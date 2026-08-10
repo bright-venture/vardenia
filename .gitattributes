@@ -1,0 +1,26 @@
+# You develop on Windows; CI and production run on Linux. Without this, files
+# get committed with CRLF endings and later show up as whole-file diffs when
+# anything touches them on another machine.
+#
+# Normalise everything to LF in the repository. Git still checks out whatever
+# your editor expects locally.
+* text=auto eol=lf
+
+# Binary files must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp4 binary
+
+# Collapse the lockfile in pull request diffs. It is generated, and reviewing
+# 20,000 lines of it hides the changes that matter.
+pnpm-lock.yaml linguist-generated=true -diff
