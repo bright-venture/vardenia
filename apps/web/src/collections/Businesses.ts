@@ -1,12 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { LISTING_TIERS, isWithinLebanon } from '@vardenia/core'
-import {
-  isAdminFieldLevel,
-  isStaff,
-  isStaffFieldLevel,
-  ownBusinessOnly,
-  publishedOrStaff,
-} from '../access/index'
+import { isAdminFieldLevel, isStaff, isStaffFieldLevel, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
@@ -15,9 +9,10 @@ import { ensureQrCode } from '../hooks/ensureQrCode'
 /**
  * The directory listing - the central document in the whole platform.
  *
- * Note the split between the "Listing" tab (what the public sees, editable by
- * the advertiser) and the "Commercial" tab (contract, tier, sales owner -
- * staff-only, and never serialised into a public API response).
+ * Only Vardenia staff edit these; listed businesses have no accounts. The split
+ * that still matters is between the first four tabs, which describe what the
+ * public sees, and the "Commercial" tab, whose contract fields carry field-level
+ * read rules so they never reach an API response.
  */
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
@@ -31,7 +26,7 @@ export const Businesses: CollectionConfig = {
   access: {
     read: publishedOrStaff,
     create: isStaff,
-    update: ownBusinessOnly,
+    update: isStaff,
     delete: isStaff,
   },
   hooks: {

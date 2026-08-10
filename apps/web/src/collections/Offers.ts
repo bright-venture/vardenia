@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isStaff, ownBusinessRelationOnly, publishedOrStaff } from '../access/index'
+import { isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 
 /**
@@ -19,7 +19,7 @@ export const Offers: CollectionConfig = {
   access: {
     read: publishedOrStaff,
     create: isStaff,
-    update: ownBusinessRelationOnly('business'),
+    update: isStaff,
     delete: isStaff,
   },
   fields: [

@@ -60,7 +60,7 @@ Payload CMS owns all content, in Postgres. Collections:
 | `issues`      | Print editions, with print run and page ranges.      |
 | `pages`       | Static marketing pages.                              |
 | `media`       | Images and video, with rights tracking.              |
-| `users`       | Staff and advertisers, role-scoped.                  |
+| `users`       | Vardenia staff only. Businesses have no accounts.    |
 
 ### Taxonomy is code, not data
 
@@ -110,18 +110,27 @@ history.
 
 ## Access control
 
-Four roles, in `apps/web/src/access/`:
+Three roles, all Vardenia staff, in `apps/web/src/access/`:
 
 - **admin** - everything, including tier and verification flags.
 - **editor** - writes and publishes editorial, curates listings.
 - **sales** - creates and edits listings and contracts; cannot publish articles.
-- **advertiser** - a paying business owner, scoped to their own listing.
 
-The `advertiser` role is load-bearing. It lets a hotel update its own photos and offers
-without emailing the team, which is the difference between a directory that stays current
-and one that rots within two seasons. Scoping is enforced by returning **query
-constraints** rather than booleans, so the database filters - an advertiser cannot
-enumerate other listings through the API.
+**Listed businesses do not get accounts.** Every change to a listing goes through the team.
+That is an editorial decision before it is a technical one: a curated title cannot let its
+subjects edit their own entries, or the standard drifts to whatever each business wants to
+say about itself.
+
+The consequence for this codebase is a large simplification. There is no such thing as a
+logged-in outsider, so access control only ever separates two audiences, staff and the
+public. No per-record scoping, no ownership graph, no "can this user see this row" logic.
+
+The cost is that listings only stay current if the team keeps them current. That is a
+staffing commitment, not a software one, and it should be priced into the editorial
+calendar rather than solved later with a self-service portal nobody planned for.
+
+If self-service is ever wanted, it is a new role plus per-record scoping, and it deserves
+its own ADR rather than being reintroduced quietly.
 
 On the `Commercial` tab, contract dates, sales owner and internal notes carry field-level
 `read: isStaffFieldLevel` and are stripped from every unauthenticated response.

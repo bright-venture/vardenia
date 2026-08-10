@@ -31,26 +31,18 @@ export const Users: CollectionConfig = {
       type: 'select',
       hasMany: true,
       required: true,
-      defaultValue: ['advertiser'],
-      // Only an admin can grant roles - otherwise an advertiser could promote
-      // themselves to editor through the API.
+      // Deliberately no default. Whoever creates an account must choose the role,
+      // rather than inheriting whichever one happened to be listed first.
+      // Only an admin can grant roles, so nobody can promote themselves via the API.
       access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },
         { label: 'Sales', value: 'sales' },
-        { label: 'Advertiser', value: 'advertiser' },
       ],
-    },
-    {
-      name: 'managedBusinesses',
-      type: 'relationship',
-      relationTo: 'businesses',
-      hasMany: true,
-      access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
       admin: {
-        description: 'Listings this advertiser may edit. Ignored for staff roles.',
-        condition: (data) => data?.roles?.includes('advertiser'),
+        description:
+          'Every account here belongs to the Vardenia team. Businesses do not get logins.',
       },
     },
     { name: 'phone', type: 'text' },

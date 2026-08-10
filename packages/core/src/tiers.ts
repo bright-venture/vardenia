@@ -19,7 +19,7 @@ export interface TierCapabilities {
   offers: boolean
   /** Gets a long-form editorial feature written by the Vardenia team. */
   editorialFeature: boolean
-  /** Advertiser can see their own QR scan + click analytics in the portal. */
+  /** Scan performance is included in the report the team sends at renewal. */
   analyticsAccess: boolean
   /** Eligible for homepage and category-hero placement. */
   heroPlacement: boolean

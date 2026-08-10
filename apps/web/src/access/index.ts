@@ -1,29 +1,35 @@
 /**
  * Role-based access control.
  *
- * Four roles, because four kinds of people touch this system:
- *  - admin      : the founding team. Everything.
- *  - editor     : writes and publishes editorial + curates listings.
- *  - sales      : creates and edits listings and contracts, cannot publish articles.
- *  - advertiser : a paying business owner. Sees and edits ONLY their own listing.
+ * Three roles, all of them Vardenia staff:
+ *  - admin  : the founding team. Everything, including tier and verification.
+ *  - editor : writes and publishes editorial, curates listings.
+ *  - sales  : creates and edits listings and contracts, cannot publish articles.
  *
- * `advertiser` is the load-bearing one. It is what lets a hotel update its own
- * photos and offers without emailing the team - which is the difference between
- * a directory that rots in six months and one that stays current.
+ * Businesses listed in the directory do NOT get accounts. Everything they want
+ * changed goes through the team, which is a deliberate editorial decision: a
+ * curated luxury title cannot let subjects edit their own entries. It also means
+ * there is no such thing as a logged-in outsider, so the only two audiences this
+ * file has to separate are "staff" and "the public".
+ *
+ * If self-service is ever wanted, it is a new role plus per-record scoping, and
+ * it deserves its own ADR rather than being reintroduced quietly.
  */
 
 import type { Access, FieldAccess } from 'payload'
 
-export type Role = 'admin' | 'editor' | 'sales' | 'advertiser'
+export type Role = 'admin' | 'editor' | 'sales'
 
 interface UserWithRoles {
   id: string | number
   roles?: Role[]
-  /** Listing IDs this advertiser is allowed to manage. */
-  managedBusinesses?: (string | number | { id: string | number })[]
 }
 
 const rolesOf = (user: unknown): Role[] => (user as UserWithRoles | null)?.roles ?? []
+
+/** Every current role is staff, but check explicitly so a future role is not staff by default. */
+const isStaffUser = (user: unknown): boolean =>
+  rolesOf(user).some((role) => role === 'admin' || role === 'editor' || role === 'sales')
 
 export const hasRole =
   (...allowed: Role[]): Access =>
@@ -41,46 +47,20 @@ export const isAdminFieldLevel: FieldAccess = ({ req }) => rolesOf(req.user).inc
  * it, so a contract value hidden behind a condition is still one unauthenticated
  * request away.
  */
-export const isStaffFieldLevel: FieldAccess = ({ req }) =>
-  rolesOf(req.user).some((role) => role === 'admin' || role === 'editor' || role === 'sales')
+export const isStaffFieldLevel: FieldAccess = ({ req }) => isStaffUser(req.user)
 
-export const isStaff: Access = ({ req }) =>
-  rolesOf(req.user).some((role) => role === 'admin' || role === 'editor' || role === 'sales')
-
-/** Anyone may read, but only published documents. Staff see drafts too. */
-export const publishedOrStaff: Access = ({ req }) => {
-  if (rolesOf(req.user).some((role) => role !== 'advertiser')) return true
-  return { _status: { equals: 'published' } }
-}
+export const isStaff: Access = ({ req }) => isStaffUser(req.user)
 
 /**
- * Staff get everything; an advertiser is scoped to the listings assigned to them.
- * Returning a query constraint (rather than true/false) makes Payload filter at
- * the database level, so an advertiser cannot enumerate other listings via the API.
+ * Public reads are limited to published documents; staff also see drafts.
+ *
+ * Returns a query constraint rather than false, so Payload filters in the
+ * database. An anonymous caller cannot page past the filter or count what is
+ * hidden behind it.
  */
-export const ownBusinessOnly: Access = ({ req }) => {
-  const roles = rolesOf(req.user)
-  if (roles.some((role) => role === 'admin' || role === 'editor' || role === 'sales')) return true
-  if (!roles.includes('advertiser')) return false
-
-  const managed = (req.user as UserWithRoles | null)?.managedBusinesses ?? []
-  const ids = managed.map((entry) => (typeof entry === 'object' ? entry.id : entry))
-  if (ids.length === 0) return false
-  return { id: { in: ids } }
+export const publishedOrStaff: Access = ({ req }) => {
+  if (isStaffUser(req.user)) return true
+  return { _status: { equals: 'published' } }
 }
-
-/** Same scoping, for collections that point AT a business (offers, QR codes). */
-export const ownBusinessRelationOnly =
-  (relationField: string): Access =>
-  ({ req }) => {
-    const roles = rolesOf(req.user)
-    if (roles.some((role) => role === 'admin' || role === 'editor' || role === 'sales')) return true
-    if (!roles.includes('advertiser')) return false
-
-    const managed = (req.user as UserWithRoles | null)?.managedBusinesses ?? []
-    const ids = managed.map((entry) => (typeof entry === 'object' ? entry.id : entry))
-    if (ids.length === 0) return false
-    return { [relationField]: { in: ids } }
-  }
 
 export const anyone: Access = () => true

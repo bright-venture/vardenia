@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import { normalizeCode } from '@vardenia/core'
 import config from '../../../payload.config'
+import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 
 /**
  * The QR redirect. `https://vrd.lb/g/K3M9QP2` -> the right page, plus one row in
@@ -47,8 +48,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const destination = resolveDestination(qr, siteUrl)
 
+  // Decide whether this scan counts. It never decides whether it works: the
+  // redirect below happens either way, because a printed code must resolve for
+  // everyone, always.
+  const verdict = evaluateScan({
+    code,
+    ip: clientIp(request.headers),
+    userAgent: request.headers.get('user-agent'),
+  })
+
   // Logged after the redirect is already on the wire.
   after(async () => {
+    if (!verdict.count) {
+      payload.logger.debug({ code, reason: verdict.reason }, 'Scan not counted')
+      return
+    }
     try {
       await recordScan(payload, qr, request)
     } catch (error) {

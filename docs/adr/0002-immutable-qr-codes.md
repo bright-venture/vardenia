@@ -52,3 +52,13 @@ anything embarrassing.
   an edge case. Verified with 8 simultaneous requests, all 8 counted.
 - If the counter and `scan-events` ever disagree, trust `scan-events` and recompute. The
   counter exists so a listing page does not have to aggregate the log on every render.
+- Not every request counts. `apps/web/src/lib/scan-guard.ts` skips link-preview bots
+  (WhatsApp, Slack, Meta and friends fetch a URL the moment it is pasted into a chat),
+  collapses repeats from one address within 60 seconds, and caps one address at 20 counted
+  scans per 10 minutes. The redirect still happens in every one of those cases: the guard
+  protects the number, never access.
+- Addresses are salted-hashed and held in memory only, never written. A rate limiter is not
+  a reason to start keeping a location history of readers.
+- That memory is per-instance and resets on deploy, so the limits are approximate. Fine
+  while this runs as one service. If it is ever scaled horizontally, move the two maps to
+  Redis or a Postgres table; the interface is one function so the change is contained.

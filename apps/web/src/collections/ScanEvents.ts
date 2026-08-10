@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { QR_PLACEMENTS } from '@vardenia/core'
-import { isAdmin, ownBusinessRelationOnly } from '../access/index'
+import { isAdmin, isStaff } from '../access/index'
 
 /**
  * Append-only scan log. This table is the evidence behind every renewal
@@ -24,7 +24,7 @@ export const ScanEvents: CollectionConfig = {
     description: 'Read-only. Written by the QR redirect endpoint.',
   },
   access: {
-    read: ownBusinessRelationOnly('business'),
+    read: isStaff,
     // Only the redirect route writes here, using local (server-side) API access.
     create: () => false,
     update: () => false,

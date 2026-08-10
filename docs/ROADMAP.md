@@ -27,8 +27,8 @@ The minimum that makes Vardenia real. Until this exists there is nothing to sell
 
 What turns the directory into revenue.
 
-- [ ] Advertiser portal: self-service editing of own listing and offers
-- [ ] Advertiser analytics dashboard - scans by placement, over time, by city
+- [ ] Staff scan report view: per listing, by placement, over time, by city
+- [ ] Exportable renewal report (PDF) the team sends to each advertiser
 - [ ] QR code generator: printable SVG/PDF sheets per issue, per placement
 - [ ] Offers / digital coupons rendering + expiry
 - [ ] Tier-gated rendering driven by `TIER_CAPABILITIES`

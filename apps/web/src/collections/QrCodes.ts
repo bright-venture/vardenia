@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
-import { isAdmin, isStaff, ownBusinessRelationOnly } from '../access/index'
+import { isAdmin, isStaff } from '../access/index'
 
 /**
  * A printed code is permanent; its destination is not.
@@ -18,7 +18,7 @@ export const QrCodes: CollectionConfig = {
     group: 'Directory',
   },
   access: {
-    read: ownBusinessRelationOnly('business'),
+    read: isStaff,
     create: isStaff,
     update: isStaff,
     delete: isAdmin,
