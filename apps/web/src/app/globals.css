@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: 'Canela', 'Times New Roman', Georgia, serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Arabic needs its own faces - Latin serif display type has no Arabic
+     coverage, and falling back mid-headline looks broken. */
+  :root:lang(ar) {
+    --font-display: 'Tajawal', 'Noto Kufi Arabic', sans-serif;
+    --font-body: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+  }
+}
+
+/* Editorial body copy rendered from the CMS rich text field. Scoped to one
+   class so CMS content can never restyle the rest of the page. */
+@layer components {
+  .prose-vardenia {
+    @apply text-ink-700 leading-relaxed;
+  }
+  .prose-vardenia > * + * {
+    @apply mt-5;
+  }
+  .prose-vardenia h2 {
+    @apply font-display text-ink-900 mt-10 text-2xl leading-snug;
+  }
+  .prose-vardenia h3 {
+    @apply text-ink-900 mt-8 text-lg font-semibold;
+  }
+  .prose-vardenia ul {
+    @apply list-disc ps-6;
+  }
+  .prose-vardenia ol {
+    @apply list-decimal ps-6;
+  }
+  .prose-vardenia li + li {
+    @apply mt-1;
+  }
+  .prose-vardenia a {
+    @apply text-gold-700 underline underline-offset-4;
+  }
+  .prose-vardenia blockquote {
+    @apply border-gold-300 text-ink-500 border-s-2 ps-5 italic;
+  }
+}

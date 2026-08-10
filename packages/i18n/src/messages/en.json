@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "discover": "Discover",
+    "directory": "Directory",
+    "magazine": "Magazine",
+    "regions": "Regions",
+    "about": "About",
+    "advertise": "Advertise with us"
+  },
+  "directory": {
+    "searchPlaceholder": "Search hotels, restaurants, experiences...",
+    "nearMe": "Near me",
+    "openNow": "Open now",
+    "resultCount": "{count, plural, =0 {No places found} one {1 place} other {# places}}",
+    "verified": "Verified by Vardenia",
+    "viewOnMap": "View on map",
+    "getDirections": "Get directions",
+    "call": "Call",
+    "reserve": "Reserve",
+    "viewMenu": "View menu",
+    "website": "Website"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

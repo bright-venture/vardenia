@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "discover": "اكتشف",
+    "directory": "الدليل",
+    "magazine": "المجلة",
+    "regions": "المناطق",
+    "about": "من نحن",
+    "advertise": "أعلن معنا"
+  },
+  "directory": {
+    "searchPlaceholder": "ابحث عن فنادق، مطاعم، تجارب...",
+    "nearMe": "بالقرب مني",
+    "openNow": "مفتوح الآن",
+    "resultCount": "{count, plural, =0 {لا توجد أماكن} one {مكان واحد} two {مكانان} few {# أماكن} many {# مكانًا} other {# مكان}}",
+    "verified": "موثّق من فاردينيا",
+    "viewOnMap": "عرض على الخريطة",
+    "getDirections": "الاتجاهات",
+    "call": "اتصل",
+    "reserve": "احجز",
+    "viewMenu": "عرض القائمة",
+    "website": "الموقع الإلكتروني"
+  },
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "retry": "إعادة المحاولة",
+    "close": "إغلاق"
+  }
+}

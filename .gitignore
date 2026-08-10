@@ -141,3 +141,24 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# --- Vardenia -------------------------------------------------------------
+# .env.* is ignored above; keep the template tracked.
+!.env.example
+
+# Turborepo
+.turbo/
+
+# Payload
+apps/web/src/payload-types.ts
+apps/web/public/media/
+apps/web/media/
+
+# Expo / React Native
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
+*.jks
+*.p8
+*.p12
+*.mobileprovision

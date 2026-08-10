@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Vardenia",
+    "slug": "vardenia",
+    "scheme": "vardenia",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vardenia.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Vardenia uses your location to show places near you and give directions.",
+        "NSCameraUsageDescription": "Vardenia uses the camera to scan QR codes in the magazine and at venues.",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "associatedDomains": ["applinks:vardenia.com"]
+    },
+    "android": {
+      "package": "com.vardenia.app",
+      "adaptiveIcon": { "backgroundColor": "#0a0d12" },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "vardenia.com" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Vardenia uses your location to show places near you."
+        }
+      ],
+      ["expo-camera", { "cameraPermission": "Vardenia uses the camera to scan QR codes." }]
+    ],
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "apiUrl": "${EXPO_PUBLIC_API_URL}"
+    }
+  }
+}
