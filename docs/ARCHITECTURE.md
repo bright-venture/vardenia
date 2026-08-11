@@ -151,6 +151,13 @@ what the database holds.
 > This was got wrong once already, and the public API served contract fields until it was
 > caught by inspecting an actual response.
 
+> **Not rendering a field does not hide it.** Next.js embeds the data a server component
+> fetched into the RSC payload inside the HTML, so a document you loaded but chose not to
+> display is still readable with View Source. `issues.printRun` leaked exactly this way:
+> the page never printed it, but the whole document was in the markup. On a server-rendered
+> page, fetching a field is equivalent to publishing it, and `access.read` is the only thing
+> that actually removes it.
+
 ## Listing tiers
 
 `packages/core/src/tiers.ts` expresses the commercial model as capabilities, not as

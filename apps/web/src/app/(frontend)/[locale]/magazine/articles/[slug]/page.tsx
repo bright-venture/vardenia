@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { formatDate, isLocale, type Locale } from '@vardenia/i18n'
-import { findArticleBySlug } from '../../../../../lib/articles'
-import { resolveImage } from '../../../../../lib/media'
-import { kindLabel, printCredit } from '../../../../../lib/editorial'
-import { ListingCard } from '../../../../../components/ListingCard'
+import { findArticleBySlug } from '../../../../../../lib/articles'
+import { resolveImage } from '../../../../../../lib/media'
+import { kindLabel, printCredit } from '../../../../../../lib/editorial'
+import { ListingCard } from '../../../../../../components/ListingCard'
 
 /**
  * An editorial story.
@@ -42,8 +42,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       publishedTime: article.publishedAt ?? undefined,
     },
     alternates: {
-      canonical: `/magazine/${slug}`,
-      languages: { en: `/magazine/${slug}`, ar: `/ar/magazine/${slug}` },
+      canonical: `/magazine/articles/${slug}`,
+      languages: { en: `/magazine/articles/${slug}`, ar: `/ar/magazine/articles/${slug}` },
     },
   }
 }

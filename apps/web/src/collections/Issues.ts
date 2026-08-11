@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, isAdmin, isStaff } from '../access/index'
+import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access/index'
 import { slugField } from '../fields/slug'
 
 /** A print edition. The digital archive and the QR attribution both hang off this. */
@@ -22,6 +22,10 @@ export const Issues: CollectionConfig = {
     {
       name: 'printRun',
       type: 'number',
+      // Staff-only. Actual circulation is commercial intelligence: it is the
+      // denominator in every scan-rate figure, and not a number an advertiser
+      // or a competitor should be able to scrape while rates are being agreed.
+      access: { read: isStaffFieldLevel },
       admin: { description: 'Copies printed. Used to compute scan rate per thousand copies.' },
     },
     {
