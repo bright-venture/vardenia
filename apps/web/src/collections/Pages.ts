@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { hasRole, isStaff, publishedOrStaff } from '../access/index'
+import { isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 
@@ -12,7 +12,7 @@ export const Pages: CollectionConfig = {
     read: publishedOrStaff,
     create: isStaff,
     update: isStaff,
-    delete: hasRole('admin'),
+    delete: isStaff,
   },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },

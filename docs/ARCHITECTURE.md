@@ -110,11 +110,17 @@ history.
 
 ## Access control
 
-Three roles, all Vardenia staff, in `apps/web/src/access/`:
+Two roles, both Vardenia staff, in `apps/web/src/access/`:
 
-- **admin** - everything, including tier and verification flags.
-- **editor** - writes and publishes editorial, curates listings.
-- **sales** - creates and edits listings and contracts; cannot publish articles.
+- **staff** - creates and edits all content: listings, offers, articles, issues, pages, media.
+- **admin** - all of that, plus identity (accounts), the permanence layer (QR codes, scan
+  events) and commercial flags (`tier`, `verified`).
+
+There were four roles at first. The extra two barely changed behaviour, and one documented
+difference, "sales cannot publish articles", was never actually enforced. A role that does
+not change what someone can do is worse than no role, because it reads as a guarantee
+nobody is checking. Split them again when two real people genuinely need different powers,
+and enforce the difference in the same commit that introduces it.
 
 **Listed businesses do not get accounts.** Every change to a listing goes through the team.
 That is an editorial decision before it is a technical one: a curated title cannot let its

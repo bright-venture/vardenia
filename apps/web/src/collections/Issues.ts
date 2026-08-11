@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, hasRole, isStaff } from '../access/index'
+import { anyone, isAdmin, isStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 
 /** A print edition. The digital archive and the QR attribution both hang off this. */
@@ -10,7 +10,7 @@ export const Issues: CollectionConfig = {
     defaultColumns: ['title', 'issueNumber', 'publishedAt'],
     group: 'Content',
   },
-  access: { read: anyone, create: isStaff, update: isStaff, delete: hasRole('admin') },
+  access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },
     slugField('title'),

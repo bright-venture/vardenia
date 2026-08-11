@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { hasRole, isStaff, publishedOrStaff } from '../access/index'
+import { isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { categoryOptions, governorateOptions } from './options'
@@ -22,8 +22,8 @@ export const Articles: CollectionConfig = {
     read: publishedOrStaff,
     create: isStaff,
     update: isStaff,
-    // Sales can draft sponsored content but must not publish it themselves.
-    delete: hasRole('admin', 'editor'),
+
+    delete: isStaff,
   },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },

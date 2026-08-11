@@ -262,7 +262,8 @@ export const Businesses: CollectionConfig = {
               type: 'relationship',
               relationTo: 'users',
               access: { read: isStaffFieldLevel },
-              filterOptions: { roles: { in: ['sales', 'admin'] } },
+              // Any team member can own the relationship with a business.
+              filterOptions: { roles: { in: ['staff', 'admin'] } },
             },
             {
               name: 'internalNotes',
@@ -289,7 +290,15 @@ export const Businesses: CollectionConfig = {
   ],
 }
 
+/**
+ * Whether to show the Commercial tab in the admin UI.
+ *
+ * Cosmetic only. `admin.condition` receives the user rather than the request, so
+ * it cannot reuse the Access helpers. What actually keeps these fields private is
+ * the field-level `read: isStaffFieldLevel` above; this just avoids showing an
+ * empty tab to someone who cannot use it.
+ */
 function hasStaffRole(user: unknown): boolean {
   const roles = (user as { roles?: string[] } | null)?.roles ?? []
-  return roles.some((role) => role === 'admin' || role === 'editor' || role === 'sales')
+  return roles.some((role) => role === 'admin' || role === 'staff')
 }

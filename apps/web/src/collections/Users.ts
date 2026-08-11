@@ -37,12 +37,11 @@ export const Users: CollectionConfig = {
       access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
       options: [
         { label: 'Admin', value: 'admin' },
-        { label: 'Editor', value: 'editor' },
-        { label: 'Sales', value: 'sales' },
+        { label: 'Staff', value: 'staff' },
       ],
       admin: {
         description:
-          'Every account here belongs to the Vardenia team. Businesses do not get logins.',
+          'Staff create and edit all content. Admin additionally manages accounts, QR codes and commercial flags. Businesses never get logins.',
       },
     },
     { name: 'phone', type: 'text' },

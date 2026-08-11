@@ -1,24 +1,28 @@
 /**
  * Role-based access control.
  *
- * Three roles, all of them Vardenia staff:
- *  - admin  : the founding team. Everything, including tier and verification.
- *  - editor : writes and publishes editorial, curates listings.
- *  - sales  : creates and edits listings and contracts, cannot publish articles.
+ * Two roles:
+ *  - admin : the founding team. Everything, including who else gets an account.
+ *  - staff : everyone else on the Vardenia team. Creates and edits all content.
  *
- * Businesses listed in the directory do NOT get accounts. Everything they want
- * changed goes through the team, which is a deliberate editorial decision: a
- * curated luxury title cannot let subjects edit their own entries. It also means
- * there is no such thing as a logged-in outsider, so the only two audiences this
- * file has to separate are "staff" and "the public".
+ * There were four (editor, sales, advertiser) and they were mostly theatre: the
+ * rules barely differed, and one documented difference was not enforced at all.
+ * Roles that do not change behaviour are worse than no roles, because they read
+ * as a guarantee nobody is checking. Split them again when two real people
+ * genuinely need different powers.
  *
- * If self-service is ever wanted, it is a new role plus per-record scoping, and
- * it deserves its own ADR rather than being reintroduced quietly.
+ * Listed businesses do NOT get accounts. Everything they want changed goes
+ * through the team, so the only line this file draws is staff versus public.
+ *
+ * The division of labour:
+ *  - staff own content: listings, offers, articles, issues, pages, media.
+ *  - admin owns identity (users) and the permanence layer (QR codes, scan
+ *    events), plus commercial flags like tier and verification.
  */
 
 import type { Access, FieldAccess } from 'payload'
 
-export type Role = 'admin' | 'editor' | 'sales'
+export type Role = 'admin' | 'staff'
 
 interface UserWithRoles {
   id: string | number
@@ -27,16 +31,13 @@ interface UserWithRoles {
 
 const rolesOf = (user: unknown): Role[] => (user as UserWithRoles | null)?.roles ?? []
 
-/** Every current role is staff, but check explicitly so a future role is not staff by default. */
+/** Admin counts as staff. Every check below reads through this. */
 const isStaffUser = (user: unknown): boolean =>
-  rolesOf(user).some((role) => role === 'admin' || role === 'editor' || role === 'sales')
-
-export const hasRole =
-  (...allowed: Role[]): Access =>
-  ({ req }) =>
-    rolesOf(req.user).some((role) => allowed.includes(role))
+  rolesOf(user).some((role) => role === 'admin' || role === 'staff')
 
 export const isAdmin: Access = ({ req }) => rolesOf(req.user).includes('admin')
+
+export const isStaff: Access = ({ req }) => isStaffUser(req.user)
 
 export const isAdminFieldLevel: FieldAccess = ({ req }) => rolesOf(req.user).includes('admin')
 
@@ -48,8 +49,6 @@ export const isAdminFieldLevel: FieldAccess = ({ req }) => rolesOf(req.user).inc
  * request away.
  */
 export const isStaffFieldLevel: FieldAccess = ({ req }) => isStaffUser(req.user)
-
-export const isStaff: Access = ({ req }) => isStaffUser(req.user)
 
 /**
  * Public reads are limited to published documents; staff also see drafts.
