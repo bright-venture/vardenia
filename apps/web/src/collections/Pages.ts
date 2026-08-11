@@ -3,10 +3,23 @@ import { isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 
-/** Static marketing pages: About, Advertise, Contact, Privacy, Terms. */
+/**
+ * Permanent website pages: About, Advertise, Contact, Privacy, Terms.
+ *
+ * Nothing to do with the printed pages inside an Issue. Labelled "Site Pages"
+ * in the admin for exactly that reason, since "Pages" sitting next to "Issues"
+ * reads as the pages of a magazine and confuses everyone once.
+ *
+ * The URL stays /pages/... The label is display only.
+ */
 export const Pages: CollectionConfig = {
   slug: 'pages',
-  admin: { useAsTitle: 'title', group: 'Content' },
+  labels: { singular: 'Site Page', plural: 'Site Pages' },
+  admin: {
+    useAsTitle: 'title',
+    group: 'Content',
+    description: 'Standing pages of the website. Not magazine content.',
+  },
   versions: { drafts: true },
   access: {
     read: publishedOrStaff,
