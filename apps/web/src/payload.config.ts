@@ -21,6 +21,34 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const useS3 = process.env.MEDIA_STORAGE_ADAPTER === 's3'
 
+/**
+ * Public base URL for uploaded files, used to build the `<img src>`.
+ *
+ * A bucket is reachable at two different addresses. `S3_ENDPOINT` is the
+ * authenticated S3 API the upload SDK talks to; handing that path to a browser
+ * returns an error. Reads need the anonymous public path.
+ *
+ * For Supabase the public path is normally
+ * `https://<ref>.supabase.co/storage/v1/object/public/<bucket>/<file>`,
+ * which this derives from the endpoint. Supabase has more than one host shape
+ * in circulation (`<ref>.supabase.co` and `<ref>.storage.supabase.co`), so
+ * `S3_PUBLIC_BASE_URL` overrides the derivation when the guess is wrong. Set it
+ * and this whole block is skipped.
+ */
+const publicStorageBase = (() => {
+  const override = (process.env.S3_PUBLIC_BASE_URL ?? '').replace(/\/$/, '')
+  if (override) return override
+
+  const endpoint = (process.env.S3_ENDPOINT ?? '').replace(/\/$/, '')
+  const bucket = process.env.S3_BUCKET ?? ''
+  if (!endpoint || !bucket) return ''
+
+  const base = endpoint.endsWith('/storage/v1/s3')
+    ? endpoint.replace(/\/storage\/v1\/s3$/, '/storage/v1/object/public')
+    : endpoint
+  return `${base}/${bucket}`
+})()
+
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL,
   admin: {
@@ -73,11 +101,26 @@ export default buildConfig({
   plugins: useS3
     ? [
         s3Storage({
-          collections: { media: true },
+          collections: {
+            media: {
+              // Serve images straight from storage rather than proxying every
+              // request through this server. Media is public anyway (see the
+              // Media collection's `read: anyone`), and a luxury title is mostly
+              // large photographs: routing them through Node would put our own
+              // server on the critical path for every image on every page.
+              disablePayloadAccessControl: true,
+              generateFileURL: ({ filename, prefix }) =>
+                [publicStorageBase, prefix, filename].filter(Boolean).join('/'),
+            },
+          },
           bucket: process.env.S3_BUCKET ?? '',
           config: {
             region: process.env.S3_REGION ?? 'auto',
             endpoint: process.env.S3_ENDPOINT,
+            // Supabase Storage addresses buckets by path, not by subdomain.
+            // Without this the SDK builds `https://<bucket>.<host>/...` and
+            // every upload fails to resolve.
+            forcePathStyle: true,
             credentials: {
               accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
               secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',

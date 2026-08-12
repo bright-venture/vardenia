@@ -27,7 +27,10 @@ const nextConfig = {
   serverExternalPackages: ['zod'],
   images: {
     formats: ['image/avif', 'image/webp'],
+    // next/image refuses any host not listed here, so every storage backend we
+    // might serve uploads from has to be named.
     remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],

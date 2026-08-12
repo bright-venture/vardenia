@@ -1,11 +1,14 @@
 import type { CollectionConfig } from 'payload'
 import { anyone, isStaff } from '../access/index'
+import { blockMediaInUse } from '../hooks/blockMediaInUse'
 
 /**
  * Photography is the product for a luxury title, so the image sizes here are
  * generous and the alt text is required - an inaccessible premium magazine is
  * still an inaccessible magazine, and Google reads alt text on every listing.
  */
+const WEBP = { format: 'webp', options: { quality: 82 } } as const
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: { group: 'Content' },
@@ -15,19 +18,26 @@ export const Media: CollectionConfig = {
     update: isStaff,
     delete: isStaff,
   },
+  hooks: {
+    beforeDelete: [blockMediaInUse],
+  },
   upload: {
     // Storage adapter is swapped to S3/R2 in payload.config.ts when configured.
     staticDir: 'public/media',
     mimeTypes: ['image/*', 'video/mp4', 'application/pdf'],
     focalPoint: true,
+    // `formatOptions` below converts the original only. Each size needs its own
+    // copy or it keeps the source format, which quietly gave us JPEG thumbnails
+    // off a WebP original - the sizes are what actually get served, so that is
+    // the whole saving lost.
     imageSizes: [
-      { name: 'thumbnail', width: 400, height: 300, position: 'centre' },
-      { name: 'card', width: 800, height: 600, position: 'centre' },
-      { name: 'portrait', width: 900, height: 1200, position: 'centre' },
-      { name: 'hero', width: 2000, height: 1125, position: 'centre' },
-      { name: 'og', width: 1200, height: 630, position: 'centre' },
+      { name: 'thumbnail', width: 400, height: 300, position: 'centre', formatOptions: WEBP },
+      { name: 'card', width: 800, height: 600, position: 'centre', formatOptions: WEBP },
+      { name: 'portrait', width: 900, height: 1200, position: 'centre', formatOptions: WEBP },
+      { name: 'hero', width: 2000, height: 1125, position: 'centre', formatOptions: WEBP },
+      { name: 'og', width: 1200, height: 630, position: 'centre', formatOptions: WEBP },
     ],
-    formatOptions: { format: 'webp', options: { quality: 82 } },
+    formatOptions: WEBP,
   },
   fields: [
     {
