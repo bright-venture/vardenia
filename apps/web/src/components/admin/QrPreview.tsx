@@ -1,6 +1,7 @@
 'use client'
 
 import { useFormFields } from '@payloadcms/ui'
+import { isPrintSafeBaseUrl, scanUrl } from '../../lib/qr-url'
 
 /**
  * Shows the printable code on the QR Codes edit screen, with download links.
@@ -48,6 +49,13 @@ export function QrPreview() {
           Use the SVG for anything printed. Keep the white border around the code: cropping it is
           the most common reason a printed code stops scanning.
         </p>
+        {isPrintSafeBaseUrl() ? null : (
+          <p style={warn}>
+            <strong>Not for print.</strong> This encodes <code>{scanUrl(code)}</code>, which readers
+            cannot reach. Codes are only safe to print once NEXT_PUBLIC_SITE_URL is the live https
+            domain, and the host cannot be changed after printing.
+          </p>
+        )}
       </div>
     </div>
   )
@@ -64,6 +72,18 @@ const wrap: React.CSSProperties = {
 const link: React.CSSProperties = {
   fontSize: 13,
   textDecoration: 'underline',
+}
+
+const warn: React.CSSProperties = {
+  margin: '12px 0 0',
+  padding: '8px 12px',
+  border: '2px solid #b00',
+  borderRadius: 4,
+  background: '#fff4f4',
+  color: '#900',
+  fontSize: 12,
+  lineHeight: 1.5,
+  maxWidth: '48ch',
 }
 
 const hint: React.CSSProperties = {

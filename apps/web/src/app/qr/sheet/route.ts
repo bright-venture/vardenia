@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
-import { DEFAULT_PRINT_MM, qrSvg, scanUrl } from '../../../lib/qr-image'
+import { DEFAULT_PRINT_MM, isPrintSafeBaseUrl, qrSvg, scanUrl } from '../../../lib/qr-image'
 
 /**
  * A contact sheet of every code, ready to print or hand to the layout team.
@@ -121,6 +121,18 @@ function renderCard({
 </figure>`
 }
 
+/**
+ * Shown when the codes encode a host the public cannot reach. Deliberately loud
+ * and deliberately printed rather than hidden by the print stylesheet: a proof
+ * that carries the warning cannot be mistaken for final artwork.
+ */
+function unsafeBaseBanner(): string {
+  if (isPrintSafeBaseUrl()) return ''
+  return `<p class="warn"><strong>Not for print.</strong> These codes encode
+    <code>${escape(scanUrl('CODE'))}</code>. Anything printed from this sheet will fail for every
+    reader, permanently. Set NEXT_PUBLIC_SITE_URL to the live https domain and generate again.</p>`
+}
+
 function page(title: string, count: number, cards: string): string {
   return `<!doctype html>
 <html lang="en">
@@ -150,6 +162,11 @@ function page(title: string, count: number, cards: string): string {
   .meta { font-size: 11px; color: #666; }
   .url { word-break: break-all; }
   .empty { color: #666; }
+  .warn {
+    border: 2px solid #b00; background: #fff4f4; color: #900;
+    padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5;
+  }
+  .warn code { word-break: break-all; }
   @media print {
     body { padding: 0; }
     header { margin-bottom: 12px; }
@@ -163,6 +180,7 @@ function page(title: string, count: number, cards: string): string {
 <header>
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
+  ${unsafeBaseBanner()}
 </header>
 ${count === 0 ? '<p class="empty">No active codes match.</p>' : `<div class="grid">${cards}</div>`}
 </body>

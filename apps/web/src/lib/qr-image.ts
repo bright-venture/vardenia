@@ -1,5 +1,6 @@
 import QRCode from 'qrcode'
 import { normalizeCode } from '@vardenia/core'
+import { scanUrl } from './qr-url'
 
 /**
  * Rendering a code as something a printer can use.
@@ -41,11 +42,7 @@ const QUIET_ZONE_MODULES = 4
 export const DEFAULT_PRINT_MM = 25
 export const MIN_PRINT_MM = 15
 
-/** What the code actually encodes. Never the destination - see packages/core/src/qr.ts. */
-export function scanUrl(code: string, siteUrl = process.env.NEXT_PUBLIC_SITE_URL): string {
-  const base = (siteUrl ?? 'http://localhost:3000').replace(/\/$/, '')
-  return `${base}/g/${code}`
-}
+export { isPrintSafeBaseUrl, scanUrl } from './qr-url'
 
 /**
  * Vector, because print scales it.

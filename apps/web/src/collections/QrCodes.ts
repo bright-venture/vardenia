@@ -13,6 +13,8 @@ import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
  */
 export const QrCodes: CollectionConfig = {
   slug: 'qr-codes',
+  // Payload titles a collection from its slug, which gives "Qr Codes".
+  labels: { singular: 'QR Code', plural: 'QR Codes' },
   admin: {
     useAsTitle: 'code',
     defaultColumns: ['code', 'targetType', 'placement', 'scanCount', 'active'],
