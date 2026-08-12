@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
+import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
 
@@ -86,11 +86,11 @@ export const QrCodes: CollectionConfig = {
       name: 'placement',
       type: 'select',
       required: true,
-      defaultValue: 'digital',
+      defaultValue: DEFAULT_PLACEMENT,
       options: QR_PLACEMENTS.map((value) => ({ label: value, value })),
       admin: {
         description:
-          'Where this physical code lives. One code per placement - that is how we prove which placement performs.',
+          'Codes are printed in the magazine and nowhere else, so leave this on magazine-page. The other values are surfaces we have not shipped; picking one now records something that is not true.',
       },
     },
     {
@@ -98,8 +98,12 @@ export const QrCodes: CollectionConfig = {
       type: 'relationship',
       relationTo: 'issues',
       admin: {
-        description: 'Print issue this code appeared in.',
-        condition: (data) => data?.placement === 'magazine-page',
+        // Previously hidden unless placement was magazine-page, which combined
+        // with a 'digital' default meant the field never appeared at all - so no
+        // code was ever tied to an issue, and the print sheet had nothing to
+        // filter on. It is the most important field here; it is always shown.
+        description:
+          'Which printed issue carries this code. Set it before the issue goes to press: it is what the print sheet filters on, and what marks the code as permanent.',
       },
     },
     {

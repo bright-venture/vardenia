@@ -1,5 +1,5 @@
 import type { CollectionAfterChangeHook } from 'payload'
-import { generateCode } from '@vardenia/core'
+import { DEFAULT_PLACEMENT, generateCode } from '@vardenia/core'
 
 const MAX_ATTEMPTS = 5
 
@@ -34,7 +34,9 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
         code,
         targetType: 'business',
         business: doc.id,
-        placement: 'digital',
+        // Codes exist to be printed. Minting one as 'digital' described a surface
+        // that does not exist and quietly hid the issue field behind a condition.
+        placement: DEFAULT_PLACEMENT,
         active: true,
       },
       req,

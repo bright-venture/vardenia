@@ -16,22 +16,37 @@ import { APIError } from 'payload'
  */
 
 /**
- * A code counts as out in the world once any of these is true. A digital-only
- * code that has never been scanned has never left the CMS, so it is still free
- * to delete - which keeps mistakes made during setup cheap to undo.
+ * A code counts as out in the world once either of these is true.
+ *
+ * Placement is deliberately not a signal. Every code is minted as `magazine-page`
+ * because that is the only surface codes appear on, so it is the same value on
+ * every row and tells us nothing about whether this particular code has been
+ * committed to anything.
+ *
+ * What does tell us: being attached to an issue, which is the act of putting a
+ * code into a layout, and having been scanned, which means a reader has already
+ * found it. A freshly minted code that is on no issue and has never been scanned
+ * exists only in the CMS, so deleting it is free - which keeps setup mistakes
+ * cheap to undo.
+ *
+ * Attached-but-unprinted is treated as committed rather than checking the
+ * issue's publish date. The asymmetry is the point: refusing to delete a code
+ * that was still safe costs one extra click to unassign it, while allowing one
+ * through leaves a dead code in a layout that nobody notices until the proofs
+ * come back.
  */
 function committedReason(qr: Record<string, any>): string | null {
   if (typeof qr.scanCount === 'number' && qr.scanCount > 0) {
     return `it has been scanned ${qr.scanCount} time${qr.scanCount === 1 ? '' : 's'}`
   }
   if (qr.issue) return 'it is assigned to a print issue'
-  if (qr.placement && qr.placement !== 'digital') return `it was produced as a ${qr.placement}`
   return null
 }
 
 const RETIRE_INSTEAD =
   'Uncheck "active" instead. Retired codes land on the "this listing has moved" page, ' +
-  'which is what keeps already-printed copies working.'
+  'which is what keeps already-printed copies working. If the code was never printed, ' +
+  'clear its issue first and then delete it.'
 
 export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req }) => {
   const qr = await req.payload.findByID({

@@ -51,19 +51,27 @@ export const QR_TARGET_TYPES = [
 export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
 
 /**
- * Where the physical code lives. Attribution is the product: an advertiser needs
- * to know the airport-lounge placement outperformed the in-restaurant decal.
+ * Where the physical code lives.
+ *
+ * One value, because there is one surface: the printed magazine. Codes appear
+ * nowhere on the website.
+ *
+ * This list previously carried six more (window-decal, table-tent, billboard,
+ * business-card, digital, event) describing surfaces that had been discussed and
+ * never shipped. A dropdown of options that do not exist is not a roadmap, it is
+ * six ways for someone to record something untrue, and the analytics built on
+ * top would have inherited it.
+ *
+ * Attribution across surfaces is still the goal. It needs more than a wider
+ * enum: today a business gets exactly one code (see hooks/ensureQrCode), so
+ * telling a window decal from a magazine page means minting a code per surface
+ * first. Add the value back at that point, alongside the feature that earns it.
  */
-export const QR_PLACEMENTS = [
-  'magazine-page',
-  'window-decal',
-  'table-tent',
-  'billboard',
-  'business-card',
-  'digital',
-  'event',
-] as const
+export const QR_PLACEMENTS = ['magazine-page'] as const
 export type QrPlacement = (typeof QR_PLACEMENTS)[number]
+
+/** Defaults key off this rather than indexing the list, so widening it stays safe. */
+export const DEFAULT_PLACEMENT: QrPlacement = 'magazine-page'
 
 export interface ScanContext {
   code: string
