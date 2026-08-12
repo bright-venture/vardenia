@@ -56,6 +56,9 @@ export default buildConfig({
     meta: {
       titleSuffix: ' - Vardenia',
     },
+    // Custom admin components are referenced by path, resolved from here. Pinned
+    // to src so those paths read as '/components/...' rather than '/src/...'.
+    importMap: { baseDir: dirname },
   },
 
   collections: [Businesses, QrCodes, Offers, Articles, Issues, Pages, Media, Users, ScanEvents],

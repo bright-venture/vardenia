@@ -10,6 +10,11 @@ export const config = {
    * `/admin` and `/api` are Payload's and must be left untouched, and `/g` is
    * the QR redirect - putting a locale prefix in front of a printed short link
    * would defeat the point of it being short.
+   *
+   * `/qr` serves images and the print sheet. A locale prefix there produces an
+   * HTML 404 in place of an SVG, which is silent unless you check the content
+   * type: the download still saves, and the broken file only turns up in a
+   * layout tool.
    */
-  matcher: ['/((?!api|admin|g|_next|_vercel|media|.*\\..*).*)'],
+  matcher: ['/((?!api|admin|g|qr|_next|_vercel|media|.*\\..*).*)'],
 }

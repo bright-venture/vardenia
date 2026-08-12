@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
+import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
 
 /**
  * A printed code is permanent; its destination is not.
@@ -23,7 +24,15 @@ export const QrCodes: CollectionConfig = {
     update: isStaff,
     delete: isAdmin,
   },
+  hooks: {
+    beforeDelete: [protectPrintedCodes],
+  },
   fields: [
+    {
+      name: 'printable',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/QrPreview#QrPreview' } },
+    },
     {
       name: 'code',
       type: 'text',

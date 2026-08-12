@@ -5,6 +5,7 @@ import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
+import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 
 /**
  * The directory listing - the central document in the whole platform.
@@ -33,6 +34,9 @@ export const Businesses: CollectionConfig = {
     // Every published listing gets a QR code automatically. Sales should never
     // have to remember to press a button before a print deadline.
     afterChange: [ensureQrCode],
+    // Deleting a listing strands its printed code, because recreating the
+    // listing mints a new one. Refused rather than warned about.
+    beforeDelete: [protectBusinessWithPrintedCode],
   },
   fields: [
     { name: 'name', type: 'text', required: true, localized: true, index: true },
