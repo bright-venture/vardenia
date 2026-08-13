@@ -10,6 +10,7 @@ import {
   findAllIssueSlugs,
 } from '../../../../../../lib/issues'
 import { resolveImage } from '../../../../../../lib/media'
+import { buildMetadata } from '../../../../../../lib/seo'
 import { ArticleCard } from '../../../../../../components/ArticleCard'
 
 /**
@@ -51,24 +52,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const issue = await findIssueBySlug(slug, locale)
   if (!issue) return {}
 
-  const cover = resolveImage(issue.cover as never, 'portrait')
-
-  return {
+  // Issues carry no SEO group - there are few of them and their metadata is
+  // formulaic - so the fallbacks do all the work here.
+  return buildMetadata({
+    seo: undefined,
     title: issue.title,
     description:
       locale === 'ar'
         ? `العدد ${issue.issueNumber} من فاردينيا.`
         : `Issue ${issue.issueNumber} of Vardenia.`,
-    openGraph: {
-      title: issue.title ?? undefined,
-      images: cover ? [{ url: cover.src }] : undefined,
-      type: 'website',
-    },
-    alternates: {
-      canonical: `/magazine/issues/${slug}`,
-      languages: { en: `/magazine/issues/${slug}`, ar: `/ar/magazine/issues/${slug}` },
-    },
-  }
+    fallbackImage: issue.cover as never,
+    path: `/magazine/issues/${slug}`,
+    locale,
+  })
 }
 
 export default async function IssuePage({ params }: Params) {

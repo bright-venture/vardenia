@@ -8,6 +8,19 @@ import { SiteFooter } from '../../../components/SiteFooter'
 import '../../globals.css'
 
 export const metadata: Metadata = {
+  /**
+   * Absolute base for every relative URL in metadata.
+   *
+   * Without it Next emits canonical and hreflang as paths. Browsers resolve
+   * those fine, but Google's hreflang spec requires fully-qualified URLs and
+   * ignores relative ones - which would silently undo the whole point of
+   * declaring the English and Arabic versions as translations.
+   *
+   * Falls back to localhost so a developer build does not crash; production
+   * must have NEXT_PUBLIC_SITE_URL set, which is already true because the QR
+   * codes depend on it.
+   */
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   title: {
     default: 'Vardenia - Discover Lebanon',
     template: '%s - Vardenia',

@@ -6,6 +6,7 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { findArticleBySlug, findAllArticleSlugs } from '../../../../../../lib/articles'
 import { resolveImage } from '../../../../../../lib/media'
+import { buildMetadata } from '../../../../../../lib/seo'
 import { kindLabel, printCredit } from '../../../../../../lib/editorial'
 import { ListingCard } from '../../../../../../components/ListingCard'
 
@@ -48,24 +49,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const article = await findArticleBySlug(slug, locale)
   if (!article) return {}
 
-  const seo = (article.seo ?? {}) as { title?: string | null; description?: string | null }
-  const image = resolveImage(article.heroImage as never, 'hero')
-
-  return {
-    title: seo.title || article.title,
-    description: seo.description || article.excerpt || undefined,
-    openGraph: {
-      title: seo.title || article.title || undefined,
-      description: seo.description || article.excerpt || undefined,
-      images: image ? [{ url: image.src }] : undefined,
-      type: 'article',
-      publishedTime: article.publishedAt ?? undefined,
-    },
-    alternates: {
-      canonical: `/magazine/articles/${slug}`,
-      languages: { en: `/magazine/articles/${slug}`, ar: `/ar/magazine/articles/${slug}` },
-    },
-  }
+  return buildMetadata({
+    seo: article.seo,
+    title: article.title,
+    description: article.excerpt,
+    fallbackImage: article.heroImage as never,
+    path: `/magazine/articles/${slug}`,
+    type: 'article',
+    publishedTime: article.publishedAt,
+    locale,
+  })
 }
 
 export default async function ArticlePage({ params }: Params) {

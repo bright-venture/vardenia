@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, isLocale } from '@vardenia/i18n'
 import { findPageBySlug, findAllPageSlugs } from '../../../../../lib/pages'
+import { buildMetadata } from '../../../../../lib/seo'
 
 /**
  * A standing site page: About, Advertise, Privacy, Terms.
@@ -49,22 +50,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const page = await findPageBySlug(slug, locale)
   if (!page) return {}
 
-  const seo = (page.seo ?? {}) as {
-    title?: string | null
-    description?: string | null
-    noIndex?: boolean | null
-  }
-
-  return {
-    title: seo.title || page.title,
-    description: seo.description || undefined,
-    // Terms and privacy drafts have no business in search results.
-    robots: seo.noIndex ? { index: false, follow: false } : undefined,
-    alternates: {
-      canonical: `/pages/${slug}`,
-      languages: { en: `/pages/${slug}`, ar: `/ar/pages/${slug}` },
-    },
-  }
+  return buildMetadata({
+    seo: page.seo,
+    title: page.title,
+    path: `/pages/${slug}`,
+    locale,
+  })
 }
 
 export default async function SitePage({ params }: Params) {

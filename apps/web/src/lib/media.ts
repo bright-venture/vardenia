@@ -23,8 +23,14 @@ export interface ResolvedImage {
   height: number
 }
 
-/** Size names, largest first, as declared in the Media collection. */
-const FALLBACK_ORDER = ['hero', 'portrait', 'card', 'thumbnail'] as const
+/**
+ * Size names, largest first, as declared in the Media collection.
+ *
+ * `og` sits between hero and portrait: it is 1200x630, the exact shape social
+ * previews crop to, so asking for it by name avoids handing WhatsApp a 2000px
+ * hero to downscale itself.
+ */
+const FALLBACK_ORDER = ['hero', 'og', 'portrait', 'card', 'thumbnail'] as const
 
 /**
  * Payload returns upload URLs absolute, prefixed with `serverURL`, e.g.

@@ -7,6 +7,7 @@ import { can, tierOf } from '@vardenia/core'
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { findListingBySlug, findAllListingSlugs } from '../../../../../lib/listings'
 import { resolveGallery, resolveImage } from '../../../../../lib/media'
+import { buildMetadata } from '../../../../../lib/seo'
 import {
   amenityLabel,
   categoryLabel,
@@ -56,23 +57,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const listing = await findListingBySlug(slug, locale)
   if (!listing) return {}
 
-  const seo = (listing.seo ?? {}) as { title?: string | null; description?: string | null }
-  const image = resolveImage(listing.heroImage as never, 'hero')
-
-  return {
-    title: seo.title || listing.name,
-    description: seo.description || listing.tagline || undefined,
-    openGraph: {
-      title: seo.title || listing.name || undefined,
-      description: seo.description || listing.tagline || undefined,
-      images: image ? [{ url: image.src }] : undefined,
-      type: 'website',
-    },
-    alternates: {
-      canonical: `/directory/${slug}`,
-      languages: { en: `/directory/${slug}`, ar: `/ar/directory/${slug}` },
-    },
-  }
+  return buildMetadata({
+    seo: listing.seo,
+    title: listing.name,
+    description: listing.tagline,
+    fallbackImage: listing.heroImage as never,
+    path: `/directory/${slug}`,
+    locale,
+  })
 }
 
 export default async function ListingPage({ params }: Params) {

@@ -8,6 +8,8 @@ import type { Field } from 'payload'
 export const seoField: Field = {
   name: 'seo',
   type: 'group',
+  // Payload titles a group from its field name, which gives "Seo".
+  label: 'SEO',
   admin: { position: 'sidebar' },
   fields: [
     {
@@ -33,7 +35,11 @@ export const seoField: Field = {
       name: 'noIndex',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'Hide this page from search engines.' },
+      label: 'Hide from search engines',
+      admin: {
+        description:
+          'Google and the others are asked not to list this page. Anyone with the link can still open it.',
+      },
     },
   ],
 }
