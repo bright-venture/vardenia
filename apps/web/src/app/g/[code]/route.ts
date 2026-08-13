@@ -100,6 +100,14 @@ function resolveDestination(qr: QrDoc, siteUrl: string): string {
       const slug = populated(qr.issue)?.slug
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
     }
+    case 'category': {
+      // The directory already filters on this, so a printed "scan for every
+      // hotel in Lebanon" code needs no new page.
+      const slug = typeof qr.category === 'string' ? qr.category : null
+      return slug
+        ? `${siteUrl}/directory?category=${encodeURIComponent(slug)}`
+        : `${siteUrl}/directory`
+    }
     case 'external': {
       // Normalised again rather than trusted: validation covers everything saved
       // from now on, but codes created before it existed, or written through the
@@ -108,7 +116,12 @@ function resolveDestination(qr: QrDoc, siteUrl: string): string {
       return external ?? `${siteUrl}/scan/not-found`
     }
     default:
-      return siteUrl
+      // A target type with no case here used to land on the homepage, which
+      // tells the reader nothing and looks like the code worked. The
+      // "we couldn't find this" page at least explains itself and offers a way
+      // onward. Reaching this means QR_TARGET_TYPES grew without the resolver
+      // growing with it.
+      return `${siteUrl}/scan/not-found?code=${qr.code ?? ''}`
   }
 }
 

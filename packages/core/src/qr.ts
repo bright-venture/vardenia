@@ -49,9 +49,9 @@ export function normalizeCode(input: string): string | null {
  *
  * Add a value only alongside the page it resolves to.
  *
- * `category` is still in this list with the same defect: no case in the resolver,
- * so it falls through to the homepage. Left alone for now because nothing uses
- * it, but it needs either a route or removing before any code is printed.
+ * Anything that does reach the resolver's default now lands on the "not found"
+ * page rather than the homepage, so a value added here without a matching case
+ * fails visibly instead of silently sending readers somewhere plausible.
  */
 export const QR_TARGET_TYPES = ['business', 'article', 'issue', 'category', 'external'] as const
 export type QrTargetType = (typeof QR_TARGET_TYPES)[number]

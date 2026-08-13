@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
+import { can, tierOf } from '@vardenia/core'
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { findListingBySlug, findAllListingSlugs } from '../../../../../lib/listings'
 import { resolveGallery, resolveImage } from '../../../../../lib/media'
@@ -84,7 +85,13 @@ export default async function ListingPage({ params }: Params) {
 
   const t = await getTranslations('directory')
   const hero = resolveImage(listing.heroImage as never, 'hero')
-  const gallery = resolveGallery(listing.gallery as never)
+  // Gallery size is what a listing tier actually buys. TIER_CAPABILITIES has
+  // described this since the beginning and nothing read it, so every listing -
+  // including free ones - showed all 40 images a partner pays for.
+  const gallery = resolveGallery(
+    listing.gallery as never,
+    can(tierOf(listing.tier), 'galleryLimit'),
+  )
   const place = placeLabel(listing.governorate, listing.district, locale as Locale)
   const price = priceLabel(listing.priceRange as string | null)
   const open = isOpenNow(listing.openingHours as never)

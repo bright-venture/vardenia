@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
+import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
 import { isUsableExternalUrl, normalizeExternalUrl } from '../lib/external-url'
@@ -71,6 +71,19 @@ export const QrCodes: CollectionConfig = {
       type: 'relationship',
       relationTo: 'articles',
       admin: { condition: (data) => data?.targetType === 'article' },
+    },
+    {
+      name: 'category',
+      type: 'select',
+      options: TAXONOMY.map((entry) => ({ label: entry.en, value: entry.slug })),
+      admin: {
+        condition: (data) => data?.targetType === 'category',
+        description: 'Opens the directory filtered to this category.',
+      },
+      validate: (value: unknown, { siblingData }: { siblingData?: { targetType?: string } }) => {
+        if (siblingData?.targetType !== 'category') return true
+        return value ? true : 'Pick a category, or the code will resolve to nothing.'
+      },
     },
     {
       name: 'externalUrl',

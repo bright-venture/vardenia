@@ -83,9 +83,17 @@ export function resolveImage(
   return null
 }
 
-export function resolveGallery(fields: MediaField[] | null | undefined): ResolvedImage[] {
+export function resolveGallery(
+  fields: MediaField[] | null | undefined,
+  limit?: number,
+): ResolvedImage[] {
   if (!Array.isArray(fields)) return []
-  return fields
+  const images = fields
     .map((f) => resolveImage(f, 'card'))
     .filter((img): img is ResolvedImage => img !== null)
+
+  // Trimmed, never dropped. The Businesses collection promises editors that
+  // "extra images are hidden, not deleted", so an upgrade brings them back
+  // without anyone re-uploading.
+  return typeof limit === 'number' ? images.slice(0, Math.max(0, limit)) : images
 }

@@ -110,16 +110,125 @@ describe('deliberate inflation', () => {
 })
 
 describe('finding the client address', () => {
-  it('takes the first entry of x-forwarded-for', () => {
-    const headers = new Headers({ 'x-forwarded-for': `${IP}, 10.0.0.1, 10.0.0.2` })
+  /**
+   * This block previously asserted that the LEFTMOST x-forwarded-for entry was
+   * used, which is the one part of the request the caller writes. Six requests
+   * from one machine with six invented addresses produced six counted scans.
+   * The tests encoded the bug, so they are rewritten alongside the fix.
+   */
+  it('prefers the platform header over anything the caller can write', () => {
+    const headers = new Headers({
+      'x-forwarded-for': '203.0.113.9',
+      'cf-connecting-ip': IP,
+    })
     expect(clientIp(headers)).toBe(IP)
   })
 
-  it('falls back to the Cloudflare header', () => {
-    expect(clientIp(new Headers({ 'cf-connecting-ip': IP }))).toBe(IP)
+  it('uses x-real-ip when Cloudflare is not in front', () => {
+    expect(clientIp(new Headers({ 'x-real-ip': IP, 'x-forwarded-for': '203.0.113.9' }))).toBe(IP)
+  })
+
+  it('takes the nearest hop from x-forwarded-for, not the caller-supplied one', () => {
+    // A client sending its own header gets it prepended; the proxy appends the
+    // address it actually saw.
+    const headers = new Headers({ 'x-forwarded-for': `203.0.113.9, 10.0.0.1, ${IP}` })
+    expect(clientIp(headers)).toBe(IP)
+  })
+
+  it('handles a single-entry x-forwarded-for', () => {
+    expect(clientIp(new Headers({ 'x-forwarded-for': IP }))).toBe(IP)
+  })
+
+  it('ignores empty segments and stray whitespace', () => {
+    expect(clientIp(new Headers({ 'x-forwarded-for': `10.0.0.1, , ${IP} ,` }))).toBe(IP)
   })
 
   it('returns null when nothing is present', () => {
     expect(clientIp(new Headers())).toBeNull()
+  })
+
+  it('returns null rather than an empty string for a blank header', () => {
+    expect(clientIp(new Headers({ 'x-forwarded-for': '   ' }))).toBeNull()
+  })
+
+  /** The attack, end to end: distinct forged addresses must not defeat dedupe. */
+  it('collapses forged addresses to one counted scan when a proxy appended the real one', () => {
+    __resetScanGuard()
+    const now = Date.now()
+    const counted = [1, 2, 3, 4, 5, 6].filter((n) => {
+      const headers = new Headers({
+        'x-forwarded-for': `203.0.113.${n}, ${IP}`,
+      })
+      return evaluateScan({
+        code: 'ABC1234',
+        ip: clientIp(headers),
+        userAgent: PHONE,
+        now: now + n,
+      }).count
+    })
+    expect(counted).toHaveLength(1)
+  })
+})
+
+/**
+ * The guard that holds when the address cannot be trusted at all - no proxy in
+ * front, so every hop in x-forwarded-for is written by the caller.
+ */
+describe('per-code ceiling', () => {
+  it('bounds inflation from perfectly forged addresses', () => {
+    __resetScanGuard()
+    const now = Date.now()
+
+    let counted = 0
+    for (let n = 0; n < 500; n++) {
+      // A different invented address every time: dedupe and the per-address
+      // ceiling are both defeated by construction.
+      const verdict = evaluateScan({
+        code: 'ABC1234',
+        ip: `203.0.113.${n % 255}.${Math.floor(n / 255)}`,
+        userAgent: PHONE,
+        now: now + n,
+      })
+      if (verdict.count) counted++
+    }
+
+    expect(counted).toBeLessThanOrEqual(60)
+  })
+
+  it('reports why it stopped counting', () => {
+    __resetScanGuard()
+    const now = Date.now()
+    let last = evaluateScan({ code: 'X', ip: '1.1.1.1', userAgent: PHONE, now })
+    for (let n = 1; n < 200; n++) {
+      last = evaluateScan({ code: 'X', ip: `9.9.${n}.1`, userAgent: PHONE, now: now + n })
+    }
+    expect(last.count).toBe(false)
+    expect(last.reason).toBe('code-burst')
+  })
+
+  it('keeps each code on its own allowance', () => {
+    __resetScanGuard()
+    const now = Date.now()
+    for (let n = 0; n < 200; n++) {
+      evaluateScan({ code: 'BUSY', ip: `9.9.${n}.1`, userAgent: PHONE, now: now + n })
+    }
+    expect(
+      evaluateScan({ code: 'QUIET', ip: '5.5.5.5', userAgent: PHONE, now: now + 300 }).count,
+    ).toBe(true)
+  })
+
+  it('recovers once the window passes, so a real spike is not silenced forever', () => {
+    __resetScanGuard()
+    const now = Date.now()
+    for (let n = 0; n < 200; n++) {
+      evaluateScan({ code: 'SPIKE', ip: `9.9.${n}.1`, userAgent: PHONE, now: now + n })
+    }
+    const later = evaluateScan({
+      code: 'SPIKE',
+      ip: '4.4.4.4',
+      userAgent: PHONE,
+      now: now + 61_000,
+    })
+    expect(later.count).toBe(true)
   })
 })

@@ -69,6 +69,17 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   },
 }
 
+/**
+ * Coerce whatever the database hands back into a tier.
+ *
+ * Unknown or missing values fall to `free` rather than throwing. Failing closed
+ * matters: the alternative is a listing with a corrupt tier quietly receiving
+ * everything a partner pays for.
+ */
+export function tierOf(value: unknown): ListingTier {
+  return LISTING_TIERS.includes(value as ListingTier) ? (value as ListingTier) : 'free'
+}
+
 export function can<K extends keyof TierCapabilities>(
   tier: ListingTier,
   capability: K,

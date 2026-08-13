@@ -36,6 +36,7 @@ export interface QrDoc {
   business?: Related<RelatedDoc>
   article?: Related<RelatedDoc>
   issue?: Related<RelatedDoc>
+  category?: string | null
   externalUrl?: string | null
   placement?: QrPlacement | null
   active?: boolean | null
