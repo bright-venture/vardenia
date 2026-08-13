@@ -24,7 +24,30 @@ export const Media: CollectionConfig = {
   upload: {
     // Storage adapter is swapped to S3/R2 in payload.config.ts when configured.
     staticDir: 'public/media',
-    mimeTypes: ['image/*', 'video/mp4', 'application/pdf'],
+    /**
+     * Listed explicitly rather than `image/*`.
+     *
+     * That wildcard included `image/svg+xml`, and an SVG is a document that can
+     * carry `<script>`. Any staff account - or anyone who obtains one - could
+     * upload stored XSS. The only thing preventing it from running against
+     * Vardenia was that uploads happen to be served from supabase.co rather
+     * than our own domain, which is a coincidence of the storage choice and not
+     * a control anyone decided on.
+     *
+     * These are the formats sharp actually processes into the sizes declared
+     * below, plus mp4 for video and PDF for an issue's digital edition. Note
+     * that HEIC, which is what an iPhone produces by default, is absent: it
+     * would need a sharp build with libheif. Editors shooting on a phone should
+     * export JPEG.
+     */
+    mimeTypes: [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/avif',
+      'video/mp4',
+      'application/pdf',
+    ],
     focalPoint: true,
     // `formatOptions` below converts the original only. Each size needs its own
     // copy or it keeps the source format, which quietly gave us JPEG thumbnails

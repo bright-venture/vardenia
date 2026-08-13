@@ -38,7 +38,9 @@ export default async function FrontendLayout({
       {/* The flex column keeps the footer at the bottom on short pages
           (a 404 or an empty directory) instead of floating mid-screen. */}
       <body className="bg-surface-base text-ink-900 flex min-h-screen flex-col antialiased">
-        <NextIntlClientProvider>
+        {/* Locale passed explicitly so client components rendered outside a
+            page - the error and not-found boundaries - can still read it. */}
+        <NextIntlClientProvider locale={locale}>
           <SiteHeader locale={locale as Locale} />
           <div className="flex-1">{children}</div>
           <SiteFooter locale={locale as Locale} />
