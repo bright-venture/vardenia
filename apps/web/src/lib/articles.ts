@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getPayload } from 'payload'
 import type { Locale } from '@vardenia/i18n'
 import config from '../payload.config'
@@ -14,7 +15,8 @@ export type Article = NonNullable<Awaited<ReturnType<typeof findArticleBySlug>>>
 
 const client = async () => getPayload({ config })
 
-export async function findArticleBySlug(slug: string, locale: Locale) {
+/** Deduped per request: generateMetadata and the page body both load it. */
+export const findArticleBySlug = cache(async (slug: string, locale: Locale) => {
   const payload = await client()
   const result = await payload.find({
     collection: 'articles',
@@ -27,6 +29,19 @@ export async function findArticleBySlug(slug: string, locale: Locale) {
     overrideAccess: false,
   })
   return result.docs[0] ?? null
+})
+
+/** Slugs for static generation. Published only, because that is all this returns. */
+export async function findAllArticleSlugs() {
+  const payload = await client()
+  const result = await payload.find({
+    collection: 'articles',
+    limit: 1000,
+    depth: 0,
+    pagination: false,
+    overrideAccess: false,
+  })
+  return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }
 
 export async function findArticles({

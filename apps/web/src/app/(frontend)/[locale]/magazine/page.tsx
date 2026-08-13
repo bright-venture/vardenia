@@ -16,6 +16,19 @@ import { ArticleCard } from '../../../../components/ArticleCard'
  * I read", and sends anyone who wants everything to /articles or /issues.
  */
 
+/**
+ * Revalidate every 60 seconds.
+ *
+ * Without this the page is prerendered once at build and never again: publishing
+ * an issue would leave the live site showing the old one until the next deploy.
+ * That was the actual behaviour before this line existed.
+ *
+ * 60 seconds because everything here is published editorial, not live data. A
+ * reader seeing a minute-old list costs nothing; a database round trip on every
+ * request costs 300ms and scales with traffic.
+ */
+export const revalidate = 60
+
 interface Props {
   params: Promise<{ locale: string }>
 }

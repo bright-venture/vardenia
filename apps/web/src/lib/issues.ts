@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getPayload } from 'payload'
 import type { Locale } from '@vardenia/i18n'
 import config from '../payload.config'
@@ -28,7 +29,8 @@ export async function findIssues(locale: Locale) {
   })
 }
 
-export async function findIssueBySlug(slug: string, locale: Locale) {
+/** Deduped per request: generateMetadata and the page body both load it. */
+export const findIssueBySlug = cache(async (slug: string, locale: Locale) => {
   const payload = await client()
   const result = await payload.find({
     collection: 'issues',
@@ -39,6 +41,19 @@ export async function findIssueBySlug(slug: string, locale: Locale) {
     overrideAccess: false,
   })
   return result.docs[0] ?? null
+})
+
+/** Slugs for static generation. Published only, because that is all this returns. */
+export async function findAllIssueSlugs() {
+  const payload = await client()
+  const result = await payload.find({
+    collection: 'issues',
+    limit: 500,
+    depth: 0,
+    pagination: false,
+    overrideAccess: false,
+  })
+  return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }
 
 /**

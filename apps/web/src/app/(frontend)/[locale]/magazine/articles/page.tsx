@@ -8,6 +8,9 @@ import { ArticleCard } from '../../../../../components/ArticleCard'
 
 /** Every article, newest first, regardless of which edition it ran in. */
 
+// Cached for 60s and regenerated in the background. See magazine/page.tsx.
+export const revalidate = 60
+
 interface Props {
   params: Promise<{ locale: string }>
   searchParams: Promise<{ page?: string }>

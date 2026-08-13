@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getPayload, type Where } from 'payload'
 import type { Locale } from '@vardenia/i18n'
 import config from '../payload.config'
@@ -17,7 +18,18 @@ export type Listing = NonNullable<Awaited<ReturnType<typeof findListingBySlug>>>
 
 const client = async () => getPayload({ config })
 
-export async function findListingBySlug(slug: string, locale: Locale) {
+/**
+ * Wrapped in `cache()` because every detail page loads it twice.
+ *
+ * Next calls `generateMetadata` and the page component separately, and both need
+ * the same document, so the naive version issued two identical queries to
+ * Supabase for one page view. `cache()` dedupes them within a single request:
+ * the second caller gets the first one's promise.
+ *
+ * This is per-request memoisation, not a cache with a lifetime. Nothing is held
+ * between requests, so a published edit still shows up immediately.
+ */
+export const findListingBySlug = cache(async (slug: string, locale: Locale) => {
   const payload = await client()
   const result = await payload.find({
     collection: 'businesses',
@@ -29,7 +41,7 @@ export async function findListingBySlug(slug: string, locale: Locale) {
     overrideAccess: false,
   })
   return result.docs[0] ?? null
-}
+})
 
 export interface ListingQuery {
   locale: Locale

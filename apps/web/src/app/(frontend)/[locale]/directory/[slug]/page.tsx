@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { isLocale, type Locale } from '@vardenia/i18n'
-import { findListingBySlug } from '../../../../../lib/listings'
+import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
+import { findListingBySlug, findAllListingSlugs } from '../../../../../lib/listings'
 import { resolveGallery, resolveImage } from '../../../../../lib/media'
 import {
   amenityLabel,
@@ -24,8 +24,28 @@ import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
  * advertiser who paid for the placement.
  */
 
+// Cached for 60s and regenerated in the background. See magazine/page.tsx.
+export const revalidate = 60
+
 interface Params {
   params: Promise<{ locale: string; slug: string }>
+}
+
+/**
+ * Prerender every known slug, at both locales.
+ *
+ * Without this the route has no static params, so Next serves it fully dynamic:
+ * the response carried "Cache-Control: no-store" and every single request paid
+ * for the database round trips. With it, pages are built once and then served
+ * from cache, refreshed by the revalidate window above.
+ *
+ * `dynamicParams` stays at its default of true, so a slug created after the
+ * build still renders on demand rather than 404ing - it just misses the cache
+ * the first time.
+ */
+export async function generateStaticParams() {
+  const slugs = await findAllListingSlugs()
+  return LOCALES.flatMap((locale) => slugs.map((slug) => ({ locale, slug })))
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
