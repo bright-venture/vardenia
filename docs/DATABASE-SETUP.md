@@ -136,6 +136,64 @@ real one.
 
 ---
 
+## Schema changes
+
+Two different mechanisms, on purpose.
+
+**In development, Payload pushes.** `push` is on whenever `NODE_ENV` is not `production`, so
+adding a field to a collection and restarting is enough - Payload compares the collections to
+the database and alters it to match. Fast, and fine to lose.
+
+**In production, migrations run.** `push` is off there, because letting a process silently
+alter a live database is how a column disappears at 2am. Production applies ordered migration
+files instead, each recorded in `payload_migrations` so it runs exactly once.
+
+### Adding a migration
+
+```bash
+pnpm --filter @vardenia/web migrate:create <name>   # writes a .ts and a .json snapshot
+pnpm --filter @vardenia/web migrate:status          # what has run
+pnpm --filter @vardenia/web migrate                 # apply pending ones
+```
+
+`migrate:create` diffs your collections against the previous snapshot in
+`apps/web/src/migrations`. It never reads the live database, so generating one is safe.
+
+Use the **session pooler** connection string when running `migrate` (see above).
+
+### The baseline
+
+`20260813_123246_baseline.ts` is the whole schema as it stood when migrations were adopted:
+41 tables, 40 enum types, 71 foreign keys. Everything before it was built by dev `push` and
+exists in no migration file, which is why the baseline had to be captured by hand.
+
+It is already recorded as applied against the Supabase database, so `migrate` skips it there.
+A brand new database runs it and gets a complete schema.
+
+Two things about it are worth knowing:
+
+- **It starts with `CREATE SCHEMA IF NOT EXISTS "payload"`, added manually.** Payload only
+  issues that statement when it creates an entire database, which it cannot do on Supabase.
+  Without the line, the first `CREATE TABLE` on a fresh database fails with "schema payload
+  does not exist". **If this file is ever regenerated, put the line back.**
+- **Regenerating it is almost never right.** It describes a point in history. New changes go
+  in new migrations.
+
+### The `dev` row
+
+`payload_migrations` contains a row named `dev` with `batch = -1`. Payload writes it whenever
+push alters the database, to record that this database was built by pushing rather than by
+migrating.
+
+Its effect: `payload migrate` on this database first asks "you've run in dev mode, data loss
+may occur, proceed?". In a non-interactive shell that prompt cannot be answered, so the
+command **exits successfully having done nothing**. Worth knowing before wiring `migrate`
+into any script that points at a development database.
+
+Production never has this row, so it never prompts.
+
+---
+
 ## What we deliberately don't use
 
 Supabase bundles authentication, realtime updates and edge functions. Vardenia uses none of

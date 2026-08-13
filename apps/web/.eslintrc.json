@@ -1,4 +1,9 @@
 {
   "extends": ["next/core-web-vitals", "next/typescript"],
-  "ignorePatterns": ["src/app/(payload)/admin/importMap.js", "src/payload-types.ts", ".next"]
+  "ignorePatterns": [
+    "src/app/(payload)/admin/importMap.js",
+    "src/payload-types.ts",
+    "src/migrations",
+    ".next"
+  ]
 }

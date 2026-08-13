@@ -14,6 +14,7 @@
     "generate:importmap": "payload generate:importmap",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
     "seed": "tsx src/seed/index.ts",
     "clean": "rimraf .next .turbo",
     "test": "vitest run",
