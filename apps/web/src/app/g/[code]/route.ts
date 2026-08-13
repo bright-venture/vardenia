@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import { normalizeCode } from '@vardenia/core'
 import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
+import { populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
 
 /**
  * The QR redirect. `https://vrd.lb/g/K3M9QP2` -> the right page, plus one row in
@@ -75,18 +76,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return Response.redirect(destination, 302)
 }
 
-function resolveDestination(qr: Record<string, any>, siteUrl: string): string {
+function resolveDestination(qr: QrDoc, siteUrl: string): string {
   switch (qr.targetType) {
     case 'business': {
-      const slug = typeof qr.business === 'object' ? qr.business?.slug : null
+      const slug = populated(qr.business)?.slug
       return slug ? `${siteUrl}/directory/${slug}` : `${siteUrl}/scan/not-found`
     }
     case 'article': {
-      const slug = typeof qr.article === 'object' ? qr.article?.slug : null
+      const slug = populated(qr.article)?.slug
       return slug ? `${siteUrl}/magazine/articles/${slug}` : `${siteUrl}/scan/not-found`
     }
     case 'issue': {
-      const slug = typeof qr.issue === 'object' ? qr.issue?.slug : null
+      const slug = populated(qr.issue)?.slug
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
     }
     case 'external':
@@ -98,11 +99,11 @@ function resolveDestination(qr: Record<string, any>, siteUrl: string): string {
 
 async function recordScan(
   payload: Awaited<ReturnType<typeof getPayload>>,
-  qr: Record<string, any>,
+  qr: QrDoc,
   request: NextRequest,
 ) {
   const userAgent = request.headers.get('user-agent') ?? ''
-  const businessId = typeof qr.business === 'object' ? qr.business?.id : qr.business
+  const businessId = relatedId(qr.business)
 
   await payload.create({
     collection: 'scan-events',

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import { DEFAULT_PRINT_MM, isPrintSafeBaseUrl, qrSvg, scanUrl } from '../../../lib/qr-image'
+import { populated, type QrDoc } from '../../../lib/qr-doc'
 
 /**
  * A contact sheet of every code, ready to print or hand to the layout team.
@@ -63,11 +64,11 @@ export async function GET(request: NextRequest) {
 
   const cards = await Promise.all(
     result.docs.map(async (doc) => {
-      const qr = doc as Record<string, any>
+      const qr = doc as unknown as QrDoc
       return renderCard({
         code: qr.code,
         label: labelFor(qr),
-        placement: qr.placement,
+        placement: qr.placement ?? '',
         svg: await qrSvg(qr.code, { sizeMm }),
       })
     }),
@@ -83,10 +84,10 @@ export async function GET(request: NextRequest) {
 }
 
 /** Whatever a person would recognise. Falls back to the code so a card is never blank. */
-function labelFor(qr: Record<string, any>): string {
-  const named = qr.business ?? qr.article ?? qr.issue
-  if (named && typeof named === 'object' && typeof named.title === 'string') return named.title
-  if (named && typeof named === 'object' && typeof named.name === 'string') return named.name
+function labelFor(qr: QrDoc): string {
+  const named = populated(qr.business) ?? populated(qr.article) ?? populated(qr.issue)
+  if (typeof named?.title === 'string') return named.title
+  if (typeof named?.name === 'string') return named.name
   if (qr.targetType === 'external' && typeof qr.externalUrl === 'string') return qr.externalUrl
   return qr.code
 }

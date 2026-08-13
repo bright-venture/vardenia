@@ -1,5 +1,6 @@
 import type { CollectionBeforeDeleteHook } from 'payload'
 import { APIError } from 'payload'
+import type { QrDoc } from '../lib/qr-doc'
 
 /**
  * Stops a code that exists in the physical world from being deleted.
@@ -35,7 +36,7 @@ import { APIError } from 'payload'
  * through leaves a dead code in a layout that nobody notices until the proofs
  * come back.
  */
-function committedReason(qr: Record<string, any>): string | null {
+function committedReason(qr: QrDoc): string | null {
   if (typeof qr.scanCount === 'number' && qr.scanCount > 0) {
     return `it has been scanned ${qr.scanCount} time${qr.scanCount === 1 ? '' : 's'}`
   }
@@ -56,13 +57,11 @@ export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req 
     overrideAccess: true,
   })
 
-  const reason = committedReason(qr as Record<string, any>)
+  const doc = qr as unknown as QrDoc
+  const reason = committedReason(doc)
   if (!reason) return
 
-  throw new APIError(
-    `Code ${(qr as { code?: string }).code} cannot be deleted because ${reason}. ${RETIRE_INSTEAD}`,
-    400,
-  )
+  throw new APIError(`Code ${doc.code} cannot be deleted because ${reason}. ${RETIRE_INSTEAD}`, 400)
 }
 
 /**
@@ -82,7 +81,8 @@ export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async 
   })
 
   const blocked = codes.docs
-    .map((doc) => ({ doc: doc as Record<string, any>, reason: committedReason(doc as never) }))
+    .map((doc) => doc as unknown as QrDoc)
+    .map((doc) => ({ doc, reason: committedReason(doc) }))
     .filter((entry) => entry.reason !== null)
 
   if (blocked.length === 0) return
