@@ -86,7 +86,6 @@ export const businessQuerySchema = z.object({
   radiusKm: z.number().positive().max(100).default(25),
   tier: z.enum(LISTING_TIERS).optional(),
   openNow: z.boolean().optional(),
-  hasOffers: z.boolean().optional(),
   locale: localeSchema.default('en'),
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(50).default(20),

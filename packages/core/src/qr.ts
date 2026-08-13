@@ -39,15 +39,21 @@ export function normalizeCode(input: string): string | null {
   return cleaned
 }
 
-/** What a scan resolves to. Extend as new surfaces ship. */
-export const QR_TARGET_TYPES = [
-  'business',
-  'article',
-  'offer',
-  'issue',
-  'category',
-  'external',
-] as const
+/**
+ * What a scan resolves to.
+ *
+ * Every value here needs a matching case in the redirect resolver and a route
+ * that actually exists. `offer` was in this list with neither: offer codes
+ * redirected to /offers/:slug, which was never built, so a scan landed on a 404
+ * - the one outcome a printed code must never produce.
+ *
+ * Add a value only alongside the page it resolves to.
+ *
+ * `category` is still in this list with the same defect: no case in the resolver,
+ * so it falls through to the homepage. Left alone for now because nothing uses
+ * it, but it needs either a route or removing before any code is printed.
+ */
+export const QR_TARGET_TYPES = ['business', 'article', 'issue', 'category', 'external'] as const
 export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
 
 /**

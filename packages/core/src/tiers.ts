@@ -15,8 +15,6 @@ export interface TierCapabilities {
   rank: number
   /** Max images in the public gallery. */
   galleryLimit: number
-  /** May publish time-limited offers / digital coupons. */
-  offers: boolean
   /** Gets a long-form editorial feature written by the Vardenia team. */
   editorialFeature: boolean
   /** Scan performance is included in the report the team sends at renewal. */
@@ -35,7 +33,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   free: {
     rank: 0,
     galleryLimit: 1,
-    offers: false,
     editorialFeature: false,
     analyticsAccess: false,
     heroPlacement: false,
@@ -45,7 +42,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   listed: {
     rank: 10,
     galleryLimit: 6,
-    offers: true,
     editorialFeature: false,
     analyticsAccess: true,
     heroPlacement: false,
@@ -55,7 +51,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   featured: {
     rank: 20,
     galleryLimit: 15,
-    offers: true,
     editorialFeature: true,
     analyticsAccess: true,
     heroPlacement: true,
@@ -66,7 +61,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   partner: {
     rank: 30,
     galleryLimit: 40,
-    offers: true,
     editorialFeature: true,
     analyticsAccess: true,
     heroPlacement: true,

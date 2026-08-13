@@ -30,7 +30,6 @@ What turns the directory into revenue.
 - [ ] Staff scan report view: per listing, by placement, over time, by city
 - [ ] Exportable renewal report (PDF) the team sends to each advertiser
 - [ ] QR code generator: printable SVG/PDF sheets per issue, per placement
-- [ ] Offers / digital coupons rendering + expiry
 - [ ] Tier-gated rendering driven by `TIER_CAPABILITIES`
 - [ ] Media kit page with live directory stats
 

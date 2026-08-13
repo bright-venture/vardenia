@@ -15,7 +15,7 @@
  * through the team, so the only line this file draws is staff versus public.
  *
  * The division of labour:
- *  - staff own content: listings, offers, articles, issues, pages, media.
+ *  - staff own content: listings, articles, issues, pages, media.
  *  - admin owns identity (users) and the permanence layer (QR codes, scan
  *    events), plus commercial flags like tier and verification.
  */

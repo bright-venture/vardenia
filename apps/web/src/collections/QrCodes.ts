@@ -72,12 +72,6 @@ export const QrCodes: CollectionConfig = {
       admin: { condition: (data) => data?.targetType === 'article' },
     },
     {
-      name: 'offer',
-      type: 'relationship',
-      relationTo: 'offers',
-      admin: { condition: (data) => data?.targetType === 'offer' },
-    },
-    {
       name: 'externalUrl',
       type: 'text',
       admin: { condition: (data) => data?.targetType === 'external' },

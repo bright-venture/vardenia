@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { config as loadEnv } from 'dotenv'
 import { buildConfig, type Config } from 'payload'
 import sharp from 'sharp'
 import { postgresAdapter } from '@payloadcms/db-postgres'
@@ -12,12 +13,26 @@ import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
-import { Offers } from './collections/Offers'
 import { Pages } from './collections/Pages'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
+
+/**
+ * Load the root .env here, not only in next.config.mjs.
+ *
+ * The `payload` CLI (generate:types, generate:importmap, migrate) imports this
+ * file directly and never touches Next's config, so without this it sees an
+ * empty environment. That is not harmless: `useS3` below would read as false,
+ * the storage plugin would not register, and `generate:importmap` would write an
+ * import map with the S3 upload handler missing - silently breaking admin
+ * uploads the next time someone deployed. It happened once already.
+ *
+ * dotenv never overwrites a variable that is already set, so a real environment
+ * (CI, production) still wins.
+ */
+loadEnv({ path: path.resolve(dirname, '../../../.env') })
 
 const useS3 = process.env.MEDIA_STORAGE_ADAPTER === 's3'
 
@@ -61,7 +76,7 @@ export default buildConfig({
     importMap: { baseDir: dirname },
   },
 
-  collections: [Businesses, QrCodes, Offers, Articles, Issues, Pages, Media, Users, ScanEvents],
+  collections: [Businesses, QrCodes, Articles, Issues, Pages, Media, Users, ScanEvents],
 
   /**
    * Content localization. Arabic falls back to English so a half-translated

@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
 /** Whatever a person would recognise. Falls back to the code so a card is never blank. */
 function labelFor(qr: Record<string, any>): string {
-  const named = qr.business ?? qr.article ?? qr.offer ?? qr.issue
+  const named = qr.business ?? qr.article ?? qr.issue
   if (named && typeof named === 'object' && typeof named.title === 'string') return named.title
   if (named && typeof named === 'object' && typeof named.name === 'string') return named.name
   if (qr.targetType === 'external' && typeof qr.externalUrl === 'string') return qr.externalUrl

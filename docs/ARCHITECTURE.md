@@ -55,7 +55,6 @@ Payload CMS owns all content, in Postgres. Collections:
 | `businesses`  | The directory listing. The central document.         |
 | `qr-codes`    | Permanent short codes with editable destinations.    |
 | `scan-events` | Append-only scan log - the evidence behind renewals. |
-| `offers`      | Time-limited promotions, gated on listing tier.      |
 | `articles`    | Editorial, shared between web and print.             |
 | `issues`      | Print editions, with print run and page ranges.      |
 | `pages`       | Static marketing pages.                              |
@@ -112,7 +111,7 @@ history.
 
 Two roles, both Vardenia staff, in `apps/web/src/access/`:
 
-- **staff** - creates and edits all content: listings, offers, articles, issues, pages, media.
+- **staff** - creates and edits all content: listings, articles, issues, pages, media.
 - **admin** - all of that, plus identity (accounts), the permanence layer (QR codes, scan
   events) and commercial flags (`tier`, `verified`).
 

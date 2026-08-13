@@ -85,10 +85,6 @@ function resolveDestination(qr: Record<string, any>, siteUrl: string): string {
       const slug = typeof qr.article === 'object' ? qr.article?.slug : null
       return slug ? `${siteUrl}/magazine/articles/${slug}` : `${siteUrl}/scan/not-found`
     }
-    case 'offer': {
-      const slug = typeof qr.offer === 'object' ? qr.offer?.slug : null
-      return slug ? `${siteUrl}/offers/${slug}` : `${siteUrl}/scan/not-found`
-    }
     case 'issue': {
       const slug = typeof qr.issue === 'object' ? qr.issue?.slug : null
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
