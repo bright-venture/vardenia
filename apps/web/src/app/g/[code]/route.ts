@@ -5,6 +5,7 @@ import { normalizeCode } from '@vardenia/core'
 import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
+import { normalizeExternalUrl } from '../../../lib/external-url'
 
 /**
  * The QR redirect. `https://vrd.lb/g/K3M9QP2` -> the right page, plus one row in
@@ -73,7 +74,16 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   // 302, not 301: browsers cache 301s forever, and we would stop seeing scans
   // from repeat visitors - which is exactly the number advertisers pay for.
-  return Response.redirect(destination, 302)
+  //
+  // Wrapped because `Response.redirect` throws on a malformed URL, and an
+  // uncaught throw here is a 500 on a code that is already printed. Whatever is
+  // wrong with the data, the reader gets a page that explains itself.
+  try {
+    return Response.redirect(destination, 302)
+  } catch {
+    payload.logger.error({ code, destination }, 'Unusable redirect destination for printed code')
+    return Response.redirect(`${siteUrl}/scan/not-found?code=${code}`, 302)
+  }
 }
 
 function resolveDestination(qr: QrDoc, siteUrl: string): string {
@@ -90,8 +100,13 @@ function resolveDestination(qr: QrDoc, siteUrl: string): string {
       const slug = populated(qr.issue)?.slug
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
     }
-    case 'external':
-      return typeof qr.externalUrl === 'string' ? qr.externalUrl : `${siteUrl}/scan/not-found`
+    case 'external': {
+      // Normalised again rather than trusted: validation covers everything saved
+      // from now on, but codes created before it existed, or written through the
+      // API, can still hold a bare domain that would throw below.
+      const external = normalizeExternalUrl(qr.externalUrl)
+      return external ?? `${siteUrl}/scan/not-found`
+    }
     default:
       return siteUrl
   }

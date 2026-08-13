@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
+import { isUsableExternalUrl, normalizeExternalUrl } from '../lib/external-url'
 
 /**
  * A printed code is permanent; its destination is not.
@@ -74,7 +75,34 @@ export const QrCodes: CollectionConfig = {
     {
       name: 'externalUrl',
       type: 'text',
-      admin: { condition: (data) => data?.targetType === 'external' },
+      admin: {
+        condition: (data) => data?.targetType === 'external',
+        description: 'Full web address. A bare domain like leroyal.com.lb is fine.',
+      },
+      /**
+       * Validated because an unusable value here is unrecoverable once printed.
+       * `Response.redirect` throws on anything that is not an absolute URL, and
+       * a throw in the scan route is a 500 - so a domain typed without https://
+       * used to turn a printed code into a hard error for every reader.
+       */
+      validate: (value: unknown, { siblingData }: { siblingData?: { targetType?: string } }) => {
+        if (siblingData?.targetType !== 'external') return true
+        if (!value) return 'Required when the target type is external.'
+        return (
+          isUsableExternalUrl(value) ||
+          'Must be a reachable http(s) address, for example https://leroyal.com.lb/spa'
+        )
+      },
+      hooks: {
+        // Store the normalised form, so what resolves at scan time is exactly
+        // what was checked at save time.
+        beforeChange: [
+          ({ value, siblingData }) =>
+            (siblingData as { targetType?: string })?.targetType === 'external'
+              ? (normalizeExternalUrl(value) ?? value)
+              : value,
+        ],
+      },
     },
     {
       name: 'placement',
