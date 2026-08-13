@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import type { Locale } from '@vardenia/i18n'
 import config from '../payload.config'
@@ -48,16 +49,33 @@ export async function findAllPageSlugs() {
  * Sorted by title rather than by creation date: the footer is a reference list,
  * and a stable alphabetical order beats one that reshuffles whenever somebody
  * adds a page.
+ *
+ * Cached across requests, not just within one. The footer renders on every page
+ * of the site, so this was a database round trip on every single render - about
+ * a fifth of the queries behind a magazine page, to fetch four links that change
+ * a few times a year.
+ *
+ * Fifteen minutes, deliberately longer than the 60s on the pages themselves.
+ * Adding a site page is rare and never urgent; the content of one can be urgent,
+ * which is why the page itself stays on the short window.
  */
-export async function findPages(locale: Locale) {
-  const payload = await client()
-  const result = await payload.find({
-    collection: 'pages',
-    locale,
-    depth: 0,
-    limit: 50,
-    sort: ['title'],
-    overrideAccess: false,
-  })
-  return result.docs
-}
+const FOOTER_PAGES_TTL = 900
+
+export const findPages = (locale: Locale) =>
+  unstable_cache(
+    async () => {
+      const payload = await client()
+      const result = await payload.find({
+        collection: 'pages',
+        locale,
+        depth: 0,
+        limit: 50,
+        sort: ['title'],
+        overrideAccess: false,
+      })
+      return result.docs
+    },
+    // Locale is in the key: the two footers hold different titles.
+    ['footer-pages', locale],
+    { revalidate: FOOTER_PAGES_TTL, tags: ['pages'] },
+  )()
