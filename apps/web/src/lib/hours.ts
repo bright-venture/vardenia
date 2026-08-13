@@ -40,8 +40,21 @@ function toMinutes(value: string | null | undefined): number | null {
   return hours * 60 + minutes
 }
 
-/** Current weekday and minutes-since-midnight in Beirut. */
-function beirutNow(now = new Date()): { day: DayKey; minutes: number } {
+/**
+ * Current weekday and minutes-since-midnight in Beirut, or null if we cannot
+ * establish them.
+ *
+ * Null rather than a default. This used to fall back to Monday when the weekday
+ * did not parse, which is the one place in this module that guessed - and the
+ * failure it guesses through is not hypothetical: a Node built with `small-icu`,
+ * which is what several slim and Alpine Docker images ship, does not carry the
+ * Asia/Beirut rules. `Asia/Beirut` then silently degrades to UTC and the short
+ * weekday may not match either. Every listing in the country would be judged
+ * against Monday's hours in the wrong timezone, confidently, with nothing in the
+ * logs. The docstring at the top of this file says guessing is worse than
+ * silence; this is where it was guessing.
+ */
+function beirutNow(now = new Date()): { day: DayKey; minutes: number } | null {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: BEIRUT,
     weekday: 'short',
@@ -55,7 +68,11 @@ function beirutNow(now = new Date()): { day: DayKey; minutes: number } {
   const hour = Number(get('hour'))
   const minute = Number(get('minute'))
 
-  return { day: DAY_ORDER.includes(weekday) ? weekday : 'mon', minutes: hour * 60 + minute }
+  if (!DAY_ORDER.includes(weekday)) return null
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null
+  if (hour > 23 || minute > 59) return null
+
+  return { day: weekday, minutes: hour * 60 + minute }
 }
 
 /**
@@ -68,7 +85,12 @@ export function isOpenNow(
 ): boolean | null {
   if (!Array.isArray(hours) || hours.length === 0) return null
 
-  const { day, minutes } = beirutNow(now)
+  const current = beirutNow(now)
+  // Cannot establish the time in Beirut, so we do not know. Saying "Closed"
+  // here would send a reader away from a place that is open.
+  if (!current) return null
+
+  const { day, minutes } = current
   const yesterday = DAY_ORDER[(DAY_ORDER.indexOf(day) + 6) % 7]
 
   const entryFor = (key: DayKey) => hours.find((h) => h.day === key)
