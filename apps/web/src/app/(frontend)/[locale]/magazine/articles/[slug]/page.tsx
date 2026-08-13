@@ -7,6 +7,8 @@ import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { findArticleBySlug, findAllArticleSlugs } from '../../../../../../lib/articles'
 import { resolveImage } from '../../../../../../lib/media'
 import { buildMetadata } from '../../../../../../lib/seo'
+import { articleSchema } from '../../../../../../lib/structured-data'
+import { JsonLd } from '../../../../../../components/JsonLd'
 import { kindLabel, printCredit } from '../../../../../../lib/editorial'
 import { ListingCard } from '../../../../../../components/ListingCard'
 
@@ -83,6 +85,8 @@ export default async function ArticlePage({ params }: Params) {
 
   return (
     <article className="pb-24">
+      <JsonLd data={articleSchema(article as never, locale as Locale)} />
+
       {hero ? (
         <div className="bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
           <Image

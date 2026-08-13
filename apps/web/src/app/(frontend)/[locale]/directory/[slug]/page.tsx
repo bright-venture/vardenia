@@ -8,6 +8,8 @@ import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { findListingBySlug, findAllListingSlugs } from '../../../../../lib/listings'
 import { resolveGallery, resolveImage } from '../../../../../lib/media'
 import { buildMetadata } from '../../../../../lib/seo'
+import { listingSchema } from '../../../../../lib/structured-data'
+import { JsonLd } from '../../../../../components/JsonLd'
 import {
   amenityLabel,
   categoryLabel,
@@ -98,6 +100,9 @@ export default async function ListingPage({ params }: Params) {
 
   return (
     <article className="pb-24">
+      {/* Invisible to readers, read by search engines. See lib/structured-data. */}
+      <JsonLd data={listingSchema(listing as never, locale as Locale)} />
+
       {hero ? (
         <div className="bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
           <Image

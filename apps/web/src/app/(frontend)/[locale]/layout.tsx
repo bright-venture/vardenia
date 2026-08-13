@@ -5,6 +5,8 @@ import { setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
+import { JsonLd } from '../../../components/JsonLd'
+import { organizationSchema } from '../../../lib/structured-data'
 import '../../globals.css'
 
 export const metadata: Metadata = {
@@ -53,6 +55,10 @@ export default async function FrontendLayout({
       <body className="bg-surface-base text-ink-900 flex min-h-screen flex-col antialiased">
         {/* Locale passed explicitly so client components rendered outside a
             page - the error and not-found boundaries - can still read it. */}
+        {/* Identifies the publisher once, on every page, so search engines tie
+            the site to one entity rather than to unattributed pages. */}
+        <JsonLd data={organizationSchema()} />
+
         <NextIntlClientProvider locale={locale}>
           <SiteHeader locale={locale as Locale} />
           <div className="flex-1">{children}</div>
