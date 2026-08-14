@@ -95,7 +95,49 @@ export default buildConfig({
   editor: lexicalEditor(),
 
   db: postgresAdapter({
-    pool: { connectionString: process.env.DATABASE_URL },
+    /**
+     * Connection pool, tuned for a pooled Supabase database on the far end of an
+     * international link.
+     *
+     * The defaults left us maximally exposed to two things, and both showed up
+     * as the same symptom: an occasional "Failed query" on an ordinary page
+     * navigation, with nothing wrong in the page itself.
+     *
+     * The observed failure, once the wrapper around it was unpicked, was
+     * `timeout exceeded when trying to connect` - a query waiting for a pool
+     * slot and not getting one. Not a broken network: contention, amplified by
+     * the round trip to Frankfurt. Establishing a connection costs a few hundred
+     * milliseconds from here, so anything that throws warm connections away makes
+     * the next burst worse.
+     *
+     * Hence the settings:
+     *
+     *  - `idleTimeoutMillis` is deliberately long. A first attempt used 30s, on
+     *    the theory that expiring our connections before the pooler expires its
+     *    own avoids handing out a dead socket. That was the wrong trade here: it
+     *    recycled connections mid-browsing-session and every rebuild cost another
+     *    half second. Two minutes keeps a session warm while still recycling well
+     *    inside pgbouncer's ten-minute idle default.
+     *  - `keepAlive` holds the TCP connection open, so a burst of navigation
+     *    reuses one socket instead of repeatedly re-establishing - and
+     *    re-resolving DNS, which is where an intermittent lookup failure gets in.
+     *  - `max` stays at 10. Raising it invites the pooler's own per-project
+     *    ceiling, which fails less legibly than waiting does.
+     *  - `connectionTimeoutMillis` is the difference between a page that fails
+     *    quickly and one that hangs until the reader leaves.
+     *
+     * None of this makes a genuinely broken link work, and a build rendering
+     * every page at once will still contend. It removes the failures that were
+     * ours rather than the network's.
+     */
+    pool: {
+      connectionString: process.env.DATABASE_URL,
+      max: 10,
+      idleTimeoutMillis: 120_000,
+      connectionTimeoutMillis: 15_000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10_000,
+    },
     // Migrations are explicit in production. Auto-push everywhere else - note
     // this is `!== 'production'`, not `=== 'development'`: scripts run through
     // tsx (seeds, one-off tasks) leave NODE_ENV unset and still need a schema.
