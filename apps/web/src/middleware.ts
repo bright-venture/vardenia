@@ -15,6 +15,10 @@ export const config = {
    * HTML 404 in place of an SVG, which is silent unless you check the content
    * type: the download still saves, and the broken file only turns up in a
    * layout tool.
+   *
+   * `/reports` serves CSV downloads and has the same failure mode: a rewritten
+   * request returns an HTML error page with a .csv filename attached, which
+   * opens in Excel as a single column of markup.
    */
-  matcher: ['/((?!api|admin|g|qr|_next|_vercel|media|.*\\..*).*)'],
+  matcher: ['/((?!api|admin|g|qr|reports|_next|_vercel|media|.*\\..*).*)'],
 }

@@ -74,6 +74,13 @@ export default buildConfig({
     // Custom admin components are referenced by path, resolved from here. Pinned
     // to src so those paths read as '/components/...' rather than '/src/...'.
     importMap: { baseDir: dirname },
+
+    // The scan report and the QR print sheet are file downloads served by
+    // routes, not collections, so Payload has no nav entry to generate for
+    // them. Without this they sit at URLs nobody would guess.
+    components: {
+      afterNavLinks: ['/components/admin/ReportsNavLink#ReportsNavLink'],
+    },
   },
 
   collections: [Businesses, QrCodes, Articles, Issues, Pages, Media, Users, ScanEvents],
