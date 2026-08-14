@@ -88,11 +88,25 @@ export function can<K extends keyof TierCapabilities>(
 }
 
 /**
- * A listing's tier is only meaningful while its contract is live. Expired
- * contracts silently fall back to `free` rather than disappearing, so a lapsed
- * advertiser keeps a basic presence (and a reason to renew).
+ * Expiry is handled by a person, not by this file.
+ *
+ * There was an `effectiveTier()` here that dropped a listing to `free` the
+ * moment its contract end date passed. Nothing ever called it, and the team has
+ * since decided the opposite: a lapsed listing keeps its tier until someone
+ * changes it deliberately.
+ *
+ * That is a reasonable call. An automatic downgrade fires at midnight on a
+ * renewal still being negotiated, quietly strips an advertiser's gallery back to
+ * one photo, and the first anyone hears of it is the advertiser. A person
+ * deciding is slower and never surprises a customer mid-conversation.
+ *
+ * The cost is that a lapsed listing keeps everything until noticed, so the
+ * safeguard is visibility rather than automation: `contractEndsAt` is a sortable
+ * column on the Businesses list, so sorting by it puts the expired accounts at
+ * the top. If that stops being enough - if listings sit lapsed for months - the
+ * answer is a report or a reminder, not a rule that acts behind the team's back.
+ *
+ * The function was deleted rather than left unused. A helper whose documentation
+ * states a policy the team has rejected is worse than no helper: the next person
+ * reads it as how the system behaves.
  */
-export function effectiveTier(tier: ListingTier, contractEndsAt: Date | null, now = new Date()) {
-  if (contractEndsAt === null) return tier === 'free' ? 'free' : tier
-  return contractEndsAt.getTime() >= now.getTime() ? tier : 'free'
-}

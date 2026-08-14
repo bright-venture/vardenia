@@ -19,7 +19,11 @@ export const Businesses: CollectionConfig = {
   slug: 'businesses',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'category', 'governorate', 'tier', '_status'],
+    // `contractEndsAt` is here because expiry is handled by a person, not by
+    // code (see packages/core/src/tiers.ts). A lapsed listing keeps everything
+    // it was paying for until someone notices, so the list has to make noticing
+    // easy: sort by this column and the expired accounts come to the top.
+    defaultColumns: ['name', 'category', 'governorate', 'tier', 'contractEndsAt', '_status'],
     group: 'Directory',
     listSearchableFields: ['name', 'slug', 'address'],
   },
@@ -258,7 +262,8 @@ export const Businesses: CollectionConfig = {
               index: true,
               access: { read: isStaffFieldLevel },
               admin: {
-                description: 'On expiry the listing silently drops to the free tier.',
+                description:
+                  'Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Businesses list by this column to find lapsed accounts.',
               },
             },
             {
