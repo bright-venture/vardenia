@@ -29,7 +29,18 @@ interface UserWithRoles {
   roles?: Role[]
 }
 
-const rolesOf = (user: unknown): Role[] => (user as UserWithRoles | null)?.roles ?? []
+/**
+ * `Array.isArray` rather than `?? []` alone.
+ *
+ * Every check below calls `.some()` on the result. If `roles` were ever a bare
+ * string or a number - a hand-edited row, a bad import, a future schema change -
+ * that throws a TypeError instead of denying, which turns a permission question
+ * into a 500. Denying is the answer we want for input we cannot read.
+ */
+const rolesOf = (user: unknown): Role[] => {
+  const roles = (user as UserWithRoles | null)?.roles
+  return Array.isArray(roles) ? roles : []
+}
 
 /** Admin counts as staff. Every check below reads through this. */
 const isStaffUser = (user: unknown): boolean =>
