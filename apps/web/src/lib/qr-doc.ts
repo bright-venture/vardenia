@@ -27,6 +27,12 @@ export interface RelatedDoc {
   slug?: string | null
   title?: string | null
   name?: string | null
+  /**
+   * Draft or published, on the collections that have drafts turned on
+   * (businesses, articles). Absent on issues, which have no draft state and are
+   * therefore always public.
+   */
+  _status?: 'draft' | 'published' | null
 }
 
 export interface QrDoc {
@@ -46,6 +52,22 @@ export interface QrDoc {
 /** Narrows a relationship to the populated document, or null when it is just an id. */
 export function populated(value: Related<RelatedDoc>): RelatedDoc | null {
   return typeof value === 'object' && value !== null ? value : null
+}
+
+/**
+ * Whether a related document is visible to the public.
+ *
+ * Only meaningful for collections with drafts. `_status` is absent on issues,
+ * and absent on anything fetched at depth 0, so the default is "yes" - the
+ * caller is expected to have populated the document before asking.
+ *
+ * This exists because the QR redirect reads documents with access control
+ * bypassed (it must: qr-codes is staff-only, and the reader is anonymous),
+ * which means it sees drafts that the destination page will refuse to render.
+ */
+export function isPubliclyVisible(doc: RelatedDoc | null): boolean {
+  if (!doc) return false
+  return doc._status !== 'draft'
 }
 
 /**

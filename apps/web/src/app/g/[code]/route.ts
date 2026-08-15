@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import { normalizeCode } from '@vardenia/core'
 import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
-import { populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
+import { isPubliclyVisible, populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
 import { normalizeExternalUrl } from '../../../lib/external-url'
 import { rawDb } from '../../../lib/db'
 
@@ -87,17 +87,46 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
+/**
+ * Where an unpublished target sends the reader.
+ *
+ * "Moved" rather than "not found", because that is what happened: the listing
+ * existed when the magazine went to print and does not now. The page offers a
+ * way onward instead of a dead end.
+ */
+const movedTo = (siteUrl: string, qr: QrDoc) =>
+  `${siteUrl}/scan/moved?code=${encodeURIComponent(qr.code ?? '')}`
+
 function resolveDestination(qr: QrDoc, siteUrl: string): string {
   switch (qr.targetType) {
+    /**
+     * Published targets only.
+     *
+     * This lookup runs with access control bypassed - it has to, because
+     * qr-codes is staff-only and the reader is anonymous - so it sees drafts
+     * that the destination page will refuse to render. Without the check, a
+     * listing unpublished after the magazine shipped sent every scan of a
+     * printed code to a 404.
+     *
+     * That was not hypothetical: the `active` checkbox on a code exists to send
+     * retired codes to /scan/moved, but unpublishing the *listing* is a
+     * different screen and skipped the safety net entirely. Unpublishing is the
+     * common action; remembering to also retire the code is not.
+     */
     case 'business': {
-      const slug = populated(qr.business)?.slug
-      return slug ? `${siteUrl}/directory/${slug}` : `${siteUrl}/scan/not-found`
+      const doc = populated(qr.business)
+      if (!doc?.slug) return `${siteUrl}/scan/not-found`
+      if (!isPubliclyVisible(doc)) return movedTo(siteUrl, qr)
+      return `${siteUrl}/directory/${doc.slug}`
     }
     case 'article': {
-      const slug = populated(qr.article)?.slug
-      return slug ? `${siteUrl}/magazine/articles/${slug}` : `${siteUrl}/scan/not-found`
+      const doc = populated(qr.article)
+      if (!doc?.slug) return `${siteUrl}/scan/not-found`
+      if (!isPubliclyVisible(doc)) return movedTo(siteUrl, qr)
+      return `${siteUrl}/magazine/articles/${doc.slug}`
     }
     case 'issue': {
+      // Issues have no draft state, so there is nothing to check here.
       const slug = populated(qr.issue)?.slug
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
     }
