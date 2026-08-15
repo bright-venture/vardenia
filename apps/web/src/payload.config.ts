@@ -81,6 +81,11 @@ export default buildConfig({
     // them. Without this they sit at URLs nobody would guess.
     components: {
       afterNavLinks: ['/components/admin/ReportsNavLink#ReportsNavLink'],
+
+      // Payload's own dashboard lists the collections and nothing else. This
+      // sits above it with the numbers and the work queue - see the component
+      // for what earns a place there.
+      beforeDashboard: ['/components/admin/DashboardOverview#DashboardOverview'],
     },
   },
 
