@@ -8,6 +8,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { LOCALES, DEFAULT_LOCALE } from '@vardenia/i18n'
 
+import { DB_SCHEMA, assertDatabaseInternals } from './lib/db'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
@@ -86,6 +87,16 @@ export default buildConfig({
   collections: [Businesses, QrCodes, Articles, Issues, Pages, Media, Users, ScanEvents],
 
   /**
+   * Fail at boot rather than at the first scan.
+   *
+   * The QR redirect and the scan report both run raw SQL through internals that
+   * Payload does not treat as public API. If an upgrade moves them, the useful
+   * moment to find out is now, on a machine with a developer in front of it, not
+   * three weeks later when an advertiser asks why their number stopped moving.
+   */
+  onInit: assertDatabaseInternals,
+
+  /**
    * Content localization. Arabic falls back to English so a half-translated
    * listing renders sensibly instead of showing empty fields - critical while
    * the editorial team catches up on translations.
@@ -162,7 +173,11 @@ export default buildConfig({
     //
     // Living in a non-exposed schema means the leak cannot happen even then.
     // Access control belongs in Payload (see src/access), not in a checkbox.
-    schemaName: 'payload',
+    //
+    // The constant is shared with src/lib/db.ts, which runs raw SQL against this
+    // schema and verifies the adapter still reports it. Changing the schema in
+    // one place and not the other is the failure that check exists to prevent.
+    schemaName: DB_SCHEMA,
   }),
 
   plugins: useS3

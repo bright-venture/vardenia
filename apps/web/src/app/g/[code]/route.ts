@@ -6,6 +6,7 @@ import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
 import { normalizeExternalUrl } from '../../../lib/external-url'
+import { rawDb } from '../../../lib/db'
 
 /**
  * The QR redirect. `https://vrd.lb/g/K3M9QP2` -> the right page, plus one row in
@@ -170,30 +171,28 @@ async function recordScan(
  *
  * Schema and table names come from the adapter's own config, never from the
  * request, so interpolating them is safe. The id is parameterised.
+ *
+ * Everything here is caught. This counter is a convenience shown in the admin
+ * list; scan-events is the authoritative record and has already been written by
+ * the time we get here. A reader holding a printed code must always be
+ * redirected, so no failure in this function is allowed to reach them - but it
+ * does get logged loudly, because a counter that silently stops moving is the
+ * failure that costs a renewal argument.
  */
 async function incrementScanCount(
   payload: Awaited<ReturnType<typeof getPayload>>,
   qrId: number | string,
 ) {
-  const db = payload.db as unknown as {
-    pool?: { query: (text: string, values: unknown[]) => Promise<unknown> }
-    schemaName?: string
-    tableNameMap?: Map<string, string>
+  try {
+    const db = rawDb(payload)
+
+    await db.pool.query(
+      `update "${db.schema}"."${db.table('qr_codes')}" set scan_count = scan_count + 1 where id = $1`,
+      [qrId],
+    )
+  } catch (error) {
+    payload.logger.error({ err: error, qrId }, 'Scan counter not incremented')
   }
-
-  if (!db.pool) {
-    // Never fail a scan over a display counter. scan-events remains authoritative.
-    payload.logger.error({ qrId }, 'No database pool available; scan counter not incremented')
-    return
-  }
-
-  const schema = db.schemaName ?? 'public'
-  const table = db.tableNameMap?.get('qr_codes') ?? 'qr_codes'
-
-  await db.pool.query(
-    `update "${schema}"."${table}" set scan_count = scan_count + 1 where id = $1`,
-    [qrId],
-  )
 }
 
 function detectPlatform(userAgent: string): 'ios' | 'android' | 'web' | 'unknown' {

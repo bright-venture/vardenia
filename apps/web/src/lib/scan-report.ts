@@ -1,5 +1,6 @@
 import { getPayload } from 'payload'
 import config from '../payload.config'
+import { rawDb } from './db'
 
 /**
  * Turning the scan log into the numbers a renewal conversation runs on.
@@ -52,23 +53,11 @@ export interface ScanEventRow {
   isDirectScan: boolean
 }
 
-interface Pooled {
-  pool?: {
-    query: (text: string, values: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>
-  }
-  schemaName?: string
-}
-
 async function query(sql: string, values: unknown[]) {
   const payload = await getPayload({ config })
-  const db = payload.db as unknown as Pooled
+  const db = rawDb(payload)
 
-  if (!db.pool) {
-    throw new Error('No database pool available for reporting')
-  }
-
-  const schema = db.schemaName ?? 'public'
-  const result = await db.pool.query(sql.replaceAll('{schema}', `"${schema}"`), values)
+  const result = await db.pool.query(sql.replaceAll('{schema}', `"${db.schema}"`), values)
   return result.rows
 }
 
