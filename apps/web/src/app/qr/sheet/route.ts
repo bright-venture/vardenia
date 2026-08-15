@@ -35,11 +35,29 @@ export async function GET(request: NextRequest) {
   const issueParam = url.searchParams.get('issue')
   const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
 
+  /**
+   * The issue id went straight from the query string into two database calls,
+   * and every wrong value produced a 500: `?issue=abc` failed casting to an
+   * integer, `?issue=1.5` failed the query, and a number that simply does not
+   * exist threw NotFound out of findByID.
+   *
+   * This is the page somebody opens to check codes against the layout just
+   * before artwork goes to a printer. An unexplained crash from a mistyped
+   * issue number, at deadline, is the worst possible moment for it.
+   */
+  const issueId = parseIssueId(issueParam)
+  if (issueParam !== null && issueId === null) {
+    return new Response(
+      `"${issueParam}" is not an issue id. Use the number from the URL of the issue in the admin, for example /qr/sheet?issue=1.`,
+      { status: 400 },
+    )
+  }
+
   const result = await payload.find({
     collection: 'qr-codes',
     where: {
       active: { equals: true },
-      ...(issueParam ? { issue: { equals: issueParam } } : {}),
+      ...(issueId !== null ? { issue: { equals: issueId } } : {}),
     },
     // A print run is a few hundred codes at most, and a sheet split across pages
     // is a sheet somebody prints half of.
@@ -51,14 +69,19 @@ export async function GET(request: NextRequest) {
   })
 
   let issueLabel = 'All active codes'
-  if (issueParam) {
-    const issue = await payload.findByID({
-      collection: 'issues',
-      id: issueParam,
-      depth: 0,
-      overrideAccess: false,
-      user,
-    })
+  if (issueId !== null) {
+    // findByID throws rather than returning null for a missing document, and a
+    // number that does not exist is an ordinary typo, not a server fault.
+    const issue = await payload
+      .findByID({ collection: 'issues', id: issueId, depth: 0, overrideAccess: false, user })
+      .catch(() => null)
+
+    if (!issue) {
+      return new Response(`No issue with id ${issueId}. Check the issue list in the admin.`, {
+        status: 404,
+      })
+    }
+
     issueLabel = `Issue ${issue.issueNumber} - ${issue.title}`
   }
 
@@ -81,6 +104,19 @@ export async function GET(request: NextRequest) {
       'cache-control': 'no-store',
     },
   })
+}
+
+/**
+ * A positive whole number, or null.
+ *
+ * Deliberately strict. `Number('1.5')` and `Number(' 1 ')` both produce
+ * something a careless check would accept and Postgres would then reject, so
+ * the string has to look like an id rather than merely coerce to one.
+ */
+export function parseIssueId(raw: string | null): number | null {
+  if (raw === null || !/^\d+$/.test(raw)) return null
+  const value = Number(raw)
+  return Number.isSafeInteger(value) && value > 0 ? value : null
 }
 
 /** Whatever a person would recognise. Falls back to the code so a card is never blank. */

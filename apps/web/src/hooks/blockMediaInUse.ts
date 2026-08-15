@@ -40,8 +40,12 @@ export const blockMediaInUse: CollectionBeforeDeleteHook = async ({ id, req }) =
     })
 
     for (const doc of result.docs) {
-      const title = (doc as { title?: string }).title ?? `#${(doc as { id: unknown }).id}`
-      blockers.push(`${use.label} "${title}"`)
+      // Issues and articles call it `title`; businesses call it `name`. Reading
+      // only `title` meant a listing - the commonest blocker by far - showed up
+      // as "#2", which defeats the entire point of this hook.
+      const record = doc as { title?: string | null; name?: string | null; id?: unknown }
+      const label = record.title || record.name || `#${record.id}`
+      blockers.push(`${use.label} "${label}"`)
     }
 
     if (result.totalDocs > result.docs.length) {

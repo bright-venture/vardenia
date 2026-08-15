@@ -17,6 +17,51 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
 
   const { payload } = req
 
+  /**
+   * Adopt an existing code before minting a new one.
+   *
+   * `doc.qrCode` was the only guard, which asks "does this listing point at a
+   * code" rather than "does a code point at this listing" - and those come
+   * apart. Minting happens in two steps: create the code, then update the
+   * listing to reference it. If the second step fails, and a dropped connection
+   * to the database is enough, the code exists and the listing does not know
+   * about it. The next save then minted a second code for the same listing.
+   *
+   * That was reproduced: clearing the relationship produced AXGRDH2 alongside
+   * AASBVQR, both pointing at one listing, with nothing to say which was real.
+   * If the first is already printed, the second is a decoy that will appear on
+   * the print sheet next to it.
+   *
+   * Oldest first, deliberately. The earliest code is the one most likely to be
+   * on paper already, and paper cannot be corrected.
+   */
+  const orphaned = await payload.find({
+    collection: 'qr-codes',
+    where: { business: { equals: doc.id } },
+    limit: 1,
+    depth: 0,
+    sort: 'createdAt',
+    overrideAccess: true,
+  })
+
+  const existing = orphaned.docs[0]
+  if (existing) {
+    await payload.update({
+      collection: 'businesses',
+      id: doc.id,
+      data: { qrCode: existing.id },
+      req,
+      context: { skipQrGeneration: true },
+    })
+
+    payload.logger.info(
+      { businessId: doc.id, code: (existing as { code?: string }).code },
+      'Relinked an existing QR code rather than minting a second one',
+    )
+
+    return { ...doc, qrCode: existing.id }
+  }
+
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const code = generateCode()
 
