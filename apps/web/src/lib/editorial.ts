@@ -47,7 +47,11 @@ export function printCredit(
   if (from != null && String(from) !== '') {
     const range =
       to != null && String(to) !== '' && String(to) !== String(from) ? `${from}-${to}` : `${from}`
-    parts.push(ar ? `صفحة ${range}` : `page${String(range).includes('-') ? 's' : ''} ${range}`)
+
+    // Both languages pluralise. Arabic said "صفحة" (one page) for a range too,
+    // so a story running across four pages read as though it ran across one.
+    const many = range.includes('-')
+    parts.push(ar ? `${many ? 'صفحات' : 'صفحة'} ${range}` : `page${many ? 's' : ''} ${range}`)
   }
 
   return parts.length > 0 ? parts.join(', ') : null

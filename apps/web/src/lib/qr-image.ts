@@ -42,6 +42,19 @@ const QUIET_ZONE_MODULES = 4
 export const DEFAULT_PRINT_MM = 25
 export const MIN_PRINT_MM = 15
 
+/**
+ * Upper bound on printed size.
+ *
+ * A metre is far beyond any real use - a double-page spread is about 420mm and a
+ * window decal rarely passes 200 - but the size comes off a query string, and
+ * without a ceiling `?size=99999` produced `width="99999mm"`: a hundred-metre
+ * QR code. Harmless in a browser, and a genuinely confusing artefact if it ever
+ * reached someone's layout tool.
+ */
+export const MAX_PRINT_MM = 1000
+
+export type QrFormat = 'svg' | 'png'
+
 export { isPrintSafeBaseUrl, scanUrl } from './qr-url'
 
 /**
@@ -63,7 +76,11 @@ export async function qrSvg(
     color: { dark: '#000000', light: '#ffffff' },
   })
 
-  const mm = Math.max(MIN_PRINT_MM, sizeMm)
+  // Clamped at both ends, and NaN falls back rather than reaching the attribute
+  // as `width="NaNmm"`.
+  const requested = Number.isFinite(sizeMm) ? sizeMm : DEFAULT_PRINT_MM
+  const mm = Math.min(MAX_PRINT_MM, Math.max(MIN_PRINT_MM, requested))
+
   return svg.replace(/^<svg([^>]*)>/, (_match, attrs: string) => {
     const kept = attrs.replace(/\s(width|height)="[^"]*"/g, '').trim()
     // Every piece is space-joined rather than concatenated. Dropping the space
@@ -96,4 +113,21 @@ export async function qrPng(
 /** Rejects anything that is not a well-formed code before it reaches the database. */
 export function parseCodeParam(raw: string): string | null {
   return normalizeCode(decodeURIComponent(raw).replace(/\.(svg|png)$/i, ''))
+}
+
+/**
+ * The format a file extension asks for, if it asks for one.
+ *
+ * `parseCodeParam` has always stripped `.svg` and `.png` so the lookup works,
+ * which made the extension look supported - but nothing read it, so
+ * `/qr/K3M9QP2.png` returned an SVG under a .png name. That fails in the worst
+ * way for this project: the file downloads happily and only turns out to be
+ * wrong inside a layout tool, possibly after it has gone to print.
+ *
+ * Returns null when there is no extension, so the caller keeps its own default.
+ */
+export function formatFromParam(raw: string): QrFormat | null {
+  const match = /\.(svg|png)$/i.exec(decodeURIComponent(raw))
+  const ext = match?.[1]?.toLowerCase()
+  return ext === 'png' || ext === 'svg' ? ext : null
 }

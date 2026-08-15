@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PRINT_MM, MIN_PRINT_MM, parseCodeParam, qrPng, qrSvg, scanUrl } from './qr-image'
+import {
+  DEFAULT_PRINT_MM,
+  MAX_PRINT_MM,
+  MIN_PRINT_MM,
+  formatFromParam,
+  parseCodeParam,
+  qrPng,
+  qrSvg,
+  scanUrl,
+} from './qr-image'
 
 const CODE = 'K3M9QP2'
 
@@ -151,5 +160,65 @@ describe('parseCodeParam', () => {
     expect(parseCodeParam('SHORT')).toBeNull()
     expect(parseCodeParam('WAYTOOLONG')).toBeNull()
     expect(parseCodeParam('../../etc')).toBeNull()
+  })
+})
+
+/**
+ * The size arrives from a query string, so both ends need a bound. The lower one
+ * protects a code that would not scan on paper; the upper one stops
+ * `?size=99999` producing a hundred-metre symbol in someone's layout tool.
+ */
+describe('print size bounds', () => {
+  it('caps an absurd size', async () => {
+    const svg = await qrSvg(CODE, { siteUrl: 'https://vardenia.com', sizeMm: 99999 })
+    expect(svg).toContain(`width="${MAX_PRINT_MM}mm"`)
+  })
+
+  it('still honours a large but plausible poster size', async () => {
+    const svg = await qrSvg(CODE, { siteUrl: 'https://vardenia.com', sizeMm: 400 })
+    expect(svg).toContain('width="400mm"')
+  })
+
+  it('falls back rather than writing NaN into the attribute', async () => {
+    const svg = await qrSvg(CODE, { siteUrl: 'https://vardenia.com', sizeMm: Number.NaN })
+    expect(svg).toContain(`width="${DEFAULT_PRINT_MM}mm"`)
+    expect(svg).not.toContain('NaN')
+  })
+
+  it('handles infinity the same way as any other oversize request', async () => {
+    const svg = await qrSvg(CODE, { siteUrl: 'https://vardenia.com', sizeMm: Infinity })
+    expect(svg).toContain(`width="${DEFAULT_PRINT_MM}mm"`)
+  })
+})
+
+/**
+ * parseCodeParam has always stripped the extension so the lookup works, which
+ * made `/qr/CODE.png` look supported while it quietly returned an SVG. A file
+ * that downloads fine and is the wrong format is the worst outcome here: it
+ * surfaces in a layout tool, possibly after going to print.
+ */
+describe('formatFromParam', () => {
+  it('reads the extension', () => {
+    expect(formatFromParam('K3M9QP2.png')).toBe('png')
+    expect(formatFromParam('K3M9QP2.svg')).toBe('svg')
+  })
+
+  it('is case insensitive, because URLs get typed by hand', () => {
+    expect(formatFromParam('K3M9QP2.PNG')).toBe('png')
+    expect(formatFromParam('K3M9QP2.Svg')).toBe('svg')
+  })
+
+  it('returns null with no extension, so the caller keeps its default', () => {
+    expect(formatFromParam('K3M9QP2')).toBeNull()
+  })
+
+  it('ignores extensions it does not serve', () => {
+    expect(formatFromParam('K3M9QP2.jpg')).toBeNull()
+    expect(formatFromParam('K3M9QP2.pdf')).toBeNull()
+  })
+
+  it('agrees with parseCodeParam on the same input', () => {
+    expect(parseCodeParam('K3M9QP2.png')).toBe('K3M9QP2')
+    expect(formatFromParam('K3M9QP2.png')).toBe('png')
   })
 })

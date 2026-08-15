@@ -1,13 +1,21 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
-import { DEFAULT_PRINT_MM, parseCodeParam, qrPng, qrSvg } from '../../../lib/qr-image'
+import {
+  DEFAULT_PRINT_MM,
+  formatFromParam,
+  parseCodeParam,
+  qrPng,
+  qrSvg,
+} from '../../../lib/qr-image'
 
 /**
  * The printable image for a code. `/qr/K3M9QP2` gives an SVG ready for layout.
  *
+ * The extension picks the format too, so `/qr/K3M9QP2.png` gives a PNG.
+ *
  * Query parameters:
- *   format=svg|png   svg by default; png only for slides and email
+ *   format=svg|png   overrides the extension; svg when neither is given
  *   size=25          printed size in millimetres (svg), pixels (png)
  *   download=1       forces a save dialog instead of rendering in the tab
  *
@@ -45,7 +53,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const url = new URL(request.url)
   const download = url.searchParams.get('download') === '1'
 
-  if (url.searchParams.get('format') === 'png') {
+  /**
+   * `?format=` wins, then the file extension, then SVG.
+   *
+   * The extension used to be stripped and ignored, so `/qr/CODE.png` served an
+   * SVG. Explicit query parameter first, because a URL that says both should
+   * honour the thing the caller wrote deliberately.
+   */
+  const requested = url.searchParams.get('format')
+  const format =
+    requested === 'png' || requested === 'svg' ? requested : (formatFromParam(rawCode) ?? 'svg')
+
+  if (format === 'png') {
     const pixels = Number(url.searchParams.get('size')) || 1024
     const png = await qrPng(code, { pixels })
     return new Response(new Uint8Array(png), {
