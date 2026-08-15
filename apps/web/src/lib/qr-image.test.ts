@@ -121,10 +121,15 @@ describe('qrPng', () => {
     )
   })
 
+  // Slowest test in the suite by a wide margin, and deliberately so: it asks for
+  // a 100000px image to prove the clamp holds. Even clamped, that is a real PNG
+  // encode. It runs in well under a second normally, but roughly ten times that
+  // under coverage instrumentation, which puts it past vitest's 5s default. An
+  // explicit timeout so it stays a size check rather than a speed check.
   it('clamps absurd sizes rather than trying to allocate them', async () => {
     const png = await qrPng(CODE, { siteUrl: 'https://vardenia.com', pixels: 100000 })
     expect(png.byteLength).toBeGreaterThan(0)
-  })
+  }, 30_000)
 })
 
 describe('parseCodeParam', () => {

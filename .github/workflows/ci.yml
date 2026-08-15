@@ -58,5 +58,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Runs before the build on purpose: the suite takes seconds and the build
+      # takes minutes, so a broken slug generator or QR encoder should fail here
+      # rather than after a full Next compile.
+      - name: Test
+        run: pnpm test
+
       - name: Build
         run: pnpm build

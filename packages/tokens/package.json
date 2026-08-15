@@ -9,11 +9,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf .turbo"
   },
   "devDependencies": {
+    "@vardenia/eslint-config": "workspace:*",
     "@vardenia/tsconfig": "workspace:*",
+    "eslint": "^10.8.1",
     "typescript": "^5.7.2"
   }
 }
