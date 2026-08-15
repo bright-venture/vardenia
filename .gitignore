@@ -162,3 +162,6 @@ apps/mobile/android/
 *.p8
 *.p12
 *.mobileprovision
+
+# Seed manifest: records what `pnpm seed` created, so reset removes only that.
+apps/web/.seed-manifest.json

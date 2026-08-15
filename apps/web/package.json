@@ -16,6 +16,7 @@
     "migrate:create": "payload migrate:create",
     "migrate:status": "payload migrate:status",
     "seed": "tsx src/seed/index.ts",
+    "seed:reset": "tsx src/seed/reset.ts",
     "clean": "rimraf .next .turbo",
     "test": "vitest run",
     "test:watch": "vitest",
