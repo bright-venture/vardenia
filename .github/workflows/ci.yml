@@ -64,5 +64,19 @@ jobs:
       - name: Test
         run: pnpm test
 
+      # The Postgres service above is created empty for every run and thrown
+      # away with the machine, so this is free to write to. Payload creates its
+      # tables on connect (push is on whenever NODE_ENV is not production), but
+      # not the schema they live in, so that is made here first.
+      - name: Create the payload schema
+        run: psql "$DATABASE_URL" -c 'CREATE SCHEMA IF NOT EXISTS payload;'
+
+      # Proves what the unit tests cannot: that an anonymous request to the real
+      # REST handler genuinely does not receive the Commercial tab, and that the
+      # scan report's SQL adds up against real rows. Seeds fixtures, asserts,
+      # then removes them.
+      - name: Integration test
+        run: pnpm --filter @vardenia/web test:integration
+
       - name: Build
         run: pnpm build

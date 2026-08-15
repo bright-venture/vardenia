@@ -27,6 +27,11 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
 
+    // The integration suite matches the glob above but needs a real database.
+    // It has its own config and its own command, so that `pnpm test` stays
+    // instant and dependency-free. See vitest.integration.config.ts.
+    exclude: ['**/node_modules/**', 'src/integration/**'],
+
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
@@ -43,6 +48,10 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.test.ts',
         '**/*.test.tsx',
+
+        // Test scaffolding, not shipped code.
+        'src/integration/**',
+        'src/seed/**',
       ],
     },
   },
