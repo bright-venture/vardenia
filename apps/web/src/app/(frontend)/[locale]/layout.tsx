@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
@@ -9,26 +9,44 @@ import { JsonLd } from '../../../components/JsonLd'
 import { organizationSchema } from '../../../lib/structured-data'
 import '../../globals.css'
 
-export const metadata: Metadata = {
-  /**
-   * Absolute base for every relative URL in metadata.
-   *
-   * Without it Next emits canonical and hreflang as paths. Browsers resolve
-   * those fine, but Google's hreflang spec requires fully-qualified URLs and
-   * ignores relative ones - which would silently undo the whole point of
-   * declaring the English and Arabic versions as translations.
-   *
-   * Falls back to localhost so a developer build does not crash; production
-   * must have NEXT_PUBLIC_SITE_URL set, which is already true because the QR
-   * codes depend on it.
-   */
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-  title: {
-    default: 'Vardenia - Discover Lebanon',
-    template: '%s - Vardenia',
-  },
-  description:
-    "Lebanon's premium tourism and lifestyle guide: hotels, restaurants, experiences and hidden villages, curated and verified.",
+/**
+ * Site-level metadata, per locale.
+ *
+ * This was a static `metadata` export, which cannot see the locale - so the
+ * Arabic homepage carried the English title and description. That is not
+ * cosmetic: the title and description are what a search engine shows in its
+ * results, so the Arabic version was competing for Arabic searches with English
+ * text. Individual pages already build their own via lib/seo.ts; this is the
+ * fallback they inherit from.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'site' })
+
+  return {
+    /**
+     * Absolute base for every relative URL in metadata.
+     *
+     * Without it Next emits canonical and hreflang as paths. Browsers resolve
+     * those fine, but Google's hreflang spec requires fully-qualified URLs and
+     * ignores relative ones - which would silently undo the whole point of
+     * declaring the English and Arabic versions as translations.
+     *
+     * Falls back to localhost so a developer build does not crash; production
+     * must have NEXT_PUBLIC_SITE_URL set, which is already true because the QR
+     * codes depend on it.
+     */
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    title: {
+      default: t('title'),
+      template: t('titleTemplate'),
+    },
+    description: t('description'),
+  }
 }
 
 export function generateStaticParams() {

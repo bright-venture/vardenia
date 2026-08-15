@@ -1,4 +1,9 @@
 {
+  "site": {
+    "title": "Vardenia - Discover Lebanon",
+    "titleTemplate": "%s - Vardenia",
+    "description": "Lebanon's premium tourism and lifestyle guide: hotels, restaurants, experiences and hidden villages, curated and verified."
+  },
   "nav": {
     "discover": "Discover",
     "directory": "Directory",
@@ -6,6 +11,12 @@
     "regions": "Regions",
     "about": "About",
     "advertise": "Advertise with us"
+  },
+  "home": {
+    "eyebrow": "Discover Lebanon",
+    "intro": "A printed magazine and a directory of the places in Lebanon worth going out of your way for. Every listing is visited before it appears.",
+    "categories": "Directory categories",
+    "subcategoryCount": "{count, plural, one {1 subcategory} other {# subcategories}}"
   },
   "directory": {
     "searchPlaceholder": "Search hotels, restaurants, experiences...",
