@@ -13,7 +13,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ]
-// Stops two copies of React being bundled when a workspace package hoists one.
-config.resolver.disableHierarchicalLookup = true
+
+// `disableHierarchicalLookup = true` used to sit here, to stop two copies of
+// React being bundled when a workspace package hoisted its own. Removed on the
+// SDK 57 upgrade for two reasons: expo-doctor flags it as an override that
+// fights the defaults, and the situation it worked around is gone now that the
+// whole monorepo is on React 19. Verified by bundling and counting - see the
+// note on the .npmrc.
 
 module.exports = config

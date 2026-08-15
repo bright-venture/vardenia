@@ -6,7 +6,6 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.vardenia.app",
@@ -19,13 +18,20 @@
     },
     "android": {
       "package": "com.vardenia.app",
-      "adaptiveIcon": { "backgroundColor": "#0a0d12" },
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0d12"
+      },
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "CAMERA"],
       "intentFilters": [
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "https", "host": "vardenia.com" }],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "vardenia.com"
+            }
+          ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
@@ -39,9 +45,16 @@
           "locationWhenInUsePermission": "Vardenia uses your location to show places near you."
         }
       ],
-      ["expo-camera", { "cameraPermission": "Vardenia uses the camera to scan QR codes." }]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Vardenia uses the camera to scan QR codes."
+        }
+      ]
     ],
-    "experiments": { "typedRoutes": true },
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "apiUrl": "${EXPO_PUBLIC_API_URL}"
     }
