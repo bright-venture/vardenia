@@ -20,6 +20,7 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
+import { normalizeExternalUrl } from '../../../../../lib/external-url'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -92,11 +93,18 @@ export default async function ListingPage({ params }: Params) {
 
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
+  /**
+   * Normalised, not just truthy-checked.
+   *
+   * These render straight into an href. The fields validate on save now (see
+   * fields/externalLink), but rows written before that can hold a bare domain,
+   * which a browser resolves as a path on this site rather than as a link out.
+   * Anything that cannot be a real destination is dropped instead of shown.
+   */
   const socials = (listing.socials ?? {}) as Record<string, string | null | undefined>
-  const socialLinks = Object.entries(socials).filter(([, url]) => Boolean(url)) as [
-    string,
-    string,
-  ][]
+  const socialLinks = Object.entries(socials)
+    .map(([network, url]) => [network, normalizeExternalUrl(url)] as const)
+    .filter((entry): entry is readonly [string, string] => entry[1] !== null)
 
   return (
     <article className="pb-24">

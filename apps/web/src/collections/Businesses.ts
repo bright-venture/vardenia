@@ -3,6 +3,7 @@ import { LISTING_TIERS, isWithinLebanon } from '@vardenia/core'
 import { isAdminFieldLevel, isStaff, isStaffFieldLevel, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { externalLinkField } from '../fields/externalLink'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
@@ -207,18 +208,24 @@ export const Businesses: CollectionConfig = {
             { name: 'phone', type: 'text' },
             { name: 'whatsapp', type: 'text' },
             { name: 'email', type: 'email' },
-            { name: 'website', type: 'text' },
-            { name: 'reservationUrl', type: 'text', label: 'Reservation link' },
-            { name: 'menuUrl', type: 'text', label: 'Menu link' },
+
+            // Every one of these is rendered directly into an href, so all of
+            // them are validated and normalised on save. See fields/externalLink.
+            externalLinkField({ name: 'website' }),
+            externalLinkField({ name: 'reservationUrl', label: 'Reservation link' }),
+            externalLinkField({ name: 'menuUrl', label: 'Menu link' }),
             {
               name: 'socials',
               type: 'group',
               fields: [
-                { name: 'instagram', type: 'text' },
-                { name: 'facebook', type: 'text' },
-                { name: 'tiktok', type: 'text' },
-                { name: 'linkedin', type: 'text' },
-                { name: 'youtube', type: 'text' },
+                externalLinkField({
+                  name: 'instagram',
+                  admin: { placeholder: 'https://instagram.com/yourhandle' },
+                }),
+                externalLinkField({ name: 'facebook' }),
+                externalLinkField({ name: 'tiktok' }),
+                externalLinkField({ name: 'linkedin' }),
+                externalLinkField({ name: 'youtube' }),
               ],
             },
           ],

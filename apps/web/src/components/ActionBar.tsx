@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { normalizeExternalUrl } from '../lib/external-url'
 
 /**
  * Call, directions, reserve.
@@ -26,6 +27,14 @@ interface Props {
 /** wa.me wants digits only, no plus, spaces or dashes. */
 const digitsOnly = (value: string) => value.replace(/\D/g, '')
 
+/**
+ * `tel:` takes no spaces. RFC 3966 disallows them, and while most dialers cope,
+ * some Android ones truncate at the first one - so `+961 1 339797` becomes a
+ * call to `+961`. Numbers are stored the way a person writes them, which is
+ * right for display and wrong for the href.
+ */
+const telHref = (value: string) => (value.trim().startsWith('+') ? '+' : '') + digitsOnly(value)
+
 const PRIMARY =
   'inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-3 text-sm font-semibold text-surface-base transition-colors hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
 
@@ -49,17 +58,31 @@ export async function ActionBar({
     ? `https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}`
     : null
 
+  /**
+   * Normalised again here, not just on save.
+   *
+   * The fields validate now (see fields/externalLink), but rows written before
+   * that can still hold `www.hotel.com` - which a browser reads as a relative
+   * path, sending the reader to /directory/www.hotel.com instead of the hotel.
+   * A link that cannot work is dropped rather than rendered, on the same
+   * principle as the rest of this component: a dead button is worse than no
+   * button.
+   */
+  const reserve = normalizeExternalUrl(reservationUrl)
+  const menu = normalizeExternalUrl(menuUrl)
+  const site = normalizeExternalUrl(website)
+
   const actions = [
-    reservationUrl && { href: reservationUrl, label: t('reserve'), primary: true, external: true },
-    phone && { href: `tel:${phone}`, label: t('call'), primary: !reservationUrl },
+    reserve && { href: reserve, label: t('reserve'), primary: true, external: true },
+    phone && { href: `tel:${telHref(phone)}`, label: t('call'), primary: !reserve },
     directions && { href: directions, label: t('getDirections'), external: true },
     whatsapp && {
       href: `https://wa.me/${digitsOnly(whatsapp)}`,
       label: 'WhatsApp',
       external: true,
     },
-    menuUrl && { href: menuUrl, label: t('viewMenu'), external: true },
-    website && { href: website, label: t('website'), external: true },
+    menu && { href: menu, label: t('viewMenu'), external: true },
+    site && { href: site, label: t('website'), external: true },
   ].filter(Boolean) as {
     href: string
     label: string
@@ -73,7 +96,7 @@ export async function ActionBar({
     <div className="flex flex-wrap gap-3" aria-label={`Contact ${name}`}>
       {actions.map((action) => (
         <a
-          key={action.href}
+          key={action.label}
           href={action.href}
           className={action.primary ? PRIMARY : SECONDARY}
           {...(action.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
