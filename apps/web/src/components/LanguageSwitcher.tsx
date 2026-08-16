@@ -1,6 +1,7 @@
 'use client'
 
 import NextLink from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { LOCALES, type Locale } from '@vardenia/i18n'
 import { getPathname, usePathname } from '../i18n/routing'
 
@@ -39,9 +40,16 @@ const FULL_NAMES: Record<Locale, string> = {
   ar: 'العربية',
 }
 
-export function LanguageSwitcher({ current }: { current: Locale }) {
-  // Already the concrete path with the locale prefix stripped, so a slug page
-  // switches to the same slug rather than to a route template.
+/**
+ * The links themselves, given a query string rather than reading one.
+ *
+ * Split out so the header can render it during static generation. Reading the
+ * query string requires `useSearchParams`, which forces the nearest Suspense
+ * boundary to render on the client - and with this component sitting in the
+ * layout, an unbounded one would opt every page in the site out of static
+ * rendering. This half has no hooks that care, so it serves as the fallback.
+ */
+export function LanguageSwitcherLinks({ current, search }: { current: Locale; search: string }) {
   const pathname = usePathname()
 
   return (
@@ -55,7 +63,7 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
             </span>
           ) : (
             <NextLink
-              href={getPathname({ href: pathname, locale })}
+              href={`${getPathname({ href: pathname, locale })}${search}`}
               hrefLang={locale}
               aria-label={FULL_NAMES[locale]}
               className="text-ink-500 hover:text-ink-900 transition-colors"
@@ -67,4 +75,19 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
       ))}
     </div>
   )
+}
+
+/**
+ * Carries the query string across the switch.
+ *
+ * Without this, a reader filtering the directory by category and switching to
+ * Arabic landed on /ar/directory with the filter gone - and the same for a page
+ * number. The path was preserved and the state on top of it was not, which is
+ * the half of "keeps you where you were" nobody notices until they use it.
+ */
+export function LanguageSwitcher({ current }: { current: Locale }) {
+  const params = useSearchParams()
+  const query = params.toString()
+
+  return <LanguageSwitcherLinks current={current} search={query ? `?${query}` : ''} />
 }

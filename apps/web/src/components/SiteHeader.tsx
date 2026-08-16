@@ -1,7 +1,8 @@
+import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
 
 /**
  * The site header.
@@ -31,7 +32,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
             {t('magazine')}
           </Link>
-          <LanguageSwitcher current={locale} />
+          {/* The switcher reads the query string so filters survive a language
+              change, and reading it requires client rendering. Bounded here so
+              that cost falls on two links rather than on the whole page: the
+              fallback is the same markup without the query, which is exactly
+              what a crawler should see anyway. */}
+          <Suspense fallback={<LanguageSwitcherLinks current={locale} search="" />}>
+            <LanguageSwitcher current={locale} />
+          </Suspense>
         </nav>
       </div>
     </header>

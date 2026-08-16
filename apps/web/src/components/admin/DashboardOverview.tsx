@@ -1,5 +1,6 @@
 import type { Payload, TypedUser } from 'payload'
 import { tierOf } from '@vardenia/core'
+import { dashboardCounts } from '../../lib/dashboard-stats'
 
 /**
  * The panel above Payload's collection cards on the admin dashboard.
@@ -47,54 +48,49 @@ export async function DashboardOverview({ payload, user }: Props) {
 
   const opts = { depth: 0, limit: 1, overrideAccess: false, user } as const
 
-  const [published, drafts, articles, issues, codes, scans, expired, expiring, codeless] =
-    await Promise.all([
-      payload.count({
-        collection: 'businesses',
-        where: { _status: { equals: 'published' } },
-        user,
-      }),
-      payload.count({ collection: 'businesses', where: { _status: { equals: 'draft' } }, user }),
-      payload.count({ collection: 'articles', where: { _status: { equals: 'published' } }, user }),
-      payload.count({ collection: 'issues', user }),
-      payload.count({ collection: 'qr-codes', where: { active: { equals: true } }, user }),
-      payload.count({
-        collection: 'scan-events',
-        where: { scannedAt: { greater_than: windowStart.toISOString() } },
-        user,
-      }),
+  /**
+   * Counts in one query, lists in three.
+   *
+   * Six separate `payload.count()` calls held six of the pool's ten connections
+   * for the length of the render; with the three lookups below that was nine.
+   * Two staff on the dashboard at once could leave nothing for the public site.
+   * See lib/dashboard-stats.ts for why the counts may use raw SQL and the lists
+   * may not.
+   */
+  const [counts, expired, expiring, codeless] = await Promise.all([
+    dashboardCounts(payload, windowStart),
 
-      // Lapsed, but still carrying a paid tier. Nothing expires on its own (see
-      // packages/core/src/tiers.ts), so this is the only thing that notices.
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        limit: 5,
-        where: { contractEndsAt: { less_than: now.toISOString() } },
-        sort: 'contractEndsAt',
-      }),
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        limit: 5,
-        where: {
-          and: [
-            { contractEndsAt: { greater_than_equal: now.toISOString() } },
-            { contractEndsAt: { less_than: soon.toISOString() } },
-          ],
-        },
-        sort: 'contractEndsAt',
-      }),
+    // Lapsed, but still carrying a paid tier. Nothing expires on its own (see
+    // packages/core/src/tiers.ts), so this is the only thing that notices.
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      limit: 5,
+      where: { contractEndsAt: { less_than: now.toISOString() } },
+      sort: 'contractEndsAt',
+    }),
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      limit: 5,
+      where: {
+        and: [
+          { contractEndsAt: { greater_than_equal: now.toISOString() } },
+          { contractEndsAt: { less_than: soon.toISOString() } },
+        ],
+      },
+      sort: 'contractEndsAt',
+    }),
 
-      // A published listing with no code cannot go in the magazine. The hook
-      // mints one automatically, so anything here means the hook failed.
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        limit: 5,
-        where: { and: [{ qrCode: { exists: false } }, { _status: { equals: 'published' } }] },
-      }),
-    ])
+    // A published listing with no code cannot go in the magazine. The hook
+    // mints one automatically, so anything here means the hook failed.
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      limit: 5,
+      where: { and: [{ qrCode: { exists: false } }, { _status: { equals: 'published' } }] },
+    }),
+  ])
 
   const attention: Attention[] = []
 
@@ -134,13 +130,13 @@ export async function DashboardOverview({ payload, user }: Props) {
       <div style={styles.stats}>
         <Stat
           label="Listings live"
-          value={published.totalDocs}
-          note={draftNote(drafts.totalDocs)}
+          value={counts.publishedListings}
+          note={draftNote(counts.draftListings)}
         />
-        <Stat label={`Scans, ${SCAN_WINDOW_DAYS} days`} value={scans.totalDocs} />
-        <Stat label="Articles live" value={articles.totalDocs} />
-        <Stat label="Issues" value={issues.totalDocs} />
-        <Stat label="Codes in circulation" value={codes.totalDocs} />
+        <Stat label={`Scans, ${SCAN_WINDOW_DAYS} days`} value={counts.recentScans} />
+        <Stat label="Articles live" value={counts.publishedArticles} />
+        <Stat label="Issues" value={counts.issues} />
+        <Stat label="Codes in circulation" value={counts.activeCodes} />
       </div>
 
       {attention.length > 0 ? (
