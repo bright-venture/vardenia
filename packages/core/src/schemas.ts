@@ -1,10 +1,19 @@
 /**
- * Wire contracts shared by the web app, the mobile app, and the public API.
+ * THESE DESCRIBE AN API THAT DOES NOT EXIST YET.
  *
- * These are the *public* shapes, deliberately narrower than the CMS documents -
- * a listing's internal notes, contract value, and sales owner must never leak
- * into an API response. Payload's generated types describe the database; these
- * describe what leaves the building.
+ * Written as the wire contracts for a public API, deliberately narrower than
+ * the CMS documents so a listing's internal notes and contract value could
+ * never leak into a response. The intent is good and the shapes are a
+ * reasonable design. They are also fiction: no route serves them.
+ *
+ * Nothing imports these except packages/api-client, which is itself uncalled -
+ * so the two describe each other and nothing else. See the header of
+ * packages/api-client/src/index.ts for the specific mismatches against what
+ * Payload's REST API actually returns.
+ *
+ * What genuinely stops commercial fields leaking today is field-level access
+ * control in apps/web/src/access, proven by the integration tests that issue
+ * real anonymous requests. Not this file.
  */
 
 import { z } from 'zod'

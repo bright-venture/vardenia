@@ -26,7 +26,7 @@ vardenia/
 |   `-- mobile/        Expo / React Native - consumes the same API
 |-- packages/
 |   |-- core/          Domain: taxonomy, regions, tiers, QR codes, wire schemas
-|   |-- api-client/    Typed API client (mobile + partners)
+|   |-- api-client/    Typed API client (unbuilt - see its index.ts)
 |   |-- i18n/          Locales, direction, formatting, message catalogues
 |   |-- tokens/        Design tokens (colour, type, spacing, motion)
 |   `-- tsconfig/      Shared TypeScript configs
@@ -183,10 +183,16 @@ a basic presence, and a reason to renew.
           vardenia.com   Expo app         scan-events
 ```
 
-Web pages read Payload through the local API (no HTTP hop). Mobile goes over REST through
-`@vardenia/api-client`, which validates every response against the shared zod schemas - so
-a breaking API change fails loudly in development rather than silently in a build already
-shipped to the App Store.
+Web pages read Payload through the local API (no HTTP hop), which is the only half of this
+picture that exists today.
+
+The mobile arrow is a plan, not a description. `@vardenia/api-client` was written against a
+public API that was never built: its paths and response shapes do not match what Payload's
+REST API actually serves, and nothing imports it. The intent - validating every response
+against a shared schema so a breaking change fails loudly in development rather than
+silently in a build already shipped to the App Store - is still the right one. It is simply
+not in force. Read the header of `packages/api-client/src/index.ts` before relying on any
+of it.
 
 ## Geo
 

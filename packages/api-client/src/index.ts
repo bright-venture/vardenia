@@ -1,10 +1,34 @@
 /**
- * Typed client for the Vardenia public API.
+ * THIS DESCRIBES AN API THAT DOES NOT EXIST YET. NOTHING CALLS IT.
  *
- * Used by the mobile app and by any future partner integration. Responses are
- * parsed through the shared zod schemas, so a breaking API change surfaces as a
- * loud validation error in development rather than a blank screen in the app
- * store build three weeks later.
+ * Read this before building on any of it. Every method below would fail today,
+ * because it was written against an intended public API that was never built.
+ * The site talks to Payload's own REST API instead, which has different paths
+ * and a different response shape:
+ *
+ *   this client asks for            Payload actually serves
+ *   ----------------------------    ------------------------------------------
+ *   GET /businesses/:slug           /api/businesses/:id   (numeric id, not slug)
+ *   GET /qr/:code                   nothing - that route serves images, not JSON
+ *   { items, total, hasMore }       { docs, totalDocs, hasNextPage }
+ *   id: string                      number (Postgres serial)
+ *   heroImage: url string           an object with url, sizes, width, height
+ *   coordinates: { lat, lng }       location: [lng, lat]
+ *
+ * The zod schemas it parses through (packages/core/src/schemas.ts) describe the
+ * same imaginary shapes and are used by nothing except this file.
+ *
+ * It is kept because the design is sound and worth reusing - the QR resolution
+ * idea in particular, which would let the app open a scanned listing natively
+ * instead of bouncing the reader out to a browser. It is left unbuilt because
+ * nobody yet knows what a real mobile screen needs, and guessing twice is worse
+ * than guessing once.
+ *
+ * Before using any of this, pick one:
+ *   1. Build the routes it expects, mapping Payload's shape onto these contracts.
+ *   2. Rewrite it against Payload's actual REST shape and delete the schemas.
+ *
+ * Do not assume it works because it type-checks. It type-checks against itself.
  */
 
 import {

@@ -35,15 +35,15 @@ pnpm dev
 
 ## Workspace
 
-| Path                  | What it is                                               |
-| --------------------- | -------------------------------------------------------- |
-| `apps/web`            | Next.js 15 + Payload 3 - site, CMS, API, QR redirect     |
-| `apps/mobile`         | Expo / React Native app                                  |
-| `packages/core`       | Taxonomy, regions, listing tiers, QR codes, wire schemas |
-| `packages/api-client` | Typed API client used by mobile                          |
-| `packages/i18n`       | Locales, RTL direction, formatting, message catalogues   |
-| `packages/tokens`     | Design tokens - the only place brand values live         |
-| `packages/tsconfig`   | Shared TypeScript configs                                |
+| Path                  | What it is                                                    |
+| --------------------- | ------------------------------------------------------------- |
+| `apps/web`            | Next.js 15 + Payload 3 - site, CMS, API, QR redirect          |
+| `apps/mobile`         | Expo / React Native app                                       |
+| `packages/core`       | Taxonomy, regions, listing tiers, QR codes, wire schemas      |
+| `packages/api-client` | Typed API client. Not wired up - see the note in its index.ts |
+| `packages/i18n`       | Locales, RTL direction, formatting, message catalogues        |
+| `packages/tokens`     | Design tokens - the only place brand values live              |
+| `packages/tsconfig`   | Shared TypeScript configs                                     |
 
 ## Common commands
 
