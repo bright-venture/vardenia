@@ -1,6 +1,7 @@
 import { setRequestLocale } from 'next-intl/server'
 import { getTranslations } from 'next-intl/server'
 import { TAXONOMY } from '@vardenia/core'
+import { Link } from '../../../i18n/routing'
 
 /**
  * The homepage.
@@ -27,12 +28,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <h1 className="font-display mt-4 text-5xl leading-tight md:text-6xl">Vardenia</h1>
       <p className="text-ink-500 mt-6 max-w-xl text-lg">{t('intro')}</p>
 
-      <nav className="mt-12 flex flex-wrap gap-6 text-sm">
-        {(['discover', 'directory', 'magazine', 'regions'] as const).map((key) => (
-          <span key={key} className="text-ink-700">
-            {nav(key)}
-          </span>
-        ))}
+      {/* Only destinations that exist, and as real links.
+          This listed four labels as plain spans: two of them - Discover and
+          Regions - have no routes behind them, and none of the four were
+          clickable. A <nav> landmark containing nothing actionable is worse
+          than no landmark, and naming sections that do not exist is the same
+          defect SiteHeader already avoids. */}
+      <nav aria-label={nav('directory')} className="mt-12 flex flex-wrap gap-6 text-sm">
+        <Link href="/directory" className="text-ink-700 hover:text-ink-900 transition-colors">
+          {nav('directory')}
+        </Link>
+        <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
+          {nav('magazine')}
+        </Link>
       </nav>
 
       <section className="mt-16">

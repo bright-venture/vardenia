@@ -12,6 +12,20 @@ export function OpeningHoursTable({
   hours: OpeningHour[] | null | undefined
   locale: Locale
 }) {
+  /**
+   * Nothing published means nothing to show, not "closed all week".
+   *
+   * `orderedHours` fills every day so the table is never gappy, which is right
+   * once there are hours to fill around. Given an empty array it filled all
+   * seven as closed - so a business that deliberately publishes no hours,
+   * because they vary by season, was rendered as permanently shut. A ski resort
+   * displayed as closed in January is worse than no hours at all.
+   *
+   * Checked on the input rather than the output, since the output is seven rows
+   * either way.
+   */
+  if (!Array.isArray(hours) || hours.length === 0) return null
+
   const rows = orderedHours(hours)
   if (rows.length === 0) return null
 

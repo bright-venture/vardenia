@@ -133,19 +133,28 @@ async function DirectoryResults({
 
       {result.totalPages > 1 ? (
         <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
-          {Array.from({ length: result.totalPages }, (_, i) => i + 1).map((n) => (
-            <Link
-              key={n}
-              href={category ? `/directory?category=${category}&page=${n}` : `/directory?page=${n}`}
-              className={
-                n === result.page
-                  ? 'bg-ink-900 text-surface-base rounded-md px-3 py-1 tabular-nums'
-                  : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-md border px-3 py-1 tabular-nums'
-              }
-            >
-              {n}
-            </Link>
-          ))}
+          {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
+            n === 'gap' ? (
+              <span key={`gap-${i}`} aria-hidden className="text-ink-300 px-1 py-1">
+                &hellip;
+              </span>
+            ) : (
+              <Link
+                key={n}
+                href={
+                  category ? `/directory?category=${category}&page=${n}` : `/directory?page=${n}`
+                }
+                aria-current={n === result.page ? 'page' : undefined}
+                className={
+                  n === result.page
+                    ? 'bg-ink-900 text-surface-base rounded-md px-3 py-1 tabular-nums'
+                    : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-md border px-3 py-1 tabular-nums'
+                }
+              >
+                {n}
+              </Link>
+            ),
+          )}
         </nav>
       ) : null}
     </>
@@ -159,6 +168,43 @@ async function DirectoryResults({
  * arrive. `aria-hidden` because a screen reader should hear the results, not a
  * description of the wait.
  */
+/**
+ * The page numbers worth showing: the first, the last, and a few either side.
+ *
+ * This rendered every page. At 24 listings a page that is 42 links for a
+ * thousand listings and 417 for ten thousand, in the HTML of every directory
+ * view - a control whose usefulness is fixed while its cost grows with the
+ * catalogue. Gaps are rendered as an ellipsis so the jump is legible rather
+ * than looking like missing pages.
+ */
+export function pageWindow(current: number, total: number, span = 2): (number | 'gap')[] {
+  if (total <= 1) return []
+
+  const wanted = new Set<number>([1, total])
+  for (let n = current - span; n <= current + span; n++) {
+    if (n >= 1 && n <= total) wanted.add(n)
+  }
+
+  const pages = [...wanted].sort((a, b) => a - b)
+  const out: (number | 'gap')[] = []
+
+  pages.forEach((n, i) => {
+    const previous = pages[i - 1]
+
+    if (previous !== undefined) {
+      const missing = n - previous - 1
+      // An ellipsis standing in for one page takes the same room as the page
+      // and tells the reader less. Only collapse a genuine run.
+      if (missing === 1) out.push(previous + 1)
+      else if (missing > 1) out.push('gap')
+    }
+
+    out.push(n)
+  })
+
+  return out
+}
+
 function DirectorySkeleton() {
   return (
     <div aria-hidden className="animate-pulse">

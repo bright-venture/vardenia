@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     }),
   )
 
-  return new Response(page(issueLabel, result.docs.length, cards.join('\n')), {
+  return new Response(page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n')), {
     headers: {
       'content-type': 'text/html; charset=utf-8',
       // Never cached: it lists who is in an unpublished issue.
@@ -159,6 +159,23 @@ function renderCard({
 }
 
 /**
+ * Shown when the sheet is not the whole list.
+ *
+ * The query is capped at 1000, and the header used to print the number of cards
+ * as though it were the total - so past that point the sheet showed 1000 codes,
+ * said "1000 codes", and gave no hint anything was missing. On the document
+ * somebody checks before sending artwork to a printer, a silently short list is
+ * the worst possible failure: every code on it is correct, and the ones that
+ * would have caught the mistake are simply absent.
+ */
+function truncationBanner(shown: number, total: number): string {
+  if (total <= shown) return ''
+  return `<p class="warn"><strong>This sheet is incomplete.</strong> Showing ${shown} of
+    ${total} codes. Narrow it with <code>?issue=</code> and check each issue separately,
+    or this proof will miss ${total - shown} of them.</p>`
+}
+
+/**
  * Shown when the codes encode a host the public cannot reach. Deliberately loud
  * and deliberately printed rather than hidden by the print stylesheet: a proof
  * that carries the warning cannot be mistaken for final artwork.
@@ -170,7 +187,7 @@ function unsafeBaseBanner(): string {
     reader, permanently. Set NEXT_PUBLIC_SITE_URL to the live https domain and generate again.</p>`
 }
 
-function page(title: string, count: number, cards: string): string {
+function page(title: string, count: number, total: number, cards: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -218,6 +235,7 @@ function page(title: string, count: number, cards: string): string {
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
   ${unsafeBaseBanner()}
+  ${truncationBanner(count, total)}
 </header>
 ${count === 0 ? '<p class="empty">No active codes match.</p>' : `<div class="grid">${cards}</div>`}
 </body>

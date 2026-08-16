@@ -93,7 +93,19 @@ export function buildMetadata({
 
     alternates: {
       canonical: localizedPath(path, locale),
-      languages: { en: path, ar: `/ar${path}` },
+      /**
+       * Built through the same helper as the canonical.
+       *
+       * Written by hand these disagreed at the root: `localizedPath('/', 'ar')`
+       * gives `/ar`, while `/ar${path}` gives `/ar/`. A page declaring one URL
+       * as canonical and a different one as its own Arabic version is exactly
+       * the confusion hreflang exists to prevent. No page passes '/' today, so
+       * this was latent - but one helper cannot drift from itself.
+       */
+      languages: {
+        en: localizedPath(path, DEFAULT_LOCALE),
+        ar: localizedPath(path, 'ar'),
+      },
     },
   }
 }

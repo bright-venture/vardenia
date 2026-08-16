@@ -24,6 +24,18 @@ import { defineConfig } from 'vitest/config'
  * meaningless or would fail the build on day one.
  */
 export default defineConfig({
+  /**
+   * Components are rendered to static markup in tests, which means the test
+   * transform has to compile JSX. tsconfig sets `jsx: "preserve"` because Next
+   * does its own compiling, and esbuild reads that as "use the classic runtime"
+   * - which needs `React` in scope and fails with "React is not defined" on
+   * files that correctly do not import it.
+   *
+   * Next uses the automatic runtime, so this makes the tests compile JSX the
+   * same way the application does.
+   */
+  esbuild: { jsx: 'automatic' },
+
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
 
