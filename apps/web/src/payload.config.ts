@@ -221,9 +221,33 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
+  /**
+   * How deep a single request may follow relationships.
+   *
+   * Payload's default ceiling is 10. Nothing here needs more than two: the
+   * deepest real query is a listing with its hero image and gallery, which is
+   * depth 2. Every level above that multiplies the work a single request can
+   * ask for, and `?depth=10` was accepted from anonymous callers.
+   *
+   * Three rather than two, to leave one level of headroom for a screen that
+   * does not exist yet without leaving room for amplification.
+   */
+  maxDepth: 3,
+
   graphQL: {
     // The public surface is REST; GraphQL stays available for internal tooling.
     disablePlaygroundInProduction: true,
+
+    /**
+     * GraphQL is the other way to ask for too much at once, and `maxDepth`
+     * does not bound it - a query can nest fields far beyond what any screen
+     * needs and cost the database dearly for one small-looking request.
+     *
+     * 1000 is generous for the queries this project actually issues, which are
+     * a listing and its immediate relations. It exists to stop a query that
+     * nobody would write by hand.
+     */
+    maxComplexity: 1000,
   },
   // Payload pins its own copy of sharp's types; the runtime object is the same.
   sharp: sharp as unknown as Config['sharp'],
