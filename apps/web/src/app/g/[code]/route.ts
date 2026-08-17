@@ -171,7 +171,17 @@ async function recordScan(
       business: businessId ?? null,
       scannedAt: new Date().toISOString(),
       placement: qr.placement,
-      // Geo headers are populated by the CDN (Vercel / Cloudflare). City-level only.
+      /**
+       * Geo comes from whatever CDN is in front, city-level only, and is null
+       * when there is none. Vercel and Cloudflare each set their own pair.
+       *
+       * Netlify sets neither, so a bare *.netlify.app deployment records every
+       * scan with no city and no country. The fix is not code: pointing the real
+       * domain through Cloudflare's proxy supplies both headers, along with
+       * cf-connecting-ip, which is the address clientIp already prefers. Until
+       * then these columns stay empty - acceptable while no reader has a printed
+       * code, and worth knowing before anyone reads a scan report as complete.
+       */
       city: request.headers.get('x-vercel-ip-city') ?? request.headers.get('cf-ipcity'),
       country: request.headers.get('x-vercel-ip-country') ?? request.headers.get('cf-ipcountry'),
       platform: detectPlatform(userAgent),

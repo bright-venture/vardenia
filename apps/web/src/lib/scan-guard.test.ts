@@ -128,6 +128,29 @@ describe('finding the client address', () => {
     expect(clientIp(new Headers({ 'x-real-ip': IP, 'x-forwarded-for': '203.0.113.9' }))).toBe(IP)
   })
 
+  /**
+   * Netlify writes its own header rather than the ones Cloudflare and Vercel use.
+   * Without it the function falls through to x-forwarded-for, which happens to
+   * work on Netlify but only because their edge appends - a weaker guarantee than
+   * a header the platform overwrites outright.
+   */
+  it('uses the Netlify header, which the platform overwrites', () => {
+    const headers = new Headers({
+      'x-forwarded-for': '203.0.113.9',
+      'x-nf-client-connection-ip': IP,
+    })
+    expect(clientIp(headers)).toBe(IP)
+  })
+
+  /** Cloudflare in front of Netlify: the outermost proxy is the one to trust. */
+  it('prefers Cloudflare over Netlify when both are present', () => {
+    const headers = new Headers({
+      'cf-connecting-ip': IP,
+      'x-nf-client-connection-ip': '203.0.113.9',
+    })
+    expect(clientIp(headers)).toBe(IP)
+  })
+
   it('takes the nearest hop from x-forwarded-for, not the caller-supplied one', () => {
     // A client sending its own header gets it prepended; the proxy appends the
     // address it actually saw.

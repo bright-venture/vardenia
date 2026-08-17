@@ -1,0 +1,28 @@
+# Netlify build configuration.
+#
+# The site is a pnpm workspace with Turborepo, so the build runs from the repo
+# root rather than from apps/web: @vardenia/web depends on five workspace
+# packages by source (see transpilePackages in next.config.mjs), and a build
+# scoped to apps/web alone cannot see them.
+#
+# `--filter=@vardenia/web` keeps the mobile app out of the deploy. Turbo still
+# builds the packages web depends on first, because the build task declares
+# dependsOn: ["^build"].
+
+[build]
+  command = "pnpm turbo run build --filter=@vardenia/web"
+  publish = "apps/web/.next"
+
+[build.environment]
+  # Matches engines (>=20.9.0) and the version CI runs on, so a build that
+  # passes in Actions is running the same runtime here.
+  #
+  # pnpm needs no setting: Netlify picks it up from pnpm-lock.yaml, and the
+  # version comes from packageManager (pnpm@9.15.0) in the root package.json.
+  NODE_VERSION = "22"
+
+# Next.js support: routing, ISR, image optimisation and the server components
+# that Payload's admin panel is built from. Without this the output in
+# apps/web/.next is served as static files and every dynamic route 404s.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

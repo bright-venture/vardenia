@@ -169,18 +169,23 @@ export function evaluateScan({ code, ip, userAgent, now = Date.now() }: ScanCont
  * or a competitor's, to make the whole dataset look untrustworthy.
  *
  * Order now:
- *  1. `cf-connecting-ip` / `x-real-ip`, which Cloudflare and Vercel set
- *     themselves and overwrite if a client supplies one.
+ *  1. `cf-connecting-ip` / `x-nf-client-connection-ip` / `x-real-ip`, which
+ *     Cloudflare, Netlify and Vercel set themselves and overwrite if a client
+ *     supplies one.
  *  2. The RIGHTMOST `x-forwarded-for` entry, appended by the nearest proxy,
  *     rather than the leftmost, which the client controls.
  *
  * This assumes exactly one trusted proxy in front of the app - the normal shape
- * on Vercel or behind Cloudflare. Exposed directly to the internet with no proxy
- * at all, every one of these headers is caller-supplied and none of them can be
- * trusted; that is a deployment property, not something this function can fix.
+ * on Vercel, on Netlify or behind Cloudflare. Exposed directly to the internet
+ * with no proxy at all, every one of these headers is caller-supplied and none of
+ * them can be trusted; that is a deployment property, not something this function
+ * can fix.
  */
 export function clientIp(headers: Headers): string | null {
-  const platform = headers.get('cf-connecting-ip') ?? headers.get('x-real-ip')
+  const platform =
+    headers.get('cf-connecting-ip') ??
+    headers.get('x-nf-client-connection-ip') ??
+    headers.get('x-real-ip')
   if (platform?.trim()) return platform.trim()
 
   const forwarded = headers.get('x-forwarded-for')
