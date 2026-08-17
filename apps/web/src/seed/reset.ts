@@ -18,6 +18,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config as loadEnv } from 'dotenv'
 import { getPayload } from 'payload'
+import { assertSeedTarget } from './guard'
 import { MANIFEST_PATH, clearManifest, loadManifest } from './manifest'
 import { resetSeed } from './run'
 
@@ -26,9 +27,11 @@ loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.
 const { default: config } = await import('../payload.config')
 
 async function main() {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Refusing to reset a production database.')
-  }
+  // Checked before the manifest, and before getPayload. The manifest guard
+  // below assumes the ids in it refer to documents here; that assumption is
+  // only true once the database has been confirmed as the right one.
+  const target = assertSeedTarget(process.env, 'reset')
+  console.log(`Resetting ${target}`)
 
   const manifest = await loadManifest()
 

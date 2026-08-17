@@ -19,6 +19,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config as loadEnv } from 'dotenv'
 import { getPayload } from 'payload'
+import { assertSeedTarget } from './guard'
 import { emptyManifest, saveManifest } from './manifest'
 import { runSeed } from './run'
 
@@ -29,9 +30,12 @@ loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.
 const { default: config } = await import('../payload.config')
 
 async function main() {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Refusing to seed a production database.')
-  }
+  // Before getPayload, not after. With NODE_ENV unset - which is how tsx runs
+  // this - `push` is true, so merely initialising Payload against the wrong
+  // database would sync its schema. By the time we could ask the database
+  // anything about itself, the damage is done.
+  const target = assertSeedTarget()
+  console.log(`Seeding ${target}`)
 
   const payload = await getPayload({ config })
   const manifest = emptyManifest()
