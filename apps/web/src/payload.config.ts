@@ -38,6 +38,37 @@ loadEnv({ path: path.resolve(dirname, '../../../.env') })
 const useS3 = process.env.MEDIA_STORAGE_ADAPTER === 's3'
 
 /**
+ * How many database connections this process may hold open.
+ *
+ * The number below used to be a flat 10, which was correct for the only shape
+ * this app had ever run in: one long-lived server, where the pool is a shared
+ * resource and 10 is the whole application's budget.
+ *
+ * On a serverless host it is not a budget, it is a multiplier. Every concurrent
+ * function instance builds its own pool, so 10 is 10 *each* - twenty instances
+ * on a busy evening is two hundred connections against a pooler that has a
+ * ceiling of its own. Worse, the symptom is not slow pages: it is the pooler
+ * refusing new clients, which surfaces as errors on requests that did nothing
+ * wrong. A single instance never needs 10 anyway; it serves a request or two at
+ * a time, and the pooler on the far end is already doing the multiplexing that
+ * a large local pool would otherwise be for.
+ *
+ * The build is the exception and has to be carved back out. `next build`
+ * prerenders every page in one process, which is exactly the burst the large
+ * pool was tuned for, and it runs on the same serverless platform - so
+ * detecting the platform alone would quietly halve build throughput.
+ *
+ * NEXT_PHASE is a Next internal rather than a documented contract. If it ever
+ * changes, this falls back to the small pool during builds: slower, never
+ * broken. That is the right direction for a guess to fail in.
+ */
+const isServerlessHost = Boolean(
+  process.env.VERCEL ?? process.env.NETLIFY ?? process.env.AWS_LAMBDA_FUNCTION_NAME,
+)
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
+const POOL_MAX = isServerlessHost && !isBuildPhase ? 3 : 10
+
+/**
  * Public base URL for uploaded files, used to build the `<img src>`.
  *
  * A bucket is reachable at two different addresses. `S3_ENDPOINT` is the
@@ -144,8 +175,10 @@ export default buildConfig({
      *  - `keepAlive` holds the TCP connection open, so a burst of navigation
      *    reuses one socket instead of repeatedly re-establishing - and
      *    re-resolving DNS, which is where an intermittent lookup failure gets in.
-     *  - `max` stays at 10. Raising it invites the pooler's own per-project
-     *    ceiling, which fails less legibly than waiting does.
+     *  - `max` is 10 on a long-lived server. Raising it invites the pooler's own
+     *    per-project ceiling, which fails less legibly than waiting does. On a
+     *    serverless host it drops to 3, because there the number is per instance
+     *    rather than per application - see POOL_MAX above.
      *  - `connectionTimeoutMillis` is the difference between a page that fails
      *    quickly and one that hangs until the reader leaves.
      *
@@ -155,7 +188,7 @@ export default buildConfig({
      */
     pool: {
       connectionString: process.env.DATABASE_URL,
-      max: 10,
+      max: POOL_MAX,
       idleTimeoutMillis: 120_000,
       connectionTimeoutMillis: 15_000,
       keepAlive: true,
