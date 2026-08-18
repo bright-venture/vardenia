@@ -1,5 +1,6 @@
-import * as migration_20260813_123246_baseline from './20260813_123246_baseline'
-import * as migration_20260813_165319_qr_category from './20260813_165319_qr_category'
+import * as migration_20260813_123246_baseline from './20260813_123246_baseline';
+import * as migration_20260813_165319_qr_category from './20260813_165319_qr_category';
+import * as migration_20260818_122702_drop_pages from './20260818_122702_drop_pages';
 
 export const migrations = [
   {
@@ -12,4 +13,9 @@ export const migrations = [
     down: migration_20260813_165319_qr_category.down,
     name: '20260813_165319_qr_category',
   },
-]
+  {
+    up: migration_20260818_122702_drop_pages.up,
+    down: migration_20260818_122702_drop_pages.down,
+    name: '20260818_122702_drop_pages'
+  },
+];

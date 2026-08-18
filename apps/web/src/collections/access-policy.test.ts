@@ -3,7 +3,6 @@ import type { Access, CollectionConfig, Field, FieldAccess } from 'payload'
 import { Businesses } from './Businesses'
 import { Articles } from './Articles'
 import { Issues } from './Issues'
-import { Pages } from './Pages'
 import { Media } from './Media'
 import { Users } from './Users'
 import { QrCodes } from './QrCodes'
@@ -116,8 +115,8 @@ describe('Businesses: the Commercial tab', () => {
 // ---------------------------------------------------------------------------
 
 describe('collection read access', () => {
-  it('hides unpublished listings, articles and pages from the public', () => {
-    for (const config of [Businesses, Articles, Pages]) {
+  it('hides unpublished listings and articles from the public', () => {
+    for (const config of [Businesses, Articles]) {
       const read = config.access?.read
       expect(read, `${config.slug} has no read rule`).toBeDefined()
       expect(read!(ctx(null)), `${config.slug} should constrain anonymous reads`).toEqual({
@@ -144,7 +143,7 @@ describe('collection read access', () => {
 
 describe('collection write access', () => {
   it('refuses every anonymous write across every collection', () => {
-    const all = [Businesses, Articles, Issues, Pages, Media, Users, QrCodes, ScanEvents]
+    const all = [Businesses, Articles, Issues, Media, Users, QrCodes, ScanEvents]
 
     for (const config of all) {
       for (const action of ['create', 'update', 'delete'] as const) {

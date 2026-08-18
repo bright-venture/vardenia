@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url'
 const FILE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.seed-manifest.json')
 
 export type ManifestCollection =
-  'businesses' | 'articles' | 'issues' | 'pages' | 'media' | 'qr-codes' | 'scan-events' | 'users'
+  'businesses' | 'articles' | 'issues' | 'media' | 'qr-codes' | 'scan-events' | 'users'
 
 export interface Manifest {
   /** When the seed ran, for a human reading the file. */

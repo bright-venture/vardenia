@@ -1,18 +1,20 @@
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
-import { findPages } from '../lib/pages'
 
 /**
  * The site footer.
  *
- * Standing pages are read from the CMS rather than hardcoded, so publishing
- * "Privacy Policy" in the admin makes it appear here on its own. Nobody has to
- * remember to also add a link, which is how footers end up missing the one page
- * a regulator asks for.
+ * This used to also list standing pages - About, Advertise, Privacy, Terms -
+ * read from a Pages collection so that publishing one made it appear here on its
+ * own. That collection is gone, and with it the mechanism for publishing a
+ * privacy policy or terms of service without a deploy.
  *
- * Only published pages come back: `findPages` runs with `overrideAccess: false`,
- * so a draft in progress stays out of the footer.
+ * That is worth remembering rather than rediscovering. Customer accounts and
+ * card payments are the two things that make those documents legally required,
+ * and both are on the roadmap. When they land, the pages have to come back in
+ * some form - either the collection again, or routes written in code and linked
+ * from here deliberately.
  *
  * The year is computed at render. These pages are statically generated, so a
  * hardcoded one would quietly go stale and a hydration-mismatched client clock
@@ -21,7 +23,6 @@ import { findPages } from '../lib/pages'
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations('nav')
   const ar = locale === 'ar'
-  const pages = await findPages(locale)
 
   return (
     <footer className="border-ink-100 mt-24 border-t">
@@ -50,23 +51,6 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               {ar ? 'الأعداد' : 'Issues'}
             </Link>
           </nav>
-
-          {pages.length > 0 ? (
-            <nav
-              aria-label={ar ? 'صفحات الموقع' : 'Site pages'}
-              className="flex flex-col gap-2 text-sm"
-            >
-              {pages.map((page) => (
-                <Link
-                  key={page.id}
-                  href={`/pages/${page.slug}`}
-                  className="text-ink-700 hover:text-ink-900 transition-colors"
-                >
-                  {page.title}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
         </div>
 
         <p className="text-ink-300 mt-10 text-xs">

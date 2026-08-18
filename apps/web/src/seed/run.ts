@@ -4,7 +4,6 @@ import {
   BUSINESSES,
   ISSUES,
   MEDIA_PREFIX,
-  PAGES,
   SCAN_CITIES,
   type BusinessFixture,
 } from './fixtures'
@@ -28,7 +27,7 @@ const STAFF_EMAIL = process.env.SEED_STAFF_EMAIL ?? 'staff@vardenia.local'
 const SCAN_COUNT = 220
 
 /** Collections this script writes to. */
-type SeedCollection = 'businesses' | 'articles' | 'issues' | 'pages'
+type SeedCollection = 'businesses' | 'articles' | 'issues'
 
 /**
  * The single place fixture data crosses into Payload's generated types.
@@ -334,33 +333,6 @@ async function seedArticles(payload: Payload, manifest: Manifest) {
   }
 }
 
-async function seedPages(payload: Payload, manifest: Manifest) {
-  for (const fixture of PAGES) {
-    if (await findBySlug(payload, 'pages', fixture.slug)) continue
-
-    const created = await payload.create({
-      collection: 'pages',
-      locale: 'en',
-      data: asData({
-        title: fixture.title.en,
-        slug: fixture.slug,
-        body: richText(fixture.body.en),
-        _status: fixture.status,
-      }),
-    })
-
-    await payload.update({
-      collection: 'pages',
-      id: created.id,
-      locale: 'ar',
-      data: asData({ title: fixture.title.ar, body: richText(fixture.body.ar) }),
-    })
-
-    record(manifest, 'pages', created.id)
-    payload.logger.info(`Page: ${fixture.title.en}`)
-  }
-}
-
 /**
  * Attach every code to the issue and generate a scan history.
  *
@@ -501,7 +473,6 @@ export async function runSeed(payload: Payload, manifest: Manifest): Promise<Man
   await seedIssues(payload, manifest)
   await seedBusinesses(payload, manifest)
   await seedArticles(payload, manifest)
-  await seedPages(payload, manifest)
   await seedScans(payload, manifest)
   return manifest
 }
@@ -534,7 +505,6 @@ export async function resetSeed(payload: Payload, manifest: Manifest): Promise<v
   await deleteAll(payload, 'articles', idsFor(manifest, 'articles'))
   await deleteAll(payload, 'businesses', idsFor(manifest, 'businesses'))
   await deleteAll(payload, 'issues', idsFor(manifest, 'issues'))
-  await deleteAll(payload, 'pages', idsFor(manifest, 'pages'))
 
   // Media last: blockMediaInUse refuses anything still referenced, so a warning
   // here means something above did not get removed.

@@ -14,7 +14,6 @@ import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
-import { Pages } from './collections/Pages'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 
@@ -120,7 +119,7 @@ export default buildConfig({
     },
   },
 
-  collections: [Businesses, QrCodes, Articles, Issues, Pages, Media, Users, ScanEvents],
+  collections: [Businesses, QrCodes, Articles, Issues, Media, Users, ScanEvents],
 
   /**
    * Fail at boot rather than at the first scan.

@@ -3,7 +3,6 @@ import { LOCALES } from '@vardenia/i18n'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
 import { findAllIssueSlugs } from '../lib/issues'
-import { findAllPageSlugs } from '../lib/pages'
 
 /**
  * The list of pages we want indexed, handed to search engines directly.
@@ -31,8 +30,6 @@ const CHANGE_FREQUENCY = {
   article: 'monthly',
   /** An issue is fixed the moment it prints. */
   issue: 'yearly',
-  /** Terms, privacy, about. */
-  page: 'yearly',
   /** Index pages change whenever anything under them does. */
   index: 'daily',
 } as const
@@ -59,11 +56,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
   const now = new Date()
 
-  const [listings, articles, issues, pages] = await Promise.all([
+  const [listings, articles, issues] = await Promise.all([
     findAllListingSlugs(),
     findAllArticleSlugs(),
     findAllIssueSlugs(),
-    findAllPageSlugs(),
   ])
 
   const entries: MetadataRoute.Sitemap = []
@@ -99,7 +95,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const slug of listings) push(`/directory/${slug}`, CHANGE_FREQUENCY.listing, 0.8)
   for (const slug of articles) push(`/magazine/articles/${slug}`, CHANGE_FREQUENCY.article, 0.6)
   for (const slug of issues) push(`/magazine/issues/${slug}`, CHANGE_FREQUENCY.issue, 0.5)
-  for (const slug of pages) push(`/pages/${slug}`, CHANGE_FREQUENCY.page, 0.3)
 
   return entries
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GOVERNORATES, LISTING_TIERS, TAXONOMY, isWithinLebanon } from '@vardenia/core'
-import { ARTICLES, BUSINESSES, ISSUES, PAGES, SCAN_CITIES, SEEDED_SLUGS } from './fixtures'
+import { ARTICLES, BUSINESSES, ISSUES, SCAN_CITIES, SEEDED_SLUGS } from './fixtures'
 import { richText } from './rich-text'
 
 /**
@@ -200,7 +200,6 @@ describe('slugs', () => {
     expect(SEEDED_SLUGS.businesses).toHaveLength(BUSINESSES.length)
     expect(SEEDED_SLUGS.articles).toHaveLength(ARTICLES.length)
     expect(SEEDED_SLUGS.issues).toHaveLength(ISSUES.length)
-    expect(SEEDED_SLUGS.pages).toHaveLength(PAGES.length)
   })
 })
 

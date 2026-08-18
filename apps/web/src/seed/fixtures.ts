@@ -348,46 +348,6 @@ export const ISSUES: IssueFixture[] = [
   },
 ]
 
-export interface PageFixture {
-  slug: string
-  title: { en: string; ar: string }
-  body: { en: string[]; ar: string[] }
-  status: 'published' | 'draft'
-}
-
-export const PAGES: PageFixture[] = [
-  {
-    slug: 'about',
-    title: { en: 'About Vardenia', ar: 'عن فاردينيا' },
-    body: {
-      en: [
-        'Vardenia is a printed magazine and a directory of places in Lebanon worth going out of your way for.',
-        'Every listing is visited before it appears.',
-      ],
-      ar: [
-        'فاردينيا مجلة مطبوعة ودليل لأماكن في لبنان تستحق أن تقصدها.',
-        'تتم زيارة كل مكان قبل إدراجه.',
-      ],
-    },
-    status: 'published',
-  },
-  {
-    slug: 'advertise',
-    title: { en: 'Advertise with us', ar: 'أعلن معنا' },
-    body: {
-      en: [
-        'Listings run for twelve months in print and online, and carry a QR code that stays pointed at your page for as long as the issue is in circulation.',
-        'Write to sales@vardenia.com for the current rate card.',
-      ],
-      ar: [
-        'تستمر القوائم اثني عشر شهراً في المطبوع وعلى الإنترنت، وتحمل رمز استجابة سريعة يبقى موجهاً إلى صفحتك.',
-        'راسلنا على sales@vardenia.com للحصول على قائمة الأسعار.',
-      ],
-    },
-    status: 'published',
-  },
-]
-
 /** Cities scan events are attributed to, weighted roughly by real traffic. */
 export const SCAN_CITIES: { city: string; country: string; weight: number }[] = [
   { city: 'Beirut', country: 'LB', weight: 40 },
@@ -407,7 +367,6 @@ export const SEEDED_SLUGS = {
   businesses: BUSINESSES.map((b) => b.slug),
   articles: ARTICLES.map((a) => a.slug),
   issues: ISSUES.map((i) => i.slug),
-  pages: PAGES.map((p) => p.slug),
 }
 
 /** Uploaded files are prefixed with this so reset can find them. */
