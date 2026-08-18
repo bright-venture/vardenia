@@ -10,6 +10,8 @@ import { LOCALES, DEFAULT_LOCALE } from '@vardenia/i18n'
 
 import { DB_SCHEMA, assertDatabaseInternals } from './lib/db'
 import { Users } from './collections/Users'
+import { BusinessUsers } from './collections/BusinessUsers'
+import { Customers } from './collections/Customers'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
@@ -119,7 +121,17 @@ export default buildConfig({
     },
   },
 
-  collections: [Businesses, QrCodes, Articles, Issues, Media, Users, ScanEvents],
+  collections: [
+    Businesses,
+    QrCodes,
+    Articles,
+    Issues,
+    Media,
+    Users,
+    BusinessUsers,
+    Customers,
+    ScanEvents,
+  ],
 
   /**
    * Fail at boot rather than at the first scan.

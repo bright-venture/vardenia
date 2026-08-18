@@ -1,6 +1,11 @@
 import type { CollectionConfig } from 'payload'
 import { LISTING_TIERS, isWithinLebanon } from '@vardenia/core'
-import { isAdminFieldLevel, isStaff, isStaffFieldLevel, publishedOrStaff } from '../access/index'
+import {
+  isAdminFieldLevel,
+  isStaff,
+  isStaffFieldLevel,
+  publishedStaffOrOwned,
+} from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { externalLinkField } from '../fields/externalLink'
@@ -30,7 +35,7 @@ export const Businesses: CollectionConfig = {
   },
   versions: { drafts: true, maxPerDoc: 25 },
   access: {
-    read: publishedOrStaff,
+    read: publishedStaffOrOwned,
     create: isStaff,
     update: isStaff,
     delete: isStaff,

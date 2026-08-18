@@ -7,6 +7,8 @@ import { Media } from './Media'
 import { Users } from './Users'
 import { QrCodes } from './QrCodes'
 import { ScanEvents } from './ScanEvents'
+import { BusinessUsers } from './BusinessUsers'
+import { Customers } from './Customers'
 
 /**
  * The access *policy*, as opposed to the access *helpers*.
@@ -26,8 +28,8 @@ import { ScanEvents } from './ScanEvents'
  * this asserts the configuration is what we believe it is.
  */
 
-const admin = { id: 1, roles: ['admin'] }
-const staff = { id: 2, roles: ['staff'] }
+const admin = { id: 1, collection: 'users', roles: ['admin'] }
+const staff = { id: 2, collection: 'users', roles: ['staff'] }
 
 const ctx = (user: unknown, extra: Record<string, unknown> = {}) =>
   ({ req: { user }, ...extra }) as unknown as Parameters<Access>[0]
@@ -143,7 +145,17 @@ describe('collection read access', () => {
 
 describe('collection write access', () => {
   it('refuses every anonymous write across every collection', () => {
-    const all = [Businesses, Articles, Issues, Media, Users, QrCodes, ScanEvents]
+    const all = [
+      Businesses,
+      Articles,
+      Issues,
+      Media,
+      Users,
+      BusinessUsers,
+      Customers,
+      QrCodes,
+      ScanEvents,
+    ]
 
     for (const config of all) {
       for (const action of ['create', 'update', 'delete'] as const) {
@@ -228,5 +240,103 @@ describe('Issues', () => {
     expect(read).toBeDefined()
     expect(read!(fieldCtx(null))).toBe(false)
     expect(read!(fieldCtx(staff))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The account collections
+// ---------------------------------------------------------------------------
+
+/**
+ * Two auth collections beyond staff, and the risk they introduce is the same in
+ * both: a rule that says "any logged-in user" instead of "this user". That reads
+ * as a permission check and behaves as a directory listing.
+ */
+describe('account collections', () => {
+  const owner = { id: 20, collection: 'business-users', businesses: [7] }
+  const customer = { id: 21, collection: 'customers' }
+
+  it.each([
+    ['business-users', BusinessUsers],
+    ['customers', Customers],
+  ])('%s is never readable anonymously', (_slug, config) => {
+    expect(config.access?.read!(ctx(null))).toBe(false)
+  })
+
+  it.each([
+    ['business-users', BusinessUsers, { id: 20, collection: 'business-users', businesses: [7] }],
+    ['customers', Customers, { id: 21, collection: 'customers' }],
+  ])('%s constrains a signed-in account to its own row', (_slug, config, user) => {
+    expect(config.access?.read!(ctx(user))).toEqual({ id: { equals: user.id } })
+  })
+
+  /**
+   * Neither account type may create its own login. Owners are made by staff
+   * during onboarding, and customer sign-up stays closed until verification,
+   * a shared rate limiter and CSRF exist. See the note in Customers.ts.
+   */
+  it.each([
+    ['business-users', BusinessUsers],
+    ['customers', Customers],
+  ])('%s cannot be created by the public or by account holders', (_slug, config) => {
+    const create = config.access?.create
+    expect(create!(ctx(null))).toBe(false)
+    expect(create!(ctx(owner))).toBe(false)
+    expect(create!(ctx(customer))).toBe(false)
+    expect(create!(ctx(staff))).toBe(true)
+  })
+
+  /**
+   * The field that decides everything else.
+   *
+   * `businesses` is what every ownership check reads, so write access to it is
+   * write access to every listing on the site. An owner can update their own
+   * record - name, password - and that same endpoint must not let them append a
+   * business they have never seen.
+   */
+  it('lets only staff write the businesses relationship', () => {
+    /**
+     * Narrowed by hand rather than with `Extract<Field, { name: string }>`,
+     * which still admits UIField - a field type that has a name and no access
+     * rules at all, so the union has no `access` property to read.
+     */
+    const field = BusinessUsers.fields.find((f) => 'name' in f && f.name === 'businesses') as
+      { access?: { create?: FieldAccess; update?: FieldAccess } } | undefined
+
+    expect(field, 'businesses field is missing').toBeDefined()
+
+    for (const action of ['create', 'update'] as const) {
+      const rule = field!.access?.[action]
+      expect(rule, `businesses.${action} has no rule`).toBeDefined()
+      expect(rule!(fieldCtx(owner)), `an owner must not ${action} their own businesses`).toBe(false)
+      expect(rule!(fieldCtx(customer))).toBe(false)
+      expect(rule!(fieldCtx(null))).toBe(false)
+      expect(rule!(fieldCtx(staff))).toBe(true)
+    }
+  })
+})
+
+/**
+ * Listings gained an owner clause. The public rule must be unchanged by it -
+ * this is the read path every anonymous visitor takes.
+ */
+describe('Businesses read access with owners in play', () => {
+  it('still constrains the public to published listings', () => {
+    expect(Businesses.access?.read!(ctx(null))).toEqual({ _status: { equals: 'published' } })
+  })
+
+  it('gives an owner their own listings on top of the published ones', () => {
+    const owner = { id: 20, collection: 'business-users', businesses: [7] }
+    expect(Businesses.access?.read!(ctx(owner))).toEqual({
+      or: [{ _status: { equals: 'published' } }, { id: { in: [7] } }],
+    })
+  })
+
+  /** Reading a listing is not editing one. Curation stays with the team. */
+  it('gives owners no write access of any kind', () => {
+    const owner = { id: 20, collection: 'business-users', businesses: [7] }
+    for (const action of ['create', 'update', 'delete'] as const) {
+      expect(Businesses.access?.[action]!(ctx(owner)), `owner should not ${action}`).toBe(false)
+    }
   })
 })
