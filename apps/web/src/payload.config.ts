@@ -19,6 +19,7 @@ import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
+import { allowedOrigins } from './lib/origins'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -298,6 +299,19 @@ export default buildConfig({
   // Payload pins its own copy of sharp's types; the runtime object is the same.
   sharp: sharp as unknown as Config['sharp'],
 
-  cors: [process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'].filter(Boolean),
-  csrf: [process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'].filter(Boolean),
+  /**
+   * Who may talk to this instance. Built in lib/origins - see the note there on
+   * why exact matching makes a trailing slash a real outage.
+   *
+   * Both lists were previously the single value of NEXT_PUBLIC_SITE_URL, which
+   * was right while the only account was a staff login on one hostname. It is
+   * not right now: `www` was missing, and `csrf` decides which pages may make a
+   * request carrying a customer's or an owner's auth cookie.
+   *
+   * The `.filter(Boolean)` that used to be here never removed anything - the
+   * `??` before it guaranteed a value - which is the kind of guard that reads as
+   * protection while doing nothing.
+   */
+  cors: allowedOrigins(),
+  csrf: allowedOrigins(),
 })

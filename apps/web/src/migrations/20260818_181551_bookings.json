@@ -70,12 +70,8 @@
           "tableFrom": "businesses_amenities",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -154,12 +150,8 @@
           "tableFrom": "businesses_subcategories",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -257,12 +249,8 @@
           "tableFrom": "businesses_opening_hours",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -341,12 +329,8 @@
           "tableFrom": "businesses_seasonality",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -862,12 +846,8 @@
           "tableFrom": "businesses",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "hero_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hero_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -876,12 +856,8 @@
           "tableFrom": "businesses",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "logo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["logo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -890,12 +866,8 @@
           "tableFrom": "businesses",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "sales_owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sales_owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -904,12 +876,8 @@
           "tableFrom": "businesses",
           "tableTo": "qr_codes",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "qr_code_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["qr_code_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -918,12 +886,8 @@
           "tableFrom": "businesses",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1044,12 +1008,8 @@
           "tableFrom": "businesses_locales",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1124,12 +1084,8 @@
           "tableFrom": "businesses_texts",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1243,12 +1199,8 @@
           "tableFrom": "businesses_rels",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1257,12 +1209,8 @@
           "tableFrom": "businesses_rels",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1341,12 +1289,8 @@
           "tableFrom": "_businesses_v_version_amenities",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1425,12 +1369,8 @@
           "tableFrom": "_businesses_v_version_subcategories",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1534,12 +1474,8 @@
           "tableFrom": "_businesses_v_version_opening_hours",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1618,12 +1554,8 @@
           "tableFrom": "_businesses_v_version_seasonality",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2266,12 +2198,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2280,12 +2208,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_hero_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_hero_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2294,12 +2218,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_logo_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_logo_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2308,12 +2228,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_sales_owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_sales_owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2322,12 +2238,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "qr_codes",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_qr_code_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_qr_code_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2336,12 +2248,8 @@
           "tableFrom": "_businesses_v",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2462,12 +2370,8 @@
           "tableFrom": "_businesses_v_locales",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2542,12 +2446,8 @@
           "tableFrom": "_businesses_v_texts",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2661,12 +2561,8 @@
           "tableFrom": "_businesses_v_rels",
           "tableTo": "_businesses_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2675,12 +2571,8 @@
           "tableFrom": "_businesses_v_rels",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2896,12 +2788,8 @@
           "tableFrom": "qr_codes",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2910,12 +2798,8 @@
           "tableFrom": "qr_codes",
           "tableTo": "articles",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "article_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["article_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -2924,12 +2808,8 @@
           "tableFrom": "qr_codes",
           "tableTo": "issues",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issue_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3214,12 +3094,8 @@
           "tableFrom": "articles",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "sponsored_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sponsored_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3228,12 +3104,8 @@
           "tableFrom": "articles",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "hero_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["hero_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3242,12 +3114,8 @@
           "tableFrom": "articles",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3256,12 +3124,8 @@
           "tableFrom": "articles",
           "tableTo": "issues",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "print_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["print_issue_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3270,12 +3134,8 @@
           "tableFrom": "articles",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -3369,12 +3229,8 @@
           "tableFrom": "articles_locales",
           "tableTo": "articles",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3488,12 +3344,8 @@
           "tableFrom": "articles_rels",
           "tableTo": "articles",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3502,12 +3354,8 @@
           "tableFrom": "articles_rels",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "businesses_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["businesses_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3919,12 +3767,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "articles",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3933,12 +3777,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_sponsored_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_sponsored_by_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3947,12 +3787,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_hero_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_hero_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3961,12 +3797,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_author_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3975,12 +3807,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "issues",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_print_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_print_issue_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -3989,12 +3817,8 @@
           "tableFrom": "_articles_v",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "version_seo_image_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_seo_image_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4088,12 +3912,8 @@
           "tableFrom": "_articles_v_locales",
           "tableTo": "_articles_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4207,12 +4027,8 @@
           "tableFrom": "_articles_v_rels",
           "tableTo": "_articles_v",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4221,12 +4037,8 @@
           "tableFrom": "_articles_v_rels",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "businesses_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["businesses_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4403,12 +4215,8 @@
           "tableFrom": "issues",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "cover_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cover_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -4417,12 +4225,8 @@
           "tableFrom": "issues",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "digital_edition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["digital_edition_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4498,12 +4302,8 @@
           "tableFrom": "issues_locales",
           "tableTo": "issues",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4981,12 +4781,8 @@
           "tableFrom": "media_locales",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5065,12 +4861,8 @@
           "tableFrom": "users_roles",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5154,12 +4946,8 @@
           "tableFrom": "users_sessions",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5377,12 +5165,8 @@
           "tableFrom": "business_users_sessions",
           "tableTo": "business_users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5630,12 +5414,8 @@
           "tableFrom": "business_users_rels",
           "tableTo": "business_users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5644,12 +5424,8 @@
           "tableFrom": "business_users_rels",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "businesses_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["businesses_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5733,12 +5509,8 @@
           "tableFrom": "customers_sessions",
           "tableTo": "customers",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "_parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["_parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6078,12 +5850,8 @@
           "tableFrom": "bookings",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6092,12 +5860,8 @@
           "tableFrom": "bookings",
           "tableTo": "customers",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6274,12 +6038,8 @@
           "tableFrom": "scan_events",
           "tableTo": "qr_codes",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "qr_code_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["qr_code_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -6288,12 +6048,8 @@
           "tableFrom": "scan_events",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6728,12 +6484,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "payload_locked_documents",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6742,12 +6494,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "businesses",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "businesses_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["businesses_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6756,12 +6504,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "qr_codes",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "qr_codes_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["qr_codes_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6770,12 +6514,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "articles",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "articles_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["articles_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6784,12 +6524,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "issues",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "issues_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["issues_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6798,12 +6534,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "media",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["media_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6812,12 +6544,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6826,12 +6554,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "business_users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "business_users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6840,12 +6564,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "customers",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "customers_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customers_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6854,12 +6574,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "bookings",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "bookings_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bookings_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6868,12 +6584,8 @@
           "tableFrom": "payload_locked_documents_rels",
           "tableTo": "scan_events",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "scan_events_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scan_events_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7120,12 +6832,8 @@
           "tableFrom": "payload_preferences_rels",
           "tableTo": "payload_preferences",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7134,12 +6842,8 @@
           "tableFrom": "payload_preferences_rels",
           "tableTo": "users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7148,12 +6852,8 @@
           "tableFrom": "payload_preferences_rels",
           "tableTo": "business_users",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "business_users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_users_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7162,12 +6862,8 @@
           "tableFrom": "payload_preferences_rels",
           "tableTo": "customers",
           "schemaTo": "payload",
-          "columnsFrom": [
-            "customers_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customers_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -7259,10 +6955,7 @@
     "payload._locales": {
       "name": "_locales",
       "schema": "payload",
-      "values": [
-        "en",
-        "ar"
-      ]
+      "values": ["en", "ar"]
     },
     "payload.enum_businesses_amenities": {
       "name": "enum_businesses_amenities",
@@ -7346,34 +7039,17 @@
     "payload.enum_businesses_opening_hours_day": {
       "name": "enum_businesses_opening_hours_day",
       "schema": "payload",
-      "values": [
-        "mon",
-        "tue",
-        "wed",
-        "thu",
-        "fri",
-        "sat",
-        "sun"
-      ]
+      "values": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
     },
     "payload.enum_businesses_seasonality": {
       "name": "enum_businesses_seasonality",
       "schema": "payload",
-      "values": [
-        "year-round",
-        "summer",
-        "winter"
-      ]
+      "values": ["year-round", "summer", "winter"]
     },
     "payload.enum_businesses_price_range": {
       "name": "enum_businesses_price_range",
       "schema": "payload",
-      "values": [
-        "1",
-        "2",
-        "3",
-        "4"
-      ]
+      "values": ["1", "2", "3", "4"]
     },
     "payload.enum_businesses_category": {
       "name": "enum_businesses_category",
@@ -7437,20 +7113,12 @@
     "payload.enum_businesses_tier": {
       "name": "enum_businesses_tier",
       "schema": "payload",
-      "values": [
-        "free",
-        "listed",
-        "featured",
-        "partner"
-      ]
+      "values": ["free", "listed", "featured", "partner"]
     },
     "payload.enum_businesses_status": {
       "name": "enum_businesses_status",
       "schema": "payload",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "payload.enum__businesses_v_version_amenities": {
       "name": "enum__businesses_v_version_amenities",
@@ -7534,34 +7202,17 @@
     "payload.enum__businesses_v_version_opening_hours_day": {
       "name": "enum__businesses_v_version_opening_hours_day",
       "schema": "payload",
-      "values": [
-        "mon",
-        "tue",
-        "wed",
-        "thu",
-        "fri",
-        "sat",
-        "sun"
-      ]
+      "values": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
     },
     "payload.enum__businesses_v_version_seasonality": {
       "name": "enum__businesses_v_version_seasonality",
       "schema": "payload",
-      "values": [
-        "year-round",
-        "summer",
-        "winter"
-      ]
+      "values": ["year-round", "summer", "winter"]
     },
     "payload.enum__businesses_v_version_price_range": {
       "name": "enum__businesses_v_version_price_range",
       "schema": "payload",
-      "values": [
-        "1",
-        "2",
-        "3",
-        "4"
-      ]
+      "values": ["1", "2", "3", "4"]
     },
     "payload.enum__businesses_v_version_category": {
       "name": "enum__businesses_v_version_category",
@@ -7625,39 +7276,22 @@
     "payload.enum__businesses_v_version_tier": {
       "name": "enum__businesses_v_version_tier",
       "schema": "payload",
-      "values": [
-        "free",
-        "listed",
-        "featured",
-        "partner"
-      ]
+      "values": ["free", "listed", "featured", "partner"]
     },
     "payload.enum__businesses_v_version_status": {
       "name": "enum__businesses_v_version_status",
       "schema": "payload",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "payload.enum__businesses_v_published_locale": {
       "name": "enum__businesses_v_published_locale",
       "schema": "payload",
-      "values": [
-        "en",
-        "ar"
-      ]
+      "values": ["en", "ar"]
     },
     "payload.enum_qr_codes_target_type": {
       "name": "enum_qr_codes_target_type",
       "schema": "payload",
-      "values": [
-        "business",
-        "article",
-        "issue",
-        "category",
-        "external"
-      ]
+      "values": ["business", "article", "issue", "category", "external"]
     },
     "payload.enum_qr_codes_category": {
       "name": "enum_qr_codes_category",
@@ -7675,21 +7309,12 @@
     "payload.enum_qr_codes_placement": {
       "name": "enum_qr_codes_placement",
       "schema": "payload",
-      "values": [
-        "magazine-page"
-      ]
+      "values": ["magazine-page"]
     },
     "payload.enum_articles_kind": {
       "name": "enum_articles_kind",
       "schema": "payload",
-      "values": [
-        "feature",
-        "guide",
-        "interview",
-        "itinerary",
-        "news",
-        "sponsored"
-      ]
+      "values": ["feature", "guide", "interview", "itinerary", "news", "sponsored"]
     },
     "payload.enum_articles_category": {
       "name": "enum_articles_category",
@@ -7721,22 +7346,12 @@
     "payload.enum_articles_status": {
       "name": "enum_articles_status",
       "schema": "payload",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "payload.enum__articles_v_version_kind": {
       "name": "enum__articles_v_version_kind",
       "schema": "payload",
-      "values": [
-        "feature",
-        "guide",
-        "interview",
-        "itinerary",
-        "news",
-        "sponsored"
-      ]
+      "values": ["feature", "guide", "interview", "itinerary", "news", "sponsored"]
     },
     "payload.enum__articles_v_version_category": {
       "name": "enum__articles_v_version_category",
@@ -7768,63 +7383,37 @@
     "payload.enum__articles_v_version_status": {
       "name": "enum__articles_v_version_status",
       "schema": "payload",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "payload.enum__articles_v_published_locale": {
       "name": "enum__articles_v_published_locale",
       "schema": "payload",
-      "values": [
-        "en",
-        "ar"
-      ]
+      "values": ["en", "ar"]
     },
     "payload.enum_media_usage_rights": {
       "name": "enum_media_usage_rights",
       "schema": "payload",
-      "values": [
-        "owned",
-        "licensed",
-        "supplied"
-      ]
+      "values": ["owned", "licensed", "supplied"]
     },
     "payload.enum_users_roles": {
       "name": "enum_users_roles",
       "schema": "payload",
-      "values": [
-        "admin",
-        "staff"
-      ]
+      "values": ["admin", "staff"]
     },
     "payload.enum_bookings_status": {
       "name": "enum_bookings_status",
       "schema": "payload",
-      "values": [
-        "pending",
-        "confirmed",
-        "cancelled",
-        "completed",
-        "no-show"
-      ]
+      "values": ["pending", "confirmed", "cancelled", "completed", "no-show"]
     },
     "payload.enum_scan_events_placement": {
       "name": "enum_scan_events_placement",
       "schema": "payload",
-      "values": [
-        "magazine-page"
-      ]
+      "values": ["magazine-page"]
     },
     "payload.enum_scan_events_platform": {
       "name": "enum_scan_events_platform",
       "schema": "payload",
-      "values": [
-        "ios",
-        "android",
-        "web",
-        "unknown"
-      ]
+      "values": ["ios", "android", "web", "unknown"]
     }
   },
   "schemas": {
