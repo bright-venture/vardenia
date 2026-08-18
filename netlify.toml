@@ -10,7 +10,29 @@
 # dependsOn: ["^build"].
 
 [build]
-  command = "pnpm turbo run build --filter=@vardenia/web"
+  # Two commands, and the order matters.
+  #
+  # src/payload-types.ts is generated from the collection definitions and is
+  # deliberately not committed - a stale checked-in type file is worse than
+  # none, because it disagrees with the schema silently. CI generates it before
+  # typechecking; this build has to do the same, or every collection resolves to
+  # `JsonObject & TypeWithID` and `next build` fails on the first place a real
+  # field is read.
+  #
+  # NODE_ENV is set inline on that first command rather than in
+  # [build.environment], and both halves of that are deliberate:
+  #
+  #  - It must be set, because payload.config has `push: NODE_ENV !==
+  #    'production'`. Left unset, generating types would initialise Payload with
+  #    push enabled against DATABASE_URL, which here is production, and sync the
+  #    schema on connect. Migrations exist precisely so that never happens.
+  #  - It must NOT be global, because Netlify runs `pnpm install` before this
+  #    command, and a production NODE_ENV would have it skip devDependencies -
+  #    taking turbo and typescript with them.
+  #
+  # `next build` sets NODE_ENV=production itself, so the second command is
+  # already safe.
+  command = "NODE_ENV=production pnpm --filter @vardenia/web generate:types && pnpm turbo run build --filter=@vardenia/web"
   publish = "apps/web/.next"
 
 [build.environment]
