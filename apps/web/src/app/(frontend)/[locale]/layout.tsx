@@ -6,6 +6,7 @@ import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
 import { JsonLd } from '../../../components/JsonLd'
+import { isIndexingAllowed } from '../../../lib/indexing'
 import { organizationSchema } from '../../../lib/structured-data'
 import '../../globals.css'
 
@@ -46,6 +47,17 @@ export async function generateMetadata({
       template: t('titleTemplate'),
     },
     description: t('description'),
+
+    /**
+     * Site-wide noindex until the directory has content. See lib/indexing.
+     *
+     * Set here so the pages that do not go through `buildMetadata` - the home
+     * page, the directory index, the magazine index - are covered too. The four
+     * page types that do use `buildMetadata` apply the same rule themselves,
+     * because a child's `robots` field replaces this one rather than merging
+     * with it.
+     */
+    robots: isIndexingAllowed() ? undefined : { index: false, follow: false },
   }
 }
 

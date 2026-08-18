@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DEFAULT_LOCALE, type Locale } from '@vardenia/i18n'
+import { isIndexingAllowed } from './indexing'
 import { resolveImage, type MediaField } from './media'
 
 /**
@@ -79,9 +80,18 @@ export function buildMetadata({
     title: resolvedTitle,
     description: resolvedDescription,
 
-    // The whole point of the checkbox. `follow: false` as well as `index: false`
-    // so links out of a hidden page do not drag it back into the index.
-    robots: seo.noIndex ? { index: false, follow: false } : undefined,
+    /**
+     * The whole point of the checkbox. `follow: false` as well as `index: false`
+     * so links out of a hidden page do not drag it back into the index.
+     *
+     * The site-wide switch is applied here as well as in the layout, rather than
+     * relying on the layout alone. Next merges metadata by field, and a child
+     * that sets `robots` replaces the parent's - so a page whose editor ticked
+     * nothing would emit `robots: undefined` and quietly discard the site-wide
+     * noindex it was supposed to inherit. Deciding it in one place removes the
+     * question.
+     */
+    robots: seo.noIndex || !isIndexingAllowed() ? { index: false, follow: false } : undefined,
 
     openGraph: {
       title: resolvedTitle,

@@ -1,6 +1,7 @@
 import type { Payload, TypedUser } from 'payload'
 import { tierOf } from '@vardenia/core'
 import { dashboardCounts } from '../../lib/dashboard-stats'
+import { indexingWarning } from '../../lib/indexing'
 
 /**
  * The panel above Payload's collection cards on the admin dashboard.
@@ -34,7 +35,14 @@ interface Props {
 
 interface Attention {
   label: string
-  href: string
+  /**
+   * Optional, because not everything needing attention is a document.
+   *
+   * Every entry used to be a listing, so a link was always the right thing.
+   * Configuration problems have no page to open - they are fixed in the hosting
+   * dashboard - and inventing a destination would be worse than not linking.
+   */
+  href?: string
   detail: string
   tone: 'warn' | 'error'
 }
@@ -94,6 +102,24 @@ export async function DashboardOverview({ payload, user }: Props) {
 
   const attention: Attention[] = []
 
+  /**
+   * First, because it affects the whole site rather than one listing.
+   *
+   * The indexing switch fails closed, which is right for launch but has an
+   * invisible failure mode: forget to turn it on and Vardenia simply never
+   * appears in search, with no error anywhere. This is the place that failure
+   * becomes visible, since the dashboard is opened far more often than the
+   * hosting configuration is read.
+   */
+  const indexing = indexingWarning()
+  if (indexing) {
+    attention.push({
+      label: 'Not indexed by search engines',
+      detail: indexing,
+      tone: 'warn',
+    })
+  }
+
   for (const doc of expired.docs) {
     const record = doc as { id: number | string; name?: string | null; contractEndsAt?: string }
     if (tierOf((doc as { tier?: unknown }).tier) === 'free') continue
@@ -144,11 +170,15 @@ export async function DashboardOverview({ payload, user }: Props) {
           <h2 style={styles.heading}>Needs attention</h2>
           <ul style={styles.list}>
             {attention.map((item) => (
-              <li key={`${item.href}-${item.detail}`} style={styles.row}>
+              <li key={`${item.label}-${item.detail}`} style={styles.row}>
                 <span style={{ ...styles.dot, background: toneColor(item.tone) }} aria-hidden />
-                <a href={item.href} style={styles.rowLink}>
-                  {item.label}
-                </a>
+                {item.href ? (
+                  <a href={item.href} style={styles.rowLink}>
+                    {item.label}
+                  </a>
+                ) : (
+                  <span style={styles.rowLink}>{item.label}</span>
+                )}
                 <span style={styles.rowDetail}>{item.detail}</span>
               </li>
             ))}

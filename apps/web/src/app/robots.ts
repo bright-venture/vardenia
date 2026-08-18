@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { isIndexingAllowed } from '../lib/indexing'
 
 /**
  * What crawlers may and may not visit.
@@ -21,6 +22,28 @@ import type { MetadataRoute } from 'next'
  */
 export default function robots(): MetadataRoute.Robots {
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+
+  /**
+   * Held back until the directory has something in it. See lib/indexing.
+   *
+   * The sitemap is withheld too. Leaving it advertised would be inviting a
+   * crawler to the exact list of pages we are asking it not to take, and the
+   * sitemap is generated from the database, so right now it is a list of almost
+   * nothing.
+   *
+   * Note this is the weaker half of the mechanism, not the whole of it.
+   * `Disallow` stops a page being *fetched*, which also stops the `noindex` on
+   * it being read - and a URL that is linked from somewhere else can still be
+   * listed on the strength of that link alone. The `noindex` metadata is what
+   * actually keeps pages out of the index; this saves crawl budget and states
+   * the intent. Both are emitted because they fail in different directions.
+   */
+  if (!isIndexingAllowed()) {
+    return {
+      rules: [{ userAgent: '*', disallow: '/' }],
+      host: base,
+    }
+  }
 
   return {
     rules: [
