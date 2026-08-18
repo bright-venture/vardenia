@@ -9,6 +9,7 @@ import { QrCodes } from './QrCodes'
 import { ScanEvents } from './ScanEvents'
 import { BusinessUsers } from './BusinessUsers'
 import { Customers } from './Customers'
+import { Bookings } from './Bookings'
 
 /**
  * The access *policy*, as opposed to the access *helpers*.
@@ -337,6 +338,126 @@ describe('Businesses read access with owners in play', () => {
     const owner = { id: 20, collection: 'business-users', businesses: [7] }
     for (const action of ['create', 'update', 'delete'] as const) {
       expect(Businesses.access?.[action]!(ctx(owner)), `owner should not ${action}`).toBe(false)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Bookings
+// ---------------------------------------------------------------------------
+
+/**
+ * Three parties see a booking and each must see a different slice of them. The
+ * failure mode is not a crash: it is a restaurant reading another restaurant's
+ * covers, or a customer listing strangers' reservations.
+ *
+ * Every rule below returns a query constraint rather than a boolean, which is
+ * the part that matters. A boolean would let a customer call /api/bookings and
+ * learn how many bookings exist from the total count while seeing none.
+ */
+describe('Bookings access', () => {
+  const owner = { id: 20, collection: 'business-users', businesses: [7, 9] }
+  const otherOwner = { id: 21, collection: 'business-users', businesses: [8] }
+  const customer = { id: 30, collection: 'customers' }
+
+  it('is never readable anonymously', () => {
+    expect(Bookings.access?.read!(ctx(null))).toBe(false)
+  })
+
+  it('gives staff everything', () => {
+    expect(Bookings.access?.read!(ctx(staff))).toBe(true)
+  })
+
+  it('scopes an owner to the businesses they manage', () => {
+    expect(Bookings.access?.read!(ctx(owner))).toEqual({ business: { in: [7, 9] } })
+    expect(Bookings.access?.read!(ctx(otherOwner))).toEqual({ business: { in: [8] } })
+  })
+
+  it('scopes a customer to their own bookings', () => {
+    expect(Bookings.access?.read!(ctx(customer))).toEqual({ customer: { equals: 30 } })
+  })
+
+  /**
+   * An owner attached to no business sees nothing, rather than everything. This
+   * is the direction an empty list has to fail in - `{ business: { in: [] } }`
+   * would be a constraint matching nothing too, but returning false is
+   * unambiguous.
+   */
+  it('shows nothing to an owner with no businesses', () => {
+    const unattached = { id: 22, collection: 'business-users', businesses: [] }
+    expect(Bookings.access?.read!(ctx(unattached))).toBe(false)
+  })
+
+  /** A customer with a forged businesses array is still just a customer. */
+  it('does not let a customer inherit an owner scope', () => {
+    const forged = { id: 31, collection: 'customers', businesses: [7] }
+    expect(Bookings.access?.read!(ctx(forged))).toEqual({ customer: { equals: 31 } })
+  })
+
+  it('applies the same scoping to updates', () => {
+    expect(Bookings.access?.update!(ctx(owner))).toEqual({ business: { in: [7, 9] } })
+    expect(Bookings.access?.update!(ctx(customer))).toEqual({ customer: { equals: 30 } })
+    expect(Bookings.access?.update!(ctx(null))).toBe(false)
+  })
+
+  /**
+   * Creating is staff-only until there is an endpoint that checks availability
+   * and inserts capacity-safely as one unit. A create through the REST API
+   * carries whatever fields the caller sends.
+   */
+  it('lets only staff create', () => {
+    expect(Bookings.access?.create!(ctx(staff))).toBe(true)
+    expect(Bookings.access?.create!(ctx(owner))).toBe(false)
+    expect(Bookings.access?.create!(ctx(customer))).toBe(false)
+    expect(Bookings.access?.create!(ctx(null))).toBe(false)
+  })
+
+  /**
+   * A cancelled booking is part of the record - it is what a dispute about a
+   * no-show fee is argued from - so cancelling sets a status rather than
+   * removing a row.
+   */
+  it('reserves deletion for an admin', () => {
+    expect(Bookings.access?.delete!(ctx(admin))).toBe(true)
+    expect(Bookings.access?.delete!(ctx(staff))).toBe(false)
+    expect(Bookings.access?.delete!(ctx(owner))).toBe(false)
+    expect(Bookings.access?.delete!(ctx(customer))).toBe(false)
+  })
+
+  /** The customer must never read what the business wrote about them. */
+  it('keeps internal notes away from customers and owners', () => {
+    const field = Bookings.fields.find((f) => 'name' in f && f.name === 'internalNotes') as
+      { access?: { read?: FieldAccess } } | undefined
+
+    expect(field?.access?.read).toBeDefined()
+    expect(field!.access!.read!(fieldCtx(customer))).toBe(false)
+    expect(field!.access!.read!(fieldCtx(owner))).toBe(false)
+    expect(field!.access!.read!(fieldCtx(null))).toBe(false)
+    expect(field!.access!.read!(fieldCtx(staff))).toBe(true)
+  })
+})
+
+/**
+ * Booking rules belong to us, not to the business. Capacity is the number both
+ * the availability check and the database trigger read, so an owner able to
+ * raise it could accept more covers than the room holds.
+ */
+describe('Businesses: the booking rules group', () => {
+  it('is writable only by staff', () => {
+    const group = Businesses.fields
+      .flatMap((f) => (f.type === 'tabs' ? f.tabs.flatMap((t) => t.fields) : [f]))
+      .find((f) => 'name' in f && f.name === 'booking') as
+      { access?: { create?: FieldAccess; update?: FieldAccess } } | undefined
+
+    expect(group, 'booking rules group is missing').toBeDefined()
+
+    const owner = { id: 20, collection: 'business-users', businesses: [7] }
+    for (const action of ['create', 'update'] as const) {
+      const rule = group!.access?.[action]
+      expect(rule, `booking.${action} has no rule`).toBeDefined()
+      expect(rule!(fieldCtx(owner))).toBe(false)
+      expect(rule!(fieldCtx(null))).toBe(false)
+      expect(rule!(fieldCtx(staff))).toBe(true)
     }
   })
 })

@@ -12,6 +12,7 @@ import { DB_SCHEMA, assertDatabaseInternals } from './lib/db'
 import { Users } from './collections/Users'
 import { BusinessUsers } from './collections/BusinessUsers'
 import { Customers } from './collections/Customers'
+import { Bookings } from './collections/Bookings'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
@@ -130,6 +131,7 @@ export default buildConfig({
     Users,
     BusinessUsers,
     Customers,
+    Bookings,
     ScanEvents,
   ],
 

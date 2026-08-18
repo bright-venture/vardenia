@@ -9,6 +9,7 @@ import {
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { externalLinkField } from '../fields/externalLink'
+import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
@@ -236,6 +237,12 @@ export const Businesses: CollectionConfig = {
           ],
         },
 
+        {
+          label: 'Bookings',
+          description:
+            'Reservations taken through Vardenia. Owners manage the bookings themselves; these rules stay with us.',
+          fields: [bookingRulesField],
+        },
         {
           label: 'Commercial',
           // Staff-only. Nothing in this tab is ever exposed by the public API.

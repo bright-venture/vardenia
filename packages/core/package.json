@@ -11,7 +11,9 @@
   "scripts": {
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf dist .turbo"
+    "clean": "rimraf dist .turbo",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "zod": "^3.24.1"
@@ -20,6 +22,7 @@
     "@vardenia/eslint-config": "workspace:*",
     "@vardenia/tsconfig": "workspace:*",
     "eslint": "^10.8.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }
