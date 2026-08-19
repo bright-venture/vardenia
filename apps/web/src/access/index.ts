@@ -73,8 +73,16 @@ const rolesOf = (user: unknown): Role[] => {
   return Array.isArray(roles) ? roles : []
 }
 
-/** Admin counts as staff. Every check below reads through this. */
-const isStaffUser = (user: unknown): boolean =>
+/**
+ * Admin counts as staff. Every check below reads through this.
+ *
+ * Exported because the sort guard needs the same question answered outside an
+ * `Access` function - it runs in `beforeOperation`, which has a `req` but no
+ * access-function signature. Sharing the predicate keeps "who is staff" in one
+ * place; a second definition there would be a second thing to keep in step with
+ * the collection check that stops a customer with `roles: ['admin']` passing.
+ */
+export const isStaffUser = (user: unknown): boolean =>
   rolesOf(user).some((role) => role === 'admin' || role === 'staff')
 
 export const isAdmin: Access = ({ req }) => rolesOf(req.user).includes('admin')

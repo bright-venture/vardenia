@@ -12,6 +12,7 @@ import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
+import { guardSort } from '../hooks/guardSort'
 
 /**
  * The directory listing - the central document in the whole platform.
@@ -41,6 +42,12 @@ export const Businesses: CollectionConfig = {
     delete: isStaff,
   },
   hooks: {
+    /**
+     * Sorting is not covered by field-level read access, so an anonymous caller
+     * could order listings by `contractEndsAt` and read off the ranking of a
+     * field whose values are correctly hidden. See hooks/guardSort.
+     */
+    beforeOperation: [guardSort],
     // Every published listing gets a QR code automatically. Sales should never
     // have to remember to press a button before a print deadline.
     afterChange: [ensureQrCode],
