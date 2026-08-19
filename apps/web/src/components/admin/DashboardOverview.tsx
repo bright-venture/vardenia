@@ -1,6 +1,7 @@
 import type { Payload, TypedUser } from 'payload'
 import { tierOf } from '@vardenia/core'
 import { dashboardCounts } from '../../lib/dashboard-stats'
+import { emailWarning } from '../../lib/email'
 import { indexingWarning } from '../../lib/indexing'
 
 /**
@@ -117,6 +118,23 @@ export async function DashboardOverview({ payload, user }: Props) {
       label: 'Not indexed by search engines',
       detail: indexing,
       tone: 'warn',
+    })
+  }
+
+  /**
+   * Email, for the same reason: a configuration failure with no error anywhere.
+   *
+   * Unconfigured, a password reset is written to a log and looks from the
+   * customer's side like a request that was never made. Redirected, every send
+   * succeeds and every customer still gets nothing - which is why that case is
+   * an error rather than a warning.
+   */
+  const email = emailWarning()
+  if (email) {
+    attention.push({
+      label: 'Email is not delivering',
+      detail: email,
+      tone: email.includes('redirected') ? 'error' : 'warn',
     })
   }
 

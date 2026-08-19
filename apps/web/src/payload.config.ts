@@ -19,7 +19,9 @@ import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { allowedOrigins } from './lib/origins'
+import { emailSettings, emailWarning } from './lib/email'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -137,14 +139,43 @@ export default buildConfig({
   ],
 
   /**
+   * Outbound email, or nothing.
+   *
+   * `undefined` leaves Payload's default behaviour in place, which writes every
+   * message to the console. That is the right degradation - see lib/email for
+   * why this does not refuse to start the way the database check does - but it
+   * is silent, so the boot log says so plainly and the dashboard keeps saying so.
+   */
+  email: (() => {
+    const settings = emailSettings()
+    if (!settings) return undefined
+
+    return resendAdapter({
+      apiKey: settings.apiKey,
+      defaultFromAddress: settings.from,
+      defaultFromName: settings.fromName,
+      ...(settings.overrideTo ? { overrideRecipientAddress: settings.overrideTo } : {}),
+    })
+  })(),
+
+  /**
    * Fail at boot rather than at the first scan.
    *
    * The QR redirect and the scan report both run raw SQL through internals that
    * Payload does not treat as public API. If an upgrade moves them, the useful
    * moment to find out is now, on a machine with a developer in front of it, not
    * three weeks later when an advertiser asks why their number stopped moving.
+   *
+   * Email is the opposite case and only warns - see lib/email. Logged on every
+   * boot rather than once, so it turns up in whichever deploy's logs somebody
+   * happens to be reading.
    */
-  onInit: assertDatabaseInternals,
+  onInit: async (payload) => {
+    assertDatabaseInternals(payload)
+
+    const warning = emailWarning()
+    if (warning) payload.logger.warn(warning)
+  },
 
   /**
    * Content localization. Arabic falls back to English so a half-translated

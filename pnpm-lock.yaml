@@ -105,6 +105,9 @@ importers:
       '@payloadcms/db-postgres':
         specifier: ^3.20.0
         version: 3.87.0(payload@3.87.0(graphql@16.14.2)(typescript@5.9.3))
+      '@payloadcms/email-resend':
+        specifier: ^3.87.0
+        version: 3.87.0(payload@3.87.0(graphql@16.14.2)(typescript@5.9.3))
       '@payloadcms/next':
         specifier: ^3.20.0
         version: 3.87.0(@types/react@19.2.18)(graphql@16.14.2)(next@15.5.22(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.77.4))(payload@3.87.0(graphql@16.14.2)(typescript@5.9.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
@@ -2201,6 +2204,12 @@ packages:
 
   '@payloadcms/drizzle@3.87.0':
     resolution: {integrity: sha512-q0hbfPRYKlbdHDfFDLfQ1jgy+WFU2ED9LPTz0MftIYa34nY6xWCH9z71w44+EzdjWuO01xx9kJGMmo9aVpwIVQ==}
+    peerDependencies:
+      payload: 3.87.0
+
+  '@payloadcms/email-resend@3.87.0':
+    resolution: {integrity: sha512-4Y2NoOd4xSJe2hXF17I6g80qfX8NBOVNL3tddWi5NxeN1l79mcFEsQ21GgL2OHKGUG3Gx4W4YgwTaCgCiU/L5g==}
+    engines: {node: ^18.20.2 || >=20.9.0}
     peerDependencies:
       payload: 3.87.0
 
@@ -9268,6 +9277,10 @@ snapshots:
       - sql.js
       - sqlite3
 
+  '@payloadcms/email-resend@3.87.0(payload@3.87.0(graphql@16.14.2)(typescript@5.9.3))':
+    dependencies:
+      payload: 3.87.0(graphql@16.14.2)(typescript@5.9.3)
+
   '@payloadcms/graphql@3.87.0(graphql@16.14.2)(payload@3.87.0(graphql@16.14.2)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       graphql: 16.14.2
@@ -11367,7 +11380,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.67.0(eslint@9.39.5(jiti@1.21.7))(typescript@6.0.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@1.21.7))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.66.0(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.5(jiti@1.21.7))
     transitivePeerDependencies:
       - supports-color
 
