@@ -4,6 +4,7 @@ import * as migration_20260818_122702_drop_pages from './20260818_122702_drop_pa
 import * as migration_20260818_170746_business_accounts from './20260818_170746_business_accounts'
 import * as migration_20260818_181551_bookings from './20260818_181551_bookings'
 import * as migration_20260818_181600_booking_capacity_trigger from './20260818_181600_booking_capacity_trigger'
+import * as migration_20260819_090000_drop_contact_fields from './20260819_090000_drop_contact_fields'
 
 /**
  * The order here is the order they run in, and the last two depend on it.
@@ -50,5 +51,10 @@ export const migrations = [
     up: migration_20260818_181600_booking_capacity_trigger.up,
     down: migration_20260818_181600_booking_capacity_trigger.down,
     name: '20260818_181600_booking_capacity_trigger',
+  },
+  {
+    up: migration_20260819_090000_drop_contact_fields.up,
+    down: migration_20260819_090000_drop_contact_fields.down,
+    name: '20260819_090000_drop_contact_fields',
   },
 ]

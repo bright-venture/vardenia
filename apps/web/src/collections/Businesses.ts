@@ -8,7 +8,6 @@ import {
 } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
-import { externalLinkField } from '../fields/externalLink'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
@@ -203,35 +202,6 @@ export const Businesses: CollectionConfig = {
                 { label: 'Year round', value: 'year-round' },
                 { label: 'Summer', value: 'summer' },
                 { label: 'Winter', value: 'winter' },
-              ],
-            },
-          ],
-        },
-
-        {
-          label: 'Contact',
-          fields: [
-            { name: 'phone', type: 'text' },
-            { name: 'whatsapp', type: 'text' },
-            { name: 'email', type: 'email' },
-
-            // Every one of these is rendered directly into an href, so all of
-            // them are validated and normalised on save. See fields/externalLink.
-            externalLinkField({ name: 'website' }),
-            externalLinkField({ name: 'reservationUrl', label: 'Reservation link' }),
-            externalLinkField({ name: 'menuUrl', label: 'Menu link' }),
-            {
-              name: 'socials',
-              type: 'group',
-              fields: [
-                externalLinkField({
-                  name: 'instagram',
-                  admin: { placeholder: 'https://instagram.com/yourhandle' },
-                }),
-                externalLinkField({ name: 'facebook' }),
-                externalLinkField({ name: 'tiktok' }),
-                externalLinkField({ name: 'linkedin' }),
-                externalLinkField({ name: 'youtube' }),
               ],
             },
           ],

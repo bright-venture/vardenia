@@ -10,14 +10,12 @@ const LISTING = {
   district: 'matn',
   address: 'Dbayeh Highway',
   location: [35.5925668, 33.9480149], // [lng, lat] - GeoJSON order
-  phone: '+9611123456',
   priceRange: 4,
   heroImage: { url: 'https://cdn.example.com/hero.webp', alt: 'Le Royal' },
   openingHours: [
     { day: 'mon', opens: '09:00', closes: '23:00' },
     { day: 'sun', closed: true },
   ],
-  socials: { instagram: 'https://instagram.com/leroyal', facebook: null },
 }
 
 describe('listingSchema', () => {
@@ -62,8 +60,17 @@ describe('listingSchema', () => {
     expect(sunday?.closes).toBe('00:00')
   })
 
-  it('drops social links that are not real URLs', () => {
-    expect(listingSchema(LISTING, 'en').sameAs).toEqual(['https://instagram.com/leroyal'])
+  /**
+   * Contact details left the collection when bookings arrived, so the schema
+   * must not still be claiming them. Asserted rather than assumed: these
+   * properties were built from fields that no longer exist, and markup that
+   * declares a telephone the page cannot show is exactly what Google penalises.
+   */
+  it('declares no contact properties, because listings no longer carry any', () => {
+    const schema = listingSchema(LISTING, 'en')
+    expect(schema).not.toHaveProperty('telephone')
+    expect(schema).not.toHaveProperty('email')
+    expect(schema).not.toHaveProperty('sameAs')
   })
 
   it('prefixes the URL for Arabic', () => {
@@ -74,7 +81,7 @@ describe('listingSchema', () => {
   /** Markup that claims more than the page shows is worse than no markup. */
   it('omits properties it has no value for', () => {
     const sparse = listingSchema({ name: 'Nameless', category: 'lifestyle' }, 'en')
-    expect(sparse).not.toHaveProperty('telephone')
+    expect(sparse).not.toHaveProperty('address')
     expect(sparse).not.toHaveProperty('geo')
     expect(sparse).not.toHaveProperty('priceRange')
     expect(sparse).not.toHaveProperty('image')

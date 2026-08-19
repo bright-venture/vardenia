@@ -1,55 +1,32 @@
 import { getTranslations } from 'next-intl/server'
-import { normalizeExternalUrl } from '../lib/external-url'
 
 /**
- * Call, directions, reserve.
+ * What a reader can actually do from a listing page.
  *
- * This is the commercial payload of a listing page. Someone has just scanned a
- * code in a magazine while standing in a lobby; these are the things they might
- * actually do next, and every one of them is a conversion the advertiser paid
- * for. Buttons only render when the underlying data exists, because a dead
- * "Reserve" button is worse than no button.
+ * This used to be the commercial payload: call, WhatsApp, reserve, menu,
+ * website. All of those routed the reader off Vardenia and, in the case of an
+ * external reservation link, straight past the thing we are building. Bookings
+ * happen here now, and a question goes through us rather than to a phone number
+ * printed on a page - so the contact fields are gone from the collection
+ * entirely, and this is what is left.
+ *
+ * Directions only, for the moment. It is the one action that cannot be served
+ * on-site: someone who has just scanned a code in a lobby wants to know how to
+ * get there, and no booking flow replaces a map.
+ *
+ * The booking button belongs here when Phase 3 lands, which is why this stays a
+ * bar rather than collapsing into a single link at the call site.
  *
  * Plain anchors, no JavaScript: they work while the rest of the page is still
  * loading, which matters on a hotel's guest Wi-Fi.
  */
 
 interface Props {
-  phone?: string | null
-  whatsapp?: string | null
-  website?: string | null
-  reservationUrl?: string | null
-  menuUrl?: string | null
   coordinates?: [number, number] | null
   name: string
 }
 
-/** wa.me wants digits only, no plus, spaces or dashes. */
-const digitsOnly = (value: string) => value.replace(/\D/g, '')
-
-/**
- * `tel:` takes no spaces. RFC 3966 disallows them, and while most dialers cope,
- * some Android ones truncate at the first one - so `+961 1 339797` becomes a
- * call to `+961`. Numbers are stored the way a person writes them, which is
- * right for display and wrong for the href.
- */
-const telHref = (value: string) => (value.trim().startsWith('+') ? '+' : '') + digitsOnly(value)
-
-const PRIMARY =
-  'inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-3 text-sm font-semibold text-surface-base transition-colors hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
-
-const SECONDARY =
-  'inline-flex items-center justify-center rounded-md border border-ink-100 px-5 py-3 text-sm font-semibold text-ink-900 transition-colors hover:border-ink-300 hover:bg-surface-sunken focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
-
-export async function ActionBar({
-  phone,
-  whatsapp,
-  website,
-  reservationUrl,
-  menuUrl,
-  coordinates,
-  name,
-}: Props) {
+export async function ActionBar({ coordinates, name }: Props) {
   const t = await getTranslations('directory')
 
   // Payload stores points as [longitude, latitude]; Google Maps wants the
@@ -58,52 +35,18 @@ export async function ActionBar({
     ? `https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}`
     : null
 
-  /**
-   * Normalised again here, not just on save.
-   *
-   * The fields validate now (see fields/externalLink), but rows written before
-   * that can still hold `www.hotel.com` - which a browser reads as a relative
-   * path, sending the reader to /directory/www.hotel.com instead of the hotel.
-   * A link that cannot work is dropped rather than rendered, on the same
-   * principle as the rest of this component: a dead button is worse than no
-   * button.
-   */
-  const reserve = normalizeExternalUrl(reservationUrl)
-  const menu = normalizeExternalUrl(menuUrl)
-  const site = normalizeExternalUrl(website)
-
-  const actions = [
-    reserve && { href: reserve, label: t('reserve'), primary: true, external: true },
-    phone && { href: `tel:${telHref(phone)}`, label: t('call'), primary: !reserve },
-    directions && { href: directions, label: t('getDirections'), external: true },
-    whatsapp && {
-      href: `https://wa.me/${digitsOnly(whatsapp)}`,
-      label: 'WhatsApp',
-      external: true,
-    },
-    menu && { href: menu, label: t('viewMenu'), external: true },
-    site && { href: site, label: t('website'), external: true },
-  ].filter(Boolean) as {
-    href: string
-    label: string
-    primary?: boolean
-    external?: boolean
-  }[]
-
-  if (actions.length === 0) return null
+  // A listing with no coordinates has nothing to offer here yet. Rendering an
+  // empty bar would leave a gap in the page for no reason.
+  if (!directions) return null
 
   return (
-    <div className="flex flex-wrap gap-3" aria-label={`Contact ${name}`}>
-      {actions.map((action) => (
-        <a
-          key={action.label}
-          href={action.href}
-          className={action.primary ? PRIMARY : SECONDARY}
-          {...(action.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        >
-          {action.label}
-        </a>
-      ))}
+    <div className="flex flex-wrap gap-3" aria-label={`Actions for ${name}`}>
+      <a href={directions} className={PRIMARY} target="_blank" rel="noopener noreferrer">
+        {t('getDirections')}
+      </a>
     </div>
   )
 }
+
+const PRIMARY =
+  'inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-3 text-sm font-semibold text-surface-base transition-colors hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'

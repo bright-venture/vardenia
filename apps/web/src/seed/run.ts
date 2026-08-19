@@ -206,8 +206,6 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     openingHours: fixture.openingHours,
     amenities: fixture.amenities,
     priceRange: fixture.priceRange,
-    phone: fixture.phone,
-    website: fixture.website,
     tier: fixture.tier,
     verified: fixture.verified,
     contractStartsAt: fixture.contractStartsAt,

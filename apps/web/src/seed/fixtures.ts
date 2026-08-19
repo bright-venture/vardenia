@@ -41,8 +41,6 @@ export interface BusinessFixture {
   verified: boolean
   priceRange: '1' | '2' | '3' | '4'
   amenities: string[]
-  phone: string
-  website?: string
   openingHours: OpeningHour[]
   /** Commercial. Only ever visible to staff - see the Commercial tab. */
   contractStartsAt?: string
@@ -93,8 +91,6 @@ export const BUSINESSES: BusinessFixture[] = [
       'wifi',
       'air-conditioning',
     ],
-    phone: '+961 1 339797',
-    website: 'https://albergobeirut.com',
     openingHours: daily('00:00', '23:59'),
     contractStartsAt: '2026-01-15T00:00:00.000Z',
     contractEndsAt: '2027-01-15T00:00:00.000Z',
@@ -119,7 +115,6 @@ export const BUSINESSES: BusinessFixture[] = [
     verified: true,
     priceRange: '4',
     amenities: ['valet-parking', 'alcohol', 'outdoor-seating', 'air-conditioning'],
-    phone: '+961 1 322722',
     openingHours: dailyExcept('19:00', '23:30', 'mon'),
     contractStartsAt: '2026-03-01T00:00:00.000Z',
     contractEndsAt: '2026-09-01T00:00:00.000Z',
@@ -144,8 +139,6 @@ export const BUSINESSES: BusinessFixture[] = [
     verified: true,
     priceRange: '2',
     amenities: ['free-parking', 'alcohol', 'family-friendly', 'outdoor-seating'],
-    phone: '+961 8 813495',
-    website: 'https://chateauksara.com',
     openingHours: dailyExcept('09:00', '17:00', 'sun'),
     contractStartsAt: '2026-02-01T00:00:00.000Z',
     contractEndsAt: '2027-02-01T00:00:00.000Z',
@@ -172,7 +165,6 @@ export const BUSINESSES: BusinessFixture[] = [
     verified: false,
     priceRange: '3',
     amenities: ['free-parking', 'family-friendly', 'mountain-view'],
-    phone: '+961 9 340101',
     // Deliberately empty: hours vary by season, which the Open now filter has to
     // handle without claiming the place is shut.
     openingHours: [],
@@ -196,7 +188,6 @@ export const BUSINESSES: BusinessFixture[] = [
     verified: false,
     priceRange: '1',
     amenities: ['family-friendly', 'outdoor-seating', 'sea-view'],
-    phone: '+961 9 540001',
     openingHours: daily('08:00', '20:00'),
     status: 'published',
   },
@@ -218,7 +209,6 @@ export const BUSINESSES: BusinessFixture[] = [
     verified: false,
     priceRange: '2',
     amenities: ['mountain-view', 'free-parking', 'pet-friendly'],
-    phone: '+961 6 520200',
     openingHours: daily('08:00', '22:00'),
     // Draft on purpose: proves publishedOrStaff hides it from anonymous callers.
     status: 'draft',

@@ -20,7 +20,6 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
-import { normalizeExternalUrl } from '../../../../../lib/external-url'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -93,19 +92,6 @@ export default async function ListingPage({ params }: Params) {
 
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
-  /**
-   * Normalised, not just truthy-checked.
-   *
-   * These render straight into an href. The fields validate on save now (see
-   * fields/externalLink), but rows written before that can hold a bare domain,
-   * which a browser resolves as a path on this site rather than as a link out.
-   * Anything that cannot be a real destination is dropped instead of shown.
-   */
-  const socials = (listing.socials ?? {}) as Record<string, string | null | undefined>
-  const socialLinks = Object.entries(socials)
-    .map(([network, url]) => [network, normalizeExternalUrl(url)] as const)
-    .filter((entry): entry is readonly [string, string] => entry[1] !== null)
-
   return (
     <article className="pb-24">
       {/* Invisible to readers, read by search engines. See lib/structured-data. */}
@@ -150,15 +136,7 @@ export default async function ListingPage({ params }: Params) {
           ) : null}
 
           <div className="mt-8">
-            <ActionBar
-              name={listing.name ?? ''}
-              phone={listing.phone}
-              whatsapp={listing.whatsapp}
-              website={listing.website}
-              reservationUrl={listing.reservationUrl}
-              menuUrl={listing.menuUrl}
-              coordinates={point}
-            />
+            <ActionBar name={listing.name ?? ''} coordinates={point} />
           </div>
 
           {listing.description ? (
@@ -252,28 +230,6 @@ export default async function ListingPage({ params }: Params) {
               <ul className="text-ink-700 mt-3 flex flex-wrap gap-2 text-sm">
                 {(listing.subcategories as string[]).map((sub) => (
                   <li key={sub}>{subcategoryLabel(sub, locale as Locale)}</li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {socialLinks.length > 0 ? (
-            <section>
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
-                {locale === 'ar' ? 'تابعنا' : 'Follow'}
-              </h2>
-              <ul className="mt-3 flex flex-wrap gap-3 text-sm">
-                {socialLinks.map(([network, url]) => (
-                  <li key={network}>
-                    <a
-                      className="text-ink-700 hover:text-gold-700 capitalize underline underline-offset-4"
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {network}
-                    </a>
-                  </li>
                 ))}
               </ul>
             </section>

@@ -25,11 +25,7 @@
     "resultCount": "{count, plural, =0 {No places found} one {1 place} other {# places}}",
     "verified": "Verified by Vardenia",
     "viewOnMap": "View on map",
-    "getDirections": "Get directions",
-    "call": "Call",
-    "reserve": "Reserve",
-    "viewMenu": "View menu",
-    "website": "Website"
+    "getDirections": "Get directions"
   },
   "common": {
     "loading": "Loading...",

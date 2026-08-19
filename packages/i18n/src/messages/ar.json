@@ -25,11 +25,7 @@
     "resultCount": "{count, plural, =0 {لا توجد أماكن} one {مكان واحد} two {مكانان} few {# أماكن} many {# مكانًا} other {# مكان}}",
     "verified": "موثّق من فاردينيا",
     "viewOnMap": "عرض على الخريطة",
-    "getDirections": "الاتجاهات",
-    "call": "اتصل",
-    "reserve": "احجز",
-    "viewMenu": "عرض القائمة",
-    "website": "الموقع الإلكتروني"
+    "getDirections": "الاتجاهات"
   },
   "common": {
     "loading": "جارٍ التحميل...",

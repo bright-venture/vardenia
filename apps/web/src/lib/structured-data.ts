@@ -11,9 +11,17 @@ import { resolveImage, type MediaField } from './media'
  * results - hours, map pin, price - that make a directory listing worth having.
  *
  * Everything here is built from fields that already exist. Nothing is inferred
- * or invented: an absent phone number produces no `telephone` property rather
- * than an empty one, because structured data that overstates what you know is
- * worse than none. Google penalises markup that disagrees with the page.
+ * or invented: a listing with no address produces no `address` block rather than
+ * an empty one, because structured data that overstates what you know is worse
+ * than none. Google penalises markup that disagrees with the page.
+ *
+ * `telephone`, `email` and `sameAs` used to be here and are gone with the
+ * contact fields themselves - bookings and enquiries go through Vardenia now,
+ * so a listing holds no phone number, address book entry or social profile to
+ * declare. That costs a little: `sameAs` is how Google ties a listing to the
+ * business as a real-world entity. It is the price of the model, not an
+ * oversight, and it is worth revisiting if listings ever carry a public profile
+ * link again.
  */
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
@@ -102,13 +110,9 @@ export interface ListingForSchema {
   district?: string | null
   address?: string | null
   location?: unknown
-  phone?: string | null
-  email?: string | null
-  website?: string | null
   priceRange?: string | number | null
   heroImage?: MediaField
   openingHours?: OpeningHour[] | null
-  socials?: Record<string, string | null | undefined> | null
 }
 
 export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
@@ -138,10 +142,6 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   // address, and asserting it in markup is worse than staying quiet.
   const hasAddress = Boolean(street || locality || region)
 
-  const sameAs = Object.values(listing.socials ?? {}).filter(
-    (url): url is string => typeof url === 'string' && url.startsWith('http'),
-  )
-
   return compact({
     '@context': 'https://schema.org',
     '@type': SCHEMA_TYPE[listing.category ?? ''] ?? 'LocalBusiness',
@@ -149,8 +149,6 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
     description: listing.tagline,
     url: listing.slug ? absolute(`/directory/${listing.slug}`, locale) : undefined,
     image: image?.src,
-    telephone: listing.phone,
-    email: listing.email,
     priceRange: priceLabel(listing.priceRange) ?? undefined,
     address: hasAddress ? address : undefined,
     geo:
@@ -158,7 +156,6 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
         ? { '@type': 'GeoCoordinates', latitude: lat, longitude: lng }
         : undefined,
     openingHoursSpecification: openingHours(listing.openingHours),
-    sameAs,
   })
 }
 
