@@ -42,10 +42,13 @@ export async function BookingPanel({
    *
    * `earliestDate` and `latestDate` come from today's date in Beirut, so on a
    * page that has sat in the cache overnight they are yesterday's answer until
-   * the first visitor triggers a revalidation. The form raises the floor again
-   * once it mounts, which is what actually fixes it; and `checkAvailability`
-   * refuses a past time regardless, so the worst case was ever a date picker
-   * that let you choose a day it should have greyed out.
+   * the first visitor triggers a revalidation.
+   *
+   * Left that way on purpose. They set the bounds of a date picker, not the
+   * rules: `checkAvailability` refuses a past or too-soon booking whatever the
+   * form allowed, and says so in a sentence. Correcting them in the browser
+   * costs an effect and a second render to stop somebody clicking a day they
+   * would immediately be told about anyway.
    */
   const model = bookingFormModel(rules)
 

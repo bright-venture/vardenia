@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { FlatCompat } from '@eslint/eslintrc'
+import reactHooks from 'eslint-plugin-react-hooks'
 
 /**
  * ESLint 9 flat config, replacing .eslintrc.json and `next lint`.
@@ -42,7 +43,41 @@ const config = [
     ],
   },
 
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  /**
+   * eslint-config-next, minus its own copy of the react-hooks plugin.
+   *
+   * `next build` runs a lint pass of its own, and it resolved
+   * eslint-plugin-react-hooks 7 while this compat layer resolved 5. Both
+   * versions are in the tree. The two passes therefore disagreed about which
+   * rules exist: `pnpm lint` was clean, `next build` was clean on my machine,
+   * and the Netlify build failed on `react-hooks/purity` and
+   * `react-hooks/set-state-in-effect` - neither of which v5 has.
+   *
+   * Both findings were real, a `Date.now()` during render and a setState inside
+   * an effect, so the code was what changed. This stops the next one costing a
+   * round trip through CI to discover.
+   *
+   * Dropping the plugin here rather than registering v7 under a second name, so
+   * that a rule fires under the same name it has in the build log. Two plugins
+   * cannot claim `react-hooks`, and the version that reports more is the one
+   * worth keeping.
+   */
+  ...compat.extends('next/core-web-vitals', 'next/typescript').map((entry) => {
+    if (!entry.plugins?.['react-hooks']) return entry
+    const plugins = { ...entry.plugins }
+    delete plugins['react-hooks']
+    return { ...entry, plugins }
+  }),
+
+  /**
+   * `configs.flat['recommended-latest']`, not `configs['recommended-latest']`.
+   *
+   * The top-level entries in v7 are still eslintrc-format - their `plugins` is
+   * an array of names - and handing one to flat config fails with a message
+   * about plugins needing to be an object. The `flat` namespace holds the same
+   * rule sets in the shape ESLint 9 wants.
+   */
+  reactHooks.configs.flat['recommended-latest'],
 ]
 
 export default config

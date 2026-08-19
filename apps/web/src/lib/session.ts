@@ -112,3 +112,35 @@ export async function customerBookings(limit = 50) {
 
   return result.docs
 }
+
+/**
+ * Bookings split into what is still ahead and what is behind.
+ *
+ * Split on the *end* rather than the start, so a dinner that began an hour ago
+ * is still "upcoming" while you are sitting at the table. Splitting on the start
+ * files a booking under Past at the exact moment it matters most.
+ *
+ * A separate function taking an explicit `now` for two reasons. It makes that
+ * rule testable without a clock, and it keeps `Date.now()` out of a component
+ * body - `react-hooks/purity` rejects an impure call during render, and it is
+ * right to: a value that changes between renders belongs to the data layer.
+ * That rule fires in Next's build lint and not in ours, which is how it reached
+ * CI; see eslint.config.mjs.
+ */
+export function partitionBookings<T extends { end: string }>(
+  bookings: T[],
+  now: number = Date.now(),
+): { upcoming: T[]; past: T[] } {
+  const upcoming: T[] = []
+  const past: T[] = []
+
+  for (const booking of bookings) {
+    const end = new Date(booking.end).getTime()
+    // An unparseable date is shown rather than dropped. A booking that vanishes
+    // from somebody's account is worse than one filed under the wrong heading.
+    if (Number.isNaN(end) || end >= now) upcoming.push(booking)
+    else past.push(booking)
+  }
+
+  return { upcoming, past }
+}

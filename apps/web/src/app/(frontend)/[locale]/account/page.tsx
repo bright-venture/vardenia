@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import type { BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
-import { currentCustomer, customerBookings } from '../../../../lib/session'
+import { currentCustomer, customerBookings, partitionBookings } from '../../../../lib/session'
 import { formatBeirut } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
@@ -63,16 +63,8 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   }
 
   const bookings = await customerBookings()
-  const now = Date.now()
-
-  /**
-   * Split on the *end* of the booking rather than the start, so a dinner that
-   * began an hour ago is still "upcoming" while you are sitting at the table.
-   * Splitting on the start moves a booking into the past at the moment it
-   * becomes most relevant.
-   */
-  const upcoming = bookings.filter((b) => new Date(b.end).getTime() >= now)
-  const past = bookings.filter((b) => new Date(b.end).getTime() < now)
+  // The clock lives in lib/session, not here. See partitionBookings.
+  const { upcoming, past } = partitionBookings(bookings)
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">

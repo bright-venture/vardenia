@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
-import { addDays, beirutDate } from '../lib/beirut'
 import { durationLabel, toInterval, type BookingFormModel } from '../lib/booking-form'
 import {
   ERROR_TEXT,
@@ -89,25 +88,6 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
-
-  /**
-   * The floor, corrected after mount.
-   *
-   * `model.earliestDate` was computed when the page was prerendered, which on a
-   * cached listing can be an old day - see BookingPanel. Running it again in the
-   * browser against Beirut's clock fixes that. In an effect rather than in the
-   * initial state so the server and client render the same thing and hydration
-   * stays quiet; it only ever moves the floor forward.
-   */
-  const [floor, setFloor] = useState(model.earliestDate)
-
-  useEffect(() => {
-    // The same sum bookingFormModel does, against the browser's idea of now.
-    const earliest = addDays(beirutDate(), Math.floor(model.leadTimeMinutes / 1440))
-
-    setFloor((current) => (earliest > current ? earliest : current))
-    setDate((current) => (current < earliest ? earliest : current))
-  }, [model.leadTimeMinutes])
 
   const [busy, setBusy] = useState(false)
   const [refusal, setRefusal] = useState<string | null>(null)
@@ -247,7 +227,20 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
             type="date"
             required
             value={date}
-            min={floor}
+            /**
+             * From the server, and possibly a day stale on a listing that has
+             * sat in the cache - see BookingPanel.
+             *
+             * There was an effect here that corrected it against the browser
+             * clock on mount. It went, because `react-hooks/set-state-in-effect`
+             * is right that it was a cascading render, and because it was buying
+             * very little: this attribute greys out days in a picker, while
+             * `checkAvailability` is what actually refuses a booking in the past
+             * and says so in a sentence the form already renders. The worst case
+             * is a picker that lets you choose a day it should have greyed out,
+             * and a clear refusal one click later.
+             */
+            min={model.earliestDate}
             max={model.latestDate}
             onChange={(e) => setDate(e.target.value)}
             className={`mt-1.5 ${field('date')}`}
