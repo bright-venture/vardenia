@@ -121,6 +121,16 @@ export function LoginForm({ next }: { next?: string }) {
           {t('signUp')}
         </Link>
       </p>
+
+      {/* Reachable from the one screen where somebody discovers they need it.
+          It is also the way out of the "check your email first" refusal above:
+          a guest booker claiming their record gets a reset rather than a
+          verification mail, so the reset link is what proves their address. */}
+      <p className={HINT}>
+        <Link href="/account/forgot" className={LINK}>
+          {t('forgot')}
+        </Link>
+      </p>
     </form>
   )
 }

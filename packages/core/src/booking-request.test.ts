@@ -3,6 +3,7 @@ import {
   availabilityQuerySchema,
   bookingRequestSchema,
   fieldErrors,
+  resetPasswordSchema,
   signupSchema,
 } from './booking-request'
 
@@ -223,5 +224,37 @@ describe('signupSchema', () => {
     const parsed = signupSchema.parse({ ...VALID_SIGNUP, roles: ['admin'], _verified: true })
     expect(parsed).not.toHaveProperty('roles')
     expect(parsed).not.toHaveProperty('_verified')
+  })
+})
+
+/**
+ * Reset shares the sign-up password rule on purpose. A floor that applies to one
+ * and not the other is not a floor: anybody could sign up, immediately reset,
+ * and land below it.
+ */
+describe('resetPasswordSchema', () => {
+  const valid = { token: 'a'.repeat(40), password: 'a-long-enough-one' }
+
+  it('accepts a token and a password', () => {
+    expect(resetPasswordSchema.safeParse(valid).success).toBe(true)
+  })
+
+  it('applies the same password floor as sign-up', () => {
+    expect(resetPasswordSchema.safeParse({ ...valid, password: 'short' }).success).toBe(false)
+    expect(resetPasswordSchema.safeParse({ ...valid, password: '           ' }).success).toBe(false)
+  })
+
+  it('refuses a token too short to be one', () => {
+    expect(resetPasswordSchema.safeParse({ ...valid, token: 'abc' }).success).toBe(false)
+  })
+
+  /**
+   * No email field, and this is the assertion that matters. Accepting one would
+   * let a caller aim a valid token at a different account.
+   */
+  it('ignores an email even when one is sent', () => {
+    const parsed = resetPasswordSchema.safeParse({ ...valid, email: 'someone@else.com' })
+    expect(parsed.success).toBe(true)
+    expect(parsed.success && 'email' in parsed.data).toBe(false)
   })
 })

@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, selfOrStaff } from '../access/index'
+import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 
 /**
  * The public. People who book things.
@@ -45,8 +46,36 @@ export const Customers: CollectionConfig = {
      * It makes deliverability load-bearing: a verification mail in a junk folder
      * is a sign-up that silently fails. Worth knowing while the domain's sending
      * reputation is still new.
+     *
+     * The template is ours because Payload's default sends customers to
+     * `/admin/customers/verify/<token>` - the staff panel, which they cannot use.
+     * See lib/auth-email; without this override `verify: true` made sign-up
+     * impossible to finish rather than merely inconvenient.
      */
-    verify: true,
+    verify: {
+      generateEmailSubject: () => verificationEmail('').subject,
+      generateEmailHTML: ({ token }) => verificationEmail(token ?? '').html,
+    },
+
+    /**
+     * Same problem, same fix. Payload's default points at the admin panel's
+     * reset form, which is bound to the staff collection.
+     *
+     * This is not only for forgotten passwords: `/auth/signup` sends a reset
+     * when the address already has a record, which is how somebody who once
+     * booked as a guest claims the account holding their bookings. So this is
+     * the more heavily travelled of the two.
+     */
+    forgotPassword: {
+      generateEmailSubject: () => passwordResetEmail('').subject,
+      // Args are optional in the type, unlike the verify hook's. A message with
+      // no token in it would be worse than none, so an absent one throws rather
+      // than mailing a link to nowhere.
+      generateEmailHTML: (args) => {
+        if (!args?.token) throw new Error('No reset token to put in the email')
+        return passwordResetEmail(args.token).html
+      },
+    },
   },
 
   admin: {

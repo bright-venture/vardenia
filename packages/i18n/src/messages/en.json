@@ -82,7 +82,17 @@
     "upcoming": "Upcoming",
     "past": "Past",
     "signInToSee": "Sign in to see your bookings.",
-    "verifyBanner": "Your email is not confirmed yet. Follow the link we sent you."
+    "verifyBanner": "Your email is not confirmed yet. Follow the link we sent you.",
+    "verifyTitle": "Confirm your email",
+    "verifyDone": "Your email is confirmed. You can sign in now.",
+    "verifyFailed": "That link has already been used, or it has expired. If you have already confirmed your email, just sign in.",
+    "resetTitle": "Set your password",
+    "newPassword": "New password",
+    "setPassword": "Set password",
+    "resetDone": "Your password is set. You can sign in now.",
+    "forgotIntro": "Enter your email and we will send you a link to set a new password.",
+    "sendResetLink": "Send the link",
+    "forgotSent": "Check your email. If we can find an account for that address, a link is on its way."
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

@@ -89,31 +89,57 @@ export const availabilityQuerySchema = z.object({
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
 
 /**
+ * The password rule, in one place.
+ *
+ * Length and nothing else. Composition rules - a digit, a symbol, a capital -
+ * push people towards `Password1!` and are weaker in practice than a long
+ * passphrase, which is why every current guideline dropped them.
+ *
+ * Shared between sign-up and reset because a floor that applies to one and not
+ * the other is not a floor: anybody could sign up, immediately reset, and land
+ * below it.
+ */
+const accountPassword = z
+  .string()
+  .min(10, 'must be at least 10 characters')
+  .max(200, 'too long')
+  // A password of only spaces satisfies a length check and nothing else.
+  .refine((value) => value.trim().length >= 10, 'must be at least 10 characters')
+
+/**
  * Opening an account from the site.
  *
  * Reuses the same loose email rule as a booking, deliberately: the two have to
  * agree, or somebody books as a guest with an address the sign-up form then
  * refuses and they can never claim the record.
- *
- * The password floor is length and nothing else. Composition rules - a digit, a
- * symbol, a capital - push people towards `Password1!` and are weaker in
- * practice than a long passphrase, which is why every current guideline dropped
- * them.
  */
 export const signupSchema = z.object({
   name: z.string().trim().min(1, 'required').max(120, 'too long'),
   email: emailAddress,
-  password: z
-    .string()
-    .min(10, 'must be at least 10 characters')
-    .max(200, 'too long')
-    // A password of only spaces satisfies a length check and nothing else.
-    .refine((value) => value.trim().length >= 10, 'must be at least 10 characters'),
+  password: accountPassword,
   phone: z.string().trim().max(40).optional(),
   locale: z.enum(['en', 'ar']).optional(),
 })
 
 export type Signup = z.infer<typeof signupSchema>
+
+/**
+ * Choosing a password from a link in an email.
+ *
+ * No email field, and that is the point: the address is whichever one the token
+ * was issued to. Accepting an address here would let a caller aim a valid token
+ * at a different account.
+ *
+ * The token is only checked for being present and plausible. Whether it is real,
+ * unexpired and unused is a database question, and the answer belongs to Payload
+ * rather than to a regex.
+ */
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20, 'required').max(200, 'too long'),
+  password: accountPassword,
+})
+
+export type ResetPassword = z.infer<typeof resetPasswordSchema>
 
 /**
  * First error per field, in the shape a form can render.
