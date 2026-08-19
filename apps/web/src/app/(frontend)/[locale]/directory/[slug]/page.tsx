@@ -19,6 +19,7 @@ import {
 } from '../../../../../lib/labels'
 import { isOpenNow } from '../../../../../lib/hours'
 import { ActionBar } from '../../../../../components/ActionBar'
+import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 
 /**
@@ -168,6 +169,17 @@ export default async function ListingPage({ params }: Params) {
               </div>
             </section>
           ) : null}
+
+          {/* Below the description rather than in the sidebar. A reader arriving
+              from a printed QR code has not decided to book yet - they are
+              finding out what the place is - and a form above that decision is
+              an interruption. Renders nothing at all for a listing that does not
+              take bookings, which is most of them. */}
+          <BookingPanel
+            businessId={listing.id}
+            rules={listing.booking as never}
+            locale={locale as Locale}
+          />
         </div>
 
         <aside className="flex flex-col gap-10">

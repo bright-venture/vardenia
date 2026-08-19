@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { availabilityQuerySchema, bookingRequestSchema, fieldErrors } from './booking-request'
+import {
+  availabilityQuerySchema,
+  bookingRequestSchema,
+  fieldErrors,
+  signupSchema,
+} from './booking-request'
 
 /**
  * The shape of a booking request.
@@ -152,5 +157,71 @@ describe('fieldErrors', () => {
     const errors = fieldErrors(result.error)
     expect(Object.keys(errors).sort()).toEqual(['email', 'name'])
     expect(typeof errors.email).toBe('string')
+  })
+})
+
+describe('signupSchema', () => {
+  const VALID_SIGNUP = {
+    name: 'Sami Khoury',
+    email: 'sami@example.com',
+    password: 'correct horse battery',
+  }
+
+  it('accepts a normal sign-up', () => {
+    expect(signupSchema.safeParse(VALID_SIGNUP).success).toBe(true)
+  })
+
+  /**
+   * The same loose email rule as a booking, and it has to stay that way. If the
+   * two disagreed, somebody could book as a guest with an address the sign-up
+   * form then refuses, and never be able to claim the record holding their
+   * bookings.
+   */
+  it('accepts every address a booking would', () => {
+    for (const email of ['a+tag@example.com', 'name@sub.domain.co.uk', "o'brien@example.com"]) {
+      expect(signupSchema.safeParse({ ...VALID_SIGNUP, email }).success, email).toBe(true)
+      expect(
+        bookingRequestSchema.safeParse({
+          business: '7',
+          start: '2027-03-01T19:00:00.000Z',
+          end: '2027-03-01T21:00:00.000Z',
+          partySize: 2,
+          name: 'Sami',
+          email,
+        }).success,
+        email,
+      ).toBe(true)
+    }
+  })
+
+  it('lowercases the email, so it matches an existing guest record', () => {
+    expect(signupSchema.parse({ ...VALID_SIGNUP, email: 'SAMI@Example.com' }).email).toBe(
+      'sami@example.com',
+    )
+  })
+
+  /**
+   * Length only. Composition rules push people towards `Password1!`, which is
+   * weaker in practice than a long passphrase - which is why the guidelines that
+   * used to demand them stopped.
+   */
+  it('requires length rather than punctuation', () => {
+    expect(signupSchema.safeParse({ ...VALID_SIGNUP, password: 'Pw1!' }).success).toBe(false)
+    expect(signupSchema.safeParse({ ...VALID_SIGNUP, password: 'a'.repeat(10) }).success).toBe(true)
+    expect(
+      signupSchema.safeParse({ ...VALID_SIGNUP, password: 'all lowercase words here' }).success,
+    ).toBe(true)
+  })
+
+  /** Ten spaces is ten characters and no password at all. */
+  it('refuses a password of whitespace', () => {
+    expect(signupSchema.safeParse({ ...VALID_SIGNUP, password: '          ' }).success).toBe(false)
+  })
+
+  /** Nothing here should let a caller grant itself anything. */
+  it('ignores fields it does not know about', () => {
+    const parsed = signupSchema.parse({ ...VALID_SIGNUP, roles: ['admin'], _verified: true })
+    expect(parsed).not.toHaveProperty('roles')
+    expect(parsed).not.toHaveProperty('_verified')
   })
 })

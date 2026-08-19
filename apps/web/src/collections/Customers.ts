@@ -8,24 +8,22 @@ import { isAdmin, isStaff, selfOrStaff } from '../access/index'
  * authenticate against the collection that reaches the admin panel, and keeping
  * them apart makes that a property of the schema rather than of a check.
  *
- * # Why `create` is staff-only right now
+ * # Sign-up is public, but not through this collection
  *
- * Public sign-up is the point of this collection, and it is still closed. Three
- * things have to exist first, and none of them is this file:
+ * `create` stays staff-only even though anybody may open an account. Payload
+ * mounts a create endpoint at `/api/customers` for every collection, and that
+ * one accepts whatever the caller sends with no throttle in front of it -
+ * Payload 3 has no global rate limit to lean on. An open endpoint there is a
+ * spam faucet.
  *
- *  1. A transactional email provider. Every build logs "No email adapter
- *     provided". Without one there is no address verification and no password
- *     reset, so an account is unrecoverable the first time someone forgets a
- *     password.
- *  2. A rate limiter that survives more than one instance. The current one is
- *     in-memory, so on serverless the real limit is the configured one times
- *     however many instances are warm - fine against a scraper, useless against
- *     someone opening accounts in bulk.
- *  3. CSRF configured for the live domain.
+ * Public sign-up goes through `/account/signup` instead: rate-limited, and able
+ * to handle the case this collection cannot, which is an address that already
+ * has a record because the person once booked as a guest. Same shape as
+ * bookings - one door, with the checks behind it.
  *
- * Opening this endpoint before then does not produce sign-ups, it produces junk
- * rows and a mailbox nobody can reach. It is one line to change when those land,
- * and this comment is what makes that a decision rather than an oversight.
+ * Staff keep `create` because entering a customer by hand is occasionally the
+ * right thing during support, and reading is staff-wide so the admin can see
+ * who has an account.
  */
 export const Customers: CollectionConfig = {
   slug: 'customers',
@@ -34,6 +32,21 @@ export const Customers: CollectionConfig = {
     tokenExpiration: 60 * 60 * 24 * 7,
     maxLoginAttempts: 10,
     lockTime: 10 * 60 * 1000,
+
+    /**
+     * An account does nothing until the address is proven.
+     *
+     * Sign-up is public, so without this anyone could open an account under
+     * somebody else's address - and a guest booking already creates a customer
+     * record from whatever email was typed into a form. Verification is what
+     * separates "a row exists with your address on it" from "somebody controls
+     * that address".
+     *
+     * It makes deliverability load-bearing: a verification mail in a junk folder
+     * is a sign-up that silently fails. Worth knowing while the domain's sending
+     * reputation is still new.
+     */
+    verify: true,
   },
 
   admin: {

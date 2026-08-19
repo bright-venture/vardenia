@@ -89,6 +89,33 @@ export const availabilityQuerySchema = z.object({
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
 
 /**
+ * Opening an account from the site.
+ *
+ * Reuses the same loose email rule as a booking, deliberately: the two have to
+ * agree, or somebody books as a guest with an address the sign-up form then
+ * refuses and they can never claim the record.
+ *
+ * The password floor is length and nothing else. Composition rules - a digit, a
+ * symbol, a capital - push people towards `Password1!` and are weaker in
+ * practice than a long passphrase, which is why every current guideline dropped
+ * them.
+ */
+export const signupSchema = z.object({
+  name: z.string().trim().min(1, 'required').max(120, 'too long'),
+  email: emailAddress,
+  password: z
+    .string()
+    .min(10, 'must be at least 10 characters')
+    .max(200, 'too long')
+    // A password of only spaces satisfies a length check and nothing else.
+    .refine((value) => value.trim().length >= 10, 'must be at least 10 characters'),
+  phone: z.string().trim().max(40).optional(),
+  locale: z.enum(['en', 'ar']).optional(),
+})
+
+export type Signup = z.infer<typeof signupSchema>
+
+/**
  * First error per field, in the shape a form can render.
  *
  * Zod's own flatten is close, but returns arrays: a field with two problems

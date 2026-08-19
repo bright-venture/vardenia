@@ -5,21 +5,23 @@ import * as migration_20260818_170746_business_accounts from './20260818_170746_
 import * as migration_20260818_181551_bookings from './20260818_181551_bookings'
 import * as migration_20260818_181600_booking_capacity_trigger from './20260818_181600_booking_capacity_trigger'
 import * as migration_20260819_090000_drop_contact_fields from './20260819_090000_drop_contact_fields'
+import * as migration_20260819_090728_customer_verification from './20260819_090728_customer_verification'
 
 /**
- * The order here is the order they run in, and the last two depend on it.
+ * The order here is the order they run in, and two entries depend on it.
  *
  * `booking_capacity_trigger` installs a trigger on `bookings`, so it must come
  * after `bookings` creates that table. It was originally written as 180000 and
  * `migrate:create` duly listed it *before* the 181551 migration it depends on -
  * the generator sorts by the timestamp in the filename, and Payload stamps that
- * when you ask for a migration rather than when you finish writing one. A
- * hand-written migration can therefore sort ahead of the generated one it needs.
- * Renamed to 181600 so the filename and the dependency agree.
+ * when you ask for a migration rather than when you finish writing one. Renamed
+ * to 181600 so the filename and the dependency agree.
  *
- * If you add a migration by hand, check this list rather than trusting the
- * regeneration: `migrate:create` rewrites this file and will happily reorder
- * things back.
+ * This comment has already been deleted once by `migrate:create`, which rewrites
+ * this file wholesale. If you add a migration by hand, re-read this list
+ * afterwards rather than trusting the regeneration - and be aware the generator
+ * diffs against the JSON snapshots here, not the database, so a hand-written
+ * migration leaves it out of step until the next generated one catches up.
  */
 export const migrations = [
   {
@@ -56,5 +58,10 @@ export const migrations = [
     up: migration_20260819_090000_drop_contact_fields.up,
     down: migration_20260819_090000_drop_contact_fields.down,
     name: '20260819_090000_drop_contact_fields',
+  },
+  {
+    up: migration_20260819_090728_customer_verification.up,
+    down: migration_20260819_090728_customer_verification.down,
+    name: '20260819_090728_customer_verification',
   },
 ]

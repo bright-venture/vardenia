@@ -95,6 +95,18 @@ export async function findOrCreateCustomer(
       password: unguessablePassword(),
     },
     overrideAccess: true,
+
+    /**
+     * No verification email, because this person did not ask for an account.
+     *
+     * They asked for a table. The message they are expecting is the booking
+     * confirmation, and a second one inviting them to verify an account they
+     * never opened reads as a mistake at best. The record stays unverified,
+     * which is accurate: nobody has proven this address yet. They claim it
+     * later through /account/signup, which sends a reset rather than a
+     * duplicate-account error.
+     */
+    disableVerificationEmail: true,
   })
 
   return { id: created.id, created: true }

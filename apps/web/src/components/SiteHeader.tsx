@@ -17,6 +17,7 @@ import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
  */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations('nav')
+  const account = await getTranslations('account')
 
   return (
     <header className="border-ink-100 bg-surface-base sticky top-0 z-50 border-b">
@@ -31,6 +32,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </Link>
           <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
             {t('magazine')}
+          </Link>
+          {/* One link whether or not anybody is signed in, and it says "your
+              account" either way.
+
+              The alternative - "Sign in" or the reader's name, depending -
+              means reading the session in the layout, and reading the session
+              means `headers()`, which would opt every prerendered page in the
+              site out of static rendering for a word in the header. The account
+              page itself is dynamic and shows the right thing when they get
+              there. */}
+          <Link href="/account" className="text-ink-700 hover:text-ink-900 transition-colors">
+            {account('title')}
           </Link>
           {/* The switcher reads the query string so filters survive a language
               change, and reading it requires client rendering. Bounded here so

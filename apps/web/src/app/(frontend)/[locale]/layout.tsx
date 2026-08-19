@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
+import { getMessages } from '@vardenia/i18n/messages'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
 import { JsonLd } from '../../../components/JsonLd'
@@ -89,7 +90,17 @@ export default async function FrontendLayout({
             the site to one entity rather than to unattributed pages. */}
         <JsonLd data={organizationSchema()} />
 
-        <NextIntlClientProvider locale={locale}>
+        {/* Messages passed explicitly. `NextIntlClientProvider` rendered from a
+            Server Component inherits the locale, the timezone and `now` from the
+            request config, but not the catalogue - checked in the installed
+            build, not assumed. Without this every client component calling
+            `useTranslations` throws, which is why the forms are the first thing
+            in the app to need it.
+
+            Both catalogues together are a couple of kilobytes, so shipping the
+            whole thing beats slicing it per route and discovering the missing
+            namespace in production. Worth revisiting if they grow. */}
+        <NextIntlClientProvider locale={locale} messages={getMessages(locale as Locale)}>
           <SiteHeader locale={locale as Locale} />
           <div className="flex-1">{children}</div>
           <SiteFooter locale={locale as Locale} />
