@@ -26,7 +26,21 @@ import {
  * component, so the page decides what counts as the token and this only submits
  * it. It never appears in a `fetch` URL, only in the body.
  */
-export function ResetPasswordForm({ token }: { token: string }) {
+export function ResetPasswordForm({
+  token,
+  endpoint = '/auth/reset',
+  signInHref = '/account/login',
+}: {
+  token: string
+  /**
+   * Customers post to our own route, which also marks the address verified -
+   * see /auth/reset for the guest-booker case that needs. Partners post to
+   * Payload's own endpoint, because `business-users` has no verification to
+   * carry and there is nothing for a route of ours to add.
+   */
+  endpoint?: string
+  signInHref?: string
+}) {
   const t = useTranslations('account')
   const common = useTranslations('common')
   const ids = useId()
@@ -44,30 +58,45 @@ export function ResetPasswordForm({ token }: { token: string }) {
     setBusy(true)
 
     try {
-      const response = await fetch('/auth/reset', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({ token, password }),
       })
 
+      /**
+       * Two endpoints, two reply shapes.
+       *
+       * Ours answers `{ ok, errors: { field: message } }`. Payload's answers
+       * `{ message, user }` on success and `{ errors: [{ message }] }` on
+       * failure - no `ok` at all. Requiring `body.ok` therefore read every
+       * successful partner reset as a failure, and treating its error array as a
+       * field map put `[object Object]` under the password box.
+       */
       const body = (await response.json().catch(() => null)) as {
         ok?: boolean
         message?: string
-        errors?: Record<string, string>
+        errors?: Record<string, string> | { message?: string }[]
       } | null
 
-      if (response.ok && body?.ok) {
+      // The status is the thing both agree on.
+      if (response.ok) {
         setDone(true)
         return
       }
 
-      if (body?.errors) {
+      // Ours: a map of field to message, rendered under the input it belongs to.
+      if (body?.errors && !Array.isArray(body.errors)) {
         setErrors(body.errors)
         return
       }
 
-      setProblem(body?.message ?? common('error'))
+      // Payload's: a list, and about the token rather than about a field. An
+      // expired or spent link is the overwhelmingly likely cause, so it belongs
+      // at the top of the form rather than under the password box.
+      const first = Array.isArray(body?.errors) ? body.errors[0]?.message : undefined
+      setProblem(first ?? body?.message ?? common('error'))
     } catch {
       setProblem(common('error'))
     } finally {
@@ -80,7 +109,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <div className={NOTICE_SUCCESS} role="status">
         <p>{t('resetDone')}</p>
         <p className="mt-4">
-          <Link href="/account/login" className={LINK}>
+          <Link href={signInHref} className={LINK}>
             {t('signIn')}
           </Link>
         </p>

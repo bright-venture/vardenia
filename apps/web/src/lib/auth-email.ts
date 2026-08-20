@@ -154,3 +154,64 @@ export const verificationEmail = (token: string, origin = siteOrigin()): AuthEma
 
 export const passwordResetEmail = (token: string, origin = siteOrigin()): AuthEmailContent =>
   render(RESET, resetUrl(token, origin))
+
+// ---------------------------------------------------------------------------
+// Partners
+// ---------------------------------------------------------------------------
+
+/**
+ * Where a partner sets or resets their password.
+ *
+ * A different path from the customer one because the two land on different
+ * pages, and those pages post to different collections. A token issued for a
+ * business-user is meaningless to `/api/customers/reset-password`, so sending
+ * somebody to the wrong page produces a refusal they cannot act on.
+ */
+export const partnerResetUrl = (token: string, origin = siteOrigin()) =>
+  `${origin}/partner/reset/${encodeURIComponent(token)}`
+
+/** Where they sign in afterwards, and every time after that. */
+export const partnerLoginUrl = (origin = siteOrigin()) => `${origin}/partner`
+
+/**
+ * One message for both the first password and every later one.
+ *
+ * Onboarding and recovery are the same act from the reader's side - choose a
+ * password using a link we sent to an address only they can read - and Payload
+ * generates one email for both, so wording that only made sense for a new
+ * account would read as nonsense to somebody who had simply forgotten theirs.
+ *
+ * It carries the sign-in address in the body, which the customer equivalents do
+ * not. Owners have to learn where the dashboard lives, and this is the one
+ * message every one of them is guaranteed to receive.
+ */
+const PARTNER_RESET: Copy = {
+  subject: 'Set your Vardenia password - تعيين كلمة المرور',
+  heading: 'Set your password',
+  en: 'Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings.',
+  ar: 'افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها.',
+  action: 'Set a password',
+  ignoreEn: 'If you were not expecting this, you can ignore this message and nothing will change.',
+  ignoreAr: 'إذا لم تكن تتوقع هذه الرسالة، تجاهلها ولن يتغير شيء.',
+}
+
+export function partnerResetEmail(token: string, origin = siteOrigin()): AuthEmailContent {
+  const mail = render(PARTNER_RESET, partnerResetUrl(token, origin))
+  const login = partnerLoginUrl(origin)
+
+  /**
+   * The dashboard address, appended to both parts.
+   *
+   * Not a second button. The reset link is the one thing to click now, and a
+   * message with two calls to action is a message where half the readers pick
+   * the wrong one.
+   */
+  return {
+    ...mail,
+    text: `${mail.text}\n\nSign in later at: ${login}\nللدخول لاحقًا: ${login}`,
+    html: mail.html.replace(
+      '</div>\n</body>',
+      `  <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid #f0ede8;font-size:13px;color:#7a7a7a;">Sign in later at <a href="${escapeHtml(login)}" style="color:#a08a5b;">${escapeHtml(login)}</a></p>\n  </div>\n</body>`,
+    ),
+  }
+}

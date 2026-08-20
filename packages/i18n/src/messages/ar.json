@@ -114,7 +114,8 @@
     "decline": "رفض",
     "markCompleted": "تم الحضور",
     "markNoShow": "لم يحضر",
-    "guestUnknown": "ضيف"
+    "guestUnknown": "ضيف",
+    "forgot": "نسيت كلمة المرور؟"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

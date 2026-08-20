@@ -2,8 +2,8 @@
 
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from '../i18n/routing'
-import { HINT, INPUT, LABEL, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import { Link, useRouter } from '../i18n/routing'
+import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
 
 /**
  * Signing in a business owner.
@@ -113,7 +113,15 @@ export function PartnerLoginForm() {
         {busy ? t('working') : t('signIn')}
       </button>
 
-      {/* No sign-up link, deliberately. See the note at the top. */}
+      {/* No sign-up link, deliberately. See the note at the top. A forgotten
+          password is the only self-service route, and it is also how a new
+          partner gets in the first time. */}
+      <p className={HINT}>
+        <Link href="/partner/forgot" className={LINK}>
+          {t('forgot')}
+        </Link>
+      </p>
+
       <p className={HINT}>{t('noSelfSignup')}</p>
     </form>
   )

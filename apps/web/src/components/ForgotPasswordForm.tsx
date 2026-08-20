@@ -26,7 +26,13 @@ import {
  * The panel afterwards is worded to match: it never confirms that an account
  * exists.
  */
-export function ForgotPasswordForm() {
+export function ForgotPasswordForm({
+  collection = 'customers',
+  signInHref = '/account/login',
+}: {
+  collection?: 'customers' | 'business-users'
+  signInHref?: string
+} = {}) {
   const t = useTranslations('account')
   const common = useTranslations('common')
   const ids = useId()
@@ -42,7 +48,7 @@ export function ForgotPasswordForm() {
     setBusy(true)
 
     try {
-      const response = await fetch('/api/customers/forgot-password', {
+      const response = await fetch(`/api/${collection}/forgot-password`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
@@ -67,7 +73,7 @@ export function ForgotPasswordForm() {
       <div className={NOTICE_SUCCESS} role="status">
         <p>{t('forgotSent')}</p>
         <p className="mt-4">
-          <Link href="/account/login" className={LINK}>
+          <Link href={signInHref} className={LINK}>
             {t('signIn')}
           </Link>
         </p>
@@ -103,7 +109,7 @@ export function ForgotPasswordForm() {
       </button>
 
       <p className={HINT}>
-        <Link href="/account/login" className={LINK}>
+        <Link href={signInHref} className={LINK}>
           {t('signIn')}
         </Link>
       </p>

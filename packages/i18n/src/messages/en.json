@@ -114,7 +114,8 @@
     "decline": "Decline",
     "markCompleted": "Mark as done",
     "markNoShow": "Did not arrive",
-    "guestUnknown": "Guest"
+    "guestUnknown": "Guest",
+    "forgot": "Forgotten your password?"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

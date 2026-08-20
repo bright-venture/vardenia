@@ -50,6 +50,19 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             >
               {ar ? 'الأعداد' : 'Issues'}
             </Link>
+
+            {/* The one place the partner dashboard is linked from.
+                Not the header: a "partner login" link on every page a reader
+                sees is an invitation to a credential-stuffing script, and the
+                people who need it are told the address during onboarding and
+                again in the email that sets their password. The footer is where
+                a business owner looks, and it is quiet enough. */}
+            <Link
+              href="/partner"
+              className="text-ink-500 hover:text-ink-900 mt-2 transition-colors"
+            >
+              {ar ? 'للشركاء' : 'For partners'}
+            </Link>
           </nav>
         </div>
 

@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
+import { partnerResetEmail } from '../lib/auth-email'
+import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 
 /**
  * Owners and managers of listings we have onboarded.
@@ -31,6 +33,36 @@ export const BusinessUsers: CollectionConfig = {
     tokenExpiration: 60 * 60 * 4,
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,
+
+    /**
+     * Ours, because Payload's default sends partners to
+     * `/admin/reset-password` - the staff panel, which is the one screen in the
+     * product they cannot open.
+     *
+     * The same bug the Customers collection had, missed here when that one was
+     * fixed. It mattered more here: this email is not only recovery, it is how
+     * an owner gets in for the first time, so a broken link meant an account
+     * nobody could ever use.
+     */
+    forgotPassword: {
+      generateEmailSubject: () => partnerResetEmail('').subject,
+      generateEmailHTML: (args) => {
+        if (!args?.token) throw new Error('No reset token to put in the partner email')
+        return partnerResetEmail(args.token).html
+      },
+    },
+  },
+
+  hooks: {
+    /**
+     * A new partner is sent a link to choose their own password.
+     *
+     * Without this, onboarding meant a staff member typing a password into the
+     * admin and passing it to the owner by hand - so the team knew every
+     * partner's credentials and they lived in a chat log. See
+     * inviteBusinessUser.
+     */
+    afterChange: [inviteBusinessUser],
   },
 
   admin: {
