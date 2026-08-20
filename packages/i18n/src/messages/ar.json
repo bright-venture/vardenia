@@ -96,7 +96,8 @@
     "cancelBooking": "إلغاء هذا الحجز",
     "cancelConfirm": "لا يمكن التراجع عن هذا.",
     "cancelYes": "نعم، ألغِه",
-    "cancelNo": "احتفظ به"
+    "cancelNo": "احتفظ به",
+    "agreeOnSignup": "بإنشاء حساب فإنك توافق على <terms>شروط الاستخدام</terms> و<privacy>سياسة الخصوصية</privacy>."
   },
   "partner": {
     "eyebrow": "للشركاء",

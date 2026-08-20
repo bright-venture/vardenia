@@ -207,6 +207,26 @@ export function SignupForm({ locale }: { locale: Locale }) {
         </p>
       </div>
 
+      {/* Said before the button, not after it. This is the moment consent is
+          actually given, and a line of small print underneath a button somebody
+          has already pressed is not consent. No tick box: under GDPR, consent
+          is not the lawful basis for running an account you asked us to open -
+          a pre-ticked or mandatory box would misrepresent what is happening. */}
+      <p className={HINT}>
+        {t.rich('agreeOnSignup', {
+          terms: (chunks) => (
+            <Link href="/legal/terms" className={LINK}>
+              {chunks}
+            </Link>
+          ),
+          privacy: (chunks) => (
+            <Link href="/legal/privacy" className={LINK}>
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
+
       <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
         {busy ? t('working') : t('submitSignUp')}
       </button>

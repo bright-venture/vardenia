@@ -64,6 +64,22 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               {ar ? 'للشركاء' : 'For partners'}
             </Link>
           </nav>
+
+          {/* The footer is where people look for these, and where a regulator
+              expects to find them. They arrived with customer accounts: holding
+              names, addresses and booking histories is what makes them
+              required rather than merely good manners. */}
+          <nav aria-label={ar ? 'قانوني' : 'Legal'} className="flex flex-col gap-2 text-sm">
+            <Link
+              href="/legal/privacy"
+              className="text-ink-500 hover:text-ink-900 transition-colors"
+            >
+              {ar ? 'سياسة الخصوصية' : 'Privacy'}
+            </Link>
+            <Link href="/legal/terms" className="text-ink-500 hover:text-ink-900 transition-colors">
+              {ar ? 'شروط الاستخدام' : 'Terms'}
+            </Link>
+          </nav>
         </div>
 
         <p className="text-ink-300 mt-10 text-xs">

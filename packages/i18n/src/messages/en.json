@@ -96,7 +96,8 @@
     "cancelBooking": "Cancel this booking",
     "cancelConfirm": "This cannot be undone.",
     "cancelYes": "Yes, cancel it",
-    "cancelNo": "Keep it"
+    "cancelNo": "Keep it",
+    "agreeOnSignup": "By creating an account you agree to our <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
   },
   "partner": {
     "eyebrow": "For partners",
