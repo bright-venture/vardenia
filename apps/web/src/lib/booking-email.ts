@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
 import { reportError } from './report'
+import { siteOrigin } from './auth-email'
 
 /**
  * The confirmation a customer receives.
@@ -429,6 +430,144 @@ export async function sendBookingOutcome({
     await reportError(error, {
       source: 'booking.outcome-email',
       extra: { reference: rest.reference, outcome: rest.outcome },
+    })
+    return false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// What we write to the venue
+// ---------------------------------------------------------------------------
+
+/**
+ * Tells a business that a booking it was holding has been called off.
+ *
+ * The first message this product ever sends a partner, and it exists because the
+ * dashboard alone does not solve the problem. A venue does not sit refreshing a
+ * page; without this a table stays held for somebody who decided last week not
+ * to come, and the venue finds out when the evening is over. That is the part of
+ * a cancellation that actually costs money.
+ *
+ * # Both languages, like the partner password email
+ *
+ * The booking carries the *customer's* language, which says nothing about the
+ * person who runs the restaurant. We have never asked a partner what they read,
+ * so both go in one message rather than one being guessed.
+ */
+export interface VenueCancellationArgs {
+  payload: Payload
+  to: string
+  businessName: string
+  guestName: string
+  reference: string
+  start: Date
+  partySize: number
+  /** True when the booking had been confirmed, so the table was genuinely held. */
+  wasConfirmed: boolean
+}
+
+export function venueCancellationContent({
+  businessName,
+  guestName,
+  reference,
+  start,
+  partySize,
+  wasConfirmed,
+}: Omit<VenueCancellationArgs, 'payload' | 'to'>): BookingEmailContent {
+  const whenEn = formatWhen(start, 'en')
+  const whenAr = formatWhen(start, 'ar')
+
+  /**
+   * A confirmed booking freed a table; a pending one was only ever a request.
+   * Saying "a table is now free" about something the venue never accepted would
+   * be telling them about a table they did not know they had lost.
+   */
+  const leadEn = wasConfirmed
+    ? `A confirmed booking at ${businessName} has been cancelled, so that table is free again.`
+    : `A booking request at ${businessName} has been withdrawn. There is nothing to answer.`
+
+  const leadAr = wasConfirmed
+    ? `تم إلغاء حجز مؤكّد في ${businessName}، والطاولة متاحة الآن.`
+    : `تم سحب طلب حجز في ${businessName}. لا حاجة للرد عليه.`
+
+  const subject = wasConfirmed
+    ? `Booking cancelled - ${reference}`
+    : `Booking request withdrawn - ${reference}`
+
+  const rows: [string, string][] = [
+    ['Guest', guestName || 'Guest'],
+    ['When', whenEn],
+    ['People', String(partySize)],
+    ['Reference', reference],
+  ]
+
+  const text = [
+    leadEn,
+    '',
+    ...rows.map(([label, value]) => `${label}: ${value}`),
+    '',
+    `Your bookings: ${siteOrigin()}/partner`,
+    '',
+    '---',
+    '',
+    leadAr,
+    '',
+    `${whenAr} - ${partySize}`,
+    reference,
+    '',
+    `حجوزاتك: ${siteOrigin()}/partner`,
+    '',
+    'Vardenia',
+  ].join('\n')
+
+  const html = `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:24px;background:#faf9f7;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e8e4de;border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a08a5b;">Vardenia</p>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(wasConfirmed ? 'Booking cancelled' : 'Request withdrawn')}</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4a4a4a;">${escapeHtml(leadEn)}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:15px;">
+      ${rows
+        .map(
+          ([label, value]) =>
+            `<tr><td style="padding:8px 0;color:#7a7a7a;border-bottom:1px solid #f0ede8;">${escapeHtml(label)}</td><td style="padding:8px 0;text-align:right;border-bottom:1px solid #f0ede8;">${escapeHtml(value)}</td></tr>`,
+        )
+        .join('\n      ')}
+    </table>
+    <p style="margin:24px 0 0;font-size:13px;color:#7a7a7a;">
+      <a href="${escapeHtml(siteOrigin())}/partner" style="color:#a08a5b;">${escapeHtml(siteOrigin())}/partner</a>
+    </p>
+    <div dir="rtl" lang="ar" style="margin-top:24px;border-top:1px solid #f0ede8;padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#4a4a4a;">${escapeHtml(leadAr)}</p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  return { subject, html, text }
+}
+
+/** Sends, and never throws - it runs from a hook after the write. */
+export async function sendVenueCancellation({
+  payload,
+  to,
+  ...rest
+}: VenueCancellationArgs): Promise<boolean> {
+  const content = venueCancellationContent(rest)
+
+  try {
+    await payload.sendEmail({
+      to,
+      subject: content.subject,
+      html: content.html,
+      text: content.text,
+    })
+    return true
+  } catch (error) {
+    await reportError(error, {
+      source: 'booking.venue-cancellation',
+      extra: { reference: rest.reference },
     })
     return false
   }

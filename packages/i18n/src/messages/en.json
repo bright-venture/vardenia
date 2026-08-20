@@ -92,7 +92,11 @@
     "resetDone": "Your password is set. You can sign in now.",
     "forgotIntro": "Enter your email and we will send you a link to set a new password.",
     "sendResetLink": "Send the link",
-    "forgotSent": "Check your email. If we can find an account for that address, a link is on its way."
+    "forgotSent": "Check your email. If we can find an account for that address, a link is on its way.",
+    "cancelBooking": "Cancel this booking",
+    "cancelConfirm": "This cannot be undone.",
+    "cancelYes": "Yes, cancel it",
+    "cancelNo": "Keep it"
   },
   "partner": {
     "eyebrow": "For partners",

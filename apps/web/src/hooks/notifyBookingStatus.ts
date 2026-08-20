@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
-import { outcomeFor, sendBookingOutcome } from '../lib/booking-email'
+import type { PayloadRequest } from 'payload'
+import { outcomeFor, sendBookingOutcome, sendVenueCancellation } from '../lib/booking-email'
 import { reportError } from '../lib/report'
 
 /**
@@ -27,6 +28,7 @@ import { reportError } from '../lib/report'
 
 /** Fields the hook needs off the saved document, none of which Payload types loosely enough. */
 interface BookingDoc {
+  business?: unknown
   id: number | string
   status?: BookingStatus
   reference?: string
@@ -67,6 +69,26 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
   const outcome = outcomeFor(from, to)
   if (!outcome) return doc
 
+  const actor = req?.user?.collection
+
+  /**
+   * The venue is told when a booking it was holding is called off by anybody but
+   * itself.
+   *
+   * This is the half a dashboard does not solve. A restaurant does not sit
+   * refreshing a page, so without a message the table stays held for somebody
+   * who decided last week not to come - and they find out when the evening is
+   * over. An owner who cancelled it themselves already knows.
+   */
+  if (to === 'cancelled' && actor !== 'business-users') {
+    await notifyVenue(current, from, req).catch(async (error) => {
+      await reportError(error, {
+        source: 'booking.venue-cancellation',
+        extra: { booking: current.id },
+      })
+    })
+  }
+
   /**
    * A customer who cancels their own booking is not told that their booking was
    * cancelled. They just did it, they watched it happen, and an email saying so
@@ -77,7 +99,7 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
    * on a customer's behalf over the phone should still produce a record in the
    * customer's inbox.
    */
-  if (req?.user?.collection === 'customers') return doc
+  if (actor === 'customers') return doc
 
   try {
     const customerId = idOf(current.customer)
@@ -123,4 +145,64 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
   }
 
   return doc
+}
+
+/**
+ * Writes to whoever manages the listing.
+ *
+ * Everything is read with access overridden, because the hook runs as whoever
+ * made the change - a customer, who may read neither the business-users
+ * collection nor anybody else's record. The ordinary path would find nothing and
+ * the venue would simply never hear.
+ *
+ * A listing with no partner account attached is silent rather than an error.
+ * Most listings have none: they were onboarded by us and their bookings are
+ * answered from the admin, which is a perfectly good arrangement and not a
+ * failure to report.
+ */
+async function notifyVenue(booking: BookingDoc, from: BookingStatus, req: PayloadRequest) {
+  const businessId = idOf(booking.business)
+  if (businessId === null) return
+
+  const owners = await req.payload.find({
+    collection: 'business-users',
+    where: { businesses: { in: [businessId] } },
+    limit: 20,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  if (owners.docs.length === 0) return
+
+  const business = await req.payload
+    .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+    .catch(() => null)
+
+  const customerId = idOf(booking.customer)
+  const customer =
+    customerId === null
+      ? null
+      : await req.payload
+          .findByID({ collection: 'customers', id: customerId, depth: 0, overrideAccess: true })
+          .catch(() => null)
+
+  const start = new Date(String(booking.start))
+  if (Number.isNaN(start.getTime())) return
+
+  for (const owner of owners.docs) {
+    const to = String((owner as { email?: unknown }).email ?? '')
+    if (!to) continue
+
+    await sendVenueCancellation({
+      payload: req.payload,
+      to,
+      businessName: String((business as { name?: unknown } | null)?.name ?? 'your listing'),
+      guestName: String((customer as { name?: unknown } | null)?.name ?? ''),
+      reference: String(booking.reference ?? ''),
+      start,
+      partySize: Number(booking.partySize ?? 1),
+      // A confirmed booking freed a table. A pending one was only a request.
+      wasConfirmed: from === 'confirmed',
+    })
+  }
 }

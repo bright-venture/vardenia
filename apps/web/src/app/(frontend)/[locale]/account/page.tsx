@@ -8,6 +8,7 @@ import { currentCustomer, customerBookings, partitionBookings } from '../../../.
 import { formatBeirut } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
+import { CancelBookingButton } from '../../../../components/CancelBookingButton'
 
 /**
  * What a customer sees of themselves: their bookings, and a way out.
@@ -152,6 +153,11 @@ async function BookingList({
               <p className="text-ink-500 mt-1 text-xs">
                 {t('reference')} <span className="select-all font-mono">{booking.reference}</span>
               </p>
+
+              {/* Renders nothing for a booking that is already finished. See
+                  CancelBookingButton - the decision is availableActions', not
+                  this page's. */}
+              <CancelBookingButton id={booking.id} status={booking.status as BookingStatus} />
             </li>
           )
         })}

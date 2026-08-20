@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { bookingConfirmationContent, bookingOutcomeContent, outcomeFor } from './booking-email'
+import {
+  bookingConfirmationContent,
+  bookingOutcomeContent,
+  outcomeFor,
+  venueCancellationContent,
+} from './booking-email'
 
 /**
  * The confirmation email.
@@ -205,5 +210,68 @@ describe('bookingOutcomeContent', () => {
   it('shows the time in Beirut, not in UTC', () => {
     const mail = bookingOutcomeContent({ ...base, outcome: 'confirmed' })
     expect(mail.text).toContain('20:00')
+  })
+})
+
+/**
+ * What the venue is told, which turns on one fact: was the table actually held?
+ *
+ * A confirmed booking freed a table. A pending one was only ever a request the
+ * venue had not answered. Telling them a table is free when they never knew they
+ * had lost one is telling them something untrue about their own evening.
+ */
+describe('venueCancellationContent', () => {
+  const base = {
+    businessName: 'Le Royal',
+    guestName: 'Sami',
+    reference: 'ABCD1234',
+    start: new Date('2026-09-01T17:00:00Z'),
+    partySize: 2,
+  }
+
+  it('says a table is free again when the booking was confirmed', () => {
+    const mail = venueCancellationContent({ ...base, wasConfirmed: true })
+    expect(mail.subject).toContain('Booking cancelled')
+    expect(mail.text).toContain('that table is free again')
+  })
+
+  it('says only that a request was withdrawn when it never was', () => {
+    const mail = venueCancellationContent({ ...base, wasConfirmed: false })
+    expect(mail.subject).toContain('withdrawn')
+    expect(mail.text).not.toContain('table is free')
+    expect(mail.text).toContain('nothing to answer')
+  })
+
+  it('carries what the venue needs to find the booking', () => {
+    const mail = venueCancellationContent({ ...base, wasConfirmed: true })
+    expect(mail.text).toContain('ABCD1234')
+    expect(mail.text).toContain('Sami')
+    expect(mail.text).toContain('Le Royal')
+    // In Beirut, not UTC.
+    expect(mail.text).toContain('20:00')
+  })
+
+  it('links to the dashboard, since that is where they act on it', () => {
+    expect(venueCancellationContent({ ...base, wasConfirmed: true }).text).toContain('/partner')
+  })
+
+  it('is written in both languages, because we never asked the venue', () => {
+    const mail = venueCancellationContent({ ...base, wasConfirmed: true })
+    expect(mail.html).toContain('dir="rtl"')
+    expect(/[؀-ۿ]/.test(mail.text)).toBe(true)
+  })
+
+  it('renders a booking whose guest record has gone', () => {
+    const mail = venueCancellationContent({ ...base, guestName: '', wasConfirmed: true })
+    expect(mail.text).toContain('Guest')
+  })
+
+  it('does not let a guest name inject markup', () => {
+    const mail = venueCancellationContent({
+      ...base,
+      guestName: '<script>alert(1)</script>',
+      wasConfirmed: true,
+    })
+    expect(mail.html).not.toContain('<script>')
   })
 })
