@@ -153,6 +153,34 @@ export function bookingConfirmationContent({
   const copy = copyFor(status, locale)
   if (!copy) return null
 
+  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale })
+}
+
+/**
+ * One layout, several messages.
+ *
+ * Extracted when the status emails arrived, because the alternative was a second
+ * copy of the same table markup - and two copies of an email template diverge
+ * the first time somebody adjusts a padding value in one of them. Everything
+ * that differs between messages is in `copy`.
+ */
+function renderBookingEmail({
+  copy,
+  name,
+  reference,
+  start,
+  end,
+  partySize,
+  locale,
+}: {
+  copy: Copy
+  name: string
+  reference: string
+  start: Date
+  end: Date
+  partySize: number
+  locale: 'en' | 'ar'
+}): BookingEmailContent {
   const rtl = locale === 'ar'
   const when = formatWhen(start, locale)
   const until = formatTime(end, locale)
@@ -236,6 +264,171 @@ export async function sendBookingConfirmation({
     await reportError(error, {
       source: 'booking.confirmation-email',
       extra: { reference: rest.reference },
+    })
+    return false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// What we write when the business answers
+// ---------------------------------------------------------------------------
+
+/**
+ * The outcomes worth an email, which is not the same as the statuses that exist.
+ *
+ *  - `confirmed`  the business accepted. The message the customer is waiting for.
+ *  - `declined`   the business could not take the request. Never confirmed, so
+ *                 nothing was ever reserved and the wording must not imply it was.
+ *  - `cancelled`  a booking that *was* confirmed has been called off. Different
+ *                 news, and worse, because they had planned around it.
+ *
+ * `completed` and `no-show` are deliberately absent. Telling somebody they
+ * turned up is noise; telling them they did not is an accusation, and one we
+ * would be making from a button a busy person pressed at the end of a shift.
+ */
+export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled'
+
+const OUTCOME_COPY: Record<'en' | 'ar', Record<BookingOutcomeKind, Copy>> = {
+  en: {
+    confirmed: {
+      subject: 'Your booking is confirmed',
+      heading: 'Booking confirmed',
+      intro:
+        'Good news - the business has confirmed your booking. Please quote this reference if you need to change anything.',
+      whenLabel: 'When',
+      untilLabel: 'Until',
+      partyLabel: 'People',
+      referenceLabel: 'Reference',
+      closing: 'We look forward to seeing you.',
+    },
+    declined: {
+      subject: 'Your booking request could not be taken',
+      heading: 'Booking not available',
+      intro:
+        'The business was not able to take this booking, so nothing has been reserved. Another time may well be free, and other places nearby are on Vardenia.',
+      whenLabel: 'You asked for',
+      untilLabel: 'Until',
+      partyLabel: 'People',
+      referenceLabel: 'Reference',
+      closing: 'Sorry to send disappointing news.',
+    },
+    cancelled: {
+      subject: 'Your booking has been cancelled',
+      heading: 'Booking cancelled',
+      intro:
+        'This booking has been cancelled and is no longer held. If that is unexpected, quote the reference below and we will look into it.',
+      whenLabel: 'Was booked for',
+      untilLabel: 'Until',
+      partyLabel: 'People',
+      referenceLabel: 'Reference',
+      closing: 'Sorry for the change.',
+    },
+  },
+  ar: {
+    confirmed: {
+      subject: 'تم تأكيد حجزك',
+      heading: 'تم تأكيد الحجز',
+      intro: 'خبر سار - أكّد المكان حجزك. يرجى ذكر هذا الرقم عند الحاجة إلى أي تعديل.',
+      whenLabel: 'الموعد',
+      untilLabel: 'حتى',
+      partyLabel: 'عدد الأشخاص',
+      referenceLabel: 'رقم الحجز',
+      closing: 'نتطلع إلى استقبالك.',
+    },
+    declined: {
+      subject: 'تعذّر قبول طلب حجزك',
+      heading: 'الحجز غير متاح',
+      intro:
+        'لم يتمكن المكان من قبول هذا الحجز، ولم يتم حجز أي شيء. قد يكون موعد آخر متاحًا، وهناك أماكن أخرى قريبة على فاردينيا.',
+      whenLabel: 'الموعد المطلوب',
+      untilLabel: 'حتى',
+      partyLabel: 'عدد الأشخاص',
+      referenceLabel: 'رقم الحجز',
+      closing: 'نأسف لهذا الخبر.',
+    },
+    cancelled: {
+      subject: 'تم إلغاء حجزك',
+      heading: 'تم إلغاء الحجز',
+      intro:
+        'تم إلغاء هذا الحجز ولم يعد محجوزًا. إذا كان ذلك غير متوقع، اذكر رقم الحجز أدناه وسنتحقق من الأمر.',
+      whenLabel: 'كان محجوزًا في',
+      untilLabel: 'حتى',
+      partyLabel: 'عدد الأشخاص',
+      referenceLabel: 'رقم الحجز',
+      closing: 'نأسف لهذا التغيير.',
+    },
+  },
+}
+
+/**
+ * Which outcome, if any, a status change should be written about.
+ *
+ * Takes both statuses because `cancelled` means two different things depending
+ * on where it came from: from `pending` the business declined a request that was
+ * never held, and from `confirmed` it called off something the customer had
+ * planned around. Sending the same sentence for both would tell one of them
+ * something untrue.
+ */
+export function outcomeFor(from: BookingStatus, to: BookingStatus): BookingOutcomeKind | null {
+  if (from === to) return null
+  if (to === 'confirmed') return 'confirmed'
+  if (to === 'cancelled') return from === 'pending' ? 'declined' : 'cancelled'
+  return null
+}
+
+export interface BookingOutcomeArgs {
+  payload: Payload
+  to: string
+  name: string
+  reference: string
+  outcome: BookingOutcomeKind
+  start: Date
+  end: Date
+  partySize: number
+  locale: 'en' | 'ar'
+}
+
+/** Pure, like the confirmation content, so the wording is testable. */
+export function bookingOutcomeContent({
+  name,
+  reference,
+  outcome,
+  start,
+  end,
+  partySize,
+  locale,
+}: Omit<BookingOutcomeArgs, 'payload' | 'to'>): BookingEmailContent {
+  const copy = OUTCOME_COPY[locale][outcome]
+  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale })
+}
+
+/**
+ * Sends, and never throws at the caller.
+ *
+ * Called from an `afterChange` hook, so the booking has already been written by
+ * the time this runs. Letting a mail failure escape would turn a successful
+ * confirmation into a 500 for the owner who pressed Accept, and leave them
+ * pressing it again against a booking that is already confirmed.
+ */
+export async function sendBookingOutcome({
+  payload,
+  to,
+  ...rest
+}: BookingOutcomeArgs): Promise<boolean> {
+  const content = bookingOutcomeContent(rest)
+
+  try {
+    await payload.sendEmail({
+      to,
+      subject: content.subject,
+      html: content.html,
+      text: content.text,
+    })
+    return true
+  } catch (error) {
+    await reportError(error, {
+      source: 'booking.outcome-email',
+      extra: { reference: rest.reference, outcome: rest.outcome },
     })
     return false
   }

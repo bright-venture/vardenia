@@ -2,6 +2,7 @@ import type { Access, CollectionConfig, Where } from 'payload'
 import { BOOKING_STATUSES, generateBookingReference } from '@vardenia/core'
 import { isAdmin, isStaff, isStaffFieldLevel, ownedBusinessIds } from '../access/index'
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
+import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
 
 /**
  * A reservation: one customer, one business, one interval.
@@ -93,6 +94,13 @@ export const Bookings: CollectionConfig = {
 
   hooks: {
     beforeValidate: [guardBookingWrite],
+    /**
+     * Tells the customer when the business accepts or declines. On the
+     * collection rather than in the partner dashboard, because a booking is
+     * answered from there, from the admin panel, and by staff on the phone -
+     * and a notification wired to one button does not fire from the others.
+     */
+    afterChange: [notifyBookingStatus],
   },
 
   fields: [
@@ -164,6 +172,34 @@ export const Bookings: CollectionConfig = {
       type: 'textarea',
       admin: {
         description: 'What the customer told us - a dietary requirement, an anniversary.',
+      },
+    },
+
+    /**
+     * Which language to write to this customer in.
+     *
+     * Captured from the page they booked on, because that is the only moment we
+     * ever know it. The confirmation email had it from the request and every
+     * message after that - the business accepting, the business cancelling - is
+     * sent from a hook with no request behind it, so without this the whole
+     * follow-up conversation would default to English for an Arabic reader.
+     *
+     * On the booking rather than on the customer: it is a fact about how they
+     * arrived, and a Beirut household that reads the site in Arabic may well have
+     * a member who books in English. The most recent booking is the better guess
+     * either way.
+     */
+    {
+      name: 'locale',
+      type: 'select',
+      defaultValue: 'en',
+      options: [
+        { label: 'English', value: 'en' },
+        { label: 'Arabic', value: 'ar' },
+      ],
+      admin: {
+        description: 'The language this customer is written to in.',
+        position: 'sidebar',
       },
     },
 

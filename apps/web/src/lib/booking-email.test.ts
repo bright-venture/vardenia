@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bookingConfirmationContent } from './booking-email'
+import { bookingConfirmationContent, bookingOutcomeContent, outcomeFor } from './booking-email'
 
 /**
  * The confirmation email.
@@ -122,5 +122,88 @@ describe('escaping', () => {
     })!
     expect(content.html).not.toContain('<script>')
     expect(content.html).toContain('&lt;script&gt;')
+  })
+})
+
+/**
+ * What we write when the business answers.
+ *
+ * The wording carries a factual claim in each case - whether anything was ever
+ * reserved - and getting that wrong is worse than saying nothing. A declined
+ * request was never held; a cancelled booking was.
+ */
+describe('outcomeFor', () => {
+  it('treats cancelling a pending request as a decline', () => {
+    expect(outcomeFor('pending', 'cancelled')).toBe('declined')
+  })
+
+  it('treats cancelling a confirmed booking as a cancellation', () => {
+    expect(outcomeFor('confirmed', 'cancelled')).toBe('cancelled')
+  })
+
+  it('writes about a confirmation', () => {
+    expect(outcomeFor('pending', 'confirmed')).toBe('confirmed')
+  })
+
+  /**
+   * Nobody needs an email saying they turned up, and "you did not turn up" is an
+   * accusation made from a button pressed at the end of a shift.
+   */
+  it.each([
+    ['confirmed', 'completed'],
+    ['confirmed', 'no-show'],
+  ] as const)('says nothing about %s -> %s', (from, to) => {
+    expect(outcomeFor(from, to)).toBeNull()
+  })
+
+  it('says nothing when the status did not change', () => {
+    expect(outcomeFor('confirmed', 'confirmed')).toBeNull()
+    expect(outcomeFor('pending', 'pending')).toBeNull()
+  })
+})
+
+describe('bookingOutcomeContent', () => {
+  const base = {
+    name: 'Sami',
+    reference: 'ABCD1234',
+    start: new Date('2026-09-01T17:00:00Z'),
+    end: new Date('2026-09-01T19:00:00Z'),
+    partySize: 2,
+    locale: 'en' as const,
+  }
+
+  it('tells a declined customer that nothing was reserved', () => {
+    const mail = bookingOutcomeContent({ ...base, outcome: 'declined' })
+    expect(mail.text).toContain('nothing has been reserved')
+    expect(mail.subject).not.toContain('confirmed')
+  })
+
+  it('does not tell a cancelled customer their booking was never held', () => {
+    const mail = bookingOutcomeContent({ ...base, outcome: 'cancelled' })
+    expect(mail.text).not.toContain('nothing has been reserved')
+  })
+
+  it.each(['confirmed', 'declined', 'cancelled'] as const)(
+    'puts the reference in both parts for %s',
+    (outcome) => {
+      const mail = bookingOutcomeContent({ ...base, outcome })
+      expect(mail.text).toContain('ABCD1234')
+      expect(mail.html).toContain('ABCD1234')
+    },
+  )
+
+  it.each(['confirmed', 'declined', 'cancelled'] as const)(
+    'writes %s in Arabic without falling back to English',
+    (outcome) => {
+      const mail = bookingOutcomeContent({ ...base, outcome, locale: 'ar' })
+      expect(mail.html).toContain('dir="rtl"')
+      expect(/[؀-ۿ]/.test(mail.subject)).toBe(true)
+      expect(/[؀-ۿ]/.test(mail.text)).toBe(true)
+    },
+  )
+
+  it('shows the time in Beirut, not in UTC', () => {
+    const mail = bookingOutcomeContent({ ...base, outcome: 'confirmed' })
+    expect(mail.text).toContain('20:00')
   })
 })

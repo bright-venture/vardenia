@@ -270,6 +270,13 @@ export async function createBooking({
         ...(request.notes ? { notes: request.notes } : {}),
 
         /**
+         * Stored so every later message reaches them in the language they
+         * booked in. See the field on the Bookings collection - the hooks that
+         * send those messages have no request to read it from.
+         */
+        locale: request.locale ?? 'en',
+
+        /**
          * Sent because the field is required, then overwritten.
          *
          * `guardBookingWrite` decides the real value from the listing's

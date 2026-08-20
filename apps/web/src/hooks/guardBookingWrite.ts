@@ -12,12 +12,24 @@ import { checkAvailability, unavailableMessage, type ExistingBooking } from '../
 /**
  * Which collection a session came from, as a role.
  *
- * Anything unrecognised - including no user at all, which is what a public
- * endpoint running with `overrideAccess` looks like - is treated as a customer,
- * the least privileged of the three. Defaulting the other way would mean a new
- * auth collection silently arriving with staff powers.
+ * The two defaults go opposite ways, and the difference is the whole point:
+ *
+ *  - **An unrecognised collection** is a customer, the least privileged of the
+ *    three. A new auth collection must not arrive with staff powers because
+ *    somebody forgot to add it here.
+ *  - **No user at all** is staff. On an update that state is unreachable from
+ *    outside: `updateBookings` returns false without a user, so nothing
+ *    anonymous ever reaches this hook. What does reach it is a local API call
+ *    with `overrideAccess: true` - a seed, a migration, a support script - and
+ *    those are us.
+ *
+ * The first version collapsed both into "customer", which refused a system write
+ * with a message about what customers may do. Nothing in the app hit it today,
+ * because the only `overrideAccess` write is a create and this check runs on
+ * update; it was found by a probe doing exactly what a support script would.
  */
 const actorFor = (collection: string | undefined): BookingActor => {
+  if (collection === undefined) return 'staff'
   if (collection === 'users') return 'staff'
   if (collection === 'business-users') return 'owner'
   return 'customer'

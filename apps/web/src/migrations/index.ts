@@ -7,6 +7,7 @@ import * as migration_20260818_181600_booking_capacity_trigger from './20260818_
 import * as migration_20260819_090000_drop_contact_fields from './20260819_090000_drop_contact_fields'
 import * as migration_20260819_090728_customer_verification from './20260819_090728_customer_verification'
 import * as migration_20260819_171121_error_events from './20260819_171121_error_events'
+import * as migration_20260820_152907_booking_locale from './20260820_152907_booking_locale'
 
 /**
  * The order here is the order they run in, and two entries depend on it.
@@ -18,12 +19,12 @@ import * as migration_20260819_171121_error_events from './20260819_171121_error
  * when you ask for a migration rather than when you finish writing one. Renamed
  * to 181600 so the filename and the dependency agree.
  *
- * This comment has now been deleted twice by `migrate:create`, which rewrites
- * this file wholesale - once in August and once when `error_events` was
- * generated. If you add a migration by hand, re-read this list afterwards rather
- * than trusting the regeneration - and be aware the generator diffs against the
- * JSON snapshots here, not the database, so a hand-written migration leaves it
- * out of step until the next generated one catches up.
+ * This comment has now been deleted three times by `migrate:create`, which
+ * rewrites this file wholesale. If you add a migration by hand, re-read this
+ * list afterwards rather than trusting the regeneration - and be aware the
+ * generator diffs against the JSON snapshots here, not the database, so a
+ * hand-written migration leaves it out of step until the next generated one
+ * catches up.
  */
 export const migrations = [
   {
@@ -70,5 +71,10 @@ export const migrations = [
     up: migration_20260819_171121_error_events.up,
     down: migration_20260819_171121_error_events.down,
     name: '20260819_171121_error_events',
+  },
+  {
+    up: migration_20260820_152907_booking_locale.up,
+    down: migration_20260820_152907_booking_locale.down,
+    name: '20260820_152907_booking_locale',
   },
 ]
