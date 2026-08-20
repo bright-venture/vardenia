@@ -141,6 +141,44 @@ export default buildConfig({
   ],
 
   /**
+   * Errors raised anywhere inside Payload.
+   *
+   * Necessary because `onRequestError` in instrumentation.ts cannot see them.
+   * Payload owns `/api/[...slug]` and catches its own failures, formatting them
+   * into a JSON body with a 500 status - so from Next's point of view nothing
+   * was ever thrown, the hook does not fire, and the entire REST and GraphQL
+   * surface reports nothing at all.
+   *
+   * That gap was found by testing rather than by reading: two genuine 500s on
+   * production wrote no rows, and the same two wrote no rows locally either -
+   * where `onRequestError` had already been proven to work on a route that
+   * throws. The trigger was wrong, not the hook, and the real hole was this one.
+   *
+   * Returns nothing, so Payload's own error response is unchanged. This only
+   * watches.
+   */
+  hooks: {
+    afterError: [
+      async ({ error, req, collection }) => {
+        /**
+         * Imported here rather than at the top of the file, because
+         * `lib/report` imports this config back - it needs a Payload instance to
+         * write the row. At module scope that is a cycle, and a cycle that runs
+         * during `getPayload` is the kind that hangs rather than errors. Inside
+         * the hook the config is already built and the import is just a lookup.
+         */
+        const { reportError } = await import('./lib/report')
+
+        await reportError(error, {
+          source: collection ? `payload.${collection.slug}` : 'payload',
+          path: String(req?.url ?? ''),
+          extra: { method: req?.method },
+        })
+      },
+    ],
+  },
+
+  /**
    * Outbound email, or nothing.
    *
    * `undefined` leaves Payload's default behaviour in place, which writes every

@@ -243,3 +243,54 @@ describe('redaction keeps JSON valid', () => {
     expect(parsed.email).toBe('[email]')
   })
 })
+
+/**
+ * What a database failure actually looks like, which is not what the tests above
+ * assume. Both of these were found by putting real errors through the reporter
+ * and reading the table, not by unit testing.
+ */
+describe('a failed database query', () => {
+  const failedQuery = (sql: string, reason: string) => {
+    const error = new Error(`Failed query: ${sql}`)
+    ;(error as { cause?: unknown }).cause = new Error(reason)
+    return error
+  }
+
+  const LONG_SELECT = `select ${'"businesses"."column", '.repeat(120)} from "businesses"`
+
+  it('reads the cause rather than the entire SELECT statement', () => {
+    const record = buildRecord(
+      failedQuery(LONG_SELECT, 'invalid input syntax for type integer: "NaN"'),
+      { source: 'payload.businesses' },
+    )
+    expect(record.message).toBe('invalid input syntax for type integer: "NaN"')
+    expect(record.message).not.toContain('select')
+  })
+
+  /**
+   * The grouping bug this caused. Two unrelated failures on one collection both
+   * began with the same two thousand characters of column list, so they
+   * truncated to an identical string and merged into a single row - one bug
+   * hiding another.
+   */
+  it('keeps two different query failures apart', () => {
+    const a = failedQuery(LONG_SELECT, 'invalid input syntax for type integer: "NaN"')
+    const b = failedQuery(LONG_SELECT, 'OFFSET must not be negative')
+
+    // Through `buildRecord`, not `fingerprint` directly - resolving the cause is
+    // part of building the record, and calling the hash on a raw Error skips it.
+    expect(buildRecord(a, { source: 's' }).fingerprint).not.toBe(
+      buildRecord(b, { source: 's' }).fingerprint,
+    )
+  })
+
+  it('keeps the short original when there is no cause worth preferring', () => {
+    expect(buildRecord(new Error('Booking failed'), { source: 's' }).message).toBe('Booking failed')
+  })
+
+  it('keeps a long message when nothing better is offered', () => {
+    const record = buildRecord(new Error(LONG_SELECT), { source: 's' })
+    expect(record.message.length).toBeGreaterThan(0)
+    expect(record.message.length).toBeLessThanOrEqual(500)
+  })
+})

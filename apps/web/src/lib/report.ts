@@ -192,9 +192,38 @@ export interface ErrorRecord {
   extra: string
 }
 
+/** How long a message may be before a shorter `cause` is preferred to it. */
+const UNREADABLE_MESSAGE = 300
+
+/**
+ * The message a person should read, which is not always `error.message`.
+ *
+ * A failed database query arrives with the entire SELECT statement as its
+ * message - two thousand characters of column list and lateral joins - and the
+ * actual reason tucked into `cause`:
+ *
+ *   message: 'Failed query: select "businesses"."id", ... (2000 chars)'
+ *   cause:   'invalid input syntax for type integer: "NaN"'
+ *
+ * Storing the first makes the table unreadable, which defeats the point of
+ * having one. Worse, it breaks grouping: every failed query on a collection
+ * truncates to the same first 500 characters, so unrelated bugs merge into one
+ * row. Both were visible the first time real errors went through this, and
+ * neither was visible in the unit tests, where messages are short.
+ *
+ * The long form is not lost - it is still in the console line, which is what the
+ * platform logs keep.
+ */
 const asError = (value: unknown): { name: string; message: string; stack?: string } => {
   if (value instanceof Error) {
-    return { name: value.name, message: value.message, stack: value.stack }
+    const cause = (value as { cause?: unknown }).cause
+    const causeMessage =
+      cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : ''
+
+    const message =
+      causeMessage && value.message.length > UNREADABLE_MESSAGE ? causeMessage : value.message
+
+    return { name: value.name, message, stack: value.stack }
   }
   if (typeof value === 'string') return { name: 'Error', message: value }
   return { name: 'Error', message: safeStringify(value) }
@@ -245,7 +274,12 @@ export function buildRecord(error: unknown, context: ReportContext): ErrorRecord
   return {
     fingerprint: fingerprint({ name, message, stack, group: context.group }),
     name: name.slice(0, 120),
-    message: redact(message).slice(0, 2000),
+    /**
+     * Short, because this is the column shown in the admin list view. Two
+     * thousand characters there is a wall of text nobody scans past; the full
+     * message survives in the console line and therefore in the platform logs.
+     */
+    message: redact(message).slice(0, 500),
     // Trimmed hard: the useful part of a stack is the first few frames, and the
     // rest is framework internals that make the row unreadable in a table.
     stack: redact((stack ?? '').split('\n').slice(0, 12).join('\n')).slice(0, 4000),
