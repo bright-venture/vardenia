@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { anonymisedCustomer, isClosed } from './account-deletion'
+import { describe, expect, it, vi } from 'vitest'
+import type { Payload } from 'payload'
+import { anonymisedCustomer, closeCustomerAccount, isClosed } from './account-deletion'
 
 /**
  * The one assertion that matters: nothing personal survives.
@@ -51,6 +52,58 @@ describe('anonymisedCustomer', () => {
   it('records when it happened', () => {
     const at = new Date('2026-08-20T12:00:00Z')
     expect(anonymisedCustomer(at).deletedAt).toBe(at.toISOString())
+  })
+})
+
+/**
+ * The writes must not join the caller's transaction.
+ *
+ * closeRatherThanDelete calls this and then throws, to stop the admin panel's
+ * Delete button going through to the row. Payload rolls its transaction back on
+ * the way out of a failed operation, so a write that had joined it would be
+ * undone - and the account would report itself closed while still carrying the
+ * customer's name and address.
+ *
+ * Threading `req` through here is the natural tidying-up instinct and it would
+ * break that silently, in the one place nobody would look. Hence this test.
+ */
+describe('closeCustomerAccount', () => {
+  function harness(bookings: Record<string, unknown>[] = []) {
+    const calls: Record<string, unknown>[] = []
+
+    const payload = {
+      find: vi.fn(async () => ({ docs: bookings, totalDocs: bookings.length })),
+      update: vi.fn(async (args: Record<string, unknown>) => {
+        calls.push(args)
+        return {}
+      }),
+    } as unknown as Payload
+
+    return { payload, calls }
+  }
+
+  it('opens its own transaction for every write', async () => {
+    const { payload, calls } = harness([{ id: 1, notes: 'nut allergy' }])
+
+    await closeCustomerAccount(payload, 7)
+
+    expect(calls.length).toBeGreaterThan(0)
+    for (const call of calls) {
+      expect(call).not.toHaveProperty('req')
+    }
+  })
+
+  it('clears the notes on every booking, not only the cancelled ones', async () => {
+    const { payload, calls } = harness([
+      { id: 1, notes: 'wheelchair access' },
+      { id: 2, notes: null },
+    ])
+
+    await closeCustomerAccount(payload, 7)
+
+    const cleared = calls.filter((c) => (c.data as { notes?: unknown })?.notes === null)
+    expect(cleared).toHaveLength(1)
+    expect(cleared[0]?.id).toBe(1)
   })
 })
 

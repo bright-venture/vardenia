@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
+import { closeRatherThanDelete } from '../hooks/closeRatherThanDelete'
 
 /**
  * The public. People who book things.
@@ -96,7 +97,21 @@ export const Customers: CollectionConfig = {
     read: selfOrStaff,
     create: isStaff,
     update: selfOrStaff,
+
+    /**
+     * Admin only, and it does not do what the word says. See the beforeDelete
+     * hook: a customer with bookings is closed rather than removed, because the
+     * bookings are the venue's record too.
+     *
+     * Staff keep the capability because "please delete my account" from somebody
+     * who has lost access to their email is a request only staff can answer, and
+     * it is the one the law puts a clock on.
+     */
     delete: isAdmin,
+  },
+
+  hooks: {
+    beforeDelete: [closeRatherThanDelete],
   },
 
   fields: [
