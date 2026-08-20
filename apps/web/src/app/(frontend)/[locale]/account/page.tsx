@@ -102,6 +102,17 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           ) : null}
         </>
       )}
+      {/* At the bottom, quiet, and a link rather than a button. Closing an
+          account is irreversible and takes upcoming reservations with it; it
+          should take a deliberate navigation rather than a stray tap. */}
+      <p className="border-ink-100 mt-16 border-t pt-8">
+        <Link
+          href="/account/close"
+          className="text-ink-500 hover:text-ink-900 text-xs underline underline-offset-4"
+        >
+          {t('closeAccount')}
+        </Link>
+      </p>
     </main>
   )
 }

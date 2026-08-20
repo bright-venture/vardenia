@@ -97,7 +97,16 @@
     "cancelConfirm": "This cannot be undone.",
     "cancelYes": "Yes, cancel it",
     "cancelNo": "Keep it",
-    "agreeOnSignup": "By creating an account you agree to our <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>."
+    "agreeOnSignup": "By creating an account you agree to our <terms>Terms of Use</terms> and <privacy>Privacy Policy</privacy>.",
+    "closeTitle": "Close your account",
+    "closeAccount": "Close your account",
+    "closeWhatHappens": "Your name, email address and phone number are permanently removed. Past bookings stay as a record for the businesses you visited, with nothing on them that identifies you.",
+    "closeUpcomingWarning": "{count, plural, one {This will also cancel 1 upcoming booking, and the business will be told.} other {This will also cancel # upcoming bookings, and the businesses will be told.}}",
+    "closePasswordHint": "We ask again because this cannot be undone.",
+    "closeConfirm": "Close my account",
+    "closeKeep": "Keep my account",
+    "closeDone": "Your account is closed. Nothing identifying you remains.",
+    "closeCancelled": "{count, plural, one {1 upcoming booking was cancelled.} other {# upcoming bookings were cancelled.}}"
   },
   "partner": {
     "eyebrow": "For partners",

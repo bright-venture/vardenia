@@ -46,6 +46,7 @@ const idOf = (value: unknown): number | string | null => {
 }
 
 export const notifyBookingStatus: CollectionAfterChangeHook = async ({
+  context,
   doc,
   previousDoc,
   operation,
@@ -100,6 +101,14 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
    * customer's inbox.
    */
   if (actor === 'customers') return doc
+
+  /**
+   * An account being closed cancels its own upcoming bookings, and the person
+   * who asked for that does not need an email about each one - least of all
+   * wording that blames the venue for it. Set by lib/account-deletion; the venue
+   * notification above still runs, because the table really is free.
+   */
+  if (context?.closingAccount === true) return doc
 
   try {
     const customerId = idOf(current.customer)

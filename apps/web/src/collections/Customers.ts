@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isStaff, selfOrStaff } from '../access/index'
+import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 
 /**
@@ -102,5 +102,26 @@ export const Customers: CollectionConfig = {
   fields: [
     { name: 'name', type: 'text', required: true },
     { name: 'phone', type: 'text' },
+
+    /**
+     * Set when the account is closed. See lib/account-deletion.
+     *
+     * A closed account is a tombstone rather than a deleted row, because
+     * bookings point at it and a booking is the venue's record as much as the
+     * customer's. Everything identifying has been overwritten by the time this
+     * is set; the timestamp exists so staff looking at the row can tell a closed
+     * account from a corrupted one.
+     */
+    {
+      name: 'deletedAt',
+      type: 'date',
+      index: true,
+      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Set when the customer closed their account. Nothing personal remains.',
+      },
+    },
   ],
 }
