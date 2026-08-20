@@ -94,6 +94,28 @@
     "sendResetLink": "Send the link",
     "forgotSent": "Check your email. If we can find an account for that address, a link is on its way."
   },
+  "partner": {
+    "eyebrow": "For partners",
+    "title": "Your bookings",
+    "signIn": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "working": "Just a moment...",
+    "signInFailed": "That email and password do not match an account.",
+    "noSelfSignup": "Partner accounts are set up by the Vardenia team. Speak to your contact if you need access.",
+    "signInToSee": "Sign in to manage bookings for your listings.",
+    "noListings": "No listings are attached to this account yet. Your Vardenia contact can add them.",
+    "noBookings": "No bookings yet.",
+    "awaiting": "{count, plural, one {1 request waiting for you} other {# requests waiting for you}}",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "people": "{count, plural, one {1 person} other {# people}}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "markCompleted": "Mark as done",
+    "markNoShow": "Did not arrive",
+    "guestUnknown": "Guest"
+  },
   "bookingStatus": {
     "pending": "Awaiting confirmation",
     "confirmed": "Confirmed",

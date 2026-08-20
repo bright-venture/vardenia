@@ -160,3 +160,59 @@ export function durationMinutes(interval: Interval): number | null {
 export function isUsableInterval(interval: Interval): boolean {
   return durationMinutes(interval) !== null
 }
+
+// ---------------------------------------------------------------------------
+// Who may make a transition
+// ---------------------------------------------------------------------------
+
+/**
+ * The three kinds of account that can change a booking.
+ *
+ * Not the collection names, deliberately. This package knows nothing about
+ * Payload, and the mapping from a collection to a role belongs at the boundary
+ * where `req.user` is read.
+ */
+export type BookingActor = 'staff' | 'owner' | 'customer'
+
+/**
+ * Which statuses each may move a booking *to*.
+ *
+ * `BOOKING_TRANSITIONS` says which moves are legal; this says who is allowed to
+ * make them. Both are needed, and having only the first was a real hole rather
+ * than a theoretical one: `pending -> confirmed` is legal, a customer may update
+ * their own booking, and nothing checked the two facts together. A customer
+ * could therefore confirm a booking the business had not accepted - verified by
+ * doing it - which is exactly what `autoConfirm: false` exists to prevent. A
+ * wedding venue wants to speak to you first, and that setting was the promise.
+ *
+ * A customer may only ever cancel. Marking a booking complete or a no-show is a
+ * statement about what happened in the building, and only the people in the
+ * building can make it.
+ */
+const ACTOR_TARGETS: Record<BookingActor, readonly BookingStatus[]> = {
+  staff: BOOKING_STATUSES,
+  owner: ['confirmed', 'cancelled', 'completed', 'no-show'],
+  customer: ['cancelled'],
+}
+
+/**
+ * True when this actor may move a booking from one status to another.
+ *
+ * `from === to` passes so that an update which does not touch the status - a
+ * customer correcting their notes - is not refused for a transition it never
+ * attempted.
+ */
+export function canActorTransition(
+  actor: BookingActor,
+  from: BookingStatus,
+  to: BookingStatus,
+): boolean {
+  if (from === to) return true
+  if (!canTransition(from, to)) return false
+  return ACTOR_TARGETS[actor].includes(to)
+}
+
+/** The moves this actor could make from here, for building a set of buttons. */
+export function availableActions(actor: BookingActor, from: BookingStatus): BookingStatus[] {
+  return BOOKING_STATUSES.filter((to) => to !== from && canActorTransition(actor, from, to))
+}

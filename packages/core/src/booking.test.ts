@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   BOOKING_REFERENCE_LENGTH,
   BOOKING_STATUSES,
+  availableActions,
+  canActorTransition,
   canTransition,
   durationMinutes,
   generateBookingReference,
@@ -199,5 +201,71 @@ describe('duration', () => {
       durationMinutes({ start: new Date('not a date'), end: at('2026-09-01T22:00:00Z') }),
     ).toBeNull()
     expect(isUsableInterval({ start: new Date('nope'), end: new Date('also nope') })).toBe(false)
+  })
+})
+
+/**
+ * Who may make a transition, as opposed to which transitions exist.
+ *
+ * Having only the second was a hole found by exercising it: `pending ->
+ * confirmed` is legal, a customer may update their own booking, and nothing
+ * checked those two facts together. A customer could confirm a booking the
+ * business had not accepted - which is the one thing `autoConfirm: false` is
+ * supposed to guarantee cannot happen.
+ */
+describe('canActorTransition', () => {
+  it('lets a customer cancel', () => {
+    expect(canActorTransition('customer', 'pending', 'cancelled')).toBe(true)
+    expect(canActorTransition('customer', 'confirmed', 'cancelled')).toBe(true)
+  })
+
+  it('does not let a customer confirm their own booking', () => {
+    expect(canActorTransition('customer', 'pending', 'confirmed')).toBe(false)
+  })
+
+  it('does not let a customer decide what happened in the building', () => {
+    expect(canActorTransition('customer', 'confirmed', 'completed')).toBe(false)
+    expect(canActorTransition('customer', 'confirmed', 'no-show')).toBe(false)
+  })
+
+  it('lets an owner accept, decline and close out a booking', () => {
+    expect(canActorTransition('owner', 'pending', 'confirmed')).toBe(true)
+    expect(canActorTransition('owner', 'pending', 'cancelled')).toBe(true)
+    expect(canActorTransition('owner', 'confirmed', 'completed')).toBe(true)
+    expect(canActorTransition('owner', 'confirmed', 'no-show')).toBe(true)
+  })
+
+  /** Role never widens what the state machine allows. */
+  it.each(['staff', 'owner', 'customer'] as const)(
+    'never lets %s reopen a terminal booking',
+    (actor) => {
+      expect(canActorTransition(actor, 'cancelled', 'confirmed')).toBe(false)
+      expect(canActorTransition(actor, 'completed', 'pending')).toBe(false)
+      expect(canActorTransition(actor, 'no-show', 'confirmed')).toBe(false)
+    },
+  )
+
+  /**
+   * An update that leaves the status alone must pass for everyone, or a customer
+   * editing their notes is refused for a transition they never asked for.
+   */
+  it.each(['staff', 'owner', 'customer'] as const)('lets %s leave the status alone', (actor) => {
+    expect(canActorTransition(actor, 'pending', 'pending')).toBe(true)
+  })
+})
+
+describe('availableActions', () => {
+  it('offers an owner accept or decline on a pending booking', () => {
+    expect(availableActions('owner', 'pending').sort()).toEqual(['cancelled', 'confirmed'])
+  })
+
+  it('offers a customer only cancellation', () => {
+    expect(availableActions('customer', 'pending')).toEqual(['cancelled'])
+    expect(availableActions('customer', 'confirmed')).toEqual(['cancelled'])
+  })
+
+  it('offers nothing once a booking is finished', () => {
+    expect(availableActions('owner', 'cancelled')).toEqual([])
+    expect(availableActions('staff', 'completed')).toEqual([])
   })
 })

@@ -6,17 +6,28 @@ import { useRouter } from '../i18n/routing'
 import { SECONDARY_BUTTON } from './formStyles'
 
 /**
- * Signing out.
+ * Signing out, from either kind of account.
  *
  * A button rather than a link, because signing out changes state on the server
  * and a GET that does that is a link any page - or any prefetcher - can follow
  * on the reader's behalf.
  *
- * `refresh` before `push` for the same reason as the login form: the page being
+ * `refresh` before `push` for the same reason as the login forms: the page being
  * left is a server component holding this session's data, and without the
  * refresh Next serves it from the router cache with the bookings still on it.
+ *
+ * The collection is a prop because Payload's logout endpoint is per collection,
+ * and posting to the wrong one succeeds without clearing anything - the reader
+ * lands on a sign-in page still signed in, which reads as the button being
+ * broken rather than as a bug in the caller.
  */
-export function SignOutButton() {
+export function SignOutButton({
+  collection = 'customers',
+  redirectTo = '/account/login',
+}: {
+  collection?: 'customers' | 'business-users'
+  redirectTo?: string
+} = {}) {
   const t = useTranslations('account')
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -24,7 +35,7 @@ export function SignOutButton() {
   async function signOut() {
     setBusy(true)
     try {
-      await fetch('/api/customers/logout', {
+      await fetch(`/api/${collection}/logout`, {
         method: 'POST',
         credentials: 'same-origin',
       })
@@ -36,7 +47,7 @@ export function SignOutButton() {
        * session shows them the truth either way.
        */
       router.refresh()
-      router.push('/account/login')
+      router.push(redirectTo)
       setBusy(false)
     }
   }

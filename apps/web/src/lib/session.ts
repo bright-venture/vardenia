@@ -2,7 +2,7 @@ import { cache } from 'react'
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '../payload.config'
-import { CUSTOMER_COLLECTION } from '../access/index'
+import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from '../access/index'
 
 /**
  * Who is signed in, as far as the public site is concerned.
@@ -143,4 +143,135 @@ export function partitionBookings<T extends { end: string }>(
   }
 
   return { upcoming, past }
+}
+
+/**
+ * The signed-in business owner, if there is one.
+ *
+ * Same shape as `currentCustomer` and separate for the same reason: Payload
+ * issues one cookie name for every auth collection, so the collection has to be
+ * checked rather than the presence of a user. A customer's token validates
+ * perfectly well; it just does not belong to somebody who manages a listing.
+ *
+ * Owners cannot reach the admin panel at all - `admin.user` is bound to `users`
+ * - which is why they need pages of their own rather than a role on a screen
+ * that already exists.
+ */
+export interface OwnerSession {
+  id: number
+  email: string
+  name: string
+  /** The listings this account manages. Staff-assigned; see BusinessUsers. */
+  businessIds: (string | number)[]
+}
+
+export const currentOwner = cache(async (): Promise<OwnerSession | null> => {
+  const payload = await getPayload({ config })
+
+  const auth = await payload
+    .auth({ headers: await nextHeaders() })
+    .catch(() => ({ user: null }) as { user: null })
+
+  const user = auth.user
+  if (!user || user.collection !== BUSINESS_USER_COLLECTION) return null
+
+  return {
+    id: Number(user.id),
+    email: String(user.email ?? ''),
+    name: String((user as { name?: unknown }).name ?? ''),
+    businessIds: ownedBusinessIds(user),
+  }
+})
+
+/**
+ * The bookings this owner may see.
+ *
+ * `overrideAccess: false` with the owner's own `user`, so the constraint comes
+ * from the Bookings collection - `{ business: { in: ownedBusinessIds(user) } }`
+ * - and is applied in the database. Writing the filter here instead would work
+ * today and would be one careless refactor away from a page showing a
+ * competitor's reservations.
+ *
+ * Sorted by start, soonest first: an owner opening this wants tonight, not last
+ * March.
+ *
+ * # The guest's name is fetched separately, and deliberately
+ *
+ * `depth: 1` does not populate `customer` for an owner, because Customers is
+ * `selfOrStaff` and an owner is neither. That is the right rule - a partner has
+ * no business reading our customer list - but it left the dashboard showing a
+ * booking with nobody's name on it, which is close to useless: "someone, two
+ * people, Tuesday". Found by looking at the rendered page.
+ *
+ * So the name and phone are looked up here with access overridden, and *only*
+ * those two fields are put on the row. Not the email, which is the key the whole
+ * account system is built on and is not needed to greet somebody at a door; not
+ * the record itself. Opening the collection to owners instead would have been
+ * the easier change and a much larger grant - and it cannot even be expressed as
+ * a Where constraint, since a customer row carries no reference to a booking.
+ */
+export interface OwnerBookingGuest {
+  name: string
+  phone: string
+}
+
+export async function ownerBookings(limit = 100) {
+  const payload = await getPayload({ config })
+
+  const auth = await payload
+    .auth({ headers: await nextHeaders() })
+    .catch(() => ({ user: null }) as { user: null })
+
+  const user = auth.user
+  if (!user || user.collection !== BUSINESS_USER_COLLECTION) return []
+
+  const result = await payload.find({
+    collection: 'bookings',
+    depth: 1,
+    limit,
+    sort: 'start',
+    overrideAccess: false,
+    user,
+  })
+
+  const customerIds = [
+    ...new Set(
+      result.docs
+        .map((doc) => {
+          const value = (doc as { customer?: unknown }).customer
+          if (typeof value === 'number' || typeof value === 'string') return value
+          return (value as { id?: number | string } | null)?.id ?? null
+        })
+        .filter((id): id is number | string => id !== null),
+    ),
+  ]
+
+  const guests = new Map<string, OwnerBookingGuest>()
+
+  if (customerIds.length > 0) {
+    const found = await payload.find({
+      collection: 'customers',
+      where: { id: { in: customerIds } },
+      limit: customerIds.length,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    for (const doc of found.docs) {
+      guests.set(String(doc.id), {
+        name: String((doc as { name?: unknown }).name ?? ''),
+        phone: String((doc as { phone?: unknown }).phone ?? ''),
+      })
+    }
+  }
+
+  return result.docs.map((doc) => {
+    const value = (doc as { customer?: unknown }).customer
+    const id =
+      typeof value === 'number' || typeof value === 'string'
+        ? value
+        : ((value as { id?: number | string } | null)?.id ?? null)
+
+    return { ...doc, guest: id === null ? null : (guests.get(String(id)) ?? null) }
+  })
 }

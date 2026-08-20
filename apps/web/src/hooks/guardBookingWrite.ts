@@ -1,7 +1,27 @@
 import type { CollectionBeforeValidateHook } from 'payload'
 import { APIError } from 'payload'
-import { canTransition, OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
+import {
+  canActorTransition,
+  canTransition,
+  OCCUPYING_STATUSES,
+  type BookingActor,
+  type BookingStatus,
+} from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from '../lib/availability'
+
+/**
+ * Which collection a session came from, as a role.
+ *
+ * Anything unrecognised - including no user at all, which is what a public
+ * endpoint running with `overrideAccess` looks like - is treated as a customer,
+ * the least privileged of the three. Defaulting the other way would mean a new
+ * auth collection silently arriving with staff powers.
+ */
+const actorFor = (collection: string | undefined): BookingActor => {
+  if (collection === 'users') return 'staff'
+  if (collection === 'business-users') return 'owner'
+  return 'customer'
+}
 
 /**
  * The rules a booking has to satisfy, wherever it is written from.
@@ -75,6 +95,20 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
         `A booking cannot go from ${from} to ${to}. Make a new booking instead.`,
         400,
       )
+    }
+
+    /**
+     * Legal is not the same as permitted, and for a while only the first was
+     * checked. `pending -> confirmed` is a legal move, `updateBookings` lets a
+     * customer update their own booking, and nothing put those together - so a
+     * customer could confirm a booking the business had not accepted. Verified
+     * by doing it before it was fixed.
+     *
+     * That is the one thing `autoConfirm: false` promises: a venue that wants to
+     * speak to you first gets to. See canActorTransition in packages/core.
+     */
+    if (!canActorTransition(actorFor(user?.collection), from, to)) {
+      throw new APIError(`You cannot change a booking to ${to}.`, 403)
     }
   }
 
