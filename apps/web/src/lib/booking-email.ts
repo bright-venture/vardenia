@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
+import { reportError } from './report'
 
 /**
  * The confirmation a customer receives.
@@ -224,10 +225,18 @@ export async function sendBookingConfirmation({
     })
     return true
   } catch (error) {
-    payload.logger.error(
-      { error, reference: rest.reference },
-      'Booking confirmation failed to send',
-    )
+    /**
+     * Reported here rather than at the call site, because this function returns
+     * `false` instead of rethrowing - so the caller's `.catch` never sees a send
+     * failure and would have reported nothing at all.
+     *
+     * The reference is attached deliberately. It is what makes this recoverable:
+     * somebody can look up the booking and write to the customer by hand.
+     */
+    await reportError(error, {
+      source: 'booking.confirmation-email',
+      extra: { reference: rest.reference },
+    })
     return false
   }
 }

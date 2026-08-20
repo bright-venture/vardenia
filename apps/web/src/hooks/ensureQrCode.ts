@@ -1,5 +1,6 @@
 import type { CollectionAfterChangeHook } from 'payload'
 import { DEFAULT_PLACEMENT, generateCode } from '@vardenia/core'
+import { reportError } from '../lib/report'
 
 const MAX_ATTEMPTS = 5
 
@@ -98,9 +99,15 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
     return { ...doc, qrCode: created.id }
   }
 
-  payload.logger.error(
-    { businessId: doc.id },
-    'Could not allocate a unique QR code after several attempts',
-  )
+  /**
+   * A published listing with no code cannot go in the magazine, and nothing on
+   * the page says so - the listing looks finished. Repeated collisions also mean
+   * the code space is filling up, which is a different and larger problem.
+   */
+  void reportError(new Error('Could not allocate a unique QR code after several attempts'), {
+    source: 'qr.allocate',
+    extra: { businessId: doc.id },
+  })
+
   return doc
 }

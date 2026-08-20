@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import { fieldErrors, resetPasswordSchema } from '@vardenia/core'
 import config from '../../../payload.config'
 import { withRateLimit } from '../../../lib/rate-limit'
+import { reportError } from '../../../lib/report'
 
 /**
  * Choosing a password from a reset link.
@@ -98,7 +99,11 @@ export const POST = withRateLimit(async (request: Request) => {
      * unverified is recoverable by staff; a customer who believes the reset
      * failed is not.
      */
-    payload.logger.error({ error, userId }, 'Password reset done but verification not set')
+    await reportError(error, {
+      source: 'auth.reset.verification',
+      path: '/auth/reset',
+      extra: { userId },
+    })
   }
 
   return json({ ok: true })

@@ -7,6 +7,7 @@ import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { isPubliclyVisible, populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
 import { normalizeExternalUrl } from '../../../lib/external-url'
 import { rawDb } from '../../../lib/db'
+import { reportError } from '../../../lib/report'
 
 /**
  * The QR redirect. `https://vrd.lb/g/K3M9QP2` -> the right page, plus one row in
@@ -69,7 +70,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       await recordScan(payload, qr, request)
     } catch (error) {
-      payload.logger.error({ error, code }, 'Failed to record scan event')
+      /**
+       * The reader got where they were going, so nothing looks wrong. What is
+       * lost is the evidence behind a renewal conversation - an advertiser whose
+       * placement worked and whose report says it did not.
+       */
+      await reportError(error, { source: 'qr.scan-event', path: `/g/${code}`, extra: { code } })
     }
   })
 
@@ -81,8 +87,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // wrong with the data, the reader gets a page that explains itself.
   try {
     return Response.redirect(destination, 302)
-  } catch {
-    payload.logger.error({ code, destination }, 'Unusable redirect destination for printed code')
+  } catch (error) {
+    /**
+     * The most expensive failure in the product to leave unnoticed. The code is
+     * on paper, the paper is in circulation for a year, and every reader who
+     * scans it lands on "not found" while the logs quietly fill up. This one
+     * should page somebody.
+     */
+    await reportError(error, {
+      source: 'qr.unusable-destination',
+      path: `/g/${code}`,
+      extra: { code, destination },
+    })
     return Response.redirect(`${siteUrl}/scan/not-found?code=${code}`, 302)
   }
 }
@@ -230,7 +246,7 @@ async function incrementScanCount(
       [qrId],
     )
   } catch (error) {
-    payload.logger.error({ err: error, qrId }, 'Scan counter not incremented')
+    await reportError(error, { source: 'qr.scan-counter', extra: { qrId } })
   }
 }
 

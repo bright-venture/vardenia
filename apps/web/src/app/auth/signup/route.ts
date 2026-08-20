@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import { fieldErrors, signupSchema } from '@vardenia/core'
 import config from '../../../payload.config'
 import { withRateLimit } from '../../../lib/rate-limit'
+import { reportError } from '../../../lib/report'
 
 /**
  * Opening a customer account from the site.
@@ -92,8 +93,13 @@ export const POST = withRateLimit(async (request: Request) => {
         data: { email },
         disableEmail: false,
       })
-      .catch((error) => {
-        payload.logger.error({ error }, 'Could not send a reset for an existing customer')
+      .catch(async (error) => {
+        /**
+         * Silent to the caller by design, and the caller is the person it hurts:
+         * they were told a message is on its way and it is not, so they are
+         * locked out of an account that already holds their bookings.
+         */
+        await reportError(error, { source: 'auth.signup.reset-email', path: '/auth/signup' })
       })
 
     return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
@@ -112,7 +118,16 @@ export const POST = withRateLimit(async (request: Request) => {
      * second. That is a duplicate, not a failure the caller should see - and
      * saying so would leak the thing this whole route is arranged to hide.
      */
-    payload.logger.warn({ error }, 'Customer sign-up did not complete')
+    /**
+     * A warning rather than an error, because the likely cause is benign - two
+     * sign-ups racing, the second refused by the unique index. Worth recording
+     * anyway: if this ever climbs, the cause is not a race.
+     */
+    await reportError(error, {
+      source: 'auth.signup.create',
+      path: '/auth/signup',
+      level: 'warning',
+    })
   }
 
   return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)

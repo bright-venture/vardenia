@@ -4,6 +4,7 @@ import config from '../../../payload.config'
 import { createBooking } from '../../../lib/booking-service'
 import { sendBookingConfirmation } from '../../../lib/booking-email'
 import { withRateLimit } from '../../../lib/rate-limit'
+import { reportError } from '../../../lib/report'
 
 /**
  * The public booking endpoint.
@@ -55,10 +56,17 @@ export const POST = withRateLimit(async (request: Request) => {
   const outcome = await createBooking({ payload, request: parsed.data })
 
   if (!outcome.ok) {
-    // Logged because "unavailable" is ordinary and "error" is not; without this
-    // the two are indistinguishable in production.
+    // Reported because "unavailable" is ordinary and "error" is not; without
+    // this the two are indistinguishable in production. The email is not
+    // attached - lib/report would scrub it anyway, and a booking that failed is
+    // a bug in our code rather than a fact about the customer.
     if (outcome.code === 'error') {
-      payload.logger.error({ request: parsed.data.email }, 'Booking failed unexpectedly')
+      await reportError(new Error(outcome.message), {
+        source: 'booking.request',
+        path: '/booking/request',
+        group: 'booking.request.unexpected',
+        extra: { business: parsed.data.business },
+      })
     }
     return json({ ok: false, message: outcome.message }, STATUS_FOR[outcome.code])
   }
@@ -78,8 +86,18 @@ export const POST = withRateLimit(async (request: Request) => {
     end: new Date(parsed.data.end),
     partySize: parsed.data.partySize,
     locale: parsed.data.locale ?? 'en',
-  }).catch((error) => {
-    payload.logger.error({ error, reference: outcome.reference }, 'Booking confirmation not sent')
+  }).catch(async (error) => {
+    /**
+     * The most consequential silent failure in the product. The booking is real
+     * and the customer has no message saying so, which they discover by turning
+     * up or by not turning up. The reference is attached because it is the one
+     * thing that makes this recoverable by hand.
+     */
+    await reportError(error, {
+      source: 'booking.confirmation-email',
+      path: '/booking/request',
+      extra: { reference: outcome.reference },
+    })
   })
 
   /**
