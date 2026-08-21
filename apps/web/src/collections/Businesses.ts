@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { LISTING_TIERS, isWithinLebanon } from '@vardenia/core'
+import { LISTING_TIERS, amenityOptions, isWithinLebanon, priceRangeOptions } from '@vardenia/core'
 import {
   isAdminFieldLevel,
   isStaff,
@@ -100,34 +100,12 @@ export const Businesses: CollectionConfig = {
               name: 'amenities',
               type: 'select',
               hasMany: true,
-              options: [
-                { label: 'Sea view', value: 'sea-view' },
-                { label: 'Mountain view', value: 'mountain-view' },
-                { label: 'Pool', value: 'pool' },
-                { label: 'Spa', value: 'spa' },
-                { label: 'Valet parking', value: 'valet-parking' },
-                { label: 'Free parking', value: 'free-parking' },
-                { label: 'Wheelchair accessible', value: 'accessible' },
-                { label: 'Family friendly', value: 'family-friendly' },
-                { label: 'Pet friendly', value: 'pet-friendly' },
-                { label: 'Outdoor seating', value: 'outdoor-seating' },
-                { label: 'Live music', value: 'live-music' },
-                { label: 'Alcohol served', value: 'alcohol' },
-                { label: 'Halal options', value: 'halal' },
-                { label: 'Vegetarian options', value: 'vegetarian' },
-                { label: 'Wi-Fi', value: 'wifi' },
-                { label: 'Air conditioning', value: 'air-conditioning' },
-              ],
+              options: amenityOptions,
             },
             {
               name: 'priceRange',
               type: 'select',
-              options: [
-                { label: '$ - Budget', value: '1' },
-                { label: '$$ - Moderate', value: '2' },
-                { label: '$$$ - Upscale', value: '3' },
-                { label: '$$$$ - Luxury', value: '4' },
-              ],
+              options: priceRangeOptions,
             },
           ],
         },

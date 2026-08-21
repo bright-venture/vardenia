@@ -7,7 +7,7 @@
  * a data problem visible on the page instead of silently blank.
  */
 
-import { GOVERNORATES, TAXONOMY } from '@vardenia/core'
+import { AMENITIES, GOVERNORATES, PRICE_RANGES, TAXONOMY } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 
 const pick = (entry: { en: string; ar: string }, locale: Locale) =>
@@ -55,28 +55,14 @@ export function placeLabel(
   return d || g
 }
 
-const AMENITY_LABELS: Record<string, { en: string; ar: string }> = {
-  'sea-view': { en: 'Sea view', ar: 'إطلالة على البحر' },
-  'mountain-view': { en: 'Mountain view', ar: 'إطلالة جبلية' },
-  pool: { en: 'Pool', ar: 'مسبح' },
-  spa: { en: 'Spa', ar: 'سبا' },
-  'valet-parking': { en: 'Valet parking', ar: 'خدمة ركن السيارات' },
-  'free-parking': { en: 'Free parking', ar: 'موقف مجاني' },
-  accessible: { en: 'Wheelchair accessible', ar: 'مهيأ لذوي الاحتياجات' },
-  'family-friendly': { en: 'Family friendly', ar: 'مناسب للعائلات' },
-  'pet-friendly': { en: 'Pet friendly', ar: 'يسمح بالحيوانات الأليفة' },
-  'outdoor-seating': { en: 'Outdoor seating', ar: 'جلسات خارجية' },
-  'live-music': { en: 'Live music', ar: 'موسيقى حية' },
-  alcohol: { en: 'Alcohol served', ar: 'يقدم الكحول' },
-  halal: { en: 'Halal options', ar: 'خيارات حلال' },
-  vegetarian: { en: 'Vegetarian options', ar: 'خيارات نباتية' },
-  wifi: { en: 'Wi-Fi', ar: 'واي فاي' },
-  'air-conditioning': { en: 'Air conditioning', ar: 'تكييف' },
+export function amenityLabel(slug: string, locale: Locale): string {
+  const found = AMENITIES.find((a) => a.slug === slug)
+  return found ? pick(found, locale) : slug
 }
 
-export function amenityLabel(slug: string, locale: Locale): string {
-  const found = AMENITY_LABELS[slug]
-  return found ? pick(found, locale) : slug
+/** "$$$" for a stored band, in either language. Marks are not translated. */
+export function priceMarks(slug: string | null | undefined): string | null {
+  return PRICE_RANGES.find((p) => p.slug === String(slug))?.marks ?? null
 }
 
 /** Price band as repeated currency marks, e.g. 3 becomes "$$$". */

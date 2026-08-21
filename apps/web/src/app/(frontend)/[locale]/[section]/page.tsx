@@ -3,7 +3,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
+  AMENITY_SLUGS,
   GOVERNORATES,
+  PRICE_SLUGS,
   SECTION_PATHS,
   TAXONOMY,
   sectionForPath,
@@ -12,9 +14,8 @@ import {
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { findListings } from '../../../../lib/listings'
-import { governorateLabel, subcategoryLabel } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
-import { FilterChip } from '../../../../components/FilterChip'
+import { ListingFilters, filterHref, type FilterState } from '../../../../components/ListingFilters'
 import { pageWindow } from '../directory/page'
 
 /**
@@ -48,7 +49,14 @@ export const revalidate = 60
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
-  searchParams: Promise<{ filter?: string; where?: string; page?: string }>
+  searchParams: Promise<{
+    filter?: string
+    where?: string
+    district?: string
+    price?: string
+    has?: string
+    page?: string
+  }>
 }
 
 /** Seven sections in two languages, all prerendered at build time. */
@@ -106,82 +114,61 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { filter, where, page } = await searchParams
+  const { filter, where, district, price, has, page } = await searchParams
   const t = await getTranslations('directory')
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
 
   /**
-   * A filter from the query string is only trusted if it belongs to this
-   * section. Without the check, `/stay?filter=photographers` would run a query
-   * that can never match and present an empty page as though the section were
-   * empty - and every crafted value would earn its own cache entry.
+   * Nothing from the query string is used until it is recognised.
+   *
+   * Two reasons, and the second is the one that bites. A value that cannot match
+   * presents an empty page as though the section itself were empty - so
+   * `/stay?filter=photographers` would look like we have no hotels. And every
+   * crafted value would otherwise be a distinct cache key, which is a cheap way
+   * for anybody to fill the cache with garbage.
+   *
+   * A district is only accepted if it belongs to the chosen governorate, so the
+   * pair can never contradict itself.
    */
-  const subcategory = children.some((child) => child.slug === filter) ? filter : undefined
-  const governorate = GOVERNORATES.some((g) => g.slug === where) ? where : undefined
+  const state: FilterState = {
+    subcategory: children.some((child) => child.slug === filter) ? filter : undefined,
+    governorate: GOVERNORATES.some((g) => g.slug === where) ? where : undefined,
+    district: undefined,
+    priceRange: PRICE_SLUGS.includes(price ?? '') ? price : undefined,
+    amenities: (has ?? '')
+      .split(',')
+      .filter((slug) => AMENITY_SLUGS.includes(slug))
+      .sort(),
+  }
+
+  const districts = GOVERNORATES.find((g) => g.slug === state.governorate)?.districts ?? []
+  state.district = districts.some((d) => d.slug === district) ? district : undefined
 
   const result = await findListings({
     locale,
     category: section.category,
-    subcategory,
-    governorate,
+    ...state,
     page: Number(page) || 1,
   })
 
   const base = `/${section.path}`
 
   /**
-   * Both filters live in the URL together, so choosing a place does not throw
-   * away the kind you were looking at. Written out rather than mutating a
-   * URLSearchParams, because the order matters: two links to the same view have
-   * to be the same string or they are two cache entries and two pages to search
-   * engines.
+   * Page links carry every filter with them. Reused from the same builder as the
+   * chips, so page two of a filtered view cannot quietly drop the filters and
+   * show a different set of listings under the same heading.
    */
-  const url = (next: { filter?: string; where?: string }) => {
-    const params = new URLSearchParams()
-    const f = 'filter' in next ? next.filter : subcategory
-    const w = 'where' in next ? next.where : governorate
-    if (f) params.set('filter', f)
-    if (w) params.set('where', w)
-    const query = params.toString()
-    return query ? `${base}?${query}` : base
+  const pageHref = (n: number) => {
+    const href = filterHref(base, state, {})
+    return href.includes('?') ? `${href}&page=${n}` : `${href}?page=${n}`
   }
 
   return (
     <>
       <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
 
-      <nav className="mt-8 flex flex-wrap gap-2" aria-label={nameFor(section, locale)}>
-        <FilterChip href={url({ filter: undefined })} active={!subcategory}>
-          {locale === 'ar' ? 'الكل' : 'All'}
-        </FilterChip>
-        {children.map((child) => (
-          <FilterChip
-            key={child.slug}
-            href={url({ filter: child.slug })}
-            active={subcategory === child.slug}
-          >
-            {subcategoryLabel(child.slug, locale)}
-          </FilterChip>
-        ))}
-      </nav>
-
-      {/* The second axis. A visitor in Beirut for three days is filtering by
-          where at least as often as by what, and every list already supports it
-          in the query - it simply had no control. */}
-      <nav
-        className="mt-3 flex flex-wrap gap-2"
-        aria-label={locale === 'ar' ? 'المحافظة' : 'Governorate'}
-      >
-        <FilterChip href={url({ where: undefined })} active={!governorate}>
-          {locale === 'ar' ? 'كل لبنان' : 'All of Lebanon'}
-        </FilterChip>
-        {GOVERNORATES.map((g) => (
-          <FilterChip key={g.slug} href={url({ where: g.slug })} active={governorate === g.slug}>
-            {governorateLabel(g.slug, locale)}
-          </FilterChip>
-        ))}
-      </nav>
+      <ListingFilters base={base} state={state} subcategories={children} locale={locale} />
 
       <ListingGrid listings={result.docs} locale={locale} empty={t('resultCount', { count: 0 })} />
 
@@ -195,7 +182,7 @@ async function SectionResults({
             ) : (
               <Link
                 key={n}
-                href={url({}) === base ? `${base}?page=${n}` : `${url({})}&page=${n}`}
+                href={pageHref(n)}
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page

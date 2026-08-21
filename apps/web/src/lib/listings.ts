@@ -54,6 +54,12 @@ export interface ListingQuery {
    */
   subcategory?: string
   governorate?: string
+  /** One of the selected governorate's own districts. */
+  district?: string
+  /** A stored band, '1' to '4'. */
+  priceRange?: string
+  /** Every one of these, not any. See the query below. */
+  amenities?: string[]
   page?: number
   perPage?: number
 }
@@ -94,11 +100,14 @@ export async function findListings({
   category,
   subcategory,
   governorate,
+  district,
+  priceRange,
+  amenities,
   page = 1,
   perPage = 24,
 }: ListingQuery) {
-  return unstable_cache(
-    async () => {
+  const run = async () => {
+    {
       const payload = await client()
 
       const where: Where = {}
@@ -115,6 +124,58 @@ export async function findListings({
        */
       if (subcategory) where.subcategories = { in: [subcategory] }
       if (governorate) where.governorate = { equals: governorate }
+      if (district) where.district = { equals: district }
+      if (priceRange) where.priceRange = { equals: priceRange }
+
+      /**
+       * Every amenity, not any of them.
+       *
+       * A reader who ticks "wheelchair accessible" and "pool" wants both. `in`
+       * is an OR, so the list would grow with each tick - the opposite of what a
+       * filter does, and for the accessibility one in particular a list that
+       * grows as you narrow it is actively misleading.
+       *
+       * # Why this is several queries and not one clause
+       *
+       * There is no operator for it. Checked against the running database rather
+       * than assumed: `all` throws ("adapter.operators[queryOperator] is not a
+       * function" - the Postgres adapter does not implement it), `in` gives OR,
+       * and an `and` of two `equals` on the same field returns nothing, because
+       * both conditions land on one join of the amenities table and no single
+       * row can be two values at once.
+       *
+       * So the intersection is done here: the ids matching each amenity, folded
+       * together. Correct, and it keeps pagination and the total count honest,
+       * which filtering the fetched page afterwards would not.
+       *
+       * The ceiling: this reads every matching id per amenity, so at tens of
+       * thousands of listings it stops being cheap. The fix then is a
+       * denormalised text[] column with a GIN index and a `@>` containment
+       * query - a migration, not a rewrite. Nowhere near that yet.
+       */
+      if (amenities?.length) {
+        let intersection: (number | string)[] | null = null
+
+        for (const slug of amenities) {
+          const matching = await payload.find({
+            collection: 'businesses',
+            where: { amenities: { in: [slug] } },
+            depth: 0,
+            pagination: false,
+            overrideAccess: false,
+          })
+
+          const ids: (number | string)[] = matching.docs.map((doc) => doc.id)
+          intersection = intersection === null ? ids : intersection.filter((id) => ids.includes(id))
+
+          if (intersection.length === 0) break
+        }
+
+        // An id that cannot exist, rather than an empty `in` - Payload treats
+        // that as no constraint at all and would return the whole catalogue for
+        // a filter that matched nothing.
+        where.id = intersection?.length ? { in: intersection } : { equals: -1 }
+      }
 
       return payload.find({
         collection: 'businesses',
@@ -129,7 +190,31 @@ export async function findListings({
         sort: ['-tier', 'name'],
         overrideAccess: false,
       })
-    },
+    }
+  }
+
+  /**
+   * Cached only while the number of possible keys stays small.
+   *
+   * The cache exists because `/directory` cost a 350ms round trip on every view.
+   * That is worth paying for on the handful of views most people actually see -
+   * a section, optionally narrowed by kind or by governorate.
+   *
+   * Past that the arithmetic turns: seven categories times fifty-one
+   * subcategories times eight governorates times twenty-eight districts times
+   * four price bands times any combination of sixteen amenities is not a bounded
+   * set in any useful sense. Caching it would fill the store with entries nobody
+   * asks for twice, and evict the ones everybody asks for constantly.
+   *
+   * So a deeply filtered view queries directly. It is rarer, it is a person
+   * genuinely narrowing something down, and 350ms is a fair price for it.
+   */
+  const cacheable = !district && !priceRange && !amenities?.length
+
+  if (!cacheable) return run()
+
+  return unstable_cache(
+    run,
     [
       'listings',
       locale,
