@@ -75,7 +75,17 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Who we are',
         body: [
-          `Vardenia is a printed magazine and an online directory of places in Lebanon. ${TBD('the registered legal entity, its company number and its registered address')}.`,
+          /**
+           * Two lines rather than one sentence with the placeholder inside it.
+           *
+           * What Vardenia is happens to be settled, and sharing a line with an
+           * unsettled clause dragged it into the warning block - so the page
+           * flagged a plain true statement as doubtful, which is the opposite of
+           * what that component is for. Splitting them lets groupLines put the
+           * settled half in body text and the open question in its own block.
+           */
+          'Vardenia is a printed magazine and an online directory of places in Lebanon.',
+          `${TBD('the registered legal entity, its company number and its registered address')}.`,
           `If you want to ask about anything in this policy, write to ${TBD('a contact address for privacy enquiries')}.`,
         ],
       },

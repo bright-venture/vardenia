@@ -39,6 +39,25 @@ describe.each(documents)('%s', (_name, document) => {
       expect(line).not.toMatch(/\[\s*\]|\bTODO\b|\bXXX\b|lorem ipsum/i)
     }
   })
+
+  /**
+   * A placeholder may finish a sentence - "write to <a contact address>" is one
+   * unsettled thought and belongs in one block. It may not *start* one, because
+   * everything before the full stop is then settled text being dragged into a
+   * block headed NOT SETTLED.
+   *
+   * That is worse than untidy. The whole point of marking these is that a reader
+   * can tell what we have decided from what we have not, and the live page was
+   * flagging "Vardenia is a printed magazine and an online directory of places
+   * in Lebanon" - plainly true, and nobody's open question - as doubtful. It
+   * also left a sentence starting in lower case, because the marker is stripped
+   * out before the text is rendered.
+   */
+  it('never drags a settled sentence into an unsettled clause', () => {
+    for (const line of document.sections.flatMap((section) => section.body)) {
+      expect(line).not.toMatch(/\.\s+TO CONFIRM:/)
+    }
+  })
 })
 
 describe('what the policy claims about the code', () => {
