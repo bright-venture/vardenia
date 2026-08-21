@@ -1,4 +1,11 @@
-import { AMENITIES, GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
+import {
+  AMENITIES,
+  AMENITY_SLUGS,
+  GOVERNORATES,
+  PRICE_RANGES,
+  PRICE_SLUGS,
+  type Labelled,
+} from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { FilterChip } from './FilterChip'
@@ -73,6 +80,49 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
   return query ? `${base}?${query}` : base
 }
 
+/** The query string as it arrives, before anything has been checked. */
+export interface RawFilterParams {
+  filter?: string
+  where?: string
+  district?: string
+  price?: string
+  has?: string
+}
+
+/**
+ * The query string, reduced to what is actually recognised.
+ *
+ * Shared by the section pages and the directory so both reject the same things.
+ * Anything unrecognised is dropped rather than passed to the database, for two
+ * reasons - and the second is the one that bites:
+ *
+ * - a value that cannot match renders an empty page that looks like a real
+ *   answer, so `/stay?filter=photographers` would read as "we have no hotels";
+ * - every crafted value would otherwise be its own cache key, which is a cheap
+ *   way for anybody to fill the cache with entries nobody will ask for twice.
+ *
+ * A district is only kept if it belongs to the chosen governorate, so the pair
+ * can never contradict itself.
+ */
+export function parseFilterState(
+  raw: RawFilterParams,
+  subcategories: readonly { slug: string }[],
+): FilterState {
+  const governorate = GOVERNORATES.some((g) => g.slug === raw.where) ? raw.where : undefined
+  const districts = GOVERNORATES.find((g) => g.slug === governorate)?.districts ?? []
+
+  return {
+    subcategory: subcategories.some((c) => c.slug === raw.filter) ? raw.filter : undefined,
+    governorate,
+    district: districts.some((d) => d.slug === raw.district) ? raw.district : undefined,
+    priceRange: PRICE_SLUGS.includes(raw.price ?? '') ? raw.price : undefined,
+    amenities: (raw.has ?? '')
+      .split(',')
+      .filter((slug) => AMENITY_SLUGS.includes(slug))
+      .sort(),
+  }
+}
+
 /** Adding an amenity if it is off, removing it if it is on. */
 const toggled = (list: string[], slug: string) =>
   list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]
@@ -93,7 +143,14 @@ export function ListingFilters({
 }: {
   base: string
   state: FilterState
-  /** The children of this section's category. */
+  /**
+   * The children of this section's category, or empty on the directory.
+   *
+   * `/directory` is every category at once, so there is no subcategory row that
+   * would mean anything - "boutique hotels" and "florists" are not alternatives
+   * on one list. The row is dropped rather than rendered with a lone "All" chip
+   * standing for nothing.
+   */
   subcategories: readonly { slug: string }[]
   locale: Locale
 }) {
@@ -108,20 +165,22 @@ export function ListingFilters({
 
   return (
     <div className="mt-8 flex flex-col gap-3">
-      <Row label={ar ? 'النوع' : 'Kind'}>
-        <FilterChip href={href({ subcategory: undefined })} active={!state.subcategory}>
-          {ar ? 'الكل' : 'All'}
-        </FilterChip>
-        {subcategories.map((child) => (
-          <FilterChip
-            key={child.slug}
-            href={href({ subcategory: child.slug })}
-            active={state.subcategory === child.slug}
-          >
-            {subcategoryLabel(child.slug, locale)}
+      {subcategories.length > 0 ? (
+        <Row label={ar ? 'النوع' : 'Kind'}>
+          <FilterChip href={href({ subcategory: undefined })} active={!state.subcategory}>
+            {ar ? 'الكل' : 'All'}
           </FilterChip>
-        ))}
-      </Row>
+          {subcategories.map((child) => (
+            <FilterChip
+              key={child.slug}
+              href={href({ subcategory: child.slug })}
+              active={state.subcategory === child.slug}
+            >
+              {subcategoryLabel(child.slug, locale)}
+            </FilterChip>
+          ))}
+        </Row>
+      ) : null}
 
       <Row label={ar ? 'المحافظة' : 'Governorate'}>
         <FilterChip href={href({ governorate: undefined })} active={!state.governorate}>

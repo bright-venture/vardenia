@@ -2,20 +2,17 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import {
-  AMENITY_SLUGS,
-  GOVERNORATES,
-  PRICE_SLUGS,
-  SECTION_PATHS,
-  TAXONOMY,
-  sectionForPath,
-  type SiteSection,
-} from '@vardenia/core'
+import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
-import { ListingFilters, filterHref, type FilterState } from '../../../../components/ListingFilters'
+import {
+  ListingFilters,
+  filterHref,
+  parseFilterState,
+  type RawFilterParams,
+} from '../../../../components/ListingFilters'
 import { pageWindow } from '../directory/page'
 
 /**
@@ -49,14 +46,7 @@ export const revalidate = 60
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
-  searchParams: Promise<{
-    filter?: string
-    where?: string
-    district?: string
-    price?: string
-    has?: string
-    page?: string
-  }>
+  searchParams: Promise<RawFilterParams & { page?: string }>
 }
 
 /** Seven sections in two languages, all prerendered at build time. */
@@ -114,36 +104,14 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { filter, where, district, price, has, page } = await searchParams
+  const { page, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
 
-  /**
-   * Nothing from the query string is used until it is recognised.
-   *
-   * Two reasons, and the second is the one that bites. A value that cannot match
-   * presents an empty page as though the section itself were empty - so
-   * `/stay?filter=photographers` would look like we have no hotels. And every
-   * crafted value would otherwise be a distinct cache key, which is a cheap way
-   * for anybody to fill the cache with garbage.
-   *
-   * A district is only accepted if it belongs to the chosen governorate, so the
-   * pair can never contradict itself.
-   */
-  const state: FilterState = {
-    subcategory: children.some((child) => child.slug === filter) ? filter : undefined,
-    governorate: GOVERNORATES.some((g) => g.slug === where) ? where : undefined,
-    district: undefined,
-    priceRange: PRICE_SLUGS.includes(price ?? '') ? price : undefined,
-    amenities: (has ?? '')
-      .split(',')
-      .filter((slug) => AMENITY_SLUGS.includes(slug))
-      .sort(),
-  }
-
-  const districts = GOVERNORATES.find((g) => g.slug === state.governorate)?.districts ?? []
-  state.district = districts.some((d) => d.slug === district) ? district : undefined
+  // Validated in one shared place, so this page and the directory reject the
+  // same things. See parseFilterState.
+  const state = parseFilterState(raw, children)
 
   const result = await findListings({
     locale,

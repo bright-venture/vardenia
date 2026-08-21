@@ -32,6 +32,22 @@ describe('legacyCategoryRedirect', () => {
     expect(run('/ar/directory?category=tourism&page=2')).toBe('/ar/experiences?page=2')
   })
 
+  /**
+   * The directory takes the same place, price and feature filters the sections
+   * do, so an old link can carry a genuinely narrowed view. Redirecting to a
+   * broader list than the one somebody shared is worse than failing: it looks
+   * like it worked.
+   */
+  it('keeps the other filters', () => {
+    expect(run('/directory?category=hospitality&where=beirut')).toBe('/stay?where=beirut')
+    expect(run('/directory?category=hospitality&price=4&has=pool,spa')).toBe(
+      '/stay?price=4&has=pool,spa',
+    )
+    expect(run('/directory?category=weddings&where=mount-lebanon&district=keserwan&page=2')).toBe(
+      '/weddings?where=mount-lebanon&district=keserwan&page=2',
+    )
+  })
+
   it('tolerates a trailing slash', () => {
     expect(run('/directory/?category=hospitality')).toBe('/stay')
   })

@@ -8,6 +8,12 @@ import { Link } from '../../../../i18n/routing'
 import { findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { FilterChip } from '../../../../components/FilterChip'
+import {
+  ListingFilters,
+  filterHref,
+  parseFilterState,
+  type RawFilterParams,
+} from '../../../../components/ListingFilters'
 
 /**
  * The browsable directory.
@@ -28,7 +34,7 @@ import { FilterChip } from '../../../../components/FilterChip'
 
 interface Props {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ category?: string; page?: string }>
+  searchParams: Promise<RawFilterParams & { category?: string; page?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -90,32 +96,49 @@ async function DirectoryResults({
    * the status can no longer change. A crawler sees the shell of a page that no
    * longer exists. Middleware answers with a real 308 before any of this runs.
    */
-  const { page } = await searchParams
+  const { page, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
-  // Everything. Filtering by category is what the section pages are for, and
-  // anything that arrives here asking for one has already been redirected.
+  /**
+   * No subcategory here, so an empty list is passed and that row is dropped.
+   *
+   * A subcategory only means something inside a category: "boutique hotels" and
+   * "florists" are not alternatives on a list that holds both. Where, price and
+   * features are the same question whatever the listing is, so they carry over
+   * unchanged.
+   */
+  const state = parseFilterState(raw, [])
+
   const result = await findListings({
     locale,
+    ...state,
     page: Number(page) || 1,
   })
+
+  const pageHref = (n: number) => {
+    const href = filterHref('/directory', state, {})
+    return href.includes('?') ? `${href}&page=${n}` : `${href}?page=${n}`
+  }
 
   return (
     <>
       <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
 
-      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Filter by category">
+      {/* Navigation, not a filter: these go to the section pages, which is where
+          the kind of place is chosen. Kept above the filters so the distinction
+          is visible - one row changes the page, the rest narrow it. */}
+      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Browse by section">
         <FilterChip href="/directory" active>
           {locale === 'ar' ? 'الكل' : 'All'}
         </FilterChip>
-        {/* Links out to the section pages rather than filtering in place. This
-            page is now "everything"; each category has an address of its own. */}
         {SECTIONS.map((section) => (
           <FilterChip key={section.path} href={`/${section.path}`} active={false}>
             {locale === 'ar' ? section.ar : section.en}
           </FilterChip>
         ))}
       </nav>
+
+      <ListingFilters base="/directory" state={state} subcategories={[]} locale={locale} />
 
       <ListingGrid listings={result.docs} locale={locale} empty={t('resultCount', { count: 0 })} />
 
@@ -129,7 +152,7 @@ async function DirectoryResults({
             ) : (
               <Link
                 key={n}
-                href={`/directory?page=${n}`}
+                href={pageHref(n)}
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page

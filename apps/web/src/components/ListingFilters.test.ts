@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterHref, type FilterState } from './ListingFilters'
+import { filterHref, parseFilterState, type FilterState } from './ListingFilters'
 
 /**
  * Every filtered view is a URL, so this builder is what makes them shareable,
@@ -102,5 +102,77 @@ describe('filterHref', () => {
     expect(filterHref('/weddings', empty, { subcategory: 'photographers' })).toBe(
       '/weddings?filter=photographers',
     )
+  })
+})
+
+/**
+ * The directory is every category at once, so it passes no subcategories. What
+ * matters is that the other four facets behave identically to a section page -
+ * one parser, one builder, two pages.
+ */
+describe('parseFilterState', () => {
+  const children = [{ slug: 'boutique-hotels' }, { slug: 'private-villas' }]
+
+  it('keeps what it recognises', () => {
+    expect(
+      parseFilterState(
+        {
+          filter: 'boutique-hotels',
+          where: 'mount-lebanon',
+          district: 'keserwan',
+          price: '3',
+          has: 'pool,wifi',
+        },
+        children,
+      ),
+    ).toEqual({
+      subcategory: 'boutique-hotels',
+      governorate: 'mount-lebanon',
+      district: 'keserwan',
+      priceRange: '3',
+      amenities: ['pool', 'wifi'],
+    })
+  })
+
+  it('drops a subcategory belonging to another section', () => {
+    expect(parseFilterState({ filter: 'photographers' }, children).subcategory).toBeUndefined()
+  })
+
+  it('drops a district that is not in the chosen governorate', () => {
+    expect(
+      parseFilterState({ where: 'beirut', district: 'keserwan' }, children).district,
+    ).toBeUndefined()
+  })
+
+  it('drops a district when no governorate was chosen', () => {
+    expect(parseFilterState({ district: 'keserwan' }, children).district).toBeUndefined()
+  })
+
+  it('drops junk rather than querying it', () => {
+    const state = parseFilterState(
+      { where: 'atlantis', price: '99', has: 'nonsense,pool' },
+      children,
+    )
+    expect(state.governorate).toBeUndefined()
+    expect(state.priceRange).toBeUndefined()
+    expect(state.amenities).toEqual(['pool'])
+  })
+
+  it('sorts amenities so one view has one URL', () => {
+    expect(parseFilterState({ has: 'wifi,pool' }, children).amenities).toEqual(['pool', 'wifi'])
+  })
+
+  it('has no subcategory when none are offered, as on the directory', () => {
+    expect(parseFilterState({ filter: 'boutique-hotels' }, []).subcategory).toBeUndefined()
+  })
+
+  it('reads an empty query string as no filters', () => {
+    expect(parseFilterState({}, children)).toEqual({
+      subcategory: undefined,
+      governorate: undefined,
+      district: undefined,
+      priceRange: undefined,
+      amenities: [],
+    })
   })
 })

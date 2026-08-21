@@ -44,7 +44,24 @@ export function legacyCategoryRedirect(pathname: string, params: URLSearchParams
 
   // Locale prefix carried across, so an Arabic reader stays in Arabic.
   const prefix = match[1] ?? ''
-  const page = params.get('page')
 
-  return `${prefix}/${section.path}${page ? `?page=${page}` : ''}`
+  /**
+   * Every other parameter comes too.
+   *
+   * The directory takes the same place, price and feature filters the sections
+   * do, so a link to `/directory?category=hospitality&where=beirut` is a real
+   * view somebody may have shared. Dropping everything but the category would
+   * redirect them to a broader list than the one they sent, which is worse than
+   * a 404 - it looks like it worked.
+   *
+   * `category` is the one left behind: it is what the path now expresses.
+   */
+  const kept = new URLSearchParams()
+  for (const key of ['filter', 'where', 'district', 'price', 'has', 'page']) {
+    const value = params.get(key)
+    if (value) kept.set(key, value)
+  }
+
+  const query = kept.toString().replace(/%2C/g, ',')
+  return `${prefix}/${section.path}${query ? `?${query}` : ''}`
 }
