@@ -103,7 +103,17 @@ export async function findListings({
 
       const where: Where = {}
       if (category) where.category = { equals: category }
-      if (subcategory) where.subcategory = { equals: subcategory }
+      /**
+       * `subcategories`, plural, and `in` rather than `equals`.
+       *
+       * The field is `hasMany`, so a listing carries a list and the query asks
+       * whether the wanted slug is in it. The singular name is not merely wrong,
+       * it throws - "the following path cannot be queried" - and it threw from
+       * inside the Suspense boundary, so the page still answered 200 with the
+       * failure buried in the streamed body. Worth remembering: a 200 from a
+       * streamed route says nothing about whether the query ran.
+       */
+      if (subcategory) where.subcategories = { in: [subcategory] }
       if (governorate) where.governorate = { equals: governorate }
 
       return payload.find({

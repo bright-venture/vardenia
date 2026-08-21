@@ -2,11 +2,17 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
+import {
+  GOVERNORATES,
+  SECTION_PATHS,
+  TAXONOMY,
+  sectionForPath,
+  type SiteSection,
+} from '@vardenia/core'
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { findListings } from '../../../../lib/listings'
-import { subcategoryLabel } from '../../../../lib/labels'
+import { governorateLabel, subcategoryLabel } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { FilterChip } from '../../../../components/FilterChip'
 import { pageWindow } from '../directory/page'
@@ -42,7 +48,7 @@ export const revalidate = 60
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
-  searchParams: Promise<{ filter?: string; page?: string }>
+  searchParams: Promise<{ filter?: string; where?: string; page?: string }>
 }
 
 /** Seven sections in two languages, all prerendered at build time. */
@@ -100,7 +106,7 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { filter, page } = await searchParams
+  const { filter, where, page } = await searchParams
   const t = await getTranslations('directory')
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
@@ -112,32 +118,67 @@ async function SectionResults({
    * empty - and every crafted value would earn its own cache entry.
    */
   const subcategory = children.some((child) => child.slug === filter) ? filter : undefined
+  const governorate = GOVERNORATES.some((g) => g.slug === where) ? where : undefined
 
   const result = await findListings({
     locale,
     category: section.category,
     subcategory,
+    governorate,
     page: Number(page) || 1,
   })
 
   const base = `/${section.path}`
-  const withFilter = (slug?: string) => (slug ? `${base}?filter=${slug}` : base)
+
+  /**
+   * Both filters live in the URL together, so choosing a place does not throw
+   * away the kind you were looking at. Written out rather than mutating a
+   * URLSearchParams, because the order matters: two links to the same view have
+   * to be the same string or they are two cache entries and two pages to search
+   * engines.
+   */
+  const url = (next: { filter?: string; where?: string }) => {
+    const params = new URLSearchParams()
+    const f = 'filter' in next ? next.filter : subcategory
+    const w = 'where' in next ? next.where : governorate
+    if (f) params.set('filter', f)
+    if (w) params.set('where', w)
+    const query = params.toString()
+    return query ? `${base}?${query}` : base
+  }
 
   return (
     <>
       <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
 
       <nav className="mt-8 flex flex-wrap gap-2" aria-label={nameFor(section, locale)}>
-        <FilterChip href={base} active={!subcategory}>
+        <FilterChip href={url({ filter: undefined })} active={!subcategory}>
           {locale === 'ar' ? 'الكل' : 'All'}
         </FilterChip>
         {children.map((child) => (
           <FilterChip
             key={child.slug}
-            href={withFilter(child.slug)}
+            href={url({ filter: child.slug })}
             active={subcategory === child.slug}
           >
             {subcategoryLabel(child.slug, locale)}
+          </FilterChip>
+        ))}
+      </nav>
+
+      {/* The second axis. A visitor in Beirut for three days is filtering by
+          where at least as often as by what, and every list already supports it
+          in the query - it simply had no control. */}
+      <nav
+        className="mt-3 flex flex-wrap gap-2"
+        aria-label={locale === 'ar' ? 'المحافظة' : 'Governorate'}
+      >
+        <FilterChip href={url({ where: undefined })} active={!governorate}>
+          {locale === 'ar' ? 'كل لبنان' : 'All of Lebanon'}
+        </FilterChip>
+        {GOVERNORATES.map((g) => (
+          <FilterChip key={g.slug} href={url({ where: g.slug })} active={governorate === g.slug}>
+            {governorateLabel(g.slug, locale)}
           </FilterChip>
         ))}
       </nav>
@@ -154,7 +195,7 @@ async function SectionResults({
             ) : (
               <Link
                 key={n}
-                href={subcategory ? `${base}?filter=${subcategory}&page=${n}` : `${base}?page=${n}`}
+                href={url({}) === base ? `${base}?page=${n}` : `${url({})}&page=${n}`}
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page
