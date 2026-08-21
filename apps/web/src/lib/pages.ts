@@ -1,4 +1,5 @@
-import { PLACEHOLDER, type LegalDocument } from './legal'
+import type { LegalDocument } from './legal'
+import { TBD, contactEmail, contactPostal } from './placeholder'
 
 /**
  * The standing pages: About, Contact, FAQ, and the three that sell a listing.
@@ -30,8 +31,6 @@ import { PLACEHOLDER, type LegalDocument } from './legal'
  * address are not mine to make up, and a plausible invented number on a sales
  * page is worse than a visible gap.
  */
-
-const TBD = (what: string) => `${PLACEHOLDER} ${what}`
 
 export type ContentPage = LegalDocument
 
@@ -116,9 +115,9 @@ export function contactPage(): ContentPage {
       {
         heading: 'How to reach us',
         body: [
-          TBD('the contact email address, and a phone number if we want one published'),
-          TBD('a postal address, which the privacy policy also needs'),
-          TBD('the hours somebody is actually reading this, and how quickly we aim to reply'),
+          contactEmail(),
+          contactPostal(),
+          TBD('the hours somebody is reading this, and how quickly we aim to reply'),
         ],
       },
     ],
@@ -221,7 +220,8 @@ export function partnerWithUsPage(): ContentPage {
         heading: 'How to start',
         body: [
           'Send us the business name, where it is, and a sentence about it. We will come back to you about whether it is right for the directory and what it would involve.',
-          'See **Add your business**.',
+          contactEmail(),
+          'Or see **Add your business** for what to send.',
         ],
       },
     ],
@@ -260,7 +260,7 @@ export function advertisePage(): ContentPage {
       },
       {
         heading: 'Get in touch',
-        body: ['Tell us what you have in mind and we will send the current rates.'],
+        body: ['Tell us what you have in mind and we will send the current rates.', contactEmail()],
       },
     ],
   }
@@ -287,6 +287,7 @@ export function addYourBusinessPage(): ContentPage {
       {
         heading: 'What happens next',
         body: [
+          contactEmail(),
           'We look at every business that gets in touch. If it is right for the directory we will come back to you with what a listing involves and what it costs.',
           'If it is not, we will say so plainly rather than leaving you waiting. A directory is only worth something to a reader if some things are left out.',
           TBD('how long we aim to take to reply'),

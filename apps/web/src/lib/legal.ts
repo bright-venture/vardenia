@@ -1,3 +1,5 @@
+import { PLACEHOLDER, TBD, contactEmail } from './placeholder'
+
 /**
  * The privacy policy and terms, as content rather than markup.
  *
@@ -49,10 +51,12 @@ export interface LegalDocument {
  */
 export const LEGAL_LAST_UPDATED = '2026-08-20'
 
-/** Marks a fact or decision nobody has settled. Rendered so it cannot be missed. */
-const TBD = (what: string) => `TO CONFIRM: ${what}`
-
-export const PLACEHOLDER = 'TO CONFIRM:'
+/**
+ * The marker and the contact details both live in lib/placeholder now, so the
+ * marketing pages can use the same ones without importing a legal document.
+ * Re-exported because this module's readers already import PLACEHOLDER from it.
+ */
+export { PLACEHOLDER } from './placeholder'
 
 /**
  * Everything still open, so it can be listed in one place rather than found by
@@ -86,7 +90,8 @@ export function privacyPolicy(): LegalDocument {
            */
           'Vardenia is a printed magazine and an online directory of places in Lebanon.',
           `${TBD('the registered legal entity, its company number and its registered address')}.`,
-          `If you want to ask about anything in this policy, write to ${TBD('a contact address for privacy enquiries')}.`,
+          'If you want to ask about anything in this policy, get in touch.',
+          contactEmail(),
         ],
       },
 
@@ -128,7 +133,7 @@ export function privacyPolicy(): LegalDocument {
           '- **The business you book with** sees your name, your phone number if you gave one, the details of the booking and your notes. They need those to hold your table and to call you if something changes. They do not see your email address.',
           '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, and the service that sends our email.',
           `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database, Netlify for hosting, and Resend for email')}.`,
-          'We do not sell your information, and we do not share it for anyone else’s marketing.',
+          "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
 
@@ -156,7 +161,8 @@ export function privacyPolicy(): LegalDocument {
         heading: 'What you can ask for',
         body: [
           'You can ask us for a copy of what we hold about you, to correct it, to delete it, to send it to you in a portable form, or to stop using it in a particular way.',
-          `Write to ${TBD('the contact address again')} and we will answer within one month.`,
+          'Ask us, and we will answer within one month.',
+          contactEmail(),
           'If you are unhappy with how we have handled it, you can complain to your national data protection authority.',
         ],
       },
