@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '../i18n/routing'
 import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import { markSignedIn } from '../lib/session-hint'
 
 /**
  * Signing a customer in.
@@ -54,6 +55,8 @@ export function LoginForm({ next }: { next?: string }) {
       })
 
       if (response.ok) {
+        // The header reads this to know which links to offer.
+        markSignedIn()
         /**
          * `refresh` before `push`, and both are needed. The account page is a
          * server component that reads the session, and Next would otherwise

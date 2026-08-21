@@ -4,6 +4,7 @@ import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
+import { AccountLink } from './AccountLink'
 
 /**
  * The site header.
@@ -20,68 +21,103 @@ import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
  * weddings, lifestyle and healthcare could all be sold to and none of them
  * appeared anywhere in the navigation.
  *
- * Seven is more than a header comfortably holds at this size. They are all
- * listed for now because a link that exists beats a link that is tidy; grouping
- * them behind a menu is a design decision that belongs with the visual pass.
+ * # Two layouts, one list
  *
- * Structure, not styling. What matters now is that every page built so far is
- * reachable without typing a URL.
+ * Seven sections plus magazine, search and account is far more than a phone can
+ * hold in a row, and this site is read on phones - most readers arrive by
+ * pointing a camera at a printed code. So the wide layout is a single row and
+ * the narrow one is a disclosure.
+ *
+ * The disclosure is a `<details>` element, which means the menu opens and closes
+ * with no JavaScript at all. That matters more here than elsewhere: the header
+ * is on every page including the prerendered ones, and a script that has to load
+ * before the navigation works is a script that fails first on the slow
+ * connection where the navigation matters most.
  */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations('nav')
-  const account = await getTranslations('account')
+
+  const sectionLinks = SECTIONS.map((section) => (
+    <Link
+      key={section.path}
+      href={`/${section.path}`}
+      className="text-ink-700 hover:text-ink-900 transition-colors"
+    >
+      {locale === 'ar' ? section.ar : section.en}
+    </Link>
+  ))
+
+  const search = (
+    <Link href="/search" className="text-ink-700 hover:text-ink-900 transition-colors">
+      {locale === 'ar' ? 'بحث' : 'Search'}
+    </Link>
+  )
+
+  const magazine = (
+    <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
+      {t('magazine')}
+    </Link>
+  )
+
+  /* The switcher reads the query string so filters survive a language change,
+     and reading it requires client rendering. Bounded in Suspense so that cost
+     falls on two links rather than on the whole page: the fallback is the same
+     markup without the query, which is what a crawler should see anyway. */
+  const language = (
+    <Suspense fallback={<LanguageSwitcherLinks current={locale} search="" />}>
+      <LanguageSwitcher current={locale} />
+    </Suspense>
+  )
 
   return (
     <header className="border-ink-100 bg-surface-base sticky top-0 z-50 border-b">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
-        <Link href="/" className="font-display text-ink-900 text-xl tracking-tight">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <Link href="/" className="font-display text-ink-900 shrink-0 text-xl tracking-tight">
           Vardenia
         </Link>
 
+        {/* Wide: everything in one row. */}
         <nav
           aria-label={t('directory')}
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+          className="hidden items-center gap-x-5 gap-y-2 text-sm lg:flex"
         >
-          {SECTIONS.map((section) => (
-            <Link
-              key={section.path}
-              href={`/${section.path}`}
-              className="text-ink-700 hover:text-ink-900 transition-colors"
-            >
-              {locale === 'ar' ? section.ar : section.en}
-            </Link>
-          ))}
-          <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
-            {t('magazine')}
-          </Link>
-          {/* One link whether or not anybody is signed in, and it says "your
-              account" either way.
-
-              The alternative - "Sign in" or the reader's name, depending -
-              means reading the session in the layout, and reading the session
-              means `headers()`, which would opt every prerendered page in the
-              site out of static rendering for a word in the header. The account
-              page itself is dynamic and shows the right thing when they get
-              there. */}
-          <Link href="/account" className="text-ink-700 hover:text-ink-900 transition-colors">
-            {account('title')}
-          </Link>
-          {/* A link rather than the box itself. The header is on every page,
-              including the prerendered ones, and an input here would be markup
-              and focus handling carried by all of them for a control most
-              readers never touch. The search page has the box. */}
-          <Link href="/search" className="text-ink-700 hover:text-ink-900 transition-colors">
-            {locale === 'ar' ? 'بحث' : 'Search'}
-          </Link>
-          {/* The switcher reads the query string so filters survive a language
-              change, and reading it requires client rendering. Bounded here so
-              that cost falls on two links rather than on the whole page: the
-              fallback is the same markup without the query, which is exactly
-              what a crawler should see anyway. */}
-          <Suspense fallback={<LanguageSwitcherLinks current={locale} search="" />}>
-            <LanguageSwitcher current={locale} />
-          </Suspense>
+          {sectionLinks}
+          {magazine}
+          {search}
+          <AccountLink locale={locale} />
+          {language}
         </nav>
+
+        {/* Narrow: a disclosure. Both navigations are in the markup and one is
+            `display: none` at any width, which keeps it out of the accessibility
+            tree as well as off the screen - so nothing is announced twice. The
+            links are built once above and rendered into whichever is showing. */}
+        <details className="group relative lg:hidden">
+          <summary
+            className="text-ink-700 hover:text-ink-900 flex cursor-pointer list-none items-center gap-2 text-sm"
+            aria-label={locale === 'ar' ? 'القائمة' : 'Menu'}
+          >
+            <span className="flex flex-col gap-[3px]" aria-hidden>
+              <span className="bg-ink-700 block h-[1.5px] w-5" />
+              <span className="bg-ink-700 block h-[1.5px] w-5" />
+              <span className="bg-ink-700 block h-[1.5px] w-5" />
+            </span>
+            {locale === 'ar' ? 'القائمة' : 'Menu'}
+          </summary>
+
+          <nav
+            aria-label={t('directory')}
+            className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 flex w-64 flex-col gap-3 rounded-md border p-5 text-sm shadow-lg"
+          >
+            {sectionLinks}
+            <span className="border-ink-100 border-t pt-3">{magazine}</span>
+            {search}
+            <span className="border-ink-100 border-t pt-3">
+              <AccountLink locale={locale} />
+            </span>
+            <span className="border-ink-100 border-t pt-3">{language}</span>
+          </nav>
+        </details>
       </div>
     </header>
   )

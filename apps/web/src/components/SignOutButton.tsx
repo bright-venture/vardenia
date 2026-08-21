@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '../i18n/routing'
 import { SECONDARY_BUTTON } from './formStyles'
+import { markSignedOut } from '../lib/session-hint'
 
 /**
  * Signing out, from either kind of account.
@@ -46,6 +47,7 @@ export function SignOutButton({
        * like the button is broken; sending them to a page that re-reads the
        * session shows them the truth either way.
        */
+      markSignedOut()
       router.refresh()
       router.push(redirectTo)
       setBusy(false)

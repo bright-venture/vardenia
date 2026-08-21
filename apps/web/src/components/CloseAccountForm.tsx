@@ -3,6 +3,7 @@
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '../i18n/routing'
+import { markSignedOut } from '../lib/session-hint'
 import {
   HINT,
   INPUT,
@@ -59,6 +60,7 @@ export function CloseAccountForm({ upcoming }: { upcoming: number }) {
       } | null
 
       if (response.ok && body?.ok) {
+        markSignedOut()
         setClosed(body.cancelled ?? 0)
         // The session is worthless now, but the cookie is still in the browser
         // and every server component would keep reading it.

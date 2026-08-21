@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '../i18n/routing'
 import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import { markSignedIn } from '../lib/session-hint'
 
 /**
  * Signing in a business owner.
@@ -50,6 +51,7 @@ export function PartnerLoginForm() {
       })
 
       if (response.ok) {
+        markSignedIn()
         // `refresh` before `push`: the dashboard is a server component that
         // reads the session, and the router cache still holds the signed-out
         // version of it.
