@@ -23,21 +23,28 @@ export interface Labelled {
 /**
  * What a place offers.
  *
- * Ordered by how often somebody filters on it rather than alphabetically.
- * Accessibility is near the top deliberately: for the person who needs it, it is
- * not a preference among sixteen, it is the only question that matters.
+ * # The order is the database's, not a design choice
+ *
+ * Payload derives a Postgres enum from this array, and enum member order is part
+ * of the type - so reordering it for readability generates a migration that
+ * drops and recreates the type on four tables. That is safe at this size and
+ * pure churn: the values are identical, only the declared order moves.
+ *
+ * So this stays in the order the enum already has. If the filter row wants a
+ * different order - putting wheelchair access first, which it should - that is a
+ * sort where it is rendered, not a change here.
  */
 export const AMENITIES: readonly Labelled[] = [
-  { slug: 'accessible', en: 'Wheelchair accessible', ar: 'مهيأ لذوي الاحتياجات' },
-  { slug: 'family-friendly', en: 'Family friendly', ar: 'مناسب للعائلات' },
-  { slug: 'outdoor-seating', en: 'Outdoor seating', ar: 'جلسات خارجية' },
   { slug: 'sea-view', en: 'Sea view', ar: 'إطلالة على البحر' },
   { slug: 'mountain-view', en: 'Mountain view', ar: 'إطلالة جبلية' },
   { slug: 'pool', en: 'Pool', ar: 'مسبح' },
   { slug: 'spa', en: 'Spa', ar: 'سبا' },
-  { slug: 'free-parking', en: 'Free parking', ar: 'موقف مجاني' },
   { slug: 'valet-parking', en: 'Valet parking', ar: 'خدمة ركن السيارات' },
+  { slug: 'free-parking', en: 'Free parking', ar: 'موقف مجاني' },
+  { slug: 'accessible', en: 'Wheelchair accessible', ar: 'مهيأ لذوي الاحتياجات' },
+  { slug: 'family-friendly', en: 'Family friendly', ar: 'مناسب للعائلات' },
   { slug: 'pet-friendly', en: 'Pet friendly', ar: 'يسمح بالحيوانات الأليفة' },
+  { slug: 'outdoor-seating', en: 'Outdoor seating', ar: 'جلسات خارجية' },
   { slug: 'live-music', en: 'Live music', ar: 'موسيقى حية' },
   { slug: 'alcohol', en: 'Alcohol served', ar: 'يقدم الكحول' },
   { slug: 'halal', en: 'Halal options', ar: 'خيارات حلال' },

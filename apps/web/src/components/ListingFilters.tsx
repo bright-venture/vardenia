@@ -8,6 +8,7 @@ import {
 } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
+import { Link } from '../i18n/routing'
 import { FilterChip } from './FilterChip'
 
 /**
@@ -127,6 +128,21 @@ export function parseFilterState(
 const toggled = (list: string[], slug: string) =>
   list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug]
 
+/**
+ * Wheelchair access first, then the rest in their stored order.
+ *
+ * Sorted here rather than in the shared list, because that list defines a
+ * Postgres enum and reordering it rewrites the type on four tables for what is
+ * purely a display decision. Somebody filtering for step-free access is not
+ * browsing sixteen options - it is the only one that matters to them, and it
+ * should not be seventh.
+ */
+const FIRST = 'accessible'
+const displayAmenities = [
+  ...AMENITIES.filter((a) => a.slug === FIRST),
+  ...AMENITIES.filter((a) => a.slug !== FIRST),
+]
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <nav className="flex flex-wrap gap-2" aria-label={label}>
@@ -237,7 +253,7 @@ export function ListingFilters({
           </Row>
 
           <Row label={ar ? 'المرافق' : 'Features'}>
-            {AMENITIES.map((a) => (
+            {displayAmenities.map((a) => (
               <FilterChip
                 key={a.slug}
                 href={href({ amenities: toggled(state.amenities, a.slug) })}
@@ -255,12 +271,17 @@ export function ListingFilters({
           nothing needs a way out that is not the back button. */}
       {state.subcategory || state.governorate || narrowed ? (
         <p className="mt-1">
-          <a
+          {/* `Link` from i18n/routing, not a bare anchor.
+              `localePrefix` is `as-needed`, so Arabic lives at /ar/stay while
+              `base` is /stay - a raw href would have thrown an Arabic reader
+              onto the English page, which is the one link on the row where
+              that is least excusable. */}
+          <Link
             href={base}
             className="text-gold-700 hover:text-ink-900 text-sm underline underline-offset-4"
           >
             {ar ? 'مسح الفلاتر' : 'Clear filters'}
-          </a>
+          </Link>
         </p>
       ) : null}
     </div>

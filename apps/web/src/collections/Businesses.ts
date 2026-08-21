@@ -100,11 +100,13 @@ export const Businesses: CollectionConfig = {
               name: 'amenities',
               type: 'select',
               hasMany: true,
+              index: true,
               options: amenityOptions,
             },
             {
               name: 'priceRange',
               type: 'select',
+              index: true,
               options: priceRangeOptions,
             },
           ],
@@ -124,6 +126,10 @@ export const Businesses: CollectionConfig = {
               name: 'subcategories',
               type: 'select',
               hasMany: true,
+              // Filtered on by every section page. Without this the value column
+              // of the join table has no index and each filter is a sequential
+              // scan - free at two listings, not at ten thousand.
+              index: true,
               options: subcategoryOptions,
               admin: { description: 'Must belong to the selected category.' },
             },
