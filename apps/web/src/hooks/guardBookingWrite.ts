@@ -3,6 +3,7 @@ import { APIError } from 'payload'
 import {
   canActorTransition,
   canTransition,
+  isRetrospective,
   OCCUPYING_STATUSES,
   type BookingActor,
   type BookingStatus,
@@ -119,8 +120,34 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
      * That is the one thing `autoConfirm: false` promises: a venue that wants to
      * speak to you first gets to. See canActorTransition in packages/core.
      */
-    if (!canActorTransition(actorFor(user?.collection), from, to)) {
+    const actor = actorFor(user?.collection)
+
+    if (!canActorTransition(actor, from, to)) {
       throw new APIError(`You cannot change a booking to ${to}.`, 403)
+    }
+
+    /**
+     * An outcome cannot be recorded before the thing it is an outcome of.
+     *
+     * The partner dashboard stopped offering "Mark as done" and "Did not arrive"
+     * on a booking still in the future, and this is the same rule on the server
+     * so the two cannot drift. Without it the buttons are a suggestion: a PATCH
+     * to /api/bookings/:id would still write a no-show against a customer whose
+     * table is next Monday.
+     *
+     * Staff are exempt. They enter bookings that were agreed on the phone and
+     * correct records after the fact, and the end time on a row somebody is
+     * repairing is not evidence of anything.
+     */
+    if (actor !== 'staff' && isRetrospective(to) && !isRetrospective(from)) {
+      const end = new Date(String((data.end ?? originalDoc.end) as string)).getTime()
+
+      if (Number.isFinite(end) && end > Date.now()) {
+        throw new APIError(
+          'This booking has not happened yet, so it cannot be marked as done or as a no-show.',
+          400,
+        )
+      }
     }
   }
 

@@ -212,7 +212,40 @@ export function canActorTransition(
   return ACTOR_TARGETS[actor].includes(to)
 }
 
-/** The moves this actor could make from here, for building a set of buttons. */
-export function availableActions(actor: BookingActor, from: BookingStatus): BookingStatus[] {
-  return BOOKING_STATUSES.filter((to) => to !== from && canActorTransition(actor, from, to))
+/**
+ * Outcomes that are statements about a sitting that has already happened.
+ *
+ * "They came and ate" and "they never turned up" are not decisions anybody can
+ * make about next Monday. Offering them on a booking still in the future asks
+ * the venue to predict the evening, and a mis-tap writes a no-show against a
+ * customer who has done nothing wrong - which is the kind of record that follows
+ * somebody around.
+ */
+export const RETROSPECTIVE_STATUSES = ['completed', 'no-show'] as const satisfies BookingStatus[]
+
+export const isRetrospective = (status: BookingStatus): boolean =>
+  (RETROSPECTIVE_STATUSES as readonly BookingStatus[]).includes(status)
+
+/**
+ * The moves this actor could make from here, for building a set of buttons.
+ *
+ * `ended` is whether the booking's own end time has passed. Before it has, the
+ * retrospective outcomes are dropped and a confirmed booking offers exactly one
+ * action - calling it off - which is the only thing anybody can honestly say
+ * about a table that has not been sat at yet.
+ *
+ * It defaults to true so that a caller which has no clock, or does not care,
+ * gets the full set of legal moves. Staff correcting a record are the case that
+ * needs it.
+ */
+export function availableActions(
+  actor: BookingActor,
+  from: BookingStatus,
+  ended: boolean = true,
+): BookingStatus[] {
+  return BOOKING_STATUSES.filter((to) => {
+    if (to === from) return false
+    if (!ended && isRetrospective(to)) return false
+    return canActorTransition(actor, from, to)
+  })
 }

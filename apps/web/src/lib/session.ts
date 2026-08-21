@@ -3,6 +3,8 @@ import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from '../access/index'
+import { bookingFilterWhere, DEFAULT_FILTER, type BookingFilter } from './booking-filters'
+import type { Booking } from '../payload-types'
 
 /**
  * Who is signed in, as far as the public site is concerned.
@@ -215,7 +217,55 @@ export interface OwnerBookingGuest {
   phone: string
 }
 
-export async function ownerBookings(limit = 100) {
+/**
+ * Searching by guest name, without letting an owner read the customer list.
+ *
+ * The name lives on Customers, which an owner cannot see, so a name search has
+ * to become a set of ids first. That lookup runs with access overridden and its
+ * result is used only as a filter - the ids go into a bookings query that is
+ * still constrained to this owner's own listings by the collection. So a search
+ * can never surface a customer who has not booked with them.
+ *
+ * Returns undefined when there was nothing to look up, which the `Where` builder
+ * treats differently from "looked and found nobody".
+ */
+async function customerIdsMatching(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  search: string,
+): Promise<(string | number)[] | undefined> {
+  if (!search) return undefined
+
+  const found = await payload.find({
+    collection: 'customers',
+    where: { name: { like: search } },
+    limit: 50,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  return found.docs.map((doc) => doc.id)
+}
+
+export interface OwnerBookingsResult {
+  /**
+   * `ended` says whether the sitting is over, which decides which actions the
+   * dashboard may honestly offer. Stamped here rather than worked out in the
+   * component, for the same reason `partitionBookings` takes an explicit `now`:
+   * `react-hooks/purity` refuses a `Date.now()` during render, and it is right
+   * to - a value that changes between renders belongs to the data layer. One
+   * clock for the whole list, so two bookings a minute apart cannot disagree.
+   */
+  docs: (Booking & { guest: OwnerBookingGuest | null; ended: boolean })[]
+  totalDocs: number
+  /** Requests still waiting on an answer, across every filter. */
+  awaiting: number
+}
+
+export async function ownerBookings(
+  filter: BookingFilter = DEFAULT_FILTER,
+  limit = 100,
+): Promise<OwnerBookingsResult> {
+  const empty = { docs: [], totalDocs: 0, awaiting: 0 }
   const payload = await getPayload({ config })
 
   const auth = await payload
@@ -223,20 +273,74 @@ export async function ownerBookings(limit = 100) {
     .catch(() => ({ user: null }) as { user: null })
 
   const user = auth.user
-  if (!user || user.collection !== BUSINESS_USER_COLLECTION) return []
+  if (!user || user.collection !== BUSINESS_USER_COLLECTION) return empty
+
+  const customerIds = await customerIdsMatching(payload, filter.search)
 
   const result = await payload.find({
     collection: 'bookings',
+    where: bookingFilterWhere(filter, { customerIds }),
     depth: 1,
     limit,
-    sort: 'start',
+    /**
+     * Soonest first when looking ahead, most recent first when looking back.
+     * A venue reading its history wants last night at the top, not the oldest
+     * booking it ever took.
+     */
+    sort: filter.window === 'past' ? '-start' : 'start',
     overrideAccess: false,
     user,
   })
 
+  /**
+   * Counted separately and deliberately outside the filter.
+   *
+   * A request waiting for an answer is the one thing on this page that is
+   * costing somebody something while it sits there, and it must stay visible
+   * while the reader is looking at, say, last month's no-shows. A badge that
+   * disappears because of a filter is a badge that stops being trusted.
+   */
+  const waiting = await payload.find({
+    collection: 'bookings',
+    where: bookingFilterWhere({ status: 'pending', window: 'upcoming', search: '' }),
+    limit: 0,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+
+  const now = Date.now()
+  const withEnded = (await withGuests(payload, result.docs)).map((doc) => {
+    const end = new Date(doc.end).getTime()
+    /**
+     * An unparseable date counts as not yet ended - the safe direction. The
+     * worst case is one fewer button, rather than a no-show recorded against
+     * somebody who was never given the chance to arrive.
+     */
+    return { ...doc, ended: Number.isFinite(end) && end < now }
+  })
+
+  return {
+    docs: withEnded,
+    totalDocs: result.totalDocs,
+    awaiting: waiting.totalDocs,
+  }
+}
+
+/**
+ * Puts the guest's name and phone on each booking, and only those two fields.
+ *
+ * Split out of `ownerBookings` when that grew filters. Unchanged in what it
+ * does: `depth: 1` does not populate `customer` for an owner, because Customers
+ * is `selfOrStaff` and an owner is neither.
+ */
+async function withGuests<T extends { customer?: unknown }>(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  docs: T[],
+): Promise<(T & { guest: OwnerBookingGuest | null })[]> {
   const customerIds = [
     ...new Set(
-      result.docs
+      docs
         .map((doc) => {
           const value = (doc as { customer?: unknown }).customer
           if (typeof value === 'number' || typeof value === 'string') return value
@@ -265,8 +369,8 @@ export async function ownerBookings(limit = 100) {
     }
   }
 
-  return result.docs.map((doc) => {
-    const value = (doc as { customer?: unknown }).customer
+  return docs.map((doc) => {
+    const value = doc.customer
     const id =
       typeof value === 'number' || typeof value === 'string'
         ? value

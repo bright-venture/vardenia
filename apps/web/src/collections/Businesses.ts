@@ -13,6 +13,10 @@ import { categoryOptions, districtOptions, governorateOptions, subcategoryOption
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { guardSort } from '../hooks/guardSort'
+import {
+  revalidateListingsAfterChange,
+  revalidateListingsAfterDelete,
+} from '../hooks/revalidateListings'
 
 /**
  * The directory listing - the central document in the whole platform.
@@ -50,7 +54,11 @@ export const Businesses: CollectionConfig = {
     beforeOperation: [guardSort],
     // Every published listing gets a QR code automatically. Sales should never
     // have to remember to press a button before a print deadline.
-    afterChange: [ensureQrCode],
+    // The cached directory is keyed per filter, so publishing has to clear all
+    // of them or the unfiltered view keeps serving an answer from before the
+    // listing existed. See hooks/revalidateListings.
+    afterChange: [ensureQrCode, revalidateListingsAfterChange],
+    afterDelete: [revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
     // listing mints a new one. Refused rather than warned about.
     beforeDelete: [protectBusinessWithPrintedCode],

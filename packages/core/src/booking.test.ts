@@ -268,4 +268,35 @@ describe('availableActions', () => {
     expect(availableActions('owner', 'cancelled')).toEqual([])
     expect(availableActions('staff', 'completed')).toEqual([])
   })
+
+  /**
+   * The dashboard offered all three of Decline, Mark as done and Did not arrive
+   * on a table booked for a week away. Two of those ask the venue to say what
+   * happened at a sitting nobody has sat at, and the damaging one is silent: a
+   * mis-tapped no-show is a mark against a customer who has done nothing, on a
+   * booking they still intend to keep.
+   */
+  describe('before the booking has happened', () => {
+    it('leaves an owner one honest action on a confirmed booking', () => {
+      expect(availableActions('owner', 'confirmed', false)).toEqual(['cancelled'])
+    })
+
+    it('still offers accept and decline on a request, which are decisions about now', () => {
+      expect(availableActions('owner', 'pending', false).sort()).toEqual(['cancelled', 'confirmed'])
+    })
+
+    it('offers the outcomes once the table has been sat at', () => {
+      expect(availableActions('owner', 'confirmed', true).sort()).toEqual([
+        'cancelled',
+        'completed',
+        'no-show',
+      ])
+    })
+
+    it('assumes the booking is over when nobody says otherwise', () => {
+      expect(availableActions('owner', 'confirmed')).toEqual(
+        availableActions('owner', 'confirmed', true),
+      )
+    })
+  })
 })
