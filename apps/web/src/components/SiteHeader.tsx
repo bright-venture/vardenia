@@ -66,6 +66,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <Link href="/account" className="text-ink-700 hover:text-ink-900 transition-colors">
             {account('title')}
           </Link>
+          {/* A link rather than the box itself. The header is on every page,
+              including the prerendered ones, and an input here would be markup
+              and focus handling carried by all of them for a control most
+              readers never touch. The search page has the box. */}
+          <Link href="/search" className="text-ink-700 hover:text-ink-900 transition-colors">
+            {locale === 'ar' ? 'بحث' : 'Search'}
+          </Link>
           {/* The switcher reads the query string so filters survive a language
               change, and reading it requires client rendering. Bounded here so
               that cost falls on two links rather than on the whole page: the
