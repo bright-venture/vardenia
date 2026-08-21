@@ -2,12 +2,12 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { TAXONOMY } from '@vardenia/core'
+import { SECTIONS } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { findListings } from '../../../../lib/listings'
-import { ListingCard } from '../../../../components/ListingCard'
-import { categoryLabel } from '../../../../lib/labels'
+import { ListingGrid } from '../../../../components/ListingGrid'
+import { FilterChip } from '../../../../components/FilterChip'
 
 /**
  * The browsable directory.
@@ -81,12 +81,22 @@ async function DirectoryResults({
   locale: Locale
   searchParams: Props['searchParams']
 }) {
-  const { category, page } = await searchParams
+  /**
+   * `?category=` is handled in middleware, not here.
+   *
+   * It predates the section pages and has to keep working, but redirecting from
+   * this component sends a 200 and then corrects itself in the browser: this
+   * runs inside the Suspense boundary, so the response has already started and
+   * the status can no longer change. A crawler sees the shell of a page that no
+   * longer exists. Middleware answers with a real 308 before any of this runs.
+   */
+  const { page } = await searchParams
   const t = await getTranslations('directory')
 
+  // Everything. Filtering by category is what the section pages are for, and
+  // anything that arrives here asking for one has already been redirected.
   const result = await findListings({
     locale,
-    category,
     page: Number(page) || 1,
   })
 
@@ -95,41 +105,19 @@ async function DirectoryResults({
       <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
 
       <nav className="mt-8 flex flex-wrap gap-2" aria-label="Filter by category">
-        <FilterChip href="/directory" active={!category}>
+        <FilterChip href="/directory" active>
           {locale === 'ar' ? 'الكل' : 'All'}
         </FilterChip>
-        {TAXONOMY.map((entry) => (
-          <FilterChip
-            key={entry.slug}
-            href={`/directory?category=${entry.slug}`}
-            active={category === entry.slug}
-          >
-            {categoryLabel(entry.slug, locale)}
+        {/* Links out to the section pages rather than filtering in place. This
+            page is now "everything"; each category has an address of its own. */}
+        {SECTIONS.map((section) => (
+          <FilterChip key={section.path} href={`/${section.path}`} active={false}>
+            {locale === 'ar' ? section.ar : section.en}
           </FilterChip>
         ))}
       </nav>
 
-      {result.docs.length === 0 ? (
-        <p className="text-ink-500 mt-16 text-center">{t('resultCount', { count: 0 })}</p>
-      ) : (
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {result.docs.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              slug={listing.slug ?? ''}
-              name={listing.name ?? ''}
-              tagline={listing.tagline}
-              category={listing.category}
-              governorate={listing.governorate}
-              district={listing.district}
-              priceRange={listing.priceRange as string | null}
-              verified={listing.verified}
-              heroImage={listing.heroImage as never}
-              locale={locale}
-            />
-          ))}
-        </div>
-      )}
+      <ListingGrid listings={result.docs} locale={locale} empty={t('resultCount', { count: 0 })} />
 
       {result.totalPages > 1 ? (
         <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
@@ -141,9 +129,7 @@ async function DirectoryResults({
             ) : (
               <Link
                 key={n}
-                href={
-                  category ? `/directory?category=${category}&page=${n}` : `/directory?page=${n}`
-                }
+                href={`/directory?page=${n}`}
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page
@@ -220,28 +206,5 @@ function DirectorySkeleton() {
         ))}
       </div>
     </div>
-  )
-}
-
-function FilterChip({
-  href,
-  active,
-  children,
-}: {
-  href: string
-  active: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <Link
-      href={href}
-      className={
-        active
-          ? 'bg-ink-900 text-surface-base rounded-full px-4 py-2 text-sm'
-          : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-full border px-4 py-2 text-sm transition-colors'
-      }
-    >
-      {children}
-    </Link>
   )
 }

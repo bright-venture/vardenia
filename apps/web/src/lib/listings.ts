@@ -47,6 +47,12 @@ export const findListingBySlug = cache(async (slug: string, locale: Locale) => {
 export interface ListingQuery {
   locale: Locale
   category?: string
+  /**
+   * One of the category's own children, e.g. `boutique-hotels` under
+   * `hospitality`. The section pages filter on this, which is why fifty-one
+   * subcategories need no templates of their own.
+   */
+  subcategory?: string
   governorate?: string
   page?: number
   perPage?: number
@@ -86,6 +92,7 @@ const LISTINGS_TTL = 60
 export async function findListings({
   locale,
   category,
+  subcategory,
   governorate,
   page = 1,
   perPage = 24,
@@ -96,6 +103,7 @@ export async function findListings({
 
       const where: Where = {}
       if (category) where.category = { equals: category }
+      if (subcategory) where.subcategory = { equals: subcategory }
       if (governorate) where.governorate = { equals: governorate }
 
       return payload.find({
@@ -112,7 +120,15 @@ export async function findListings({
         overrideAccess: false,
       })
     },
-    ['listings', locale, category ?? '', governorate ?? '', String(page), String(perPage)],
+    [
+      'listings',
+      locale,
+      category ?? '',
+      subcategory ?? '',
+      governorate ?? '',
+      String(page),
+      String(perPage),
+    ],
     { revalidate: LISTINGS_TTL, tags: ['businesses'] },
   )()
 }

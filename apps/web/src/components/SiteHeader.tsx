@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
+import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
@@ -12,8 +13,19 @@ import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
  * out rather than shipped as links that go nowhere - the same defect that made
  * offer QR codes resolve to a 404.
  *
- * Structure, not styling. The visual design lands later; what matters now is
- * that every page built so far is reachable without typing a URL.
+ * # The sections come from the taxonomy
+ *
+ * Mapped from `SECTIONS` rather than written out here, so a category can never
+ * exist in the database without a way to reach it. That was not theoretical:
+ * weddings, lifestyle and healthcare could all be sold to and none of them
+ * appeared anywhere in the navigation.
+ *
+ * Seven is more than a header comfortably holds at this size. They are all
+ * listed for now because a link that exists beats a link that is tidy; grouping
+ * them behind a menu is a design decision that belongs with the visual pass.
+ *
+ * Structure, not styling. What matters now is that every page built so far is
+ * reachable without typing a URL.
  */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations('nav')
@@ -26,10 +38,19 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           Vardenia
         </Link>
 
-        <nav aria-label={t('directory')} className="flex items-center gap-6 text-sm">
-          <Link href="/directory" className="text-ink-700 hover:text-ink-900 transition-colors">
-            {t('directory')}
-          </Link>
+        <nav
+          aria-label={t('directory')}
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+        >
+          {SECTIONS.map((section) => (
+            <Link
+              key={section.path}
+              href={`/${section.path}`}
+              className="text-ink-700 hover:text-ink-900 transition-colors"
+            >
+              {locale === 'ar' ? section.ar : section.en}
+            </Link>
+          ))}
           <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
             {t('magazine')}
           </Link>

@@ -2,6 +2,7 @@ import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 import { adminRedirectFor, PAYLOAD_COOKIE } from './lib/admin-guard'
+import { legacyCategoryRedirect } from './lib/legacy-urls'
 
 const intl = createMiddleware(routing)
 
@@ -28,6 +29,15 @@ export default function middleware(request: NextRequest): NextResponse {
 
     // Staff, or nobody. Payload answers, as it always has.
     return NextResponse.next()
+  }
+
+  /**
+   * `/directory?category=...` moved to the section pages. Answered here so it
+   * is a real 308 - see lib/legacy-urls for why the page itself cannot do it.
+   */
+  const moved = legacyCategoryRedirect(request.nextUrl.pathname, request.nextUrl.searchParams)
+  if (moved) {
+    return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
   }
 
   return intl(request) as NextResponse

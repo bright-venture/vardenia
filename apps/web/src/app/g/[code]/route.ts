@@ -1,7 +1,7 @@
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
-import { normalizeCode } from '@vardenia/core'
+import { normalizeCode, sectionForCategory } from '@vardenia/core'
 import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { isPubliclyVisible, populated, relatedId, type QrDoc } from '../../../lib/qr-doc'
@@ -147,12 +147,22 @@ function resolveDestination(qr: QrDoc, siteUrl: string): string {
       return slug ? `${siteUrl}/magazine/issues/${slug}` : `${siteUrl}/magazine`
     }
     case 'category': {
-      // The directory already filters on this, so a printed "scan for every
-      // hotel in Lebanon" code needs no new page.
+      /**
+       * A printed "scan for every hotel in Lebanon" code, resolved to that
+       * category's section page.
+       *
+       * This used to point at `/directory?category=...`. Changing it is safe in
+       * a way that changing a listing URL would not be: what is on the paper is
+       * `/g/CODE`, and this function runs fresh on every scan, so codes already
+       * in circulation follow the new address without anything being reprinted.
+       *
+       * A category with no section is impossible - the mapping is exhaustive by
+       * type - but the fallback stays, because this is a printed code and a
+       * homepage beats a 404.
+       */
       const slug = typeof qr.category === 'string' ? qr.category : null
-      return slug
-        ? `${siteUrl}/directory?category=${encodeURIComponent(slug)}`
-        : `${siteUrl}/directory`
+      const section = sectionForCategory(slug)
+      return section ? `${siteUrl}/${section.path}` : `${siteUrl}/directory`
     }
     case 'external': {
       // Normalised again rather than trusted: validation covers everything saved

@@ -1,4 +1,5 @@
 export * from './taxonomy'
+export * from './sections'
 export * from './regions'
 export * from './tiers'
 export * from './qr'
