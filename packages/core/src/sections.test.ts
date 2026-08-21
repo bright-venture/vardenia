@@ -116,3 +116,23 @@ describe('sectionForPath', () => {
     }
   })
 })
+
+/**
+ * The menu shows all seven at once with a line each, so a description that is
+ * missing or still in English is visible on the busiest page of the site.
+ */
+describe('section descriptions', () => {
+  it('describes every section in both languages', () => {
+    for (const section of SECTIONS) {
+      expect(section.descriptionEn.trim().length, section.path).toBeGreaterThan(10)
+      expect(section.descriptionAr.trim().length, section.path).toBeGreaterThan(10)
+      expect(section.descriptionAr, section.path).not.toBe(section.descriptionEn)
+    }
+  })
+
+  it('does not just repeat the section name', () => {
+    for (const section of SECTIONS) {
+      expect(section.descriptionEn.toLowerCase()).not.toBe(section.en.toLowerCase())
+    }
+  })
+})

@@ -47,16 +47,67 @@ export interface SiteSection {
   category: CategorySlug
   en: string
   ar: string
+  /**
+   * One line, for the menu that lists all seven at once.
+   *
+   * Seven names in a row tell a first-time visitor almost nothing - "Lifestyle"
+   * and "Experiences" could be anything. These say what is actually behind each
+   * one, in the words a reader would use rather than the taxonomy's.
+   */
+  descriptionEn: string
+  descriptionAr: string
 }
 
 const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
-  hospitality: { path: 'stay', en: 'Stay', ar: 'الضيافة' },
-  'food-and-beverage': { path: 'eat-and-drink', en: 'Eat & Drink', ar: 'المأكولات والمشروبات' },
-  tourism: { path: 'experiences', en: 'Experiences', ar: 'السياحة' },
-  weddings: { path: 'weddings', en: 'Weddings', ar: 'الأعراس' },
-  lifestyle: { path: 'lifestyle', en: 'Lifestyle', ar: 'نمط الحياة' },
-  healthcare: { path: 'health', en: 'Health', ar: 'الرعاية الصحية' },
-  transportation: { path: 'getting-around', en: 'Getting Around', ar: 'النقل' },
+  hospitality: {
+    path: 'stay',
+    en: 'Stay',
+    ar: 'الضيافة',
+    descriptionEn: 'Hotels, guesthouses, chalets and villas',
+    descriptionAr: 'فنادق وبيوت ضيافة وشاليهات وفلل',
+  },
+  'food-and-beverage': {
+    path: 'eat-and-drink',
+    en: 'Eat & Drink',
+    ar: 'المأكولات والمشروبات',
+    descriptionEn: 'Restaurants, cafes, beach clubs and nightlife',
+    descriptionAr: 'مطاعم ومقاهي ونوادي شاطئية وحياة ليلية',
+  },
+  tourism: {
+    path: 'experiences',
+    en: 'Experiences',
+    ar: 'السياحة',
+    descriptionEn: 'Historic sites, mountain escapes and hidden villages',
+    descriptionAr: 'مواقع تاريخية واستراحات جبلية وقرى مخفية',
+  },
+  weddings: {
+    path: 'weddings',
+    en: 'Weddings',
+    ar: 'الأعراس',
+    descriptionEn: 'Venues, planners, photographers and everything after',
+    descriptionAr: 'قاعات ومنظمون ومصورون وكل ما يليها',
+  },
+  lifestyle: {
+    path: 'lifestyle',
+    en: 'Lifestyle',
+    ar: 'نمط الحياة',
+    descriptionEn: 'Shopping, jewellery, fashion and beauty',
+    descriptionAr: 'تسوق ومجوهرات وأزياء وتجميل',
+  },
+  healthcare: {
+    path: 'health',
+    en: 'Health',
+    ar: 'الرعاية الصحية',
+    descriptionEn: 'Hospitals, clinics, spas and medical travel',
+    descriptionAr: 'مستشفيات وعيادات ومراكز سبا وسياحة علاجية',
+  },
+  transportation: {
+    path: 'getting-around',
+    en: 'Getting Around',
+    ar: 'النقل',
+    descriptionEn: 'Car hire, airport transfers and private drivers',
+    descriptionAr: 'تأجير سيارات ونقل من المطار وسائقون خاصون',
+  },
 }
 
 /**
