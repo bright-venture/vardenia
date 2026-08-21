@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
+import { SECTIONS } from '@vardenia/core'
 import { LOCALES } from '@vardenia/i18n'
+import { CONTENT_PAGE_SLUGS } from '../lib/pages'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
 import { findAllIssueSlugs } from '../lib/issues'
@@ -88,9 +90,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // nothing and other crawlers do read it.
   push('/', CHANGE_FREQUENCY.index, 1)
   push('/directory', CHANGE_FREQUENCY.index, 0.9)
+
+  /**
+   * The seven sections, generated rather than listed.
+   *
+   * These are the pages a search for "boutique hotels Lebanon" should find, so
+   * leaving them out would have meant the most valuable landing pages on the
+   * site being reachable only by following a link from the header. Built from
+   * `SECTIONS` so an eighth category cannot appear in the navigation and quietly
+   * miss the sitemap.
+   *
+   * Ranked with the directory rather than below it: a section is a better answer
+   * to a real search than "every listing in Lebanon" is.
+   */
+  for (const section of SECTIONS) push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+
   push('/magazine', CHANGE_FREQUENCY.index, 0.9)
   push('/magazine/articles', CHANGE_FREQUENCY.index, 0.7)
   push('/magazine/issues', CHANGE_FREQUENCY.index, 0.7)
+
+  /**
+   * The standing pages. Low priority next to a listing, but they have to be in
+   * here: "add your business" is a page somebody searches for by name, and it
+   * is the only route into the directory for a business that is not in it yet.
+   */
+  for (const slug of CONTENT_PAGE_SLUGS) push(`/${slug}`, CHANGE_FREQUENCY.article, 0.5)
 
   for (const slug of listings) push(`/directory/${slug}`, CHANGE_FREQUENCY.listing, 0.8)
   for (const slug of articles) push(`/magazine/articles/${slug}`, CHANGE_FREQUENCY.article, 0.6)

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 
@@ -37,6 +38,25 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             </p>
           </div>
 
+          {/* Every section, spelled out.
+              The header has the same seven, but a footer is where a crawler
+              looks for the shape of a site and where a reader who has scrolled
+              to the bottom is looking for somewhere else to go. Generated from
+              the taxonomy for the same reason the header is: a category that
+              exists in the database and appears in no navigation is one nobody
+              can reach. */}
+          <nav aria-label={ar ? 'الأقسام' : 'Sections'} className="flex flex-col gap-2 text-sm">
+            {SECTIONS.map((section) => (
+              <Link
+                key={section.path}
+                href={`/${section.path}`}
+                className="text-ink-700 hover:text-ink-900 transition-colors"
+              >
+                {ar ? section.ar : section.en}
+              </Link>
+            ))}
+          </nav>
+
           <nav aria-label={ar ? 'تذييل' : 'Footer'} className="flex flex-col gap-2 text-sm">
             <Link href="/directory" className="text-ink-700 hover:text-ink-900 transition-colors">
               {t('directory')}
@@ -51,6 +71,16 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               {ar ? 'الأعداد' : 'Issues'}
             </Link>
 
+            <Link href="/about" className="text-ink-700 hover:text-ink-900 transition-colors">
+              {ar ? 'من نحن' : 'About'}
+            </Link>
+            <Link href="/faq" className="text-ink-700 hover:text-ink-900 transition-colors">
+              {ar ? 'أسئلة شائعة' : 'Questions'}
+            </Link>
+            <Link href="/contact" className="text-ink-700 hover:text-ink-900 transition-colors">
+              {ar ? 'اتصل بنا' : 'Contact'}
+            </Link>
+
             {/* The one place the partner dashboard is linked from.
                 Not the header: a "partner login" link on every page a reader
                 sees is an invitation to a credential-stuffing script, and the
@@ -62,6 +92,28 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
               className="text-ink-500 hover:text-ink-900 mt-2 transition-colors"
             >
               {ar ? 'للشركاء' : 'For partners'}
+            </Link>
+          </nav>
+
+          {/* The way in for a business that has seen the magazine and wants to
+              be in it. This is the top of the revenue funnel and it used to end
+              in a 404, so it gets its own column rather than a line at the
+              bottom of somebody else's. */}
+          <nav aria-label={ar ? 'للأعمال' : 'For business'} className="flex flex-col gap-2 text-sm">
+            <Link
+              href="/add-your-business"
+              className="text-ink-700 hover:text-ink-900 transition-colors"
+            >
+              {ar ? 'أضف عملك' : 'Add your business'}
+            </Link>
+            <Link
+              href="/partner-with-us"
+              className="text-ink-500 hover:text-ink-900 transition-colors"
+            >
+              {ar ? 'كن شريكاً' : 'Partner with us'}
+            </Link>
+            <Link href="/advertise" className="text-ink-500 hover:text-ink-900 transition-colors">
+              {ar ? 'أعلن معنا' : 'Advertise'}
             </Link>
           </nav>
 
