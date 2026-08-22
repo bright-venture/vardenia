@@ -8,13 +8,7 @@ import { AccountLink } from './AccountLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { MenuLink } from './header/MenuLink'
-import {
-  BUSINESS_ICON,
-  CONTACT_ICON,
-  MAGAZINE_ICON,
-  SEARCH_ICON,
-  SECTION_ICONS,
-} from './header/icons'
+import { BUSINESS_ICON, CONTACT_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS } from './navIcons'
 
 /**
  * The site header.

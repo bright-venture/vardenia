@@ -1,11 +1,20 @@
 import {
   BedDouble,
+  BookOpen,
   CarFront,
+  CircleHelp,
+  FileText,
+  Handshake,
   Heart,
+  Info,
+  LogIn,
   Mail,
+  Megaphone,
   Mountain,
   Newspaper,
+  Scale,
   Search,
+  ShieldCheck,
   Sparkles,
   Stethoscope,
   Store,
@@ -37,8 +46,17 @@ export const SECTION_ICONS: Record<CategorySlug, LucideIcon> = {
   transportation: CarFront,
 }
 
-/** The handful used outside the section list. */
+/** The handful used outside the section list, by the header and the footer. */
 export const MAGAZINE_ICON = Newspaper
 export const SEARCH_ICON = Search
 export const CONTACT_ICON = Mail
 export const BUSINESS_ICON = Store
+export const ISSUE_ICON = BookOpen
+export const ARTICLE_ICON = FileText
+export const ABOUT_ICON = Info
+export const HELP_ICON = CircleHelp
+export const PARTNER_ICON = Handshake
+export const ADVERTISE_ICON = Megaphone
+export const SIGN_IN_ICON = LogIn
+export const PRIVACY_ICON = ShieldCheck
+export const TERMS_ICON = Scale
