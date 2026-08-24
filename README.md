@@ -5,7 +5,16 @@ mobile app, and QR layer over one content spine.
 
 ## Quick start
 
-Requires Node >= 20.9 and pnpm 9. The database is hosted (Supabase) - nothing to install.
+Requires **Node 20.9 or newer** and **pnpm 9**. The database is hosted (Supabase) - nothing to
+install locally, and nothing else needs installing globally: `turbo`, `typescript` and the
+Payload CLI all come from `pnpm install`. A globally installed `turbo` of a different major
+version will shadow the one this repo pins, so if you have one, it is worth removing.
+
+The pinned pnpm version is in `packageManager`, so the simplest way to get the right one is:
+
+```bash
+corepack enable
+```
 
 First, set up a database: **[docs/DATABASE-SETUP.md](docs/DATABASE-SETUP.md)** (~10 minutes,
 free, once). Then:
@@ -18,7 +27,18 @@ pnpm install
 cp .env.example .env
 ```
 
-Paste your database connection string into `.env`, then:
+Paste your database connection string into `.env`, then generate the Payload types:
+
+```bash
+pnpm --filter @vardenia/web generate:types
+```
+
+**This step is not optional and has to come before anything else runs.**
+`apps/web/src/payload-types.ts` is generated from the collection definitions and is
+deliberately not committed - a stale checked-in type file disagrees with the schema silently,
+which is worse than having none. Four files import it, including the seed script, so a fresh
+clone fails on `seed`, `dev`, `typecheck` and `build` until this has been run once. It needs a
+working `DATABASE_URL` in `.env`, which is why it comes after that step and not before.
 
 ```bash
 pnpm --filter @vardenia/web seed
