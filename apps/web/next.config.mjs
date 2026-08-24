@@ -25,6 +25,60 @@ const nextConfig = {
   // "Cannot find module './vendor-chunks/zod@x.y.z.js'". Requiring it from
   // node_modules at runtime sidesteps the split entirely.
   serverExternalPackages: ['zod'],
+  /**
+   * Security headers.
+   *
+   * An audit found none of these were set. Each closes a distinct hole, and
+   * none of them is a substitute for the access rules - they are the layer that
+   * still helps when something else has already gone wrong.
+   *
+   * `X-Frame-Options` stops the site being framed. Without it a copy of
+   * /account or /partner can be loaded invisibly on somebody else's page and a
+   * reader tricked into clicking a control they cannot see. That matters here
+   * because both of those pages cancel bookings.
+   *
+   * `X-Content-Type-Options` stops a browser guessing that an upload is
+   * something more interesting than the type we served it as. The Media
+   * collection accepts files from staff, and a guessed type is how an image
+   * becomes a script.
+   *
+   * `Referrer-Policy` stops the full URL leaking to another origin. A password
+   * reset link is a URL with a token in it, and the default policy would send
+   * it in the Referer header of any outbound click from that page.
+   *
+   * `Permissions-Policy` turns off hardware nothing here uses. The site never
+   * asks for a camera, a microphone or a location, so nothing embedded in it
+   * should be able to either.
+   *
+   * `Strict-Transport-Security` is ignored over plain http, so it costs nothing
+   * locally and pins https in production. Two years, with subdomains, which is
+   * what the preload lists ask for.
+   *
+   * No Content-Security-Policy yet, deliberately. Payload's admin panel needs
+   * inline styles and eval, so a policy strict enough to be worth having would
+   * have to exempt /admin, and one loose enough to cover both would not stop
+   * much. That is a careful separate pass rather than a line added in an audit.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
+    ]
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     // next/image refuses any host not listed here, so every storage backend we

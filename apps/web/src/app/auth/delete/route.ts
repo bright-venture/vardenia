@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import { headers as nextHeaders } from 'next/headers'
 import config from '../../../payload.config'
-import { withRateLimit } from '../../../lib/rate-limit'
+import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
 import { closeCustomerAccount } from '../../../lib/account-deletion'
 import { reportError } from '../../../lib/report'
 import { CUSTOMER_COLLECTION } from '../../../access/index'
@@ -92,4 +92,4 @@ export const POST = withRateLimit(async (request: Request) => {
 
     return json({ ok: false, message: 'We could not close the account. Please try again.' }, 500)
   }
-})
+}, RATE_LIMIT.AUTH_PER_WINDOW)

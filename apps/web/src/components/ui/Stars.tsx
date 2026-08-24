@@ -75,20 +75,32 @@ export function Stars({
         : `${shown} out of 5, from ${count} reviews`
 
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    /**
+     * `role="img"` carries the label, and it is load-bearing rather than tidy.
+     *
+     * An `aria-label` on a bare span is ignored: a span has the implicit role
+     * `generic`, and ARIA does not let a generic element take a name. The first
+     * version of this put the label on a plain span and hid every piece of
+     * visible content inside it, so a screen reader announced nothing at all
+     * for the rating - worse than the bare number it replaced.
+     *
+     * With an explicit role the element can be named, and the whole thing reads
+     * as one graphic saying "4.5 out of 5, from 12 reviews" rather than as five
+     * unlabelled shapes.
+     */
+    <span
+      role="img"
+      aria-label={label}
+      className={`inline-flex items-center gap-2 ${className}`}
+    >
       <span className="inline-flex gap-0.5" dir="ltr" aria-hidden>
         {[0, 1, 2, 3, 4].map((i) => (
           <Star key={i} fill={clamped - i} />
         ))}
       </span>
-      {/* The accessible name for the whole control, and the visible number. */}
-      <span className="text-ink-700 font-mono text-xs tabular-nums" aria-label={label}>
-        <span aria-hidden>
-          {shown}
-          {count === undefined ? null : (
-            <span className="text-ink-300"> ({count})</span>
-          )}
-        </span>
+      <span className="text-ink-700 font-mono text-xs tabular-nums" aria-hidden>
+        {shown}
+        {count === undefined ? null : <span className="text-ink-300"> ({count})</span>}
       </span>
     </span>
   )

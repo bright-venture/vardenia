@@ -41,6 +41,22 @@ const WINDOW_MS = 60_000
  */
 const MAX_PER_WINDOW = 300
 
+/**
+ * The budget for anything that costs something to be wrong about.
+ *
+ * 300 a minute was chosen for the admin panel, which fires a dozen requests to
+ * render one list view. Applying the same number to the auth surface meant 300
+ * password guesses a minute from one address, and - the one that actually bites
+ * - 300 password-reset requests a minute aimed at one mailbox. Each of those
+ * sends a real email, so the endpoint was a way to flood somebody's inbox and
+ * burn the sending reputation of the domain at the same time.
+ *
+ * Ten a minute is far above a person who has forgotten their password twice and
+ * far below anything automated. Payload's own `maxLoginAttempts` and `lockTime`
+ * still guard the guessing case per account; this guards the cost per caller.
+ */
+const AUTH_PER_WINDOW = 10
+
 /** Stop the map growing without bound on a long-lived server. */
 const SWEEP_INTERVAL_MS = 5 * 60_000
 
@@ -77,33 +93,46 @@ export interface RateVerdict {
  * every unidentifiable caller would let one script deny service to all of them,
  * which turns a mitigation into a vulnerability.
  */
-export function checkRate(headers: Headers, now = Date.now()): RateVerdict {
+export function checkRate(
+  headers: Headers,
+  now = Date.now(),
+  budget = MAX_PER_WINDOW,
+): RateVerdict {
   sweep(now)
 
   const ip = clientIp(headers)
   const unlimited: RateVerdict = {
     allowed: true,
-    limit: MAX_PER_WINDOW,
-    remaining: MAX_PER_WINDOW,
+    limit: budget,
+    remaining: budget,
     retryAfter: 0,
   }
   if (!ip) return unlimited
 
-  const existing = windows.get(ip)
+  /**
+   * Counted per budget, not per address alone.
+   *
+   * A shared counter would let the chatty admin panel spend the small auth
+   * budget on a staff member's behalf, and then lock them out of signing in.
+   * Two buckets keep an expensive endpoint tight without making the cheap ones
+   * unusable.
+   */
+  const key = `${budget}:${ip}`
+  const existing = windows.get(key)
 
   if (!existing || existing.resetAt <= now) {
-    windows.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    return { ...unlimited, remaining: MAX_PER_WINDOW - 1 }
+    windows.set(key, { count: 1, resetAt: now + WINDOW_MS })
+    return { ...unlimited, remaining: budget - 1 }
   }
 
   existing.count += 1
 
   const retryAfter = Math.max(1, Math.ceil((existing.resetAt - now) / 1000))
-  const remaining = Math.max(0, MAX_PER_WINDOW - existing.count)
+  const remaining = Math.max(0, budget - existing.count)
 
   return {
-    allowed: existing.count <= MAX_PER_WINDOW,
-    limit: MAX_PER_WINDOW,
+    allowed: existing.count <= budget,
+    limit: budget,
     remaining,
     retryAfter,
   }
@@ -139,9 +168,9 @@ type Handler = (request: Request, context: never) => Promise<Response>
  * attack. That route has its own protection in scan-guard, which limits what
  * gets *counted* and never what works.
  */
-export function withRateLimit(handler: Handler): Handler {
+export function withRateLimit(handler: Handler, budget = MAX_PER_WINDOW): Handler {
   return async (request, context) => {
-    const verdict = checkRate(request.headers)
+    const verdict = checkRate(request.headers, Date.now(), budget)
     if (!verdict.allowed) return tooManyRequests(verdict)
 
     const response = await handler(request, context)
@@ -160,4 +189,4 @@ export function __resetRateLimit() {
   lastSweep = 0
 }
 
-export const RATE_LIMIT = { WINDOW_MS, MAX_PER_WINDOW } as const
+export const RATE_LIMIT = { WINDOW_MS, MAX_PER_WINDOW, AUTH_PER_WINDOW } as const

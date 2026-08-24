@@ -9,7 +9,7 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes'
 import { withApiLimits } from '../../../../lib/api-limits'
-import { withRateLimit } from '../../../../lib/rate-limit'
+import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
 
 /**
  * The hand-made changes to this generated file, both about bounding what one
@@ -24,7 +24,58 @@ import { withRateLimit } from '../../../../lib/rate-limit'
  * passwords get guessed.
  */
 const guardRead = <T>(handler: T) => withRateLimit(withApiLimits(handler as never)) as T
-const guardWrite = <T>(handler: T) => withRateLimit(handler as never) as T
+
+/**
+ * Payload's own auth endpoints, which cost something to be wrong about.
+ *
+ * `forgot-password` sends a real email on every call, so at the general budget
+ * of 300 a minute one address could aim 300 emails a minute at one mailbox -
+ * flooding the recipient and burning the sending reputation of the domain in
+ * the same request loop. `login` and `unlock` are the guessing surface, and
+ * `reset-password` and `verify` both consume a token that was mailed out.
+ *
+ * These are substrings of the path rather than exact routes because every
+ * auth collection exposes its own copy: /api/customers/login,
+ * /api/business-users/login and /api/users/login are three different paths and
+ * the same endpoint.
+ */
+const AUTH_PATHS = [
+  '/login',
+  '/logout',
+  '/forgot-password',
+  '/reset-password',
+  '/refresh-token',
+  '/unlock',
+  '/verify/',
+]
+
+const isAuthPath = (url: string) => {
+  try {
+    const path = new URL(url).pathname
+    return AUTH_PATHS.some((segment) => path.includes(segment))
+  } catch {
+    // An unparseable URL is not a reason to hand out the larger budget.
+    return true
+  }
+}
+
+/**
+ * Writes get the tight budget when they touch auth, the general one otherwise.
+ *
+ * Chosen per request rather than per export, because one handler serves both.
+ * The two budgets are counted in separate buckets (see lib/rate-limit), so a
+ * staff member using the admin panel cannot spend the auth allowance and then
+ * find themselves unable to sign in.
+ */
+const guardWrite = <T>(handler: T) => {
+  const general = withRateLimit(handler as never)
+  const auth = withRateLimit(handler as never, RATE_LIMIT.AUTH_PER_WINDOW)
+
+  return (async (request: Request, context: unknown) =>
+    isAuthPath(request.url)
+      ? auth(request as never, context as never)
+      : general(request as never, context as never)) as T
+}
 
 export const GET = guardRead(REST_GET(config))
 export const POST = guardWrite(REST_POST(config))

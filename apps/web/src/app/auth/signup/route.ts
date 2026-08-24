@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import { fieldErrors, signupSchema } from '@vardenia/core'
 import config from '../../../payload.config'
-import { withRateLimit } from '../../../lib/rate-limit'
+import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -131,4 +131,4 @@ export const POST = withRateLimit(async (request: Request) => {
   }
 
   return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
-})
+}, RATE_LIMIT.AUTH_PER_WINDOW)
