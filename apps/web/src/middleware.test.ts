@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
-import { clearStaleHint, config } from './middleware'
+import { syncSessionHint, config } from './middleware'
 import { PAYLOAD_COOKIE } from './lib/admin-guard'
 import { SESSION_HINT } from './lib/session-hint'
 
@@ -107,7 +107,7 @@ describe('the stale session hint', () => {
     response.cookies.getAll().find((c) => c.name === SESSION_HINT)
 
   it('is cleared when the hint is present but the real token is gone', () => {
-    const response = clearStaleHint(req({ [SESSION_HINT]: '1' }), NextResponse.next())
+    const response = syncSessionHint(req({ [SESSION_HINT]: '1' }), NextResponse.next())
     const cookie = hintCookie(response)
 
     expect(cookie, 'the stale hint was not cleared').toBeDefined()
@@ -116,16 +116,11 @@ describe('the stale session hint', () => {
   })
 
   it('is left alone when a real session backs it', () => {
-    const response = clearStaleHint(
+    const response = syncSessionHint(
       req({ [SESSION_HINT]: '1', [PAYLOAD_COOKIE]: 'a.real.token' }),
       NextResponse.next(),
     )
     expect(hintCookie(response), 'a live session had its hint cleared').toBeUndefined()
-  })
-
-  it('does nothing when there is no hint to clear', () => {
-    const response = clearStaleHint(req({}), NextResponse.next())
-    expect(hintCookie(response)).toBeUndefined()
   })
 
   /**
@@ -133,20 +128,62 @@ describe('the stale session hint', () => {
    * links, which understates the truth rather than asserting something false.
    * It must not start writing hints from middleware.
    */
-  it('does not invent a hint for a session that has one missing', () => {
-    const response = clearStaleHint(req({ [PAYLOAD_COOKIE]: 'a.real.token' }), NextResponse.next())
-    expect(hintCookie(response)).toBeUndefined()
+  /**
+   * The direction the first version got wrong. Nothing but a fresh login ever
+   * set the hint, so a session whose hint was lost showed Sign in and Sign up
+   * to somebody looking at their own bookings and a Sign out button.
+   */
+  it('restores the hint for a real session that has lost it', () => {
+    const response = syncSessionHint(req({ [PAYLOAD_COOKIE]: 'a.real.token' }), NextResponse.next())
+    const cookie = hintCookie(response)
+    expect(cookie, 'a live session did not get its hint back').toBeDefined()
+    expect(cookie!.value).toBe('1')
+    expect(cookie!.maxAge).toBeGreaterThan(0)
+  })
+
+  it('writes nothing when the two already agree', () => {
+    const both = syncSessionHint(
+      req({ [SESSION_HINT]: '1', [PAYLOAD_COOKIE]: 'a.real.token' }),
+      NextResponse.next(),
+    )
+    expect(hintCookie(both), 'wrote a cookie that was already correct').toBeUndefined()
+
+    const neither = syncSessionHint(req({}), NextResponse.next())
+    expect(hintCookie(neither)).toBeUndefined()
   })
 
   /** The delete has to match how the browser set it or it silently misses. */
-  it('marks the deletion secure over https and not over http', () => {
-    const https = clearStaleHint(req({ [SESSION_HINT]: '1' }), NextResponse.next())
+  it('marks the cookie secure over https and not over plain http', () => {
+    const https = syncSessionHint(req({ [SESSION_HINT]: '1' }), NextResponse.next())
     expect(hintCookie(https)!.secure).toBe(true)
 
-    const http = clearStaleHint(
+    const http = syncSessionHint(
       req({ [SESSION_HINT]: '1' }, 'http://localhost:3000/account'),
       NextResponse.next(),
     )
     expect(hintCookie(http)!.secure).toBe(false)
+  })
+
+  /**
+   * Behind Netlify, TLS terminates at the edge and the request arrives over
+   * plain http. Asking nextUrl for the protocol therefore reads http on a
+   * request the reader made over https, and the cookie would be written without
+   * Secure while the original had it. x-forwarded-proto is what the edge saw.
+   */
+  it('trusts the proxy header over the internal protocol', () => {
+    const request = new NextRequest('http://internal.local/account')
+    request.cookies.set(PAYLOAD_COOKIE, 'a.real.token')
+    request.headers.set('x-forwarded-proto', 'https')
+
+    const cookie = hintCookie(syncSessionHint(request, NextResponse.next()))
+    expect(cookie!.secure, 'a proxied https request wrote a non-secure cookie').toBe(true)
+  })
+
+  it('reads only the first hop of a multi-value forwarded proto', () => {
+    const request = new NextRequest('http://internal.local/account')
+    request.cookies.set(PAYLOAD_COOKIE, 'a.real.token')
+    request.headers.set('x-forwarded-proto', 'https, http')
+
+    expect(hintCookie(syncSessionHint(request, NextResponse.next()))!.secure).toBe(true)
   })
 })

@@ -8,47 +8,68 @@ import { SESSION_HINT } from './lib/session-hint'
 const intl = createMiddleware(routing)
 
 /**
- * Clear the session hint when the real session is gone.
+ * Keep the session hint agreeing with the real session, in both directions.
  *
- * # The bug this fixes
+ * # What the hint is for
  *
  * The header reads `vd_session`, a non-httpOnly cookie that says only "a session
  * exists", so it can swap its own label without the server reading the real
  * token - which would opt every prerendered page out of static rendering.
  *
- * Nothing cleared that hint when the real token expired. A reader whose session
- * had lapsed saw "Your account" in the header, clicked it, and landed on a page
- * that said "Sign in to see your bookings". Both statements on one screen, and
- * the header was the wrong one.
+ * # Both directions are bugs, and both were seen
  *
- * The original note in lib/session-hint called this survivable on the grounds
- * that the page they land on corrects it. It does not: the header is on that
- * page too, still contradicting it, and a header that lies about who you are is
- * not a small thing on a site that takes bookings.
+ * Nothing cleared the hint when the token expired, so a lapsed reader saw "Your
+ * account" in the header and "Sign in to see your bookings" in the page body,
+ * on the same screen.
+ *
+ * The first version of this fixed only that direction, on the reasoning that a
+ * token with no hint "understates rather than lies". That was wrong in
+ * practice. Nothing ever *sets* the hint except a fresh login, so any session
+ * whose hint is lost - a partial cookie clear, a privacy tool, a console
+ * command - shows Sign in and Sign up to somebody who is signed in, on a page
+ * that is simultaneously showing them their bookings and a Sign out button.
+ * A header that contradicts the page it sits on reads as broken whichever way
+ * round it is.
+ *
+ * So the hint is now written as well as cleared. It carries no identity and
+ * authorises nothing; the httpOnly token remains the only thing any real check
+ * consults.
  *
  * # Why here
  *
  * Middleware is the only place that sees both cookies. The token is httpOnly so
  * no script can compare them, and a server component cannot write a cookie
- * during a static render. Here it costs one map lookup on a request that was
+ * during a static render. It costs two map lookups on a request that was
  * already going through locale routing, and it heals every page rather than
  * whichever one somebody remembered to patch.
- *
- * The reverse case needs nothing: a token with no hint shows the signed-out
- * links until the next sign-in sets it, which understates rather than lies.
  */
-export function clearStaleHint(request: NextRequest, response: NextResponse): NextResponse {
+export function syncSessionHint(request: NextRequest, response: NextResponse): NextResponse {
   const hasHint = request.cookies.get(SESSION_HINT)?.value === '1'
   const hasToken = Boolean(request.cookies.get(PAYLOAD_COOKIE)?.value)
 
-  if (hasHint && !hasToken) {
-    response.cookies.set(SESSION_HINT, '', {
-      path: '/',
-      maxAge: 0,
-      sameSite: 'lax',
-      // Matches how the browser set it, or the delete silently misses.
-      secure: request.nextUrl.protocol === 'https:',
-    })
+  if (hasHint === hasToken) return response
+
+  /**
+   * Whether the browser will accept a `Secure` cookie.
+   *
+   * `nextUrl.protocol` is the wrong thing to ask behind a proxy: Netlify
+   * terminates TLS at the edge and forwards internally over http, so it reads
+   * `http:` on a request the reader made over https. Setting the cookie
+   * non-secure then leaves a Secure original untouched, and the two disagree.
+   *
+   * `x-forwarded-proto` is what the edge actually saw. Falling back to the URL
+   * keeps local http development working, where no such header exists.
+   */
+  const forwarded = request.headers.get('x-forwarded-proto')
+  const secure = forwarded ? forwarded.split(',')[0]?.trim() === 'https' : request.nextUrl.protocol === 'https:'
+
+  // A week, matching the token's own lifetime, so the two lapse together.
+  const shared = { path: '/', sameSite: 'lax', secure } as const
+
+  if (hasToken) {
+    response.cookies.set(SESSION_HINT, '1', { ...shared, maxAge: 60 * 60 * 24 * 7 })
+  } else {
+    response.cookies.set(SESSION_HINT, '', { ...shared, maxAge: 0 })
   }
 
   return response
@@ -88,7 +109,7 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
   }
 
-  return clearStaleHint(request, intl(request) as NextResponse)
+  return syncSessionHint(request, intl(request) as NextResponse)
 }
 
 /**

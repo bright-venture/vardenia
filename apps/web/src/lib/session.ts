@@ -1,3 +1,4 @@
+import { isTerminalStatus, type BookingStatus } from '@vardenia/core'
 import { cache } from 'react'
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
@@ -129,7 +130,7 @@ export async function customerBookings(limit = 50) {
  * That rule fires in Next's build lint and not in ours, which is how it reached
  * CI; see eslint.config.mjs.
  */
-export function partitionBookings<T extends { end: string }>(
+export function partitionBookings<T extends { end: string; status?: string | null }>(
   bookings: T[],
   now: number = Date.now(),
 ): { upcoming: T[]; past: T[] } {
@@ -137,6 +138,22 @@ export function partitionBookings<T extends { end: string }>(
   const past: T[] = []
 
   for (const booking of bookings) {
+    /**
+     * Status first, then the clock.
+     *
+     * This used to split on the end date alone, which put a booking marked
+     * completed, cancelled or no-show under "Upcoming" whenever its date had
+     * not passed yet. That is exactly what a reader saw: a card reading
+     * COMPLETED, filed under Upcoming, on the same screen. Nothing is upcoming
+     * once it has been settled, whatever the calendar says - and an owner can
+     * legitimately mark a table done before the slot ends, or cancel one weeks
+     * ahead.
+     */
+    if (booking.status && isTerminalStatus(booking.status as BookingStatus)) {
+      past.push(booking)
+      continue
+    }
+
     const end = new Date(booking.end).getTime()
     // An unparseable date is shown rather than dropped. A booking that vanishes
     // from somebody's account is worse than one filed under the wrong heading.

@@ -9,6 +9,11 @@ import { formatBeirut } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
+import {
+  ChangeEmail,
+  ChangeName,
+  ChangePassword,
+} from '../../../../components/ProfileForms'
 
 /**
  * What a customer sees of themselves: their bookings, and a way out.
@@ -82,6 +87,20 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           proven the address - telling them why the verification mail is sitting
           in their inbox is more use than locking the page. */}
       {customer.verified ? null : <p className={`${NOTICE_INFO} mt-8`}>{t('verifyBanner')}</p>}
+
+      {/* Details before bookings, because this is the part of the page that is
+          about them rather than about a restaurant. Each row is closed at rest,
+          so the page still opens as a short summary of what is true rather than
+          as a settings panel. */}
+      <h2 className="text-ink-300 mt-12 text-xs uppercase tracking-widest">
+        {locale === 'ar' ? 'تفاصيلك' : 'Your details'}
+      </h2>
+
+      <div className="mt-4">
+        <ChangeName current={customer.name} />
+        <ChangeEmail current={customer.email} />
+        <ChangePassword />
+      </div>
 
       <h2 className="text-ink-300 mt-12 text-xs uppercase tracking-widest">{t('bookings')}</h2>
 

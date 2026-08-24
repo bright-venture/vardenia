@@ -72,3 +72,56 @@ describe('partitionBookings', () => {
     expect(partitionBookings([], now)).toEqual({ upcoming: [], past: [] })
   })
 })
+
+/**
+ * A settled booking is not upcoming, whatever the calendar says.
+ *
+ * The bug: this split on the end date alone, so a booking marked COMPLETED,
+ * CANCELLED or NO-SHOW appeared under "Upcoming" until its date passed. A
+ * reader saw a card reading COMPLETED filed under Upcoming on the same screen.
+ *
+ * Both halves are real. An owner can mark a table done before the slot ends,
+ * and a cancellation weeks ahead is the common case rather than the odd one.
+ */
+describe('partitionBookings and terminal statuses', () => {
+  const future = new Date(Date.now() + 7 * 24 * 3600_000).toISOString()
+  const past = new Date(Date.now() - 7 * 24 * 3600_000).toISOString()
+
+  it('files a completed booking under past even when its date is ahead', () => {
+    const { upcoming, past: done } = partitionBookings([
+      { end: future, status: 'completed' },
+    ])
+    expect(upcoming).toHaveLength(0)
+    expect(done).toHaveLength(1)
+  })
+
+  it('files a cancellation under past even when its date is ahead', () => {
+    const { upcoming, past: done } = partitionBookings([
+      { end: future, status: 'cancelled' },
+    ])
+    expect(upcoming).toHaveLength(0)
+    expect(done).toHaveLength(1)
+  })
+
+  it('files a no-show under past even when its date is ahead', () => {
+    const { upcoming } = partitionBookings([{ end: future, status: 'no-show' }])
+    expect(upcoming).toHaveLength(0)
+  })
+
+  it('still shows a live booking as upcoming', () => {
+    for (const status of ['pending', 'confirmed']) {
+      const { upcoming } = partitionBookings([{ end: future, status }])
+      expect(upcoming, `${status} should be upcoming`).toHaveLength(1)
+    }
+  })
+
+  it('still files a finished date under past', () => {
+    const { past: done } = partitionBookings([{ end: past, status: 'confirmed' }])
+    expect(done).toHaveLength(1)
+  })
+
+  it('tolerates a booking with no status at all', () => {
+    const { upcoming } = partitionBookings([{ end: future }])
+    expect(upcoming).toHaveLength(1)
+  })
+})
