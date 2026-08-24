@@ -3,26 +3,120 @@
 @tailwind utilities;
 
 @layer base {
+  /* The --font-* variables on the right are emitted by next/font and set on
+     <html> in the layout. See src/app/fonts.ts for why they are self-hosted
+     rather than named in a stack and hoped for. */
   :root {
-    --font-display: 'Canela', 'Times New Roman', Georgia, serif;
-    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: var(--font-fraunces), 'Times New Roman', Georgia, serif;
+    --font-body: var(--font-inter), system-ui, -apple-system, sans-serif;
+    --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   /* Arabic needs its own faces - Latin serif display type has no Arabic
-     coverage, and falling back mid-headline looks broken. */
+     coverage, and falling back mid-headline looks broken. The mono is not
+     overridden: reference codes and price marks are Latin in both languages. */
   :root:lang(ar) {
-    --font-display: 'Tajawal', 'Noto Kufi Arabic', sans-serif;
-    --font-body: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', sans-serif;
+    --font-display: var(--font-tajawal), 'Noto Kufi Arabic', sans-serif;
+    --font-body: var(--font-plex-arabic), 'Noto Sans Arabic', sans-serif;
   }
 
   body {
     font-family: var(--font-body);
+  }
+
+  /* Headings are display type everywhere unless a component says otherwise.
+     Setting it once here means a new page cannot forget and quietly ship a
+     sans-serif headline into an editorial layout. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  /* Anything the reader can reach with a thumb clears the 44px target the
+     mobile guidelines ask for, without having to remember it per component. */
+  @media (pointer: coarse) {
+    a,
+    button,
+    [role='button'],
+    summary {
+      min-height: 44px;
+    }
+
+    /* Inline links inside a paragraph are read, not tapped as controls, and
+       a 44px line box would wreck the leading. */
+    p a,
+    li a,
+    .prose-vardenia a {
+      min-height: 0;
+    }
+  }
+}
+
+/* The masthead load sequence. Two keyframes, referenced from Tailwind
+   arbitrary animation values in components/home/Hero.
+
+   These live here rather than in the Tailwind config because they are used in
+   exactly one component and a config entry would put the definition three files
+   away from its only caller. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes foil {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Anyone who has asked their system for less movement gets the finished state
+   immediately rather than a faster version of the same motion. `animation:
+   none` on an element whose opacity starts at 0 would leave it invisible, which
+   is why the keyframes above end at the resting state and this rule cancels
+   the animation rather than the transform.
+
+   The `!important` is deliberate and is the one place it appears: it has to
+   beat a utility class, and a reader asking for reduced motion is not a
+   preference to be overridden by a component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
 /* Editorial body copy rendered from the CMS rich text field. Scoped to one
    class so CMS content can never restyle the rest of the page. */
 @layer components {
+  /* A row that scrolls sideways without a visible bar.
+     Used by the filter row, where a scrollbar under eight chips would take a
+     third of the row's height and look like a rendering fault. The row is still
+     scrollable by touch, wheel and keyboard - only the bar is hidden. */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   .prose-vardenia {
     @apply text-ink-700 leading-relaxed;
   }

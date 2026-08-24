@@ -30,6 +30,8 @@
  * mail and the mail pretending to be ours.
  */
 
+import { emailPalette } from './email-palette'
+
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -123,24 +125,24 @@ function render(copy: Copy, url: string): AuthEmailContent {
 
   const html = `<!doctype html>
 <html lang="en">
-<body style="margin:0;padding:24px;background:#faf9f7;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
-  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e8e4de;border-radius:8px;padding:32px;">
-    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a08a5b;">Vardenia</p>
+<body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
+  <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
     <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(copy.heading)}</h1>
 
-    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4a4a4a;">${escapeHtml(copy.en)}</p>
+    <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(copy.en)}</p>
 
     <p style="margin:0 0 20px;">
-      <a href="${safeUrl}" style="display:inline-block;padding:12px 20px;background:#1a1a1a;color:#ffffff;font-size:15px;text-decoration:none;border-radius:6px;">${escapeHtml(copy.action)}</a>
+      <a href="${safeUrl}" style="display:inline-block;padding:12px 20px;background:${emailPalette.buttonBg};color:${emailPalette.buttonText};font-size:15px;text-decoration:none;border-radius:6px;">${escapeHtml(copy.action)}</a>
     </p>
 
-    <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:#7a7a7a;word-break:break-all;">${safeUrl}</p>
+    <p style="margin:0 0 24px;font-size:13px;line-height:1.6;color:${emailPalette.quiet};word-break:break-all;">${safeUrl}</p>
 
-    <p style="margin:0 0 24px;font-size:13px;color:#7a7a7a;">${escapeHtml(copy.ignoreEn)}</p>
+    <p style="margin:0 0 24px;font-size:13px;color:${emailPalette.quiet};">${escapeHtml(copy.ignoreEn)}</p>
 
-    <div dir="rtl" lang="ar" style="border-top:1px solid #f0ede8;padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
-      <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:#4a4a4a;">${escapeHtml(copy.ar)}</p>
-      <p style="margin:0;font-size:13px;color:#7a7a7a;">${escapeHtml(copy.ignoreAr)}</p>
+    <div dir="rtl" lang="ar" style="border-top:1px solid ${emailPalette.edge};padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:${emailPalette.body};">${escapeHtml(copy.ar)}</p>
+      <p style="margin:0;font-size:13px;color:${emailPalette.quiet};">${escapeHtml(copy.ignoreAr)}</p>
     </div>
   </div>
 </body>
@@ -211,7 +213,7 @@ export function partnerResetEmail(token: string, origin = siteOrigin()): AuthEma
     text: `${mail.text}\n\nSign in later at: ${login}\nللدخول لاحقًا: ${login}`,
     html: mail.html.replace(
       '</div>\n</body>',
-      `  <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid #f0ede8;font-size:13px;color:#7a7a7a;">Sign in later at <a href="${escapeHtml(login)}" style="color:#a08a5b;">${escapeHtml(login)}</a></p>\n  </div>\n</body>`,
+      `  <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid ${emailPalette.edge};font-size:13px;color:${emailPalette.quiet};">Sign in later at <a href="${escapeHtml(login)}" style="color:${emailPalette.accent};">${escapeHtml(login)}</a></p>\n  </div>\n</body>`,
     ),
   }
 }

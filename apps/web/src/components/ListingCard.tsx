@@ -1,8 +1,8 @@
-import Image from 'next/image'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
-import { resolveImage, type MediaField } from '../lib/media'
+import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
+import { Plate, Stars, Tier } from './ui'
 
 interface Props {
   slug: string
@@ -13,21 +13,46 @@ interface Props {
   district?: string | null
   priceRange?: string | number | null
   verified?: boolean | null
+  /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
+  signature?: boolean | null
   heroImage?: MediaField
+  /** Editorial rating, when the place has been reviewed. */
+  rating?: number | null
+  reviewCount?: number | null
+  /** Reference code, printed under the QR on the page this listing appears on. */
+  reference?: string | null
+  /** Set on the first card above the fold so its image preloads. */
+  priority?: boolean
   locale: Locale
 }
 
 /**
- * Matches `directory.verified` in the message catalogues.
+ * One listing in a grid.
  *
- * Written out rather than read through `getTranslations`, because this is a
- * synchronous component that already takes `locale` - the same approach as
- * OpeningHoursTable and lib/labels. What it must not be is what it was: the
- * English string, hardcoded, on a site half its readers use in Arabic.
+ * # The whole card is the link
+ *
+ * A card with a linked heading and an unlinked image gives a reader two targets
+ * where they perceive one, and on a phone the image is the part a thumb lands
+ * on. One anchor wrapping everything is also the only version that a keyboard
+ * user tabs through once rather than twice.
+ *
+ * # What is on it, and why in this order
+ *
+ * Category, then name, then place, then price, then the marks. That is the
+ * order somebody scanning a grid actually reads: what kind of thing, what it is
+ * called, whether it is near them, whether they can afford it. The tier badges
+ * sit on the image because they qualify the listing as a whole rather than any
+ * one line of it.
+ *
+ * The reference code is set in mono at the bottom because every listing here has
+ * a printed twin, and a catalogue number is the cue that says so.
+ *
+ * # Verified is a tick, not a colour
+ *
+ * The old version marked verification with a gold tick character beside the
+ * name. That is invisible to anyone who cannot distinguish it and ambiguous to
+ * everyone else. It is now a labelled badge with its own text.
  */
-const verifiedLabel = (locale: Locale) =>
-  locale === 'ar' ? 'موثّق من فاردينيا' : 'Verified by Vardenia'
-
 export function ListingCard({
   slug,
   name,
@@ -37,54 +62,65 @@ export function ListingCard({
   district,
   priceRange,
   verified,
+  signature,
   heroImage,
+  rating,
+  reviewCount,
+  reference,
+  priority = false,
   locale,
 }: Props) {
-  const image = resolveImage(heroImage, 'card')
   const price = priceLabel(priceRange)
   const place = placeLabel(governorate, district, locale)
 
   return (
-    <article className="border-ink-100 hover:border-ink-300 group overflow-hidden rounded-lg border transition-colors">
-      <Link href={`/directory/${slug}`} className="block focus-visible:outline-none">
-        <div className="bg-surface-sunken relative aspect-[4/3] overflow-hidden">
-          {image ? (
-            <Image
-              src={image.src}
-              alt={image.alt}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+    <article className="group">
+      <Link
+        href={`/directory/${slug}`}
+        className="border-ink-100 hover:border-ink-300 flex h-full flex-col overflow-hidden rounded-lg border transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(16,26,29,0.06),0_24px_48px_-16px_rgba(16,26,29,0.18)]"
+      >
+        <div className="relative">
+          <Plate image={heroImage} ratio="card" interactive priority={priority} />
+
+          {signature || verified ? (
+            <div className="absolute start-3 top-3 flex gap-1.5">
+              {signature ? <Tier kind="signature" locale={locale} /> : null}
+              {verified ? <Tier kind="verified" locale={locale} /> : null}
+            </div>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-1 p-4">
-          <p className="text-ink-300 text-xs uppercase tracking-widest">
+        <div className="flex flex-1 flex-col gap-1.5 p-4">
+          <p className="text-ink-300 font-mono text-[10px] uppercase tracking-[0.12em]">
             {categoryLabel(category, locale)}
           </p>
-          <h3 className="font-display text-ink-900 text-xl leading-snug">
-            {name}
-            {/* The tick is the whole badge, so its label is the only thing a
-                screen reader has to go on - and `title` alone is both English
-                and unreliably announced. `role="img"` with an aria-label makes
-                it a labelled graphic rather than a stray character. */}
-            {verified ? (
-              <span
-                className="text-gold-700 ms-2 align-middle text-xs"
-                role="img"
-                title={verifiedLabel(locale)}
-                aria-label={verifiedLabel(locale)}
-              >
-                &#10003;
+
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-ink-900 text-lg leading-snug">{name}</h3>
+            {price ? (
+              <span className="text-gold-700 shrink-0 pt-0.5 font-mono text-sm tabular-nums">
+                {price}
               </span>
             ) : null}
-          </h3>
-          {tagline ? <p className="text-ink-500 line-clamp-2 text-sm">{tagline}</p> : null}
-          <p className="text-ink-300 mt-1 text-xs">
-            {place}
-            {price ? <span className="ms-2 tabular-nums">{price}</span> : null}
-          </p>
+          </div>
+
+          {place ? <p className="text-ink-500 text-sm">{place}</p> : null}
+
+          {tagline ? (
+            <p className="text-ink-500 line-clamp-2 text-sm leading-relaxed">{tagline}</p>
+          ) : null}
+
+          {typeof rating === 'number' && rating > 0 ? (
+            <div className="mt-1">
+              <Stars rating={rating} count={reviewCount ?? undefined} locale={locale} />
+            </div>
+          ) : null}
+
+          {reference ? (
+            <p className="text-ink-300 mt-auto pt-3 font-mono text-[10px] tracking-[0.1em]">
+              {reference}
+            </p>
+          ) : null}
         </div>
       </Link>
     </article>

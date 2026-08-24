@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
 import { reportError } from './report'
 import { siteOrigin } from './auth-email'
+import { emailPalette } from './email-palette'
 
 /**
  * The confirmation a customer receives.
@@ -208,21 +209,21 @@ function renderBookingEmail({
 
   const html = `<!doctype html>
 <html lang="${locale}" dir="${rtl ? 'rtl' : 'ltr'}">
-<body style="margin:0;padding:24px;background:#faf9f7;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
-  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e8e4de;border-radius:8px;padding:32px;">
-    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a08a5b;">Vardenia</p>
+<body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
+  <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
     <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(copy.heading)}</h1>
     <p style="margin:0 0 8px;font-size:15px;">${escapeHtml(name)},</p>
-    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4a4a4a;">${escapeHtml(copy.intro)}</p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(copy.intro)}</p>
     <table style="width:100%;border-collapse:collapse;font-size:15px;">
       ${rows
         .map(
           ([label, value]) =>
-            `<tr><td style="padding:8px 0;color:#7a7a7a;border-bottom:1px solid #f0ede8;">${escapeHtml(label)}</td><td style="padding:8px 0;text-align:${rtl ? 'left' : 'right'};border-bottom:1px solid #f0ede8;">${escapeHtml(value)}</td></tr>`,
+            `<tr><td style="padding:8px 0;color:${emailPalette.quiet};border-bottom:1px solid ${emailPalette.edge};">${escapeHtml(label)}</td><td style="padding:8px 0;text-align:${rtl ? 'left' : 'right'};border-bottom:1px solid ${emailPalette.edge};">${escapeHtml(value)}</td></tr>`,
         )
         .join('\n      ')}
     </table>
-    <p style="margin:24px 0 0;font-size:15px;color:#4a4a4a;">${escapeHtml(copy.closing)}</p>
+    <p style="margin:24px 0 0;font-size:15px;color:${emailPalette.body};">${escapeHtml(copy.closing)}</p>
   </div>
 </body>
 </html>`
@@ -522,24 +523,24 @@ export function venueCancellationContent({
 
   const html = `<!doctype html>
 <html lang="en">
-<body style="margin:0;padding:24px;background:#faf9f7;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;">
-  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e8e4de;border-radius:8px;padding:32px;">
-    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a08a5b;">Vardenia</p>
+<body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
+  <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
     <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(wasConfirmed ? 'Booking cancelled' : 'Request withdrawn')}</h1>
-    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4a4a4a;">${escapeHtml(leadEn)}</p>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(leadEn)}</p>
     <table style="width:100%;border-collapse:collapse;font-size:15px;">
       ${rows
         .map(
           ([label, value]) =>
-            `<tr><td style="padding:8px 0;color:#7a7a7a;border-bottom:1px solid #f0ede8;">${escapeHtml(label)}</td><td style="padding:8px 0;text-align:right;border-bottom:1px solid #f0ede8;">${escapeHtml(value)}</td></tr>`,
+            `<tr><td style="padding:8px 0;color:${emailPalette.quiet};border-bottom:1px solid ${emailPalette.edge};">${escapeHtml(label)}</td><td style="padding:8px 0;text-align:right;border-bottom:1px solid ${emailPalette.edge};">${escapeHtml(value)}</td></tr>`,
         )
         .join('\n      ')}
     </table>
-    <p style="margin:24px 0 0;font-size:13px;color:#7a7a7a;">
-      <a href="${escapeHtml(siteOrigin())}/partner" style="color:#a08a5b;">${escapeHtml(siteOrigin())}/partner</a>
+    <p style="margin:24px 0 0;font-size:13px;color:${emailPalette.quiet};">
+      <a href="${escapeHtml(siteOrigin())}/partner" style="color:${emailPalette.accent};">${escapeHtml(siteOrigin())}/partner</a>
     </p>
-    <div dir="rtl" lang="ar" style="margin-top:24px;border-top:1px solid #f0ede8;padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
-      <p style="margin:0;font-size:15px;line-height:1.8;color:#4a4a4a;">${escapeHtml(leadAr)}</p>
+    <div dir="rtl" lang="ar" style="margin-top:24px;border-top:1px solid ${emailPalette.edge};padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
+      <p style="margin:0;font-size:15px;line-height:1.8;color:${emailPalette.body};">${escapeHtml(leadAr)}</p>
     </div>
   </div>
 </body>

@@ -1,6 +1,10 @@
 import type { Locale } from '@vardenia/i18n'
 import { districtLabel, governorateLabel, priceLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
+import { aggregateRating, type ReviewSummary } from './reviews'
+
+/** The publisher, named once, so markup and the organisation block agree. */
+const SITE_NAME = 'Vardenia'
 
 /**
  * Schema.org markup, emitted as JSON-LD.
@@ -115,8 +119,70 @@ export interface ListingForSchema {
   openingHours?: OpeningHour[] | null
 }
 
-export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
+/**
+ * Reviews, marked up according to who actually said them.
+ *
+ * # The rule, and why breaking it is expensive
+ *
+ * Google allows a publisher to mark up its own critic review as a `Review`
+ * authored by the publisher. It does not allow that review into an
+ * `aggregateRating`, which is defined as a summary of ratings from many
+ * independent people. Rolling our own editorial verdict into a star rating and
+ * showing it in search results is a policy violation, and the penalty lands on
+ * the whole domain rather than on the one page.
+ *
+ * A partner-supplied quote is not marked up at all. It is the subject of the
+ * page talking about itself, which is not a review under any reading.
+ *
+ * The decision lives in lib/reviews.ts and is applied here. Both are tested.
+ */
+function reviewMarkup(reviews: ReviewSummary[]) {
+  const aggregate = aggregateRating(reviews)
+
+  // Editorial and guest reviews are both real `Review` objects; only the author
+  // differs. Partner quotes are dropped entirely.
+  const marked = reviews
+    .filter((review) => review.source !== 'partner')
+    .map((review) =>
+      compact({
+        '@type': 'Review',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: review.rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        name: review.title,
+        reviewBody: review.body,
+        datePublished: review.publishedAt ?? review.visitedAt ?? undefined,
+        author:
+          review.source === 'editorial'
+            ? { '@type': 'Organization', name: SITE_NAME }
+            : compact({ '@type': 'Person', name: review.authorName || undefined }),
+      }),
+    )
+
+  return {
+    review: marked.length ? marked : undefined,
+    aggregateRating: aggregate
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: aggregate.value,
+          reviewCount: aggregate.count,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : undefined,
+  }
+}
+
+export function listingSchema(
+  listing: ListingForSchema,
+  locale: Locale,
+  reviews: ReviewSummary[] = [],
+): Json {
   const image = resolveImage(listing.heroImage, 'hero')
+  const { review, aggregateRating: aggregate } = reviewMarkup(reviews)
 
   // Payload stores a point as [longitude, latitude] - GeoJSON order, the
   // reverse of how everyone says it aloud. Getting this backwards puts a Beirut
@@ -156,6 +222,8 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
         ? { '@type': 'GeoCoordinates', latitude: lat, longitude: lng }
         : undefined,
     openingHoursSpecification: openingHours(listing.openingHours),
+    review,
+    aggregateRating: aggregate,
   })
 }
 
@@ -200,7 +268,7 @@ export function organizationSchema(): Json {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Vardenia',
+    name: SITE_NAME,
     url: SITE,
     description: "Lebanon's tourism and lifestyle guide, in print and online.",
     areaServed: { '@type': 'Country', name: 'Lebanon' },

@@ -9,6 +9,7 @@ import { SiteFooter } from '../../../components/SiteFooter'
 import { JsonLd } from '../../../components/JsonLd'
 import { isIndexingAllowed } from '../../../lib/indexing'
 import { organizationSchema } from '../../../lib/structured-data'
+import { FONT_VARIABLES } from '../../fonts'
 import '../../globals.css'
 
 /**
@@ -80,7 +81,9 @@ export default async function FrontendLayout({
   setRequestLocale(locale)
 
   return (
-    <html lang={locale} dir={dirFor(locale)}>
+    // The font variables go on <html> rather than <body> so that anything
+    // rendered into a portal or outside the body flow still resolves them.
+    <html lang={locale} dir={dirFor(locale)} className={FONT_VARIABLES}>
       {/* The flex column keeps the footer at the bottom on short pages
           (a 404 or an empty directory) instead of floating mid-screen. */}
       <body className="bg-surface-base text-ink-900 flex min-h-screen flex-col antialiased">

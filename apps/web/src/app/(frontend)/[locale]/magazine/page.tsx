@@ -8,6 +8,7 @@ import { findArticles } from '../../../../lib/articles'
 import { findIssues } from '../../../../lib/issues'
 import { resolveImage } from '../../../../lib/media'
 import { ArticleCard } from '../../../../components/ArticleCard'
+import { ButtonLink } from '../../../../components/ui'
 
 /**
  * The magazine hub: the current edition, then recent stories.
@@ -94,19 +95,13 @@ export default async function MagazinePage({ params }: Props) {
             </h2>
             {current.season ? <p className="text-ink-500 mt-2 text-sm">{current.season}</p> : null}
 
-            <div className="mt-6 flex flex-wrap gap-3 text-sm">
-              <Link
-                href={`/magazine/issues/${current.slug}`}
-                className="bg-ink-900 text-surface-base hover:bg-ink-700 rounded-md px-5 py-3 font-semibold transition-colors"
-              >
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href={`/magazine/issues/${current.slug}`} variant="solid">
                 {ar ? 'ماذا في هذا العدد' : 'What is in this issue'}
-              </Link>
-              <Link
-                href="/magazine/issues"
-                className="border-ink-100 text-ink-900 hover:border-ink-300 rounded-md border px-5 py-3 font-semibold transition-colors"
-              >
+              </ButtonLink>
+              <ButtonLink href="/magazine/issues" variant="outline">
                 {ar ? 'كل الأعداد' : 'All issues'}
-              </Link>
+              </ButtonLink>
             </div>
           </div>
         </section>

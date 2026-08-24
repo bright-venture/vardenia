@@ -4,28 +4,46 @@ import {
   GOVERNORATES,
   PRICE_RANGES,
   PRICE_SLUGS,
-  type Labelled,
 } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'
 import { FilterChip } from './FilterChip'
+import { FilterSheet } from './FilterSheet'
 
 /**
  * Every way to narrow a list of places.
  *
- * # Two kinds of filter, shown differently
+ * # One row, a button, and a list of what is applied
  *
- * What a place *is* - its kind, and where it is - is what almost everybody
- * narrows by, so those rows are always open. Price and amenities are a smaller
- * audience asking a sharper question, and sixteen more chips on top of the
- * others turns a page with two listings on it into a wall of controls. They live
- * behind a disclosure, which is a `<details>` element and therefore works with
- * no JavaScript at all.
+ * There are twenty-nine filters across five facets. Laid out as rows of chips
+ * they wrapped to four lines on a laptop and six on a phone, which pushed the
+ * listings off the screen on the one page whose whole job is to show listings.
  *
- * The exception proves the rule: somebody filtering for wheelchair access is not
- * browsing, they are checking whether they can get in the door. That is why
- * accessibility is first in the amenity list rather than alphabetical.
+ * So there are three things here now:
+ *
+ * 1. Governorate, in a row that scrolls sideways rather than wrapping. It is
+ *    always exactly one row tall whatever the taxonomy grows to, and it is the
+ *    facet almost everybody uses.
+ * 2. A Filters button carrying a count, which opens the sheet holding the other
+ *    four facets. See FilterSheet.
+ * 3. The applied filters, as chips that remove themselves.
+ *
+ * The third is not decoration. Once four facets live behind a button, a reader
+ * can no longer see what is narrowing their results by looking at the page, and
+ * "why are there only two hotels" stops being answerable without opening the
+ * modal. Each one is a link, so removing a filter is a tap rather than a round
+ * trip through the sheet.
+ *
+ * # Every applied filter is still a URL
+ *
+ * The sheet holds pending state while it is open and navigates once, on apply.
+ * Nothing is kept in React that outlives it. Every combination is still a real
+ * URL that can be shared, bookmarked, indexed and printed beside a QR code,
+ * which is the constraint the whole directory is built around.
+ *
+ * The chips outside the sheet are plain links and keep working with no
+ * JavaScript; the sheet does not, which is a degradation rather than a break.
  *
  * # Districts appear only once a governorate is chosen
  *
@@ -33,11 +51,10 @@ import { FilterChip } from './FilterChip'
  * would return nothing; shown under their governorate they are the natural next
  * question after "Mount Lebanon".
  *
- * # Every filter is a link
+ * # Wheelchair access is first, not alphabetical
  *
- * No form, no client state. Each chip is an href to the same page with one facet
- * changed, so every combination is a real URL that can be shared, bookmarked,
- * indexed and printed. The same reasoning as the rest of the directory.
+ * Somebody filtering for step-free access is not browsing sixteen options. It
+ * is the only one that matters to them and it should not be seventh.
  */
 
 export interface FilterState {
@@ -138,7 +155,7 @@ const toggled = (list: string[], slug: string) =>
  * should not be seventh.
  */
 const FIRST = 'accessible'
-const displayAmenities = [
+export const displayAmenities = [
   ...AMENITIES.filter((a) => a.slug === FIRST),
   ...AMENITIES.filter((a) => a.slug !== FIRST),
 ]
@@ -173,103 +190,94 @@ export function ListingFilters({
   const ar = locale === 'ar'
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
 
-  const districts =
-    GOVERNORATES.find((g) => g.slug === state.governorate)?.districts ?? ([] as Labelled[])
-
   const narrowed =
     Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)
 
+  const anyFilter = Boolean(state.subcategory) || Boolean(state.governorate) || narrowed
+
   return (
     <div className="mt-8 flex flex-col gap-3">
-      {subcategories.length > 0 ? (
-        <Row label={ar ? 'النوع' : 'Kind'}>
-          <FilterChip href={href({ subcategory: undefined })} active={!state.subcategory}>
-            {ar ? 'الكل' : 'All'}
-          </FilterChip>
-          {subcategories.map((child) => (
+      {/*
+        The bar: one row that scrolls sideways rather than wrapping, plus the
+        sheet trigger pinned to the end of it.
+
+        Wrapping was the problem this replaces. Eight governorates and up to
+        fifty-one kinds wrapped to four lines on a laptop and six on a phone,
+        which pushed the listings themselves below the fold on the one page
+        whose entire job is to show listings. A single scrolling row is bounded:
+        it is always exactly one row tall, whatever the taxonomy grows to.
+      */}
+      <div className="flex items-center gap-2">
+        <Row label={ar ? 'المحافظة' : 'Governorate'}>
+          <div className="scrollbar-none flex flex-1 gap-2 overflow-x-auto pb-1">
+            <FilterChip href={href({ governorate: undefined })} active={!state.governorate}>
+              {ar ? 'كل لبنان' : 'All of Lebanon'}
+            </FilterChip>
+            {GOVERNORATES.map((g) => (
+              <FilterChip
+                key={g.slug}
+                href={href({ governorate: g.slug })}
+                active={state.governorate === g.slug}
+              >
+                {governorateLabel(g.slug, locale)}
+              </FilterChip>
+            ))}
+          </div>
+        </Row>
+
+        {/* Kind, district, price and the sixteen amenities live in here. */}
+        <FilterSheet base={base} state={state} subcategories={subcategories} locale={locale} />
+      </div>
+
+      {/*
+        What is currently applied, as removable chips.
+
+        Once four of the five facets live behind a button, a reader can no
+        longer see what is narrowing their results by looking at the page - and
+        "why are there only two hotels" becomes unanswerable without opening the
+        sheet. These are links, so each one is a real URL and removing a filter
+        is one tap rather than a round trip through the modal.
+      */}
+      {narrowed || state.subcategory ? (
+        <Row label={ar ? 'الفلاتر المطبقة' : 'Applied filters'}>
+          {state.subcategory ? (
+            <FilterChip href={href({ subcategory: undefined })} active>
+              {subcategoryLabel(state.subcategory, locale)}
+              <Cross />
+            </FilterChip>
+          ) : null}
+
+          {state.district ? (
+            <FilterChip href={href({ district: undefined })} active>
+              {districtLabel(state.district, locale)}
+              <Cross />
+            </FilterChip>
+          ) : null}
+
+          {state.priceRange ? (
+            <FilterChip href={href({ priceRange: undefined })} active>
+              {PRICE_RANGES.find((p) => p.slug === state.priceRange)?.marks ?? state.priceRange}
+              <Cross />
+            </FilterChip>
+          ) : null}
+
+          {state.amenities.map((slug) => (
             <FilterChip
-              key={child.slug}
-              href={href({ subcategory: child.slug })}
-              active={state.subcategory === child.slug}
+              key={slug}
+              href={href({ amenities: toggled(state.amenities, slug) })}
+              active
             >
-              {subcategoryLabel(child.slug, locale)}
+              {amenityLabel(slug, locale)}
+              <Cross />
             </FilterChip>
           ))}
         </Row>
       ) : null}
-
-      <Row label={ar ? 'المحافظة' : 'Governorate'}>
-        <FilterChip href={href({ governorate: undefined })} active={!state.governorate}>
-          {ar ? 'كل لبنان' : 'All of Lebanon'}
-        </FilterChip>
-        {GOVERNORATES.map((g) => (
-          <FilterChip
-            key={g.slug}
-            href={href({ governorate: g.slug })}
-            active={state.governorate === g.slug}
-          >
-            {governorateLabel(g.slug, locale)}
-          </FilterChip>
-        ))}
-      </Row>
-
-      {districts.length > 1 ? (
-        <Row label={ar ? 'القضاء' : 'District'}>
-          <FilterChip href={href({ district: undefined })} active={!state.district}>
-            {ar ? 'كل الأقضية' : 'Anywhere in it'}
-          </FilterChip>
-          {districts.map((d) => (
-            <FilterChip
-              key={d.slug}
-              href={href({ district: d.slug })}
-              active={state.district === d.slug}
-            >
-              {districtLabel(d.slug, locale)}
-            </FilterChip>
-          ))}
-        </Row>
-      ) : null}
-
-      <details open={narrowed} className="mt-1">
-        <summary className="text-ink-500 hover:text-ink-900 cursor-pointer text-sm">
-          {ar ? 'المزيد من الفلاتر' : 'Price and features'}
-        </summary>
-
-        <div className="mt-4 flex flex-col gap-3">
-          <Row label={ar ? 'السعر' : 'Price'}>
-            <FilterChip href={href({ priceRange: undefined })} active={!state.priceRange}>
-              {ar ? 'أي سعر' : 'Any price'}
-            </FilterChip>
-            {PRICE_RANGES.map((p) => (
-              <FilterChip
-                key={p.slug}
-                href={href({ priceRange: p.slug })}
-                active={state.priceRange === p.slug}
-              >
-                <span className="font-medium">{p.marks}</span>
-                <span className="text-xs"> {ar ? p.ar : p.en}</span>
-              </FilterChip>
-            ))}
-          </Row>
-
-          <Row label={ar ? 'المرافق' : 'Features'}>
-            {displayAmenities.map((a) => (
-              <FilterChip
-                key={a.slug}
-                href={href({ amenities: toggled(state.amenities, a.slug) })}
-                active={state.amenities.includes(a.slug)}
-              >
-                {amenityLabel(a.slug, locale)}
-              </FilterChip>
-            ))}
-          </Row>
-        </div>
-      </details>
 
       {/* One link back to the unfiltered section. With five facets it is
           otherwise several clicks to undo, and a reader who has narrowed to
           nothing needs a way out that is not the back button. */}
-      {state.subcategory || state.governorate || narrowed ? (
+      {anyFilter ? (
         <p className="mt-1">
           {/* `Link` from i18n/routing, not a bare anchor.
               `localePrefix` is `as-needed`, so Arabic lives at /ar/stay while
@@ -285,5 +293,28 @@ export function ListingFilters({
         </p>
       ) : null}
     </div>
+  )
+}
+
+/**
+ * The small cross on an applied-filter chip.
+ *
+ * Decorative: the chip is already a link whose text names the filter, and
+ * announcing "times" after it would add nothing. What it does is make the chip
+ * read as removable rather than as a label.
+ */
+function Cross() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      className="ms-1.5 inline-block size-3 align-[-1px]"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
   )
 }

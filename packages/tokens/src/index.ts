@@ -6,40 +6,66 @@
  * (the abstraction costs more than it saves at this size) - we share the values
  * that make both surfaces look like the same brand.
  *
- * Palette placeholder: replace with the final brand colours once the identity
- * is signed off. Structure stays; hex values change in this file only.
+ * # The palette, and why it is this one
+ *
+ * The ground is cedar rather than cream or near-black. Cream with a serif and a
+ * warm accent is the house style of every template on the market, and black is
+ * what a brand picks when it has not decided anything. A deep cedar green reads
+ * as Lebanon without illustrating it, and it is dark enough to carry white type
+ * and gold foil at print contrast.
+ *
+ * Gold is unchanged from the first pass and is deliberately rationed: hairlines,
+ * small caps, one-pixel rules, the pressed state of a control. It is a foil
+ * stamp, not a fill. The moment it becomes a background it stops reading as
+ * expensive.
+ *
+ * Every neutral carries a slight green bias, so no grey on the page looks like
+ * it was inherited from a framework default. That is the difference between a
+ * palette that was chosen and one that was accepted.
+ *
+ * # Keys are contract, values are not
+ *
+ * Tailwind is generated from this object, so `ink.500` is referenced as
+ * `text-ink-500` in around forty components. Renaming a key is a refactor across
+ * the whole app; changing a hex is a rebrand and touches nothing else. Keep the
+ * key set stable and this file stays the only place brand colour lives.
  */
 
 export const colors = {
-  // Deep ink - editorial body text, premium dark surfaces.
+  // Editorial body text. Biased green rather than blue so it sits with cedar.
   ink: {
-    50: '#f5f6f7',
-    100: '#e5e7ea',
-    300: '#a8aeb8',
-    500: '#5c6472',
-    700: '#333a47',
-    900: '#14181f',
-    950: '#0a0d12',
+    50: '#f6f7f6',
+    100: '#e3e7e4',
+    300: '#9da9a9',
+    500: '#5e6c6e',
+    700: '#2e3b3e',
+    900: '#101a1d',
+    950: '#080f11',
   },
   // Accent: warm metallic, the "premium" signal in print and digital alike.
+  // Used as foil - rules, small caps, pressed states - and never as a fill.
   gold: {
     100: '#f8efdc',
     300: '#e8d4a3',
     500: '#c9a227',
-    700: '#96771a',
+    700: '#8f7118',
     900: '#5e4a10',
   },
-  // Lebanon cedar green, used sparingly for provenance cues.
+  // Lebanon cedar. 900 is the brand ground: mastheads, footers, dark panels.
   cedar: {
     100: '#e3ede6',
+    300: '#a9c4b4',
     500: '#3f7255',
-    700: '#2a4d3a',
+    700: '#1b4438',
+    900: '#10302a',
   },
   surface: {
     base: '#ffffff',
-    raised: '#fbfaf8',
-    sunken: '#f2f0ec',
-    inverse: '#0a0d12',
+    // Limestone. Cooler than a cream so it reads as stone rather than paper.
+    raised: '#f7f7f4',
+    sunken: '#edeee9',
+    // Cedar, not near-black: an inverted panel should still be the brand.
+    inverse: '#10302a',
   },
   state: {
     success: '#2f7d54',
@@ -49,15 +75,32 @@ export const colors = {
   },
 } as const
 
+/**
+ * # Why Fraunces and not Canela
+ *
+ * Canela is licensed per-domain and was never bought, so naming it in a font
+ * stack achieved nothing: the browser skipped it and every headline on the site
+ * rendered in Times New Roman. Fraunces is a variable serif with real optical
+ * sizing, it is free, and it is close enough in voice that swapping to Canela
+ * later is one line here. A face that loads beats a better face that does not.
+ *
+ * The mono is not decoration. Reference codes and price marks are set in it
+ * because every listing has a printed twin, and a catalogue number is the cue
+ * that says so.
+ */
 export const typography = {
   // Editorial serif for headlines; the magazine voice carries to the web.
   display: {
-    family: '"Canela", "Times New Roman", Georgia, serif',
+    family: '"Fraunces", "Times New Roman", Georgia, serif',
     familyAr: '"Tajawal", "Noto Kufi Arabic", sans-serif',
   },
   body: {
     family: '"Inter", system-ui, -apple-system, sans-serif',
     familyAr: '"IBM Plex Sans Arabic", "Noto Sans Arabic", sans-serif',
+  },
+  // Reference codes, price marks, and anything that lines up in a column.
+  mono: {
+    family: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
   },
   scale: {
     xs: 12,

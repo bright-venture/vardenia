@@ -85,8 +85,12 @@ describe('ListingCard', () => {
   })
 
   /**
-   * The badge is a bare tick, so its accessible label is the only thing a screen
-   * reader can announce. It was hardcoded English on a bilingual site.
+   * The badge used to be a bare tick character, whose accessible label was the
+   * only thing a screen reader could announce - and it was hardcoded English on
+   * a bilingual site. It is now a labelled badge with visible text, but the
+   * guarantee is the same one and worth keeping: the mark is announced in the
+   * reader's language, and it appears only when the listing is actually
+   * verified. See components/ui/Tier.
    */
   it('labels the verified badge, and only when verified', () => {
     expect(render({ verified: true })).toContain('Verified by Vardenia')
@@ -94,7 +98,7 @@ describe('ListingCard', () => {
     expect(render({})).not.toContain('Verified')
   })
 
-  it('gives the tick an accessible label rather than leaving it a stray glyph', () => {
+  it('gives the badge an accessible label rather than leaving it a stray glyph', () => {
     const html = render({ verified: true })
     expect(html).toContain('role="img"')
     expect(html).toContain('aria-label="Verified by Vardenia"')

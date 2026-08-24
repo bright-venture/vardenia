@@ -1,3 +1,4 @@
+import { colors } from '@vardenia/tokens'
 import Link from 'next/link'
 
 /**
@@ -31,8 +32,8 @@ export default function RootNotFound() {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '2rem',
-          background: '#fbfaf8',
-          color: '#1a1a1a',
+          background: colors.surface.raised,
+          color: colors.ink[900],
           fontFamily: 'ui-serif, Georgia, serif',
         }}
       >
@@ -43,7 +44,7 @@ export default function RootNotFound() {
               fontSize: 12,
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
-              color: '#8a6d3b',
+              color: colors.gold[700],
             }}
           >
             Vardenia
@@ -53,7 +54,7 @@ export default function RootNotFound() {
             This page does not exist
           </h1>
 
-          <p style={{ margin: '1.25rem 0 0', color: '#6b6b6b', lineHeight: 1.6 }}>
+          <p style={{ margin: '1.25rem 0 0', color: colors.ink[500], lineHeight: 1.6 }}>
             The link may have changed, or the page may have been removed. Try the directory or the
             magazine instead.
           </p>
@@ -64,8 +65,8 @@ export default function RootNotFound() {
             style={{
               margin: '1.5rem 0 0',
               paddingTop: '1.5rem',
-              borderTop: '1px solid #e5e0d8',
-              color: '#6b6b6b',
+              borderTop: `1px solid ${colors.ink[100]}`,
+              color: colors.ink[500],
               lineHeight: 1.8,
             }}
           >
@@ -78,8 +79,8 @@ export default function RootNotFound() {
               style={{
                 padding: '0.75rem 1.25rem',
                 borderRadius: 6,
-                background: '#1a1a1a',
-                color: '#fbfaf8',
+                background: colors.ink[900],
+                color: colors.surface.raised,
                 fontSize: 14,
                 fontWeight: 600,
                 textDecoration: 'none',
@@ -92,8 +93,8 @@ export default function RootNotFound() {
               style={{
                 padding: '0.75rem 1.25rem',
                 borderRadius: 6,
-                border: '1px solid #e5e0d8',
-                color: '#1a1a1a',
+                border: `1px solid ${colors.ink[100]}`,
+                color: colors.ink[900],
                 fontSize: 14,
                 fontWeight: 600,
                 textDecoration: 'none',

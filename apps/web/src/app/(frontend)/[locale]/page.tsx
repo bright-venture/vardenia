@@ -1,63 +1,144 @@
-import { setRequestLocale } from 'next-intl/server'
-import { getTranslations } from 'next-intl/server'
-import { TAXONOMY } from '@vardenia/core'
-import { Link } from '../../../i18n/routing'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import type { Locale } from '@vardenia/i18n'
+import { Hero } from '../../../components/home/Hero'
+import { SectionsGrid } from '../../../components/home/SectionsGrid'
+import { ArticleCard } from '../../../components/ArticleCard'
+import { ListingGrid } from '../../../components/ListingGrid'
+import { Band, ButtonLink } from '../../../components/ui'
+import { findListings, type ListingSummary } from '../../../lib/listings'
+import { findArticles } from '../../../lib/articles'
 
 /**
  * The homepage.
  *
- * Still a holding page rather than a designed one, but it no longer says so.
- * The previous copy read "Scaffold in place" and pointed the public at
- * docs/ROADMAP.md, which is fine on localhost and not fine on the address
- * printed under a QR code.
+ * # What it was
  *
- * The strings that were hardcoded English are now translated. On /ar the
- * eyebrow, the intro and the category heading all rendered in English before,
- * which is worse on a bilingual title than a plain page.
+ * A holding page: a heading, two links, and a list of taxonomy categories
+ * rendered as unclickable boxes with a subcategory count. It was honest about
+ * being unfinished, which is more than the version before it managed, but it
+ * was not a front door. Nothing on it showed a single listing or article, which
+ * on a directory is the only thing a visitor came for.
+ *
+ * # What it is
+ *
+ * Five bands, in the order a first-time visitor needs them:
+ *
+ * 1. The masthead, which says where this is and why the listings can be trusted.
+ * 2. The seven sections, so somebody who knows what they want leaves immediately.
+ * 3. Listings, because a directory that shows no places is a brochure.
+ * 4. The magazine, because the print edition is half of what this is.
+ * 5. One line for business owners, at the bottom where it belongs.
+ *
+ * # Why the data is fetched here and not in the components
+ *
+ * The two grids are pure and take what they are given, so they can be dropped
+ * onto a section page or an issue page without dragging a query along. This
+ * page is the only thing that knows the homepage shows six listings and three
+ * articles.
+ *
+ * # It survives an empty database
+ *
+ * Both queries can legitimately return nothing: the directory is pre-launch and
+ * on some days there genuinely are no published articles. Neither case renders
+ * an empty grid with a heading over it. The listings band falls back to an
+ * explanation, and the magazine band removes itself entirely rather than
+ * announcing a section with nothing in it.
  */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  const nav = await getTranslations('nav')
   const t = await getTranslations('home')
+  const nav = await getTranslations('nav')
+
+  /**
+   * Both in parallel. They are independent, and awaiting them in sequence would
+   * add the slower one's latency to the faster one's for no reason.
+   *
+   * `findListings` with no filter is the cacheable path, so this is usually a
+   * cache read rather than a round trip to Frankfurt.
+   */
+  const [listings, articles] = await Promise.all([
+    findListings({ locale: locale as Locale, perPage: 6 }),
+    findArticles({ locale: locale as Locale, perPage: 3 }),
+  ])
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-24">
-      <p className="text-gold-700 text-sm uppercase tracking-[0.3em]">{t('eyebrow')}</p>
-      <h1 className="font-display mt-4 text-5xl leading-tight md:text-6xl">Vardenia</h1>
-      <p className="text-ink-500 mt-6 max-w-xl text-lg">{t('intro')}</p>
+    <main>
+      <Hero />
 
-      {/* Only destinations that exist, and as real links.
-          This listed four labels as plain spans: two of them - Discover and
-          Regions - have no routes behind them, and none of the four were
-          clickable. A <nav> landmark containing nothing actionable is worse
-          than no landmark, and naming sections that do not exist is the same
-          defect SiteHeader already avoids. */}
-      <nav aria-label={nav('directory')} className="mt-12 flex flex-wrap gap-6 text-sm">
-        <Link href="/directory" className="text-ink-700 hover:text-ink-900 transition-colors">
-          {nav('directory')}
-        </Link>
-        <Link href="/magazine" className="text-ink-700 hover:text-ink-900 transition-colors">
-          {nav('magazine')}
-        </Link>
-      </nav>
+      <Band
+        eyebrow={t('sectionsEyebrow')}
+        title={t('sectionsTitle')}
+        note={t('sectionsNote')}
+      >
+        <SectionsGrid locale={locale as Locale} />
+      </Band>
 
-      <section className="mt-16">
-        <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-          {t('categories')} ({TAXONOMY.length})
-        </h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {TAXONOMY.map((category) => (
-            <li key={category.slug} className="border-ink-100 rounded-lg border px-4 py-3 text-sm">
-              <span className="block">{locale === 'ar' ? category.ar : category.en}</span>
-              <span className="text-ink-300 text-xs">
-                {t('subcategoryCount', { count: category.children.length })}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Band
+        tone="raised"
+        eyebrow={t('listingsEyebrow')}
+        title={t('listingsTitle')}
+        action={
+          <ButtonLink href="/directory" variant="outline" size="sm">
+            {t('seeAllListings')}
+          </ButtonLink>
+        }
+      >
+        <ListingGrid
+          listings={listings.docs as ListingSummary[]}
+          locale={locale as Locale}
+          empty={t('listingsEmpty')}
+          emptyBody={t('listingsEmptyBody')}
+          emptyAction={
+            <ButtonLink href="/magazine" variant="outline" size="sm">
+              {nav('magazine')}
+            </ButtonLink>
+          }
+        />
+      </Band>
+
+      {/* Removed entirely rather than shown empty. A "From the magazine"
+          heading with nothing under it advertises an absence. */}
+      {articles.docs.length > 0 ? (
+        <Band
+          eyebrow={t('magazineEyebrow')}
+          title={t('magazineTitle')}
+          action={
+            <ButtonLink href="/magazine/articles" variant="outline" size="sm">
+              {t('allArticles')}
+            </ButtonLink>
+          }
+        >
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {articles.docs.map((article, index) => (
+              <ArticleCard
+                key={article.id}
+                slug={article.slug ?? ''}
+                title={article.title ?? ''}
+                excerpt={article.excerpt}
+                kind={article.kind}
+                publishedAt={article.publishedAt}
+                heroImage={article.heroImage as never}
+                priority={index === 0}
+                locale={locale as Locale}
+              />
+            ))}
+          </div>
+        </Band>
+      ) : null}
+
+      <Band tone="inverse" compact>
+        <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+          <div className="max-w-[52ch]">
+            <h2 className="text-surface-base text-2xl sm:text-3xl">{t('businessTitle')}</h2>
+            <p className="text-cedar-100/70 mt-3 text-sm leading-relaxed">{t('businessBody')}</p>
+          </div>
+          <ButtonLink href="/add-your-business" variant="gold" size="lg" className="shrink-0">
+            {t('addBusiness')}
+          </ButtonLink>
+        </div>
+      </Band>
     </main>
   )
 }

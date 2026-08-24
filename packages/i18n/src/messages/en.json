@@ -13,10 +13,29 @@
     "advertise": "Advertise with us"
   },
   "home": {
-    "eyebrow": "Discover Lebanon",
-    "intro": "A printed magazine and a directory of the places in Lebanon worth going out of your way for. Every listing is visited before it appears.",
-    "categories": "Directory categories",
-    "subcategoryCount": "{count, plural, one {1 subcategory} other {# subcategories}}"
+    "eyebrow": "Issue 01, Beirut and Mount Lebanon",
+    "headlineA": "The places",
+    "headlineB": "worth the",
+    "headlineEmphasis": "drive",
+    "intro": "Lebanon's tourism and lifestyle guide. Every place here is visited before it is printed, and every printed page carries a code that brings you back to this.",
+    "browse": "Browse the directory",
+    "read": "Read the magazine",
+    "sectionsEyebrow": "Where to start",
+    "sectionsTitle": "Seven sections, one taxonomy",
+    "sectionsNote": "Every listing belongs to exactly one, and the printed code on a table card resolves to the same section it was sold under. That is why the set does not change.",
+    "wholeDirectory": "The whole directory",
+    "wholeDirectoryNote": "Every listing, filtered how you like",
+    "listingsEyebrow": "From the directory",
+    "listingsTitle": "Places we have been to",
+    "seeAllListings": "See all listings",
+    "listingsEmpty": "The directory is still being built",
+    "listingsEmptyBody": "We visit and verify each place before it appears here, so the first entries are still being worked through. The magazine is the faster way in for now.",
+    "magazineEyebrow": "From the magazine",
+    "magazineTitle": "Read",
+    "allArticles": "All articles",
+    "businessTitle": "Do you run somewhere in Lebanon?",
+    "businessBody": "Getting listed starts with a visit. We handle the writing, the photography and the QR code that goes on your table cards.",
+    "addBusiness": "Add your business"
   },
   "directory": {
     "searchPlaceholder": "Search hotels, restaurants, experiences...",
