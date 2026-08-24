@@ -43,6 +43,22 @@
   # version comes from packageManager (pnpm@9.15.0) in the root package.json.
   NODE_VERSION = "22"
 
+# Run the functions next to the database.
+#
+# Supabase is in eu-central-1 (Frankfurt) - the connection string says
+# aws-0-eu-central-1.pooler.supabase.com. Netlify defaults to us-east-1, so
+# every dynamic page opened its connection across the Atlantic and paid that
+# round trip on each query. A listing page makes two of them.
+#
+# It is also closer to the readers. Lebanon to Frankfurt is a short hop; Lebanon
+# to Virginia and back on every uncached request is not.
+#
+# Region selection needs a Netlify Core Pro plan or above. On a lower plan the
+# setting is ignored rather than failing the build - so if the improvement does
+# not appear, check the plan before looking for a bug.
+[functions]
+  region = "eu-central-1"
+
 # Next.js support: routing, ISR, image optimisation and the server components
 # that Payload's admin panel is built from. Without this the output in
 # apps/web/.next is served as static files and every dynamic route 404s.

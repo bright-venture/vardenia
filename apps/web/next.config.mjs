@@ -31,9 +31,19 @@ const nextConfig = {
    * `dev` is development, `build` and `start` are production. So the two can
    * never collide again without anybody remembering to do anything.
    *
+   * # The NETLIFY guard is not paranoia
+   *
+   * `netlify.toml` publishes `apps/web/.next`, and @netlify/plugin-nextjs reads
+   * this config to find the build output. If anything on that side evaluated it
+   * without NODE_ENV set to production, this would resolve to `.next-dev`, the
+   * plugin would look in a directory the build never wrote, and the deploy
+   * would fail or ship an empty site. Netlify sets NETLIFY=true on every build,
+   * so naming it here makes the deployed path unconditional.
+   *
    * Keep `.next-dev` in the ignore rules alongside `.next`.
    */
-  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
+  distDir:
+    process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? '.next-dev' : '.next',
   // Workspace packages ship TypeScript source, not build output - one less
   // build step, and the whole monorepo typechecks as a single graph.
   transpilePackages: [
