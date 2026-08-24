@@ -32,6 +32,11 @@ const config = [
      */
     ignores: [
       '.next/**',
+      // The dev server's own output directory. Separate from .next so a
+      // production build cannot corrupt a running dev server - see distDir in
+      // next.config.mjs. Linting it means linting Next's compiled bundles, and
+      // it produced around nine thousand problems about code nobody wrote.
+      '.next-dev/**',
       '.turbo/**',
       'coverage/**',
       'src/payload-types.ts',

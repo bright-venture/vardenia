@@ -17,7 +17,7 @@
     "migrate:status": "payload migrate:status",
     "seed": "tsx src/seed/index.ts",
     "seed:reset": "tsx src/seed/reset.ts",
-    "clean": "rimraf .next .turbo",
+    "clean": "rimraf .next .next-dev .turbo",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

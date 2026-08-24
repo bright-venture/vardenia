@@ -1,5 +1,9 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, publishedOrStaff } from '../access/index'
+import {
+  revalidateReviewsAfterChange,
+  revalidateReviewsAfterDelete,
+} from '../hooks/revalidateReviews'
 
 /**
  * A review of a listing, written by Vardenia.
@@ -67,6 +71,17 @@ export const Reviews: CollectionConfig = {
     create: isStaff,
     update: isStaff,
     delete: isStaff,
+  },
+  /**
+   * Publishing a review has to show up on the listing page immediately.
+   *
+   * Without these the page is prerendered with a 60 second revalidate, so a
+   * review appeared up to a minute after it was published - which reads as the
+   * feature not working. See hooks/revalidateReviews.
+   */
+  hooks: {
+    afterChange: [revalidateReviewsAfterChange],
+    afterDelete: [revalidateReviewsAfterDelete],
   },
   fields: [
     {
