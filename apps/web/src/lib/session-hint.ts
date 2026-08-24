@@ -21,11 +21,21 @@
  * against the httpOnly token. The worst a forged value does is show its own
  * author the wrong link, which the page they land on then corrects.
  *
- * # It can drift, and that is survivable
+ * # It drifts, and the middleware corrects it
  *
- * A token expiring does not clear this, so a lapsed session still shows "Your
- * account" until the reader clicks it and lands on the sign-in page. That is the
- * same place the honest answer would have sent them, one step later.
+ * A token expiring does not clear this, because nothing in the browser is told
+ * that it happened. This file used to claim that was survivable on the grounds
+ * that the page the reader lands on corrects them. It does not: the header is on
+ * that page too, so `/account` showed "Your account" at the top and "Sign in to
+ * see your bookings" underneath it, at the same time.
+ *
+ * The correction lives in middleware, which is the only place that can see both
+ * this cookie and the httpOnly token in the same request. A hint with no token
+ * behind it is deleted there, so the drift lasts exactly one request.
+ *
+ * The other direction needs nothing. A token with no hint shows the signed-out
+ * links until the next sign-in writes one, which understates the truth rather
+ * than asserting something false.
  */
 
 export const SESSION_HINT = 'vd_session'

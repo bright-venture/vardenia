@@ -3,8 +3,56 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 import { adminRedirectFor, PAYLOAD_COOKIE } from './lib/admin-guard'
 import { legacyCategoryRedirect } from './lib/legacy-urls'
+import { SESSION_HINT } from './lib/session-hint'
 
 const intl = createMiddleware(routing)
+
+/**
+ * Clear the session hint when the real session is gone.
+ *
+ * # The bug this fixes
+ *
+ * The header reads `vd_session`, a non-httpOnly cookie that says only "a session
+ * exists", so it can swap its own label without the server reading the real
+ * token - which would opt every prerendered page out of static rendering.
+ *
+ * Nothing cleared that hint when the real token expired. A reader whose session
+ * had lapsed saw "Your account" in the header, clicked it, and landed on a page
+ * that said "Sign in to see your bookings". Both statements on one screen, and
+ * the header was the wrong one.
+ *
+ * The original note in lib/session-hint called this survivable on the grounds
+ * that the page they land on corrects it. It does not: the header is on that
+ * page too, still contradicting it, and a header that lies about who you are is
+ * not a small thing on a site that takes bookings.
+ *
+ * # Why here
+ *
+ * Middleware is the only place that sees both cookies. The token is httpOnly so
+ * no script can compare them, and a server component cannot write a cookie
+ * during a static render. Here it costs one map lookup on a request that was
+ * already going through locale routing, and it heals every page rather than
+ * whichever one somebody remembered to patch.
+ *
+ * The reverse case needs nothing: a token with no hint shows the signed-out
+ * links until the next sign-in sets it, which understates rather than lies.
+ */
+export function clearStaleHint(request: NextRequest, response: NextResponse): NextResponse {
+  const hasHint = request.cookies.get(SESSION_HINT)?.value === '1'
+  const hasToken = Boolean(request.cookies.get(PAYLOAD_COOKIE)?.value)
+
+  if (hasHint && !hasToken) {
+    response.cookies.set(SESSION_HINT, '', {
+      path: '/',
+      maxAge: 0,
+      sameSite: 'lax',
+      // Matches how the browser set it, or the delete silently misses.
+      secure: request.nextUrl.protocol === 'https:',
+    })
+  }
+
+  return response
+}
 
 /**
  * Two jobs, kept apart.
@@ -40,7 +88,7 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
   }
 
-  return intl(request) as NextResponse
+  return clearStaleHint(request, intl(request) as NextResponse)
 }
 
 /**
