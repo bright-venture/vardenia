@@ -55,24 +55,46 @@ export function Stars({
   count,
   locale,
   className = '',
+  showSource = true,
 }: {
   rating: number
-  /** How many reviews the average is over. Omitted for a single review. */
+  /** How many ratings the average is over. Omitted when it is not known. */
   count?: number
   locale: Locale
   className?: string
+  /**
+   * Show "Google" beside the stars.
+   *
+   * Defaults to true, and turning it off should be rare. This number was
+   * copied from Google; it is not a rating Vardenia collected and not a verdict
+   * Vardenia formed. Unattributed on a listing page it reads as ours, which is
+   * a claim we have not earned. The only reason to hide it is when the
+   * surrounding text already says where it came from.
+   */
+  showSource?: boolean
 }) {
   const clamped = Math.max(0, Math.min(5, rating))
   const shown = clamped.toFixed(1)
+  const ar = locale === 'ar'
 
-  const label =
-    locale === 'ar'
-      ? count === undefined
-        ? `${shown} من 5`
-        : `${shown} من 5، من ${count} تقييم`
-      : count === undefined
-        ? `${shown} out of 5`
-        : `${shown} out of 5, from ${count} reviews`
+  /**
+   * The accessible name says the source too.
+   *
+   * A sighted reader gets the attribution from the word beside the stars. A
+   * listener would otherwise hear "4.5 out of 5" with no idea who said so,
+   * which is the one piece of context that changes what the number means.
+   */
+  const source = ar ? 'على غوغل' : 'on Google'
+
+  const base = ar ? `${shown} من 5` : `${shown} out of 5`
+  const withCount =
+    count === undefined
+      ? base
+      : ar
+        ? `${base}، من ${count} تقييم`
+        : `${base}, from ${count} ratings`
+
+  const label = showSource ? `${withCount} ${source}` : withCount
 
   return (
     /**
@@ -102,6 +124,11 @@ export function Stars({
         {shown}
         {count === undefined ? null : <span className="text-ink-300"> ({count})</span>}
       </span>
+      {showSource ? (
+        <span className="text-ink-300 text-[11px]" aria-hidden>
+          {source}
+        </span>
+      ) : null}
     </span>
   )
 }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Access, CollectionConfig, Field, FieldAccess } from 'payload'
 import { Businesses } from './Businesses'
-import { Reviews } from './Reviews'
 import { Articles } from './Articles'
 import { Issues } from './Issues'
 import { Media } from './Media'
@@ -460,60 +459,5 @@ describe('Businesses: the booking rules group', () => {
       expect(rule!(fieldCtx(null))).toBe(false)
       expect(rule!(fieldCtx(staff))).toBe(true)
     }
-  })
-})
-
-/**
- * Reviews are written by Vardenia and by nobody else.
- *
- * This is not a limitation waiting to be lifted. A directory whose ratings can
- * be written by the businesses being rated, or by anyone who makes an account,
- * is a directory whose ratings mean nothing. The proposition is that somebody
- * from Vardenia went and looked.
- *
- * The failure this guards against is a plausible-sounding future change:
- * someone adds "let a customer who completed a booking leave a review", wires
- * an owner clause into `create`, and the whole guarantee is gone with no test
- * going red. These assertions are deliberately about who is REFUSED.
- */
-describe('Reviews: only staff may write', () => {
-  const owner = { id: 20, collection: 'business-users', businesses: [7] }
-  const customer = { id: 21, collection: 'customers' }
-
-  it('refuses create, update and delete to everyone who is not staff', () => {
-    for (const action of ['create', 'update', 'delete'] as const) {
-      const rule = Reviews.access?.[action]
-      expect(rule, `reviews.${action} has no rule, which defaults to open`).toBeDefined()
-
-      expect(rule!(ctx(null)), `an anonymous caller can ${action}`).toBe(false)
-      expect(rule!(ctx(customer)), `a customer can ${action}`).toBe(false)
-      expect(rule!(ctx(owner)), `a business owner can ${action}`).toBe(false)
-
-      expect(rule!(ctx(staff)), `staff cannot ${action}`).toBe(true)
-      expect(rule!(ctx(admin)), `an admin cannot ${action}`).toBe(true)
-    }
-  })
-
-  /**
-   * A business owner must not be able to write a review of their own listing
-   * even though they can edit that listing. The two permissions are unrelated
-   * and it would be natural to assume otherwise.
-   */
-  it('does not let a business owner review the listing they own', () => {
-    const rule = Reviews.access?.create
-    expect(rule!(ctx(owner, { data: { business: 7 } }))).toBe(false)
-  })
-
-  it('keeps drafts away from the public while letting staff see them', () => {
-    const read = Reviews.access?.read
-    expect(read, 'reviews.read has no rule').toBeDefined()
-
-    // Staff get an unrestricted true; the public get a query constraint that
-    // limits them to published documents rather than a flat refusal.
-    expect(read!(ctx(staff))).toBe(true)
-
-    const anonymous = read!(ctx(null))
-    expect(anonymous, 'the public read rule is not a constraint').not.toBe(true)
-    expect(JSON.stringify(anonymous)).toContain('published')
   })
 })

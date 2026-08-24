@@ -15,7 +15,6 @@ import { Customers } from './collections/Customers'
 import { Bookings } from './collections/Bookings'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
-import { Reviews } from './collections/Reviews'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
 import { QrCodes } from './collections/QrCodes'
@@ -129,7 +128,6 @@ export default buildConfig({
 
   collections: [
     Businesses,
-    Reviews,
     QrCodes,
     Articles,
     Issues,

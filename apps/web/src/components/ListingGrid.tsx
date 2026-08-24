@@ -57,6 +57,8 @@ export function ListingGrid({
           district={listing.district}
           priceRange={listing.priceRange as string | null}
           verified={listing.verified}
+          googleRating={listing.googleRating}
+          googleRatingCount={listing.googleRatingCount}
           heroImage={listing.heroImage as never}
           priority={index === 0}
           locale={locale}

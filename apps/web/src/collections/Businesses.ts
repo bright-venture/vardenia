@@ -109,6 +109,79 @@ export const Businesses: CollectionConfig = {
               index: true,
               options: priceRangeOptions,
             },
+
+            /**
+             * The place's Google rating, copied in by staff.
+             *
+             * # This is somebody else's number, and the whole design follows
+             *
+             * It is not a review Vardenia wrote and not a rating Vardenia
+             * collected. That has three consequences, and all three are load
+             * bearing rather than cautious:
+             *
+             *  1. It is always shown labelled as Google. An unattributed rating
+             *     on a listing page reads as our verdict on the place, which is
+             *     a claim we have not earned and cannot defend.
+             *  2. It never enters structured data. Marking up a rating sourced
+             *     from another site as our own `aggregateRating` is a Google
+             *     policy violation, and the penalty applies to the whole domain
+             *     rather than the page. See lib/structured-data.
+             *  3. It goes stale. A rating copied by hand in August is a claim
+             *     about August, which is why `ratingCheckedAt` exists.
+             *
+             * # Why a number and a count rather than a review
+             *
+             * There is no author, no text and no visit behind it. Storing it as
+             * a review would invite it to be displayed as one.
+             */
+            {
+              name: 'googleRating',
+              type: 'number',
+              min: 1,
+              max: 5,
+              index: true,
+              admin: {
+                step: 0.1,
+                description:
+                  'The rating shown on Google, 1 to 5. Shown as stars, always labelled as Google. Leave blank if the place has no Google listing.',
+              },
+              validate: (value: number | null | undefined) => {
+                if (value === null || value === undefined) return true
+                if (value < 1 || value > 5) return 'A Google rating is between 1 and 5.'
+                // One decimal is what Google itself shows. More implies a
+                // precision that was never in the source.
+                if (Math.round(value * 10) !== value * 10) {
+                  return 'Use one decimal place, as Google does (4.5, not 4.53).'
+                }
+                return true
+              },
+            },
+            {
+              name: 'googleRatingCount',
+              type: 'number',
+              min: 0,
+              admin: {
+                step: 1,
+                description:
+                  'How many Google reviews the rating is over. A 5.0 from two people and a 4.3 from nine hundred are different claims.',
+                condition: (data) => typeof data?.googleRating === 'number',
+              },
+              validate: (value: number | null | undefined) => {
+                if (value === null || value === undefined) return true
+                if (!Number.isInteger(value) || value < 0) return 'Use a whole number.'
+                return true
+              },
+            },
+            {
+              name: 'ratingCheckedAt',
+              type: 'date',
+              admin: {
+                date: { pickerAppearance: 'dayOnly' },
+                description:
+                  'When somebody last looked this up. A hand-copied rating is a claim about the day it was copied.',
+                condition: (data) => typeof data?.googleRating === 'number',
+              },
+            },
           ],
         },
 

@@ -16,9 +16,15 @@ interface Props {
   /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
   signature?: boolean | null
   heroImage?: MediaField
-  /** Editorial rating, when the place has been reviewed. */
-  rating?: number | null
-  reviewCount?: number | null
+  /**
+   * The place's Google rating, copied in by staff.
+   *
+   * Named for its source rather than called `rating`, because the name is what
+   * stops it being treated as ours somewhere down the line. It is always drawn
+   * with the word Google beside it - see ui/Stars.
+   */
+  googleRating?: number | null
+  googleRatingCount?: number | null
   /** Reference code, printed under the QR on the page this listing appears on. */
   reference?: string | null
   /** Set on the first card above the fold so its image preloads. */
@@ -64,8 +70,8 @@ export function ListingCard({
   verified,
   signature,
   heroImage,
-  rating,
-  reviewCount,
+  googleRating,
+  googleRatingCount,
   reference,
   priority = false,
   locale,
@@ -110,9 +116,13 @@ export function ListingCard({
             <p className="text-ink-500 line-clamp-2 text-sm leading-relaxed">{tagline}</p>
           ) : null}
 
-          {typeof rating === 'number' && rating > 0 ? (
+          {typeof googleRating === 'number' && googleRating > 0 ? (
             <div className="mt-1">
-              <Stars rating={rating} count={reviewCount ?? undefined} locale={locale} />
+              <Stars
+                rating={googleRating}
+                count={googleRatingCount ?? undefined}
+                locale={locale}
+              />
             </div>
           ) : null}
 

@@ -1,7 +1,6 @@
 import type { Locale } from '@vardenia/i18n'
 import { districtLabel, governorateLabel, priceLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
-import { aggregateRating, type ReviewSummary } from './reviews'
 
 /** The publisher, named once, so markup and the organisation block agree. */
 const SITE_NAME = 'Vardenia'
@@ -120,69 +119,27 @@ export interface ListingForSchema {
 }
 
 /**
- * Reviews, marked up according to who actually said them.
+ * # Why there is no rating in this markup
  *
- * # The rule, and why breaking it is expensive
+ * A listing carries `googleRating`, and it is deliberately not emitted here.
  *
- * Google allows a publisher to mark up its own critic review as a `Review`
- * authored by the publisher. It does not allow that review into an
- * `aggregateRating`, which is defined as a summary of ratings from many
- * independent people. Rolling our own editorial verdict into a star rating and
- * showing it in search results is a policy violation, and the penalty lands on
- * the whole domain rather than on the one page.
+ * That number was copied from Google by a member of staff. It is not a rating
+ * Vardenia collected, from a system Vardenia runs, about reviews Vardenia can
+ * show. Google's structured data policy is explicit that `aggregateRating` must
+ * summarise ratings the publisher itself gathered and displays on the page -
+ * republishing another site's aggregate as your own is a violation, and the
+ * penalty applies to the whole domain rather than the one page.
  *
- * A partner-supplied quote is not marked up at all. It is the subject of the
- * page talking about itself, which is not a review under any reading.
+ * Showing it to a reader with the word "Google" beside it is a different act
+ * and is fine. Asserting it to a crawler as our own is not, and the difference
+ * is invisible until the domain loses rich results.
  *
- * The decision lives in lib/reviews.ts and is applied here. Both are tested.
+ * If Vardenia ever collects real ratings from real guests through its own
+ * booking flow, that is the thing that belongs in an `aggregateRating`, and
+ * this is where it would go.
  */
-function reviewMarkup(reviews: ReviewSummary[]) {
-  const aggregate = aggregateRating(reviews)
-
-  // Editorial and guest reviews are both real `Review` objects; only the author
-  // differs. Partner quotes are dropped entirely.
-  const marked = reviews
-    .filter((review) => review.source !== 'partner')
-    .map((review) =>
-      compact({
-        '@type': 'Review',
-        reviewRating: {
-          '@type': 'Rating',
-          ratingValue: review.rating,
-          bestRating: 5,
-          worstRating: 1,
-        },
-        name: review.title,
-        reviewBody: review.body,
-        datePublished: review.publishedAt ?? review.visitedAt ?? undefined,
-        author:
-          review.source === 'editorial'
-            ? { '@type': 'Organization', name: SITE_NAME }
-            : compact({ '@type': 'Person', name: review.authorName || undefined }),
-      }),
-    )
-
-  return {
-    review: marked.length ? marked : undefined,
-    aggregateRating: aggregate
-      ? {
-          '@type': 'AggregateRating',
-          ratingValue: aggregate.value,
-          reviewCount: aggregate.count,
-          bestRating: 5,
-          worstRating: 1,
-        }
-      : undefined,
-  }
-}
-
-export function listingSchema(
-  listing: ListingForSchema,
-  locale: Locale,
-  reviews: ReviewSummary[] = [],
-): Json {
+export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   const image = resolveImage(listing.heroImage, 'hero')
-  const { review, aggregateRating: aggregate } = reviewMarkup(reviews)
 
   // Payload stores a point as [longitude, latitude] - GeoJSON order, the
   // reverse of how everyone says it aloud. Getting this backwards puts a Beirut
@@ -222,8 +179,6 @@ export function listingSchema(
         ? { '@type': 'GeoCoordinates', latitude: lat, longitude: lng }
         : undefined,
     openingHoursSpecification: openingHours(listing.openingHours),
-    review,
-    aggregateRating: aggregate,
   })
 }
 

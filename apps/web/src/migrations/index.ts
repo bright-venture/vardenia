@@ -11,6 +11,7 @@ import * as migration_20260820_152907_booking_locale from './20260820_152907_boo
 import * as migration_20260820_171943_customer_deleted_at from './20260820_171943_customer_deleted_at';
 import * as migration_20260821_130500_filter_indexes from './20260821_130500_filter_indexes';
 import * as migration_20260824_075820_reviews from './20260824_075820_reviews';
+import * as migration_20260824_122311_google_rating from './20260824_122311_google_rating';
 
 /**
  * The order here is the order they run in, and two entries depend on it.
@@ -23,10 +24,21 @@ import * as migration_20260824_075820_reviews from './20260824_075820_reviews';
  * to 181600 so the filename and the dependency agree.
  *
  * `migrate:create` rewrites this file wholesale and has now deleted this comment
- * six times. Restore it. If you add a migration by hand, re-read the list
+ * seven times. Restore it. If you add a migration by hand, re-read the list
  * afterwards rather than trusting the regeneration - and be aware the generator
  * diffs against the JSON snapshots here, not the database, so a hand-written
  * migration leaves it out of step until the next generated one catches up.
+ *
+ * # 20260824_122311_google_rating DROPS TABLES
+ *
+ * It is the only one in this list since the baseline that destroys data. It
+ * removes the four `reviews` tables, because the Reviews collection was
+ * replaced by a rating field on the listing itself - the number is copied from
+ * Google, not a review anybody wrote, and a collection with an author and a body
+ * invited it to be displayed as one.
+ *
+ * Anything stored in those tables is gone when this runs. On production that is
+ * whatever was entered while the collection existed, which was a day.
  */
 export const migrations = [
   {
@@ -92,6 +104,11 @@ export const migrations = [
   {
     up: migration_20260824_075820_reviews.up,
     down: migration_20260824_075820_reviews.down,
-    name: '20260824_075820_reviews'
+    name: '20260824_075820_reviews',
+  },
+  {
+    up: migration_20260824_122311_google_rating.up,
+    down: migration_20260824_122311_google_rating.down,
+    name: '20260824_122311_google_rating'
   },
 ];

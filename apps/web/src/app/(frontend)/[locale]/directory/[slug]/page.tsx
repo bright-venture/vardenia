@@ -21,8 +21,7 @@ import { isOpenNow } from '../../../../../lib/hours'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
-import { EditorialVerdict, ReviewList } from '../../../../../components/ReviewList'
-import { editorialVerdict, findReviewsForBusiness } from '../../../../../lib/reviews'
+import { Stars } from '../../../../../components/ui'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -96,23 +95,18 @@ export default async function ListingPage({ params }: Params) {
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
   /**
-   * Reviews are fetched after the listing rather than alongside it, because the
-   * query needs the listing's id. It is one extra round trip on a page that is
-   * prerendered and revalidated every 60 seconds, so it costs a reader nothing.
+   * The Google rating, if somebody has looked it up.
    *
-   * `verdict` is pulled out because it is not one review among many: it is
-   * Vardenia's own, and it gets a panel rather than a row in a list.
+   * Read straight off the listing rather than fetched, because it is one number
+   * on the business and not a collection of reviews. It is deliberately absent
+   * from the structured data below - see lib/structured-data.
    */
-  const reviews = await findReviewsForBusiness(listing.id, locale as Locale)
-  const verdict = editorialVerdict(reviews)
+  const googleRating = typeof listing.googleRating === 'number' ? listing.googleRating : null
 
   return (
     <article className="pb-24">
-      {/* Invisible to readers, read by search engines. See lib/structured-data.
-          The reviews are passed in so the markup can distinguish our own
-          editorial verdict from a guest's rating - only the latter may be
-          aggregated, and getting that wrong costs rich results site-wide. */}
-      <JsonLd data={listingSchema(listing as never, locale as Locale, reviews)} />
+      {/* Invisible to readers, read by search engines. See lib/structured-data. */}
+      <JsonLd data={listingSchema(listing as never, locale as Locale)} />
 
       {hero ? (
         <div className="bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
@@ -140,6 +134,21 @@ export default async function ListingPage({ params }: Params) {
           <div className="text-ink-500 mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span>{place}</span>
             {price ? <span className="tabular-nums">{price}</span> : null}
+
+            {/* Labelled as Google by the component itself. This is not our
+                verdict on the place and must never read as one. */}
+            {googleRating !== null ? (
+              <Stars
+                rating={googleRating}
+                count={
+                  typeof listing.googleRatingCount === 'number'
+                    ? listing.googleRatingCount
+                    : undefined
+                }
+                locale={locale as Locale}
+              />
+            ) : null}
+
             {listing.verified ? <span className="text-cedar-700">{t('verified')}</span> : null}
             {open !== null ? (
               <span className={open ? 'text-cedar-700' : 'text-ink-300'}>
@@ -186,16 +195,6 @@ export default async function ListingPage({ params }: Params) {
             </section>
           ) : null}
 
-          {/* Our own verdict sits directly under the description and above the
-              booking form, because it is the argument for booking. A guest's
-              review is evidence; ours is the recommendation, and burying it
-              below a form would be burying the reason the page exists. */}
-          {verdict ? (
-            <div className="mt-14">
-              <EditorialVerdict review={verdict} locale={locale as Locale} />
-            </div>
-          ) : null}
-
           {/* Below the description rather than in the sidebar. A reader arriving
               from a printed QR code has not decided to book yet - they are
               finding out what the place is - and a form above that decision is
@@ -206,11 +205,6 @@ export default async function ListingPage({ params }: Params) {
             rules={listing.booking as never}
             locale={locale as Locale}
           />
-
-          {/* Everything that is not our verdict: guest reviews first, then any
-              quote the business supplied, clearly labelled as such. Renders
-              nothing when there is nothing, rather than an empty heading. */}
-          <ReviewList reviews={reviews} locale={locale as Locale} />
         </div>
 
         <aside className="flex flex-col gap-10">
