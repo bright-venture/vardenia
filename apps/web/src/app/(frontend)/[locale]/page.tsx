@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Hero } from '../../../components/home/Hero'
-import { SectionsGrid } from '../../../components/home/SectionsGrid'
+import { SectionShaderCards } from '../../../components/home/SectionShaderCards'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
@@ -72,7 +72,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         title={t('sectionsTitle')}
         note={t('sectionsNote')}
       >
-        <SectionsGrid locale={locale as Locale} />
+        <SectionShaderCards locale={locale as Locale} />
       </Band>
 
       <Band

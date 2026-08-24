@@ -76,6 +76,9 @@ web_modules/
 
 # Next.js build output
 .next
+# Dev server output. Kept separate from .next so a production build cannot
+# corrupt a running dev server - see distDir in apps/web/next.config.mjs.
+.next-dev
 out
 
 # Nuxt.js build / generate output

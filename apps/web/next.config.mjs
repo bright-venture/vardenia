@@ -11,6 +11,29 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  /**
+   * Separate build directories for dev and production.
+   *
+   * # The bug this fixes
+   *
+   * `next dev` and `next build` both wrote to `.next`, and they do not write
+   * the same thing. Running a build while a dev server was up left the dev
+   * server holding a manifest that pointed at chunks the build had replaced,
+   * which surfaces as `Cannot find module './vendor-chunks/<something>.js'` and
+   * a page that stops updating until the server is restarted.
+   *
+   * It looked like a flaky dev server. It was two processes writing to one
+   * directory, and it happened every single time a build ran alongside a dev
+   * session - which, during any stretch of verification work, is constantly.
+   *
+   * Keyed off NODE_ENV rather than a flag because Next sets it per command:
+   * `dev` is development, `build` and `start` are production. So the two can
+   * never collide again without anybody remembering to do anything.
+   *
+   * Keep `.next-dev` in the ignore rules alongside `.next`.
+   */
+  distDir: process.env.NODE_ENV === 'development' ? '.next-dev' : '.next',
   // Workspace packages ship TypeScript source, not build output - one less
   // build step, and the whole monorepo typechecks as a single graph.
   transpilePackages: [
