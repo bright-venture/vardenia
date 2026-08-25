@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
-import { getMessages } from '@vardenia/i18n/messages'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
 import { Analytics } from '../../../components/Analytics'
@@ -98,17 +97,19 @@ export default async function FrontendLayout({
             and preview builds stay out of the numbers. See lib/analytics. */}
         <Analytics />
 
-        {/* Messages passed explicitly. `NextIntlClientProvider` rendered from a
-            Server Component inherits the locale, the timezone and `now` from the
-            request config, but not the catalogue - checked in the installed
-            build, not assumed. Without this every client component calling
-            `useTranslations` throws, which is why the forms are the first thing
-            in the app to need it.
+        {/* Messages are inherited, not passed.
 
-            Both catalogues together are a couple of kilobytes, so shipping the
-            whole thing beats slicing it per route and discovering the missing
-            namespace in production. Worth revisiting if they grow. */}
-        <NextIntlClientProvider locale={locale} messages={getMessages(locale as Locale)}>
+            They used to be passed explicitly, with a note saying the provider
+            inherits the locale, the timezone and `now` from the request config
+            but not the catalogue - true, and checked, in v3. v4 inherits the
+            catalogue as well, so the prop is now the thing that would need
+            justifying rather than its absence.
+
+            The inherited value comes from i18n/request.ts, which is where the
+            catalogue was being read from anyway. Both together are a couple of
+            kilobytes, so the whole thing still ships rather than being sliced
+            per route - `messages={null}` is the opt-out if that ever changes. */}
+        <NextIntlClientProvider locale={locale}>
           <SiteHeader locale={locale as Locale} />
           <div className="flex-1">{children}</div>
           <SiteFooter locale={locale as Locale} />

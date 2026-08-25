@@ -23,6 +23,26 @@ export const routing = defineRouting({
   //
   // Language becomes an explicit choice via a switcher (Phase 1), not a guess.
   localeDetection: false,
+
+  /**
+   * And no NEXT_LOCALE cookie either. Both are needed since v4.
+   *
+   * In v3 these were one setting: `localeDetection: false` turned off the
+   * Accept-Language redirect *and* the cookie. v4 split them into two options
+   * that both default to `true`, so the upgrade quietly re-enabled the cookie
+   * while the line above kept doing only half of what it used to.
+   *
+   * Read in the installed build rather than inferred: `middleware/syncCookie`
+   * writes NEXT_LOCALE gated on `localeCookie` alone - `localeDetection` is
+   * checked only when *reading* it back in `resolveLocale`. So without this,
+   * every visitor gets a year-long locale cookie that nothing ever consults,
+   * which is reason 2 above arriving through a different door.
+   *
+   * It also matters for consent: the site sets no analytics cookies on purpose
+   * so there is no banner to build, and a cookie appearing by default is not
+   * something to discover later.
+   */
+  localeCookie: false,
 })
 
 export const { Link, redirect, usePathname, useRouter, getPathname } = createNavigation(routing)

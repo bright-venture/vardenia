@@ -39,6 +39,27 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
 
+    /**
+     * next-intl has to go through Vite's resolver rather than Node's.
+     *
+     * v4 ships ESM only, and its build imports `next/server` and
+     * `next/navigation` as bare specifiers. Under pnpm's isolated node_modules
+     * those do not resolve from inside next-intl's own directory - `next` is a
+     * peer dependency, so it is not linked there - and Node's ESM resolver
+     * gives up with "Cannot find module .../next-intl/node_modules/next/server".
+     *
+     * It never came up under v3 because that build was CJS and went through a
+     * resolver that walks up to the app's own node_modules. Nothing about the
+     * application changed; only the module format did.
+     *
+     * Inlining makes Vite resolve those imports from the app, which is where
+     * Next actually lives. The bundler does the same thing in a real build,
+     * which is why `next build` was happy while the tests were not.
+     */
+    server: {
+      deps: { inline: ['next-intl'] },
+    },
+
     // The integration suite matches the glob above but needs a real database.
     // It has its own config and its own command, so that `pnpm test` stays
     // instant and dependency-free. See vitest.integration.config.ts.

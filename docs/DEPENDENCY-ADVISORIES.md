@@ -29,9 +29,28 @@ All four stay inside their existing major, so nothing here is a migration. The
 verification was the ordinary one: install, typecheck, 966 tests, a production
 build of all 93 pages, and a live upload proving sharp still processes images.
 
+## Resolved
+
+**`next-intl` 3.26.5 to 4.13.7**, upgraded 25 Aug 2026. Closed both advisories -
+the open redirect and the prototype pollution. Three things it needed, none of
+which the type checker or the test suite would have caught on its own:
+
+- **`localeCookie: false`** in `i18n/routing.ts`. v3 had one setting;
+  `localeDetection: false` turned off Accept-Language detection *and* the
+  NEXT_LOCALE cookie. v4 split them into two options that both default to
+  `true`, so the upgrade alone would have started setting a year-long locale
+  cookie on every visitor. Verified by removing the line again: the cookie
+  reappeared on all four request shapes.
+- **Dropping `messages` from `NextIntlClientProvider`.** v4 inherits the
+  catalogue from `i18n/request.ts`; passing it is now redundant.
+- **`server.deps.inline: ['next-intl']`** in `vitest.config.ts`. v4 is ESM only
+  and imports `next/server` as a bare specifier, which does not resolve from
+  inside next-intl's own directory under pnpm. A build was fine; the tests were
+  not.
+
 ## What is knowingly left alone
 
-Four advisories survive the overrides. Each is a deliberate decision rather than
+Three advisories survive the overrides. Each is a deliberate decision rather than
 an oversight, and each has a condition that would change the answer.
 
 ### `image-size` - high, no fix exists
@@ -44,21 +63,6 @@ Reachable only through Next's image handling. The upload allowlist in
 three affected formats - and uploading is staff-only. **Revisit when a patched
 version ships, or immediately if HEIC is ever added to the allowlist**, which
 has been discussed, because that is the format an iPhone produces by default.
-
-### `next-intl` - two moderates, needs a major upgrade
-
-Installed at `3.26.5`. The open redirect is patched in `4.9.1` and the prototype
-pollution in `4.9.2`, so both fixes are on the other side of a 3 to 4 migration.
-
-The prototype pollution does not apply: it needs
-`experimental.messages.precompile`, which this project does not use. The open
-redirect is in locale handling, and `src/i18n/routing.ts` runs with
-`localeDetection: false` and a middleware matcher that excludes every non-page
-route - which narrows it but does not obviously close it.
-
-**This is the one that should be scheduled rather than deferred indefinitely.**
-It is a direct dependency, the version is nearly a major behind, and the upgrade
-gets harder the longer it waits.
 
 ### `uuid` - moderate, unreachable
 
