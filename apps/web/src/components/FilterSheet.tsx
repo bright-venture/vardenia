@@ -234,15 +234,20 @@ export function FilterSheet({
       <dialog
         ref={ref}
         aria-label={ar ? 'الفلاتر' : 'Filters'}
-        className="bg-surface-base text-ink-900 backdrop:bg-ink-950/50 m-0 w-full max-w-none rounded-t-xl p-0 shadow-2xl backdrop:backdrop-blur-[2px] sm:mx-auto sm:my-auto sm:max-w-xl sm:rounded-lg"
-        style={{
-          // The native dialog centres itself with `inset: 0; margin: auto`.
-          // On a phone we want it pinned to the bottom instead, which needs a
-          // real position rather than a utility that the UA stylesheet beats.
-          marginTop: 'auto',
-          marginBottom: 0,
-          maxHeight: '88vh',
-        }}
+        /*
+          The margins do the positioning, and they have to be classes.
+
+          A native dialog centres itself with `inset: 0; margin: auto` from the
+          UA stylesheet. Overriding that in `style` looked like the safe way to
+          pin it to the bottom edge on a phone - but an inline style has no
+          media query, so `marginBottom: 0` applied at every width and beat
+          `sm:my-auto`, which is why the sheet sat at the bottom of a laptop
+          screen instead of in the middle of it.
+
+          Longhand on both sides rather than `sm:m-auto`, so there is no
+          shorthand-versus-longhand ordering question to get wrong.
+        */
+        className="bg-surface-base text-ink-900 backdrop:bg-ink-950/50 mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none rounded-t-xl p-0 shadow-2xl backdrop:backdrop-blur-[2px] sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl sm:rounded-lg"
       >
         <div className="flex max-h-[88vh] flex-col sm:max-h-[80vh]">
           {/* The grab handle is a phone affordance and noise on a laptop. */}
