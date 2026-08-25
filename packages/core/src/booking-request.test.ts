@@ -84,8 +84,20 @@ describe('bookingRequestSchema', () => {
     expect(bookingRequestSchema.safeParse(backwards).success).toBe(true)
   })
 
-  it('requires a name', () => {
-    expect(bookingRequestSchema.safeParse({ ...VALID, name: '   ' }).success).toBe(false)
+  /**
+   * A name is no longer required here, because it is no longer sent. Booking
+   * needs a signed-in customer and the server uses the name on the account, so
+   * an absent one is the ordinary case rather than an error - and a schema that
+   * rejected it would break the form for everybody.
+   */
+  it('does not require a name, which now comes from the account', () => {
+    const withoutName = { ...VALID, name: undefined }
+    expect(bookingRequestSchema.safeParse(withoutName).success).toBe(true)
+  })
+
+  /** Still rejected when sent and malformed, rather than silently accepted. */
+  it('still rejects a name that is too long', () => {
+    expect(bookingRequestSchema.safeParse({ ...VALID, name: 'x'.repeat(200) }).success).toBe(false)
   })
 
   /** Lebanese numbers are written half a dozen ways; a strict regex rejects real ones. */
@@ -151,13 +163,19 @@ describe('fieldErrors', () => {
    * same empty box reads as broken.
    */
   it('reports the first problem per field, keyed for a form', () => {
-    const result = bookingRequestSchema.safeParse({ ...VALID, email: 'nope', name: '' })
+    // `name` is optional now, so the two fields that can still both fail on one
+    // submission are the ones the form actually collects.
+    const result = bookingRequestSchema.safeParse({
+      ...VALID,
+      partySize: 0,
+      notes: 'x'.repeat(2000),
+    })
     expect(result.success).toBe(false)
     if (result.success) return
 
     const errors = fieldErrors(result.error)
-    expect(Object.keys(errors).sort()).toEqual(['email', 'name'])
-    expect(typeof errors.email).toBe('string')
+    expect(Object.keys(errors).sort()).toEqual(['notes', 'partySize'])
+    expect(typeof errors.partySize).toBe('string')
   })
 })
 

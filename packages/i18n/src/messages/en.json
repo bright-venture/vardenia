@@ -76,7 +76,13 @@
     "another": "Make another booking",
     "leadTime": "{hours, plural, one {This place needs at least 1 hour of notice.} other {This place needs at least # hours of notice.}}",
     "accountHint": "Use the same email as your account and this booking will appear in it.",
-    "accountLink": "Your account"
+    "accountLink": "Your account",
+    "accountRequired": "You need a Vardenia account to book.",
+    "accountRequiredWhy": "Bookings are held against a confirmed email address, so the place you are booking can reach you and you can manage the reservation yourself.",
+    "accountCreate": "Create an account",
+    "accountSignIn": "Sign in",
+    "verifyFirst": "Confirm your email address before booking. We sent you a link when you signed up.",
+    "verifyResend": "Send the link again"
   },
   "account": {
     "title": "Your account",
@@ -128,7 +134,8 @@
     "closeConfirm": "Close my account",
     "closeKeep": "Keep my account",
     "closeDone": "Your account is closed. Nothing identifying you remains.",
-    "closeCancelled": "{count, plural, one {1 upcoming booking was cancelled.} other {# upcoming bookings were cancelled.}}"
+    "closeCancelled": "{count, plural, one {1 upcoming booking was cancelled.} other {# upcoming bookings were cancelled.}}",
+    "resendVerification": "Send the confirmation link again"
   },
   "partner": {
     "eyebrow": "For partners",

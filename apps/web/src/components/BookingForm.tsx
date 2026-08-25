@@ -1,10 +1,11 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
-import { Link } from '../i18n/routing'
+import { Link, usePathname } from '../i18n/routing'
 import { trackEvent } from '../lib/analytics'
+import { sessionAudience } from '../lib/session-hint'
 import { durationLabel, toInterval, type BookingFormModel } from '../lib/booking-form'
 import {
   ERROR_TEXT,
@@ -45,20 +46,32 @@ import {
  * wording for one condition drift apart and the customer reads whichever one
  * happens to be stale.
  *
- * # It does not know who you are, and does not need to
+ * # Booking requires an account, and the page still cannot read the session
  *
- * No prefilling from the session, for two reasons that happen to agree. The
- * listing page is prerendered and revalidated - the one measured performance fix
- * on the busiest page in the product, since every printed QR code lands there -
- * and reading the session means reading headers, which opts the whole route out
- * of static rendering. Every reader would pay a database round trip so that a
- * minority could skip typing their address.
+ * A booking used to be open to anyone with an email address. It is not any
+ * more: deposits are coming, and taking money against an address nobody has
+ * confirmed leaves no party to refund or charge. `/booking/request` now refuses
+ * without a signed-in customer whose address is verified.
  *
- * The second reason is that it would not buy much. `/booking/request` binds a
- * booking to a customer by *email address*, not by cookie: that is what lets
- * somebody book as a guest and later claim the record. So the address in this
- * field is what decides where the booking lands, signed in or not, and the hint
- * under the form says exactly that rather than implying a sign-in matters.
+ * That creates a problem this file has to work around rather than solve. The
+ * listing page is prerendered and revalidated - the one measured performance
+ * fix on the busiest page in the product, since every printed QR code lands
+ * there - and reading the real session means reading headers, which opts the
+ * whole route out of static rendering. Every reader would pay a database round
+ * trip so the form could know who they are before they touch it.
+ *
+ * So the resting state is guessed from the `vd_session` hint cookie, exactly as
+ * the header does, and the server's answer is the truth. A signed-out reader
+ * sees a sign-in prompt instead of a form they cannot submit; anyone the hint
+ * gets wrong finds out from a 401 and sees the same dialog. The unverified case
+ * has no hint at all and can only arrive as a 403.
+ *
+ * # Name and email are gone from the form
+ *
+ * They belong to the account now. The server takes both from the session and
+ * ignores anything sent here, so collecting them would be asking for something
+ * that cannot change the outcome - and would invite somebody to think they
+ * could book under a different address.
  */
 
 export interface BookingFormProps {
@@ -75,6 +88,20 @@ interface Success {
   email: string
 }
 
+/**
+ * Same subscription as AccountLink: a cookie is external state, and re-reading
+ * it when the tab is looked at again means signing in elsewhere fixes this form
+ * rather than leaving it showing a sign-in prompt to somebody who just did.
+ */
+const subscribeToSession = (onChange: () => void) => {
+  document.addEventListener('visibilitychange', onChange)
+  window.addEventListener('focus', onChange)
+  return () => {
+    document.removeEventListener('visibilitychange', onChange)
+    window.removeEventListener('focus', onChange)
+  }
+}
+
 export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const t = useTranslations('booking')
   const common = useTranslations('common')
@@ -85,8 +112,6 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const [duration, setDuration] = useState(model.durationOptions[0] ?? 60)
   const [nights, setNights] = useState(model.nightOptions[0] ?? 1)
   const [partySize, setPartySize] = useState(model.defaultPartySize)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
 
@@ -94,6 +119,31 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const [refusal, setRefusal] = useState<string | null>(null)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [done, setDone] = useState<Success | null>(null)
+  const [needsAccount, setNeedsAccount] = useState(false)
+  const [unverified, setUnverified] = useState(false)
+
+  /**
+   * Whether a customer session exists, read from the hint cookie.
+   *
+   * The listing page is prerendered - reading the real session on the server
+   * would make every listing dynamic, which is the 6ms-versus-350ms trade this
+   * whole site is arranged around. So the resting state of the button comes
+   * from the same non-httpOnly hint the header uses, and the *truth* comes from
+   * the server's answer when the form is submitted.
+   *
+   * The hint cannot know whether the address is verified. That case is only
+   * ever discovered from the 403, which is fine: it is rarer, and a wrong guess
+   * here costs a round trip rather than a wrong page.
+   */
+  const audience = useSyncExternalStore(subscribeToSession, sessionAudience, () => null)
+  const signedIn = audience === 'customer'
+
+  /**
+   * Where to come back to. Without it, signing in from a listing drops the
+   * reader on their account page and they have to find the place again -
+   * which, if they arrived from a printed code, they may not be able to.
+   */
+  const next = usePathname()
 
   const field = (key: string) => (errors[key] ? `${INPUT} ${INPUT_ERROR}` : INPUT)
   const describedBy = (key: string) => (errors[key] ? `${ids}-${key}-error` : undefined)
@@ -136,8 +186,6 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
           start: interval.start,
           end: interval.end,
           partySize,
-          name,
-          email,
           ...(phone.trim() ? { phone } : {}),
           ...(notes.trim() ? { notes } : {}),
           locale,
@@ -148,12 +196,18 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
         ok?: boolean
         reference?: string
         status?: string
+        email?: string
         message?: string
         errors?: FieldErrors
       } | null
 
       if (response.ok && body?.ok && body.reference) {
-        setDone({ reference: body.reference, status: body.status ?? 'pending', email })
+        setDone({
+          reference: body.reference,
+          status: body.status ?? 'pending',
+          // The address the server actually sent to, which is the account's.
+          email: body.email ?? '',
+        })
         /**
          * The event the whole print model rests on. A scan is already recorded
          * server-side, but it stops at the redirect - this is the only place
@@ -163,6 +217,21 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
          * on it, and the reader has already been told they are booked.
          */
         trackEvent('booking-requested', { status: body.status ?? 'pending' })
+        return
+      }
+
+      /**
+       * The two account refusals, before the generic one. Both are things the
+       * reader can fix, and neither is a problem with what they typed - so
+       * they get their own panels rather than a red sentence above the form.
+       */
+      if (response.status === 401) {
+        setNeedsAccount(true)
+        return
+      }
+
+      if (response.status === 403) {
+        setUnverified(true)
         return
       }
 
@@ -344,54 +413,6 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
       </div>
 
       <div>
-        <label className={LABEL} htmlFor={`${ids}-name`}>
-          {t('name')}
-        </label>
-        <input
-          id={`${ids}-name`}
-          type="text"
-          required
-          autoComplete="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={`mt-1.5 ${field('name')}`}
-          aria-describedby={describedBy('name')}
-        />
-        {errors.name ? (
-          <p id={`${ids}-name-error`} className={ERROR_TEXT}>
-            {errors.name}
-          </p>
-        ) : null}
-      </div>
-
-      <div>
-        <label className={LABEL} htmlFor={`${ids}-email`}>
-          {t('email')}
-        </label>
-        <input
-          id={`${ids}-email`}
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`mt-1.5 ${field('email')}`}
-          aria-describedby={`${ids}-email-hint`}
-        />
-        {/* The address is what binds the booking to an account, so this is not
-            a nicety - it is the only instruction that determines whether the
-            booking shows up in "Your bookings" later. */}
-        <p id={`${ids}-email-hint`} className={HINT}>
-          {t('accountHint')}
-        </p>
-        {errors.email ? (
-          <p id={`${ids}-email-error`} className={ERROR_TEXT}>
-            {errors.email}
-          </p>
-        ) : null}
-      </div>
-
-      <div>
         <label className={LABEL} htmlFor={`${ids}-phone`}>
           {t('phone')}
         </label>
@@ -427,9 +448,71 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
         </p>
       </div>
 
-      <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
-        {busy ? t('submitting') : t('submit')}
-      </button>
+      {/*
+        Signed out: the prompt replaces the button rather than sitting beside
+        it. A reader who fills in six fields and is then told to make an account
+        has done the work twice, and the second time they may not bother.
+      */}
+      {signedIn ? (
+        <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
+          {busy ? t('submitting') : t('submit')}
+        </button>
+      ) : (
+        <div className={NOTICE_INFO}>
+          <p className="font-medium">{t('accountRequired')}</p>
+          <p className="mt-1 text-sm">{t('accountRequiredWhy')}</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link href={{ pathname: '/account/signup', query: { next } }} className={PRIMARY_BUTTON}>
+              {t('accountCreate')}
+            </Link>
+            <Link href={{ pathname: '/account/login', query: { next } }} className={SECONDARY_BUTTON}>
+              {t('accountSignIn')}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/*
+        The hint said signed in and the server disagreed. Same panel, arrived at
+        from the 401 rather than from the cookie.
+      */}
+      {needsAccount ? (
+        <div className={NOTICE_ERROR} role="alert">
+          <p>{t('accountRequired')}</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link href={{ pathname: '/account/login', query: { next } }} className={LINK}>
+              {t('accountSignIn')}
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {/*
+        Signed in but not verified, which today cannot happen and is handled
+        anyway.
+
+        Payload refuses to authenticate an unverified customer at all - checked
+        against the running server, `/api/customers/me` answers `user: null`
+        with a token minted while verified - so this arrives as a 401 rather
+        than a 403 and the panel above is what shows. Kept because the refusal
+        is the server's to make, not this component's to predict, and because a
+        future collection setting could make it reachable without anyone
+        thinking to add a branch here.
+
+        The way out of it lives on the sign-in page, where somebody without a
+        session can actually reach it.
+      */}
+      {unverified ? (
+        <div className={NOTICE_INFO} role="alert">
+          <p>{t('verifyFirst')}</p>
+          <Link
+            href={{ pathname: '/account/login', query: { next } }}
+            className={`${LINK} mt-2 inline-block text-sm`}
+          >
+            {t('accountSignIn')}
+          </Link>
+        </div>
+      ) : null}
 
       <p className="text-ink-500 text-xs">
         <Link href="/account" className={LINK}>

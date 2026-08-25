@@ -57,8 +57,21 @@ export const bookingRequestSchema = z.object({
 
   partySize: z.coerce.number().int().min(1, 'at least one person').max(500, 'too many'),
 
-  name: z.string().trim().min(1, 'required').max(120, 'too long'),
-  email: emailAddress,
+  /**
+   * Neither is sent any more, and neither is trusted if it is.
+   *
+   * Booking requires a signed-in customer with a verified address, so the
+   * server takes the name and the email from the session and ignores whatever
+   * arrives here - see /booking/request. They stay in the schema as optional
+   * rather than being deleted so that an older client, or a request replayed
+   * from a log, is still parsed rather than rejected with a confusing field
+   * error about a field it was right to send.
+   *
+   * The listing page is prerendered, so the form has no way to know who is
+   * reading it and could not fill these in even if they were still wanted.
+   */
+  name: z.string().trim().max(120, 'too long').optional(),
+  email: emailAddress.optional(),
 
   /**
    * Optional, and not validated as a phone number.

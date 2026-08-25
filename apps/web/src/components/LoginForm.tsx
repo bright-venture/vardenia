@@ -41,6 +41,8 @@ export function LoginForm({ next }: { next?: string }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const [unverified, setUnverified] = useState(false)
+  const [resent, setResent] = useState<string | null>(null)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -71,7 +73,21 @@ export function LoginForm({ next }: { next?: string }) {
         return
       }
 
-      setProblem(response.status === 403 ? t('unverified') : t('signInFailed'))
+      /**
+       * 403 is the unverified case, and it is a dead end without a way out.
+       *
+       * Payload refuses to authenticate an unverified customer at all, so this
+       * reader has no session and cannot ask for anything that needs one. The
+       * resend below takes the address they just typed, which is the only
+       * credential they have.
+       */
+      if (response.status === 403) {
+        setUnverified(true)
+        setProblem(t('unverified'))
+        return
+      }
+
+      setProblem(t('signInFailed'))
     } catch {
       setProblem(common('error'))
     } finally {
@@ -82,9 +98,35 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
       {problem ? (
-        <p className={NOTICE_ERROR} role="alert">
-          {problem}
-        </p>
+        <div className={NOTICE_ERROR} role="alert">
+          <p>{problem}</p>
+
+          {/* The only way out of this refusal.
+              Payload will not authenticate an unverified customer at all, so
+              there is no session to prove anything with and no signed-in page
+              to offer this from. The address typed above is the credential. */}
+          {unverified ? (
+            resent ? (
+              <p className="mt-2 text-sm">{resent}</p>
+            ) : (
+              <button
+                type="button"
+                className={`${LINK} mt-2 block text-sm`}
+                onClick={async () => {
+                  const r = await fetch('/auth/verify/resend', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                  }).catch(() => null)
+                  const b = (await r?.json().catch(() => null)) as { message?: string } | null
+                  setResent(b?.message ?? common('error'))
+                }}
+              >
+                {t('resendVerification')}
+              </button>
+            )
+          ) : null}
+        </div>
       ) : null}
 
       <div>

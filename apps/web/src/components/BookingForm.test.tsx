@@ -105,10 +105,32 @@ describe('BookingForm', () => {
     expect(html).not.toContain('1 hours')
   })
 
-  it('tells the customer that the email address is what binds the booking', () => {
-    // The single most consequential sentence on the form: nothing else decides
-    // whether the booking ever appears in an account.
-    expect(text(render(restaurant))).toContain('same email as your account')
+  /**
+   * What a prerendered listing page ships.
+   *
+   * There is no session on the server and no cookie during a static render, so
+   * the signed-out state is what every reader receives first - including one
+   * who is signed in, until the browser reads the hint and corrects it. It has
+   * to be the safe state: an account prompt rather than a form that would be
+   * refused on submit.
+   */
+  it('asks for an account rather than offering a form nobody can submit', () => {
+    const rendered = text(render(restaurant))
+    expect(rendered).toContain('You need a Vardenia account to book')
+    expect(rendered).toContain('Create an account')
+  })
+
+  /** The two fields that moved to the account must not come back. */
+  it('no longer collects a name or an email address', () => {
+    const html = render(restaurant)
+    expect(html).not.toContain('autoComplete="email"')
+    expect(html).not.toContain('autocomplete="email"')
+    expect(html).not.toContain('autocomplete="name"')
+  })
+
+  /** Signing in has to return the reader to the listing, not to their account. */
+  it('carries the reader back to this listing after signing in', () => {
+    expect(render(restaurant)).toContain('next=')
   })
 
   /**
@@ -127,8 +149,10 @@ describe('BookingForm', () => {
   })
 
   it('renders in Arabic without leaking English', () => {
-    const html = render(restaurant, 'ar')
-    expect(text(html)).not.toContain('Request booking')
-    expect(text(html)).toContain('اطلب الحجز')
+    const html = text(render(restaurant, 'ar'))
+    // The account prompt is what a signed-out reader sees, so that is the
+    // string that has to be translated - the submit button is not rendered.
+    expect(html).not.toContain('You need a Vardenia account')
+    expect(html).toContain('تحتاج إلى حساب')
   })
 })

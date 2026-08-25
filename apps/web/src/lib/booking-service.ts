@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import { randomBytes } from 'node:crypto'
+
 import type { BookingRequest } from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from './availability'
 import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
@@ -53,64 +53,24 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
 /**
- * A random password for a customer record created by a guest booking.
+ * Guest bookings, and why this file no longer creates customers.
  *
- * Payload requires one, and nobody should know it - including us. The address
- * owner claims the account through password reset, which also proves the address
- * is theirs. Generating something guessable here would hand an account to
- * whoever typed the email in.
+ * A booking used to accept any email address and create a customer record for
+ * it - `findOrCreateCustomer`, with an unguessable password nobody knew, so the
+ * address owner could claim it later through a password reset. That made
+ * booking frictionless, which was right while a booking was a request for a
+ * table and nothing more.
+ *
+ * It stopped being right once a booking can carry a deposit. Money needs a
+ * party you can identify and reach, and "whatever was typed into a form" is
+ * neither. Booking now requires a signed-in customer with a verified address;
+ * the route establishes that and passes the id in.
+ *
+ * Records created the old way are untouched and still work. Their owners can
+ * still claim them at /account/signup, which sends a reset rather than a
+ * duplicate-account error - see /auth/reset, whose comment describes exactly
+ * this path.
  */
-const unguessablePassword = () => randomBytes(32).toString('base64url')
-
-export async function findOrCreateCustomer(
-  payload: Payload,
-  { email, name, phone }: Pick<BookingRequest, 'email' | 'name' | 'phone'>,
-): Promise<{ id: number; created: boolean }> {
-  const existing = await payload.find({
-    collection: 'customers',
-    where: { email: { equals: email } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  })
-
-  const found = existing.docs[0]
-  if (found) return { id: found.id, created: false }
-
-  /**
-   * Created without a usable password on purpose. The record exists so bookings
-   * have an owner and a returning customer sees their history; it is not an
-   * account until somebody proves the address is theirs.
-   *
-   * Name and phone are taken from this request and not updated on later ones -
-   * a booking made under a different spelling should not quietly rewrite the
-   * record somebody else may already control.
-   */
-  const created = await payload.create({
-    collection: 'customers',
-    data: {
-      email,
-      name,
-      ...(phone ? { phone } : {}),
-      password: unguessablePassword(),
-    },
-    overrideAccess: true,
-
-    /**
-     * No verification email, because this person did not ask for an account.
-     *
-     * They asked for a table. The message they are expecting is the booking
-     * confirmation, and a second one inviting them to verify an account they
-     * never opened reads as a mistake at best. The record stays unverified,
-     * which is accurate: nobody has proven this address yet. They claim it
-     * later through /account/signup, which sends a reset rather than a
-     * duplicate-account error.
-     */
-    disableVerificationEmail: true,
-  })
-
-  return { id: created.id, created: true }
-}
 
 /** Bookings this customer already holds that occupy a place. */
 export async function pendingBookingCount(payload: Payload, customerId: number): Promise<number> {
@@ -193,12 +153,26 @@ export function translateInsertError(error: unknown): BookingOutcome {
 export interface CreateBookingArgs {
   payload: Payload
   request: BookingRequest
+  /**
+   * The signed-in customer this booking belongs to.
+   *
+   * Passed in rather than derived from the request, and that is the whole
+   * change: a booking used to create a customer record from whatever address
+   * was typed into the form, so anybody could book under anybody's email. Once
+   * a booking can carry a deposit, the party on the other end has to be a
+   * proven account rather than a string somebody entered.
+   *
+   * The route establishes this from the session and refuses without one. See
+   * /booking/request.
+   */
+  customerId: number
   now?: Date
 }
 
 export async function createBooking({
   payload,
   request,
+  customerId,
   now = new Date(),
 }: CreateBookingArgs): Promise<BookingOutcome> {
   const start = new Date(request.start)
@@ -247,9 +221,7 @@ export async function createBooking({
     }
   }
 
-  const customer = await findOrCreateCustomer(payload, request)
-
-  const pending = await pendingBookingCount(payload, customer.id)
+  const pending = await pendingBookingCount(payload, customerId)
   if (pending >= MAX_PENDING_PER_CUSTOMER) {
     return {
       ok: false,
@@ -263,7 +235,7 @@ export async function createBooking({
       collection: 'bookings',
       data: {
         business: business.id,
-        customer: customer.id,
+        customer: customerId,
         start: start.toISOString(),
         end: end.toISOString(),
         partySize: request.partySize,
