@@ -13,10 +13,13 @@ import { currentCustomer } from '../../../../../lib/session'
  * session, and a sign-in form is not a search result.
  *
  * `?next=` is honoured so a reader sent here from somewhere else lands back
- * where they were. Only paths beginning with a single slash are accepted, in the
- * form itself - an open redirect on a sign-in page is the classic way to make a
- * phishing link look like it came from us, since the domain in the address bar
- * is genuinely ours right up until the redirect fires.
+ * where they were. What counts as an acceptable destination is decided by
+ * lib/safe-next, applied in the form - an open redirect on a sign-in page is the
+ * classic way to make a phishing link look like it came from us, since the
+ * domain in the address bar is genuinely ours right up until the redirect fires.
+ *
+ * This comment used to say "paths beginning with a single slash", which is what
+ * the guard was meant to do and not what it did. See lib/safe-next.
  */
 
 export const dynamic = 'force-dynamic'

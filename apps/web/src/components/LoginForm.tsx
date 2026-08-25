@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, useRouter } from '../i18n/routing'
 import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import { safeNextPath } from '../lib/safe-next'
 import { markSignedIn } from '../lib/session-hint'
 
 /**
@@ -64,7 +65,9 @@ export function LoginForm({ next }: { next?: string }) {
          * visitor, which is the sign-in prompt they just came from.
          */
         router.refresh()
-        router.push(next && next.startsWith('/') ? next : '/account')
+        // See lib/safe-next. `?next=` is attacker-supplied, and the guard this
+        // replaced accepted `//evil.com` as an internal path.
+        router.push(safeNextPath(next, '/account'))
         return
       }
 
