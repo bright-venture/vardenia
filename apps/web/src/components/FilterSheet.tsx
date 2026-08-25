@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import { amenityLabel, districtLabel, subcategoryLabel } from '../lib/labels'
+import { amenityLabel, districtLabel, governorateLabel, subcategoryLabel } from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -62,10 +62,13 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 function Toggle({
   active,
   onClick,
+  count,
   children,
 }: {
   active: boolean
   onClick: () => void
+  /** Matching listings, where that is known. Mirrors FilterChip outside. */
+  count?: number
   children: React.ReactNode
 }) {
   return (
@@ -75,11 +78,20 @@ function Toggle({
       onClick={onClick}
       className={
         active
-          ? 'bg-cedar-900 text-surface-base rounded-full px-4 py-2 text-sm transition-transform active:scale-[0.97]'
-          : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-full border px-4 py-2 text-sm transition-[border-color,transform] active:scale-[0.97]'
+          ? 'bg-cedar-900 text-surface-base inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-transform active:scale-[0.97]'
+          : 'border-ink-100 text-ink-700 hover:border-ink-300 inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-[border-color,transform] active:scale-[0.97]'
       }
     >
       {children}
+      {typeof count === 'number' ? (
+        <span
+          className={`font-mono text-[11px] tabular-nums ${
+            active ? 'opacity-70' : count === 0 ? 'text-ink-300' : 'text-ink-500'
+          }`}
+        >
+          {count}
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -89,11 +101,14 @@ export function FilterSheet({
   state,
   subcategories,
   locale,
+  counts,
 }: {
   base: string
   state: FilterState
   subcategories: readonly { slug: string }[]
   locale: Locale
+  /** Listings per governorate, for the Region group. See lib/listings. */
+  counts?: Record<string, number>
 }) {
   const ar = locale === 'ar'
   const router = useRouter()
@@ -259,6 +274,44 @@ export function FilterSheet({
           </div>
 
           <div className="flex-1 overflow-y-auto overscroll-contain px-6">
+            {/*
+              Region, first and complete.
+
+              The bar outside shows only the regions that have something in
+              them, because eight equally-weighted chips of which six are empty
+              is not a choice anybody can make and it overflowed the row. This
+              is where the full list lives, so nothing is unreachable - and it
+              is first, because it is the facet almost everybody uses.
+
+              Choosing a region clears the district for the same reason
+              filterHref does: a district belongs to somewhere else, and the
+              pair would return nothing while looking deliberate.
+            */}
+            <Group title={ar ? 'المنطقة' : 'Region'}>
+              <Toggle
+                active={!draft.governorate}
+                onClick={() => set({ governorate: undefined, district: undefined })}
+                count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
+              >
+                {ar ? 'كل لبنان' : 'All of Lebanon'}
+              </Toggle>
+              {GOVERNORATES.map((g) => (
+                <Toggle
+                  key={g.slug}
+                  active={draft.governorate === g.slug}
+                  onClick={() =>
+                    set({
+                      governorate: draft.governorate === g.slug ? undefined : g.slug,
+                      district: undefined,
+                    })
+                  }
+                  count={counts?.[g.slug] ?? (counts ? 0 : undefined)}
+                >
+                  {governorateLabel(g.slug, locale)}
+                </Toggle>
+              ))}
+            </Group>
+
             {subcategories.length > 0 ? (
               <Group title={ar ? 'النوع' : 'Kind'}>
                 {subcategories.map((child) => (

@@ -22,9 +22,9 @@ import { FilterSheet } from './FilterSheet'
  *
  * So there are three things here now:
  *
- * 1. Governorate, in a row that scrolls sideways rather than wrapping. It is
- *    always exactly one row tall whatever the taxonomy grows to, and it is the
- *    facet almost everybody uses.
+ * 1. Region, as chips for the places that actually have listings. Eight chips
+ *    of which six read "0" is a row of dead ends, and it overflowed the bar;
+ *    the full list, with the same counts, is the first group in the sheet.
  * 2. A Filters button carrying a count, which opens the sheet holding the other
  *    four facets. See FilterSheet.
  * 3. The applied filters, as chips that remove themselves.
@@ -216,6 +216,34 @@ export function ListingFilters({
   const ar = locale === 'ar'
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
 
+  /**
+   * Which regions get a chip in the bar.
+   *
+   * Not all eight. Eight chips of which six read "0" is a row of dead ends that
+   * happened to overflow the page, and widening them with counts is what pushed
+   * the Filters button off the right edge. Showing the regions that have
+   * something in them is both shorter and more useful - it is the difference
+   * between a menu and a list of everywhere in Lebanon.
+   *
+   * The one currently chosen is always kept even at zero, or selecting an empty
+   * region would make its own chip disappear and the bar would look like it had
+   * ignored the tap.
+   *
+   * Capped so a full directory cannot overflow the row again. Canonical order
+   * rather than by size, so a region does not move because a listing was
+   * published somewhere else.
+   *
+   * Everything omitted is in the sheet's Region group, complete and with the
+   * same counts. Nothing is unreachable, and every governorate URL still
+   * resolves whether or not it has a chip.
+   */
+  const INLINE_REGIONS = 5
+  const shown = counts
+    ? GOVERNORATES.filter(
+        (g) => (counts[g.slug] ?? 0) > 0 || state.governorate === g.slug,
+      ).slice(0, INLINE_REGIONS)
+    : GOVERNORATES
+
   const narrowed =
     Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)
 
@@ -233,13 +261,31 @@ export function ListingFilters({
         whose entire job is to show listings. A single scrolling row is bounded:
         it is always exactly one row tall, whatever the taxonomy grows to.
       */}
-      <div className="flex items-center gap-2">
-        <Row label={ar ? 'المحافظة' : 'Governorate'}>
-          <div className="scrollbar-none flex flex-1 gap-2 overflow-x-auto pb-1">
+      <div className="flex items-start gap-3">
+        {/*
+          Two changes here, and it took a control run to tell which mattered.
+
+          The row used to be a `overflow-x-auto` scroller sitting in a `flex-1`
+          box. A flex item defaults to `min-width: auto`, so that box would not
+          shrink below its contents: instead of the row scrolling inside a
+          fixed width, the box grew to the width of all nine chips and dragged
+          the document sideways with it. The Filters button, pinned after it,
+          went off the right edge - which is exactly the bug that was reported.
+
+          Measured at 375px on the pre-fix markup: the page scrolled to 539px
+          and the button sat at 434-539, entirely outside the viewport.
+
+          So the internal scroller is gone and the row wraps, and `min-w-0`
+          lets this box shrink. Removing either alone was not enough; the first
+          control run kept the wrapping row and passed, which is what caught an
+          earlier version of this comment being wrong about the cause.
+        */}
+        <div className="min-w-0 flex-1">
+          <Row label={ar ? 'المحافظة' : 'Governorate'}>
             {/*
               "All of Lebanon" carries the total, so the row adds up: the sum of
-              the eight is the number on the first chip. Without it the reader
-              has a set of parts and no whole.
+              the regions shown plus those behind Filters is the number on the
+              first chip. Without it the reader has parts and no whole.
             */}
             <FilterChip
               href={href({ governorate: undefined })}
@@ -248,7 +294,7 @@ export function ListingFilters({
             >
               {ar ? 'كل لبنان' : 'All of Lebanon'}
             </FilterChip>
-            {GOVERNORATES.map((g) => (
+            {shown.map((g) => (
               <FilterChip
                 key={g.slug}
                 href={href({ governorate: g.slug })}
@@ -260,11 +306,17 @@ export function ListingFilters({
                 {governorateLabel(g.slug, locale)}
               </FilterChip>
             ))}
-          </div>
-        </Row>
+          </Row>
+        </div>
 
-        {/* Kind, district, price and the sixteen amenities live in here. */}
-        <FilterSheet base={base} state={state} subcategories={subcategories} locale={locale} />
+        {/* Region, kind, district, price and the sixteen amenities live in here. */}
+        <FilterSheet
+          base={base}
+          state={state}
+          subcategories={subcategories}
+          locale={locale}
+          counts={counts}
+        />
       </div>
 
       {/*
