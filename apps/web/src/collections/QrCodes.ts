@@ -2,6 +2,10 @@ import type { CollectionConfig } from 'payload'
 import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
+import {
+  revalidateQrCodesAfterChange,
+  revalidateQrCodesAfterDelete,
+} from '../hooks/revalidateQrCodes'
 import { isUsableExternalUrl, normalizeExternalUrl } from '../lib/external-url'
 
 /**
@@ -29,6 +33,10 @@ export const QrCodes: CollectionConfig = {
   },
   hooks: {
     beforeDelete: [protectPrintedCodes],
+    // The /g redirect caches each code's destination. Retargeting one has to
+    // take effect on the next scan, not an hour later - see revalidateQrCodes.
+    afterChange: [revalidateQrCodesAfterChange],
+    afterDelete: [revalidateQrCodesAfterDelete],
   },
   fields: [
     {

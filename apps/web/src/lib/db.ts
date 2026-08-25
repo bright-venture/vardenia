@@ -3,11 +3,16 @@ import type { Payload } from 'payload'
 /**
  * The one place that reaches into Payload's database adapter.
  *
- * Two things here are raw SQL rather than payload.update(): the scan counter,
- * which has to increment under a row lock so concurrent scans cannot lose one,
- * and the scan report, which is all aggregates and Payload has no grouping. Both
- * need the pool, the schema and the real table name, and none of those are
- * public API.
+ * Three things here are raw SQL rather than payload.update(). Two of them are
+ * counters - the scan counter and the error counter - which have to increment
+ * as `count = count + 1` in the database, because Payload's update takes a
+ * value and there is no way to express "one more than whatever is there"
+ * through the document API; reading the row first loses occurrences whenever
+ * two arrive together. The third is the scan report, which is all aggregates
+ * and Payload has no grouping.
+ *
+ * All three need the pool, the schema and the real table name, and none of
+ * those are public API.
  *
  * They used to be read inline at each call site, like this:
  *

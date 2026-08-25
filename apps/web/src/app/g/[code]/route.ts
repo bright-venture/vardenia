@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
@@ -24,6 +25,61 @@ import { reportError } from '../../../lib/report'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * A code's destination, cached.
+ *
+ * Every scan used to be a live round trip to Frankfurt before the reader was
+ * sent anywhere. That is the wrong shape for this route twice over.
+ *
+ * The obvious cost is latency: someone is standing in a hotel lobby holding up
+ * a phone, and the redirect is the whole product. The less obvious one is that
+ * it made the printed promise depend on the database being up. A code is on
+ * paper, in circulation for a year, and with no cache an outage sent every
+ * single scan to "not found" - which is the most expensive failure this product
+ * has, and the paper cannot be recalled.
+ *
+ * # What this does and does not buy
+ *
+ * It is not immunity. Next serves a cached value for the life of the entry and
+ * then goes back to the database, so an outage still reaches codes whose entry
+ * has expired. What it buys is that the codes people are actually scanning stay
+ * answered, and that the ordinary case costs nothing.
+ *
+ * # An hour, and why staleness is not the risk it looks like
+ *
+ * Destinations are meant to change - that is the point of the redirect layer,
+ * and ADR 0002 spells it out. But an edit in the admin panel fires
+ * `revalidateQrCodes`, which drops the entry immediately, so the hour only
+ * applies to a change made behind Payload's back, straight in the database.
+ *
+ * # Keyed by code, tagged for the collection
+ *
+ * The key has to carry the code or every code would share one entry. The tag is
+ * collection-wide because a code is edited by hand, rarely, and clearing all of
+ * them costs one round trip per code afterwards.
+ */
+const QR_TTL = 60 * 60
+
+async function lookup(payload: Awaited<ReturnType<typeof getPayload>>, code: string) {
+  const run = async () => {
+    const result = await payload.find({
+      collection: 'qr-codes',
+      where: { code: { equals: code } },
+      limit: 1,
+      depth: 1,
+    })
+    // `null` rather than undefined: undefined is not JSON, and the cache stores
+    // JSON. A miss has to be cacheable too, or a wrong code is the one request
+    // shape that always hits the database.
+    return result.docs[0] ?? null
+  }
+
+  return unstable_cache(run, ['qr-code', code], {
+    revalidate: QR_TTL,
+    tags: ['qr-codes'],
+  })()
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code: rawCode } = await params
   const code = normalizeCode(rawCode)
@@ -35,14 +91,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const payload = await getPayload({ config })
 
-  const result = await payload.find({
-    collection: 'qr-codes',
-    where: { code: { equals: code } },
-    limit: 1,
-    depth: 1,
-  })
-
-  const qr = result.docs[0]
+  const qr = await lookup(payload, code)
   if (!qr) {
     return Response.redirect(`${siteUrl}/scan/not-found?code=${code}`, 302)
   }

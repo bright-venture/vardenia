@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { rawDb } from './db'
 
 /**
  * Where a production error goes.
@@ -337,24 +338,43 @@ export async function reportError(error: unknown, context: ReportContext): Promi
     const found = existing.docs[0]
 
     if (found) {
-      await payload.update({
-        collection: 'error-events',
-        id: found.id,
-        data: {
-          count: (typeof found.count === 'number' ? found.count : 0) + 1,
-          lastSeen: now,
-          // A bug somebody ticked off that has happened again is not resolved.
-          // Silently leaving it ticked is how a regression stays invisible.
-          resolved: false,
-          // Refreshed because the newest occurrence is the one worth reading:
-          // the path and stack may differ between callers of the same bug.
-          message: record.message,
-          stack: record.stack,
-          path: record.path,
-          extra: record.extra,
-        },
-        overrideAccess: true,
-      })
+      /**
+       * `count = count + 1` in the database, not `found.count + 1` here.
+       *
+       * The previous version read the row and wrote back the number it had
+       * read. Two occurrences of the same bug arriving together both read 5 and
+       * both write 6, so one is lost - and that is precisely what happens in a
+       * crash loop, which is the one time the number matters. The scan counter
+       * in /g/[code] already did it this way; this did not.
+       *
+       * Raw SQL because Payload's update takes a value rather than an
+       * expression, so there is no way to say "one more than whatever is there"
+       * through the document API.
+       *
+       * Only the update path bypasses Payload. Creating still goes through it
+       * below, which is what fires the afterChange hook that mails on a bug's
+       * first sighting - see hooks/notifyNewError.
+       */
+      const db = rawDb(payload)
+      const table = `"${db.schema}"."${db.table('error_events')}"`
+
+      await db.pool.query(
+        `update ${table}
+            set count = count + 1,
+                last_seen = $2,
+                updated_at = $2,
+                -- A bug somebody ticked off that has happened again is not
+                -- resolved. Leaving it ticked is how a regression stays hidden.
+                resolved = false,
+                -- Refreshed because the newest occurrence is the one worth
+                -- reading: path and stack may differ between callers.
+                message = $3,
+                stack = $4,
+                path = $5,
+                extra = $6
+          where fingerprint = $1`,
+        [record.fingerprint, now, record.message, record.stack, record.path, record.extra],
+      )
       return
     }
 
