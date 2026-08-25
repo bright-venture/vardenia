@@ -44,7 +44,10 @@
     "resultCount": "{count, plural, =0 {لا توجد أماكن} one {مكان واحد} two {مكانان} few {# أماكن} many {# مكانًا} other {# مكان}}",
     "verified": "موثّق من فاردينيا",
     "viewOnMap": "عرض على الخريطة",
-    "getDirections": "الاتجاهات"
+    "getDirections": "الاتجاهات",
+    "clearFilters": "مسح الفلاتر",
+    "emptyFiltered": "لا شيء هنا يطابق كل الفلاتر المختارة. جرّب إزالة أحدها أو توسيع المنطقة.",
+    "emptySection": "لم ننشر شيئاً هنا بعد. نضيف أماكن جديدة مع كل عدد."
   },
   "booking": {
     "heading": "احجز طاولة",

@@ -228,6 +228,90 @@ export async function findListings({
   )()
 }
 
+/**
+ * How many listings each governorate holds, for the chips above the grid.
+ *
+ * # The problem this solves
+ *
+ * The governorate row offered eight identical-looking choices, six of which
+ * returned nothing. A reader tapped Beirut, got "No places found", and had no
+ * way to have known - so the row read as broken rather than as empty. A number
+ * beside each label turns a dead end into a decision made before the tap.
+ *
+ * # Scoped to the section, deliberately not to every filter
+ *
+ * The count answers "how many Stay listings are in Beirut", not "how many
+ * survive all five of your current filters". That is a real limitation: with a
+ * price band applied, a chip reading 12 can still yield 3.
+ *
+ * It is the right trade anyway. A zero is never wrong - a governorate with no
+ * listings in this section has none under any additional filter either - so the
+ * dead end that prompted this is still prevented. And the alternative is
+ * recomputing eight counts against the full filter set on every view, including
+ * the amenity intersection that already costs one query per amenity. That would
+ * make the cheap common case pay for the rare one.
+ *
+ * # One query, tallied here
+ *
+ * Eight `count` queries would be eight round trips to Frankfurt. This reads the
+ * governorate of every published listing in the section once and counts them in
+ * memory, which is a single trip.
+ *
+ * The ceiling is the same one `findAllListingSlugs` has: at some thousands of
+ * listings, fetching every row to count them stops being sensible and this
+ * becomes a `GROUP BY`. Nowhere near that, and the fix is a query rather than a
+ * redesign.
+ */
+export async function countByGovernorate({
+  locale,
+  category,
+  subcategory,
+}: {
+  locale: Locale
+  category?: string
+  subcategory?: string
+}): Promise<Record<string, number>> {
+  const run = async () => {
+    const payload = await client()
+
+    const where: Where = {}
+    if (category) where.category = { equals: category }
+    // Plural and `in`, for the reason spelled out in findListings.
+    if (subcategory) where.subcategories = { in: [subcategory] }
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where,
+      locale,
+      limit: 1000,
+      depth: 0,
+      pagination: false,
+      // Drafts are excluded by the collection's own access rule, not here.
+      overrideAccess: false,
+      select: { governorate: true },
+    })
+
+    const counts: Record<string, number> = {}
+    for (const doc of result.docs) {
+      const key = typeof doc.governorate === 'string' ? doc.governorate : null
+      if (key) counts[key] = (counts[key] ?? 0) + 1
+    }
+    return counts
+  }
+
+  /**
+   * Always cacheable, unlike findListings, because the key space is bounded:
+   * seven categories times fifty-one subcategories times two locales. Tagged
+   * with `businesses` so publishing a listing updates the numbers on the same
+   * revalidation the grid already uses - a count that disagrees with the grid
+   * below it is worse than no count.
+   */
+  return unstable_cache(run, ['governorate-counts', locale, category ?? '', subcategory ?? ''], {
+    revalidate: LISTINGS_TTL,
+    tags: ['businesses'],
+  })()
+}
+
 /** Slugs for static generation. Published only, because that is all this returns. */
 export async function findAllListingSlugs() {
   const payload = await client()

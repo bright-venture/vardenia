@@ -66,6 +66,23 @@ export interface FilterState {
 }
 
 /**
+ * Whether anything is narrowing the list at all.
+ *
+ * Exported because the pages need it to decide what an empty result means. With
+ * a filter applied, an empty page is something the reader can undo; with none,
+ * it is a gap in the directory and offering "clear filters" would be nonsense.
+ */
+export function anyFilterApplied(state: FilterState): boolean {
+  return (
+    Boolean(state.subcategory) ||
+    Boolean(state.governorate) ||
+    Boolean(state.district) ||
+    Boolean(state.priceRange) ||
+    state.amenities.length > 0
+  )
+}
+
+/**
  * The href for the same view with one facet changed.
  *
  * Built in a fixed order rather than by mutating what arrived, so two routes to
@@ -173,6 +190,7 @@ export function ListingFilters({
   state,
   subcategories,
   locale,
+  counts,
 }: {
   base: string
   state: FilterState
@@ -186,6 +204,14 @@ export function ListingFilters({
    */
   subcategories: readonly { slug: string }[]
   locale: Locale
+  /**
+   * Listings per governorate in this section, or undefined if not computed.
+   *
+   * Optional so a caller that has no cheap way to produce them renders the row
+   * exactly as before rather than showing eight zeroes. See
+   * lib/listings.countByGovernorate for what the numbers mean.
+   */
+  counts?: Record<string, number>
 }) {
   const ar = locale === 'ar'
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
@@ -210,7 +236,16 @@ export function ListingFilters({
       <div className="flex items-center gap-2">
         <Row label={ar ? 'المحافظة' : 'Governorate'}>
           <div className="scrollbar-none flex flex-1 gap-2 overflow-x-auto pb-1">
-            <FilterChip href={href({ governorate: undefined })} active={!state.governorate}>
+            {/*
+              "All of Lebanon" carries the total, so the row adds up: the sum of
+              the eight is the number on the first chip. Without it the reader
+              has a set of parts and no whole.
+            */}
+            <FilterChip
+              href={href({ governorate: undefined })}
+              active={!state.governorate}
+              count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
+            >
               {ar ? 'كل لبنان' : 'All of Lebanon'}
             </FilterChip>
             {GOVERNORATES.map((g) => (
@@ -218,6 +253,9 @@ export function ListingFilters({
                 key={g.slug}
                 href={href({ governorate: g.slug })}
                 active={state.governorate === g.slug}
+                // Absent counts render no number at all rather than a zero,
+                // which would claim something untrue.
+                count={counts?.[g.slug] ?? (counts ? 0 : undefined)}
               >
                 {governorateLabel(g.slug, locale)}
               </FilterChip>

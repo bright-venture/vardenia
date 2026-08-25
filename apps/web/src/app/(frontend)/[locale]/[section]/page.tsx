@@ -5,10 +5,12 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
 import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
-import { findListings } from '../../../../lib/listings'
+import { countByGovernorate, findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
+import { LINK } from '../../../../components/formStyles'
 import {
   ListingFilters,
+  anyFilterApplied,
   filterHref,
   parseFilterState,
   type RawFilterParams,
@@ -113,12 +115,23 @@ async function SectionResults({
   // same things. See parseFilterState.
   const state = parseFilterState(raw, children)
 
-  const result = await findListings({
-    locale,
-    category: section.category,
-    ...state,
-    page: Number(page) || 1,
-  })
+  /**
+   * The listings and the per-governorate counts, in parallel.
+   *
+   * Sequential would put a second round trip to Frankfurt in front of the
+   * render for a number that is decoration on the row above the grid. The
+   * counts are cached separately and far more aggressively than the listings -
+   * see countByGovernorate - so in practice this is one query plus a cache read.
+   */
+  const [result, counts] = await Promise.all([
+    findListings({
+      locale,
+      category: section.category,
+      ...state,
+      page: Number(page) || 1,
+    }),
+    countByGovernorate({ locale, category: section.category, subcategory: state.subcategory }),
+  ])
 
   const base = `/${section.path}`
 
@@ -134,11 +147,39 @@ async function SectionResults({
 
   return (
     <>
-      <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
+      {/*
+        The count line is hidden at zero, because the empty state below says the
+        same sentence. Both rendered, "No places found" appeared twice within a
+        few hundred pixels - once as a subtitle and once inside the box - which
+        reads as a glitch rather than as emphasis.
+      */}
+      {result.totalDocs > 0 ? (
+        <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
+      ) : null}
 
-      <ListingFilters base={base} state={state} subcategories={children} locale={locale} />
+      <ListingFilters
+        base={base}
+        state={state}
+        subcategories={children}
+        locale={locale}
+        counts={counts}
+      />
 
-      <ListingGrid listings={result.docs} locale={locale} empty={t('resultCount', { count: 0 })} />
+      <ListingGrid
+        listings={result.docs}
+        locale={locale}
+        empty={t('resultCount', { count: 0 })}
+        // Says which way out exists, rather than restating the problem. See
+        // ui/EmptyState: the title is what happened, the body is what to do.
+        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+        emptyAction={
+          anyFilterApplied(state) ? (
+            <Link href={base} className={LINK}>
+              {t('clearFilters')}
+            </Link>
+          ) : null
+        }
+      />
 
       {result.totalPages > 1 ? (
         <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">

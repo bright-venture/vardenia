@@ -5,11 +5,13 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
-import { findListings } from '../../../../lib/listings'
+import { countByGovernorate, findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
+import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
 import {
   ListingFilters,
+  anyFilterApplied,
   filterHref,
   parseFilterState,
   type RawFilterParams,
@@ -109,11 +111,18 @@ async function DirectoryResults({
    */
   const state = parseFilterState(raw, [])
 
-  const result = await findListings({
-    locale,
-    ...state,
-    page: Number(page) || 1,
-  })
+  // In parallel, for the reason given on the section page: the counts are a
+  // separate cache entry and should not add a round trip in front of the grid.
+  const [result, counts] = await Promise.all([
+    findListings({
+      locale,
+      ...state,
+      page: Number(page) || 1,
+    }),
+    // No category here - /directory is every section at once, so the counts are
+    // "listings in this governorate" across the whole directory.
+    countByGovernorate({ locale }),
+  ])
 
   const pageHref = (n: number) => {
     const href = filterHref('/directory', state, {})
@@ -122,7 +131,10 @@ async function DirectoryResults({
 
   return (
     <>
-      <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
+      {/* Hidden at zero: the empty state below already says it. */}
+      {result.totalDocs > 0 ? (
+        <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
+      ) : null}
 
       {/* Navigation, not a filter: these go to the section pages, which is where
           the kind of place is chosen. Kept above the filters so the distinction
@@ -138,9 +150,27 @@ async function DirectoryResults({
         ))}
       </nav>
 
-      <ListingFilters base="/directory" state={state} subcategories={[]} locale={locale} />
+      <ListingFilters
+        base="/directory"
+        state={state}
+        subcategories={[]}
+        locale={locale}
+        counts={counts}
+      />
 
-      <ListingGrid listings={result.docs} locale={locale} empty={t('resultCount', { count: 0 })} />
+      <ListingGrid
+        listings={result.docs}
+        locale={locale}
+        empty={t('resultCount', { count: 0 })}
+        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+        emptyAction={
+          anyFilterApplied(state) ? (
+            <Link href="/directory" className={LINK}>
+              {t('clearFilters')}
+            </Link>
+          ) : null
+        }
+      />
 
       {result.totalPages > 1 ? (
         <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">

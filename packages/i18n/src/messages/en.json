@@ -44,7 +44,10 @@
     "resultCount": "{count, plural, =0 {No places found} one {1 place} other {# places}}",
     "verified": "Verified by Vardenia",
     "viewOnMap": "View on map",
-    "getDirections": "Get directions"
+    "getDirections": "Get directions",
+    "clearFilters": "Clear filters",
+    "emptyFiltered": "Nothing here matches every filter you have on. Try removing one, or widen the area.",
+    "emptySection": "We have not published anything here yet. New places are added with every issue."
   },
   "booking": {
     "heading": "Book a table",
