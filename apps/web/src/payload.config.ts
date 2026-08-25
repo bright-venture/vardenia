@@ -371,6 +371,47 @@ export default buildConfig({
   sharp: sharp as unknown as Config['sharp'],
 
   /**
+   * A ceiling on an upload, because Payload ships without one.
+   *
+   * Left alone, a single file is bounded only by whatever the host happens to
+   * allow. Uploading is staff-only, so this is not an attack surface - but
+   * "staff-only" is not "never wrong", and a raw camera export or an
+   * uncompressed print PDF is an easy thing to pick by accident. Without a
+   * limit the failure is the whole function running out of memory, because
+   * `useTempFiles` is off and every byte is buffered in RAM.
+   *
+   * 25 MB is sized against what actually arrives: a hero frame out of
+   * Lightroom is a few megabytes, and every image here is re-encoded to WebP
+   * afterwards anyway. It is a guard rail, not a quota.
+   *
+   * # abortOnLimit is the half that matters
+   *
+   * Payload's default is `false`, which does not refuse an oversized file - it
+   * truncates it and marks the result `truncated`. Nothing here reads that
+   * flag, so the quiet outcome would be a corrupt half-image stored and served
+   * as though it were fine. `true` returns 413 instead, and an editor finds
+   * out at the moment they can still do something about it.
+   *
+   * # This is not the binding limit in production
+   *
+   * A Netlify function's own request body cap is well below 25 MB, so on
+   * production that boundary is hit first and this one mostly protects local
+   * and self-hosted runs. It is still worth setting: it is the difference
+   * between a readable error and a crash, and it is the only limit that
+   * survives a move off Netlify.
+   *
+   * The practical consequence is that a full issue PDF cannot be pushed
+   * through the admin panel in production and has to be put in the storage
+   * bucket directly. That was already true; it is written down here because
+   * nothing else says so.
+   */
+  upload: {
+    limits: { fileSize: 25 * 1024 * 1024 },
+    abortOnLimit: true,
+    responseOnLimit: 'That file is larger than 25 MB. Export a smaller version and try again.',
+  },
+
+  /**
    * Who may talk to this instance. Built in lib/origins - see the note there on
    * why exact matching makes a trailing slash a real outage.
    *

@@ -24,6 +24,9 @@ export const Media: CollectionConfig = {
   upload: {
     // Storage adapter is swapped to S3/R2 in payload.config.ts when configured.
     staticDir: 'public/media',
+
+    // The file size ceiling is not here. Payload takes it once for every
+    // collection, on the top-level `upload` config - see payload.config.ts.
     /**
      * Listed explicitly rather than `image/*`.
      *

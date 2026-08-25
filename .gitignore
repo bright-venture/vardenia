@@ -83,6 +83,11 @@ web_modules/
 # graphify knowledge graph output. Generated from the source, rebuilt on
 # demand, and large. Nothing here is authored.
 graphify-out/
+
+# The designer's HTML prototypes, dropped here to be ported into the React
+# components. Reference material rather than source: the ported version is what
+# ships, and these would only rot alongside it.
+design-incoming/
 out
 
 # Nuxt.js build / generate output
