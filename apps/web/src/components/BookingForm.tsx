@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
+import { trackEvent } from '../lib/analytics'
 import { durationLabel, toInterval, type BookingFormModel } from '../lib/booking-form'
 import {
   ERROR_TEXT,
@@ -153,6 +154,15 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
 
       if (response.ok && body?.ok && body.reference) {
         setDone({ reference: body.reference, status: body.status ?? 'pending', email })
+        /**
+         * The event the whole print model rests on. A scan is already recorded
+         * server-side, but it stops at the redirect - this is the only place
+         * that knows a visit turned into a reservation.
+         *
+         * After `setDone`, and best effort: nothing about the booking depends
+         * on it, and the reader has already been told they are booked.
+         */
+        trackEvent('booking-requested', { status: body.status ?? 'pending' })
         return
       }
 

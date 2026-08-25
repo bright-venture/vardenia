@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff } from '../access/index'
+import { notifyNewError } from '../hooks/notifyNewError'
 
 /**
  * What broke, and how often.
@@ -52,6 +53,14 @@ export const ErrorEvents: CollectionConfig = {
     // Staff may mark one resolved; the guard below limits it to that field.
     update: isStaff,
     delete: isAdmin,
+  },
+
+  /**
+   * Mails on a first sighting only, and only when ERROR_ALERT_TO is set. See
+   * hooks/notifyNewError - including why it cannot report its own failures.
+   */
+  hooks: {
+    afterChange: [notifyNewError],
   },
 
   fields: [

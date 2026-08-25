@@ -6,6 +6,7 @@ import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { getMessages } from '@vardenia/i18n/messages'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
+import { Analytics } from '../../../components/Analytics'
 import { JsonLd } from '../../../components/JsonLd'
 import { isIndexingAllowed } from '../../../lib/indexing'
 import { organizationSchema } from '../../../lib/structured-data'
@@ -92,6 +93,10 @@ export default async function FrontendLayout({
         {/* Identifies the publisher once, on every page, so search engines tie
             the site to one entity rather than to unattributed pages. */}
         <JsonLd data={organizationSchema()} />
+
+        {/* Renders nothing unless the analytics variables are set, so local
+            and preview builds stay out of the numbers. See lib/analytics. */}
+        <Analytics />
 
         {/* Messages passed explicitly. `NextIntlClientProvider` rendered from a
             Server Component inherits the locale, the timezone and `now` from the
