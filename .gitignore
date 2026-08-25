@@ -79,6 +79,10 @@ web_modules/
 # Dev server output. Kept separate from .next so a production build cannot
 # corrupt a running dev server - see distDir in apps/web/next.config.mjs.
 .next-dev
+
+# graphify knowledge graph output. Generated from the source, rebuilt on
+# demand, and large. Nothing here is authored.
+graphify-out/
 out
 
 # Nuxt.js build / generate output
