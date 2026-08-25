@@ -1,5 +1,23 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
+/**
+ * Reviews out, Google rating in.
+ *
+ * # One hand-edit, and it has to survive regeneration
+ *
+ * `migrate:create` generated this, and generated it wrong: it drops the reviews
+ * tables with CASCADE and then drops the foreign key on
+ * `payload_locked_documents_rels` by name. CASCADE has already taken that
+ * constraint - it existed only because it pointed at `reviews` - so the second
+ * statement fails with "constraint does not exist" and the whole migration
+ * rolls back.
+ *
+ * It rolled back on the first production attempt, which is the only reason
+ * this was cheap to find. `IF EXISTS` is the fix: correct whether or not
+ * CASCADE got there first.
+ *
+ * If this file is ever regenerated, the guard will be gone. Put it back.
+ */
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    ALTER TABLE "payload"."reviews" DISABLE ROW LEVEL SECURITY;
@@ -10,9 +28,9 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   DROP TABLE "payload"."reviews_locales" CASCADE;
   DROP TABLE "payload"."_reviews_v" CASCADE;
   DROP TABLE "payload"."_reviews_v_locales" CASCADE;
-  ALTER TABLE "payload"."payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_reviews_fk";
-  
-  DROP INDEX "payload"."payload_locked_documents_rels_reviews_id_idx";
+  ALTER TABLE "payload"."payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_reviews_fk";
+
+  DROP INDEX IF EXISTS "payload"."payload_locked_documents_rels_reviews_id_idx";
   ALTER TABLE "payload"."businesses" ADD COLUMN "google_rating" numeric;
   ALTER TABLE "payload"."businesses" ADD COLUMN "google_rating_count" numeric;
   ALTER TABLE "payload"."businesses" ADD COLUMN "rating_checked_at" timestamp(3) with time zone;
