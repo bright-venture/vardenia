@@ -1,20 +1,52 @@
 import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
-import { adminRedirectFor, PAYLOAD_COOKIE } from './lib/admin-guard'
+import { adminRedirectFor, PAYLOAD_COOKIE, tokenCollection } from './lib/admin-guard'
 import { legacyCategoryRedirect } from './lib/legacy-urls'
-import { SESSION_HINT } from './lib/session-hint'
+import { HINT_VALUE, SESSION_HINT } from './lib/session-hint'
 
 const intl = createMiddleware(routing)
+
+/**
+ * What the hint should say for this token, or null for no hint at all.
+ *
+ * The collection claim is what makes this correct. Payload issues one cookie
+ * name for every auth collection, so the mere presence of `payload-token` says
+ * nothing about who is holding it - which is how signing in to the admin panel
+ * as staff ended up lighting up "Your account" in the public header.
+ *
+ * Staff get null on purpose. They are not customers and the account page has
+ * nothing for them; the admin panel is where they belong, and the header
+ * offering a way in is the honest answer for the site they are looking at.
+ *
+ * An unrecognised collection also gets null. A new auth collection added later
+ * should not inherit a customer's header by default - understating is the safe
+ * failure, and this is a label rather than a permission.
+ *
+ * Reading the claim without verifying the signature is fine here for the same
+ * reason it is fine in admin-guard: nothing is granted on the strength of it.
+ * A forged token changes one word in its own author's header.
+ */
+function hintFor(token: string | undefined): string | null {
+  switch (tokenCollection(token)) {
+    case 'customers':
+      return HINT_VALUE.customer
+    case 'business-users':
+      return HINT_VALUE.partner
+    default:
+      return null
+  }
+}
 
 /**
  * Keep the session hint agreeing with the real session, in both directions.
  *
  * # What the hint is for
  *
- * The header reads `vd_session`, a non-httpOnly cookie that says only "a session
- * exists", so it can swap its own label without the server reading the real
- * token - which would opt every prerendered page out of static rendering.
+ * The header reads `vd_session`, a non-httpOnly cookie naming which kind of
+ * session exists and nothing else, so it can swap its own label without the
+ * server reading the real token - which would opt every prerendered page out of
+ * static rendering.
  *
  * # Both directions are bugs, and both were seen
  *
@@ -44,10 +76,10 @@ const intl = createMiddleware(routing)
  * whichever one somebody remembered to patch.
  */
 export function syncSessionHint(request: NextRequest, response: NextResponse): NextResponse {
-  const hasHint = request.cookies.get(SESSION_HINT)?.value === '1'
-  const hasToken = Boolean(request.cookies.get(PAYLOAD_COOKIE)?.value)
+  const current = request.cookies.get(SESSION_HINT)?.value ?? ''
+  const wanted = hintFor(request.cookies.get(PAYLOAD_COOKIE)?.value)
 
-  if (hasHint === hasToken) return response
+  if (current === (wanted ?? '')) return response
 
   /**
    * Whether the browser will accept a `Secure` cookie.
@@ -66,8 +98,8 @@ export function syncSessionHint(request: NextRequest, response: NextResponse): N
   // A week, matching the token's own lifetime, so the two lapse together.
   const shared = { path: '/', sameSite: 'lax', secure } as const
 
-  if (hasToken) {
-    response.cookies.set(SESSION_HINT, '1', { ...shared, maxAge: 60 * 60 * 24 * 7 })
+  if (wanted) {
+    response.cookies.set(SESSION_HINT, wanted, { ...shared, maxAge: 60 * 60 * 24 * 7 })
   } else {
     response.cookies.set(SESSION_HINT, '', { ...shared, maxAge: 0 })
   }

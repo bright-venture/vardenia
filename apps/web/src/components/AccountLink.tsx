@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
-import { hasSessionHint } from '../lib/session-hint'
+import { sessionAudience } from '../lib/session-hint'
 
 /**
  * "Sign in" and "Sign up" to a visitor, "Your account" to a customer.
@@ -48,12 +48,29 @@ export function AccountLink({ locale }: { locale: Locale }) {
 
   // Third argument is the server snapshot: nothing is known there, so the
   // signed-out links are what gets prerendered.
-  const signedIn = useSyncExternalStore(subscribe, hasSessionHint, () => false)
+  const audience = useSyncExternalStore(subscribe, sessionAudience, () => null)
 
-  if (signedIn) {
+  if (audience === 'customer') {
     return (
       <Link href="/account" className="text-ink-700 hover:text-ink-900 transition-colors">
         {ar ? 'حسابك' : 'Your account'}
+      </Link>
+    )
+  }
+
+  /**
+   * A partner is signed in, but not to anything at /account - their bookings
+   * live at /partner. Sending them to the customer page would show them a sign
+   * in prompt while they hold a valid session, which is the contradiction this
+   * whole component exists to avoid.
+   *
+   * The words are `partner.title` from the message catalogue rather than
+   * something new, so the link names the page it opens.
+   */
+  if (audience === 'partner') {
+    return (
+      <Link href="/partner" className="text-ink-700 hover:text-ink-900 transition-colors">
+        {ar ? 'حجوزاتك' : 'Your bookings'}
       </Link>
     )
   }

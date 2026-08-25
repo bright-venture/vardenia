@@ -56,7 +56,7 @@ export function LoginForm({ next }: { next?: string }) {
 
       if (response.ok) {
         // The header reads this to know which links to offer.
-        markSignedIn()
+        markSignedIn('customer')
         /**
          * `refresh` before `push`, and both are needed. The account page is a
          * server component that reads the session, and Next would otherwise

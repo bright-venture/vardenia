@@ -21,6 +21,18 @@
  * against the httpOnly token. The worst a forged value does is show its own
  * author the wrong link, which the page they land on then corrects.
  *
+ * # It says which kind of session, not just that there is one
+ *
+ * It used to hold `1` and mean "somebody is signed in". That was wrong, because
+ * Payload mints the same `payload-token` cookie for every auth collection -
+ * staff, partners and customers alike. So signing in to `/admin` as staff set
+ * the hint, and the public header offered "Your account" to somebody who has no
+ * customer account at all. Following it led to `/account`, which correctly told
+ * them to sign in. Header and page contradicting each other, again.
+ *
+ * The audience is therefore part of the value. Staff get no hint: they are not
+ * customers, and their home is the admin panel.
+ *
  * # It drifts, and the middleware corrects it
  *
  * A token expiring does not clear this, because nothing in the browser is told
@@ -30,15 +42,33 @@
  * see your bookings" underneath it, at the same time.
  *
  * The correction lives in middleware, which is the only place that can see both
- * this cookie and the httpOnly token in the same request. A hint with no token
- * behind it is deleted there, so the drift lasts exactly one request.
- *
- * The other direction needs nothing. A token with no hint shows the signed-out
- * links until the next sign-in writes one, which understates the truth rather
- * than asserting something false.
+ * this cookie and the httpOnly token in the same request. It writes and clears
+ * in both directions, so the drift lasts exactly one request - including for a
+ * browser still carrying the old `1`, which no longer reads as any audience and
+ * is replaced or removed on the next request.
  */
 
 export const SESSION_HINT = 'vd_session'
+
+/** Who the session belongs to, as far as the header needs to care. */
+export type SessionAudience = 'customer' | 'partner'
+
+/**
+ * Single letters because the whole cookie is a hint.
+ *
+ * Spelling out `customer` would say a little more about the reader to anything
+ * that happens to see the request, for no gain - nothing but this file and the
+ * middleware ever interprets it.
+ */
+export const HINT_VALUE: Record<SessionAudience, string> = {
+  customer: 'c',
+  partner: 'p',
+}
+
+const AUDIENCE_FOR: Record<string, SessionAudience> = {
+  c: 'customer',
+  p: 'partner',
+}
 
 /** A week, matching the token's own lifetime, so the two lapse together. */
 const MAX_AGE = 60 * 60 * 24 * 7
@@ -49,9 +79,9 @@ const attributes = () => {
 }
 
 /** Called wherever a session is created: sign in, sign up, password reset. */
-export function markSignedIn(): void {
+export function markSignedIn(audience: SessionAudience): void {
   if (typeof document === 'undefined') return
-  document.cookie = `${SESSION_HINT}=1; max-age=${MAX_AGE}; ${attributes()}`
+  document.cookie = `${SESSION_HINT}=${HINT_VALUE[audience]}; max-age=${MAX_AGE}; ${attributes()}`
 }
 
 /** Called wherever a session ends: sign out, closing an account. */
@@ -60,7 +90,21 @@ export function markSignedOut(): void {
   document.cookie = `${SESSION_HINT}=; max-age=0; ${attributes()}`
 }
 
-export function hasSessionHint(): boolean {
-  if (typeof document === 'undefined') return false
-  return document.cookie.split('; ').some((pair) => pair === `${SESSION_HINT}=1`)
+/**
+ * Which audience the hint claims, or null for none.
+ *
+ * Anything unrecognised is null, which covers a tampered value and the old `1`
+ * equally. Null means the header shows its signed-out links - the safe reading,
+ * because it offers a way in rather than a way back to something that may not
+ * be there.
+ */
+export function sessionAudience(): SessionAudience | null {
+  if (typeof document === 'undefined') return null
+
+  for (const pair of document.cookie.split('; ')) {
+    const [name, value] = pair.split('=')
+    if (name === SESSION_HINT) return AUDIENCE_FOR[value ?? ''] ?? null
+  }
+
+  return null
 }

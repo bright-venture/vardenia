@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { SESSION_HINT, hasSessionHint, markSignedIn, markSignedOut } from './session-hint'
+import { SESSION_HINT, markSignedIn, markSignedOut, sessionAudience } from './session-hint'
 
 /**
  * The header reads this to decide between "Sign in" and "Your account".
  *
  * It carries no identity and authorises nothing - every real check still runs
  * against the httpOnly token - so what matters here is narrower than security:
- * that it never reports a session that has been ended, and that reading it on
- * the server is safe, because the header renders there first.
+ * that it never reports a session that has been ended, that it never reports
+ * the wrong audience, and that reading it on the server is safe, because the
+ * header renders there first.
  */
 
 const cookieJar = () => {
@@ -34,13 +35,30 @@ afterEach(() => vi.unstubAllGlobals())
 describe('session hint', () => {
   it('is absent until somebody signs in', () => {
     cookieJar()
-    expect(hasSessionHint()).toBe(false)
+    expect(sessionAudience()).toBeNull()
   })
 
-  it('is present after signing in', () => {
+  it('reports a customer after a customer signs in', () => {
     cookieJar()
-    markSignedIn()
-    expect(hasSessionHint()).toBe(true)
+    markSignedIn('customer')
+    expect(sessionAudience()).toBe('customer')
+  })
+
+  /**
+   * The two audiences must not be confusable. A partner reading "Your account"
+   * is sent to /account, which holds nothing of theirs and asks them to sign in
+   * while they are already signed in.
+   */
+  it('reports a partner after a partner signs in', () => {
+    cookieJar()
+    markSignedIn('partner')
+    expect(sessionAudience()).toBe('partner')
+  })
+
+  it('does not confuse the two', () => {
+    cookieJar()
+    markSignedIn('partner')
+    expect(sessionAudience()).not.toBe('customer')
   })
 
   /**
@@ -50,34 +68,46 @@ describe('session hint', () => {
    */
   it('is gone after signing out', () => {
     cookieJar()
-    markSignedIn()
+    markSignedIn('customer')
     markSignedOut()
-    expect(hasSessionHint()).toBe(false)
+    expect(sessionAudience()).toBeNull()
   })
 
   it('survives other cookies sitting beside it', () => {
     cookieJar()
     document.cookie = 'NEXT_LOCALE=ar'
-    markSignedIn()
+    markSignedIn('customer')
     document.cookie = 'something=else'
-    expect(hasSessionHint()).toBe(true)
+    expect(sessionAudience()).toBe('customer')
   })
 
   /**
-   * `vd_session_other=1` must not read as `vd_session=1`. Whole-pair matching
+   * `vd_session_other=c` must not read as `vd_session=c`. Whole-name matching
    * rather than a substring search, or a cookie added later could switch the
    * header on by accident.
    */
   it('does not match a cookie whose name merely starts the same way', () => {
     cookieJar()
-    document.cookie = `${SESSION_HINT}_other=1`
-    expect(hasSessionHint()).toBe(false)
+    document.cookie = `${SESSION_HINT}_other=c`
+    expect(sessionAudience()).toBeNull()
   })
 
-  it('does not treat any value as signed in', () => {
+  it('does not treat an unrecognised value as a session', () => {
     cookieJar()
     document.cookie = `${SESSION_HINT}=0`
-    expect(hasSessionHint()).toBe(false)
+    expect(sessionAudience()).toBeNull()
+  })
+
+  /**
+   * Browsers are still carrying `1` from the version that meant only "somebody
+   * is signed in". It must not read as a customer: staff and partners got that
+   * same value, which is the bug this replaced. Reading as nobody is right - the
+   * middleware rewrites it on the very next request.
+   */
+  it('does not treat the old value as a customer', () => {
+    cookieJar()
+    document.cookie = `${SESSION_HINT}=1`
+    expect(sessionAudience()).toBeNull()
   })
 
   /**
@@ -86,8 +116,8 @@ describe('session hint', () => {
    */
   it('is safe on the server, where there is no document', () => {
     vi.stubGlobal('document', undefined)
-    expect(hasSessionHint()).toBe(false)
-    expect(() => markSignedIn()).not.toThrow()
+    expect(sessionAudience()).toBeNull()
+    expect(() => markSignedIn('customer')).not.toThrow()
     expect(() => markSignedOut()).not.toThrow()
   })
 })

@@ -51,7 +51,7 @@ export function PartnerLoginForm() {
       })
 
       if (response.ok) {
-        markSignedIn()
+        markSignedIn('partner')
         // `refresh` before `push`: the dashboard is a server component that
         // reads the session, and the router cache still holds the signed-out
         // version of it.
