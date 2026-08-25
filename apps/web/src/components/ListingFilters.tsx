@@ -249,17 +249,25 @@ export function ListingFilters({
 
   const anyFilter = Boolean(state.subcategory) || Boolean(state.governorate) || narrowed
 
+  /*
+   * `mb-8` matching the `mt-8` above it, so the bar is a band with air on both
+   * sides rather than a strip glued to the top of the grid.
+   *
+   * It belongs here rather than on ListingGrid: the grid is also used on the
+   * home page and in search results, where it follows a heading and already has
+   * its own spacing. Putting the margin on the filters gives the gap to exactly
+   * the two pages that need it.
+   */
   return (
-    <div className="mt-8 flex flex-col gap-3">
+    <div className="mb-8 mt-8 flex flex-col gap-3">
       {/*
-        The bar: one row that scrolls sideways rather than wrapping, plus the
-        sheet trigger pinned to the end of it.
+        The bar: the regions worth offering, and the sheet trigger beside them.
 
-        Wrapping was the problem this replaces. Eight governorates and up to
-        fifty-one kinds wrapped to four lines on a laptop and six on a phone,
-        which pushed the listings themselves below the fold on the one page
-        whose entire job is to show listings. A single scrolling row is bounded:
-        it is always exactly one row tall, whatever the taxonomy grows to.
+        Wrapping to four lines on a laptop was the original problem, and a
+        sideways-scrolling row was the original answer to it. That row is what
+        later dragged the whole page sideways - see the note below. Showing
+        only the regions that have listings keeps it short enough to wrap
+        harmlessly, which is a bound on the content rather than on the box.
       */}
       <div className="flex items-start gap-3">
         {/*
