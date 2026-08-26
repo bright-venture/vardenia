@@ -12,6 +12,7 @@ import * as migration_20260820_171943_customer_deleted_at from './20260820_17194
 import * as migration_20260821_130500_filter_indexes from './20260821_130500_filter_indexes'
 import * as migration_20260824_075820_reviews from './20260824_075820_reviews'
 import * as migration_20260824_122311_google_rating from './20260824_122311_google_rating'
+import * as migration_20260826_092448_home_qr_target from './20260826_092448_home_qr_target'
 
 /**
  * The order here is the order they run in, and two entries depend on it.
@@ -24,7 +25,7 @@ import * as migration_20260824_122311_google_rating from './20260824_122311_goog
  * to 181600 so the filename and the dependency agree.
  *
  * `migrate:create` rewrites this file wholesale and has now deleted this comment
- * seven times. Restore it. If you add a migration by hand, re-read the list
+ * eight times. Restore it. If you add a migration by hand, re-read the list
  * afterwards rather than trusting the regeneration - and be aware the generator
  * diffs against the JSON snapshots here, not the database, so a hand-written
  * migration leaves it out of step until the next generated one catches up.
@@ -110,5 +111,10 @@ export const migrations = [
     up: migration_20260824_122311_google_rating.up,
     down: migration_20260824_122311_google_rating.down,
     name: '20260824_122311_google_rating',
+  },
+  {
+    up: migration_20260826_092448_home_qr_target.up,
+    down: migration_20260826_092448_home_qr_target.down,
+    name: '20260826_092448_home_qr_target',
   },
 ]

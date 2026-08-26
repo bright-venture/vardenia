@@ -66,6 +66,10 @@ export const QrCodes: CollectionConfig = {
       required: true,
       defaultValue: 'business',
       options: QR_TARGET_TYPES.map((value) => ({ label: value, value })),
+      admin: {
+        description:
+          'What the code opens. Pick "home" for a generic code that opens vardenia.com itself - a cover, a card, a window sticker - and leave the target fields below empty. Everything else needs the matching field filled in.',
+      },
     },
     {
       name: 'business',

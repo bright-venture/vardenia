@@ -121,6 +121,11 @@ export function parseIssueId(raw: string | null): number | null {
 
 /** Whatever a person would recognise. Falls back to the code so a card is never blank. */
 function labelFor(qr: QrDoc): string {
+  // Checked before the relationships, because a home code may still be tied to
+  // an issue - and "Summer 2026" on the card that goes on the cover is exactly
+  // the mislabelling this sheet exists to catch.
+  if (qr.targetType === 'home') return 'Vardenia home page'
+
   const named = populated(qr.business) ?? populated(qr.article) ?? populated(qr.issue)
   if (typeof named?.title === 'string') return named.title
   if (typeof named?.name === 'string') return named.name

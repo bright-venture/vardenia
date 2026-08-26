@@ -53,7 +53,24 @@ export function normalizeCode(input: string): string | null {
  * page rather than the homepage, so a value added here without a matching case
  * fails visibly instead of silently sending readers somewhere plausible.
  */
-export const QR_TARGET_TYPES = ['business', 'article', 'issue', 'category', 'external'] as const
+export const QR_TARGET_TYPES = [
+  'business',
+  'article',
+  'issue',
+  'category',
+  'external',
+  /**
+   * The website itself, not anything in it.
+   *
+   * The one code that can go on a cover, a card or a window without naming a
+   * listing. It is deliberately not an `external` code pointing at our own
+   * domain: that would bake the address into a database row, and the row is
+   * read by a symbol printed on paper. Resolving it from the running site's own
+   * base URL instead means a domain change follows automatically, which is the
+   * entire reason scans go through /g at all.
+   */
+  'home',
+] as const
 export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
 
 /**
