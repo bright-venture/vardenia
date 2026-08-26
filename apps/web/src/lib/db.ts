@@ -43,6 +43,13 @@ export const DB_SCHEMA = 'payload'
 
 interface QueryResult {
   rows: Record<string, unknown>[]
+  /**
+   * How many rows a write touched. node-postgres returns null for statements
+   * that do not report one, which is why this is not simply a number - a caller
+   * treating null as zero would report a successful delete as having deleted
+   * nothing.
+   */
+  rowCount?: number | null
 }
 
 interface Pool {
@@ -134,6 +141,16 @@ export function rawDb(payload: Payload): RawDb {
  */
 export function assertDatabaseInternals(payload: Payload): void {
   const db = rawDb(payload)
+  /**
+   * `rate_limits` is queried by raw SQL too and is deliberately not in this
+   * list. Every other table here is one whose absence should stop the process:
+   * a scan that is not counted is revenue evidence lost, silently. The rate
+   * limiter is the opposite - it is designed to fail open, because a limiter
+   * that turns a database problem into "nobody can sign in, including the staff
+   * who would fix it" is worse than the attack it prevents. Asserting it here
+   * would also mean a deploy that lands before its migration refuses to boot.
+   * See lib/rate-limit-store, which says so once on the console instead.
+   */
   for (const table of ['qr_codes', 'scan_events', 'businesses', 'issues', 'error_events']) {
     db.table(table)
   }

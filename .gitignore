@@ -186,3 +186,7 @@ apps/mobile/android/
 
 # Seed manifest: records what `pnpm seed` created, so reset removes only that.
 apps/web/.seed-manifest.json
+
+# Working ledger for the completion-gate tooling. Local only.
+.unlazy/
+.unlazy-hook-state.json

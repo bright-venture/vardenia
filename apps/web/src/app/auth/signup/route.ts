@@ -53,82 +53,86 @@ const json = (body: unknown, status = 200) =>
 const CHECK_YOUR_EMAIL =
   'Check your email. If we can open an account for that address, a message is on its way.'
 
-export const POST = withRateLimit(async (request: Request) => {
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return json({ ok: false, message: 'Expected a JSON body.' }, 400)
-  }
+export const POST = withRateLimit(
+  async (request: Request) => {
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return json({ ok: false, message: 'Expected a JSON body.' }, 400)
+    }
 
-  const parsed = signupSchema.safeParse(body)
-  if (!parsed.success) {
-    return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
-  }
+    const parsed = signupSchema.safeParse(body)
+    if (!parsed.success) {
+      return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
+    }
 
-  const { email, name, password, phone } = parsed.data
-  const payload = await getPayload({ config })
+    const { email, name, password, phone } = parsed.data
+    const payload = await getPayload({ config })
 
-  const existing = await payload.find({
-    collection: 'customers',
-    where: { email: { equals: email } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  })
-
-  if (existing.docs.length > 0) {
-    /**
-     * Deliberately not updated with the submitted name, phone or password.
-     *
-     * This request is unauthenticated and the address is unproven, so anything
-     * it writes would be a stranger editing somebody else's record - and setting
-     * the password would be handing them the account outright. The reset link
-     * goes to the address itself, which is the only thing here that proves
-     * anything.
-     */
-    await payload
-      .forgotPassword({
-        collection: 'customers',
-        data: { email },
-        disableEmail: false,
-      })
-      .catch(async (error) => {
-        /**
-         * Silent to the caller by design, and the caller is the person it hurts:
-         * they were told a message is on its way and it is not, so they are
-         * locked out of an account that already holds their bookings.
-         */
-        await reportError(error, { source: 'auth.signup.reset-email', path: '/auth/signup' })
-      })
-
-    return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
-  }
-
-  try {
-    await payload.create({
+    const existing = await payload.find({
       collection: 'customers',
-      data: { email, name, password, ...(phone ? { phone } : {}) },
+      where: { email: { equals: email } },
+      limit: 1,
+      depth: 0,
       overrideAccess: true,
     })
-  } catch (error) {
-    /**
-     * Most likely two sign-ups for the same address arriving together: the
-     * lookup above found nothing for both, and the unique index refused the
-     * second. That is a duplicate, not a failure the caller should see - and
-     * saying so would leak the thing this whole route is arranged to hide.
-     */
-    /**
-     * A warning rather than an error, because the likely cause is benign - two
-     * sign-ups racing, the second refused by the unique index. Worth recording
-     * anyway: if this ever climbs, the cause is not a race.
-     */
-    await reportError(error, {
-      source: 'auth.signup.create',
-      path: '/auth/signup',
-      level: 'warning',
-    })
-  }
 
-  return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
-}, RATE_LIMIT.AUTH_PER_WINDOW)
+    if (existing.docs.length > 0) {
+      /**
+       * Deliberately not updated with the submitted name, phone or password.
+       *
+       * This request is unauthenticated and the address is unproven, so anything
+       * it writes would be a stranger editing somebody else's record - and setting
+       * the password would be handing them the account outright. The reset link
+       * goes to the address itself, which is the only thing here that proves
+       * anything.
+       */
+      await payload
+        .forgotPassword({
+          collection: 'customers',
+          data: { email },
+          disableEmail: false,
+        })
+        .catch(async (error) => {
+          /**
+           * Silent to the caller by design, and the caller is the person it hurts:
+           * they were told a message is on its way and it is not, so they are
+           * locked out of an account that already holds their bookings.
+           */
+          await reportError(error, { source: 'auth.signup.reset-email', path: '/auth/signup' })
+        })
+
+      return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
+    }
+
+    try {
+      await payload.create({
+        collection: 'customers',
+        data: { email, name, password, ...(phone ? { phone } : {}) },
+        overrideAccess: true,
+      })
+    } catch (error) {
+      /**
+       * Most likely two sign-ups for the same address arriving together: the
+       * lookup above found nothing for both, and the unique index refused the
+       * second. That is a duplicate, not a failure the caller should see - and
+       * saying so would leak the thing this whole route is arranged to hide.
+       */
+      /**
+       * A warning rather than an error, because the likely cause is benign - two
+       * sign-ups racing, the second refused by the unique index. Worth recording
+       * anyway: if this ever climbs, the cause is not a race.
+       */
+      await reportError(error, {
+        source: 'auth.signup.create',
+        path: '/auth/signup',
+        level: 'warning',
+      })
+    }
+
+    return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
+  },
+  RATE_LIMIT.AUTH_PER_WINDOW,
+  { shared: true },
+)

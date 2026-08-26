@@ -160,7 +160,72 @@ export function tooManyRequests(verdict: RateVerdict): Response {
 type Handler = (request: Request, context: never) => Promise<Response>
 
 /**
+ * The same decision, counted in Postgres instead of in this process.
+ *
+ * # Why the auth budget needs it and the general budget does not
+ *
+ * The Map above is per instance. On Netlify each warm container holds its own,
+ * so the real budget is the configured one multiplied by however many are
+ * running, and an attacker gets a fresh allowance by arriving at a different
+ * one. For a budget of 300 general requests that is untidy. For a budget of 10
+ * login attempts it is the difference between a limit and a decoration.
+ *
+ * The cost is one round trip, which on the current deployment is about 200ms.
+ * That is acceptable on a login and would not be on every API read, which is why
+ * this is opt-in rather than the default.
+ *
+ * # It fails open
+ *
+ * A database that cannot answer falls back to the in-memory count rather than
+ * refusing. A rate limiter that turns a database outage into "nobody can sign
+ * in, including staff, including to fix it" has converted a availability
+ * problem into a worse one. The in-memory counter is weak, not absent, so the
+ * fallback is a degraded limit rather than none.
+ */
+async function checkRateShared(
+  headers: Headers,
+  now: number,
+  budget: number,
+): Promise<RateVerdict> {
+  const ip = clientIp(headers)
+  const unlimited: RateVerdict = { allowed: true, limit: budget, remaining: budget, retryAfter: 0 }
+  if (!ip) return unlimited
+
+  const [{ getPayload }, config, store] = await Promise.all([
+    import('payload'),
+    import('../payload.config').then((m) => m.default),
+    import('./rate-limit-store'),
+  ])
+
+  const payload = await getPayload({ config })
+  const outcome = await store.hit(payload, store.bucketKey(budget, ip), WINDOW_MS, now)
+
+  // Unreachable database. See the note above on failing open.
+  if (!outcome) return checkRate(headers, now, budget)
+
+  /**
+   * Swept from the request that happens to notice, roughly once per window per
+   * instance. There is no scheduler on this platform, and a dedicated endpoint
+   * would be another thing to remember to call.
+   */
+  if (Math.random() < 0.01) void store.sweepExpired(payload)
+
+  const retryAfter = Math.max(1, Math.ceil((outcome.resetAt - now) / 1000))
+
+  return {
+    allowed: outcome.count <= budget,
+    limit: budget,
+    remaining: Math.max(0, budget - outcome.count),
+    retryAfter,
+  }
+}
+
+/**
  * Wrap a handler so repeated calls from one address are bounded.
+ *
+ * Pass `{ shared: true }` for anything an attacker would want to repeat -
+ * signing in, asking for a reset, creating an account. That counts in Postgres
+ * so the budget holds across instances; see checkRateShared.
  *
  * Never apply this to `/g/`. A printed code has to resolve for everyone, every
  * time, for as long as the paper is in circulation - a coach party of forty
@@ -168,9 +233,16 @@ type Handler = (request: Request, context: never) => Promise<Response>
  * attack. That route has its own protection in scan-guard, which limits what
  * gets *counted* and never what works.
  */
-export function withRateLimit(handler: Handler, budget = MAX_PER_WINDOW): Handler {
+export function withRateLimit(
+  handler: Handler,
+  budget = MAX_PER_WINDOW,
+  { shared = false }: { shared?: boolean } = {},
+): Handler {
   return async (request, context) => {
-    const verdict = checkRate(request.headers, Date.now(), budget)
+    const now = Date.now()
+    const verdict = shared
+      ? await checkRateShared(request.headers, now, budget)
+      : checkRate(request.headers, now, budget)
     if (!verdict.allowed) return tooManyRequests(verdict)
 
     const response = await handler(request, context)

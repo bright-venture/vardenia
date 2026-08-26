@@ -20,6 +20,7 @@ import { Issues } from './collections/Issues'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
+import { RateLimits } from './collections/RateLimits'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
@@ -138,6 +139,7 @@ export default buildConfig({
     Bookings,
     ScanEvents,
     ErrorEvents,
+    RateLimits,
   ],
 
   /**

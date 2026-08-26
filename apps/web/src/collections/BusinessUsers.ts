@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
 import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
+import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
  * Owners and managers of listings we have onboarded.
@@ -28,6 +29,8 @@ export const BusinessUsers: CollectionConfig = {
   slug: 'business-users',
 
   auth: {
+    // Secure in production, Lax always. See lib/auth-cookies.
+    cookies: SESSION_COOKIES,
     // Shorter than staff's eight hours. These sessions live on personal phones
     // in a business, not on a laptop the team controls.
     tokenExpiration: 60 * 60 * 4,

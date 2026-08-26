@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 import { closeRatherThanDelete } from '../hooks/closeRatherThanDelete'
+import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
  * The public. People who book things.
@@ -31,6 +32,8 @@ export const Customers: CollectionConfig = {
   slug: 'customers',
 
   auth: {
+    // Secure in production, Lax always. See lib/auth-cookies.
+    cookies: SESSION_COOKIES,
     tokenExpiration: 60 * 60 * 24 * 7,
     maxLoginAttempts: 10,
     lockTime: 10 * 60 * 1000,

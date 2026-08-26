@@ -1,9 +1,12 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
+import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: {
+    // Secure in production, Lax always. See lib/auth-cookies.
+    cookies: SESSION_COOKIES,
     tokenExpiration: 60 * 60 * 8,
     maxLoginAttempts: 5,
     lockTime: 10 * 60 * 1000,

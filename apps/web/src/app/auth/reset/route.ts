@@ -45,66 +45,70 @@ export const dynamic = 'force-dynamic'
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
-export const POST = withRateLimit(async (request: Request) => {
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return json({ ok: false, message: 'Expected a JSON body.' }, 400)
-  }
+export const POST = withRateLimit(
+  async (request: Request) => {
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return json({ ok: false, message: 'Expected a JSON body.' }, 400)
+    }
 
-  const parsed = resetPasswordSchema.safeParse(body)
-  if (!parsed.success) {
-    return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
-  }
+    const parsed = resetPasswordSchema.safeParse(body)
+    if (!parsed.success) {
+      return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
+    }
 
-  const { token, password } = parsed.data
-  const payload = await getPayload({ config })
+    const { token, password } = parsed.data
+    const payload = await getPayload({ config })
 
-  let userId: number | string
-  try {
-    const result = await payload.resetPassword({
-      collection: 'customers',
-      data: { token, password },
-      overrideAccess: true,
-    })
-    userId = (result.user as { id: number | string }).id
-  } catch {
-    /**
-     * One message for every failure, and a 400 rather than a 403.
-     *
-     * Payload distinguishes an unknown token from an expired one. Passing that
-     * on would say whether a token ever existed, which is a small oracle but a
-     * free one to close - and neither answer changes what the reader does next,
-     * which is ask for a new link.
-     */
-    return json(
-      { ok: false, message: 'That link is no longer valid. Please ask for a new one.' },
-      400,
-    )
-  }
+    let userId: number | string
+    try {
+      const result = await payload.resetPassword({
+        collection: 'customers',
+        data: { token, password },
+        overrideAccess: true,
+      })
+      userId = (result.user as { id: number | string }).id
+    } catch {
+      /**
+       * One message for every failure, and a 400 rather than a 403.
+       *
+       * Payload distinguishes an unknown token from an expired one. Passing that
+       * on would say whether a token ever existed, which is a small oracle but a
+       * free one to close - and neither answer changes what the reader does next,
+       * which is ask for a new link.
+       */
+      return json(
+        { ok: false, message: 'That link is no longer valid. Please ask for a new one.' },
+        400,
+      )
+    }
 
-  try {
-    await payload.update({
-      collection: 'customers',
-      id: userId,
-      data: { _verified: true },
-      overrideAccess: true,
-    })
-  } catch (error) {
-    /**
-     * Logged and swallowed. The password is already changed by this point, so
-     * failing the request would tell the customer their reset did not work when
-     * it did, and they would set it again to no effect. An account left
-     * unverified is recoverable by staff; a customer who believes the reset
-     * failed is not.
-     */
-    await reportError(error, {
-      source: 'auth.reset.verification',
-      path: '/auth/reset',
-      extra: { userId },
-    })
-  }
+    try {
+      await payload.update({
+        collection: 'customers',
+        id: userId,
+        data: { _verified: true },
+        overrideAccess: true,
+      })
+    } catch (error) {
+      /**
+       * Logged and swallowed. The password is already changed by this point, so
+       * failing the request would tell the customer their reset did not work when
+       * it did, and they would set it again to no effect. An account left
+       * unverified is recoverable by staff; a customer who believes the reset
+       * failed is not.
+       */
+      await reportError(error, {
+        source: 'auth.reset.verification',
+        path: '/auth/reset',
+        extra: { userId },
+      })
+    }
 
-  return json({ ok: true })
-}, RATE_LIMIT.AUTH_PER_WINDOW)
+    return json({ ok: true })
+  },
+  RATE_LIMIT.AUTH_PER_WINDOW,
+  { shared: true },
+)

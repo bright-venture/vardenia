@@ -69,7 +69,10 @@ const isAuthPath = (url: string) => {
  */
 const guardWrite = <T>(handler: T) => {
   const general = withRateLimit(handler as never)
-  const auth = withRateLimit(handler as never, RATE_LIMIT.AUTH_PER_WINDOW)
+  // Shared, because these are the paths worth repeating: /api/customers/login,
+  // /api/business-users/login, /api/users/login, and the forgot-password and
+  // unlock endpoints beside them. A per-instance count on those is not a limit.
+  const auth = withRateLimit(handler as never, RATE_LIMIT.AUTH_PER_WINDOW, { shared: true })
 
   return (async (request: Request, context: unknown) =>
     isAuthPath(request.url)
