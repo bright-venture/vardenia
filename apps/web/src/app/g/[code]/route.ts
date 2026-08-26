@@ -172,12 +172,20 @@ async function recordScan(
        * Geo comes from whatever CDN is in front, city-level only, and is null
        * when there is none. Vercel and Cloudflare each set their own pair.
        *
-       * Netlify sets neither, so a bare *.netlify.app deployment records every
-       * scan with no city and no country. The fix is not code: pointing the real
-       * domain through Cloudflare's proxy supplies both headers, along with
-       * cf-connecting-ip, which is the address clientIp already prefers. Until
-       * then these columns stay empty - acceptable while no reader has a printed
-       * code, and worth knowing before anyone reads a scan report as complete.
+       * # Country arrives, city does not, and they are two separate settings
+       *
+       * This note used to say that putting the domain behind Cloudflare
+       * supplied both. It does not, and the first real scans proved it: two
+       * scans of a printed home code recorded `country=LB` and `city=NULL`.
+       *
+       * Cloudflare sends `cf-ipcountry` as soon as IP Geolocation is on, which
+       * it is. `cf-ipcity` comes from a different switch - Rules -> Transform
+       * Rules -> Managed Transforms -> **Add visitor location headers** - which
+       * also adds cf-region, cf-timezone and the lat/long pair. Nothing here
+       * changes when it is turned on; the header simply starts arriving.
+       *
+       * Netlify, the origin, sets neither, so a deployment reached directly on
+       * *.netlify.app rather than through the proxied domain records nothing.
        */
       city: request.headers.get('x-vercel-ip-city') ?? request.headers.get('cf-ipcity'),
       country: request.headers.get('x-vercel-ip-country') ?? request.headers.get('cf-ipcountry'),
