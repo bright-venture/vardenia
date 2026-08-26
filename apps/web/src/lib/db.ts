@@ -134,7 +134,7 @@ export function rawDb(payload: Payload): RawDb {
  */
 export function assertDatabaseInternals(payload: Payload): void {
   const db = rawDb(payload)
-  for (const table of ['qr_codes', 'scan_events', 'businesses', 'issues']) {
+  for (const table of ['qr_codes', 'scan_events', 'businesses', 'issues', 'error_events']) {
     db.table(table)
   }
 }

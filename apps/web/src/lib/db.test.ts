@@ -13,11 +13,13 @@ import { DB_SCHEMA, assertDatabaseInternals, rawDb } from './db'
 
 const pool = { query: async () => ({ rows: [] }) }
 
+// Every table assertDatabaseInternals checks. Add one there, add it here.
 const tableNameMap = new Map([
   ['qr_codes', 'qr_codes'],
   ['scan_events', 'scan_events'],
   ['businesses', 'businesses'],
   ['issues', 'issues'],
+  ['error_events', 'error_events'],
 ])
 
 /** Shaped like the real adapter, verified against a live Supabase connection. */

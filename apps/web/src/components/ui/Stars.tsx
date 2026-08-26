@@ -110,11 +110,7 @@ export function Stars({
      * as one graphic saying "4.5 out of 5, from 12 reviews" rather than as five
      * unlabelled shapes.
      */
-    <span
-      role="img"
-      aria-label={label}
-      className={`inline-flex items-center gap-2 ${className}`}
-    >
+    <span role="img" aria-label={label} className={`inline-flex items-center gap-2 ${className}`}>
       <span className="inline-flex gap-0.5" dir="ltr" aria-hidden>
         {[0, 1, 2, 3, 4].map((i) => (
           <Star key={i} fill={clamped - i} />

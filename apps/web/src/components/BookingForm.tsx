@@ -462,10 +462,16 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
           <p className="font-medium">{t('accountRequired')}</p>
           <p className="mt-1 text-sm">{t('accountRequiredWhy')}</p>
           <div className="mt-3 flex flex-wrap gap-3">
-            <Link href={{ pathname: '/account/signup', query: { next } }} className={PRIMARY_BUTTON}>
+            <Link
+              href={{ pathname: '/account/signup', query: { next } }}
+              className={PRIMARY_BUTTON}
+            >
               {t('accountCreate')}
             </Link>
-            <Link href={{ pathname: '/account/login', query: { next } }} className={SECONDARY_BUTTON}>
+            <Link
+              href={{ pathname: '/account/login', query: { next } }}
+              className={SECONDARY_BUTTON}
+            >
               {t('accountSignIn')}
             </Link>
           </div>

@@ -93,7 +93,9 @@ export function syncSessionHint(request: NextRequest, response: NextResponse): N
    * keeps local http development working, where no such header exists.
    */
   const forwarded = request.headers.get('x-forwarded-proto')
-  const secure = forwarded ? forwarded.split(',')[0]?.trim() === 'https' : request.nextUrl.protocol === 'https:'
+  const secure = forwarded
+    ? forwarded.split(',')[0]?.trim() === 'https'
+    : request.nextUrl.protocol === 'https:'
 
   // A week, matching the token's own lifetime, so the two lapse together.
   const shared = { path: '/', sameSite: 'lax', secure } as const

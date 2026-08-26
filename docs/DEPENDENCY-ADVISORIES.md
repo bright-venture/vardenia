@@ -13,12 +13,12 @@ The `pnpm.overrides` block in the root `package.json` forces four transitive
 packages forward. None of them is a direct dependency, so there is nothing to
 upgrade in the ordinary way - the fix has to be applied to the whole tree.
 
-| Package | Forced to | Fixes | Owned by |
-| --- | --- | --- | --- |
-| `undici` | `^7.29.0` | cross-user information disclosure (high), plus three moderates | `payload` |
-| `postcss` | `^8.5.23` | path traversal and arbitrary file read (high), XSS, two more | `next`, `vite`, `@expo/metro-config` |
-| `nanoid` | `^3.3.18` | infinite loop with custom generators (high) | `expo-router`, `postcss` |
-| `sharp` | `^0.35.3` | inherited libvips vulnerabilities (high) | `next` |
+| Package   | Forced to | Fixes                                                          | Owned by                             |
+| --------- | --------- | -------------------------------------------------------------- | ------------------------------------ |
+| `undici`  | `^7.29.0` | cross-user information disclosure (high), plus three moderates | `payload`                            |
+| `postcss` | `^8.5.23` | path traversal and arbitrary file read (high), XSS, two more   | `next`, `vite`, `@expo/metro-config` |
+| `nanoid`  | `^3.3.18` | infinite loop with custom generators (high)                    | `expo-router`, `postcss`             |
+| `sharp`   | `^0.35.3` | inherited libvips vulnerabilities (high)                       | `next`                               |
 
 `sharp` is also a direct dependency of `apps/web`, raised to `^0.35.3` there.
 The override exists because Next ships its own copy and the two have to agree -
@@ -36,7 +36,7 @@ the open redirect and the prototype pollution. Three things it needed, none of
 which the type checker or the test suite would have caught on its own:
 
 - **`localeCookie: false`** in `i18n/routing.ts`. v3 had one setting;
-  `localeDetection: false` turned off Accept-Language detection *and* the
+  `localeDetection: false` turned off Accept-Language detection _and_ the
   NEXT_LOCALE cookie. v4 split them into two options that both default to
   `true`, so the upgrade alone would have started setting a year-long locale
   cookie on every visitor. Verified by removing the line again: the cookie

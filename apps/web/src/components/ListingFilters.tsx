@@ -1,10 +1,4 @@
-import {
-  AMENITIES,
-  AMENITY_SLUGS,
-  GOVERNORATES,
-  PRICE_RANGES,
-  PRICE_SLUGS,
-} from '@vardenia/core'
+import { AMENITIES, AMENITY_SLUGS, GOVERNORATES, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'
@@ -239,9 +233,10 @@ export function ListingFilters({
    */
   const INLINE_REGIONS = 5
   const shown = counts
-    ? GOVERNORATES.filter(
-        (g) => (counts[g.slug] ?? 0) > 0 || state.governorate === g.slug,
-      ).slice(0, INLINE_REGIONS)
+    ? GOVERNORATES.filter((g) => (counts[g.slug] ?? 0) > 0 || state.governorate === g.slug).slice(
+        0,
+        INLINE_REGIONS,
+      )
     : GOVERNORATES
 
   const narrowed =

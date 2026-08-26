@@ -161,16 +161,35 @@ describe('other collections', () => {
   })
 })
 
+const ANONYMOUS_WRITES: [string, unknown][] = [
+  ['/api/businesses', { name: 'Intruder', slug: 'intruder' }],
+  ['/api/articles', { title: 'Intruder', slug: 'intruder' }],
+  ['/api/issues', { title: 'Intruder', issueNumber: 999 }],
+  ['/api/scan-events', { code: 'AAAAAAA', scannedAt: new Date().toISOString() }],
+  ['/api/users', { email: 'intruder@example.com', password: 'x', roles: ['admin'] }],
+]
+
 describe('anonymous writes', () => {
+  /**
+   * Runs first, because the assertion below cannot tell the two apart.
+   *
+   * Payload answers 404 for a collection it does not have, and this file used to
+   * list /api/pages. That collection was deleted three days after this test was
+   * written, so the line was asserting that a route which no longer exists
+   * refuses writes - which it does, for the wrong reason, and would have failed
+   * here as an access-control problem. Name the real cause instead.
+   */
+  it('lists only collections that still exist', () => {
+    const slugs = payload.config.collections.map((c) => c.slug)
+
+    for (const [path] of ANONYMOUS_WRITES) {
+      const slug = path.replace('/api/', '')
+      expect(slugs, `${path} names a collection that is no longer configured`).toContain(slug)
+    }
+  })
+
   it('are refused on every collection', async () => {
-    const attempts: [string, unknown][] = [
-      ['/api/businesses', { name: 'Intruder', slug: 'intruder' }],
-      ['/api/articles', { title: 'Intruder', slug: 'intruder' }],
-      ['/api/issues', { title: 'Intruder', issueNumber: 999 }],
-      ['/api/pages', { title: 'Intruder', slug: 'intruder' }],
-      ['/api/scan-events', { code: 'AAAAAAA', scannedAt: new Date().toISOString() }],
-      ['/api/users', { email: 'intruder@example.com', password: 'x', roles: ['admin'] }],
-    ]
+    const attempts = ANONYMOUS_WRITES
 
     for (const [path, body] of attempts) {
       const { status } = await restPost(path, body)

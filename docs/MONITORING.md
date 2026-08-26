@@ -27,13 +27,13 @@ Admin panel → **Analytics → Error Events**.
 
 ### How to read the table
 
-| Column | What it means |
-| --- | --- |
-| **Message** | What failed, scrubbed of anything sensitive |
-| **Source** | Which part of the site. `booking.confirmation-email`, `auth.profile.verification`, `qr.scan-counter` |
-| **Count** | How many times **this same bug** has happened |
-| **Last seen** | When it last happened |
-| **Resolved** | You tick it. A later occurrence unticks it automatically |
+| Column        | What it means                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| **Message**   | What failed, scrubbed of anything sensitive                                                          |
+| **Source**    | Which part of the site. `booking.confirmation-email`, `auth.profile.verification`, `qr.scan-counter` |
+| **Count**     | How many times **this same bug** has happened                                                        |
+| **Last seen** | When it last happened                                                                                |
+| **Resolved**  | You tick it. A later occurrence unticks it automatically                                             |
 
 The important thing: **one row is one bug, not one occurrence.** A crash loop is
 a single row with a count in the thousands, not thousands of rows. That is what
@@ -83,10 +83,10 @@ cover it, and there is not one yet.
 
 Set `NEXT_PUBLIC_ANALYTICS_SRC` plus **one** identifier:
 
-| Provider | Variables |
-| --- | --- |
-| Plausible | `SRC=https://plausible.io/js/script.js` and `DOMAIN=vardenia.com` |
-| Umami | `SRC=https://cloud.umami.is/script.js` and `WEBSITE_ID=<id from dashboard>` |
+| Provider  | Variables                                                                   |
+| --------- | --------------------------------------------------------------------------- |
+| Plausible | `SRC=https://plausible.io/js/script.js` and `DOMAIN=vardenia.com`           |
+| Umami     | `SRC=https://cloud.umami.is/script.js` and `WEBSITE_ID=<id from dashboard>` |
 
 Both are cookieless, which is why there is no consent banner on the site. Adding
 Google Analytics would require building one.
@@ -112,11 +112,11 @@ events automatically.
 
 Three numbers, from three different places:
 
-| Step | Where it lives |
-| --- | --- |
-| Scans | Admin dashboard, from `scan-events` |
-| Listing pageviews | Analytics dashboard |
-| Bookings | The `booking-requested` event, or the Bookings collection |
+| Step              | Where it lives                                            |
+| ----------------- | --------------------------------------------------------- |
+| Scans             | Admin dashboard, from `scan-events`                       |
+| Listing pageviews | Analytics dashboard                                       |
+| Bookings          | The `booking-requested` event, or the Bookings collection |
 
 Scans → views → bookings is the entire pitch to an advertiser. Nothing computes
 this for you yet; it is three numbers read off two screens.

@@ -48,11 +48,7 @@ export async function SectionsGrid({ locale }: { locale: Locale }) {
             href={`/${section.path}`}
             className="bg-surface-base hover:bg-surface-raised group relative flex min-h-[9.5rem] flex-col gap-2 p-6 transition-colors"
           >
-            <Icon
-              aria-hidden
-              className="text-gold-700 size-5 shrink-0"
-              strokeWidth={1.5}
-            />
+            <Icon aria-hidden className="text-gold-700 size-5 shrink-0" strokeWidth={1.5} />
             <span className="font-display text-ink-900 text-xl leading-tight">
               {ar ? section.ar : section.en}
             </span>

@@ -118,11 +118,7 @@ export function ListingCard({
 
           {typeof googleRating === 'number' && googleRating > 0 ? (
             <div className="mt-1">
-              <Stars
-                rating={googleRating}
-                count={googleRatingCount ?? undefined}
-                locale={locale}
-              />
+              <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
             </div>
           ) : null}
 

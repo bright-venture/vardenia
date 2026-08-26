@@ -197,8 +197,7 @@ export function FilterSheet({
     router.push(filterHref(base, draft, {}))
   }
 
-  const clear = () =>
-    setDraft({ amenities: [] })
+  const clear = () => setDraft({ amenities: [] })
 
   return (
     <>
@@ -325,8 +324,7 @@ export function FilterSheet({
                     active={draft.subcategory === child.slug}
                     onClick={() =>
                       set({
-                        subcategory:
-                          draft.subcategory === child.slug ? undefined : child.slug,
+                        subcategory: draft.subcategory === child.slug ? undefined : child.slug,
                       })
                     }
                   >

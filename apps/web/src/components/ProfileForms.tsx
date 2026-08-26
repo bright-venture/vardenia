@@ -207,8 +207,8 @@ export function ChangeEmail({ current }: { current: string }) {
             account out of nothing but does make it unverified until the link is
             followed, and finding that out afterwards is a surprise. */}
         <p className="text-ink-500 mt-3 text-xs leading-relaxed">
-          We will send a link to the new address to confirm it, and tell your old
-          address that it changed.
+          We will send a link to the new address to confirm it, and tell your old address that it
+          changed.
         </p>
 
         {done ? <p className={`${NOTICE_SUCCESS} mt-3`}>{done}</p> : null}

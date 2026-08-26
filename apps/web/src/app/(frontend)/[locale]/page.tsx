@@ -67,11 +67,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <main>
       <Hero />
 
-      <Band
-        eyebrow={t('sectionsEyebrow')}
-        title={t('sectionsTitle')}
-        note={t('sectionsNote')}
-      >
+      <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
         <SectionShaderCards locale={locale as Locale} />
       </Band>
 

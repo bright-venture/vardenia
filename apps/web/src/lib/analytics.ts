@@ -62,9 +62,7 @@ export function analyticsConfig(
 
 /** The events worth naming. Kept small on purpose - see the note below. */
 export type AnalyticsEvent =
-  | 'booking-requested'
-  | 'listing-viewed-from-print'
-  | 'directory-filtered'
+  'booking-requested' | 'listing-viewed-from-print' | 'directory-filtered'
 
 /**
  * Record a named event, if analytics is loaded at all.

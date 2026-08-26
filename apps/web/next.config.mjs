@@ -42,8 +42,7 @@ const nextConfig = {
    *
    * Keep `.next-dev` in the ignore rules alongside `.next`.
    */
-  distDir:
-    process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? '.next-dev' : '.next',
+  distDir: process.env.NODE_ENV === 'development' && !process.env.NETLIFY ? '.next-dev' : '.next',
   // Workspace packages ship TypeScript source, not build output - one less
   // build step, and the whole monorepo typechecks as a single graph.
   transpilePackages: [

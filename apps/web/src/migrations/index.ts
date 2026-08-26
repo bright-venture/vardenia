@@ -1,17 +1,17 @@
-import * as migration_20260813_123246_baseline from './20260813_123246_baseline';
-import * as migration_20260813_165319_qr_category from './20260813_165319_qr_category';
-import * as migration_20260818_122702_drop_pages from './20260818_122702_drop_pages';
-import * as migration_20260818_170746_business_accounts from './20260818_170746_business_accounts';
-import * as migration_20260818_181551_bookings from './20260818_181551_bookings';
-import * as migration_20260818_181600_booking_capacity_trigger from './20260818_181600_booking_capacity_trigger';
-import * as migration_20260819_090000_drop_contact_fields from './20260819_090000_drop_contact_fields';
-import * as migration_20260819_090728_customer_verification from './20260819_090728_customer_verification';
-import * as migration_20260819_171121_error_events from './20260819_171121_error_events';
-import * as migration_20260820_152907_booking_locale from './20260820_152907_booking_locale';
-import * as migration_20260820_171943_customer_deleted_at from './20260820_171943_customer_deleted_at';
-import * as migration_20260821_130500_filter_indexes from './20260821_130500_filter_indexes';
-import * as migration_20260824_075820_reviews from './20260824_075820_reviews';
-import * as migration_20260824_122311_google_rating from './20260824_122311_google_rating';
+import * as migration_20260813_123246_baseline from './20260813_123246_baseline'
+import * as migration_20260813_165319_qr_category from './20260813_165319_qr_category'
+import * as migration_20260818_122702_drop_pages from './20260818_122702_drop_pages'
+import * as migration_20260818_170746_business_accounts from './20260818_170746_business_accounts'
+import * as migration_20260818_181551_bookings from './20260818_181551_bookings'
+import * as migration_20260818_181600_booking_capacity_trigger from './20260818_181600_booking_capacity_trigger'
+import * as migration_20260819_090000_drop_contact_fields from './20260819_090000_drop_contact_fields'
+import * as migration_20260819_090728_customer_verification from './20260819_090728_customer_verification'
+import * as migration_20260819_171121_error_events from './20260819_171121_error_events'
+import * as migration_20260820_152907_booking_locale from './20260820_152907_booking_locale'
+import * as migration_20260820_171943_customer_deleted_at from './20260820_171943_customer_deleted_at'
+import * as migration_20260821_130500_filter_indexes from './20260821_130500_filter_indexes'
+import * as migration_20260824_075820_reviews from './20260824_075820_reviews'
+import * as migration_20260824_122311_google_rating from './20260824_122311_google_rating'
 
 /**
  * The order here is the order they run in, and two entries depend on it.
@@ -109,6 +109,6 @@ export const migrations = [
   {
     up: migration_20260824_122311_google_rating.up,
     down: migration_20260824_122311_google_rating.down,
-    name: '20260824_122311_google_rating'
+    name: '20260824_122311_google_rating',
   },
-];
+]

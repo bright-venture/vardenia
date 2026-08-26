@@ -9,11 +9,7 @@ import { formatBeirut } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
-import {
-  ChangeEmail,
-  ChangeName,
-  ChangePassword,
-} from '../../../../components/ProfileForms'
+import { ChangeEmail, ChangeName, ChangePassword } from '../../../../components/ProfileForms'
 
 /**
  * What a customer sees of themselves: their bookings, and a way out.

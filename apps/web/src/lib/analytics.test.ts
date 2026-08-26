@@ -35,11 +35,13 @@ describe('analytics stays off', () => {
 
 describe('analytics loads', () => {
   it('for a Plausible-style domain', () => {
-    expect(analyticsConfig('https://plausible.io/js/script.js', 'vardenia.com', undefined)).toEqual({
-      src: 'https://plausible.io/js/script.js',
-      domain: 'vardenia.com',
-      websiteId: null,
-    })
+    expect(analyticsConfig('https://plausible.io/js/script.js', 'vardenia.com', undefined)).toEqual(
+      {
+        src: 'https://plausible.io/js/script.js',
+        domain: 'vardenia.com',
+        websiteId: null,
+      },
+    )
   })
 
   it('for a Umami-style website id', () => {

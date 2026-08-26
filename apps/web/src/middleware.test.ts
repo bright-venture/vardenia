@@ -82,7 +82,6 @@ describe('a prefix is not a segment', () => {
   })
 })
 
-
 /**
  * The session hint must agree with the session, and about who it belongs to.
  *
@@ -173,10 +172,7 @@ describe('the session hint', () => {
 
   it('clears a hint left behind when staff sign in over a customer session', () => {
     const cookie = hintCookie(
-      syncSessionHint(
-        req({ [SESSION_HINT]: 'c', [PAYLOAD_COOKIE]: STAFF }),
-        NextResponse.next(),
-      ),
+      syncSessionHint(req({ [SESSION_HINT]: 'c', [PAYLOAD_COOKIE]: STAFF }), NextResponse.next()),
     )
     expect(cookie, 'the customer hint survived a staff token').toBeDefined()
     expect(cookie!.maxAge).toBe(0)
@@ -191,10 +187,7 @@ describe('the session hint', () => {
 
   it('corrects a hint that names the wrong audience', () => {
     const cookie = hintCookie(
-      syncSessionHint(
-        req({ [SESSION_HINT]: 'c', [PAYLOAD_COOKIE]: PARTNER }),
-        NextResponse.next(),
-      ),
+      syncSessionHint(req({ [SESSION_HINT]: 'c', [PAYLOAD_COOKIE]: PARTNER }), NextResponse.next()),
     )
     expect(cookie, 'a partner kept a customer hint').toBeDefined()
     expect(cookie!.value).toBe('p')

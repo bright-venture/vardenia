@@ -88,17 +88,13 @@ describe('partitionBookings and terminal statuses', () => {
   const past = new Date(Date.now() - 7 * 24 * 3600_000).toISOString()
 
   it('files a completed booking under past even when its date is ahead', () => {
-    const { upcoming, past: done } = partitionBookings([
-      { end: future, status: 'completed' },
-    ])
+    const { upcoming, past: done } = partitionBookings([{ end: future, status: 'completed' }])
     expect(upcoming).toHaveLength(0)
     expect(done).toHaveLength(1)
   })
 
   it('files a cancellation under past even when its date is ahead', () => {
-    const { upcoming, past: done } = partitionBookings([
-      { end: future, status: 'cancelled' },
-    ])
+    const { upcoming, past: done } = partitionBookings([{ end: future, status: 'cancelled' }])
     expect(upcoming).toHaveLength(0)
     expect(done).toHaveLength(1)
   })

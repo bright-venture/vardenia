@@ -115,13 +115,7 @@ export function Band({
  * Mono, because it is a label rather than prose, and the letterspacing is what
  * makes eleven characters read as a category rather than as a short sentence.
  */
-export function Eyebrow({
-  children,
-  inverse = false,
-}: {
-  children: ReactNode
-  inverse?: boolean
-}) {
+export function Eyebrow({ children, inverse = false }: { children: ReactNode; inverse?: boolean }) {
   return (
     <p
       className={`font-mono text-[11px] uppercase tracking-[0.16em] ${
