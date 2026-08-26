@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import type { Locale } from '@vardenia/i18n'
+import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionShaderCards } from '../../../components/home/SectionShaderCards'
 import { ArticleCard } from '../../../components/ArticleCard'
@@ -45,7 +45,16 @@ import { findArticles } from '../../../lib/articles'
  * announcing a section with nothing in it.
  */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params
+  const { locale: raw } = await params
+  /**
+   * Before anything is fetched, and not in the layout.
+   *
+   * The layout guards too, but layouts and pages render in parallel, so its
+   * `notFound()` does not stop the two queries below. This page was the only one
+   * that fetched without checking, which is how `/favicon.ico` became a 500 in
+   * production. See lib/require-locale.
+   */
+  const locale = requireLocale(raw)
   setRequestLocale(locale)
 
   const t = await getTranslations('home')
@@ -59,8 +68,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
    * cache read rather than a round trip to Frankfurt.
    */
   const [listings, articles] = await Promise.all([
-    findListings({ locale: locale as Locale, perPage: 6 }),
-    findArticles({ locale: locale as Locale, perPage: 3 }),
+    findListings({ locale, perPage: 6 }),
+    findArticles({ locale, perPage: 3 }),
   ])
 
   return (
@@ -68,7 +77,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <Hero />
 
       <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
-        <SectionShaderCards locale={locale as Locale} />
+        <SectionShaderCards locale={locale} />
       </Band>
 
       <Band
@@ -83,7 +92,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       >
         <ListingGrid
           listings={listings.docs as ListingSummary[]}
-          locale={locale as Locale}
+          locale={locale}
           empty={t('listingsEmpty')}
           emptyBody={t('listingsEmptyBody')}
           emptyAction={
@@ -117,7 +126,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 publishedAt={article.publishedAt}
                 heroImage={article.heroImage as never}
                 priority={index === 0}
-                locale={locale as Locale}
+                locale={locale}
               />
             ))}
           </div>
