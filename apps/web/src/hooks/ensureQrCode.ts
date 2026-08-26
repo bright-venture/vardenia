@@ -1,8 +1,7 @@
 import type { CollectionAfterChangeHook } from 'payload'
-import { DEFAULT_PLACEMENT, generateCode } from '@vardenia/core'
+import { DEFAULT_PLACEMENT } from '@vardenia/core'
+import { allocateCode } from '../lib/allocate-code'
 import { reportError } from '../lib/report'
-
-const MAX_ATTEMPTS = 5
 
 /**
  * Guarantees every listing owns a QR code from the moment it exists.
@@ -63,51 +62,49 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
     return { ...doc, qrCode: existing.id }
   }
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const code = generateCode()
+  // Shared with the Code field's own minting, so the two cannot drift apart.
+  // See lib/allocate-code.
+  const code = await allocateCode(payload)
 
-    const existing = await payload.find({
-      collection: 'qr-codes',
-      where: { code: { equals: code } },
-      limit: 1,
-      depth: 0,
-    })
-    if (existing.totalDocs > 0) continue // Astronomically unlikely; handled anyway.
-
-    const created = await payload.create({
-      collection: 'qr-codes',
-      data: {
-        code,
-        targetType: 'business',
-        business: doc.id,
-        // Codes exist to be printed. Minting one as 'digital' described a surface
-        // that does not exist and quietly hid the issue field behind a condition.
-        placement: DEFAULT_PLACEMENT,
-        active: true,
-      },
-      req,
+  if (!code) {
+    /**
+     * A published listing with no code cannot go in the magazine, and nothing on
+     * the page says so - the listing looks finished. Repeated collisions also
+     * mean the code space is filling up, which is a different and larger problem.
+     *
+     * Reported rather than thrown: the listing itself saved fine, and refusing
+     * the save would turn a code-allocation problem into an editor being unable
+     * to publish.
+     */
+    void reportError(new Error('Could not allocate a unique QR code after several attempts'), {
+      source: 'qr.allocate',
+      extra: { businessId: doc.id },
     })
 
-    await payload.update({
-      collection: 'businesses',
-      id: doc.id,
-      data: { qrCode: created.id },
-      req,
-      context: { skipQrGeneration: true },
-    })
-
-    return { ...doc, qrCode: created.id }
+    return doc
   }
 
-  /**
-   * A published listing with no code cannot go in the magazine, and nothing on
-   * the page says so - the listing looks finished. Repeated collisions also mean
-   * the code space is filling up, which is a different and larger problem.
-   */
-  void reportError(new Error('Could not allocate a unique QR code after several attempts'), {
-    source: 'qr.allocate',
-    extra: { businessId: doc.id },
+  const created = await payload.create({
+    collection: 'qr-codes',
+    data: {
+      code,
+      targetType: 'business',
+      business: doc.id,
+      // Codes exist to be printed. Minting one as 'digital' described a surface
+      // that does not exist and quietly hid the issue field behind a condition.
+      placement: DEFAULT_PLACEMENT,
+      active: true,
+    },
+    req,
   })
 
-  return doc
+  await payload.update({
+    collection: 'businesses',
+    id: doc.id,
+    data: { qrCode: created.id },
+    req,
+    context: { skipQrGeneration: true },
+  })
+
+  return { ...doc, qrCode: created.id }
 }

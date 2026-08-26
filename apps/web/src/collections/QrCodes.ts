@@ -7,6 +7,7 @@ import {
   revalidateQrCodesAfterDelete,
 } from '../hooks/revalidateQrCodes'
 import { isUsableExternalUrl, normalizeExternalUrl } from '../lib/external-url'
+import { allocateCode } from '../lib/allocate-code'
 
 /**
  * A printed code is permanent; its destination is not.
@@ -51,11 +52,42 @@ export const QrCodes: CollectionConfig = {
       unique: true,
       index: true,
       admin: { readOnly: true, description: 'Immutable. This is what gets printed.' },
+      /**
+       * Minted here, when the create form is built.
+       *
+       * It has to happen this early rather than in a save hook. The field is
+       * required *and* read-only, so the admin panel's own client-side check
+       * refuses an empty one before any request leaves the browser - which is
+       * exactly what happened the first time anyone tried to create a code by
+       * hand: "This field is required" over a box nobody is allowed to type in.
+       * Every code until then had been minted by ensureQrCode from a listing,
+       * so the admin path had never been walked.
+       *
+       * Abandoning the form costs nothing. Nothing is written until save, and
+       * the code space is 34 billion wide.
+       */
+      defaultValue: async ({ req }) => (req?.payload ? await allocateCode(req.payload) : undefined),
       hooks: {
         beforeChange: [
-          ({ value, originalDoc, operation }) => {
+          async ({ value, originalDoc, operation, req }) => {
+            // Immutable once it exists. This is the whole premise of the printed
+            // product: the paper cannot be reissued, so the code cannot change.
             if (operation === 'update' && originalDoc?.code) return originalDoc.code
-            return value
+            if (value) return value
+
+            /**
+             * Nothing supplied. The admin panel cannot reach here because of the
+             * default above, so this is the REST and local API path - a seed, a
+             * script, or an integration - and it is worth serving rather than
+             * rejecting.
+             */
+            const minted = req?.payload ? await allocateCode(req.payload) : null
+            if (!minted) {
+              throw new Error(
+                'Could not allocate a unique QR code after several attempts. Nothing was saved.',
+              )
+            }
+            return minted
           },
         ],
       },
