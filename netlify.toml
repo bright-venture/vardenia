@@ -56,6 +56,29 @@
 # Region selection needs a Netlify Core Pro plan or above. On a lower plan the
 # setting is ignored rather than failing the build - so if the improvement does
 # not appear, check the plan before looking for a bug.
+#
+# # It is being ignored today. Measured 26 August 2026.
+#
+# Two paths through the same force-dynamic function, so edge distance cancels:
+# /g/ZZZ returns before it ever calls getPayload, and /g/<seven valid chars>
+# costs exactly one uncached lookup. The difference was ~217ms. A laptop in
+# Lebanon querying the same database over the same pooler gets 62ms.
+#
+# Being three times further from Frankfurt than Beirut is means us-east-1, which
+# is the default. So this line is doing nothing on the current plan.
+#
+# What it costs, beyond a slower page:
+#
+#   - Payload's admin panel deletes and updates one document at a time so that
+#     hooks and access run per row. At this latency that is roughly a second per
+#     row, so any bulk action over about ten rows exceeds Netlify's 10s function
+#     timeout and surfaces as "An unknown error has occurred".
+#   - Every uncached dynamic request pays it. A listing page makes two queries.
+#   - A QR scan pays it on a cache miss, before the reader goes anywhere.
+#
+# Moving the database to us-east-1 would fix the latency and is the wrong fix:
+# Frankfurt is deliberate, both for readers in Lebanon and for the EU hosting
+# position the privacy policy rests on.
 [functions]
   region = "eu-central-1"
 
