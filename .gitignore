@@ -190,3 +190,8 @@ apps/web/.seed-manifest.json
 # Working ledger for the completion-gate tooling. Local only.
 .unlazy/
 .unlazy-hook-state.json
+
+# Listing directories for bulk import. The importer is code and is committed; the
+# spreadsheets it loads are business data and are not. No CSV belongs in here at all -
+# the test fixture is a TypeScript module, apps/web/src/import/sample-listings.ts.
+*.csv

@@ -96,6 +96,7 @@ export const Businesses: CollectionConfig = {
               },
             },
             { name: 'logo', type: 'upload', relationTo: 'media' },
+
             {
               name: 'amenities',
               type: 'select',
@@ -340,6 +341,38 @@ export const Businesses: CollectionConfig = {
               type: 'textarea',
               access: { read: isStaffFieldLevel },
               admin: { description: 'Never shown publicly. Enforced by field access above.' },
+            },
+
+            /**
+             * Which bulk import created this row, if any.
+             *
+             * # Why a listing needs to remember where it came from
+             *
+             * Imported listings are not customers. They are a directory bought
+             * in bulk, and some of them are demo data that has to leave again
+             * cleanly. Without a marker, "remove the demo listings" means
+             * matching on names, and a name match will eventually take a real
+             * listing with it.
+             *
+             * It is also the only thing that makes teardown safe. Deleting an
+             * imported listing has to be allowed to remove a QR code that the
+             * usual guard protects, and that permission is granted on the
+             * strength of this field and nothing else. See
+             * hooks/protectPrintedCodes and scripts/remove-import.
+             *
+             * Empty for anything a person created, which is what keeps the
+             * escape hatch away from real listings.
+             */
+            {
+              name: 'importBatch',
+              type: 'text',
+              index: true,
+              access: { read: isStaffFieldLevel, update: isAdminFieldLevel },
+              admin: {
+                readOnly: true,
+                description:
+                  'Set by a bulk import. A listing carrying this can be removed by scripts/remove-import, including its QR code. Blank means a person created it.',
+              },
             },
           ],
         },

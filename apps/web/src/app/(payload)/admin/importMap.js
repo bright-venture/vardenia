@@ -25,6 +25,7 @@ import { QrPreview as QrPreview_63c83128da94d6b39963c25535130a97 } from '../../.
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
 import { DashboardOverview as DashboardOverview_6eebd759fa9848ad75ed4bee6bb4023d } from '../../../components/admin/DashboardOverview'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
+import { ImportListings as ImportListings_63ae5156d5323ea00059048055533c2c } from '../../../components/admin/ImportListings'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -56,5 +57,6 @@ export const importMap = {
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,
   "/components/admin/DashboardOverview#DashboardOverview": DashboardOverview_6eebd759fa9848ad75ed4bee6bb4023d,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
+  "/components/admin/ImportListings#ImportListings": ImportListings_63ae5156d5323ea00059048055533c2c,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

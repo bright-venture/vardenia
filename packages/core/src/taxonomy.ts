@@ -74,6 +74,11 @@ export const TAXONOMY = [
       { slug: 'mountain-escapes', en: 'Mountain Escapes', ar: 'استراحات جبلية' },
       { slug: 'hidden-villages', en: 'Hidden Villages', ar: 'قرى مخفية' },
       { slug: 'adventure', en: 'Adventure Experiences', ar: 'تجارب المغامرة' },
+      // Added for the Keserwan directory, which has 17 guides and 12 festivals
+      // and nothing here that described either. Squashing them into `adventure`
+      // would have made the section filters lie about what is behind them.
+      { slug: 'tour-guides', en: 'Tour Guides', ar: 'أدلاء سياحيون' },
+      { slug: 'festivals', en: 'Festivals', ar: 'مهرجانات' },
     ],
   },
   {

@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+
 /**
  * A link to the scan report, in the admin sidebar.
  *
@@ -44,6 +46,20 @@ export function ReportsNavLink() {
       >
         QR code sheet
       </a>
+
+      {/*
+       * A Link and not a new tab, unlike the two above. Those are file
+       * downloads on routes Next does not own; this is a page in the admin
+       * panel, and it holds a job that runs for minutes - a tab somebody opened
+       * and forgot is a tab they will close mid-import.
+       */}
+      <Link
+        href="/admin/import-listings"
+        style={linkStyle}
+        title="Create listings in bulk from a spreadsheet"
+      >
+        Import listings (CSV)
+      </Link>
     </div>
   )
 }

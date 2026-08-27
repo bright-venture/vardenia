@@ -22,6 +22,7 @@ import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
 import { resendAdapter } from '@payloadcms/email-resend'
+import { importListingsEndpoint } from './import/endpoint'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 
@@ -124,8 +125,29 @@ export default buildConfig({
       // sits above it with the numbers and the work queue - see the component
       // for what earns a place there.
       beforeDashboard: ['/components/admin/DashboardOverview#DashboardOverview'],
+
+      /**
+       * A whole screen rather than a field, because importing a directory is
+       * not editing a document: it needs a file, a rehearsal, and a progress
+       * bar for a job that runs for minutes. See the component for why the
+       * browser drives the loop.
+       */
+      views: {
+        importListings: {
+          path: '/import-listings',
+          Component: '/components/admin/ImportListings#ImportListings',
+        },
+      },
     },
   },
+
+  /**
+   * The import runs here rather than in a route under app/, because a Payload
+   * endpoint arrives with `req.user` and `req.payload` already resolved from
+   * the admin cookie. A hand-rolled route would have to repeat that, and the
+   * repetition is where an auth check goes missing.
+   */
+  endpoints: [importListingsEndpoint],
 
   collections: [
     Businesses,

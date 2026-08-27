@@ -49,7 +49,52 @@ const RETIRE_INSTEAD =
   'which is what keeps already-printed copies working. If the code was never printed, ' +
   'clear its issue first and then delete it.'
 
-export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req }) => {
+/**
+ * The one way past the guard above, and why it is narrow.
+ *
+ * Bulk-imported listings are not customers. A demo directory has to be
+ * removable afterwards, and by then somebody on the team will have scanned one
+ * of the codes to show it working - which is exactly what `committedReason`
+ * treats as "in circulation" and refuses to delete. Without a way through, a
+ * single demo scan strands a row permanently.
+ *
+ * # Why the context flag alone is not the permission
+ *
+ * The caller passes the batch it intends to remove, but the answer comes from
+ * the database: this returns true only when the listing itself carries that
+ * exact `importBatch`. A person creating a listing in the admin panel never
+ * sets that field - it is read-only and staff-only - so no real listing can be
+ * reached this way, whatever a caller claims.
+ *
+ * That asymmetry is deliberate. If the flag were the permission, anything able
+ * to set context would inherit the power to delete a printed code, which is the
+ * failure this whole file exists to prevent.
+ */
+async function isTeardownOfBatch(
+  req: Parameters<CollectionBeforeDeleteHook>[0]['req'],
+  context: Record<string, unknown>,
+  businessId: string | number | null | undefined,
+): Promise<boolean> {
+  const batch = context.importTeardown
+  if (typeof batch !== 'string' || batch === '') return false
+  if (businessId === null || businessId === undefined) return false
+
+  try {
+    const business = await req.payload.findByID({
+      collection: 'businesses',
+      id: businessId,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    return (business as { importBatch?: string }).importBatch === batch
+  } catch {
+    // A missing listing is not a licence to delete. Refusing is the safe answer.
+    return false
+  }
+}
+
+export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req, context }) => {
   const qr = await req.payload.findByID({
     collection: 'qr-codes',
     id,
@@ -61,6 +106,14 @@ export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req 
   const reason = committedReason(doc)
   if (!reason) return
 
+  const business = doc.business
+  const businessId =
+    typeof business === 'object' && business !== null
+      ? (business as { id?: string | number }).id
+      : business
+
+  if (await isTeardownOfBatch(req, context, businessId)) return
+
   throw new APIError(`Code ${doc.code} cannot be deleted because ${reason}. ${RETIRE_INSTEAD}`, 400)
 }
 
@@ -71,7 +124,14 @@ export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req 
  * the listing mints a fresh code (see hooks/ensureQrCode), so the printed one is
  * orphaned just as permanently. This is the exact route the real mistake took.
  */
-export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async ({ id, req }) => {
+export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async ({
+  id,
+  req,
+  context,
+}) => {
+  // Same narrow exemption as above, checked against this listing's own batch.
+  if (await isTeardownOfBatch(req, context, id)) return
+
   const codes = await req.payload.find({
     collection: 'qr-codes',
     where: { business: { equals: id } },
