@@ -149,21 +149,31 @@ export default function middleware(request: NextRequest): NextResponse {
   /**
    * A single-segment path nothing serves gets a real 404 status.
    *
-   * `notFound()` renders the right page and returns 200 in this application -
-   * measured, and not caused by the rewrite, since an unrewritten `/ar/nonsense`
-   * behaves the same. A crawler reads the status line, so without this every
-   * invented URL a scanner probes is an indexable page.
+   * `notFound()` renders the right page and returns 200 for this route -
+   * measured, and not caused by the locale rewrite, since an unrewritten
+   * `/ar/nonsense` behaves the same. A crawler reads the status line, so
+   * without this every invented URL a scanner probes is an indexable page.
    *
-   * Re-issued rather than mutated: a NextResponse's status is fixed once built,
-   * so this constructs the same rewrite again with a status attached and copies
-   * the cookies syncSessionHint just set. See lib/known-paths for what it can
-   * and cannot decide.
+   * # Why it points at a route instead of setting the status here
+   *
+   * It used to be `NextResponse.rewrite(url, { status: 404 })`. That works on a
+   * local production build and is dropped by Netlify, so production answered
+   * 200 for six days while the machine it was tested on answered 404.
+   *
+   * Ordinary pages calling `notFound()` return 404 on Netlify perfectly well -
+   * `/stay/nothing-here` does - so a status from the origin survives and only a
+   * status invented by middleware is lost. app/not-found-404 is that origin.
+   *
+   * The cookies syncSessionHint just set are carried across, because a lapsed
+   * session should still be tidied up on the way past. See lib/known-paths for
+   * what this can and cannot decide.
    */
   if (isUnknownTopLevelPath(request.nextUrl.pathname, routing.locales)) {
-    const destination = response.headers.get('x-middleware-rewrite')
-    const url = destination ? new URL(destination, request.url) : request.nextUrl.clone()
+    const url = request.nextUrl.clone()
+    url.pathname = '/not-found-404'
+    url.search = ''
 
-    const notFoundResponse = NextResponse.rewrite(url, { status: 404 })
+    const notFoundResponse = NextResponse.rewrite(url)
     for (const cookie of response.cookies.getAll()) {
       notFoundResponse.cookies.set(cookie)
     }
@@ -226,7 +236,7 @@ export default function middleware(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|g|qr|reports|_next|_vercel|media)(?:/|$)|.*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

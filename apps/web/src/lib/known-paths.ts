@@ -64,6 +64,9 @@ const FIXED_SEGMENTS = [
  */
 export const UNMATCHED_PREFIXES = [
   'api',
+  // Where the middleware sends an unknown path. Excluded from locale routing
+  // by the matcher, so it cannot be rewritten into itself.
+  'not-found-404',
   'admin',
   'auth',
   'booking',
