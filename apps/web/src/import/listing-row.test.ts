@@ -213,8 +213,18 @@ describe('cleanName', () => {
     )
   })
 
-  it('keeps a hyphenated place that is genuinely the name', () => {
-    expect(cleanName('Harbour Stories-Zouk Mosbeh', 'ZOUK')).toBe('Harbour Stories-Zouk Mosbeh')
+  /**
+   * A hyphenated town is still a town, and it duplicates the Location column.
+   *
+   * This test used to assert the opposite, on the reasoning that a name without
+   * a space around the hyphen was probably part of the name. Checked against the
+   * real export instead: 79 names end this way, and not one of the stems appears
+   * twice - so these are not branches, they are the town repeated. Stripping
+   * gives `italian-stories` rather than `italian-stories-zouk-mosbeh` on a slug
+   * that a printed code points at, and nothing collides.
+   */
+  it('strips a hyphenated town that repeats the location', () => {
+    expect(cleanName('Harbour Stories-Zouk Mosbeh', 'ZOUK')).toBe('Harbour Stories')
   })
 
   /**
@@ -231,6 +241,36 @@ describe('cleanName', () => {
 
   it('does not call a matching location a disagreement', () => {
     expect(cleanNameWithNote('Pinegrove Chalets — Faraya', 'Faraya').disagreement).toBeNull()
+  })
+
+  /**
+   * The same place at a different zoom. "Zouk Mosbeh" against a Location of
+   * "ZOUK" is a town inside a district, and it appeared seven times in the real
+   * export - which is how a warning list becomes noise nobody reads.
+   */
+  it('treats a place that contains the location as the same place', () => {
+    const result = cleanNameWithNote('Harbour Stories — Zouk Mosbeh', 'ZOUK')
+    expect(result.disagreement).toBeNull()
+    expect(result.name).toBe('Harbour Stories')
+  })
+
+  /**
+   * An activity is not a town. Nine rows were reported as disagreeing places
+   * when they were things like Padel courts and Go-kart racing, and the sheet
+   * says so in its own column.
+   */
+  it('does not call an activity a disagreeing place', () => {
+    const result = cleanNameWithNote(
+      'Skyline Cableway — Cable-car ride',
+      'Jounieh',
+      'Cable-car ride',
+    )
+    expect(result.disagreement).toBeNull()
+  })
+
+  it('still flags a real town that disagrees, even with an activity column', () => {
+    const result = cleanNameWithNote('Somewhere Hotel — Sahel Alma', 'Jounieh', 'Hiking')
+    expect(result.disagreement).toContain('Sahel Alma')
   })
 
   it('collapses the whitespace a stripped star leaves behind', () => {

@@ -70,7 +70,25 @@ function call({ roles = ['admin'], body = {}, onImport }: CallOptions = {}) {
   return handler(req)
 }
 
-const read = async (response: Response) => (await response.json()) as Record<string, never>
+/**
+ * The response shape, stated rather than left as `Record<string, never>`.
+ *
+ * That earlier alias typed every value as `never`, so `body.warnings.length`
+ * did not compile and `body.parsed` compared to a number by accident. A test
+ * helper that types away the thing under test is not a helper.
+ */
+interface ImportBody_ {
+  parsed?: number
+  created?: number
+  skippedExisting?: number
+  unmappable?: unknown[]
+  warnings?: unknown[]
+  failures?: unknown[]
+  nextOffset?: number | null
+  error?: string
+}
+
+const read = async (response: Response) => (await response.json()) as ImportBody_
 
 describe('who may call it', () => {
   it('answers an admin', async () => {
@@ -224,5 +242,48 @@ describe('a dry run', () => {
     const body = await read(await call({ body: { csv, batch: 'a-batch', dryRun: true } }))
     expect(body.parsed).toBe(SAMPLE_ROWS)
     expect(Array.isArray(body.warnings)).toBe(true)
+  })
+})
+
+/**
+ * The check button, which sends `limit: 0` meaning "describe the whole file".
+ *
+ * It did not. `counted(0, 5)` returns 0, `0 || DEFAULT_WINDOW` is 5, and the
+ * dry run therefore examined the first five rows while reporting `parsed` for
+ * all of them. Against the real Keserwan file that showed "308 listings, 0 rows
+ * needing a look" - the first five rows are clean hotels - when 56 rows have
+ * something wrong with them.
+ *
+ * Worse than a missing feature: it is a check that says the file is fine.
+ */
+describe('the check button', () => {
+  it('describes every row, not just the first window', async () => {
+    const body = await read(
+      await call({ body: { csv, batch: 'a-batch', dryRun: true, offset: 0, limit: 0 } }),
+    )
+
+    expect(body.parsed).toBe(SAMPLE_ROWS)
+    expect(body.warnings?.length ?? 0).toBeGreaterThan(2)
+  })
+
+  /**
+   * The number that made the bug invisible. `parsed` counted the whole file
+   * while `warnings` counted one window, so the report looked complete.
+   */
+  it('counts warnings over the same rows it claims to have parsed', async () => {
+    const whole = await read(
+      await call({ body: { csv, batch: 'a-batch', dryRun: true, limit: 0 } }),
+    )
+    const window = await read(
+      await call({ body: { csv, batch: 'a-batch', dryRun: true, limit: 5 } }),
+    )
+
+    expect(whole.parsed).toBe(window.parsed)
+    expect(whole.warnings?.length ?? 0).toBeGreaterThan(window.warnings?.length ?? 0)
+  })
+
+  it('still clamps a real import, where limit 0 is not a request for everything', async () => {
+    const body = await read(await call({ body: { csv: manyRows(60), batch: 'a-batch', limit: 0 } }))
+    expect(body.nextOffset).toBe(5)
   })
 })

@@ -114,7 +114,7 @@ export interface CleanedName {
  * Strips what the spreadsheet put in the name that is not a name, and says so
  * when it declined to.
  */
-export function cleanNameWithNote(raw: string, location?: string): CleanedName {
+export function cleanNameWithNote(raw: string, location?: string, activity?: string): CleanedName {
   let name = raw
     .replace(/[★☆]+/gu, ' ')
     .replace(/\(\s*\d\s*-?\s*star[^)]*\)/gi, ' ')
@@ -133,9 +133,30 @@ export function cleanNameWithNote(raw: string, location?: string): CleanedName {
     const trailing = match?.[2]?.trim().toLowerCase()
 
     if (match?.[1] && trailing) {
-      if (trailing === place || place.includes(trailing)) {
+      /**
+       * Either containing the other is the same place at a different zoom.
+       *
+       * "Zouk Mosbeh" against a Location of "ZOUK" is not a contradiction, it is
+       * a district and the town inside it - and it appeared seven times, which
+       * is how a warning list becomes noise nobody reads.
+       */
+      const samePlace = trailing === place || place.includes(trailing) || trailing.includes(place)
+
+      /**
+       * The trailing text is an activity, not a place, when the sheet says so in
+       * its own Type / Activity column.
+       *
+       * "Teleferique du Liban - Cable-car ride" was reported as a town that
+       * disagreed with Jounieh. Nine rows were activities like this: Padel
+       * courts, Go-kart racing, Escape rooms. Checked against the column rather
+       * than guessed at by shape, because "Horse riding" and "Sahel Alma" are
+       * the same shape.
+       */
+      const isActivity = Boolean(activity?.trim() && trailing === activity.trim().toLowerCase())
+
+      if (samePlace) {
         name = match[1].trim()
-      } else if (trailing.split(/[\s,]+/).length <= 2 && !/\d/.test(trailing)) {
+      } else if (!isActivity && trailing.split(/[\s,]+/).length <= 2 && !/\d/.test(trailing)) {
         // Short, wordy and not a match: most likely a place name that the
         // Location column contradicts. Reported, never resolved here.
         disagreement = `name ends in "${match[2]!.trim()}" but the location column says "${location.trim()}"`
@@ -277,7 +298,8 @@ export function toListing(
   }
 
   const location = value(row, 'Location')
-  const { name, disagreement } = cleanNameWithNote(value(row, 'Name / Listing'), location)
+  const activity = value(row, 'Type / Activity')
+  const { name, disagreement } = cleanNameWithNote(value(row, 'Name / Listing'), location, activity)
 
   if (!name) return null
   if (disagreement) warnings.push(disagreement)
@@ -314,7 +336,6 @@ export function toListing(
   takenSlugs.add(slug)
 
   const description = value(row, 'Overview / Description')
-  const activity = value(row, 'Type / Activity')
 
   const when = value(row, 'Usually When')
   const seasonality = seasonalityFrom(when)

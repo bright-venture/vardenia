@@ -218,15 +218,31 @@ export function ImportListings() {
     return `${Math.max(1, Math.round(seconds / 60))} min`
   }, [total, done, rate])
 
+  /**
+   * Warnings grouped by kind, with real examples kept.
+   *
+   * The grouping key blanks out the quoted values so that nineteen variations
+   * of the same problem count as one line. The first version then rendered only
+   * that key, which read `name ends in "..." but the location column says
+   * "..."` - a count of a problem with every detail removed, and nothing a
+   * person could act on. The examples are the part that makes the list useful.
+   */
   const warningGroups = useMemo(() => {
-    const groups = new Map<string, number>()
+    const groups = new Map<string, { count: number; examples: string[] }>()
+
     for (const entry of checked?.warnings ?? []) {
       for (const warning of entry.warnings) {
         const key = warning.replace(/"[^"]*"/g, '"..."')
-        groups.set(key, (groups.get(key) ?? 0) + 1)
+        const group = groups.get(key) ?? { count: 0, examples: [] }
+
+        group.count += 1
+        if (group.examples.length < 4) group.examples.push(`${entry.name} - ${warning}`)
+
+        groups.set(key, group)
       }
     }
-    return [...groups.entries()].sort((a, b) => b[1] - a[1])
+
+    return [...groups.entries()].sort((a, b) => b[1].count - a[1].count)
   }, [checked])
 
   // Nothing at all while the session is still resolving, so the screen does not
@@ -365,9 +381,18 @@ export function ImportListings() {
             <>
               <h3 style={styles.h3}>Worth checking afterwards</h3>
               <ul style={styles.list}>
-                {warningGroups.map(([warning, count]) => (
-                  <li key={warning}>
-                    <strong>{count}</strong> {count === 1 ? 'listing' : 'listings'}: {warning}
+                {warningGroups.map(([warning, group]) => (
+                  <li key={warning} style={{ marginBottom: '0.5rem' }}>
+                    <strong>{group.count}</strong> {group.count === 1 ? 'listing' : 'listings'}:{' '}
+                    {warning.replace(/\s*"\.\.\."/g, '')}
+                    <ul style={styles.examples}>
+                      {group.examples.map((example) => (
+                        <li key={example}>{example}</li>
+                      ))}
+                      {group.count > group.examples.length ? (
+                        <li>and {group.count - group.examples.length} more</li>
+                      ) : null}
+                    </ul>
                   </li>
                 ))}
               </ul>
@@ -503,6 +528,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statValue: { fontSize: '1.5rem', margin: '0.125rem 0 0', fontVariantNumeric: 'tabular-nums' },
   list: { margin: 0, paddingInlineStart: '1.25rem', lineHeight: 1.7, fontSize: '0.875rem' },
+  examples: {
+    margin: '0.25rem 0 0',
+    paddingInlineStart: '1rem',
+    listStyle: 'none',
+    fontSize: '0.8125rem',
+    opacity: 0.7,
+    lineHeight: 1.6,
+  },
   barOuter: {
     height: '0.5rem',
     borderRadius: '0.25rem',

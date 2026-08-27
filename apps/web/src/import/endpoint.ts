@@ -110,7 +110,22 @@ export const importListingsEndpoint: Endpoint = {
 
     const dryRun = body.dryRun === true
     const offset = counted(body.offset, 0)
-    const limit = Math.min(counted(body.limit, DEFAULT_WINDOW) || DEFAULT_WINDOW, MAX_WINDOW)
+    /**
+     * `limit: 0` means "the whole file", and only a dry run may ask for it.
+     *
+     * The check button sends it, because describing a file it has only half
+     * read is worse than not describing it: `0 || DEFAULT_WINDOW` used to make
+     * that a window of five, so the real Keserwan export reported "308
+     * listings, 0 rows needing a look" - the first five rows happen to be clean
+     * hotels - while 56 rows had something wrong with them. A check that says a
+     * file is fine is not a missing feature, it is a wrong answer.
+     *
+     * Safe only because a dry run writes nothing. Mapping the whole file is
+     * milliseconds; it is the writes that need windowing, and a real import
+     * still gets the clamp.
+     */
+    const requested = counted(body.limit, DEFAULT_WINDOW)
+    const limit = dryRun && requested === 0 ? 0 : Math.min(requested || DEFAULT_WINDOW, MAX_WINDOW)
 
     try {
       const result = await runImport(req.payload, { csv, batch, dryRun, offset, limit })
