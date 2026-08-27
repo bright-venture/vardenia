@@ -10,30 +10,29 @@ rather than the category marked PASS and forgotten.
 
 ## Results
 
-| #   | Category         | Before | After     | What changed                                      |
-| --- | ---------------- | ------ | --------- | ------------------------------------------------- |
-| 1   | SECRETS_EXPOSURE | PASS   | PASS      |                                                   |
-| 2   | DATABASE_ACCESS  | LOW    | PENDING   | RLS migration written; applies on the next deploy |
-| 3   | AUTH_MIDDLEWARE  | PASS   | PASS      |                                                   |
-| 4   | ACCESS_CONTROL   | PASS   | PASS      |                                                   |
-| 5   | FRONTEND_SECRETS | PASS   | PASS      |                                                   |
-| 6   | SSRF             | N/A    | N/A       | Nothing fetches a user-supplied URL               |
-| 7   | CSRF             | LOW    | PASS      | Secure flag on every session cookie               |
-| 8   | SECURITY_HEADERS | MEDIUM | PASS      | Content-Security-Policy, public and admin         |
-| 9   | CORS             | PASS   | PASS      |                                                   |
-| 10  | RATE_LIMITING    | MEDIUM | PASS      | Auth budget counted in Postgres, not per process  |
-| 11  | SQL_INJECTION    | PASS   | PASS      |                                                   |
-| 12  | XSS              | PASS   | PASS      |                                                   |
-| 13  | PAYMENT_WEBHOOKS | N/A    | N/A       | No payments yet                                   |
-| 14  | FILE_UPLOADS     | PASS   | PASS      | Uploads renamed to an unguessable filename        |
-| 15  | ERROR_HANDLING   | PASS   | PASS      |                                                   |
-| 16  | PASSWORD_HASHING | PASS   | NOT MOVED | Payload hardcodes PBKDF2; see below               |
-| 17  | DEPENDENCIES     | LOW    | PASS      | 9 advisories down to 4, none reaching the site    |
+| #   | Category         | Before | After     | What changed                                     |
+| --- | ---------------- | ------ | --------- | ------------------------------------------------ |
+| 1   | SECRETS_EXPOSURE | PASS   | PASS      |                                                  |
+| 2   | DATABASE_ACCESS  | LOW    | PASS      | Row level security on all 45 production tables   |
+| 3   | AUTH_MIDDLEWARE  | PASS   | PASS      |                                                  |
+| 4   | ACCESS_CONTROL   | PASS   | PASS      |                                                  |
+| 5   | FRONTEND_SECRETS | PASS   | PASS      |                                                  |
+| 6   | SSRF             | N/A    | N/A       | Nothing fetches a user-supplied URL              |
+| 7   | CSRF             | LOW    | PASS      | Secure flag on every session cookie              |
+| 8   | SECURITY_HEADERS | MEDIUM | PASS      | Content-Security-Policy, public and admin        |
+| 9   | CORS             | PASS   | PASS      |                                                  |
+| 10  | RATE_LIMITING    | MEDIUM | PASS      | Auth budget counted in Postgres, not per process |
+| 11  | SQL_INJECTION    | PASS   | PASS      |                                                  |
+| 12  | XSS              | PASS   | PASS      |                                                  |
+| 13  | PAYMENT_WEBHOOKS | N/A    | N/A       | No payments yet                                  |
+| 14  | FILE_UPLOADS     | PASS   | PASS      | Uploads renamed to an unguessable filename       |
+| 15  | ERROR_HANDLING   | PASS   | PASS      |                                                  |
+| 16  | PASSWORD_HASHING | PASS   | NOT MOVED | Payload hardcodes PBKDF2; see below              |
+| 17  | DEPENDENCIES     | LOW    | PASS      | 9 advisories down to 4, none reaching the site   |
 
-Category 2 is written and verified safe but not yet applied: it lands when
-`pnpm --filter @vardenia/web migrate` is run against production, which happens
-with the next deploy. Until then production still reports RLS off. One grant
-inside that category could not be removed at all; both are described below.
+Category 2 is applied. Production reports row level security on all 45 tables,
+the connection role still bypasses it, and no table forces it. One grant inside
+that category could not be removed at all; it is described below.
 
 ## What changed, and how each was verified
 
@@ -140,6 +139,11 @@ Verified afterwards by confirming all 45 tables have it on, the role still
 bypasses, no table forces it, and Payload can still read listings and complete a
 write.
 
+**Applied to production on 27 August**, in the same operation that reconciled
+three migrations the schema already had. See "How production got out of step"
+below - that is worth reading, because the cause was a tool of ours pushing
+schema to a live database.
+
 **It only holds in production, and that is not a caveat, it is the design.**
 Drizzle push reconciles the schema against the collection definitions, RLS is
 not part of those, so push resets it. Measured: after applying the migration to
@@ -168,6 +172,32 @@ to a browser and never references. `businesses.location` is a real PostGIS
 geometry column, so emptying that table would break location writes and any
 distance query, which is more than nothing. It needs a session that can become
 `supabase_admin`, so it is a support request rather than a code change.
+
+## How production got out of step
+
+Production's schema was correct while its migration history said otherwise:
+`rate_limits`, `import_batch` and two new enum values all existed with no
+migration recorded against any of them.
+
+The cause was `pnpm import:listings`. It runs through tsx, which leaves
+NODE_ENV unset, and `payload.config.ts` sets `push: NODE_ENV !== 'production'`.
+So every run against production synced the schema, including the runs that only
+meant to delete rows. The seed's guard exists to prevent exactly this and did
+not apply, because the import is allowed to reach production by design and its
+`--target` check asked which database rather than whether push would fire.
+
+Nothing was lost. Row level security had not been applied yet, so there was
+nothing for push to reset - which is luck rather than design, since push takes
+RLS from 45 tables to none.
+
+The import CLI now sets NODE_ENV before importing the config, so `push` is
+false whatever database it is pointed at. Verified by leaving a stray column in
+a database and confirming a real run no longer drops it.
+
+The three migrations were reconciled rather than re-run: two were already true
+in the schema and would have failed on "already exists", so they were recorded
+as applied, and row level security was applied as its own SQL after checking
+that the role bypasses RLS, owns every table, and that no table forces it.
 
 ## Category 16, which did not move
 

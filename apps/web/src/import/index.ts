@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { config as loadEnv } from 'dotenv'
 import { getPayload } from 'payload'
-import { assertSeedTarget, databaseIdentity } from '../seed/guard'
+import { checkSeedTarget, databaseIdentity } from '../seed/guard'
 import { runImport } from './run'
 import { describeImport, removeImport } from './remove'
 import { clearListings, resetContent } from './clear'
@@ -36,6 +36,33 @@ import { clearListings, resetContent } from './clear'
  */
 
 loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../.env') })
+
+/**
+ * Stop Payload pushing the schema, before the config is imported.
+ *
+ * # This is not belt and braces, it already happened
+ *
+ * `payload.config.ts` sets `push: NODE_ENV !== 'production'`, and tsx leaves
+ * NODE_ENV unset. So merely initialising Payload from this script synced the
+ * schema to whatever DATABASE_URL pointed at - and with `--target` naming
+ * production, that was production. It added `import_batch`, the rate limits
+ * table and two enum values to the live database with no migration recorded
+ * against any of them.
+ *
+ * Nothing was lost that time, because row level security had not been applied
+ * yet and there was nothing for push to wipe. That was luck. Push resets RLS
+ * from 45 tables to none, measured, and the next run would have done it.
+ *
+ * The seed guards this by refusing every database but one. This script has to
+ * be able to reach production, because importing a directory there is the whole
+ * point - so it makes the environment honest instead: with NODE_ENV set,
+ * `push` is false and Payload leaves the schema alone whatever it thinks of it.
+ *
+ * Set before the config module is imported, because `push` is read at module
+ * scope. After the import it would be too late and would look like it worked.
+ */
+// Typed readonly by @types/node; assignment is the documented way to do this.
+;(process.env as Record<string, string>).NODE_ENV = 'production'
 
 const { default: config } = await import('../payload.config')
 
@@ -120,7 +147,45 @@ export function parseArgs(argv: string[]): Args {
  * un-reverted DATABASE_URL.
  */
 function assertTarget(stated: string | null): string {
-  if (!stated) return assertSeedTarget(process.env, 'seed')
+  if (!stated) {
+    /**
+     * The seed's rule about which database, without its rule about NODE_ENV.
+     *
+     * `assertSeedTarget` refuses outright when NODE_ENV is production, which is
+     * right for the seed - it writes invented businesses and must never reach a
+     * live site. This script sets NODE_ENV itself, to stop Payload pushing the
+     * schema, so inheriting that check would make it refuse every database
+     * including the development one.
+     *
+     * What is kept is the part that matters here: only the database named in
+     * SEED_ALLOWED_DB, failing closed when nothing is named.
+     */
+    const result = checkSeedTarget({
+      connectionString: process.env.DATABASE_URL,
+      allowed: process.env.SEED_ALLOWED_DB,
+      nodeEnv: undefined,
+    })
+
+    if (result.ok) return result.identity
+
+    throw new Error(
+      [
+        'Refusing to run.',
+        '',
+        result.reason,
+        '',
+        `DATABASE_URL currently points at: ${result.identity ?? '(unidentifiable)'}`,
+        '',
+        'Without --target this runs only against the database named in .env as:',
+        '',
+        '  SEED_ALLOWED_DB=<user>@<host>/<database>',
+        '',
+        'To reach another database, name it explicitly:',
+        '',
+        '  --target <user>@<host>/<database>',
+      ].join('\n'),
+    )
+  }
 
   const actual = databaseIdentity(process.env.DATABASE_URL)
 
