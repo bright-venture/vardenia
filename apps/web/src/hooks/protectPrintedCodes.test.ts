@@ -197,3 +197,58 @@ describe('deleting the business itself', () => {
     await expect(call(protectBusinessWithPrintedCode, '12', fresh)).resolves.toBeUndefined()
   })
 })
+
+/**
+ * The second exemption, for emptying a database before launch.
+ *
+ * Broader than the batch teardown by design, and therefore shaped so it cannot
+ * reach the one code that must never go: the printed `home` code pointing at
+ * vardenia.com, which belongs to no listing.
+ */
+describe('clearing every listing', () => {
+  const attached: FakeDocs = {
+    codes: { '1': { id: 1, code: 'AAA1111', scanCount: 40, issue: 3, business: 10 } },
+    businesses: { '10': { id: 10, name: 'A listing being cleared' } },
+  }
+
+  /** The home code. No business, and it is the one that is really printed. */
+  const home: FakeDocs = {
+    codes: { '9': { id: 9, code: 'CFHH5WH', scanCount: 12, business: undefined } },
+    businesses: {},
+  }
+
+  it('lets a scanned code attached to a listing go', async () => {
+    await expect(
+      call(protectPrintedCodes, '1', attached, { clearAllListings: true }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('lets a listing go even with a code on a print issue', async () => {
+    await expect(
+      call(protectBusinessWithPrintedCode, '10', attached, { clearAllListings: true }),
+    ).resolves.toBeUndefined()
+  })
+
+  /**
+   * The one that would lose the printed code on the back cover. "Remove every
+   * listing" and "remove the code pointing at vardenia.com" are different
+   * requests, and only the first has ever been made.
+   */
+  it('refuses the home code, which belongs to no listing', async () => {
+    await expect(call(protectPrintedCodes, '9', home, { clearAllListings: true })).rejects.toThrow(
+      /cannot be deleted/,
+    )
+  })
+
+  it('refuses anything short of the flag being exactly true', async () => {
+    for (const value of ['true', 1, {}, 'yes']) {
+      await expect(
+        call(protectPrintedCodes, '1', attached, { clearAllListings: value }),
+      ).rejects.toThrow(/cannot be deleted/)
+    }
+  })
+
+  it('changes nothing when the flag is absent', async () => {
+    await expect(call(protectPrintedCodes, '1', attached)).rejects.toThrow(/cannot be deleted/)
+  })
+})

@@ -131,3 +131,22 @@ export function formatFromParam(raw: string): QrFormat | null {
   const ext = match?.[1]?.toLowerCase()
   return ext === 'png' || ext === 'svg' ? ext : null
 }
+
+/**
+ * The same two formats, named directly rather than as a file extension.
+ *
+ * `formatFromParam` above answers "what does this filename ask for" and needs
+ * the dot: it exists for `/qr/K3M9QP2.png`. A query string says `?format=png`,
+ * with no dot and nothing to strip, and handing that to the other function
+ * returns null.
+ *
+ * That is not hypothetical. The export route did exactly this, and because null
+ * falls back to SVG it produced an archive of SVG files for every request that
+ * asked for PNG - named `.svg`, so nothing looked wrong until somebody opened
+ * the zip. Two functions with distinct names is what stops the next person
+ * reaching for the wrong one.
+ */
+export function formatFromWord(raw: string | null): QrFormat | null {
+  const word = (raw ?? '').trim().toLowerCase()
+  return word === 'png' || word === 'svg' ? word : null
+}

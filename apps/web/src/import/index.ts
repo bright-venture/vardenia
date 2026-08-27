@@ -6,6 +6,7 @@ import { getPayload } from 'payload'
 import { assertSeedTarget, databaseIdentity } from '../seed/guard'
 import { runImport } from './run'
 import { describeImport, removeImport } from './remove'
+import { clearListings } from './clear'
 
 /**
  * Bulk listing import, command line entry point.
@@ -39,6 +40,8 @@ loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.
 const { default: config } = await import('../payload.config')
 
 interface Args {
+  /** Empty the database of listings. 'all', 'published' or 'draft'. */
+  clear: string | null
   file: string | null
   batch: string | null
   remove: string | null
@@ -50,6 +53,7 @@ interface Args {
 
 export function parseArgs(argv: string[]): Args {
   const args: Args = {
+    clear: null,
     file: null,
     batch: null,
     remove: null,
@@ -74,6 +78,10 @@ export function parseArgs(argv: string[]): Args {
         break
       case '--describe':
         args.describe = next()
+        index += 1
+        break
+      case '--clear':
+        args.clear = next() ?? 'all'
         index += 1
         break
       case '--target':
@@ -148,6 +156,39 @@ async function main() {
       `  listings:  ${summary.listings}`,
       `  with code: ${summary.withCode}`,
       `  published: ${summary.published}`,
+    ])
+    return
+  }
+
+  if (args.clear) {
+    if (!['all', 'published', 'draft'].includes(args.clear)) {
+      throw new Error(`--clear takes all, published or draft. Got "${args.clear}".`)
+    }
+
+    const status = args.clear === 'all' ? undefined : (args.clear as 'published' | 'draft')
+    const result = await clearListings(payload, {
+      ...(status ? { status } : {}),
+      dryRun: args.dryRun,
+    })
+
+    report([
+      args.dryRun
+        ? `Would clear ${args.clear} listings from ${identity}`
+        : `Cleared ${args.clear} listings from ${identity}`,
+      `  listings:    ${result.listings}`,
+      `  qr codes:    ${result.codes}`,
+      `  scan events: ${result.scanEvents}`,
+      `  bookings:    ${result.bookings}`,
+      '',
+      `  ${result.kept.length} code(s) kept, belonging to no listing:`,
+      ...result.kept.map((k) => `    ${k.code}  (${k.targetType})`),
+      ...(result.failures.length
+        ? [
+            '',
+            `  ${result.failures.length} refused:`,
+            ...result.failures.map((f) => `    ${f.what}: ${f.error}`),
+          ]
+        : []),
     ])
     return
   }

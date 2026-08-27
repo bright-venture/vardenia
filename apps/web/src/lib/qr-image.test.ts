@@ -8,6 +8,7 @@ import {
   qrPng,
   qrSvg,
   scanUrl,
+  formatFromWord,
 } from './qr-image'
 
 const CODE = 'K3M9QP2'
@@ -220,5 +221,41 @@ describe('formatFromParam', () => {
   it('agrees with parseCodeParam on the same input', () => {
     expect(parseCodeParam('K3M9QP2.png')).toBe('K3M9QP2')
     expect(formatFromParam('K3M9QP2.png')).toBe('png')
+  })
+})
+
+/**
+ * Two functions that answer nearly the same question, which is why they are
+ * tested together.
+ *
+ * `formatFromParam` reads a filename and needs the dot. `formatFromWord` reads
+ * a query value and must not. The export route used the first for the second
+ * job: `?format=png` returned null, fell back to SVG, and shipped an archive of
+ * SVG files named `.svg` to everybody who asked for PNG. Nothing looked wrong
+ * until the zip was opened.
+ */
+describe('the two format parsers, and the difference between them', () => {
+  it('formatFromParam reads an extension', () => {
+    expect(formatFromParam('K3M9QP2.png')).toBe('png')
+    expect(formatFromParam('K3M9QP2.svg')).toBe('svg')
+  })
+
+  /** The exact input that caused the bug. */
+  it('formatFromParam does not read a bare word', () => {
+    expect(formatFromParam('png')).toBeNull()
+    expect(formatFromParam('svg')).toBeNull()
+  })
+
+  it('formatFromWord reads a bare word', () => {
+    expect(formatFromWord('png')).toBe('png')
+    expect(formatFromWord('svg')).toBe('svg')
+    expect(formatFromWord('PNG')).toBe('png')
+    expect(formatFromWord('  svg  ')).toBe('svg')
+  })
+
+  it('formatFromWord refuses anything else, including a filename', () => {
+    for (const value of ['jpg', '', '  ', 'pngg', 'K3M9QP2.png', null]) {
+      expect(formatFromWord(value), String(value)).toBeNull()
+    }
   })
 })

@@ -50,7 +50,31 @@ const RETIRE_INSTEAD =
   'clear its issue first and then delete it.'
 
 /**
- * The one way past the guard above, and why it is narrow.
+ * The other way past, for emptying the database before launch.
+ *
+ * Broader than the batch teardown and deliberately shaped so it cannot reach
+ * the one code that matters. `clearAllListings` permits deleting a code that
+ * belongs to a listing; it never permits deleting a code that belongs to none,
+ * which is exactly what the `home` code pointing at vardenia.com is.
+ *
+ * That distinction is the whole safety property. "Remove every listing" and
+ * "remove the printed code on the back cover" are different requests, and the
+ * second one has never been asked for.
+ *
+ * Reachable only through the local API - Payload does not let a REST caller set
+ * `context` - so this is a thing a script does with a database URL in hand, not
+ * a thing an HTTP request can do.
+ */
+function isClearingListings(
+  context: Record<string, unknown>,
+  businessId: string | number | null | undefined,
+): boolean {
+  if (context.clearAllListings !== true) return false
+  return businessId !== null && businessId !== undefined
+}
+
+/**
+ * One way past the guard above, for removing a bulk import.
  *
  * Bulk-imported listings are not customers. A demo directory has to be
  * removable afterwards, and by then somebody on the team will have scanned one
@@ -112,6 +136,7 @@ export const protectPrintedCodes: CollectionBeforeDeleteHook = async ({ id, req,
       ? (business as { id?: string | number }).id
       : business
 
+  if (isClearingListings(context, businessId)) return
   if (await isTeardownOfBatch(req, context, businessId)) return
 
   throw new APIError(`Code ${doc.code} cannot be deleted because ${reason}. ${RETIRE_INSTEAD}`, 400)
@@ -129,7 +154,9 @@ export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async 
   req,
   context,
 }) => {
-  // Same narrow exemption as above, checked against this listing's own batch.
+  // Same exemptions as above. A listing always has an id, so the clearing one
+  // applies here whenever it was asked for.
+  if (isClearingListings(context, id)) return
   if (await isTeardownOfBatch(req, context, id)) return
 
   const codes = await req.payload.find({

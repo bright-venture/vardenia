@@ -97,13 +97,16 @@ export async function GET(request: NextRequest) {
     }),
   )
 
-  return new Response(page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n')), {
-    headers: {
-      'content-type': 'text/html; charset=utf-8',
-      // Never cached: it lists who is in an unpublished issue.
-      'cache-control': 'no-store',
+  return new Response(
+    page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n'), issueId),
+    {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        // Never cached: it lists who is in an unpublished issue.
+        'cache-control': 'no-store',
+      },
     },
-  })
+  )
 }
 
 /**
@@ -192,7 +195,31 @@ function unsafeBaseBanner(): string {
     reader, permanently. Set NEXT_PUBLIC_SITE_URL to the live https domain and generate again.</p>`
 }
 
-function page(title: string, count: number, total: number, cards: string): string {
+/**
+ * Links to the same set of codes as individual files.
+ *
+ * The issue filter is carried across deliberately. Somebody who has narrowed
+ * the sheet to one issue and then downloads everything has been given the wrong
+ * files, and would not find out until the layout.
+ */
+function downloads(issueId: number | null): string {
+  const query = (format: string) =>
+    `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}`
+
+  return `<p class="downloads">
+  <a href="${query('svg')}">Download all as SVG</a>
+  <a href="${query('png')}">Download all as PNG</a>
+  <span>One file per code, named after the business. SVG for print.</span>
+</p>`
+}
+
+function page(
+  title: string,
+  count: number,
+  total: number,
+  cards: string,
+  issueId: number | null,
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -207,6 +234,14 @@ function page(title: string, count: number, total: number, cards: string): strin
   header { margin-bottom: 24px; }
   h1 { font-size: 20px; margin: 0 0 4px; }
   .count { color: #666; font-size: 13px; margin: 0; }
+  .downloads { margin: 12px 0 0; font-size: 13px; }
+  .downloads a {
+    display: inline-block; margin-inline-end: 8px; padding: 5px 10px;
+    border: 1px solid #bbb; border-radius: 4px; color: #111; text-decoration: none;
+  }
+  .downloads span { color: #666; }
+  /* The buttons are for the screen. On paper they are two grey boxes. */
+  @media print { .downloads { display: none; } }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
   .card {
     margin: 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px;
@@ -239,6 +274,7 @@ function page(title: string, count: number, total: number, cards: string): strin
 <header>
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
+  ${downloads(issueId)}
   ${unsafeBaseBanner()}
   ${truncationBanner(count, total)}
 </header>
