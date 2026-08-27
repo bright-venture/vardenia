@@ -323,7 +323,15 @@ export function ImportListings() {
             type="button"
             onClick={() => void start()}
             disabled={!checked || busy !== null}
-            style={styles.primary}
+            /*
+             * Dimmed when disabled, because it spends most of its life that way
+             * - the file has to be checked first - and a filled button that
+             * looks identical whether or not it does anything reads as broken.
+             */
+            style={{
+              ...styles.primary,
+              ...(!checked || busy !== null ? styles.disabled : {}),
+            }}
             title={checked ? undefined : 'Check the file first'}
           >
             {busy === 'importing' ? 'Importing...' : `Import ${total || ''} listings`.trim()}
@@ -500,16 +508,30 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hint: { fontSize: '0.8125rem', opacity: 0.7, margin: '0.5rem 0 0', lineHeight: 1.5 },
   actions: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' },
+  /**
+   * The filled button, and why it is not `currentColor`.
+   *
+   * It was `background: currentColor` with `color: inherit`, which are the same
+   * colour by definition - so the button rendered as a solid black rectangle
+   * with its label invisible inside it. `mixBlendMode: difference` was meant to
+   * rescue the text and cannot: it blends the whole element against what is
+   * behind it, not the label against its own background.
+   *
+   * Payload's own elevation variables give a background and a foreground that
+   * are guaranteed to contrast and that swap in the dark theme. The fallbacks
+   * carry the same contrast if the names ever change, so the worst case is a
+   * button that looks slightly foreign rather than one nobody can read.
+   */
   primary: {
     padding: '0.5rem 1rem',
     font: 'inherit',
     cursor: 'pointer',
-    border: '1px solid currentColor',
+    border: '1px solid transparent',
     borderRadius: '0.25rem',
-    background: 'currentColor',
-    color: 'inherit',
-    mixBlendMode: 'difference',
+    background: 'var(--theme-elevation-800, #111827)',
+    color: 'var(--theme-elevation-0, #ffffff)',
   },
+  disabled: { opacity: 0.45, cursor: 'not-allowed' },
   secondary: {
     padding: '0.5rem 1rem',
     font: 'inherit',
