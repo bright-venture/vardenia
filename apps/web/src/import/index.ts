@@ -6,7 +6,7 @@ import { getPayload } from 'payload'
 import { assertSeedTarget, databaseIdentity } from '../seed/guard'
 import { runImport } from './run'
 import { describeImport, removeImport } from './remove'
-import { clearListings } from './clear'
+import { clearListings, resetContent } from './clear'
 
 /**
  * Bulk listing import, command line entry point.
@@ -40,6 +40,8 @@ loadEnv({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.
 const { default: config } = await import('../payload.config')
 
 interface Args {
+  /** Wipe every content collection, keeping the home code and the staff logins. */
+  reset: boolean
   /** Empty the database of listings. 'all', 'published' or 'draft'. */
   clear: string | null
   file: string | null
@@ -53,6 +55,7 @@ interface Args {
 
 export function parseArgs(argv: string[]): Args {
   const args: Args = {
+    reset: false,
     clear: null,
     file: null,
     batch: null,
@@ -91,6 +94,9 @@ export function parseArgs(argv: string[]): Args {
       case '--limit':
         args.limit = Number(next()) || null
         index += 1
+        break
+      case '--reset':
+        args.reset = true
         break
       case '--dry-run':
         args.dryRun = true
@@ -156,6 +162,32 @@ async function main() {
       `  listings:  ${summary.listings}`,
       `  with code: ${summary.withCode}`,
       `  published: ${summary.published}`,
+    ])
+    return
+  }
+
+  if (args.reset) {
+    const result = await resetContent(payload, { dryRun: args.dryRun })
+    const rows = Object.entries(result.removed).filter(([, n]) => n > 0)
+
+    report([
+      args.dryRun ? `Would reset ${identity}` : `Reset ${identity}`,
+      ...(rows.length
+        ? rows.map(([name, n]) => `  ${name.padEnd(14)} ${n}`)
+        : ['  nothing to remove']),
+      '',
+      `  kept, belonging to no listing:`,
+      ...result.kept.map((k) => `    ${k.code}  (${k.targetType})`),
+      '',
+      `  left alone, being accounts rather than content:`,
+      ...Object.entries(result.untouched).map(([name, n]) => `    ${name.padEnd(14)} ${n}`),
+      ...(result.failures.length
+        ? [
+            '',
+            `  ${result.failures.length} refused:`,
+            ...result.failures.map((f) => `    ${f.what}: ${f.error}`),
+          ]
+        : []),
     ])
     return
   }

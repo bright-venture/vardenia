@@ -245,3 +245,184 @@ export async function clearListings(
 
   return result
 }
+
+/**
+ * Everything back to nothing, except the printed code and the way in.
+ *
+ * # What this is for
+ *
+ * A pre-launch reset. The database has been carrying demo listings, seeded
+ * articles, invented scans and a test booking since before anybody looked at
+ * it, and none of that should be there on the day the site is real.
+ *
+ * # The two things it must never take
+ *
+ * **The `home` QR code.** It points at vardenia.com, it is printed, and it has
+ * been scanned by real people. Codes attached to a listing are fair game; a
+ * code attached to nothing is the one on the back cover.
+ *
+ * **The staff accounts.** Deleting `users` empties the admin panel of anybody
+ * who can log in to it, and on production that is not recoverable through the
+ * interface. A reset that locks you out of the thing you are resetting is not a
+ * reset.
+ *
+ * Customers and business users are left alone too, but for a different reason:
+ * they are people rather than content, and `closeRatherThanDelete` exists
+ * precisely because deleting a customer is the wrong verb. They are reported
+ * instead, for a person to decide about.
+ */
+
+/** Content collections, in the order their dependencies allow. */
+const RESET_ORDER = [
+  // Listings first, which takes their codes, scans and bookings with them.
+  'businesses',
+  // Then the things that reference media, so media is free by the time we get there.
+  'articles',
+  'issues',
+  // Then what is left of each.
+  'scan-events',
+  'bookings',
+  'media',
+  'error-events',
+  'rate-limits',
+] as const
+
+export interface ResetResult {
+  removed: Record<string, number>
+  kept: { code: string; targetType: string }[]
+  untouched: Record<string, number>
+  failures: { what: string; error: string }[]
+}
+
+export async function resetContent(
+  payload: Payload,
+  options: { dryRun?: boolean } = {},
+): Promise<ResetResult> {
+  const result: ResetResult = { removed: {}, kept: [], untouched: {}, failures: [] }
+
+  // Listings go through clearListings, which knows about the guard and the
+  // order codes, scans and bookings have to be removed in.
+  const cleared = await clearListings(payload, { ...(options.dryRun ? { dryRun: true } : {}) })
+  result.removed['businesses'] = cleared.listings
+  result.removed['qr-codes'] = cleared.codes
+  result.removed['scan-events'] = cleared.scanEvents
+  result.removed['bookings'] = cleared.bookings
+  result.kept = cleared.kept
+  result.failures.push(...cleared.failures)
+
+  for (const collection of RESET_ORDER) {
+    if (collection === 'businesses' || collection === 'bookings') continue
+
+    const found = await payload.find({
+      collection: collection as 'articles',
+      limit: 1000,
+      depth: 0,
+      ...(collection === 'articles' || collection === 'issues' ? { draft: true } : {}),
+      overrideAccess: true,
+    })
+
+    if (options.dryRun) {
+      result.removed[collection] = (result.removed[collection] ?? 0) + found.totalDocs
+      continue
+    }
+
+    for (const doc of found.docs) {
+      try {
+        await payload.delete({
+          collection: collection as 'articles',
+          id: doc.id,
+          overrideAccess: true,
+          context: { clearAllListings: true },
+        })
+        result.removed[collection] = (result.removed[collection] ?? 0) + 1
+      } catch (error) {
+        result.failures.push({
+          what: `${collection} ${String(doc.id)}`,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+  }
+
+  /**
+   * Any code that is not the home code goes too.
+   *
+   * `clearListings` only removes codes owned by a listing, and treats everything
+   * else as kept - which is right for it, but too broad here. Development had an
+   * orphan `business` code attached to nothing, left over from a listing deleted
+   * long ago, and "keep the code for vardenia.com" does not mean "keep every
+   * code that happens to have no listing".
+   *
+   * Only `targetType === 'home'` survives. That is the one on the back cover.
+   */
+  if (!options.dryRun) {
+    const strays = await payload.find({
+      collection: 'qr-codes',
+      where: { targetType: { not_equals: 'home' } },
+      limit: 500,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    for (const code of strays.docs) {
+      try {
+        await payload.delete({ collection: 'qr-codes', id: code.id, overrideAccess: true })
+        result.removed['qr-codes'] = (result.removed['qr-codes'] ?? 0) + 1
+      } catch (error) {
+        result.failures.push({
+          what: `stray code ${String((code as { code?: string }).code ?? code.id)}`,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    result.kept = result.kept.filter((k) => k.targetType === 'home')
+  }
+
+  /**
+   * The surviving code keeps its code and loses its tally.
+   *
+   * Its scan events have just been deleted, so a `scanCount` of 3 describes
+   * visits that no longer exist anywhere - the number on the code and the rows
+   * in the report would disagree from the first day the site is real.
+   *
+   * Worth knowing: a code with no scans and no issue is one the delete guard
+   * will allow through. The home code becomes deletable from the admin panel by
+   * doing this, where before its tally protected it.
+   */
+  if (!options.dryRun) {
+    const survivors = await payload.find({
+      collection: 'qr-codes',
+      limit: 100,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    for (const code of survivors.docs) {
+      if (Number((code as { scanCount?: number }).scanCount ?? 0) === 0) continue
+
+      try {
+        await payload.update({
+          collection: 'qr-codes',
+          id: code.id,
+          data: { scanCount: 0 },
+          overrideAccess: true,
+        })
+        result.removed['scan tallies reset'] = (result.removed['scan tallies reset'] ?? 0) + 1
+      } catch (error) {
+        result.failures.push({
+          what: `scan count on ${String((code as { code?: string }).code ?? code.id)}`,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+  }
+
+  // Reported, never deleted. See the note above.
+  for (const collection of ['users', 'customers', 'business-users'] as const) {
+    const found = await payload.find({ collection, limit: 0, depth: 0, overrideAccess: true })
+    result.untouched[collection] = found.totalDocs
+  }
+
+  return result
+}
