@@ -392,7 +392,13 @@ export function ImportListings() {
                 {warningGroups.map(([warning, group]) => (
                   <li key={warning} style={{ marginBottom: '0.5rem' }}>
                     <strong>{group.count}</strong> {group.count === 1 ? 'listing' : 'listings'}:{' '}
-                    {warning.replace(/\s*"\.\.\."/g, '')}
+                    {/*
+                     * The blanked value becomes an ellipsis rather than being
+                     * deleted. Removing it left the preposition dangling -
+                     * "name ends in but the location column says" - which reads
+                     * as a truncated sentence rather than a heading.
+                     */}
+                    {warning.replace(/"\.\.\."/g, '…')}
                     <ul style={styles.examples}>
                       {group.examples.map((example) => (
                         <li key={example}>{example}</li>
