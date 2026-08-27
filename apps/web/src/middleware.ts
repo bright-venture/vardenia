@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 import { adminRedirectFor, PAYLOAD_COOKIE, tokenCollection } from './lib/admin-guard'
 import { legacyCategoryRedirect } from './lib/legacy-urls'
+import { isUnknownTopLevelPath } from './lib/known-paths'
 import { HINT_VALUE, SESSION_HINT } from './lib/session-hint'
 
 const intl = createMiddleware(routing)
@@ -143,7 +144,33 @@ export default function middleware(request: NextRequest): NextResponse {
     return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
   }
 
-  return syncSessionHint(request, intl(request) as NextResponse)
+  const response = syncSessionHint(request, intl(request) as NextResponse)
+
+  /**
+   * A single-segment path nothing serves gets a real 404 status.
+   *
+   * `notFound()` renders the right page and returns 200 in this application -
+   * measured, and not caused by the rewrite, since an unrewritten `/ar/nonsense`
+   * behaves the same. A crawler reads the status line, so without this every
+   * invented URL a scanner probes is an indexable page.
+   *
+   * Re-issued rather than mutated: a NextResponse's status is fixed once built,
+   * so this constructs the same rewrite again with a status attached and copies
+   * the cookies syncSessionHint just set. See lib/known-paths for what it can
+   * and cannot decide.
+   */
+  if (isUnknownTopLevelPath(request.nextUrl.pathname, routing.locales)) {
+    const destination = response.headers.get('x-middleware-rewrite')
+    const url = destination ? new URL(destination, request.url) : request.nextUrl.clone()
+
+    const notFoundResponse = NextResponse.rewrite(url, { status: 404 })
+    for (const cookie of response.cookies.getAll()) {
+      notFoundResponse.cookies.set(cookie)
+    }
+    return notFoundResponse
+  }
+
+  return response
 }
 
 /**

@@ -183,6 +183,25 @@ OWASP's current recommendation of 600,000 for this construction. Same order of
 magnitude, and a NIST-approved KDF. Worth revisiting at the next major Payload
 upgrade, not worth a fork now.
 
+## The soft 404, found alongside this
+
+Every invented URL answered **200** with the 404 page inside it, so a crawler
+would index it as a real page. `notFound()` does not set a status in this
+application, measured across several routes. The usual suspect is the middleware
+rewrite and it is not the cause: `/ar/nonsense` carries no rewrite header and
+behaved identically. What is unusual is that there is no root `app/layout.tsx` -
+`(frontend)` and `(payload)` are route groups with separate root layouts, which
+changes how the not-found boundary is served.
+
+The middleware now answers a single-segment path that nothing serves with a real
+404, using the section list and the route directories as its source of truth. A
+test reads the app directory and fails if a route exists that the list does not
+know, so it cannot rot into 404ing a real page.
+
+**It does not cover deeper paths.** `/directory/no-such-listing` still answers
+200, because deciding it needs a database lookup the middleware has no business
+doing. That is the remaining gap.
+
 ## What no code audit can answer
 
 The checklist's manual half covers what no code read will find: whether a real

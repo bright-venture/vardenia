@@ -56,13 +56,30 @@ function policy(directives: Record<string, string[]>): string {
     .join('; ')
 }
 
-export function publicCsp(analyticsSrc = process.env.NEXT_PUBLIC_ANALYTICS_SRC): string {
+/**
+ * `next dev` compiles modules through React Refresh, which evaluates strings.
+ * Without this the dev server throws `EvalError: Evaluating a string as
+ * JavaScript violates the following Content Security Policy directive` out of
+ * main-app.js on every page load, and hot reload stops working - while the
+ * production build, which does not use eval, is completely unaffected.
+ *
+ * So the exception is granted to the development build only. Getting this
+ * backwards is how a policy ends up loosened in production because it was
+ * annoying locally.
+ */
+const devEval = (isProduction = process.env.NODE_ENV === 'production'): string[] =>
+  isProduction ? [] : ["'unsafe-eval'"]
+
+export function publicCsp(
+  analyticsSrc = process.env.NEXT_PUBLIC_ANALYTICS_SRC,
+  isProduction = process.env.NODE_ENV === 'production',
+): string {
   const analytics = analyticsOrigin(analyticsSrc)
 
   return policy({
     'default-src': ["'self'"],
     // See the note above on why this is not a nonce.
-    'script-src': ["'self'", "'unsafe-inline'", ...analytics],
+    'script-src': ["'self'", "'unsafe-inline'", ...devEval(isProduction), ...analytics],
     // Tailwind ships a stylesheet, but Next inlines critical CSS and React
     // injects style attributes, so this cannot be 'self' alone.
     'style-src': ["'self'", "'unsafe-inline'"],

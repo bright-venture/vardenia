@@ -20,7 +20,7 @@ const directive = (csp: string, name: string): string[] | null => {
 }
 
 describe('the public policy', () => {
-  const csp = publicCsp(undefined)
+  const csp = publicCsp(undefined, true)
 
   it('falls back to itself rather than to nothing', () => {
     expect(directive(csp, 'default-src')).toEqual(["'self'"])
@@ -74,6 +74,18 @@ describe('the public policy', () => {
     expect(directive(csp, 'script-src')).not.toContain("'unsafe-eval'")
   })
 
+  /**
+   * The exception that must never leak into a deployment. `next dev` compiles
+   * through React Refresh, which evaluates strings, so the development policy
+   * has to permit eval or hot reload stops working. Production does not use
+   * eval and must not allow it, and the pair of assertions is what stops this
+   * being "fixed" locally by loosening the wrong one.
+   */
+  it('allows eval in development, and only there', () => {
+    expect(directive(publicCsp(undefined, false), 'script-src')).toContain("'unsafe-eval'")
+    expect(directive(publicCsp(undefined, true), 'script-src')).not.toContain("'unsafe-eval'")
+  })
+
   it('never widens a directive to a bare wildcard', () => {
     for (const part of csp.split(';')) {
       expect(part.trim().split(/\s+/), `"${part.trim()}" is a wildcard`).not.toContain('*')
@@ -83,13 +95,13 @@ describe('the public policy', () => {
 
 describe('the analytics origin', () => {
   it('is allowed to load and to receive, when one is configured', () => {
-    const csp = publicCsp('https://plausible.io/js/script.js')
+    const csp = publicCsp('https://plausible.io/js/script.js', true)
     expect(directive(csp, 'script-src')).toContain('https://plausible.io')
     expect(directive(csp, 'connect-src')).toContain('https://plausible.io')
   })
 
   it('adds only the origin, never the path', () => {
-    const csp = publicCsp('https://plausible.io/js/script.js')
+    const csp = publicCsp('https://plausible.io/js/script.js', true)
     expect(csp).not.toContain('/js/script.js')
   })
 
@@ -98,8 +110,8 @@ describe('the analytics origin', () => {
    * policy. Analytics simply stays blocked until it is a URL.
    */
   it('ignores a value that is not a URL', () => {
-    const csp = publicCsp('not a url')
-    expect(csp).toBe(publicCsp(undefined))
+    const csp = publicCsp('not a url', true)
+    expect(csp).toBe(publicCsp(undefined, true))
   })
 })
 
