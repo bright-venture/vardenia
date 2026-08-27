@@ -5,13 +5,16 @@ import { privacyPolicy, termsOfService } from './legal'
 import { CONTENT_PAGE_SLUGS, contentPage } from './pages'
 
 /**
- * There is no mailbox yet, so every page that has to name one says so instead.
+ * One address has to reach four places at once.
  *
- * What is actually being protected here is the day that changes: setting
- * `CONTACT.email` has to fill the contact page, both pages that sell a listing,
- * and the privacy policy at once. Four places, two of them inside a legal
- * document nobody rereads, and the one that would be missed longest is the one a
- * data request is sent to.
+ * `CONTACT.email` feeds the contact page, both pages that sell a listing, and
+ * the privacy policy. Two of those are inside a legal document nobody rereads,
+ * and the one that would stay wrong longest is the one a data request is sent
+ * to, so the test that matters is the one counting how many gaps the address
+ * closes rather than the one checking the constant.
+ *
+ * The postal address is still unset, which is what keeps the placeholder
+ * machinery under test now that the mailbox exists.
  */
 
 const restore = (fn: () => void) => {
@@ -24,18 +27,20 @@ const restore = (fn: () => void) => {
 }
 
 describe('contact details', () => {
-  it('has no mailbox yet, and says so rather than inventing one', () => {
-    expect(CONTACT.email).toBeNull()
-    expect(contactEmail()).toContain(PLACEHOLDER)
+  it('publishes the mailbox rather than a marked gap', () => {
+    expect(CONTACT.email).toBe('contact@vardenia.com')
+    expect(contactEmail()).not.toContain(PLACEHOLDER)
+    expect(contactEmail()).toContain('contact@vardenia.com')
   })
 
-  it('reads as an instruction once there is an address', () => {
+  /**
+   * The gap has to come back if the address is ever removed, because the
+   * alternative is a page that names nobody and does not admit it.
+   */
+  it('goes back to a marked gap if the address is taken away', () => {
     restore(() => {
-      CONTACT.email = 'hello@vardenia.com'
-      const line = contactEmail()
-
-      expect(line).not.toContain(PLACEHOLDER)
-      expect(line).toContain('hello@vardenia.com')
+      CONTACT.email = null
+      expect(contactEmail()).toContain(PLACEHOLDER)
     })
   })
 
@@ -60,9 +65,14 @@ describe('contact details', () => {
    * be a whole sentence in both states.
    */
   it('is a whole line, never a fragment inside a sentence', () => {
-    for (const line of [contactEmail(), contactPostal()]) {
-      expect(line.startsWith(PLACEHOLDER)).toBe(true)
-    }
+    restore(() => {
+      CONTACT.email = null
+      CONTACT.postalAddress = null
+
+      for (const line of [contactEmail(), contactPostal()]) {
+        expect(line.startsWith(PLACEHOLDER), line).toBe(true)
+      }
+    })
   })
 })
 
@@ -84,16 +94,23 @@ describe('every page that names a contact', () => {
     }
   })
 
-  it('fills in everywhere at once when the address is set', () => {
-    const before = allLines().filter((line) => line.includes(PLACEHOLDER)).length
+  /**
+   * Measured by taking the address away rather than by adding it, now that it is
+   * set. Same property either way: one field is load-bearing in several
+   * documents, and a page that stopped reading it would go unnoticed because it
+   * would simply carry on rendering a sentence.
+   */
+  it('fills in everywhere at once, and empties everywhere at once', () => {
+    const marked = () => allLines().filter((line) => line.includes(PLACEHOLDER)).length
+    const withAddress = marked()
 
     restore(() => {
-      CONTACT.email = 'hello@vardenia.com'
-      const after = allLines().filter((line) => line.includes(PLACEHOLDER)).length
+      CONTACT.email = null
 
-      // One address closes four gaps: contact, partner-with-us, advertise,
-      // add-your-business, and both mentions in the privacy policy.
-      expect(before - after).toBeGreaterThanOrEqual(4)
+      // Six, counted rather than assumed: contact, partner-with-us, advertise,
+      // add-your-business, and the privacy policy, which names it twice. The
+      // note this replaces said four while listing six.
+      expect(marked() - withAddress).toBeGreaterThanOrEqual(6)
     })
   })
 })

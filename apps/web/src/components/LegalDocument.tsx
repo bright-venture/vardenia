@@ -1,5 +1,6 @@
 import type { Locale } from '@vardenia/i18n'
 import { PLACEHOLDER, LEGAL_LAST_UPDATED, type LegalDocument } from '../lib/legal'
+import { withEmphasis } from './emphasis'
 
 /**
  * Renders a legal document, and refuses to let an unfinished one look finished.
@@ -18,19 +19,6 @@ import { PLACEHOLDER, LEGAL_LAST_UPDATED, type LegalDocument } from '../lib/lega
  * See lib/legal. The English text governs; the Arabic pages say so and link
  * here. Machine-translated legal wording reads as authoritative and is not.
  */
-
-/** Bold runs written as **this**, which is all the markup the text needs. */
-function withEmphasis(text: string, keyPrefix: string) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
-    part.startsWith('**') && part.endsWith('**') ? (
-      <strong key={`${keyPrefix}-${index}`} className="text-ink-900 font-semibold">
-        {part.slice(2, -2)}
-      </strong>
-    ) : (
-      <span key={`${keyPrefix}-${index}`}>{part}</span>
-    ),
-  )
-}
 
 /** `lines` is never empty - groupLines always seeds a group with one line. */
 type LineGroup = { kind: 'list' | 'single'; lines: [string, ...string[]] }

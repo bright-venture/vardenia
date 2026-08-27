@@ -2,6 +2,7 @@ import type { Locale } from '@vardenia/i18n'
 import type { ContentPage } from '../lib/pages'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
+import { withEmphasis } from './emphasis'
 
 /**
  * The template behind About, Contact, FAQ and the three that sell a listing.
@@ -22,19 +23,6 @@ import { groupLines } from './LegalDocument'
  * unfinished - so it degrades to English rather than refusing to render, and the
  * note at the top of an Arabic page says so.
  */
-
-/** Bold runs written as **this**, matching the legal documents. */
-function withEmphasis(text: string, keyPrefix: string) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
-    part.startsWith('**') && part.endsWith('**') ? (
-      <strong key={`${keyPrefix}-${index}`} className="text-ink-900 font-semibold">
-        {part.slice(2, -2)}
-      </strong>
-    ) : (
-      <span key={`${keyPrefix}-${index}`}>{part}</span>
-    ),
-  )
-}
 
 function Line({ text, id }: { text: string; id: string }) {
   const isList = text.startsWith('- ')

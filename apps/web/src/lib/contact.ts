@@ -1,27 +1,32 @@
 /**
  * How to reach Vardenia, in one place.
  *
- * There is no mailbox yet. That is a real gap rather than an oversight: the
- * contact page, the two pages that sell a listing, and the privacy policy all
- * have to name an address, and until one exists every one of them says so.
+ * # Why a module and not four literals
  *
- * # Why a module and not four placeholders
+ * The contact page, the two pages that sell a listing, and the privacy policy
+ * all have to name an address. They are easy to miss when one changes - two are
+ * on marketing pages and two are inside a legal document nobody rereads - and
+ * the one that would stay wrong longest is the privacy policy, where the address
+ * is what a data request is sent to. Setting a field here fills every one of
+ * them at once, and clearing it puts the marked gap back everywhere at once.
  *
- * Because the day the mailbox is created, somebody has to remember all four.
- * They are easy to miss - two are on marketing pages and two are inside a legal
- * document that nobody rereads - and the one that would be missed longest is the
- * privacy policy, where the address is what a data request is sent to. Setting
- * `email` below fills every one of them at once.
+ * # The rule about publishing one
  *
- * # Why not just publish an address that does not exist yet
+ * Nothing goes in here until mail sent to it has been received. An address that
+ * silently goes nowhere is worse than an honest gap: it costs a lead and it
+ * looks like being ignored, and nothing bounces to tell us.
  *
- * A business emails it, nothing bounces, and nobody ever replies. That is worse
- * than an honest gap: it costs a lead and it looks like being ignored. A visible
- * "not published yet" at least tells somebody to try another way.
+ * `contact@vardenia.com` is an alias on the Google Workspace mailbox, so it
+ * lands in the same inbox as admin@ and needed no DNS change. Delivery was
+ * confirmed before it was set here.
+ *
+ * The postal address and phone are still unset, and every page that needs them
+ * says so rather than inventing one. The privacy policy is the one that most
+ * needs the postal address.
  */
 
 export interface ContactDetails {
-  /** The public mailbox. Set this and the whole site stops apologising. */
+  /** The public mailbox. Null puts a marked gap on every page that names one. */
   email: string | null
   /** Optional. A published number is a commitment to answer it. */
   phone: string | null
@@ -30,7 +35,7 @@ export interface ContactDetails {
 }
 
 export const CONTACT: ContactDetails = {
-  email: null,
+  email: 'contact@vardenia.com',
   phone: null,
   postalAddress: null,
 }
