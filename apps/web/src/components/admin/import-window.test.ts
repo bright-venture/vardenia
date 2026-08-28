@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nextWindowSize } from './import-window'
+import { LANES, MAX_WINDOW, nextWindowSize, WindowCursor } from './import-window'
 
 /**
  * How many listings the browser asks for at a time.
@@ -85,5 +85,148 @@ describe('nextWindowSize', () => {
   it('cannot leap from a fast window to a window that would time out', () => {
     const afterFluke = nextWindowSize(2, 20)
     expect(afterFluke).toBeLessThanOrEqual(4)
+  })
+})
+
+/**
+ * The cursor several lanes claim their work from.
+ *
+ * # What these are really testing
+ *
+ * That no listing is claimed twice and none is missed. Neither shows up as an
+ * error at import time: a slug that already exists is skipped, so an overlap
+ * produces a run that quietly does some of its work twice, reports more
+ * listings processed than the file holds, and drives the progress bar past the
+ * end. A gap is worse and quieter still - the run finishes looking successful
+ * with listings missing, and the missing ones have no QR codes.
+ *
+ * So the properties are asserted over every interleaving these tests can
+ * produce, rather than at a couple of chosen points.
+ */
+describe('WindowCursor', () => {
+  /** Drains a cursor the way lanes would, with whatever window sizes are given. */
+  const drain = (total: number, sizes: number[], from = 0) => {
+    const cursor = new WindowCursor(total, from)
+    const slices: { offset: number; limit: number }[] = []
+
+    for (let index = 0; ; index += 1) {
+      const slice = cursor.take(sizes[index % sizes.length] ?? 1)
+      if (!slice) break
+      slices.push(slice)
+    }
+
+    return slices
+  }
+
+  it('covers the file exactly once, whatever sizes the lanes ask for', () => {
+    for (const total of [1, 2, 7, 25, 308, 1000]) {
+      for (const sizes of [[1], [5], [25], [1, 5, 25], [3, 1, 8, 2], [25, 1]]) {
+        const slices = drain(total, sizes)
+        const seen: number[] = []
+
+        for (const slice of slices) {
+          for (let i = slice.offset; i < slice.offset + slice.limit; i += 1) seen.push(i)
+        }
+
+        const label = `total ${total}, sizes ${sizes.join('/')}`
+        expect(seen, label).toEqual(Array.from({ length: total }, (_, i) => i))
+        expect(new Set(seen).size, `${label} - overlap`).toBe(total)
+      }
+    }
+  })
+
+  /**
+   * The lanes start after the warm-up window, which has already written the
+   * first listing. Claiming from zero would send every lane over ground that is
+   * already covered.
+   */
+  it('resumes from where the first window stopped', () => {
+    expect(drain(10, [3], 1)).toEqual([
+      { offset: 1, limit: 3 },
+      { offset: 4, limit: 3 },
+      { offset: 7, limit: 3 },
+    ])
+  })
+
+  it('never hands out a slice that runs past the end', () => {
+    const slices = drain(10, [25])
+
+    expect(slices).toEqual([{ offset: 0, limit: 10 }])
+  })
+
+  it('returns null once the file is claimed, and keeps returning null', () => {
+    const cursor = new WindowCursor(2)
+
+    expect(cursor.take(5)).toEqual({ offset: 0, limit: 2 })
+    expect(cursor.take(5)).toBeNull()
+    expect(cursor.take(5)).toBeNull()
+    expect(cursor.claimed).toBe(2)
+  })
+
+  it('has nothing to hand out for an empty file', () => {
+    expect(new WindowCursor(0).take(5)).toBeNull()
+    expect(new WindowCursor(3, 3).take(5)).toBeNull()
+  })
+
+  /**
+   * A lane asking for a nonsense window still gets a usable slice rather than
+   * an empty one, which would spin the lane forever without claiming anything.
+   */
+  it('always claims at least one listing while any remain', () => {
+    for (const size of [0, -5, 0.4, Number.NaN]) {
+      const slice = new WindowCursor(10).take(size)
+      expect(slice, String(size)).not.toBeNull()
+      expect(slice?.limit, String(size)).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  /**
+   * Interleaved rather than drained one lane at a time, because that is what
+   * actually happens: three lanes take turns as their windows return.
+   */
+  it('keeps lanes off each other regardless of who asks when', () => {
+    const total = 100
+    const cursor = new WindowCursor(total)
+    const lanes = [5, 3, 8]
+    const seen = new Set<number>()
+    let claims = 0
+
+    for (let turn = 0; claims < total; turn += 1) {
+      const slice = cursor.take(lanes[turn % lanes.length] ?? 1)
+      if (!slice) break
+
+      for (let i = slice.offset; i < slice.offset + slice.limit; i += 1) {
+        expect(seen.has(i), `listing ${i} claimed twice`).toBe(false)
+        seen.add(i)
+      }
+
+      claims += slice.limit
+    }
+
+    expect(seen.size).toBe(total)
+  })
+})
+
+describe('LANES', () => {
+  /**
+   * Modest on purpose. Supabase's transaction pooler has a connection limit,
+   * and each lane holds one for the length of its window; the aim is to stop
+   * waiting rather than to saturate it.
+   */
+  it('is more than one and small enough not to fight the pooler', () => {
+    expect(LANES).toBeGreaterThan(1)
+    expect(LANES).toBeLessThanOrEqual(4)
+  })
+
+  /**
+   * A lane never asks for more than the endpoint would give it. The two
+   * constants agree today because import-window owns both; this is here so that
+   * raising one without the other is caught rather than silently clamped, which
+   * would make the window sizing lie to itself about what it just measured.
+   */
+  it('sizes its windows within what the endpoint allows', () => {
+    for (let current = 1; current <= MAX_WINDOW; current += 1) {
+      expect(nextWindowSize(current, 1)).toBeLessThanOrEqual(MAX_WINDOW)
+    }
   })
 })

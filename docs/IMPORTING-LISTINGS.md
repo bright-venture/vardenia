@@ -20,10 +20,16 @@ scanned. Give every import its own.
 
 ### Why there is a progress bar and not a spinner
 
-A listing is slow to write: a lookup, a create, a QR code minted by a hook that
-runs several queries of its own, and a link back. Measured through this
-endpoint against the development database, that is **3.4 seconds each** - 308
-listings in 1052 seconds over 62 windows.
+A listing is slow to write, and the reason is distance rather than work.
+Counted with `pg_stat_statements` against the development database, one listing
+costs **31 database round trips** and the server executes them in about two
+milliseconds. Everything else is the network: 98% of an import is spent
+waiting.
+
+That is why it is so much slower in production. The round trips are the same;
+each one is longer. `netlify.toml` records 217ms from the function to Frankfurt
+against 62ms from a laptop in Beirut, because the region setting there needs a
+Netlify Core Pro plan and is being ignored on the current one.
 
 A Netlify function is killed at ten seconds, so an import cannot run inside one
 request. The browser holds the loop instead, because a browser tab has no
@@ -31,10 +37,16 @@ timeout, and asks for a window of listings at a time.
 
 **The window sizes itself.** It starts at one, times the round trip, and grows
 while windows stay under six seconds, never more than doubling and never past 25. That is not tuning for its own sake: a fixed window of five was the first
-version, and at 3.4 seconds a listing it took 17 seconds - so it worked on a
-laptop and would have been killed in production, where the function is in
-us-east-1 and the database is in Frankfurt. The client cannot know that distance
-in advance, so it measures instead of guessing.
+version, and at the speed of the day it took 17 seconds - so it worked on a
+laptop and would have been killed in production. The client cannot know that
+distance in advance, so it measures instead of guessing.
+
+**Three windows run at once.** A window is almost entirely idle, and in
+production it shrinks to a listing or two, so a sequential import becomes a
+couple of hundred requests waiting one after another. The first window still
+runs alone: it establishes how long a listing takes here, how many listings the
+file holds, and creates the one placeholder image that three cold lanes would
+otherwise each upload a copy of.
 
 A window either finishes or it does not, and one that fails can simply be sent
 again: every write is skipped when the slug already exists. That also means it
@@ -44,6 +56,18 @@ the same batch name picks up where it stopped.
 If a single listing cannot be written inside the function's limit, the browser
 route cannot work at all on that deployment. Use the command line, which runs
 from your machine and is not subject to it.
+
+### The QR code is minted before the listing
+
+Backwards on purpose. `ensureQrCode` normally mints a code after a listing is
+saved and then saves the listing again to point at it, and on a versioned
+collection with three array fields that second save cost about twenty of the
+fifty-seven round trips a listing used to take.
+
+So the import creates the code first and hands it to the listing, which means
+the expensive save happens once and the link back goes on the code instead -
+a record with no versions and no arrays. The hook is untouched and still covers
+every other way a listing gets created.
 
 ## Doing it from the command line
 

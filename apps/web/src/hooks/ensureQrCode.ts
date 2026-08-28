@@ -50,6 +50,9 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
       collection: 'businesses',
       id: doc.id,
       data: { qrCode: existing.id },
+      // The result is discarded, so populating relationships costs round trips
+      // and buys nothing. See import/run.ts, where this path is avoided instead.
+      depth: 0,
       req,
       context: { skipQrGeneration: true },
     })
@@ -102,6 +105,7 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
     collection: 'businesses',
     id: doc.id,
     data: { qrCode: created.id },
+    depth: 0,
     req,
     context: { skipQrGeneration: true },
   })

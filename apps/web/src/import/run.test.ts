@@ -20,31 +20,62 @@ import { SAMPLE_CSV, SAMPLE_ROWS } from './sample-listings'
 
 const csv = SAMPLE_CSV
 
+interface Call {
+  collection: string
+  data: Record<string, unknown>
+  draft?: boolean
+}
+
 interface Recorder {
   payload: Payload
-  created: { collection: string; data: Record<string, unknown>; draft?: boolean }[]
+  created: Call[]
+  updated: (Call & { id: unknown })[]
+  deleted: { collection: string; id: unknown }[]
 }
 
 /** `existingSlugs` makes the re-run case testable without two passes. */
 function recordingPayload(existingSlugs: string[] = []): Recorder {
-  const created: Recorder['created'] = []
+  const created: Call[] = []
+  const updated: Recorder['updated'] = []
+  const deleted: Recorder['deleted'] = []
   const taken = new Set(existingSlugs)
 
   const payload = {
     find: vi.fn(async ({ collection, where }: { collection: string; where?: never }) => {
       if (collection === 'media') return { docs: [{ id: 1 }], totalDocs: 1 }
 
-      const slug = (where as unknown as { slug?: { equals: string } })?.slug?.equals
-      const found = slug && taken.has(slug) ? [{ id: 99 }] : []
-      return { docs: found, totalDocs: found.length }
+      /**
+       * The slug question is asked once per window with an `in`, not once per
+       * listing with an `equals`. The fake matches that shape deliberately: a
+       * fake that still answered `equals` would keep passing after the real
+       * code stopped asking it, and the round trips this change exists to save
+       * would quietly come back.
+       */
+      if (collection === 'businesses') {
+        const slugs = (where as unknown as { slug?: { in?: string[] } })?.slug?.in ?? []
+        const found = slugs.filter((slug) => taken.has(slug)).map((slug) => ({ id: 99, slug }))
+        return { docs: found, totalDocs: found.length }
+      }
+
+      // qr-codes, asked by allocateCode whether a freshly generated code is
+      // free. Nothing is taken here, so the first attempt always wins.
+      return { docs: [], totalDocs: 0 }
     }),
-    create: vi.fn(async (args: { collection: string; data: Record<string, unknown> }) => {
+    create: vi.fn(async (args: Call) => {
       created.push(args)
       return { id: created.length }
     }),
+    update: vi.fn(async (args: Call & { id: unknown }) => {
+      updated.push(args)
+      return { id: args.id }
+    }),
+    delete: vi.fn(async (args: { collection: string; id: unknown }) => {
+      deleted.push(args)
+      return { id: args.id }
+    }),
   } as unknown as Payload
 
-  return { payload, created }
+  return { payload, created, updated, deleted }
 }
 
 describe('a dry run', () => {
@@ -142,6 +173,7 @@ describe('a real run', () => {
       'seasonality',
       'tier',
       'importBatch',
+      'qrCode',
       '_status',
     ])
 
@@ -206,12 +238,14 @@ describe('a real run', () => {
    */
   it('carries on past a row that fails to save, and names it', async () => {
     const { payload } = recordingPayload()
-    let calls = 0
+    let listings = 0
 
     vi.mocked(payload.create).mockImplementation((async (args: { collection: string }) => {
-      calls += 1
-      if (calls === 3) throw new Error('unique constraint')
-      return { id: calls, collection: args.collection }
+      if (args.collection !== 'businesses') return { id: 1000, collection: args.collection }
+
+      listings += 1
+      if (listings === 3) throw new Error('unique constraint')
+      return { id: listings, collection: args.collection }
     }) as never)
 
     const result = await runImport(payload, { csv, batch: 'keserwan-test' })
@@ -219,5 +253,146 @@ describe('a real run', () => {
     expect(result.failures).toHaveLength(1)
     expect(result.failures[0]?.error).toContain('unique constraint')
     expect(result.created).toBe(19)
+  })
+})
+
+/**
+ * The QR code, which is the actual deliverable.
+ *
+ * # Why the code is minted before the listing
+ *
+ * `ensureQrCode` mints one in an afterChange hook and then saves the listing a
+ * second time to point at it. On a versioned collection with three array fields
+ * that second save cost about twenty of the fifty-seven round trips a listing
+ * took - measured - and in production every one of those crosses the Atlantic.
+ *
+ * A listing created with `qrCode` already set never enters the hook, so the
+ * expensive save happens once and the cheap link goes on the code instead.
+ *
+ * That reordering is only safe if both halves really are written, which is what
+ * these assert. A listing with no code cannot go to the printer, and a code
+ * that does not point back at its listing cannot be found by `removeImport`,
+ * which reaches codes through the listing that owns them.
+ */
+describe('the QR code each listing arrives with', () => {
+  it('is minted before the listing, so the listing is written once', async () => {
+    const { payload, created } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test', limit: 3 })
+
+    const order = created.map((call) => call.collection)
+    expect(order).toEqual([
+      'qr-codes',
+      'businesses',
+      'qr-codes',
+      'businesses',
+      'qr-codes',
+      'businesses',
+    ])
+  })
+
+  it('is on the listing at the moment the listing is created', async () => {
+    const { payload, created } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test' })
+
+    for (const call of created.filter((c) => c.collection === 'businesses')) {
+      expect(call.data.qrCode, String(call.data.name)).toBeDefined()
+    }
+  })
+
+  it('points back at its listing', async () => {
+    const { payload, created, updated } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test' })
+
+    const listings = created.filter((c) => c.collection === 'businesses')
+    const links = updated.filter((c) => c.collection === 'qr-codes')
+
+    expect(links).toHaveLength(listings.length)
+    for (const link of links) {
+      expect(link.data.business).toBeDefined()
+    }
+  })
+
+  /** Nothing about the code should tempt anyone to publish the listing. */
+  it('is printable rather than digital, and belongs to a business', async () => {
+    const { payload, created } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test', limit: 2 })
+
+    for (const call of created.filter((c) => c.collection === 'qr-codes')) {
+      expect(call.data.targetType).toBe('business')
+      expect(call.data.active).toBe(true)
+      expect(call.data.code).toMatch(/^[A-Z0-9]{5,10}$/)
+    }
+  })
+
+  /**
+   * The window a half-finished mint leaves open. A code created for a listing
+   * that then fails to save points at nothing, and `removeImport` would never
+   * find it - so the run takes it back rather than leaving a row nobody can
+   * account for.
+   */
+  it('is deleted again when its listing fails to save', async () => {
+    const { payload, deleted } = recordingPayload()
+    let listings = 0
+
+    vi.mocked(payload.create).mockImplementation((async (args: { collection: string }) => {
+      if (args.collection !== 'businesses') return { id: 500 + listings, collection: 'qr-codes' }
+
+      listings += 1
+      if (listings === 2) throw new Error('unique constraint')
+      return { id: listings, collection: args.collection }
+    }) as never)
+
+    const result = await runImport(payload, { csv, batch: 'keserwan-test', limit: 3 })
+
+    expect(result.failures).toHaveLength(1)
+    expect(deleted).toHaveLength(1)
+    expect(deleted[0]?.collection).toBe('qr-codes')
+  })
+
+  /**
+   * The cleanup must not become the error. `payload.delete` throwing before it
+   * returns a promise - which is what a missing method does - used to escape
+   * the handler and take down the whole window, replacing the row's real error
+   * with a confusing one. Found by a fake that had no delete.
+   */
+  it('reports the listing failure even when the cleanup itself fails', async () => {
+    const { payload } = recordingPayload()
+
+    vi.mocked(payload.create).mockImplementation((async (args: { collection: string }) => {
+      if (args.collection === 'businesses') throw new Error('unique constraint')
+      return { id: 1, collection: args.collection }
+    }) as never)
+
+    vi.mocked(payload.delete).mockImplementation((() => {
+      throw new Error('delete is not available')
+    }) as never)
+
+    const result = await runImport(payload, { csv, batch: 'keserwan-test', limit: 2 })
+
+    expect(result.failures).toHaveLength(2)
+    for (const failure of result.failures) {
+      expect(failure.error).toContain('unique constraint')
+    }
+  })
+
+  /**
+   * The round trips this whole change exists to save. Asked once for the
+   * window, not once for each listing - and `pagination: false` is what stops
+   * Payload adding a count query alongside the select.
+   */
+  it('asks once per window whether the slugs are taken, not once per listing', async () => {
+    const { payload } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test', limit: 10 })
+
+    const slugQueries = vi
+      .mocked(payload.find)
+      .mock.calls.filter(([args]) => (args as { collection: string }).collection === 'businesses')
+
+    expect(slugQueries).toHaveLength(1)
+
+    const [args] = slugQueries[0] ?? []
+    const where = (args as { where?: { slug?: { in?: string[] } } })?.where
+    expect(where?.slug?.in).toHaveLength(10)
+    expect((args as { pagination?: boolean }).pagination).toBe(false)
   })
 })

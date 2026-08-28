@@ -1,7 +1,9 @@
 import type { Payload } from 'payload'
+import { DEFAULT_PLACEMENT } from '@vardenia/core'
 import { placeholderImage } from '../seed/images'
 import { richText } from '../seed/rich-text'
 import { parseCsvTable } from '../lib/csv-parse'
+import { allocateCode } from '../lib/allocate-code'
 import { toListings, type ImportedListing } from './listing-row'
 
 /**
@@ -151,6 +153,48 @@ function documentFor(listing: ImportedListing, heroImage: number | string, batch
   }
 }
 
+/**
+ * Mint the code before the listing, so the listing is only ever written once.
+ *
+ * # Why the order is backwards
+ *
+ * `ensureQrCode` mints a code in an afterChange hook and then updates the
+ * listing to point at it. That second update is a whole extra save of a
+ * versioned document with three array fields: measured, it rewrote the row, a
+ * new draft version, the locales row and every subcategory row, and accounted
+ * for roughly twenty of the fifty-seven round trips a listing cost.
+ *
+ * A listing created with `qrCode` already set never enters that hook at all -
+ * it returns early on `doc.qrCode` - so the expensive save happens once. The
+ * link back to the listing then goes on the code instead, which has no versions
+ * and no arrays and costs a few statements.
+ *
+ * # What a half-finished mint leaves behind
+ *
+ * Between this and the listing there is a code whose targetType is `business`
+ * and whose business is empty. `business` is not a required field, so nothing
+ * refuses it; `/g/<code>` would fail to resolve for as long as it lasts.
+ *
+ * The caller deletes it when the listing fails, so the only way one survives is
+ * the process being killed mid-listing. Such a code has never been printed and
+ * has no scans, so `protectPrintedCodes` allows it to be deleted by hand in the
+ * admin panel. `removeImport` will not find it, because it finds codes through
+ * their listing - which is the same reason it cannot be left to chance.
+ */
+async function mintCode(payload: Payload): Promise<number | string | null> {
+  const code = await allocateCode(payload)
+  if (!code) return null
+
+  const created = await payload.create({
+    collection: 'qr-codes',
+    data: { code, targetType: 'business', placement: DEFAULT_PLACEMENT, active: true },
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  return created.id
+}
+
 export async function runImport(payload: Payload, options: ImportOptions): Promise<ImportResult> {
   const table = parseCsvTable(options.csv)
   const { listings, skipped } = toListings(table.rows)
@@ -182,35 +226,73 @@ export async function runImport(payload: Payload, options: ImportOptions): Promi
 
   if (options.dryRun) return result
 
+  /**
+   * An offset past the end of the file asks for nothing, and asking the
+   * database for nothing is not harmless here: `slug: { in: [] }` is either a
+   * syntax error or, worse, a condition that matches everything - which would
+   * mark every listing as already present and skip the window in silence.
+   */
+  if (wanted.length === 0) return result
+
   const heroImage = await placeholderId(payload)
 
-  for (const listing of wanted) {
-    /**
-     * Re-runnable. A run that dies halfway through - a dropped connection is
-     * enough - has to be restartable without creating a second copy of
-     * everything it managed the first time.
-     */
-    const existing = await payload.find({
-      collection: 'businesses',
-      where: { slug: { equals: listing.slug } },
-      limit: 1,
-      depth: 0,
-      draft: true,
-      overrideAccess: true,
-    })
+  /**
+   * Which of this window's slugs are already taken, in one question.
+   *
+   * Re-runnable. A run that dies halfway through - a dropped connection is
+   * enough - has to be restartable without creating a second copy of everything
+   * it managed the first time.
+   *
+   * Asked once per window rather than once per listing. It used to be a `find`
+   * inside the loop, which on a versioned collection is a count and a select,
+   * so two round trips per listing to answer a question one round trip answers
+   * for the whole window. `pagination: false` is what drops the count.
+   */
+  const taken = await payload.find({
+    collection: 'businesses',
+    where: { slug: { in: wanted.map((listing) => listing.slug) } },
+    pagination: false,
+    depth: 0,
+    draft: true,
+    overrideAccess: true,
+  })
 
-    if (existing.docs.length > 0) {
+  const existingSlugs = new Set(taken.docs.map((doc) => (doc as { slug?: string }).slug))
+
+  for (const listing of wanted) {
+    if (existingSlugs.has(listing.slug)) {
       result.skippedExisting += 1
       continue
     }
 
+    // Null when the code space refused to yield a free code, which
+    // `allocateCode` treats as recoverable. The listing is still worth writing;
+    // ensureQrCode will try again on the next save.
+    const qrCode = await mintCode(payload)
+
     try {
-      await payload.create({
+      const created = await payload.create({
         collection: 'businesses',
-        data: documentFor(listing, heroImage, options.batch) as never,
+        data: {
+          ...documentFor(listing, heroImage, options.batch),
+          ...(qrCode !== null ? { qrCode } : {}),
+        } as never,
         draft: true,
+        // The returned document is counted and thrown away, so populating its
+        // relationships is three round trips spent on nothing.
+        depth: 0,
         overrideAccess: true,
       })
+
+      if (qrCode !== null) {
+        await payload.update({
+          collection: 'qr-codes',
+          id: qrCode,
+          data: { business: created.id },
+          depth: 0,
+          overrideAccess: true,
+        })
+      }
 
       result.created += 1
     } catch (error) {
@@ -218,7 +300,27 @@ export async function runImport(payload: Payload, options: ImportOptions): Promi
        * One bad row must not end the run. 308 listings is a long enough job
        * that failing on the last one and rolling nothing back would waste the
        * whole thing, and every failure is named at the end.
+       *
+       * The code minted for it goes too. It points at no listing, so nothing
+       * would ever find it again: `removeImport` reaches codes through the
+       * listing that owns them.
        */
+      if (qrCode !== null) {
+        /**
+         * try/catch rather than `.catch()`. A `payload.delete` that throws
+         * before returning a promise - which is what a missing method does -
+         * escapes the handler entirely and takes down the whole window,
+         * replacing the row's real error with a confusing one. Found by a test
+         * whose fake had no delete, which is the shape of the real bug.
+         */
+        try {
+          await payload.delete({ collection: 'qr-codes', id: qrCode, overrideAccess: true })
+        } catch {
+          // The listing failed; a stray code is the smaller problem and saying
+          // so twice would bury the error that matters.
+        }
+      }
+
       result.failures.push({
         name: listing.name,
         error: error instanceof Error ? error.message : String(error),

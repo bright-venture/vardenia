@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@payloadcms/ui'
-import { FIRST_WINDOW, nextWindowSize } from './import-window'
+import { FIRST_WINDOW, LANES, nextWindowSize, WindowCursor } from './import-window'
 
 /**
  * Import a directory of listings from a spreadsheet, in the admin panel.
@@ -160,43 +160,124 @@ export function ImportListings() {
     }
   }, [csv, batch])
 
+  /**
+   * The import loop: one window alone, then several at a time.
+   *
+   * # Why the first window runs by itself
+   *
+   * Three reasons, and all three are needed.
+   *
+   * It establishes how many listings the file really holds, which is what the
+   * lanes divide between them. It measures how long a listing takes here, which
+   * is what sizes their windows - and that number is unknowable in advance,
+   * because it depends on the distance between the function and the database.
+   *
+   * And it creates the shared placeholder image. Three lanes starting cold
+   * would each look for it, each fail to find it, and each upload one.
+   *
+   * # Why the lanes are worth having
+   *
+   * A window is almost all waiting - 98% of it, measured. In production the
+   * window shrinks to a listing or two, so the import becomes a couple of
+   * hundred requests that spend their time idle one after another. See
+   * import-window for the rest of the reasoning.
+   */
   const start = useCallback(async () => {
     setBusy('importing')
     setError(null)
     stopped.current = false
 
     const running: Totals = { created: 0, skippedExisting: 0, failures: [] }
-    let offset = 0
-    let window = FIRST_WINDOW
+    const startedAll = Date.now()
+    let processed = 0
+
+    /** Called by each lane as its window returns, so the screen keeps up. */
+    const absorb = (result: ImportResponse) => {
+      running.created += result.created
+      running.skippedExisting += result.skippedExisting
+      running.failures.push(...result.failures)
+
+      /**
+       * Counted rather than read off `nextOffset`, which describes one lane's
+       * position and says nothing about the other two. Every listing in a
+       * window comes back as created, skipped or failed, so these add up to the
+       * window - and to the file, once every window has returned.
+       */
+      processed += result.created + result.skippedExisting + result.failures.length
+
+      setTotals({ ...running, failures: [...running.failures] })
+      setDone(processed)
+
+      /**
+       * Wall clock across every lane, not the duration of one window. With
+       * three lanes running, a window's own elapsed time overstates what a
+       * listing costs by roughly three, and the estimate on screen would be
+       * three times too long.
+       */
+      setRate((Date.now() - startedAll) / Math.max(processed, 1))
+    }
 
     try {
-      for (;;) {
-        const startedAt = Date.now()
-        const result = await postWindow({ csv, batch, offset, limit: window })
-        const elapsed = Date.now() - startedAt
+      const first = await postWindow({ csv, batch, offset: 0, limit: FIRST_WINDOW })
+      const firstElapsed = Date.now() - startedAll
 
-        running.created += result.created
-        running.skippedExisting += result.skippedExisting
-        running.failures.push(...result.failures)
+      absorb(first)
 
-        setTotals({ ...running, failures: [...running.failures] })
-        setDone(result.nextOffset ?? result.parsed)
-        setRate(elapsed / Math.max(window, 1))
-
-        window = nextWindowSize(window, elapsed)
-
-        if (result.nextOffset === null) break
+      if (first.nextOffset !== null && !stopped.current) {
+        const cursor = new WindowCursor(first.parsed, first.nextOffset)
+        const sized = nextWindowSize(FIRST_WINDOW, firstElapsed)
 
         /**
-         * Checked between windows rather than inside one. A window that has
-         * begun writing finishes; stopping mid-write would leave a listing
-         * without the QR code its hook was about to mint.
+         * One lane per slot, each claiming the next slice when its own window
+         * returns. Lanes size their windows independently, so a lane that hits
+         * a slow patch shrinks without dragging the others down with it.
          */
-        if (stopped.current) break
+        const lane = async () => {
+          let window = sized
 
-        offset = result.nextOffset
+          try {
+            for (;;) {
+              /**
+               * Checked before claiming rather than inside a window. A window
+               * that has begun writing finishes; stopping mid-write would leave
+               * a listing without the QR code minted alongside it.
+               */
+              if (stopped.current) return
+
+              const slice = cursor.take(window)
+              if (!slice) return
+
+              const at = Date.now()
+              const result = await postWindow({ csv, batch, ...slice })
+
+              absorb(result)
+              window = nextWindowSize(slice.limit, Date.now() - at)
+            }
+          } catch (caught) {
+            // Sets the flag before rethrowing, so the sibling lanes stop at
+            // their next claim rather than working through the rest of the file
+            // against a database that has just refused one of them.
+            stopped.current = true
+            throw caught
+          }
+        }
+
+        const lanes = await Promise.allSettled(
+          Array.from({ length: Math.min(LANES, first.parsed - first.nextOffset) }, lane),
+        )
+
+        /**
+         * One lane failing stops the rest, but only after they have finished
+         * the window they were in. Reporting the first failure is enough: they
+         * are almost always the same failure - the session expiring, or the
+         * database being unreachable - and three copies of it on screen reads
+         * as three problems.
+         */
+        const failed = lanes.find((outcome) => outcome.status === 'rejected')
+        if (failed) throw failed.reason
       }
     } catch (caught) {
+      stopped.current = true
       setError(caught instanceof Error ? caught.message : String(caught))
     } finally {
       setBusy(null)
