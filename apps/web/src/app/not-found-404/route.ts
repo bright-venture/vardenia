@@ -11,16 +11,31 @@ import { colors } from '@vardenia/tokens'
  * rewrite and drops the status, so every invented URL came back 200 in
  * production while returning 404 on the machine it was tested on.
  *
- * Measured on both, the same five paths:
+ * Measured on both, the same three paths:
  *
  *                                 local   netlify
  *     /magazine/no-such-article    404     404
  *     /stay/nothing-here           404     404
  *     /nonsense                    404     200   <- the rewrite status
  *
- * The two that agree are ordinary pages calling `notFound()`. So a status that
- * comes from the origin survives Netlify perfectly well, and only a status
- * invented by middleware is lost. This is the origin.
+ * # What that comparison does and does not show
+ *
+ * An earlier version of this note read the first two as "ordinary pages calling
+ * `notFound()`", and concluded that a status from the origin survives Netlify
+ * while a status invented by middleware is lost. The conclusion may well be
+ * right; the evidence was not. Neither path matches a route at all - there is
+ * no `/magazine/[slug]` and no `/stay/[slug]` - so both are Next's own 404 for
+ * an unmatched URL, not a page deciding anything.
+ *
+ * The pages that really do call `notFound()` were checked afterwards and two of
+ * them answered 200, for an unrelated reason: a `loading.tsx` above them
+ * flushed the response head before the page ran. See the note in
+ * magazine/articles/page.tsx.
+ *
+ * So what is actually established is narrower: middleware cannot set a status
+ * on this deployment, and a route handler returning a `Response` with an
+ * explicit status is a different mechanism with a much better chance. That
+ * remains unverified on Netlify, because it has never been deployed.
  *
  * # Why the markup is here rather than shared with not-found.tsx
  *

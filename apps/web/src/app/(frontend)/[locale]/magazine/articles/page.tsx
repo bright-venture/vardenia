@@ -1,12 +1,34 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../i18n/routing'
 import { findArticles } from '../../../../../lib/articles'
 import { ArticleCard } from '../../../../../components/ArticleCard'
+import { ListingsSkeleton } from '../../../../../components/PageSkeleton'
 
-/** Every article, newest first, regardless of which edition it ran in. */
+/**
+ * Every article, newest first, regardless of which edition it ran in.
+ *
+ * # Why the skeleton is here rather than in a loading.tsx
+ *
+ * It was a `loading.tsx`, and that file also covered `articles/[slug]`, which
+ * broke the status code on every missing article. A `loading.tsx` puts its
+ * whole subtree behind a Suspense boundary, so Next flushes the response head -
+ * status line included - before the page runs, and the `notFound()` that
+ * follows can change what is rendered but not what has already been sent.
+ * `/magazine/articles/no-such-article` answered 200 with the not-found page in
+ * it, and so did every invented listing URL under directory/loading.tsx.
+ *
+ * Measured on a production build, which is the only place it shows: removing
+ * the two loading.tsx files turned four such paths from 200 to 404 and changed
+ * nothing else.
+ *
+ * A boundary declared inside the page covers the page and nothing below it, so
+ * the index keeps its skeleton and the article route keeps its status. The
+ * directory page had always been written this way; this one had not.
+ */
 
 // Cached for 60s and regenerated in the background. See magazine/page.tsx.
 export const revalidate = 60
@@ -33,8 +55,6 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
   setRequestLocale(locale)
 
   const ar = locale === 'ar'
-  const { page } = await searchParams
-  const result = await findArticles({ locale, page: Number(page) || 1 })
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
@@ -47,6 +67,29 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
         </h1>
       </header>
 
+      {/* `searchParams` is handed over unawaited so this boundary is the only
+          thing that blocks on it, matching the directory page. */}
+      <Suspense fallback={<ListingsSkeleton />}>
+        <ArticleResults locale={locale} searchParams={searchParams} />
+      </Suspense>
+    </main>
+  )
+}
+
+/** The part that needs the query string, and therefore the database. */
+async function ArticleResults({
+  locale,
+  searchParams,
+}: {
+  locale: Locale
+  searchParams: Props['searchParams']
+}) {
+  const ar = locale === 'ar'
+  const { page } = await searchParams
+  const result = await findArticles({ locale, page: Number(page) || 1 })
+
+  return (
+    <>
       {result.docs.length === 0 ? (
         <p className="text-ink-500 mt-16 text-center">
           {ar ? 'لا توجد مقالات بعد.' : 'No articles yet.'}
@@ -85,6 +128,6 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
           ))}
         </nav>
       ) : null}
-    </main>
+    </>
   )
 }

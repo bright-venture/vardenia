@@ -12,6 +12,7 @@ import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
+import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { guardSort } from '../hooks/guardSort'
 import {
   revalidateListingsAfterChange,
@@ -61,7 +62,10 @@ export const Businesses: CollectionConfig = {
     afterDelete: [revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
     // listing mints a new one. Refused rather than warned about.
-    beforeDelete: [protectBusinessWithPrintedCode],
+    // Bookings are the other thing that makes a listing undeletable, and the
+    // database already refused those - just not in words. See
+    // hooks/blockBusinessWithBookings.
+    beforeDelete: [protectBusinessWithPrintedCode, blockBusinessWithBookings],
   },
   fields: [
     { name: 'name', type: 'text', required: true, localized: true, index: true },
