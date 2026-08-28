@@ -102,3 +102,35 @@ describe('slugifyStem', () => {
     expect(slugifyStem('a'.repeat(59) + '-b')).not.toMatch(/-$/)
   })
 })
+
+/**
+ * The property the listing import depends on.
+ *
+ * `import/run.ts` finds its shared placeholder image by the stem of the name it
+ * uploaded, because this hook renames the file before it is stored and there is
+ * no other stable handle on the row. That coupling is invisible from either
+ * file on its own, so it is pinned here: if the rename ever stops preserving
+ * the stem, this fails rather than the import quietly uploading one placeholder
+ * per listing again - which is what it did, 308 times, in two databases.
+ */
+describe('the stem the listing import looks up', () => {
+  it('survives the rename, so a prefix match still finds the file', () => {
+    const renamed = unguessableName('import-placeholder.jpg')
+
+    expect(renamed.startsWith('import-placeholder-')).toBe(true)
+    expect(renamed).toContain('import-placeholder')
+  })
+
+  /**
+   * The extension is not part of the handle either. `formatOptions` converts
+   * the stored file to WebP after this hook has run, so anything matching on
+   * `.jpg` would miss for a second reason.
+   */
+  it('keeps the stem recognisable whatever the extension becomes', () => {
+    for (const name of ['import-placeholder.jpg', 'import-placeholder.png']) {
+      expect(unguessableName(name).split('-').slice(0, 2).join('-'), name).toBe(
+        'import-placeholder',
+      )
+    }
+  })
+})

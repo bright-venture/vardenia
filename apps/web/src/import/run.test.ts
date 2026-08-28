@@ -42,7 +42,17 @@ function recordingPayload(existingSlugs: string[] = []): Recorder {
 
   const payload = {
     find: vi.fn(async ({ collection, where }: { collection: string; where?: never }) => {
-      if (collection === 'media') return { docs: [{ id: 1 }], totalDocs: 1 }
+      /**
+       * The placeholder is answered only for the query the code should be
+       * making. It is stored under a randomised name, so a lookup by exact
+       * filename finds nothing - which is the bug this shape encodes: a fake
+       * that answered `equals` would have kept the broken version passing.
+       */
+      if (collection === 'media') {
+        const filename = (where as unknown as { filename?: Record<string, unknown> })?.filename
+        const matches = typeof filename?.like === 'string'
+        return matches ? { docs: [{ id: 1 }], totalDocs: 1 } : { docs: [], totalDocs: 0 }
+      }
 
       /**
        * The slug question is asked once per window with an `in`, not once per
@@ -209,6 +219,50 @@ describe('a real run', () => {
     await runImport(payload, { csv, batch: 'keserwan-test' })
 
     expect(created.filter((call) => call.collection === 'media')).toHaveLength(0)
+  })
+
+  /**
+   * The bug this replaced, stated as the query rather than as the outcome.
+   *
+   * `placeholderId` asked for `filename equals "import-placeholder.jpg"`, and
+   * nothing is ever stored under that name: `unguessableFilename` renames every
+   * upload and `formatOptions` converts it to WebP, so the row says
+   * `import-placeholder-a3f19c4e2b7d5081cf20b114.webp`. The lookup matched
+   * nothing, every listing uploaded its own, and production accumulated 308
+   * near-identical gradients with five derived sizes each.
+   *
+   * Asserted on the query because the outcome is easy to fake and the query is
+   * the thing that was wrong.
+   */
+  it('looks the placeholder up by stem, because the stored name is randomised', async () => {
+    const { payload } = recordingPayload()
+    await runImport(payload, { csv, batch: 'keserwan-test', limit: 2 })
+
+    const [args] =
+      vi
+        .mocked(payload.find)
+        .mock.calls.find(([a]) => (a as { collection: string }).collection === 'media') ?? []
+
+    const filename = (args as { where?: { filename?: Record<string, unknown> } })?.where?.filename
+
+    expect(filename?.like).toBe('import-placeholder')
+    expect(filename?.equals, 'an exact filename can never match a randomised one').toBeUndefined()
+  })
+
+  /** One upload for the whole file, even when nothing exists to find. */
+  it('uploads the placeholder once for a whole window, not once per listing', async () => {
+    const { payload, created } = recordingPayload()
+
+    vi.mocked(payload.find).mockImplementation((async (args: { collection: string }) => {
+      // Nothing exists yet: the first window has to create the placeholder.
+      if (args.collection === 'media') return { docs: [], totalDocs: 0 }
+      if (args.collection === 'businesses') return { docs: [], totalDocs: 0 }
+      return { docs: [], totalDocs: 0 }
+    }) as never)
+
+    await runImport(payload, { csv, batch: 'keserwan-test', limit: 10 })
+
+    expect(created.filter((call) => call.collection === 'media')).toHaveLength(1)
   })
 
   /**

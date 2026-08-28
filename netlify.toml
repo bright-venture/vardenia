@@ -57,7 +57,13 @@
 # setting is ignored rather than failing the build - so if the improvement does
 # not appear, check the plan before looking for a bug.
 #
-# # It is being ignored today. Measured 26 August 2026.
+# # It was ignored for two separate reasons. Measured 26 and 28 August 2026.
+#
+# The plan is one of them, below. The other is that the value said
+# "eu-central-1", which this key does not accept - it takes airport codes, and
+# an unrecognised one is not an error, just nothing. Either fault alone produces
+# the same symptom, so fixing the plan without fixing the value would have
+# looked like the plan making no difference.
 #
 # Two paths through the same force-dynamic function, so edge distance cancels:
 # /g/ZZZ returns before it ever calls getPayload, and /g/<seven valid chars>
@@ -80,7 +86,18 @@
 # Frankfurt is deliberate, both for readers in Lebanon and for the EU hosting
 # position the privacy policy rests on.
 [functions]
-  region = "eu-central-1"
+  # Frankfurt. `fra` is an airport code, and that is the only form this key
+  # accepts - the AWS name `eu-central-1` sat here for two days and was never a
+  # valid value. On the free plan it was ignored either way, so nothing revealed
+  # it; on Pro it would have looked exactly like the plan not applying the
+  # setting. Netlify's self-serve list is cmh, dub, fra, gru, iad, lhr, nrt,
+  # pdx, sfo, sin, syd, yul.
+  #
+  # Also set the same region in the UI under Project configuration > Build &
+  # deploy > Functions region. That is the documented site-level control; this
+  # key is documented per function. Both pointing at Frankfurt means whichever
+  # one the platform honours gives the same answer.
+  region = "fra"
 
 # Next.js support: routing, ISR, image optimisation and the server components
 # that Payload's admin panel is built from. Without this the output in

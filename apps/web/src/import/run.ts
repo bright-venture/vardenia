@@ -35,8 +35,27 @@ import { toListings, type ImportedListing } from './listing-row'
  * other half.
  */
 
-/** One shared image for the whole batch, rather than one per listing. */
-const PLACEHOLDER_FILENAME = 'import-placeholder.jpg'
+/**
+ * The name the placeholder is uploaded under, and the stem it is found by.
+ *
+ * It is never stored under this name. `unguessableFilename` renames every
+ * upload before it is written, keeping the slugified stem and appending 96 bits
+ * of randomness, and `formatOptions` then converts the file to WebP. So this
+ * arrives as `import-placeholder.jpg` and is stored as
+ * `import-placeholder-a3f19c4e2b7d5081cf20b114.webp`.
+ *
+ * That is why the lookup below matches on the stem rather than on the whole
+ * name. Asking for this string exactly is what the first version did, and it
+ * could never match anything: every listing found no placeholder and uploaded
+ * its own. Production ended up with 308 near-identical gradients and dev with
+ * the same, each one re-encoded to WebP and given five derived sizes - exactly
+ * the cost the comment on `placeholderId` says this avoids.
+ *
+ * unguessableFilename.test.ts pins the property this depends on: that the stem
+ * survives the rename.
+ */
+const PLACEHOLDER_STEM = 'import-placeholder'
+const PLACEHOLDER_UPLOAD_NAME = `${PLACEHOLDER_STEM}.jpg`
 
 export interface ImportOptions {
   csv: string
@@ -94,9 +113,15 @@ export interface ImportResult {
 async function placeholderId(payload: Payload): Promise<number | string> {
   const existing = await payload.find({
     collection: 'media',
-    where: { filename: { equals: PLACEHOLDER_FILENAME } },
+    // Contains, not equals. See PLACEHOLDER_STEM for why the stored name is
+    // never the name it was uploaded under.
+    where: { filename: { like: PLACEHOLDER_STEM } },
     limit: 1,
+    // Oldest first, so every window of every import converges on the same
+    // image instead of whichever one a page of results happened to return.
+    sort: 'createdAt',
     depth: 0,
+    overrideAccess: true,
   })
 
   const found = existing.docs[0]
@@ -111,7 +136,9 @@ async function placeholderId(payload: Payload): Promise<number | string> {
       credit: 'Vardenia placeholder',
       usageRights: 'owned',
     },
-    file: { data, mimetype: 'image/jpeg', name: PLACEHOLDER_FILENAME, size: data.length },
+    file: { data, mimetype: 'image/jpeg', name: PLACEHOLDER_UPLOAD_NAME, size: data.length },
+    depth: 0,
+    overrideAccess: true,
   })
 
   return created.id
