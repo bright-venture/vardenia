@@ -51,6 +51,36 @@ mints that suffix whenever two businesses share a name, so it will keep
 happening. A folder per business removes the ambiguity, and matches how a shoot
 is organised anyway.
 
+### Uploading the photos once they come back
+
+```bash
+pnpm --filter @vardenia/web photos:import photos --credit "Studio X" --rights supplied --dry-run
+```
+
+Drop `--dry-run` to write. It reads one folder per listing, matches the folder
+name against the slug, uploads `cover.*` as the hero and the rest as gallery
+images, and reports everything it did not do.
+
+**Credit and rights are required.** Neither can be worked out from a file, and
+several hundred photographs of real businesses published on a commercial
+directory with no record of where they came from is a liability rather than an
+untidiness. `--rights` is `owned`, `licensed` or `supplied`.
+
+**Nothing is guessed.** A folder matching no listing is named in the report, not
+fuzzy-matched. A listing that already has a real photograph is left alone -
+`--replace` overrides that - because the usual second run is somebody adding the
+folders that were missing the first time.
+
+**HEIC is refused, by name.** It is what an iPhone shoots by default and
+`Media.ts` does not accept it, so it will arrive. The report says which file and
+that it needs exporting as JPEG, rather than "unsupported file", which would
+send somebody hunting for a bug.
+
+It is a command rather than a screen for the same reason the listing import is a
+screen: a spreadsheet is small enough to post to a function, and gigabytes of
+photography is not. The folders arrive on somebody's machine anyway, and that
+machine is three times closer to the database than the deployed site is.
+
 ### How many photos to ask for
 
 `galleryLimit` is what a tier buys: free shows **1** gallery image, featured 6,
