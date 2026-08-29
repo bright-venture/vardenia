@@ -253,6 +253,13 @@ async function main(): Promise<void> {
     `  folders read     ${result.folders}`,
     `  listings updated ${result.updated}`,
     `  photographs      ${result.uploaded}`,
+    /**
+     * Echoed back because it is written onto every photograph and there is no
+     * other way to see what arrived. A shell that drops a space turns "Studio
+     * Beirut" into "StudioBeirut" on several hundred rows, and the only clue
+     * was a quoted argument in the command echo - which nobody reads.
+     */
+    `  credited to      "${args.credit.trim()}" (${args.rights})`,
   ]
 
   if (result.skippedExisting.length > 0) {
@@ -307,7 +314,17 @@ async function main(): Promise<void> {
   console.log(lines.join('\n'))
 }
 
-main().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
-  process.exit(1)
-})
+/**
+ * Exits explicitly, like import/index.ts does.
+ *
+ * Payload's connection pool keeps the event loop alive after the work is
+ * finished, so without this the command prints its report and then sits there
+ * looking like it is still running. Left out of the first version, and it makes
+ * a working tool look broken.
+ */
+main()
+  .then(() => process.exit(0))
+  .catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exit(1)
+  })
