@@ -54,7 +54,7 @@ import { toListings, type ImportedListing } from './listing-row'
  * unguessableFilename.test.ts pins the property this depends on: that the stem
  * survives the rename.
  */
-const PLACEHOLDER_STEM = 'import-placeholder'
+export const PLACEHOLDER_STEM = 'import-placeholder'
 const PLACEHOLDER_UPLOAD_NAME = `${PLACEHOLDER_STEM}.jpg`
 
 export interface ImportOptions {
@@ -110,7 +110,7 @@ export interface ImportResult {
  * Deliberately ugly and labelled, for the same reason the seed's are. Nobody
  * should look at a listing and be unsure whether the photograph is real.
  */
-async function placeholderId(payload: Payload): Promise<number | string> {
+export async function placeholderId(payload: Payload): Promise<number | string> {
   const existing = await payload.find({
     collection: 'media',
     // Contains, not equals. See PLACEHOLDER_STEM for why the stored name is

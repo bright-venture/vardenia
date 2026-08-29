@@ -14,9 +14,14 @@ are typing, rather than in a report afterwards.
 **The template.** `python scripts/make-listing-template.py` writes
 `vardenia-listing-template.xlsx`: the exact columns `import/listing-row.ts`
 reads, a filled example row, help text under every heading, and dropdowns on
-Category, District and Usually When. The lists are short because they are the
-ones the importer accepts - a category typed by hand that is not on the list
-means the row is rejected, so the dropdown is not decoration.
+six of the ten columns - only the name, the activity and the description are
+typed. Category, District, Hotel Stars and Usually When refuse anything off the
+list, because a value off the list cannot be imported at all. Location and Price
+Range only warn, since a village nobody has entered before is a real thing.
+
+The town list is the sixty already in the directory. Free typing produced
+"FARAYA", "Faraya" and "Faraya (Airbnb)" as three separate places in the last
+import, which is what it exists to stop.
 
 Regenerate it whenever the importer's vocabulary changes. A template that
 produces a file the importer cannot read is worse than no template.
@@ -81,10 +86,36 @@ screen: a spreadsheet is small enough to post to a function, and gigabytes of
 photography is not. The folders arrive on somebody's machine anyway, and that
 machine is three times closer to the database than the deployed site is.
 
+### Taking photographs back off
+
+```bash
+pnpm --filter @vardenia/web photos:import photos --remove --dry-run
+```
+
+Point it at the same folder tree the upload used, or at a single slug. Each
+listing goes back to the shared placeholder, its gallery is cleared, and the
+files are deleted.
+
+**It only removes what it can prove it uploaded.** The proof is the stored
+filename: uploads are named `<slug>-cover` and `<slug>-01`, and
+`unguessableFilename` keeps that stem. A photograph an editor added through the
+admin panel, an image shared with an article, and the placeholder itself are all
+left alone and reported.
+
+That strictness is the point. The failure to guard against is not a wrong
+photograph coming back - it is a teardown quietly destroying the one photograph
+a business actually supplied. Note that `blue-table-2-cover-...` belongs to the
+listing `blue-table-2`, not to `blue-table`, and four such slugs are already
+live.
+
+The listing is repointed before anything is deleted, because `heroImage` is
+required and `blockMediaInUse` refuses to delete an image a required field still
+points at.
+
 ### How many photos to ask for
 
-`galleryLimit` is what a tier buys: free shows **1** gallery image, featured 6,
-premium 15, partner 40. Every listing is free today, so a folder of twenty
+`galleryLimit` is what a tier buys: free shows **1** gallery image, listed 6,
+featured 15, partner 40. Every listing is free today, so a folder of twenty
 photographs displays two of them - the cover and one - while all twenty are
 uploaded, re-encoded into six sizes each and stored where nobody sees them.
 

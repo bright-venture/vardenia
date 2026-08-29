@@ -4,6 +4,7 @@ import { config as loadEnv } from 'dotenv'
 import { getPayload } from 'payload'
 import { checkSeedTarget, databaseIdentity } from '../seed/guard'
 import { isDirectory, runPhotoImport } from './photo-import'
+import { runPhotoRemove } from './photo-remove'
 
 /**
  * Bulk photograph upload, command line entry point.
@@ -44,6 +45,7 @@ interface Args {
   limit: number | null
   dryRun: boolean
   replace: boolean
+  remove: boolean
 }
 
 function parseArgs(argv: string[]): Args {
@@ -55,6 +57,7 @@ function parseArgs(argv: string[]): Args {
     limit: null,
     dryRun: false,
     replace: false,
+    remove: false,
   }
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -83,6 +86,9 @@ function parseArgs(argv: string[]): Args {
         break
       case '--replace':
         args.replace = true
+        break
+      case '--remove':
+        args.remove = true
         break
       default:
         if (arg && !arg.startsWith('--') && !args.folder) args.folder = arg
@@ -141,22 +147,83 @@ function assertTarget(stated: string | null): string {
 const USAGE = [
   'Usage:',
   '  pnpm --filter @vardenia/web photos:import <folder> --credit "<who>" --rights <owned|licensed|supplied>',
+  '  pnpm --filter @vardenia/web photos:import <folder|slug> --remove',
   '',
   'Options:',
   '  --dry-run     work everything out and write nothing',
   '  --limit N     only the first N folders',
   '  --replace     overwrite listings that already have a photograph',
+  '  --remove      take the photographs back off and restore the placeholder',
   '  --target ...  name the database, required to reach anything but the default',
 ].join('\n')
+
+/** Removal, which takes the same folder the upload took. */
+async function remove(args: Args, identity: string): Promise<void> {
+  const payload = await getPayload({ config })
+
+  const result = await runPhotoRemove(payload, {
+    target: path.resolve(args.folder as string),
+    dryRun: args.dryRun,
+  })
+
+  const lines = [
+    args.dryRun ? `Would remove from ${identity}` : `Removed from ${identity}`,
+    `  listings named    ${result.slugs}`,
+    `  listings changed  ${result.listings}`,
+    `  photographs gone  ${result.deleted}`,
+  ]
+
+  if (result.notOurs.length > 0) {
+    lines.push(
+      '',
+      `  ${result.notOurs.length} listing(s) left completely alone - the photograph was not`,
+      '  uploaded by this tool, so it belongs to somebody else:',
+      ...result.notOurs.slice(0, 10).map((n) => `    ${n.slug}  ${n.filename}`),
+    )
+  }
+
+  if (result.unmatched.length > 0) {
+    lines.push(
+      '',
+      `  ${result.unmatched.length} folder(s) match no listing:`,
+      ...result.unmatched.slice(0, 10).map((s) => `    ${s}`),
+    )
+  }
+
+  if (result.refused.length > 0) {
+    lines.push('', `  ${result.refused.length} refused:`)
+    for (const entry of result.refused.slice(0, 10)) {
+      lines.push(`    ${entry.slug}: ${entry.error}`)
+    }
+  }
+
+  if (args.dryRun) lines.push('', '  Nothing was written. Run again without --dry-run.')
+
+  console.log(lines.join('\n'))
+}
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
 
-  if (!args.folder || !isDirectory(path.resolve(args.folder))) {
-    console.error(args.folder ? `Not a folder: ${args.folder}` : 'No folder given.')
+  if (!args.folder) {
+    console.error('No folder given.')
     console.error('')
     console.error(USAGE)
     process.exit(1)
+  }
+
+  // Removal accepts a single slug as well as a tree, so only the upload needs
+  // the argument to be a real directory.
+  if (!args.remove && !isDirectory(path.resolve(args.folder))) {
+    console.error(`Not a folder: ${args.folder}`)
+    console.error('')
+    console.error(USAGE)
+    process.exit(1)
+  }
+
+  if (args.remove) {
+    await remove(args, assertTarget(args.target))
+    return
   }
 
   if (!args.credit?.trim() || !args.rights) {
