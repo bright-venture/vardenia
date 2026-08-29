@@ -18,6 +18,7 @@
     "seed": "tsx src/seed/index.ts",
     "seed:reset": "tsx src/seed/reset.ts",
     "import:listings": "tsx src/import/index.ts",
+    "photos:folders": "tsx src/import/photo-folders.ts",
     "clean": "rimraf .next .next-dev .turbo",
     "test": "vitest run",
     "test:watch": "vitest",

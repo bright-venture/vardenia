@@ -3,6 +3,63 @@
 Turns a directory held in Excel into draft listings, each owning a QR code, so a
 designer can be handed a sheet of codes.
 
+## Collecting listings from somebody outside the team
+
+Two files do this, and neither of them is an app. The people filling them in are
+not on the team and will not be trained; a spreadsheet is a thing they already
+know, works offline and can be emailed. What a form would have bought is
+validation, and Excel's dropdowns buy most of that where it matters - while they
+are typing, rather than in a report afterwards.
+
+**The template.** `python scripts/make-listing-template.py` writes
+`vardenia-listing-template.xlsx`: the exact columns `import/listing-row.ts`
+reads, a filled example row, help text under every heading, and dropdowns on
+Category, District and Usually When. The lists are short because they are the
+ones the importer accepts - a category typed by hand that is not on the list
+means the row is rejected, so the dropdown is not decoration.
+
+Regenerate it whenever the importer's vocabulary changes. A template that
+produces a file the importer cannot read is worse than no template.
+
+**Only Mount Lebanon.** `listing-row.ts` hardcodes the governorate and knows
+three district headings. That is a property of the Keserwan import it was
+written for, not a decision about the product, and it has to change before a
+business anywhere else can be collected this way.
+
+**The photo folders.** Photographs never go in the spreadsheet. Once the sheet
+comes back, export the Listings tab as CSV and run:
+
+```bash
+pnpm --filter @vardenia/web photos:folders sheet.csv photos
+```
+
+That creates one empty folder per business, named exactly as the slug the
+importer will mint, each holding a note saying what goes inside. It also writes
+`photos/_folders.csv` pairing folder with business, so a later photo import
+reads the pairing rather than re-deriving it - a business renamed between the
+shoot and the upload then keeps its photographs.
+
+Inside a folder: `cover.jpg` is the hero, and `01.jpg`, `02.jpg` are gallery
+images in name order.
+
+### Why folders rather than named files
+
+`chez-sami-2.jpg` cannot be told apart from the cover photo of a business whose
+slug is `chez-sami-2`, and four such slugs are already live -
+`boneless-28`, `chez-sami-2`, `murray-resto-2`, `zaatar-w-zeit-2`. The importer
+mints that suffix whenever two businesses share a name, so it will keep
+happening. A folder per business removes the ambiguity, and matches how a shoot
+is organised anyway.
+
+### How many photos to ask for
+
+`galleryLimit` is what a tier buys: free shows **1** gallery image, featured 6,
+premium 15, partner 40. Every listing is free today, so a folder of twenty
+photographs displays two of them - the cover and one - while all twenty are
+uploaded, re-encoded into six sizes each and stored where nobody sees them.
+
+Ask for a cover and one or two more until listings are actually sold.
+
 ## Doing it in the admin panel
 
 **Import listings (CSV)**, in the sidebar under Reports. That is the way to use
