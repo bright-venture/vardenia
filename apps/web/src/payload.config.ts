@@ -25,6 +25,7 @@ import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
+import { withSendCap } from './lib/email-cap'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -214,12 +215,28 @@ export default buildConfig({
     const settings = emailSettings()
     if (!settings) return undefined
 
-    return resendAdapter({
-      apiKey: settings.apiKey,
-      defaultFromAddress: settings.from,
-      defaultFromName: settings.fromName,
-      ...(settings.overrideTo ? { overrideRecipientAddress: settings.overrideTo } : {}),
-    })
+    /**
+     * Wrapped in the send cap, which is the only place that can bound the total.
+     *
+     * Every existing guard on the mail path bounds one caller: ten auth requests
+     * a minute per address, and Payload's own account lockout. None of them
+     * bounds how much mail leaves in total, and the two failures that costs are
+     * a bill and a spent sending reputation - the second of which puts ordinary
+     * password resets in everyone's junk folder for weeks, with no way to undo
+     * it.
+     *
+     * Here rather than around our own helpers, because Payload sends the
+     * verification and password-reset messages itself and those are the ones
+     * worth flooding. See lib/email-cap.
+     */
+    return withSendCap(
+      resendAdapter({
+        apiKey: settings.apiKey,
+        defaultFromAddress: settings.from,
+        defaultFromName: settings.fromName,
+        ...(settings.overrideTo ? { overrideRecipientAddress: settings.overrideTo } : {}),
+      }),
+    )
   })(),
 
   /**
