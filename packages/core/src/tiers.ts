@@ -23,7 +23,17 @@ export interface TierCapabilities {
   heroPlacement: boolean
   /** Eligible to appear in the printed magazine. */
   printInclusion: boolean
-  /** Push notification campaigns to nearby app users. */
+  /**
+   * Push notification campaigns to nearby app users.
+   *
+   * False on every tier, deliberately, and kept in the shape so the intention is
+   * not lost. The mobile app exists but has no push notification code and no
+   * users, so there is nobody to notify. `partner` claimed this until 28 August
+   * 2026, which meant the data model asserted something the product could not
+   * do - and a sales sheet generated from it would have promised it.
+   *
+   * Turn it on for `partner` when the app ships and has an audience, not before.
+   */
   pushCampaigns: boolean
 }
 
@@ -65,7 +75,8 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     analyticsAccess: true,
     heroPlacement: true,
     printInclusion: true,
-    pushCampaigns: true,
+    // Not until the app has users. See the note on the field.
+    pushCampaigns: false,
   },
 }
 
