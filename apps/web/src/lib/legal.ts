@@ -103,7 +103,8 @@ export function privacyPolicy(): LegalDocument {
           '- **If you make a booking**: the date and time, how many people, and anything you write in the notes field. We also keep a reference number so you and the business can identify the booking later.',
           '- **If you scan a printed code**: the code, the time, your city and country, and whether you were on a phone or a computer. We do not record your precise location, and we do not store your IP address at all - it is hashed in memory to spot repeated scans and never written down.',
           '- **If something breaks**: a record of the error, with email addresses, passwords and access tokens automatically removed before it is stored.',
-          'We do not use analytics or advertising trackers, and there is no third-party script on the site collecting anything about you.',
+          '- **When you read any page**: which pages were visited, which site the visit came from, the country it came from, and whether it was a phone or a computer. This is measured for us by an analytics provider, it sets no cookie, and it is counted rather than tied to you.',
+          'We use no advertising trackers, we do not build a profile of you, and nothing here follows you to another site.',
         ],
       },
 
@@ -131,8 +132,8 @@ export function privacyPolicy(): LegalDocument {
         heading: 'Who else sees it',
         body: [
           '- **The business you book with** sees your name, your phone number if you gave one, the details of the booking and your notes. They need those to hold your table and to call you if something changes. They do not see your email address.',
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, and the service that sends our email.',
-          `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database, Netlify for hosting, and Resend for email')}.`,
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the service that sends our email, and the service that counts page visits.',
+          `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database, Netlify for hosting, Resend for email, and Umami for analytics')}.`,
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
@@ -140,7 +141,7 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Where it is kept',
         body: [
-          'Our database is hosted in the European Union, in Frankfurt. Our website host and our email provider may process data outside it.',
+          'Our database is hosted in the European Union, in Frankfurt, and our page-visit figures are held in the European Union too. Our website host and our email provider may process data outside it.',
           TBD(
             'the transfer mechanism relied on for suppliers outside the EU, and whether a full record of processing activities is needed',
           ),
@@ -171,6 +172,7 @@ export function privacyPolicy(): LegalDocument {
         heading: 'Cookies',
         body: [
           'One cookie, and only once you sign in. It keeps you signed in and nothing else. It is not used to track you, it is not shared, and there is no advertising or analytics cookie on this site.',
+          'That last part is deliberate. We do count page visits, and we chose a provider that needs no cookie to do it, so measuring how the site is read costs you nothing and asks you nothing.',
           'Because that cookie is strictly necessary to provide something you asked for, there is no consent banner. If we ever add anything that is not strictly necessary, there will be.',
         ],
       },

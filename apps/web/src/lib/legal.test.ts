@@ -94,6 +94,44 @@ describe('what the policy claims about the code', () => {
   it('is accurate about what the business receives', () => {
     expect(lines).toContain('they do not see your email address')
   })
+
+  /**
+   * The policy used to say, flatly, "We do not use analytics or advertising
+   * trackers, and there is no third-party script on the site collecting
+   * anything about you."
+   *
+   * That was true when it was written and became false the moment an analytics
+   * provider was configured - a privacy policy contradicted by the page it is
+   * printed on. Nothing would have caught it: the variables live in Netlify, so
+   * the claim and the thing it describes are not even in the same repository.
+   *
+   * Pinned as a claim rather than as wording. If analytics is ever removed
+   * again, this test should be updated deliberately, not worked around.
+   */
+  it('does not deny using analytics, because the site now does', () => {
+    expect(lines).not.toContain('we do not use analytics')
+    expect(lines).not.toContain('no third-party script')
+  })
+
+  it('says what the analytics collects and names it as a supplier', () => {
+    expect(lines).toContain('which pages were visited')
+    expect(lines).toContain('sets no cookie')
+    expect(lines).toContain('the service that counts page visits')
+  })
+
+  /**
+   * Cookieless is the whole reason there is still no consent banner, so the two
+   * claims have to stay consistent with each other. A provider that set a
+   * cookie would make this section wrong without touching it.
+   */
+  it('still claims no analytics cookie, which is why the banner is absent', () => {
+    expect(lines).toContain('no advertising or analytics cookie')
+    expect(lines).toContain('no consent banner')
+  })
+
+  it('says where the analytics data is held', () => {
+    expect(lines).toContain('european union')
+  })
 })
 
 describe('pendingDecisions', () => {
