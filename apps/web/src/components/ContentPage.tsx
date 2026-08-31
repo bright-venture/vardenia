@@ -1,4 +1,3 @@
-import type { Locale } from '@vardenia/i18n'
 import type { ContentPage } from '../lib/pages'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
@@ -16,24 +15,24 @@ import { withEmphasis } from './emphasis'
  * No "awaiting legal review" banner, because these are not legal documents and
  * the marker on the individual clause says enough.
  *
- * # Not localized yet
+ * # Translated, so nothing here overrides direction any more
  *
- * The Arabic pages are the English text for now. Unlike the legal documents,
- * where an unchecked translation would be actively dangerous, this is only
- * unfinished - so it degrades to English rather than refusing to render, and the
- * note at the top of an Arabic page says so.
+ * These pages used to be English served under an Arabic URL, with a notice
+ * saying so and `dir="ltr"` forced on the whole page. The direction was not
+ * cosmetic: the layout inherits `dir="rtl"`, and the bidirectional algorithm
+ * puts neutral characters at the end of the paragraph direction, so an English
+ * full stop or question mark jumped to the left edge. "Is Vardenia free to use?"
+ * rendered as "?Is Vardenia free to use", which reads as broken rather than as
+ * untranslated.
  *
- * # Which is why the Arabic page is laid out left to right
+ * lib/pages now returns Arabic for an Arabic reader, so both the notice and the
+ * override are gone and the page simply inherits the layout's direction. The
+ * `TO CONFIRM` marker keeps its own `dir="ltr"`: it is a deliberately
+ * untranslated English signal to us, and left to inherit RTL it shows the same
+ * displaced-punctuation fault the rest of this comment describes.
  *
- * The layout inherits `dir="rtl"` from the html element, and English text in an
- * RTL paragraph is not merely right-aligned: the bidirectional algorithm puts
- * neutral characters at the *end* of the paragraph direction, so a full stop or
- * question mark jumps to the left edge. "Is Vardenia free to use?" rendered as
- * "?Is Vardenia free to use", which reads as broken rather than as untranslated.
- *
- * So the direction follows the language of the text rather than the language of
- * the page. The Arabic notice stays RTL because it is the one thing here that is
- * actually Arabic.
+ * The legal documents are still English in both editions and still carry the
+ * override. See LegalDocument.
  */
 
 function Line({ text, id }: { text: string; id: string }) {
@@ -42,7 +41,19 @@ function Line({ text, id }: { text: string; id: string }) {
 
   if (body.includes(PLACEHOLDER)) {
     return (
-      <p className="border-state-warning bg-gold-100 text-ink-900 my-4 rounded-md border-s-4 px-4 py-3 text-sm">
+      /**
+       * The one block that stays English on an Arabic page, so the one that
+       * still pins its direction. These describe a decision nobody has made
+       * yet - a price, a print deadline - and they are notes to ourselves that
+       * happen to be visible. Left to inherit RTL, their full stops would jump
+       * to the left edge, which is the exact fault the rest of this file was
+       * changed to remove.
+       */
+      <p
+        dir="ltr"
+        lang="en"
+        className="border-state-warning bg-gold-100 text-ink-900 my-4 rounded-md border-s-4 px-4 py-3 text-start text-sm"
+      >
         <span className="text-state-warning me-2 text-xs font-semibold uppercase tracking-wider">
           Not settled
         </span>
@@ -58,24 +69,15 @@ function Line({ text, id }: { text: string; id: string }) {
   return <p className="text-ink-700 mt-4 leading-relaxed">{withEmphasis(body, id)}</p>
 }
 
-export function ContentPageView({ page, locale }: { page: ContentPage; locale: Locale }) {
+/**
+ * No locale prop any more: lib/pages already returned the right language, and a
+ * component that takes both the copy and the language it is in has two sources
+ * of truth for one fact.
+ */
+export function ContentPageView({ page }: { page: ContentPage }) {
   return (
-    <main
-      dir={locale === 'ar' ? 'ltr' : undefined}
-      className="mx-auto max-w-2xl px-6 py-16"
-      lang={locale === 'ar' ? 'en' : undefined}
-    >
+    <main className="mx-auto max-w-2xl px-6 py-16">
       <h1 className="font-display text-ink-900 text-4xl">{page.title}</h1>
-
-      {locale === 'ar' ? (
-        <p
-          dir="rtl"
-          lang="ar"
-          className="border-ink-100 bg-surface-raised text-ink-500 mt-6 rounded-md border px-4 py-3 text-sm"
-        >
-          هذه الصفحة متوفرة بالإنجليزية فقط في الوقت الحالي.
-        </p>
-      ) : null}
 
       <p className="text-ink-700 mt-8 text-lg leading-relaxed">{page.intro}</p>
 

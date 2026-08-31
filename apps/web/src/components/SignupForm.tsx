@@ -1,9 +1,10 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
+import { Turnstile, type TurnstileHandle } from './Turnstile'
 import {
   ERROR_TEXT,
   HINT,
@@ -52,6 +53,17 @@ export function SignupForm({ locale }: { locale: Locale }) {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [sent, setSent] = useState<string | null>(null)
 
+  /**
+   * Null until the widget solves, and null again after a refusal.
+   *
+   * The submit button is deliberately NOT disabled while it is null. A person
+   * whose challenge has not finished, or whose network ate the script, would
+   * otherwise face a button that never enables and says nothing about why -
+   * which is worse than letting them submit and telling them what happened.
+   */
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstile = useRef<TurnstileHandle | null>(null)
+
   const field = (key: string) => (errors[key] ? `${INPUT} ${INPUT_ERROR}` : INPUT)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -70,6 +82,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
           email,
           password,
           ...(phone.trim() ? { phone } : {}),
+          ...(turnstileToken ? { turnstileToken } : {}),
           locale,
         }),
       })
@@ -78,6 +91,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
         ok?: boolean
         message?: string
         errors?: Record<string, string>
+        code?: string
       } | null
 
       if (response.ok && body?.ok) {
@@ -85,10 +99,22 @@ export function SignupForm({ locale }: { locale: Locale }) {
         return
       }
 
-      // 400 with field errors is the only failure the endpoint reports, and it
-      // is about the shape of the input rather than about the account.
+      // 400 with field errors is about the shape of the input rather than about
+      // the account.
       if (body?.errors) {
         setErrors(body.errors)
+        return
+      }
+
+      /**
+       * A refused challenge, which is why the endpoint answers 403 rather than
+       * folding this into the 400. A Turnstile token is single use, so the
+       * widget has to be reset or a second attempt sends a spent token and is
+       * refused again for a reason the reader cannot see.
+       */
+      if (response.status === 403) {
+        turnstile.current?.reset()
+        setProblem(body?.message ?? common('error'))
         return
       }
 
@@ -226,6 +252,9 @@ export function SignupForm({ locale }: { locale: Locale }) {
           ),
         })}
       </p>
+
+      {/* Renders nothing until a site key is set. See components/Turnstile. */}
+      <Turnstile onToken={setTurnstileToken} handle={turnstile} locale={locale} />
 
       <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
         {busy ? t('working') : t('submitSignUp')}

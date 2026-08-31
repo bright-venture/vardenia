@@ -2,6 +2,8 @@ import { getPayload } from 'payload'
 import { fieldErrors, signupSchema } from '@vardenia/core'
 import config from '../../../payload.config'
 import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
+import { clientIp } from '../../../lib/scan-guard'
+import { verifyTurnstile } from '../../../lib/turnstile'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -65,6 +67,36 @@ export const POST = withRateLimit(
     const parsed = signupSchema.safeParse(body)
     if (!parsed.success) {
       return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
+    }
+
+    /**
+     * Turnstile, before anything is looked up or written.
+     *
+     * Placed here rather than deeper because a refused request should cost one
+     * call to Cloudflare and no database round trip at all.
+     *
+     * It is checked after schema parsing on purpose: a malformed body is a 400
+     * whatever the token says, and spending a Cloudflare verification on
+     * something already known to be invalid helps nobody.
+     *
+     * Returns 403 rather than 400 because the submission is well-formed and was
+     * refused - the form has to tell those apart to know whether to reset the
+     * widget. Does nothing at all until TURNSTILE_SECRET_KEY is set; see
+     * lib/turnstile for why that is the safe direction.
+     */
+    const verdict = await verifyTurnstile(
+      (body as { turnstileToken?: unknown }).turnstileToken,
+      clientIp(request.headers),
+    )
+    if (!verdict.ok) {
+      return json(
+        {
+          ok: false,
+          code: verdict.reason,
+          message: 'We could not confirm you are a person. Please try again.',
+        },
+        403,
+      )
     }
 
     const { email, name, password, phone } = parsed.data

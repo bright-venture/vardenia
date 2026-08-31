@@ -33,11 +33,13 @@ export interface ContentRouteProps {
 export function contentRoute(slug: ContentPageSlug) {
   async function generateMetadata({ params }: ContentRouteProps): Promise<Metadata> {
     const { locale } = await params
-    const page = contentPage(slug)
+    const page = contentPage(slug, isLocale(locale) ? locale : DEFAULT_LOCALE)
     if (!page) return {}
 
-    // Not translated yet, so the description is the English intro in both
-    // languages. Better than an empty one, which is what a missing key gives.
+    // Title and description now come from the page in the reader's own language,
+    // which matters here more than on most pages: these are what a search engine
+    // shows in its results, so an English description under an Arabic URL was
+    // competing for Arabic searches with English text.
     return {
       title: page.title,
       description: page.intro.slice(0, 155),
@@ -61,10 +63,10 @@ export function contentRoute(slug: ContentPageSlug) {
      * the keys of CONTENT_PAGES. The check is here so that deleting a page from
      * lib/pages gives a 404 rather than a crash on a live route.
      */
-    const page = contentPage(slug)
+    const page = contentPage(slug, locale)
     if (!page) notFound()
 
-    return <ContentPageView page={page} locale={locale} />
+    return <ContentPageView page={page} />
   }
 
   return { generateMetadata, Page }

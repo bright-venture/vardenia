@@ -50,6 +50,21 @@ function analyticsOrigin(src: string | undefined): string[] {
   }
 }
 
+/**
+ * Cloudflare's origin, but only once Turnstile is actually switched on.
+ *
+ * Turnstile needs `script-src` for its loader and `frame-src` for the challenge
+ * iframe, and `default-src 'self'` blocks both. Widening the policy on the
+ * strength of a feature nobody has enabled would leave a permanent hole for a
+ * script that never loads, so the origin appears exactly while the site key
+ * does - the same rule the analytics origin follows.
+ */
+const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com'
+
+function turnstileOrigin(siteKey: string | undefined): string[] {
+  return siteKey?.trim() ? [TURNSTILE_ORIGIN] : []
+}
+
 function policy(directives: Record<string, string[]>): string {
   return Object.entries(directives)
     .map(([name, values]) => (values.length ? `${name} ${values.join(' ')}` : name))
@@ -73,13 +88,21 @@ const devEval = (isProduction = process.env.NODE_ENV === 'production'): string[]
 export function publicCsp(
   analyticsSrc = process.env.NEXT_PUBLIC_ANALYTICS_SRC,
   isProduction = process.env.NODE_ENV === 'production',
+  turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 ): string {
   const analytics = analyticsOrigin(analyticsSrc)
+  const turnstile = turnstileOrigin(turnstileSiteKey)
 
   return policy({
     'default-src': ["'self'"],
     // See the note above on why this is not a nonce.
-    'script-src': ["'self'", "'unsafe-inline'", ...devEval(isProduction), ...analytics],
+    'script-src': [
+      "'self'",
+      "'unsafe-inline'",
+      ...devEval(isProduction),
+      ...analytics,
+      ...turnstile,
+    ],
     // Tailwind ships a stylesheet, but Next inlines critical CSS and React
     // injects style attributes, so this cannot be 'self' alone.
     'style-src': ["'self'", "'unsafe-inline'"],
@@ -90,7 +113,14 @@ export function publicCsp(
     'font-src': ["'self'", 'data:'],
     // Where a script may send data. Named explicitly, because this is what turns
     // a successful injection into a failed exfiltration.
-    'connect-src': ["'self'", ...analytics],
+    'connect-src': ["'self'", ...analytics, ...turnstile],
+    /**
+     * Turnstile renders its challenge in an iframe from Cloudflare. Without this
+     * the widget mounts, loads nothing and shows an empty box - and because
+     * `frame-src` falls back to `default-src 'self'`, there is no directive here
+     * to notice is missing. Absent while Turnstile is off.
+     */
+    ...(turnstile.length ? { 'frame-src': turnstile } : {}),
     'frame-ancestors': ["'none'"],
     'form-action': ["'self'"],
     'base-uri': ["'self'"],

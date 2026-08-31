@@ -147,16 +147,78 @@ describe('the FAQ against what booking really requires', () => {
   /**
    * The same failure as the booking answer, found the same way.
    *
-   * The FAQ promised "every page has an Arabic version". The chrome and the
-   * dictionary are fully translated, but this file has no locale parameter at
-   * all, so the six standing pages and both legal documents are English served
-   * under an Arabic URL - and the promise was rendering in English on /ar/faq,
-   * refuting itself to precisely the reader who would check.
+   * The FAQ once promised "every page has an Arabic version" while this file
+   * had no locale parameter at all, so the promise rendered in English on
+   * /ar/faq and refuted itself to precisely the reader who would check.
    *
-   * Pinned as a claim, not as wording. If these pages are ever translated this
-   * test should be deleted, not worked around.
+   * These pages are translated now, so the claim is narrower rather than gone:
+   * the legal documents are still English, and so are listing descriptions.
+   * Pinned as claims, not as wording.
    */
-  it('does not promise that the whole site is translated', () => {
+  it('does not promise more than is translated', () => {
     expect(text()).not.toMatch(/every page has an arabic version/)
+  })
+
+  it('still admits the legal documents are English', () => {
+    expect(text()).toMatch(/legal documents are in english/)
+  })
+})
+
+/**
+ * Arabic, pinned in the repository rather than only in a one-off check.
+ *
+ * The failure worth catching is not a crash. It is a page that quietly returns
+ * English for an Arabic reader - which renders perfectly, and is invisible to
+ * everyone who does not read Arabic.
+ */
+describe('the standing pages in Arabic', () => {
+  const ARABIC = /[؀-ۿ]/
+
+  it.each(CONTENT_PAGE_SLUGS)('%s is written in Arabic', (slug) => {
+    const page = contentPage(slug, 'ar')
+    expect(page).not.toBeNull()
+    expect(page!.title, 'title').toMatch(ARABIC)
+    expect(page!.intro, 'intro').toMatch(ARABIC)
+    for (const section of page!.sections) {
+      expect(section.heading, section.heading).toMatch(ARABIC)
+    }
+  })
+
+  it.each(CONTENT_PAGE_SLUGS)('%s says something different from the English page', (slug) => {
+    expect(contentPage(slug, 'ar')!.title).not.toBe(contentPage(slug, 'en')!.title)
+  })
+
+  /**
+   * A translation that drops or invents a paragraph is how the two languages
+   * start promising different things, which on pages that quote prices and
+   * describe what a listing includes is a commercial problem rather than a
+   * cosmetic one.
+   */
+  it.each(CONTENT_PAGE_SLUGS)('%s keeps the same shape in both languages', (slug) => {
+    const ar = contentPage(slug, 'ar')!
+    const en = contentPage(slug, 'en')!
+    expect(ar.sections).toHaveLength(en.sections.length)
+    ar.sections.forEach((section, i) => {
+      expect(section.body.length, `section ${i}`).toBe(en.sections[i]!.body.length)
+    })
+  })
+
+  it('defaults to English when no locale is passed', () => {
+    for (const slug of CONTENT_PAGE_SLUGS) {
+      expect(contentPage(slug)).toEqual(contentPage(slug, 'en'))
+    }
+  })
+
+  /**
+   * The marker stays English on purpose: lib/legal counts unresolved clauses by
+   * matching it, and two spellings is how that count silently starts missing
+   * half of them.
+   */
+  it('leaves the TO CONFIRM marker untranslated', () => {
+    const unsettled = contentPage('advertise', 'ar')!
+      .sections.flatMap((s) => s.body)
+      .filter((line) => line.includes(PLACEHOLDER))
+
+    expect(unsettled.length).toBeGreaterThan(0)
   })
 })

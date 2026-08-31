@@ -32,17 +32,37 @@ export const TBD = (what: string) => `${PLACEHOLDER} ${what}`
  * marked gap and nothing settled is attached to it.
  */
 
+/**
+ * The locale these lines are being written into.
+ *
+ * Optional, and English when omitted, because the legal documents are still
+ * English in both editions and call these without one. Only the standing pages
+ * pass a locale.
+ *
+ * The `TO CONFIRM` marker itself is deliberately NOT translated. It is a
+ * signal to us rather than copy for a reader, `lib/legal` counts unresolved
+ * clauses by matching on it, and two spellings of a marker is how a count
+ * silently starts missing half of them.
+ */
+type Lang = 'en' | 'ar'
+
 /** How to reach us by email, or a marked note that there is no address yet. */
-export const contactEmail = (): string =>
-  CONTACT.email
-    ? `Write to **${CONTACT.email}**.`
-    : TBD('an email address to publish here, so that a reader has a way to reach us')
+export const contactEmail = (lang: Lang = 'en'): string => {
+  if (CONTACT.email) {
+    return lang === 'ar' ? `راسلنا على **${CONTACT.email}**.` : `Write to **${CONTACT.email}**.`
+  }
+  return TBD('an email address to publish here, so that a reader has a way to reach us')
+}
 
 /** The postal address. The privacy policy needs one whether or not it is shown. */
-export const contactPostal = (): string =>
-  CONTACT.postalAddress
-    ? `By post: ${CONTACT.postalAddress}.`
-    : TBD('a postal address, which the privacy policy also has to name')
+export const contactPostal = (lang: Lang = 'en'): string => {
+  if (CONTACT.postalAddress) {
+    return lang === 'ar'
+      ? `بالبريد: ${CONTACT.postalAddress}.`
+      : `By post: ${CONTACT.postalAddress}.`
+  }
+  return TBD('a postal address, which the privacy policy also has to name')
+}
 
 /** The phone number, when there is one worth committing to answer. */
 export const contactPhone = (): string | null =>
