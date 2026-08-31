@@ -183,8 +183,10 @@ export function faqPage(): ContentPage {
       {
         heading: 'Is the site available in Arabic?',
         body: [
-          'Yes. Every page has an Arabic version, and the language switcher is in the header.',
-          'The legal documents are in English only for now: a machine translation of a contract reads as authoritative and is not.',
+          'Partly, and the rest is catching up. The language switcher is in the header, and every page opens in Arabic.',
+          'Browsing, searching, your account and booking are all translated. These questions, the pages about the company, and the legal documents are still in English.',
+          'Listings are written in English at the moment, so an Arabic page shows you the English description of a place until we have translated it.',
+          'The legal documents will be the last to change: a machine translation of a contract reads as authoritative and is not.',
         ],
       },
     ],

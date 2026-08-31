@@ -143,4 +143,20 @@ describe('the FAQ against what booking really requires', () => {
     // stuck at a step nothing warned them about.
     expect(all).toMatch(/confirm/)
   })
+
+  /**
+   * The same failure as the booking answer, found the same way.
+   *
+   * The FAQ promised "every page has an Arabic version". The chrome and the
+   * dictionary are fully translated, but this file has no locale parameter at
+   * all, so the six standing pages and both legal documents are English served
+   * under an Arabic URL - and the promise was rendering in English on /ar/faq,
+   * refuting itself to precisely the reader who would check.
+   *
+   * Pinned as a claim, not as wording. If these pages are ever translated this
+   * test should be deleted, not worked around.
+   */
+  it('does not promise that the whole site is translated', () => {
+    expect(text()).not.toMatch(/every page has an arabic version/)
+  })
 })
