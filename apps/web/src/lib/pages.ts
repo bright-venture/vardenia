@@ -134,15 +134,23 @@ export function faqPage(): ContentPage {
       {
         heading: 'Is Vardenia free to use?',
         body: [
-          'Yes. Reading the site, browsing listings, making a booking and reading the magazine online all cost nothing, and none of it requires an account.',
-          'An account is only worth having if you want your bookings kept in one place.',
+          'Yes. Reading the site, browsing listings, booking and reading the magazine online all cost nothing.',
+          'Browsing needs no account. Booking does, because a venue holding a table needs to know it can reach you.',
         ],
       },
       {
         heading: 'Do I need an account to book?',
         body: [
-          'No. A booking can be made with a name, an email address and a phone number.',
-          'If you later open an account with the same email address, the bookings you already made are there waiting.',
+          'Yes, and it takes a minute. You sign up with your name and email address, then confirm the address from the link we send you. Bookings only go through once the address is confirmed, so that a venue keeping a table free is not doing it for somebody who cannot be reached.',
+          'If the link has not arrived after a few minutes, look in your junk folder.',
+          'Everything you book is then kept in one place, and you can cancel from there.',
+        ],
+      },
+      {
+        heading: 'Can you book for me over WhatsApp?',
+        body: [
+          'Yes. Message us and we will make the booking for you, using your name and email address.',
+          'You will get a confirmation like anyone else. If you later want to see your bookings on the site, sign up with the same email address and they will be there.',
         ],
       },
       {
