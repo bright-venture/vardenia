@@ -88,7 +88,21 @@ export function LegalDocumentView({
   const ar = locale === 'ar'
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    /**
+     * Laid out left to right on the Arabic page, because the document itself is
+     * English. See ContentPage for the full reasoning: an English sentence in an
+     * RTL paragraph has its full stop moved to the left edge, which reads as a
+     * rendering fault rather than as an untranslated page.
+     *
+     * It matters more here than on the standing pages. These are the terms
+     * somebody accepts, and a clause that looks garbled is a clause they cannot
+     * be said to have read.
+     */
+    <main
+      dir={ar ? 'ltr' : undefined}
+      lang={ar ? 'en' : undefined}
+      className="mx-auto max-w-2xl px-6 py-16"
+    >
       <h1 className="font-display text-ink-900 text-4xl">{document.title}</h1>
       <p className="text-ink-300 mt-3 text-xs uppercase tracking-widest">
         Last updated {LEGAL_LAST_UPDATED}
@@ -97,7 +111,11 @@ export function LegalDocumentView({
       {/* Said once, at the top, in plain words. A reader deciding whether to
           trust the site with an address deserves to know this is a draft. */}
       {unresolved > 0 ? (
-        <p className="border-state-warning bg-gold-100 text-ink-900 mt-8 rounded-md border px-4 py-3 text-sm">
+        <p
+          dir={ar ? 'rtl' : undefined}
+          lang={ar ? 'ar' : undefined}
+          className="border-state-warning bg-gold-100 text-ink-900 mt-8 rounded-md border px-4 py-3 text-sm"
+        >
           {ar
             ? 'هذه مسودة قيد المراجعة القانونية. الفقرات المعلّمة أدناه لم تُحسم بعد.'
             : `This is a draft awaiting legal review. ${unresolved} point${unresolved === 1 ? '' : 's'} below ${unresolved === 1 ? 'is' : 'are'} not settled yet, and are marked where they appear.`}

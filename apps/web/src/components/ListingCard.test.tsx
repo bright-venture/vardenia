@@ -129,5 +129,29 @@ describe('ListingCard', () => {
       expect(html).toContain('موثّق من فاردينيا')
       expect(html).not.toContain('Verified by Vardenia')
     })
+
+    /**
+     * No listing has an Arabic name yet, so on the Arabic page these two fields
+     * hold English inside an RTL layout. The bidirectional algorithm puts
+     * neutral characters at the end of the paragraph direction, which moves a
+     * full stop to the left edge and makes the text look broken rather than
+     * untranslated.
+     *
+     * `auto` and not `ltr`: the moment a listing is translated, a hardcoded
+     * direction would be wrong for it. Asking the browser to read the first
+     * strong character is correct in both states, and in the long middle where
+     * some listings are translated and some are not.
+     */
+    it('lets the browser choose direction for the name and tagline', () => {
+      const html = render({ name: 'Le Royal Hotel', tagline: 'A view of the bay.', locale: 'ar' })
+
+      expect(html).toMatch(/<h3[^>]*dir="auto"/)
+      expect(html).toMatch(/<p[^>]*dir="auto"[^>]*>A view of the bay\./)
+    })
+
+    it('does not pin the direction to ltr, which would break a translated name', () => {
+      const html = render({ name: 'فندق لو رويال', locale: 'ar' })
+      expect(html).not.toMatch(/dir="ltr"/)
+    })
   })
 })

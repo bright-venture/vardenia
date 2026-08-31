@@ -102,7 +102,14 @@ export function ListingCard({
           </p>
 
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-ink-900 text-lg leading-snug">{name}</h3>
+            {/* `dir="auto"` on the two fields a person typed. The rest of this
+                card is built from the taxonomy, which is translated, so it
+                follows the page. A listing's own name and tagline fall back to
+                English until translated, and a fixed direction would be wrong at
+                one end or the other of that. */}
+            <h3 dir="auto" className="text-ink-900 text-lg leading-snug">
+              {name}
+            </h3>
             {price ? (
               <span className="text-gold-700 shrink-0 pt-0.5 font-mono text-sm tabular-nums">
                 {price}
@@ -113,7 +120,9 @@ export function ListingCard({
           {place ? <p className="text-ink-500 text-sm">{place}</p> : null}
 
           {tagline ? (
-            <p className="text-ink-500 line-clamp-2 text-sm leading-relaxed">{tagline}</p>
+            <p dir="auto" className="text-ink-500 line-clamp-2 text-sm leading-relaxed">
+              {tagline}
+            </p>
           ) : null}
 
           {typeof googleRating === 'number' && googleRating > 0 ? (

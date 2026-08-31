@@ -47,11 +47,18 @@ export function ArticleCard({
         <p className="text-ink-300 mt-4 font-mono text-[10px] uppercase tracking-[0.12em]">
           {kindLabel(kind, locale)}
         </p>
-        <h3 className="text-ink-900 group-hover:text-gold-700 mt-1 text-2xl leading-snug transition-colors">
+        {/* Editorial fields, so `dir="auto"` for the same reason as the listing
+            card: an article with no Arabic version yet falls back to English. */}
+        <h3
+          dir="auto"
+          className="text-ink-900 group-hover:text-gold-700 mt-1 text-2xl leading-snug transition-colors"
+        >
           {title}
         </h3>
         {excerpt ? (
-          <p className="text-ink-500 mt-2 line-clamp-3 text-sm leading-relaxed">{excerpt}</p>
+          <p dir="auto" className="text-ink-500 mt-2 line-clamp-3 text-sm leading-relaxed">
+            {excerpt}
+          </p>
         ) : null}
 
         {pageLabel ? (

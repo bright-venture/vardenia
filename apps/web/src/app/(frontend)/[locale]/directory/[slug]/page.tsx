@@ -127,7 +127,21 @@ export default async function ListingPage({ params }: Params) {
             {categoryLabel(listing.category, locale as Locale)}
           </p>
 
-          <h1 className="font-display text-ink-900 mt-3 text-4xl leading-tight md:text-5xl">
+          {/* `dir="auto"` rather than a fixed direction, on every field that
+              holds text somebody typed into the admin.
+
+              Payload falls back to English when a listing has no Arabic yet, and
+              today none of them do - so the Arabic page shows English text in an
+              RTL paragraph, which moves its full stop to the left edge. A fixed
+              `ltr` would fix that and then break the day the field is actually
+              translated. `auto` asks the browser to decide per field from the
+              first strong character, which is right in both states and during
+              the long middle where some listings are translated and some are
+              not. */}
+          <h1
+            dir="auto"
+            className="font-display text-ink-900 mt-3 text-4xl leading-tight md:text-5xl"
+          >
             {listing.name}
           </h1>
 
@@ -158,7 +172,9 @@ export default async function ListingPage({ params }: Params) {
           </div>
 
           {listing.tagline ? (
-            <p className="text-ink-700 mt-6 max-w-2xl text-lg">{listing.tagline}</p>
+            <p dir="auto" className="text-ink-700 mt-6 max-w-2xl text-lg">
+              {listing.tagline}
+            </p>
           ) : null}
 
           <div className="mt-8">
@@ -166,7 +182,7 @@ export default async function ListingPage({ params }: Params) {
           </div>
 
           {listing.description ? (
-            <div className="prose-vardenia mt-12 max-w-2xl">
+            <div dir="auto" className="prose-vardenia mt-12 max-w-2xl">
               <RichText data={listing.description as never} />
             </div>
           ) : null}
