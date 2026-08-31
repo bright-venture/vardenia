@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
-import { isLocale, LOCALES, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
+import { alternatesFor } from '../../../../../lib/seo'
 import { privacyPolicy, PLACEHOLDER } from '../../../../../lib/legal'
 import { LegalDocumentView } from '../../../../../components/LegalDocument'
 
@@ -20,9 +21,18 @@ export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))
 }
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description: 'How Vardenia handles your information.',
+/** A function rather than a static object, for the reason given on the terms page. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return {
+    title: 'Privacy Policy',
+    description: 'How Vardenia handles your information.',
+    alternates: alternatesFor('/legal/privacy', isLocale(locale) ? locale : DEFAULT_LOCALE),
+  }
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {

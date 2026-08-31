@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
-import { isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
+import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
@@ -47,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale === 'ar'
         ? 'فنادق ومطاعم وتجارب مختارة في لبنان.'
         : 'Curated hotels, restaurants and experiences across Lebanon.',
+    alternates: alternatesFor('/directory', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
 

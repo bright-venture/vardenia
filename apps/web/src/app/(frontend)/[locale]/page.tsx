@@ -1,4 +1,7 @@
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
+import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionShaderCards } from '../../../components/home/SectionShaderCards'
@@ -44,6 +47,26 @@ import { findArticles } from '../../../lib/articles'
  * explanation, and the magazine band removes itself entirely rather than
  * announcing a section with nothing in it.
  */
+/**
+ * Only the alternates. Title and description are inherited from the layout,
+ * which builds them from the `site` namespace in both languages.
+ *
+ * Next merges metadata field by field, so returning `alternates` alone leaves
+ * the layout's title template intact. Returning a title here would replace it.
+ *
+ * The homepage is the one page that passes '/' to `alternatesFor`, which is the
+ * case the helper was written to keep consistent: the canonical of the Arabic
+ * homepage is `/ar`, not `/ar/`.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  return { alternates: alternatesFor('/', isLocale(locale) ? locale : DEFAULT_LOCALE) }
+}
+
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params
   /**

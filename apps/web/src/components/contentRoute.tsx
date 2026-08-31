@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
-import { isLocale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { contentPage, type ContentPageSlug } from '../lib/pages'
+import { alternatesFor } from '../lib/seo'
 import { ContentPageView } from './ContentPage'
 
 /**
@@ -40,7 +41,13 @@ export function contentRoute(slug: ContentPageSlug) {
     return {
       title: page.title,
       description: page.intro.slice(0, 155),
-      alternates: { canonical: locale === 'en' ? `/${slug}` : `/${locale}/${slug}` },
+      /**
+       * The canonical here was correct and hand-rolled, and the hreflang beside
+       * it was missing entirely - so these six pages told Google which URL they
+       * were but never that an Arabic version existed. Both now come from the
+       * one helper the listing pages use.
+       */
+      alternates: alternatesFor(`/${slug}`, isLocale(locale) ? locale : DEFAULT_LOCALE),
     }
   }
 

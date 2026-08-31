@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
-import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
+import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, findListings } from '../../../../lib/listings'
 import { ListingGrid } from '../../../../components/ListingGrid'
@@ -64,7 +65,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const section = sectionForPath(path)
   if (!section) return {}
 
-  return { title: nameFor(section, locale) }
+  return {
+    title: nameFor(section, locale),
+    /**
+     * Built from `section.path`, not from the `path` off the URL. They are equal
+     * here because `sectionForPath` matches exactly, but the canonical URL of a
+     * page should come from our own table rather than from the request - that is
+     * the habit that stops a future looser lookup putting request text into a
+     * tag whose whole job is to be authoritative.
+     */
+    alternates: alternatesFor(`/${section.path}`, isLocale(locale) ? locale : DEFAULT_LOCALE),
+  }
 }
 
 export default async function SectionPage({ params, searchParams }: Props) {

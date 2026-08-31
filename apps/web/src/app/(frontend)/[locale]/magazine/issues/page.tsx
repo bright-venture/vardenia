@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
-import { formatDate, isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, formatDate, isLocale, type Locale } from '@vardenia/i18n'
+import { alternatesFor } from '../../../../../lib/seo'
 import { Link } from '../../../../../i18n/routing'
 import { findIssues } from '../../../../../lib/issues'
 import { resolveImage } from '../../../../../lib/media'
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: ar ? 'الأعداد' : 'Issues',
     description: ar ? 'أرشيف أعداد فاردينيا المطبوعة.' : 'The Vardenia print archive.',
+    alternates: alternatesFor('/magazine/issues', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
 

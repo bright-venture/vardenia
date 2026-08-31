@@ -101,21 +101,51 @@ export function buildMetadata({
       ...(publishedTime ? { publishedTime } : {}),
     },
 
-    alternates: {
-      canonical: localizedPath(path, locale),
+    alternates: alternatesFor(path, locale),
+  }
+}
+
+/**
+ * Canonical and hreflang for one path, in the locale being rendered.
+ *
+ * # Why this is exported rather than living inside buildMetadata
+ *
+ * Only four page types call `buildMetadata`: listings, articles, issues and the
+ * pages built from a `seo` group. Everything else on the public site writes its
+ * own metadata, because there is no document behind it to read a `seo` group
+ * from - the homepage, the directory index, the seven section pages, the three
+ * magazine indexes, the six standing pages and both legal documents.
+ *
+ * Measured against production, every one of those emitted no hreflang at all,
+ * and all but the standing pages emitted no canonical either. So `/directory`
+ * and `/ar/directory` were two URLs with nothing tying them together, which
+ * Google reads as duplicates competing for the same terms rather than as one
+ * page in two languages. On a bilingual product that is half the reach, lost
+ * quietly.
+ *
+ * Taking the alternates out of `buildMetadata` lets a page that has no `seo`
+ * group still get this right, without reimplementing it and drifting.
+ *
+ * # Why the languages are built by the same helper as the canonical
+ *
+ * Written by hand these disagreed at the root: `localizedPath('/', 'ar')` gives
+ * `/ar`, while `/ar${path}` gives `/ar/`. A page declaring one URL as canonical
+ * and a different one as its own Arabic version is exactly the confusion
+ * hreflang exists to prevent. The homepage passes '/' now, so this is no longer
+ * latent.
+ */
+export function alternatesFor(path: string, locale: Locale): NonNullable<Metadata['alternates']> {
+  return {
+    canonical: localizedPath(path, locale),
+    languages: {
+      en: localizedPath(path, DEFAULT_LOCALE),
+      ar: localizedPath(path, 'ar'),
       /**
-       * Built through the same helper as the canonical.
-       *
-       * Written by hand these disagreed at the root: `localizedPath('/', 'ar')`
-       * gives `/ar`, while `/ar${path}` gives `/ar/`. A page declaring one URL
-       * as canonical and a different one as its own Arabic version is exactly
-       * the confusion hreflang exists to prevent. No page passes '/' today, so
-       * this was latent - but one helper cannot drift from itself.
+       * Where to send a reader whose language we do not publish. Google treats
+       * a set without it as having no default, and picks one itself; English is
+       * the site's default locale and the unprefixed URL, so it says so.
        */
-      languages: {
-        en: localizedPath(path, DEFAULT_LOCALE),
-        ar: localizedPath(path, 'ar'),
-      },
+      'x-default': localizedPath(path, DEFAULT_LOCALE),
     },
   }
 }
