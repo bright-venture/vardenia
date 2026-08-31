@@ -193,6 +193,18 @@ export default buildConfig({
          * the hook the config is already built and the import is just a lookup.
          */
         const { reportError } = await import('./lib/report')
+        const { isApplicationFault } = await import('./lib/reportable')
+
+        /**
+         * A refused request is not a defect.
+         *
+         * Without this, every wrong password became a row in the collection
+         * staff read - production had four such events against three real ones
+         * - and with customers it would be a permanent hum burying the one row
+         * that matters. See lib/reportable for why the split is on HTTP status
+         * rather than on the message or the class name.
+         */
+        if (!isApplicationFault(error)) return
 
         await reportError(error, {
           source: collection ? `payload.${collection.slug}` : 'payload',
