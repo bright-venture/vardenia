@@ -163,9 +163,12 @@ export default async function ListingPage({ params }: Params) {
               />
             ) : null}
 
-            {listing.verified ? <span className="text-cedar-700">{t('verified')}</span> : null}
+            {/* `state.success`, not the brand green. "Verified" and "open now"
+                are statuses: they should stay green if the brand ever stops
+                being, and the brand ground is navy now. */}
+            {listing.verified ? <span className="text-state-success">{t('verified')}</span> : null}
             {open !== null ? (
-              <span className={open ? 'text-cedar-700' : 'text-ink-300'}>
+              <span className={open ? 'text-state-success' : 'text-ink-300'}>
                 {open ? t('openNow') : locale === 'ar' ? 'مغلق الآن' : 'Closed now'}
               </span>
             ) : null}

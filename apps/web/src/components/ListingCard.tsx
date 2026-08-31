@@ -83,7 +83,10 @@ export function ListingCard({
     <article className="group">
       <Link
         href={`/directory/${slug}`}
-        className="border-ink-100 hover:border-ink-300 flex h-full flex-col overflow-hidden rounded-lg border transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(16,26,29,0.06),0_24px_48px_-16px_rgba(16,26,29,0.18)]"
+        /* The shadow is ink.900 at two alphas, written out because an arbitrary
+           shadow value cannot reference a colour class. Update it with the
+           palette - it held the old #101a1d through the 2026 rebrand. */
+        className="border-ink-100 hover:border-ink-300 flex h-full flex-col overflow-hidden rounded-lg border transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(42,33,27,0.06),0_24px_48px_-16px_rgba(42,33,27,0.18)]"
       >
         <div className="relative">
           <Plate image={heroImage} ratio="card" interactive priority={priority} />

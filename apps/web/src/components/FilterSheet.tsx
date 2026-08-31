@@ -218,8 +218,10 @@ export function FilterSheet({
           <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
         </svg>
         {ar ? 'الفلاتر' : 'Filters'}
+        {/* 11px, so the least forgiving text on the site for contrast. Ivory on
+            gold.700 is 5.79:1; the navy-on-gold.500 it replaces was 3.74. */}
         {count > 0 ? (
-          <span className="bg-gold-500 text-cedar-900 inline-flex min-w-[19px] items-center justify-center rounded-full px-1.5 font-mono text-[11px] font-medium">
+          <span className="bg-gold-700 text-surface-base inline-flex min-w-[19px] items-center justify-center rounded-full px-1.5 font-mono text-[11px] font-medium">
             {count}
           </span>
         ) : null}

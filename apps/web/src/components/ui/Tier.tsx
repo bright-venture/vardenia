@@ -29,9 +29,14 @@ const LABELS = {
 
 export type TierKind = keyof typeof LABELS
 
+/**
+ * Both measured on the ivory ground, because a badge is small type and small
+ * type is where contrast fails first. Gold.300 on navy is 6.84:1; ivory on
+ * gold.700 is 5.79:1. The pair this replaces - navy on gold.500 - was 3.74:1.
+ */
 const STYLES = {
   verified: 'bg-cedar-900 text-gold-300',
-  signature: 'bg-gold-500 text-cedar-900',
+  signature: 'bg-gold-700 text-surface-base',
 } as const
 
 /**

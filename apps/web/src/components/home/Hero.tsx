@@ -50,13 +50,20 @@ export async function Hero() {
   return (
     <header className="bg-cedar-900 relative isolate overflow-hidden">
       {/* Two soft washes, so the flat ground has some depth without an image.
-          Behind the content on the z-axis, and inert to a screen reader. */}
+          Behind the content on the z-axis, and inert to a screen reader.
+
+          The two rgba values are gold.500 and cedar.700 written out, because a
+          gradient stop cannot take a Tailwind colour class. That makes them the
+          one place on this page a rebrand does not reach on its own: the 2026
+          palette change turned the whole site navy and left this corner green,
+          because these still held the old #c9a227 and #1b4438. If you change
+          the palette, grep the components for `rgba(` before believing it. */}
       <div
         aria-hidden
         className="absolute inset-0 -z-10"
         style={{
           backgroundImage:
-            'radial-gradient(120% 90% at 78% 8%, rgba(201,162,39,0.20), transparent 58%), radial-gradient(80% 70% at 8% 92%, rgba(27,68,56,0.9), transparent 62%)',
+            'radial-gradient(120% 90% at 78% 8%, rgba(155,106,32,0.20), transparent 58%), radial-gradient(80% 70% at 8% 92%, rgba(21,34,78,0.9), transparent 62%)',
         }}
       />
 

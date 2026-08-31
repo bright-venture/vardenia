@@ -38,8 +38,15 @@ const VARIANTS = {
   solid: 'bg-cedar-900 text-surface-base hover:bg-cedar-700',
   outline: 'border border-ink-100 text-ink-900 hover:border-ink-300 hover:bg-surface-raised',
   ghost: 'text-ink-500 hover:text-ink-900 hover:bg-surface-sunken',
-  /** Gold, for the one place a control has to feel like the brand: the masthead. */
-  gold: 'bg-gold-500 text-cedar-900 hover:bg-gold-300',
+  /**
+   * Gold, for the one place a control has to feel like the brand: the masthead.
+   *
+   * Filled with gold.700 and labelled in the ivory ground, which is 5.79:1. The
+   * obvious pair - gold.500 behind navy, as this was - measures 3.74:1 and fails
+   * AA on a control whose whole job is to be pressed. gold.500 stays the hover,
+   * so the button still brightens on the way in.
+   */
+  gold: 'bg-gold-700 text-surface-base hover:bg-gold-500',
 } as const
 
 const SIZES = {

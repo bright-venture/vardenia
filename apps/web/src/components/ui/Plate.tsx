@@ -89,8 +89,12 @@ export function Plate({
         resolved
           ? undefined
           : {
+              // cedar.900 at three alphas, written out because a gradient stop
+              // cannot take a colour class. Update it with the palette - this
+              // held the old #10302a through the 2026 rebrand and tinted every
+              // photograph-less card green on an otherwise navy site.
               backgroundImage:
-                'repeating-linear-gradient(-45deg, rgba(16,48,42,0.05) 0 10px, transparent 10px 20px), linear-gradient(160deg, rgba(16,48,42,0.09), rgba(16,48,42,0.03))',
+                'repeating-linear-gradient(-45deg, rgba(11,23,57,0.05) 0 10px, transparent 10px 20px), linear-gradient(160deg, rgba(11,23,57,0.09), rgba(11,23,57,0.03))',
             }
       }
     >

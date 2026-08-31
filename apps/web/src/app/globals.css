@@ -8,16 +8,20 @@
      rather than named in a stack and hoped for. */
   :root {
     --font-display: var(--font-fraunces), 'Times New Roman', Georgia, serif;
-    --font-body: var(--font-inter), system-ui, -apple-system, sans-serif;
-    --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-body: var(--font-manrope), system-ui, -apple-system, sans-serif;
+    --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   /* Arabic needs its own faces - Latin serif display type has no Arabic
      coverage, and falling back mid-headline looks broken. The mono is not
-     overridden: reference codes and price marks are Latin in both languages. */
+     overridden: reference codes and price marks are Latin in both languages.
+
+     Amiri is a naskh serif rather than the geometric sans that used to sit
+     here, so an Arabic headline now reads as the same masthead as the English
+     one instead of as a different brand. See app/fonts.ts. */
   :root:lang(ar) {
-    --font-display: var(--font-tajawal), 'Noto Kufi Arabic', sans-serif;
-    --font-body: var(--font-plex-arabic), 'Noto Sans Arabic', sans-serif;
+    --font-display: var(--font-amiri), 'Noto Naskh Arabic', serif;
+    --font-body: var(--font-noto-arabic), 'Noto Sans Arabic', sans-serif;
   }
 
   body {
@@ -35,6 +39,22 @@
     line-height: 1.12;
     letter-spacing: -0.015em;
     text-wrap: balance;
+  }
+
+  /* Amiri ships 400 and 700 and nothing between, so the 500 above would be
+     synthesised - a faux-bold that thickens the strokes unevenly and is most
+     obvious at headline size, which is the only size this rule applies at.
+     400 is the weight the face was drawn at.
+
+     The other two are properties Latin type needs and Arabic does not: negative
+     tracking closes up naskh joins, and 1.12 is too tight for glyphs that carry
+     ascenders and descenders on nearly every letter. */
+  :lang(ar) h1,
+  :lang(ar) h2,
+  :lang(ar) h3 {
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1.18;
   }
 
   /* Anything the reader can reach with a thumb clears the 44px target the

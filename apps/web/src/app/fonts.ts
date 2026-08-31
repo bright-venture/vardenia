@@ -1,4 +1,4 @@
-import { Fraunces, IBM_Plex_Sans_Arabic, Inter, JetBrains_Mono, Tajawal } from 'next/font/google'
+import { Amiri, Fraunces, IBM_Plex_Mono, Manrope, Noto_Sans_Arabic } from 'next/font/google'
 
 /**
  * The brand faces, actually fetched.
@@ -46,40 +46,50 @@ export const fraunces = Fraunces({
   axes: ['SOFT', 'WONK'],
 })
 
-export const inter = Inter({
+export const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-manrope',
 })
 
-export const jetbrainsMono = JetBrains_Mono({
+export const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-jetbrains',
+  variable: '--font-plex-mono',
   // Only the two weights the reference codes and price marks use. The rest
   // would be kilobytes for glyphs nothing renders.
   weight: ['400', '500'],
 })
 
-export const tajawal = Tajawal({
+/**
+ * Amiri is a naskh serif, and that is the point of choosing it.
+ *
+ * Tajawal, which it replaces, is a geometric sans - correct next to Inter and
+ * wrong next to Fraunces. An English headline in a serif beside an Arabic
+ * headline in a sans does not read as one masthead in two languages, it reads
+ * as two brands. Amiri carries the same editorial voice into Arabic.
+ *
+ * It has no 500 weight; 400 and 700 are the whole family.
+ */
+export const amiri = Amiri({
   subsets: ['arabic'],
   display: 'swap',
-  variable: '--font-tajawal',
-  weight: ['400', '500', '700'],
+  variable: '--font-amiri',
+  weight: ['400', '700'],
 })
 
-export const plexArabic = IBM_Plex_Sans_Arabic({
+export const notoArabic = Noto_Sans_Arabic({
   subsets: ['arabic'],
   display: 'swap',
-  variable: '--font-plex-arabic',
+  variable: '--font-noto-arabic',
   weight: ['400', '500', '600'],
 })
 
 /** Every face, for the `<html>` class. Order does not matter; presence does. */
 export const FONT_VARIABLES = [
   fraunces.variable,
-  inter.variable,
-  jetbrainsMono.variable,
-  tajawal.variable,
-  plexArabic.variable,
+  manrope.variable,
+  plexMono.variable,
+  amiri.variable,
+  notoArabic.variable,
 ].join(' ')
