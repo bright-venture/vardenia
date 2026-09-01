@@ -312,6 +312,81 @@ export async function countByGovernorate({
   })()
 }
 
+/** How many places the foot of a listing page offers. Three fills one row. */
+const RELATED_COUNT = 3
+
+/**
+ * A few more places to look at, for the foot of a listing page.
+ *
+ * # Why this page in particular needs one
+ *
+ * Most readers arrive here from a printed QR code, which means they land on a
+ * listing having never seen the site. Without somewhere to go next, the whole
+ * visit is one page: they read it, and they leave. This is the only place the
+ * directory gets offered to somebody who did not go looking for it.
+ *
+ * # Same section, then nearest
+ *
+ * Same category is the strong signal - somebody reading about a hotel is
+ * choosing a hotel. Governorate breaks the tie, because a restaurant two hours
+ * away is a worse suggestion than one down the road.
+ *
+ * It is a preference, not a filter: the top dozen of the category are fetched
+ * once and the nearby ones sorted to the front. So it suggests the best-ranked
+ * places, nearest first, rather than searching the whole category for the three
+ * closest. One round trip, and with the catalogue in one governorate today the
+ * distinction is theoretical anyway.
+ *
+ * Returns an empty list for a listing with no category rather than falling back
+ * to anything at all. Three unrelated places under "More like this" is worse
+ * than no section.
+ */
+export async function findRelatedListings({
+  locale,
+  slug,
+  category,
+  governorate,
+}: {
+  locale: Locale
+  slug: string
+  category?: string | null
+  governorate?: string | null
+}): Promise<ListingSummary[]> {
+  if (!category) return []
+
+  const run = async () => {
+    const payload = await client()
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where: { category: { equals: category }, slug: { not_equals: slug } },
+      locale,
+      depth: 1,
+      limit: 12,
+      sort: ['-tier', 'name'],
+      overrideAccess: false,
+    })
+
+    if (!governorate) return result.docs.slice(0, RELATED_COUNT)
+
+    const near = result.docs.filter((doc) => doc.governorate === governorate)
+    const far = result.docs.filter((doc) => doc.governorate !== governorate)
+    return [...near, ...far].slice(0, RELATED_COUNT)
+  }
+
+  /**
+   * Bounded by the catalogue: one entry per listing per locale, and the listing
+   * pages that use it are prerendered anyway, so this mostly serves the ones
+   * published since the last build. Tagged `businesses` like everything else
+   * here, so a new listing appears in its neighbours' suggestions on the same
+   * revalidation that puts it in the grid.
+   */
+  return unstable_cache(run, ['related', locale, category, governorate ?? '', slug], {
+    revalidate: LISTINGS_TTL,
+    tags: ['businesses'],
+  })()
+}
+
 /** Slugs for static generation. Published only, because that is all this returns. */
 export async function findAllListingSlugs() {
   const payload = await client()

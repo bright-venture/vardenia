@@ -59,6 +59,48 @@ function toRenderableSrc(url: string): string {
   }
 }
 
+/**
+ * The stem of the stand-in every imported listing points at until somebody
+ * photographs it.
+ *
+ * One file, shared by the whole import - the 308 duplicate rows were collapsed
+ * into a single media record, so every unphotographed listing resolves to the
+ * same picture.
+ *
+ * This lived only in the import scripts, where it decides which listings still
+ * need a photographer. It is here now because rendering has the same question
+ * to ask and a worse consequence for getting it wrong: a layout that opens on a
+ * full-height photograph would open 308 different listings on one identical
+ * image. Knowing there is no photograph is what lets a page choose a different
+ * shape instead of showing a lie at full bleed.
+ */
+export const PLACEHOLDER_STEM = 'import-placeholder'
+
+/**
+ * Whether a filename or a resolved image is the shared placeholder.
+ *
+ * Matched on the stem rather than on an id, because the id differs between the
+ * development and production databases and the stem is written by our own
+ * import. If the import ever renames it, `photo-import.test.ts` fails - which
+ * is the point of the constant above being the only spelling of it.
+ */
+export function isPlaceholder(value: unknown): boolean {
+  if (typeof value === 'string') return value.includes(PLACEHOLDER_STEM)
+  if (value && typeof value === 'object' && 'src' in value) {
+    return isPlaceholder((value as ResolvedImage).src)
+  }
+  return false
+}
+
+/** A real photograph, or null when the listing only has the shared stand-in. */
+export function resolvePhotograph(
+  field: MediaField,
+  preferred: (typeof FALLBACK_ORDER)[number] = 'card',
+): ResolvedImage | null {
+  const image = resolveImage(field, preferred)
+  return image && !isPlaceholder(image) ? image : null
+}
+
 export function resolveImage(
   field: MediaField,
   preferred: (typeof FALLBACK_ORDER)[number] = 'card',

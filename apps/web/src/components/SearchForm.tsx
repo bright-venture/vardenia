@@ -35,7 +35,18 @@ export function SearchForm({
         {label}
       </label>
 
-      <div className="flex gap-2">
+      {/*
+        One bordered rectangle with the button flush inside it, rather than a
+        rounded field and a rounded button with a gap. That is the design's
+        treatment and it is the same shape as the masthead's search on the home
+        page, which matters here more than usual: a reader who searched from the
+        front page lands on this and should recognise the box they typed into.
+
+        `focus-within` on the wrapper, because the focus ring has to be on the
+        thing that looks like the control. A ring around the input alone would
+        draw a rectangle inside a rectangle.
+      */}
+      <div className="border-ink-300 bg-surface-raised focus-within:border-gold-500 flex items-stretch border transition-colors">
         <input
           id="site-search"
           type="search"
@@ -44,11 +55,11 @@ export function SearchForm({
           autoFocus={autoFocus}
           maxLength={80}
           placeholder={ar ? 'فندق، مطعم، مقال' : 'A hotel, a restaurant, an article'}
-          className="border-ink-100 focus:border-ink-300 text-ink-900 placeholder:text-ink-500 w-full rounded-md border px-4 py-2 text-sm outline-none transition-colors"
+          className="text-ink-900 placeholder:text-ink-500 w-full bg-transparent px-5 py-4 outline-none"
         />
         <button
           type="submit"
-          className="bg-ink-900 text-surface-base rounded-md px-4 py-2 text-sm transition-opacity hover:opacity-90"
+          className="bg-cedar-900 text-surface-base hover:bg-gold-700 px-6 text-sm font-semibold transition-colors"
         >
           {label}
         </button>

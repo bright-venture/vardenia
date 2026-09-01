@@ -48,5 +48,14 @@ export async function ActionBar({ coordinates, name }: Props) {
   )
 }
 
+/**
+ * Square, and cedar rather than near-black.
+ *
+ * It sits on the listing page directly under a masthead in the brand navy, and
+ * a rounded near-black pill there read as a control borrowed from another site.
+ * `ink.900` and `cedar.900` are a few points apart in darkness and far apart in
+ * hue, which is exactly the pairing that looks like a mistake rather than a
+ * choice - the same reason ui/FilterChip stopped using two darks.
+ */
 const PRIMARY =
-  'inline-flex items-center justify-center rounded-md bg-ink-900 px-5 py-3 text-sm font-semibold text-surface-base transition-colors hover:bg-ink-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
+  'inline-flex items-center justify-center bg-cedar-900 px-6 py-3.5 text-sm font-semibold text-surface-base transition-colors hover:bg-gold-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'

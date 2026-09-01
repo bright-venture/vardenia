@@ -24,11 +24,36 @@ import type { Locale } from '@vardenia/i18n'
  * `dir="ltr"` on the row pins it; the text after it flows normally.
  */
 
-function Star({ fill }: { fill: number }) {
+/**
+ * The two grounds this can land on.
+ *
+ * `gold.500` is the fill on ivory and all but disappears on navy, which is the
+ * same reason ui/Rule switches to `gold.300` over the cedar ground. The unfilled
+ * track has to flip outright rather than fade: `ink.100` is a light grey, so on
+ * navy it reads as a *filled* star and a 3.5 would look like a 5.
+ */
+const TONES = {
+  light: {
+    track: 'text-ink-100',
+    fill: 'text-gold-500',
+    value: 'text-ink-700',
+    muted: 'text-ink-500',
+    source: 'text-ink-300',
+  },
+  inverse: {
+    track: 'text-cedar-100/25',
+    fill: 'text-gold-300',
+    value: 'text-surface-base',
+    muted: 'text-cedar-100/70',
+    source: 'text-cedar-100/70',
+  },
+} as const
+
+function Star({ fill, tone }: { fill: number; tone: (typeof TONES)[keyof typeof TONES] }) {
   const id = `star-${Math.round(fill * 100)}`
   return (
     <span className="relative inline-block size-3.5">
-      <svg viewBox="0 0 24 24" className="text-ink-100 absolute inset-0 size-full fill-current">
+      <svg viewBox="0 0 24 24" className={`${tone.track} absolute inset-0 size-full fill-current`}>
         <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2Z" />
       </svg>
       {fill > 0 ? (
@@ -39,7 +64,7 @@ function Star({ fill }: { fill: number }) {
         >
           <svg
             viewBox="0 0 24 24"
-            className="text-gold-500 size-3.5 max-w-none fill-current"
+            className={`${tone.fill} size-3.5 max-w-none fill-current`}
             key={id}
           >
             <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2Z" />
@@ -56,12 +81,15 @@ export function Stars({
   locale,
   className = '',
   showSource = true,
+  inverse = false,
 }: {
   rating: number
   /** How many ratings the average is over. Omitted when it is not known. */
   count?: number
   locale: Locale
   className?: string
+  /** Set on the cedar ground, where the ink greys are invisible. See TONES. */
+  inverse?: boolean
   /**
    * Show "Google" beside the stars.
    *
@@ -76,6 +104,7 @@ export function Stars({
   const clamped = Math.max(0, Math.min(5, rating))
   const shown = clamped.toFixed(1)
   const ar = locale === 'ar'
+  const tone = inverse ? TONES.inverse : TONES.light
 
   /**
    * The accessible name says the source too.
@@ -113,15 +142,15 @@ export function Stars({
     <span role="img" aria-label={label} className={`inline-flex items-center gap-2 ${className}`}>
       <span className="inline-flex gap-0.5" dir="ltr" aria-hidden>
         {[0, 1, 2, 3, 4].map((i) => (
-          <Star key={i} fill={clamped - i} />
+          <Star key={i} fill={clamped - i} tone={tone} />
         ))}
       </span>
-      <span className="text-ink-700 font-mono text-xs tabular-nums" aria-hidden>
+      <span className={`${tone.value} font-mono text-xs tabular-nums`} aria-hidden>
         {shown}
-        {count === undefined ? null : <span className="text-ink-500"> ({count})</span>}
+        {count === undefined ? null : <span className={tone.muted}> ({count})</span>}
       </span>
       {showSource ? (
-        <span className="text-ink-300 text-[11px]" aria-hidden>
+        <span className={`${tone.source} text-[11px]`} aria-hidden>
           {source}
         </span>
       ) : null}

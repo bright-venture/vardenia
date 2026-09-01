@@ -52,11 +52,17 @@ export async function BookingPanel({
    */
   const model = bookingFormModel(rules)
 
+  /*
+   * Square, and it sets no margin of its own.
+   *
+   * The rounded corners went with the old palette - the design draws every
+   * panel as a plain rectangle with a hairline. The margin went because this is
+   * now placed by the listing page rather than stacked under the description,
+   * and a component carrying its own top margin cannot be put in a sidebar
+   * without fighting it.
+   */
   return (
-    <section
-      id="book"
-      className="border-ink-100 bg-surface-raised mt-14 rounded-lg border p-6 md:p-8"
-    >
+    <section id="book" className="border-ink-100 bg-surface-raised border p-6 md:p-8">
       <h2 className="font-display text-ink-900 text-2xl">
         {model.mode === 'nights' ? t('headingStay') : t('heading')}
       </h2>

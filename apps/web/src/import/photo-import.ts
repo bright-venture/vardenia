@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import type { Payload } from 'payload'
 import { can, tierOf } from '@vardenia/core'
+import { isPlaceholder } from '../lib/media'
 
 /**
  * Uploads a tree of photograph folders onto the listings they belong to.
@@ -139,10 +140,16 @@ export function readFolder(dir: string, entries: string[]): FolderContents {
   }
 }
 
-/** Whether the listing's current hero is one of the import's placeholders. */
-export function isPlaceholder(filename: unknown): boolean {
-  return typeof filename === 'string' && filename.includes('import-placeholder')
-}
+/**
+ * Whether the listing's current hero is one of the import's placeholders.
+ *
+ * Re-exported rather than defined here. The rendering side needs the same
+ * answer - a page that opens on a full-height photograph has to know when there
+ * is not one - and two spellings of "is this the stand-in" is how the site and
+ * the photography backlog start disagreeing about which listings still need a
+ * photographer. See lib/media.
+ */
+export { isPlaceholder }
 
 const relationId = (value: unknown): string | number | null => {
   if (typeof value === 'string' || typeof value === 'number') return value

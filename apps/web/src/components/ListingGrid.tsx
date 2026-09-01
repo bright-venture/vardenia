@@ -37,8 +37,28 @@ import { EmptyState } from './ui'
  * Nobody is comparing here - it is a taste of the directory, and the
  * asymmetry is what makes six listings read as a spread rather than as the
  * first page of results.
+ *
+ * `related` is the three suggestions at the foot of a listing page. It reaches
+ * three columns a breakpoint earlier than `directory` does, because it holds
+ * exactly three cards: at `lg` the directory's two columns would leave the
+ * third stranded on a row of its own with a gap beside it.
  */
-export type GridKind = 'directory' | 'editorial'
+export type GridKind = 'directory' | 'editorial' | 'related'
+
+const GRIDS: Record<GridKind, string> = {
+  /*
+    Two columns from the narrowest width, not one.
+
+    The plates are 4:5 now rather than 4:3, so a single column on a phone gave
+    one listing per screen and made a 308-entry directory feel endless. Two
+    upright cards side by side is what the design draws and what the shape is
+    for. Three only at `xl`, because at `lg` a third column takes the cards
+    below the width where a name and a place fit on one line each.
+  */
+  directory: 'grid grid-cols-2 gap-x-5 gap-y-10 xl:grid-cols-3 xl:gap-x-8',
+  editorial: 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-8',
+  related: 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-3 lg:gap-x-8',
+}
 
 /** What each card contributes to the editorial layout, by position. */
 const EDITORIAL_SPANS: Record<number, string> = {
@@ -70,22 +90,7 @@ export function ListingGrid({
   const editorial = kind === 'editorial'
 
   return (
-    <div
-      /*
-        Two columns from the narrowest width, not one.
-
-        The plates are 4:5 now rather than 4:3, so a single column on a phone
-        gave one listing per screen and made a 308-entry directory feel endless.
-        Two upright cards side by side is what the design draws and what the
-        shape is for. Three only at `xl`, because at `lg` a third column takes
-        the cards below the width where a name and a place fit on one line each.
-      */
-      className={
-        editorial
-          ? 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-8'
-          : 'grid grid-cols-2 gap-x-5 gap-y-10 xl:grid-cols-3 xl:gap-x-8'
-      }
-    >
+    <div className={GRIDS[kind]}>
       {listings.map((listing, index) => (
         <div key={listing.id} className={editorial ? EDITORIAL_SPANS[index] : undefined}>
           <ListingCard
