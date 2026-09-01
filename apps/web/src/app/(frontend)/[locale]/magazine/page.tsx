@@ -75,7 +75,7 @@ export default async function MagazinePage({ params }: Props) {
       {current ? (
         <section className="border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
           <Link href={`/magazine/issues/${current.slug}`} className="group block">
-            <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden rounded-md">
+            <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
               {cover ? (
                 <Image
                   src={cover.src}

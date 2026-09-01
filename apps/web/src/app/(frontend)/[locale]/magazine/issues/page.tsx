@@ -62,7 +62,7 @@ export default async function IssuesPage({ params }: Props) {
             return (
               <article key={issue.id}>
                 <Link href={`/magazine/issues/${issue.slug}`} className="group block">
-                  <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden rounded-md">
+                  <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
                     {cover ? (
                       <Image
                         src={cover.src}

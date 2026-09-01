@@ -78,8 +78,8 @@ function Toggle({
       onClick={onClick}
       className={
         active
-          ? 'bg-cedar-900 text-surface-base inline-flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-transform active:scale-[0.97]'
-          : 'border-ink-100 text-ink-700 hover:border-ink-300 inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm transition-[border-color,transform] active:scale-[0.97]'
+          ? 'bg-cedar-900 text-surface-base inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm transition-transform active:scale-[0.97]'
+          : 'border-ink-100 text-ink-700 hover:border-ink-300 inline-flex items-center gap-2 whitespace-nowrap border px-4 py-2 text-sm transition-[border-color,transform] active:scale-[0.97]'
       }
     >
       {children}
@@ -204,7 +204,7 @@ export function FilterSheet({
       <button
         type="button"
         onClick={openSheet}
-        className="bg-cedar-900 text-surface-base hover:bg-cedar-700 inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-medium transition-[background-color,transform] active:scale-[0.97]"
+        className="bg-cedar-900 text-surface-base hover:bg-cedar-700 inline-flex h-11 shrink-0 items-center gap-2 px-5 text-sm font-medium transition-[background-color,transform] active:scale-[0.97]"
       >
         <svg
           aria-hidden
@@ -221,7 +221,7 @@ export function FilterSheet({
         {/* 11px, so the least forgiving text on the site for contrast. Ivory on
             gold.700 is 5.79:1; the navy-on-gold.500 it replaces was 3.74. */}
         {count > 0 ? (
-          <span className="bg-gold-700 text-surface-base inline-flex min-w-[19px] items-center justify-center rounded-full px-1.5 font-mono text-[11px] font-medium">
+          <span className="bg-gold-700 text-surface-base inline-flex min-w-[19px] items-center justify-center px-1.5 font-mono text-[11px] font-medium">
             {count}
           </span>
         ) : null}
@@ -248,7 +248,7 @@ export function FilterSheet({
           Longhand on both sides rather than `sm:m-auto`, so there is no
           shorthand-versus-longhand ordering question to get wrong.
         */
-        className="bg-surface-base text-ink-900 backdrop:bg-ink-950/50 mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none rounded-t-xl p-0 shadow-2xl backdrop:backdrop-blur-[2px] sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl sm:rounded-lg"
+        className="bg-surface-base text-ink-900 backdrop:bg-ink-950/50 sm: mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none p-0 shadow-2xl backdrop:backdrop-blur-[2px] sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl"
       >
         <div className="flex max-h-[88vh] flex-col sm:max-h-[80vh]">
           {/* The grab handle is a phone affordance and noise on a laptop. */}
@@ -263,7 +263,7 @@ export function FilterSheet({
               type="button"
               onClick={() => setOpen(false)}
               aria-label={ar ? 'إغلاق' : 'Close filters'}
-              className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 grid size-9 place-items-center rounded-full transition-colors"
+              className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 grid size-9 place-items-center transition-colors"
             >
               <svg
                 aria-hidden
@@ -359,7 +359,7 @@ export function FilterSheet({
                 scale, and chips would imply they can be combined. */}
             <Group title={ar ? 'السعر' : 'Price'}>
               <div
-                className="border-ink-100 flex overflow-hidden rounded-md border"
+                className="border-ink-100 flex overflow-hidden border"
                 role="group"
                 aria-label={ar ? 'السعر' : 'Price'}
               >
@@ -408,7 +408,7 @@ export function FilterSheet({
             <button
               type="button"
               onClick={apply}
-              className="bg-cedar-900 text-surface-base hover:bg-cedar-700 h-11 flex-1 rounded-md px-6 text-sm font-medium transition-[background-color,transform] active:scale-[0.985] sm:max-w-[240px]"
+              className="bg-cedar-900 text-surface-base hover:bg-cedar-700 h-11 flex-1 px-6 text-sm font-medium transition-[background-color,transform] active:scale-[0.985] sm:max-w-[240px]"
             >
               {ar ? 'عرض النتائج' : 'Show results'}
             </button>

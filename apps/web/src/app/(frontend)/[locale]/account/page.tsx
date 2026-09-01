@@ -158,7 +158,7 @@ async function BookingList({
           const slug = typeof business === 'object' && business ? (business.slug ?? '') : ''
 
           return (
-            <li key={booking.id} className="border-ink-100 bg-surface-raised rounded-lg border p-4">
+            <li key={booking.id} className="border-ink-100 bg-surface-raised border p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 {slug ? (
                   <Link href={`/directory/${slug}`} className="text-ink-900 font-semibold">

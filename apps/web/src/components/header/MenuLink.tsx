@@ -26,11 +26,11 @@ export function MenuLink({
   return (
     <Link
       href={href}
-      className="hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-start gap-3 rounded-md p-2.5 transition-colors focus-visible:outline-none"
+      className="hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-start gap-3 p-2.5 transition-colors focus-visible:outline-none"
     >
       <span
         aria-hidden
-        className="border-ink-100 bg-surface-raised text-gold-700 flex size-9 shrink-0 items-center justify-center rounded-md border"
+        className="border-ink-100 bg-surface-raised text-gold-700 flex size-9 shrink-0 items-center justify-center border"
       >
         <Icon className="size-4" strokeWidth={1.5} />
       </span>

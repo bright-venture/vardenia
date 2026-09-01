@@ -84,7 +84,7 @@ export function AccountLink({ locale }: { locale: Locale }) {
           the only thing here we are asking a reader to do, rather than offering. */}
       <Link
         href="/account/signup"
-        className="bg-ink-900 text-surface-base rounded-full px-3 py-1.5 text-sm transition-opacity hover:opacity-90"
+        className="bg-cedar-900 text-surface-base px-4 py-2 text-sm transition-opacity hover:opacity-90"
       >
         {ar ? 'إنشاء حساب' : 'Sign up'}
       </Link>

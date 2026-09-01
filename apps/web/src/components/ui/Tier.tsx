@@ -80,7 +80,7 @@ export function Tier({
       role="img"
       aria-label={full}
       title={full}
-      className={`font-mono text-[9.5px] font-medium uppercase tracking-[0.13em] ${STYLES[kind]} rounded-sm px-2 py-1 ${className}`}
+      className={`font-mono text-[9.5px] font-medium uppercase tracking-[0.13em] ${STYLES[kind]} px-2 py-1 ${className}`}
     >
       {ar ? LABELS[kind].ar : LABELS[kind].en}
     </span>

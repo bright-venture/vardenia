@@ -25,7 +25,7 @@
  */
 
 function Bar({ className }: { className: string }) {
-  return <div className={`bg-surface-sunken rounded ${className}`} />
+  return <div className={`bg-surface-sunken ${className}`} />
 }
 
 /** The heading block every page opens with. */
@@ -61,7 +61,7 @@ function ChipRows({ rows = 2 }: { rows?: number }) {
       {Array.from({ length: rows }, (_, r) => (
         <div key={r} className="flex flex-wrap gap-2">
           {widths.map((w, i) => (
-            <Bar key={i} className={`h-9 rounded-full ${w}`} />
+            <Bar key={i} className={`h-9 ${w}`} />
           ))}
         </div>
       ))}
@@ -86,7 +86,7 @@ export function SearchSkeleton() {
   return (
     <main aria-hidden aria-busy className="mx-auto max-w-6xl animate-pulse px-6 py-16">
       <Header />
-      <Bar className="mt-6 h-11 w-full max-w-xl rounded-md" />
+      <Bar className="mt-6 h-11 w-full max-w-xl" />
       <CardGrid count={3} />
     </main>
   )
@@ -99,7 +99,7 @@ export function RecordsSkeleton() {
       <Header />
       <div className="mt-12 flex flex-col gap-4">
         {Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="border-ink-100 flex flex-col gap-3 rounded-lg border p-5">
+          <div key={i} className="border-ink-100 flex flex-col gap-3 border p-5">
             <Bar className="h-4 w-40" />
             <Bar className="h-3 w-56" />
             <Bar className="h-3 w-32" />

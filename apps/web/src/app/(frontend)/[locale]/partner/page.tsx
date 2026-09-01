@@ -197,9 +197,9 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
           type="search"
           defaultValue={filter.search}
           placeholder={t('searchPlaceholder')}
-          className="border-ink-100 text-ink-900 min-w-56 flex-1 rounded-md border px-3 py-2 text-sm"
+          className="border-ink-100 text-ink-900 min-w-56 flex-1 border px-3 py-2 text-sm"
         />
-        <button type="submit" className="border-ink-100 rounded-md border px-4 py-2 text-sm">
+        <button type="submit" className="border-ink-100 border px-4 py-2 text-sm">
           {t('searchAction')}
         </button>
 
@@ -226,9 +226,9 @@ function Chip({
     <Link
       href={href}
       aria-current={active ? 'true' : undefined}
-      className={`rounded-full border px-4 py-1.5 text-sm transition ${
+      className={`border px-4 py-1.5 text-sm transition ${
         active
-          ? 'border-ink-900 bg-ink-900 text-surface-base'
+          ? 'border-cedar-900 bg-cedar-900 text-surface-base'
           : 'border-ink-100 text-ink-700 hover:border-ink-300'
       }`}
     >
@@ -258,7 +258,7 @@ async function BookingList({ bookings, locale }: { bookings: BookingDoc[]; local
         const guestName = row.guest?.name || t('guestUnknown')
 
         return (
-          <li key={row.id} className="border-ink-100 bg-surface-raised rounded-lg border p-4">
+          <li key={row.id} className="border-ink-100 bg-surface-raised border p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="text-ink-900 font-semibold">{guestName}</span>
               <span className="text-ink-500 text-xs uppercase tracking-wider">

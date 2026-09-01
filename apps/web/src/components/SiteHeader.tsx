@@ -104,7 +104,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <DropdownNav label={ar ? 'اكتشف' : 'Discover'}>{sectionMenu}</DropdownNav>
             <Link
               href="/magazine"
-              className="text-ink-700 hover:text-ink-900 rounded-md px-2 py-1.5 text-sm transition-colors"
+              className="text-ink-700 hover:text-ink-900 px-2 py-1.5 text-sm transition-colors"
             >
               {t('magazine')}
             </Link>
@@ -116,7 +116,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <Link
             href="/search"
             aria-label={ar ? 'بحث' : 'Search'}
-            className="text-ink-700 hover:text-ink-900 rounded-md p-1.5 transition-colors"
+            className="text-ink-700 hover:text-ink-900 p-1.5 transition-colors"
           >
             <SEARCH_ICON className="size-4" strokeWidth={1.75} aria-hidden />
           </Link>
@@ -142,7 +142,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
           <nav
             aria-label={t('directory')}
-            className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 max-h-[80vh] w-[19rem] overflow-y-auto rounded-lg border p-2 shadow-xl"
+            className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 max-h-[80vh] w-[19rem] overflow-y-auto border p-2 shadow-xl"
           >
             {SECTIONS.map((section) => (
               <MenuLink

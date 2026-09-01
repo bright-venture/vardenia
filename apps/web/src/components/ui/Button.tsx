@@ -29,10 +29,24 @@ import { Link } from '../../i18n/routing'
  * 44px at `md` is the mobile tap target, not a coincidence. `sm` exists for
  * dense rows on desktop and is deliberately unavailable to the touch-sized
  * layouts by convention rather than by type.
+ *
+ * # No corner radius, here or anywhere
+ *
+ * These were `rounded-md` until the 2026 design landed, which sets every panel,
+ * control, input and badge as a plain rectangle with a hairline. It is not a
+ * preference: it is the print convention the design is built on, and a rounded
+ * button in a page of square rules reads as a web widget dropped into a
+ * magazine.
+ *
+ * The rule is asserted in lib/radius.test.ts rather than left as a convention,
+ * because a convention is what let forty-six radii accumulate across
+ * twenty-three files while every one of them looked reasonable on its own.
+ * `rounded-full` is still allowed where round is the meaning - a status dot, a
+ * drag handle - and nowhere else.
  */
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45'
+  'inline-flex items-center justify-center gap-2 font-medium transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45'
 
 const VARIANTS = {
   solid: 'bg-cedar-900 text-surface-base hover:bg-cedar-700',

@@ -121,8 +121,8 @@ async function ArticleResults({
               href={`/magazine/articles?page=${n}`}
               className={
                 n === result.page
-                  ? 'bg-ink-900 text-surface-base rounded-md px-3 py-1 tabular-nums'
-                  : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-md border px-3 py-1 tabular-nums'
+                  ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
+                  : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
               }
             >
               {n}

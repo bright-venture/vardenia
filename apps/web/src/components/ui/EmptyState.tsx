@@ -33,7 +33,7 @@ export function EmptyState({
   return (
     <div
       role="status"
-      className="border-ink-100 col-span-full flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-16 text-center"
+      className="border-ink-100 col-span-full flex flex-col items-center gap-3 border border-dashed px-6 py-16 text-center"
     >
       <h3 className="text-ink-900 text-xl">{title}</h3>
       {body ? <p className="text-ink-500 max-w-[46ch] text-sm leading-relaxed">{body}</p> : null}

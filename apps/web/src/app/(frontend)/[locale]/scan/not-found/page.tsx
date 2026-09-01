@@ -62,13 +62,13 @@ export default async function ScanNotFoundPage({
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
           href="/directory"
-          className="bg-ink-900 text-surface-base hover:bg-ink-700 rounded-md px-5 py-3 text-sm font-semibold transition-colors"
+          className="bg-cedar-900 text-surface-base hover:bg-cedar-700 px-5 py-3 text-sm font-semibold transition-colors"
         >
           {ar ? 'تصفّح الدليل' : 'Browse the directory'}
         </Link>
         <Link
           href="/"
-          className="border-ink-100 text-ink-900 hover:border-ink-300 rounded-md border px-5 py-3 text-sm font-semibold transition-colors"
+          className="border-ink-100 text-ink-900 hover:border-ink-300 border px-5 py-3 text-sm font-semibold transition-colors"
         >
           {ar ? 'الصفحة الرئيسية' : 'Go to homepage'}
         </Link>

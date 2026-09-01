@@ -41,7 +41,7 @@ export function ArticleCard({
           interactive
           priority={priority}
           sizes="(max-width: 768px) 100vw, 33vw"
-          className="rounded-lg"
+          className=""
         />
 
         <p className="text-ink-500 mt-4 font-mono text-[10px] uppercase tracking-[0.12em]">

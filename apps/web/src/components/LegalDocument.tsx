@@ -59,7 +59,7 @@ function Line({ text, id }: { text: string; id: string }) {
 
   if (body.includes(PLACEHOLDER)) {
     return (
-      <p className="border-state-warning bg-gold-100 text-ink-900 my-4 rounded-md border-s-4 px-4 py-3 text-sm">
+      <p className="border-state-warning bg-gold-100 text-ink-900 my-4 border-s-4 px-4 py-3 text-sm">
         <span className="text-state-warning me-2 text-xs font-semibold uppercase tracking-wider">
           Not settled
         </span>
@@ -114,7 +114,7 @@ export function LegalDocumentView({
         <p
           dir={ar ? 'rtl' : undefined}
           lang={ar ? 'ar' : undefined}
-          className="border-state-warning bg-gold-100 text-ink-900 mt-8 rounded-md border px-4 py-3 text-sm"
+          className="border-state-warning bg-gold-100 text-ink-900 mt-8 border px-4 py-3 text-sm"
         >
           {ar
             ? 'هذه مسودة قيد المراجعة القانونية. الفقرات المعلّمة أدناه لم تُحسم بعد.'

@@ -206,8 +206,8 @@ async function SectionResults({
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page
-                    ? 'bg-ink-900 text-surface-base rounded-md px-3 py-1 tabular-nums'
-                    : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-md border px-3 py-1 tabular-nums'
+                    ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
+                    : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
                 }
               >
                 {n}
@@ -225,7 +225,7 @@ function SectionSkeleton() {
   return (
     <div aria-hidden className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {[0, 1, 2, 3, 4, 5].map((n) => (
-        <div key={n} className="bg-surface-sunken h-64 animate-pulse rounded-lg" />
+        <div key={n} className="bg-surface-sunken h-64 animate-pulse" />
       ))}
     </div>
   )

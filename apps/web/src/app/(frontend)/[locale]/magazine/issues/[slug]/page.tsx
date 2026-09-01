@@ -87,7 +87,7 @@ export default async function IssuePage({ params }: Params) {
       </Link>
 
       <div className="mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
-        <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden rounded-md">
+        <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
           {cover ? (
             <Image
               src={cover.src}
@@ -132,7 +132,7 @@ export default async function IssuePage({ params }: Params) {
               href={edition.src}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-ink-900 text-surface-base hover:bg-ink-700 mt-8 inline-block rounded-md px-5 py-3 text-sm font-semibold transition-colors"
+              className="bg-cedar-900 text-surface-base hover:bg-cedar-700 mt-8 inline-block px-5 py-3 text-sm font-semibold transition-colors"
             >
               {ar ? 'تصفح النسخة الرقمية' : 'Read the digital edition'}
             </a>

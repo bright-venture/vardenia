@@ -276,15 +276,15 @@ export function pageWindow(current: number, total: number, span = 2): (number | 
 function DirectorySkeleton() {
   return (
     <div aria-hidden className="animate-pulse">
-      <div className="bg-surface-sunken mt-3 h-4 w-32 rounded" />
+      <div className="bg-surface-sunken mt-3 h-4 w-32" />
       <div className="mt-8 flex flex-wrap gap-2">
         {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="bg-surface-sunken h-10 w-28 rounded-full" />
+          <div key={i} className="bg-surface-sunken h-11 w-28" />
         ))}
       </div>
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="bg-surface-sunken aspect-[4/3] rounded-md" />
+          <div key={i} className="bg-surface-sunken aspect-[4/3]" />
         ))}
       </div>
     </div>

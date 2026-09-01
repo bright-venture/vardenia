@@ -52,7 +52,7 @@ function Line({ text, id }: { text: string; id: string }) {
       <p
         dir="ltr"
         lang="en"
-        className="border-state-warning bg-gold-100 text-ink-900 my-4 rounded-md border-s-4 px-4 py-3 text-start text-sm"
+        className="border-state-warning bg-gold-100 text-ink-900 my-4 border-s-4 px-4 py-3 text-start text-sm"
       >
         <span className="text-state-warning me-2 text-xs font-semibold uppercase tracking-wider">
           Not settled

@@ -42,7 +42,7 @@ export function DropdownNav({
         type="button"
         // Not a link: it goes nowhere, and announcing it as one promises a
         // destination that does not exist.
-        className="text-ink-700 hover:text-ink-900 group-focus-within:text-ink-900 flex items-center gap-1 rounded-md px-2 py-1.5 text-sm transition-colors"
+        className="text-ink-700 hover:text-ink-900 group-focus-within:text-ink-900 flex items-center gap-1 px-2 py-1.5 text-sm transition-colors"
         aria-haspopup="true"
       >
         {label}
@@ -70,7 +70,7 @@ export function DropdownNav({
           align === 'end' ? 'end-0' : 'start-0',
         ].join(' ')}
       >
-        <div className="border-ink-100 bg-surface-base shadow-ink-900/5 rounded-lg border p-2 shadow-xl">
+        <div className="border-ink-100 bg-surface-base shadow-ink-900/5 border p-2 shadow-xl">
           {children}
         </div>
       </div>
