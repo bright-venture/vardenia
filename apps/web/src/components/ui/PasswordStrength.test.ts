@@ -46,10 +46,6 @@ describe('agreeing with the server', () => {
   })
 })
 
-/**
- * Not one of these can be satisfied by decorating a short word, which is the
- * whole reason they are these rules and not a capital, a digit and a symbol.
- */
 describe('the rules', () => {
   it('scores nothing for an empty field, and lists every rule as unmet', () => {
     const state = evaluatePassword('')
@@ -57,29 +53,81 @@ describe('the rules', () => {
     expect(state.rules.every((rule) => !rule.met)).toBe(true)
   })
 
-  it('refuses `Password1!`, which passes every composition checklist', () => {
-    const state = evaluatePassword('Password1!')
-    expect(state.meetsRequirement).toBe(true)
-    // Long enough for the server, and almost nothing else.
-    expect(state.score).toBeLessThanOrEqual(2)
-    expect(state.guessable).toBe(true)
+  describe('a number', () => {
+    it('wants a digit', () => {
+      expect(met('olive trees', 'number')).toBe(false)
+      expect(met('olive trees 7', 'number')).toBe(true)
+    })
   })
 
-  it('rewards an ordinary passphrase with no symbols at all', () => {
+  describe('a special character', () => {
+    it('wants punctuation', () => {
+      expect(met('olive trees', 'symbol')).toBe(false)
+      expect(met('olive-trees', 'symbol')).toBe(true)
+    })
+
+    /**
+     * A space is not alphanumeric, so a naive `[^A-Za-z0-9]` would have counted
+     * "olive trees" as containing a special character. Nobody means that.
+     */
+    it('does not count a space as one', () => {
+      expect(met('olive trees above the harbour', 'symbol')).toBe(false)
+    })
+  })
+
+  describe('upper and lower case', () => {
+    it('wants both, not either', () => {
+      expect(met('olive trees', 'case')).toBe(false)
+      expect(met('OLIVE TREES', 'case')).toBe(false)
+      expect(met('Olive trees', 'case')).toBe(true)
+    })
+  })
+
+  /**
+   * The composition rules are advice. `Password1!` satisfies a number, a symbol
+   * and mixed case - the whole familiar checklist - and is worthless, which is
+   * why `notCommon` sits beside them and why none of them is `required`.
+   */
+  describe('Password1!, the reason composition rules are not enforced', () => {
+    const state = () => evaluatePassword('Password1!')
+
+    it('ticks every composition box', () => {
+      expect(met('Password1!', 'number')).toBe(true)
+      expect(met('Password1!', 'symbol')).toBe(true)
+      expect(met('Password1!', 'case')).toBe(true)
+    })
+
+    it('is still flagged as an obvious pattern', () => {
+      expect(state().guessable).toBe(true)
+      expect(met('Password1!', 'notCommon')).toBe(false)
+    })
+
+    /**
+     * The clamp, and the case that put it there. Without it this scores five of
+     * six and the meter says "Good" - checked in the running page, where the
+     * arithmetic was right and the word was wrong.
+     */
+    it('reads Weak however many boxes it ticks', () => {
+      const { score, max, guessable } = state()
+      expect(score).toBeGreaterThanOrEqual(max - 1)
+      expect(strengthBand(score, max, guessable)).toBe(1)
+    })
+
+    it('would have read Good without the clamp, which is why it exists', () => {
+      const { score, max } = state()
+      expect(strengthBand(score, max, false)).toBe(3)
+    })
+  })
+
+  /**
+   * The other half of the same point: a password with no symbols and no digits
+   * is allowed through, because the server asks for length and nothing else.
+   */
+  it('lets an ordinary passphrase through even though it ticks few boxes', () => {
     const state = evaluatePassword('olive trees above the harbour')
-    expect(state.score).toBe(state.max)
-    expect(strengthBand(state.score, state.max)).toBe(4)
-  })
-
-  describe('two words or more', () => {
-    it('wants a space with something either side', () => {
-      expect(met('olivetreesabove', 'words')).toBe(false)
-      expect(met('olive trees above', 'words')).toBe(true)
-    })
-
-    it('does not count a trailing space as a second word', () => {
-      expect(met('olivetrees ', 'words')).toBe(false)
-    })
+    expect(state.meetsRequirement).toBe(true)
+    expect(met('olive trees above the harbour', 'symbol')).toBe(false)
+    expect(met('olive trees above the harbour', 'number')).toBe(false)
   })
 
   describe('not an obvious pattern', () => {
@@ -165,5 +213,14 @@ describe('the strength word', () => {
   it('never divides by zero', () => {
     expect(() => strengthBand(0, 0)).not.toThrow()
     expect(strengthBand(0, 0)).toBe(0)
+  })
+
+  it('holds a guessable password at Weak no matter the proportion', () => {
+    expect(strengthBand(6, 6, true)).toBe(1)
+    expect(strengthBand(5, 6, true)).toBe(1)
+  })
+
+  it('still says nothing for an empty field, even if flagged guessable', () => {
+    expect(strengthBand(0, 6, true)).toBe(0)
   })
 })

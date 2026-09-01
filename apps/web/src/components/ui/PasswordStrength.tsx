@@ -7,19 +7,30 @@ import { signupSchema } from '@vardenia/core'
 /**
  * How strong the password somebody is typing actually is.
  *
- * # The composition checklist is deliberately not here
+ * # Shown and enforced are two different lists, on purpose
  *
- * The component this is adapted from scores a password on four boxes: twelve
- * characters, upper and lower case, a digit, a symbol. Vardenia's password rule
- * refuses exactly that, and says why in packages/core/booking-request:
- * composition rules push people towards `Password1!` and are weaker in practice
- * than a long passphrase, which is why current guidance dropped them.
+ * The checklist includes the familiar composition boxes - a number, a symbol,
+ * upper and lower case - because they were asked for. The server does not check
+ * any of them, and packages/core/booking-request explains why it refuses to:
+ * composition rules push people towards `Password1!`, which ticks all three and
+ * is worthless.
  *
- * Shipping the original would have put a checklist on screen demanding a symbol,
- * directly under a hint that says length beats punctuation, in front of a server
- * that only checks length. Three answers to one question, two of them wrong.
+ * Both facts can be true at once, and the shape of this component is what keeps
+ * them from contradicting each other:
  *
- * So the bars measure length, and the one requirement shown is the real one.
+ *   - Exactly one rule is `required`, and it is the server's own length rule.
+ *     It is marked as such on screen. Nothing else can stop a submission.
+ *   - `notCommon` sits beside the composition boxes precisely so they cannot be
+ *     gamed. `Password1!` ticks three and is still flagged, and still cannot
+ *     reach the top band.
+ *   - The meter is advice throughout. It never blocks: a meter that refuses a
+ *     password the server would accept is one people work around rather than
+ *     learn from, and it would also be lying about what happens next.
+ *
+ * The earlier version of this file argued the composition boxes should not exist
+ * at all. That argument is recorded in packages/core, where the rule that
+ * actually matters lives; this is the display layer, and it shows what it was
+ * asked to show without pretending the server agrees.
  *
  * # The requirement is the server's own schema, not a copy of it
  *
@@ -49,20 +60,39 @@ const REPEATED = /(.)\1{3,}/
 const SEQUENCE = /(?:0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef|defg|qwer|wert|erty|asdf)/i
 
 /**
+ * ASCII punctuation, by range rather than by listing characters.
+ *
+ * Deliberately excludes the space. A space is not alphanumeric and would satisfy
+ * a naive `[^A-Za-z0-9]`, so "olive trees" would have counted as containing a
+ * special character - which is not what anybody means by one.
+ */
+const SYMBOL = /[!-/:-@[-`{-~]/
+
+/**
  * What the reader is told about, in the order it is worth knowing.
  *
- * # Why these five and not the usual four
- *
- * The familiar checklist - a capital, a digit, a symbol, twelve characters - is
- * the one thing this cannot be, for the reason packages/core gives: composition
- * rules produce `Password1!` and are weaker than a long passphrase. None of the
- * rules below can be satisfied by decorating a short word.
- *
  *   length       the server's own floor, and the only required one
- *   longer       past the floor, where guessing stops being cheap
- *   words        a space is the cheapest way to reach real length
+ *   number       a digit
+ *   symbol       ASCII punctuation, not merely a space
+ *   case         upper and lower together
  *   notCommon    length cannot save `password1234`
  *   notPersonal  the one an attacker who knows the reader tries first
+ *
+ * # The composition rules here are advice, and only advice
+ *
+ * `number`, `symbol` and `case` were asked for. They are worth being plain
+ * about, because packages/core deliberately refuses to enforce them:
+ * composition requirements push people towards `Password1!`, which satisfies all
+ * three and is worthless. So they are shown, they move the meter, and none of
+ * them can stop a form being submitted - `required` is true on `length` alone,
+ * which is the only rule /auth/signup actually checks.
+ *
+ * That split is the point. A reader who wants the familiar boxes gets them; a
+ * reader who types four ordinary words is not blocked for owning no keyboard
+ * symbols. `notCommon` is what stops the boxes being gamed: `Password1!` ticks
+ * three of them and is still flagged.
+ *
+ * The rule that used to sit here - "two words or more" - was removed on request.
  *
  * # `notPersonal` is why this takes a context
  *
@@ -113,12 +143,12 @@ export const PASSWORD_RULES: readonly PasswordRule[] = [
     // The server's schema, asked directly - see the note at the top of the file.
     test: (value) => signupSchema.shape.password.safeParse(value).success,
   },
-  { id: 'longer', required: false, test: (value) => value.trim().length >= 14 },
+  { id: 'number', required: false, test: (value) => /\d/.test(value) },
+  { id: 'symbol', required: false, test: (value) => SYMBOL.test(value) },
   {
-    id: 'words',
+    id: 'case',
     required: false,
-    // A space with something either side, so a trailing space is not a "word".
-    test: (value) => /\S\s\S/.test(value.trim()),
+    test: (value) => /[a-z]/.test(value) && /[A-Z]/.test(value),
   },
   {
     id: 'notCommon',
@@ -186,11 +216,25 @@ export function evaluatePassword(value: string, context: PasswordContext = {}) {
 /**
  * The word for a score, by proportion rather than by count.
  *
- * A count would mean different things on the two forms: four out of four on the
- * reset page is everything, and four out of five on sign-up is not.
+ * A count would mean different things on the two forms: five out of five on the
+ * reset page is everything, and five out of six on sign-up is not.
+ *
+ * # A guessable password is Weak however many boxes it ticks
+ *
+ * This clamp is what makes the composition rules safe to show. Without it
+ * `Password1!` scores five of six - length, a number, a symbol, mixed case, not
+ * the reader's name - and the meter calls it **Good**. It is the single most
+ * guessed password shape there is.
+ *
+ * Found by typing it into the running page, not by reading the code: the
+ * arithmetic looked fine and the word on screen was wrong. Composition boxes are
+ * gameable by construction, so the pattern check has to outrank them rather than
+ * merely sit beside them.
  */
-export function strengthBand(score: number, max: number): 0 | 1 | 2 | 3 | 4 {
+export function strengthBand(score: number, max: number, guessable = false): 0 | 1 | 2 | 3 | 4 {
   if (score === 0 || max === 0) return 0
+  if (guessable) return 1
+
   const ratio = score / max
   if (ratio >= 1) return 4
   if (ratio >= 0.75) return 3
@@ -254,7 +298,7 @@ export function PasswordStrength({
    */
   const state = useMemo(() => evaluatePassword(value, { name, email }), [value, name, email])
   const { score, max, meetsRequirement, guessable, rules } = state
-  const band = strengthBand(score, max)
+  const band = strengthBand(score, max, guessable)
 
   const labels = [
     t('strengthEmpty'),
@@ -414,7 +458,10 @@ export function PasswordStrength({
               </span>
             ) : null}
 
-            <span className="sr-only">{rule.met ? t('strengthMet') : t('strengthNotMet')}</span>
+            {/* The spaces are not decoration. Without them the off-screen words
+                butt against the visible label, and copying the list out of the
+                page gives "At least 10 charactersRequiredmet". */}
+            <span className="sr-only"> {rule.met ? t('strengthMet') : t('strengthNotMet')}</span>
           </li>
         ))}
       </ul>

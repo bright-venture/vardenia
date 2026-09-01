@@ -169,8 +169,6 @@
     "closeCancelled": "{count, plural, zero {} one {تم إلغاء حجز قادم واحد.} two {تم إلغاء حجزين قادمين.} few {تم إلغاء # حجوزات قادمة.} many {تم إلغاء # حجزًا قادمًا.} other {تم إلغاء # حجز قادم.}}",
     "resendVerification": "أعد إرسال رابط التأكيد",
     "rule_length": "10 أحرف على الأقل",
-    "rule_longer": "14 حرفًا أو أكثر",
-    "rule_words": "كلمتان أو أكثر",
     "rule_notCommon": "ليست نمطًا شائعًا",
     "rule_notPersonal": "لا تحتوي اسمك أو بريدك",
     "strengthRequired": "مطلوب",
@@ -178,7 +176,10 @@
     "strengthNotMet": "غير مستوفى",
     "strengthAllMet": "كل الشروط مستوفاة.",
     "strengthStillNeeded": "ما زال مطلوبًا: {list}.",
-    "strengthAdvice": "الأول وحده مطلوب. بضع كلمات عادية أقوى من كلمة قصيرة مليئة بالرموز."
+    "strengthAdvice": "الأول وحده مطلوب. الطول يبقى أهم من كل ما سواه.",
+    "rule_number": "رقم",
+    "rule_symbol": "رمز خاص",
+    "rule_case": "حرف كبير وآخر صغير"
   },
   "partner": {
     "eyebrow": "للشركاء",

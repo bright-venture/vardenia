@@ -169,8 +169,6 @@
     "closeCancelled": "{count, plural, one {1 upcoming booking was cancelled.} other {# upcoming bookings were cancelled.}}",
     "resendVerification": "Send the confirmation link again",
     "rule_length": "At least 10 characters",
-    "rule_longer": "14 characters or more",
-    "rule_words": "Two words or more",
     "rule_notCommon": "Not an obvious pattern",
     "rule_notPersonal": "Not your name or email",
     "strengthRequired": "Required",
@@ -178,7 +176,10 @@
     "strengthNotMet": "not met",
     "strengthAllMet": "Everything is met.",
     "strengthStillNeeded": "Still needed: {list}.",
-    "strengthAdvice": "Only the first is required. A few ordinary words are stronger than a short one with symbols in it."
+    "strengthAdvice": "Only the first is required. Length still does more for you than any of the others.",
+    "rule_number": "A number",
+    "rule_symbol": "A special character",
+    "rule_case": "Upper and lower case"
   },
   "partner": {
     "eyebrow": "For partners",
