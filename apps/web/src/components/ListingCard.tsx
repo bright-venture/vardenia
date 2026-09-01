@@ -86,24 +86,36 @@ export function ListingCard({
           <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
 
           {/*
-            The category moved onto the plate as a chip, and the tier badges
-            moved to the opposite corner to make room for it.
+            The category moved onto the plate as a chip, and the tier badges sit
+            at the far end of the same row.
 
-            On the design's own cards this is the only label above the fold of a
-            grid, and it is the one a reader scans by: "hotel" or "restaurant"
-            narrows a page of twenty-four far faster than a name does. Set on
-            ivory so it stays legible over any photograph.
+            On the design's own cards the category is the only label above the
+            fold of a grid, and it is the one a reader scans by: "hotel" or
+            "restaurant" narrows a page of twenty-four far faster than a name
+            does. Set on ivory so it stays legible over any photograph.
+
+            # One flex row, not two absolutes
+
+            They were two absolutely positioned corners, which is what the design
+            draws and what breaks: at two columns on a 375px phone the card is
+            about 150px wide, and "HOSPITALITY" ran straight under "VERIFIED".
+            A row that spans the plate cannot overlap however narrow it gets -
+            the badge keeps its size and the category truncates, which is the
+            right way round because a clipped word is still readable and a
+            covered one is not.
           */}
-          <span className="bg-surface-base/95 text-ink-900 absolute start-3 top-3 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
-            {categoryLabel(category, locale)}
-          </span>
+          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
+            <span className="bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
+              {categoryLabel(category, locale)}
+            </span>
 
-          {signature || verified ? (
-            <div className="absolute end-3 top-3 flex gap-1.5">
-              {signature ? <Tier kind="signature" locale={locale} /> : null}
-              {verified ? <Tier kind="verified" locale={locale} /> : null}
-            </div>
-          ) : null}
+            {signature || verified ? (
+              <div className="ms-auto flex shrink-0 gap-1.5">
+                {signature ? <Tier kind="signature" locale={locale} /> : null}
+                {verified ? <Tier kind="verified" locale={locale} /> : null}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/*

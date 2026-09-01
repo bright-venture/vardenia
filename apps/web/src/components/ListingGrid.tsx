@@ -71,10 +71,19 @@ export function ListingGrid({
 
   return (
     <div
+      /*
+        Two columns from the narrowest width, not one.
+
+        The plates are 4:5 now rather than 4:3, so a single column on a phone
+        gave one listing per screen and made a 308-entry directory feel endless.
+        Two upright cards side by side is what the design draws and what the
+        shape is for. Three only at `xl`, because at `lg` a third column takes
+        the cards below the width where a name and a place fit on one line each.
+      */
       className={
         editorial
           ? 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-8'
-          : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
+          : 'grid grid-cols-2 gap-x-5 gap-y-10 xl:grid-cols-3 xl:gap-x-8'
       }
     >
       {listings.map((listing, index) => (

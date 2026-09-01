@@ -59,11 +59,19 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
+      {/*
+        The design puts the result count beside the title. It cannot go here:
+        this shell is deliberately static and the count needs the query, so
+        hoisting it would make the whole page wait on a database round trip for
+        one number - the exact thing the Suspense boundary below exists to
+        avoid. It stays above the grid, inside the boundary, where it already
+        was.
+      */}
       <header>
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
+        <p className="text-gold-700 font-mono text-[11px] uppercase tracking-[0.2em]">
           {locale === 'ar' ? 'اكتشف لبنان' : 'Discover Lebanon'}
         </p>
-        <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
+        <h1 className="font-display text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">
           {locale === 'ar' ? 'الدليل' : 'Directory'}
         </h1>
       </header>
@@ -135,13 +143,26 @@ async function DirectoryResults({
     <>
       {/* Hidden at zero: the empty state below already says it. */}
       {result.totalDocs > 0 ? (
-        <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
+        <p className="text-ink-500 mt-3 font-mono text-sm tabular-nums">
+          {t('resultCount', { count: result.totalDocs })}
+        </p>
       ) : null}
 
-      {/* Navigation, not a filter: these go to the section pages, which is where
-          the kind of place is chosen. Kept above the filters so the distinction
-          is visible - one row changes the page, the rest narrow it. */}
-      <nav className="mt-8 flex flex-wrap gap-2" aria-label="Browse by section">
+      {/*
+        Navigation, not a filter: these go to the section pages, which is where
+        the kind of place is chosen. Kept above the filters so the distinction is
+        visible - one row changes the page, the rest narrow it.
+
+        A rail rather than a wrapping row, per the design: seven sections plus
+        "All" wrapped to three ragged lines on a phone and pushed the listings
+        off the screen. Scrolling sideways keeps the whole set one line tall at
+        every width, and the rules above and below make it read as a band rather
+        than as loose buttons.
+      */}
+      <nav
+        className="border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
+        aria-label="Browse by section"
+      >
         <FilterChip href="/directory" active>
           {locale === 'ar' ? 'الكل' : 'All'}
         </FilterChip>
@@ -174,11 +195,17 @@ async function DirectoryResults({
         }
       />
 
+      {/*
+        Square cells, navy for the current page, per the design. The windowing
+        stays: the design draws every page number because its sample data has
+        four, and 308 listings at 24 a page is thirteen - which on a phone is a
+        second row of controls under the results. `pageWindow` keeps it to one.
+      */}
       {result.totalPages > 1 ? (
-        <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
+        <nav className="mt-16 flex items-center justify-center gap-2" aria-label="Pagination">
           {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
             n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-300 px-1 py-1">
+              <span key={`gap-${i}`} aria-hidden className="text-ink-300 px-1">
                 &hellip;
               </span>
             ) : (
@@ -188,8 +215,8 @@ async function DirectoryResults({
                 aria-current={n === result.page ? 'page' : undefined}
                 className={
                   n === result.page
-                    ? 'bg-ink-900 text-surface-base rounded-md px-3 py-1 tabular-nums'
-                    : 'border-ink-100 text-ink-700 hover:border-ink-300 rounded-md border px-3 py-1 tabular-nums'
+                    ? 'bg-cedar-900 text-surface-base inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums'
+                    : 'text-ink-500 hover:bg-surface-raised hover:text-ink-900 inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums transition-colors'
                 }
               >
                 {n}

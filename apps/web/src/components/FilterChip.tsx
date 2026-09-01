@@ -27,6 +27,14 @@ import { Link } from '../i18n/routing'
  * same size; the row already scrolls sideways, so there is nothing to gain by
  * letting a label wrap.
  *
+ * # Square, since the 2026 design
+ *
+ * The pill shape went with the old palette. The design sets every control as a
+ * plain rectangle with a hairline, which is the print convention it is built on
+ * - a rounded pill in a page of square rules reads as a web widget dropped into
+ * a magazine. The height and the nowrap rule above are unchanged and still
+ * carry their own reasons.
+ *
  * # The count
  *
  * Optional, because only the governorate row has one. It is rendered inside the
@@ -51,8 +59,8 @@ export function FilterChip({
       aria-current={active ? 'true' : undefined}
       className={
         active
-          ? 'bg-cedar-900 text-surface-base inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm'
-          : 'border-ink-100 text-ink-700 hover:border-ink-300 hover:bg-surface-raised inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm transition-colors'
+          ? 'bg-cedar-900 text-surface-base border-cedar-900 inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm'
+          : 'border-ink-100 text-ink-700 hover:border-ink-500 hover:bg-surface-raised inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm transition-colors'
       }
     >
       {children}
