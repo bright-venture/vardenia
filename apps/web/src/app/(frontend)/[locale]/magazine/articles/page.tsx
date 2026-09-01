@@ -31,8 +31,8 @@ import { ListingsSkeleton } from '../../../../../components/PageSkeleton'
  * directory page had always been written this way; this one had not.
  */
 
-// Cached for 60s and regenerated in the background. See magazine/page.tsx.
-export const revalidate = 60
+// Cached for an hour and regenerated in the background. See magazine/page.tsx.
+export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string }>

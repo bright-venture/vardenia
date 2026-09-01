@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { resolveImage, type MediaField } from '../../lib/media'
+import { resolvePhotograph, type MediaField } from '../../lib/media'
 
 /**
  * An image slot that looks deliberate before there is an image in it.
@@ -85,7 +85,22 @@ export function Plate({
   className = '',
   alt,
 }: Props) {
-  const resolved = resolveImage(image, PREFERRED[ratio])
+  /**
+   * `resolvePhotograph`, so the shared import stand-in counts as no image.
+   *
+   * Every unphotographed listing points at one file, so the directory was
+   * drawing twenty-four copies of the same picture per page and asking the
+   * image optimiser for each one. The listing page has ignored that file since
+   * the masthead was rebuilt; the cards were the half still rendering it, which
+   * is both an inconsistency and a bill.
+   *
+   * What replaces it is the empty state directly below - the hatch this
+   * component was written around, and which says "no photograph yet" more
+   * honestly than a green gradient with unrenderable text across it.
+   *
+   * Articles and issues are unaffected: the check matches one filename stem.
+   */
+  const resolved = resolvePhotograph(image, PREFERRED[ratio])
 
   return (
     <div

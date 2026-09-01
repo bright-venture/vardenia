@@ -15,8 +15,8 @@ import { resolveImage } from '../../../../../lib/media'
  * were designed for is most of what makes an archive page feel like one.
  */
 
-// Cached for 60s and regenerated in the background. See magazine/page.tsx.
-export const revalidate = 60
+// Cached for an hour and regenerated in the background. See magazine/page.tsx.
+export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string }>

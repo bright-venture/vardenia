@@ -50,26 +50,19 @@ import { Eyebrow, Stars } from '../../../../../components/ui'
  * It has to work with no photograph too, and today most of the catalogue has
  * none - see `Masthead` below.
  *
- * # What is not taken from the design
+ * # The QR arrival notice, and why it is a client component
  *
- * The design shows a gold notice at the top of the page for readers arriving
- * from a QR scan, keyed off `?via=qr`. It is a good idea and it is not here yet,
- * for two reasons worth writing down rather than rediscovering:
- *
- *  - Reading `searchParams` in this component would make the route dynamic, and
- *    that would undo `generateStaticParams` below. The single most important
- *    page in the product would go back to paying two database round trips per
- *    view, which is precisely backwards.
- *  - Nothing sets the parameter. `/g/[code]` redirects to the destination
- *    stored on the QR code, and adding to that URL means editing the one route
- *    whose stated rule is that it must never fail.
- *
- * Both are solvable - a small client component reading `location.search`, and a
- * careful append in the resolver - and neither belongs in a page restyle.
+ * The design shows a gold notice for readers arriving from a scan, keyed off
+ * `?via=qr`. It is built - see components/ScanArrival - and the constraint that
+ * shaped it is worth keeping written down: reading `searchParams` here would
+ * make the route dynamic and undo `generateStaticParams` below, so the most
+ * important page in the product would pay two database round trips per view.
+ * The parameter is read in the browser instead, inside a Suspense boundary, and
+ * the page stays prerendered. `/g/[code]` puts it there; see lib/qr-destination.
  */
 
-// Cached for 60s and regenerated in the background. See magazine/page.tsx.
-export const revalidate = 60
+// Cached for an hour and regenerated in the background. See magazine/page.tsx.
+export const revalidate = 3600
 
 interface Params {
   params: Promise<{ locale: string; slug: string }>

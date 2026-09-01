@@ -19,17 +19,34 @@ import { ButtonLink } from '../../../../components/ui'
  */
 
 /**
- * Revalidate every 60 seconds.
+ * Revalidate every hour. This number is the one every cached page copies.
  *
- * Without this the page is prerendered once at build and never again: publishing
+ * Without it the page is prerendered once at build and never again: publishing
  * an issue would leave the live site showing the old one until the next deploy.
  * That was the actual behaviour before this line existed.
  *
- * 60 seconds because everything here is published editorial, not live data. A
- * reader seeing a minute-old list costs nothing; a database round trip on every
- * request costs 300ms and scales with traffic.
+ * # Why an hour, when it was a minute
+ *
+ * A minute was chosen against database latency alone - a round trip costs 300ms,
+ * a minute-old list costs nothing - and on that reasoning shorter always looked
+ * better. It missed what the window actually buys on a host that bills for
+ * compute: every expiry is a function invocation and two queries to Frankfurt,
+ * paid the next time anybody asks for the page. At sixty seconds, one reader
+ * idly refreshing a listing regenerates it sixty times an hour.
+ *
+ * The Netlify bill showed it as compute out of proportion to traffic. An hour is
+ * sixty times fewer regenerations for content that is published editorial and
+ * changes when a person presses a button.
+ *
+ * # An hour is not how long an edit takes to appear
+ *
+ * Publishing anything in Businesses fires `revalidateTag('businesses')` - see
+ * hooks/revalidateListings, which exists because a stale directory read as a
+ * broken filter. That clears the cached queries immediately, whatever this says.
+ * The window is the ceiling for a change made behind Payload's back, straight in
+ * the database.
  */
-export const revalidate = 60
+export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string }>

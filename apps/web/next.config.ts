@@ -73,7 +73,35 @@ const nextConfig: NextConfig = {
     return securityHeaders()
   },
   images: {
-    formats: ['image/avif', 'image/webp'],
+    /**
+     * WebP only. AVIF was here and was costing real money.
+     *
+     * Every `/_next/image` request that misses the cache runs the optimiser as a
+     * serverless function, and AVIF encoding is roughly an order of magnitude
+     * more CPU than WebP for a few percent smaller file. The originals in
+     * storage are already WebP - the Media collection converts them - so this
+     * was paying to re-encode an efficient format into a slower one.
+     *
+     * On the Netlify bill that showed up as compute far out of proportion to
+     * traffic: 5.2 credits of functions against 0.69 of web requests.
+     */
+    formats: ['image/webp'],
+
+    /**
+     * A year, against a Next default of sixty seconds.
+     *
+     * The default means every optimised variant expires a minute after it is
+     * made, so the second view of any page re-runs the optimiser on every image
+     * on it. For a site whose images almost never change, that is a function
+     * invocation per image per minute of traffic, forever.
+     *
+     * A year is safe here specifically because upload URLs are immutable:
+     * hooks/unguessableFilename gives every file 96 bits of randomness in its
+     * name, so replacing an image produces a new URL rather than new bytes at
+     * the old one. There is no stale-image failure mode to protect against.
+     */
+    minimumCacheTTL: 60 * 60 * 24 * 365,
+
     // next/image refuses any host not listed here, so every storage backend we
     // might serve uploads from has to be named.
     remotePatterns: [

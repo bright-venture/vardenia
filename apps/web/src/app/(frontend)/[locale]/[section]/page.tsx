@@ -45,7 +45,7 @@ import { pageWindow } from '../directory/page'
  * the design work would multiply by the same factor.
  */
 
-export const revalidate = 60
+export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
