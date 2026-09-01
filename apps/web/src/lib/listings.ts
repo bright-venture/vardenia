@@ -331,10 +331,10 @@ const RELATED_COUNT = 3
  * choosing a hotel. Governorate breaks the tie, because a restaurant two hours
  * away is a worse suggestion than one down the road.
  *
- * It is a preference, not a filter: the top dozen of the category are fetched
- * once and the nearby ones sorted to the front. So it suggests the best-ranked
- * places, nearest first, rather than searching the whole category for the three
- * closest. One round trip, and with the catalogue in one governorate today the
+ * It is a preference, not a filter: a pool of the category's best-ranked places
+ * is fetched and the nearby ones sorted to the front. So it suggests the
+ * best-ranked places, nearest first, rather than searching the whole category
+ * for the three closest. With the catalogue in two districts today the
  * distinction is theoretical anyway.
  *
  * Returns an empty list for a listing with no category rather than falling back
@@ -354,34 +354,82 @@ export async function findRelatedListings({
 }): Promise<ListingSummary[]> {
   if (!category) return []
 
+  // The query is shared by every listing in the category; only the sorting
+  // below is per-listing, and that is arithmetic rather than a round trip.
+  const pool = (await categoryPool(category, locale)).filter((doc) => doc.slug !== slug)
+
+  if (!governorate) return pool.slice(0, RELATED_COUNT)
+
+  const near = pool.filter((doc) => doc.governorate === governorate)
+  const far = pool.filter((doc) => doc.governorate !== governorate)
+  return [...near, ...far].slice(0, RELATED_COUNT)
+}
+
+/**
+ * How many of a category to hold in the pool the suggestions are drawn from.
+ *
+ * Big enough that excluding the listing being viewed, and preferring its
+ * governorate, still leaves three worth showing. Small enough that the whole
+ * thing is one page of results.
+ */
+const POOL_SIZE = 24
+
+/**
+ * The best-ranked listings in one category, cached per category and locale.
+ *
+ * # This exists because of what the first version cost at build time
+ *
+ * `findRelatedListings` used to run the query itself, with the slug in its cache
+ * key. That is correct and it meant one uncached query per listing per locale:
+ * 616 round trips to Frankfurt on every production build, on top of the 616 the
+ * pages themselves make. It roughly doubled the database work a deploy does, and
+ * it was mine.
+ *
+ * The realisation is that every listing in a category wants the same query. Only
+ * the ordering afterwards differs, and that is done in memory. Seven categories
+ * times two locales is fourteen distinct keys, whatever the catalogue grows to.
+ *
+ * # Fourteen keys is not fourteen queries, and the difference is worth knowing
+ *
+ * Measured by logging every real query through a build: ten listing pages
+ * produced nine queries, not six. `unstable_cache` deduplicates by writing a
+ * result and serving it to later callers, and Next renders pages across parallel
+ * workers - so several can miss the same key before any of them has written it.
+ * Two pages sharing a key sometimes collapse to one query and sometimes do not.
+ *
+ * That race is bounded by the number of workers, not by the number of pages. At
+ * 308 listings each key is wanted by roughly a hundred pages, so all but the
+ * first handful are served from cache. Tens of queries rather than 616, which is
+ * the point - but do not expect exactly fourteen.
+ *
+ * # Why the self-exclusion moved out of the query
+ *
+ * `where: { slug: { not_equals: slug } }` is what forced the key to be
+ * per-listing. Dropping it makes the query shareable, and the caller filters
+ * itself out of the pool instead. The pool is larger than the old limit of
+ * twelve to pay for the one row that is now spent on the listing itself.
+ *
+ * Tagged `businesses`, so a newly published listing appears in its neighbours'
+ * suggestions on the same revalidation that puts it in the grid.
+ */
+async function categoryPool(category: string, locale: Locale): Promise<ListingSummary[]> {
   const run = async () => {
     const payload = await client()
 
     const result = await payload.find({
       collection: 'businesses',
-      where: { category: { equals: category }, slug: { not_equals: slug } },
+      where: { category: { equals: category } },
       locale,
       depth: 1,
-      limit: 12,
+      limit: POOL_SIZE,
       sort: ['-tier', 'name'],
       overrideAccess: false,
     })
 
-    if (!governorate) return result.docs.slice(0, RELATED_COUNT)
-
-    const near = result.docs.filter((doc) => doc.governorate === governorate)
-    const far = result.docs.filter((doc) => doc.governorate !== governorate)
-    return [...near, ...far].slice(0, RELATED_COUNT)
+    return result.docs
   }
 
-  /**
-   * Bounded by the catalogue: one entry per listing per locale, and the listing
-   * pages that use it are prerendered anyway, so this mostly serves the ones
-   * published since the last build. Tagged `businesses` like everything else
-   * here, so a new listing appears in its neighbours' suggestions on the same
-   * revalidation that puts it in the grid.
-   */
-  return unstable_cache(run, ['related', locale, category, governorate ?? '', slug], {
+  return unstable_cache(run, ['category-pool', locale, category], {
     revalidate: LISTINGS_TTL,
     tags: ['businesses'],
   })()
