@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { signupSchema } from '@vardenia/core'
-import { evaluatePassword } from './PasswordStrength'
+import { PASSWORD_RULES, evaluatePassword, strengthBand } from './PasswordStrength'
+
+const met = (value: string, id: string, context = {}) =>
+  evaluatePassword(value, context).rules.find((rule) => rule.id === id)?.met
 
 /**
  * The meter, and the one property that actually matters: that it never
@@ -36,62 +39,131 @@ describe('agreeing with the server', () => {
   it('refuses whitespace that is long enough to look valid', () => {
     expect(evaluatePassword('          ').meetsRequirement).toBe(false)
   })
-})
 
-describe('scoring', () => {
-  it('is zero only when nothing has been typed', () => {
-    expect(evaluatePassword('').score).toBe(0)
-    expect(evaluatePassword('a').score).toBeGreaterThan(0)
-  })
-
-  it('rises with length', () => {
-    const scores = ['a', 'a'.repeat(10), 'a'.repeat(14), 'a'.repeat(20), 'a'.repeat(26)].map(
-      (v) => evaluatePassword(v).score,
-    )
-    // Not strictly increasing: repeats are guessable, which is the next test.
-    expect(scores[0]).toBeLessThanOrEqual(scores[4]!)
-  })
-
-  it('rises with length, on a password that is not a repeat', () => {
-    const build = (n: number) => 'Th3 quick brown fox jumps over it'.slice(0, n)
-    expect(evaluatePassword(build(9)).score).toBeLessThan(evaluatePassword(build(14)).score)
-    expect(evaluatePassword(build(14)).score).toBeLessThan(evaluatePassword(build(26)).score)
-  })
-
-  it('never exceeds the number of bars drawn', () => {
-    const { score, max } = evaluatePassword('a'.repeat(200))
-    expect(score).toBeLessThanOrEqual(max)
+  it('has exactly one required rule, so the marked one is the server`s', () => {
+    expect(PASSWORD_RULES.filter((rule) => rule.required)).toHaveLength(1)
+    expect(PASSWORD_RULES.find((rule) => rule.required)?.id).toBe('length')
   })
 })
 
 /**
- * Length alone is not strength, and this is the half the length bands cannot
- * see. Each of these is long enough to clear the requirement and worthless.
+ * Not one of these can be satisfied by decorating a short word, which is the
+ * whole reason they are these rules and not a capital, a digit and a symbol.
  */
-describe('guessable patterns', () => {
-  it.each([
-    ['a common password', 'password12345'],
-    ['a repeated character', 'aaaaaaaaaaaaaa'],
-    ['a run of digits', 'my pin is 123456'],
-    ['a run along the keyboard', 'qwertyuiop asdf'],
-  ])('pins %s to the lowest band', (_name, password) => {
-    const result = evaluatePassword(password)
-    expect(result.guessable).toBe(true)
-    expect(result.score).toBe(1)
+describe('the rules', () => {
+  it('scores nothing for an empty field, and lists every rule as unmet', () => {
+    const state = evaluatePassword('')
+    expect(state.score).toBe(0)
+    expect(state.rules.every((rule) => !rule.met)).toBe(true)
   })
 
-  it('leaves an ordinary passphrase alone', () => {
-    const result = evaluatePassword('olive trees above the harbour')
-    expect(result.guessable).toBe(false)
-    expect(result.score).toBeGreaterThan(1)
+  it('refuses `Password1!`, which passes every composition checklist', () => {
+    const state = evaluatePassword('Password1!')
+    expect(state.meetsRequirement).toBe(true)
+    // Long enough for the server, and almost nothing else.
+    expect(state.score).toBeLessThanOrEqual(2)
+    expect(state.guessable).toBe(true)
+  })
+
+  it('rewards an ordinary passphrase with no symbols at all', () => {
+    const state = evaluatePassword('olive trees above the harbour')
+    expect(state.score).toBe(state.max)
+    expect(strengthBand(state.score, state.max)).toBe(4)
+  })
+
+  describe('two words or more', () => {
+    it('wants a space with something either side', () => {
+      expect(met('olivetreesabove', 'words')).toBe(false)
+      expect(met('olive trees above', 'words')).toBe(true)
+    })
+
+    it('does not count a trailing space as a second word', () => {
+      expect(met('olivetrees ', 'words')).toBe(false)
+    })
+  })
+
+  describe('not an obvious pattern', () => {
+    it.each([
+      ['a common password', 'password12345'],
+      ['a repeated character', 'aaaaaaaaaaaaaa'],
+      ['a run of digits', 'my pin is 123456'],
+      ['a run along the keyboard', 'qwertyuiop asdf'],
+    ])('catches %s', (_name, password) => {
+      expect(met(password, 'notCommon')).toBe(false)
+      expect(evaluatePassword(password).guessable).toBe(true)
+    })
+
+    it('leaves an ordinary passphrase alone', () => {
+      expect(met('olive trees above the harbour', 'notCommon')).toBe(true)
+    })
+  })
+})
+
+/**
+ * The rule an attacker who knows the reader tries first, and the only one here
+ * that no amount of length fixes.
+ */
+describe('not your name or email', () => {
+  const context = { name: 'David Bright', email: 'dav.chem11@example.com' }
+
+  it.each([
+    ['the given name', 'david and the sea wall'],
+    ['the family name', 'a very bright morning indeed'],
+    ['the email local part', 'chem11 is my favourite'],
+    ['a different case', 'DAVID walks the long road'],
+  ])('refuses a password containing %s', (_name, password) => {
+    expect(met(password, 'notPersonal', context)).toBe(false)
+  })
+
+  it('accepts a password that shares nothing with them', () => {
+    expect(met('olive trees above the harbour', 'notPersonal', context)).toBe(true)
   })
 
   /**
-   * Guessability is advice, not a gate. The server decides what is acceptable,
-   * and a long guessable password still clears its rule - the meter says so
-   * quietly rather than refusing.
+   * Two-character fragments would refuse ordinary words for containing somebody's
+   * initials - `a.b@x.com` would ban every password with an "a" in it.
    */
-  it('does not withhold the requirement from a guessable password', () => {
-    expect(evaluatePassword('password12345').meetsRequirement).toBe(true)
+  it('ignores fragments too short to mean anything', () => {
+    expect(met('olive trees above the harbour', 'notPersonal', { email: 'a.b@x.com' })).toBe(true)
+  })
+
+  /**
+   * The reset form is reached from a link and knows neither name nor email. A
+   * tick beside "not your name" on a page that never saw your name is a claim
+   * the page cannot make, so the rule is dropped rather than auto-passed.
+   */
+  it('is not shown at all when there is nothing to compare against', () => {
+    const withContext = evaluatePassword('olive trees', context)
+    const without = evaluatePassword('olive trees')
+
+    expect(withContext.rules.map((r) => r.id)).toContain('notPersonal')
+    expect(without.rules.map((r) => r.id)).not.toContain('notPersonal')
+    expect(without.max).toBe(withContext.max - 1)
+  })
+})
+
+/**
+ * The word is a proportion, not a count, because four of four on the reset form
+ * is everything and four of five on sign-up is not.
+ */
+describe('the strength word', () => {
+  it('says nothing for an empty field', () => {
+    expect(strengthBand(0, 5)).toBe(0)
+  })
+
+  it('reaches the top only when every rule is met', () => {
+    expect(strengthBand(4, 5)).toBeLessThan(4)
+    expect(strengthBand(5, 5)).toBe(4)
+    expect(strengthBand(4, 4)).toBe(4)
+  })
+
+  it('rises with the proportion met', () => {
+    expect(strengthBand(1, 5)).toBeLessThan(strengthBand(3, 5))
+    expect(strengthBand(3, 5)).toBeLessThan(strengthBand(5, 5))
+  })
+
+  it('never divides by zero', () => {
+    expect(() => strengthBand(0, 0)).not.toThrow()
+    expect(strengthBand(0, 0)).toBe(0)
   })
 })

@@ -49,42 +49,153 @@ const REPEATED = /(.)\1{3,}/
 const SEQUENCE = /(?:0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef|defg|qwer|wert|erty|asdf)/i
 
 /**
- * Length bands, in characters.
+ * What the reader is told about, in the order it is worth knowing.
  *
- * The first is the server's floor, so the first filled bar and the ticked
- * requirement always agree. The rest are advice: each step is roughly an order
- * of magnitude more work to guess, and 20 is where a passphrase of three or four
- * words lands without anybody being told to count.
+ * # Why these five and not the usual four
+ *
+ * The familiar checklist - a capital, a digit, a symbol, twelve characters - is
+ * the one thing this cannot be, for the reason packages/core gives: composition
+ * rules produce `Password1!` and are weaker than a long passphrase. None of the
+ * rules below can be satisfied by decorating a short word.
+ *
+ *   length       the server's own floor, and the only required one
+ *   longer       past the floor, where guessing stops being cheap
+ *   words        a space is the cheapest way to reach real length
+ *   notCommon    length cannot save `password1234`
+ *   notPersonal  the one an attacker who knows the reader tries first
+ *
+ * # `notPersonal` is why this takes a context
+ *
+ * Somebody who targets a specific person starts with their name, their email and
+ * the service they are signing into - which is exactly what a sign-up form has
+ * on screen and has never checked. Current guidance names this explicitly, and
+ * it is the only rule here that no amount of length fixes.
+ *
+ * It is dropped rather than auto-passed where there is nothing to compare
+ * against: the reset form is reached from a link and knows neither name nor
+ * email, and a tick beside "not your name" on a page that never saw your name
+ * is a claim the page cannot make.
  */
-const BANDS = [10, 14, 20, 26] as const
+export interface PasswordContext {
+  name?: string
+  email?: string
+}
+
+export interface PasswordRule {
+  id: string
+  /** Whether the server refuses the password without it. Exactly one is true. */
+  required: boolean
+  test: (value: string, context: PasswordContext) => boolean
+  /** False when there is nothing to check the rule against; it is then hidden. */
+  applies?: (context: PasswordContext) => boolean
+}
+
+/**
+ * Anything from the reader's own details that is worth refusing.
+ *
+ * The email's local part as well as the whole address, because `dav@x.com` gives
+ * `dav` - and three characters is the floor, below which this would refuse
+ * ordinary words for containing somebody's initials.
+ */
+function personalTerms({ name, email }: PasswordContext): string[] {
+  const terms = [name, email, email?.split('@')[0]]
+    .flatMap((value) => (value ?? '').split(/[\s.@_-]+/))
+    .map((term) => term.trim().toLowerCase())
+    .filter((term) => term.length >= 3)
+
+  return [...new Set(terms)]
+}
+
+export const PASSWORD_RULES: readonly PasswordRule[] = [
+  {
+    id: 'length',
+    required: true,
+    // The server's schema, asked directly - see the note at the top of the file.
+    test: (value) => signupSchema.shape.password.safeParse(value).success,
+  },
+  { id: 'longer', required: false, test: (value) => value.trim().length >= 14 },
+  {
+    id: 'words',
+    required: false,
+    // A space with something either side, so a trailing space is not a "word".
+    test: (value) => /\S\s\S/.test(value.trim()),
+  },
+  {
+    id: 'notCommon',
+    required: false,
+    test: (value) => !(COMMON.test(value) || REPEATED.test(value) || SEQUENCE.test(value)),
+  },
+  {
+    id: 'notPersonal',
+    required: false,
+    applies: (context) => personalTerms(context).length > 0,
+    test: (value, context) => {
+      const lowered = value.toLowerCase()
+      return !personalTerms(context).some((term) => lowered.includes(term))
+    },
+  },
+]
+
+export interface EvaluatedRule {
+  id: string
+  met: boolean
+  required: boolean
+}
 
 export interface PasswordStrengthState {
-  /** 0 when empty, 1 to 4 otherwise. */
+  /** How many rules are met. 0 when nothing has been typed. */
   score: number
+  /** How many rules apply, which is what the bars count. */
   max: number
   /** Whether the password clears the rule the server enforces. */
   meetsRequirement: boolean
-  /** A common password, a repeat, or a keyboard run. */
+  /** A common password, a repeat, or a keyboard run. Shown as its own warning. */
   guessable: boolean
+  rules: EvaluatedRule[]
 }
 
-export function evaluatePassword(value: string): PasswordStrengthState {
-  const max = BANDS.length
-  const trimmed = value.trim()
+export function evaluatePassword(value: string, context: PasswordContext = {}) {
+  const applicable = PASSWORD_RULES.filter((rule) => rule.applies?.(context) ?? true)
+  const max = applicable.length
 
   if (value.length === 0) {
-    return { score: 0, max, meetsRequirement: false, guessable: false }
+    return {
+      score: 0,
+      max,
+      meetsRequirement: false,
+      guessable: false,
+      rules: applicable.map((rule) => ({ id: rule.id, met: false, required: rule.required })),
+    } satisfies PasswordStrengthState
   }
 
-  const meetsRequirement = signupSchema.shape.password.safeParse(value).success
-  const guessable = COMMON.test(value) || REPEATED.test(value) || SEQUENCE.test(value)
+  const rules = applicable.map((rule) => ({
+    id: rule.id,
+    met: rule.test(value, context),
+    required: rule.required,
+  }))
 
-  // One bar for something typed, then one per band cleared. A guessable
-  // password never rises above the first bar however long it is.
-  const earned = BANDS.reduce((n, band) => n + (trimmed.length >= band ? 1 : 0), 0)
-  const score = guessable ? 1 : Math.max(1, earned)
+  return {
+    score: rules.filter((rule) => rule.met).length,
+    max,
+    meetsRequirement: rules.find((rule) => rule.id === 'length')?.met ?? false,
+    guessable: !(rules.find((rule) => rule.id === 'notCommon')?.met ?? true),
+    rules,
+  } satisfies PasswordStrengthState
+}
 
-  return { score, max, meetsRequirement, guessable }
+/**
+ * The word for a score, by proportion rather than by count.
+ *
+ * A count would mean different things on the two forms: four out of four on the
+ * reset page is everything, and four out of five on sign-up is not.
+ */
+export function strengthBand(score: number, max: number): 0 | 1 | 2 | 3 | 4 {
+  if (score === 0 || max === 0) return 0
+  const ratio = score / max
+  if (ratio >= 1) return 4
+  if (ratio >= 0.75) return 3
+  if (ratio >= 0.5) return 2
+  return 1
 }
 
 /**
@@ -122,10 +233,28 @@ const TEXT_TONES = [
  */
 const ANNOUNCE_DELAY = 700
 
-export function PasswordStrength({ value, className = '' }: { value: string; className?: string }) {
+export function PasswordStrength({
+  value,
+  name,
+  email,
+  className = '',
+}: {
+  value: string
+  /** The reader's own details, so a password made of them can be refused. */
+  name?: string
+  email?: string
+  className?: string
+}) {
   const t = useTranslations('account')
-  const state = useMemo(() => evaluatePassword(value), [value])
-  const { score, max, meetsRequirement, guessable } = state
+
+  /**
+   * The context is rebuilt on every keystroke of the name and email fields too,
+   * so it is memoised on its parts rather than on the object - an object literal
+   * is a new reference every render and would defeat the memo entirely.
+   */
+  const state = useMemo(() => evaluatePassword(value, { name, email }), [value, name, email])
+  const { score, max, meetsRequirement, guessable, rules } = state
+  const band = strengthBand(score, max)
 
   const labels = [
     t('strengthEmpty'),
@@ -135,13 +264,19 @@ export function PasswordStrength({ value, className = '' }: { value: string; cla
     t('strengthStrong'),
   ]
 
+  const unmet = rules.filter((rule) => !rule.met)
+
   const sentence =
     value.length === 0
       ? ''
       : [
-          t('strengthAnnounce', { label: labels[score] ?? '' }),
+          t('strengthAnnounce', { label: labels[band] ?? '' }),
           guessable ? t('strengthGuessable') : '',
-          meetsRequirement ? '' : t('passwordHint'),
+          unmet.length === 0
+            ? t('strengthAllMet')
+            : t('strengthStillNeeded', {
+                list: unmet.map((rule) => t(`rule_${rule.id}` as never)).join(', '),
+              }),
         ]
           .filter(Boolean)
           .join(' ')
@@ -175,7 +310,7 @@ export function PasswordStrength({ value, className = '' }: { value: string; cla
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuenow={score}
-        aria-valuetext={labels[score] ?? ''}
+        aria-valuetext={labels[band] ?? ''}
         className="grid gap-1.5"
         style={{ gridTemplateColumns: `repeat(${max}, minmax(0, 1fr))` }}
       >
@@ -194,7 +329,7 @@ export function PasswordStrength({ value, className = '' }: { value: string; cla
             <span
               className={`absolute inset-0 ltr:origin-left rtl:origin-right ${
                 i < score ? 'scale-x-100' : 'scale-x-0'
-              } ${TONES[score] ?? TONES[0]} transition-transform duration-300`}
+              } ${TONES[band] ?? TONES[0]} transition-transform duration-300`}
               style={{ transitionDelay: i < score ? `${i * 40}ms` : '0ms' }}
             />
           </div>
@@ -214,8 +349,8 @@ export function PasswordStrength({ value, className = '' }: { value: string; cla
               key={label}
               aria-hidden
               className={`col-start-1 row-start-1 whitespace-nowrap transition-opacity duration-200 ${
-                TEXT_TONES[score] ?? TEXT_TONES[0]
-              } ${i === score ? 'opacity-100' : 'opacity-0'}`}
+                TEXT_TONES[band] ?? TEXT_TONES[0]
+              } ${i === band ? 'opacity-100' : 'opacity-0'}`}
             >
               {label}
             </span>
@@ -233,35 +368,59 @@ export function PasswordStrength({ value, className = '' }: { value: string; cla
       </div>
 
       {/*
-        One requirement, because there is one. The tick is not the only signal:
-        the word beside it changes too, so this does not rely on colour.
+        The checklist.
+
+        A real list, so a screen reader says how many there are before reading
+        them. Colour is never the only signal: each row carries a tick, a change
+        of text colour, and an off-screen word saying met or not - a green box
+        alone tells a colour-blind reader nothing.
+
+        The required row is marked, because "at least 10 characters" and "two
+        words or more" look identical otherwise and only one of them will stop
+        the form being accepted.
       */}
-      <p className="mt-2.5 flex items-center gap-2 text-xs">
-        <span
-          aria-hidden
-          className={`grid size-3.5 shrink-0 place-items-center border transition-colors duration-200 ${
-            meetsRequirement
-              ? 'border-state-success bg-state-success text-surface-base'
-              : 'border-ink-100'
-          }`}
-        >
-          <svg viewBox="0 0 12 12" fill="none" className="size-2.5">
-            <path
-              d="M2 6.2 4.7 8.9 10 3.3"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-opacity duration-200 ${
-                meetsRequirement ? 'opacity-100' : 'opacity-0'
+      <ul className="mt-3 grid gap-1.5">
+        {rules.map((rule) => (
+          <li key={rule.id} className="flex items-center gap-2 text-xs">
+            <span
+              aria-hidden
+              className={`grid size-3.5 shrink-0 place-items-center border transition-colors duration-200 ${
+                rule.met
+                  ? 'border-state-success bg-state-success text-surface-base'
+                  : 'border-ink-100'
               }`}
-            />
-          </svg>
-        </span>
-        <span className={meetsRequirement ? 'text-ink-700' : 'text-ink-500'}>
-          {t('passwordHint')}
-        </span>
-      </p>
+            >
+              <svg viewBox="0 0 12 12" fill="none" className="size-2.5">
+                <path
+                  d="M2 6.2 4.7 8.9 10 3.3"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-opacity duration-200 ${
+                    rule.met ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </svg>
+            </span>
+
+            <span className={rule.met ? 'text-ink-700' : 'text-ink-500'}>
+              {t(`rule_${rule.id}` as never)}
+            </span>
+
+            {rule.required ? (
+              <span className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
+                {t('strengthRequired')}
+              </span>
+            ) : null}
+
+            <span className="sr-only">{rule.met ? t('strengthMet') : t('strengthNotMet')}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* The one line of advice that is not a box to tick. */}
+      <p className="text-ink-500 mt-2.5 text-[11px] leading-relaxed">{t('strengthAdvice')}</p>
 
       {/* Said once, after a pause. See ANNOUNCE_DELAY. */}
       <p aria-live="polite" className="sr-only">

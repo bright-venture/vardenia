@@ -238,7 +238,16 @@ export function SignupForm({ locale }: { locale: Locale }) {
           beside it and the server: see ui/PasswordStrength, and the rule itself
           in packages/core/booking-request.
         */}
-        <PasswordStrength value={password} className={errors.password ? 'mt-3' : 'mt-2.5'} />
+        {/* `name` and `email` are handed over so a password built out of them
+            can be refused. They are typed above this field, so by the time
+            somebody reaches the password box the check has something to work
+            with. Nothing leaves the browser: the comparison happens here. */}
+        <PasswordStrength
+          value={password}
+          name={name}
+          email={email}
+          className={errors.password ? 'mt-3' : 'mt-2.5'}
+        />
         <span id={`${ids}-password-hint`} className="sr-only">
           {t('passwordHint')}
         </span>

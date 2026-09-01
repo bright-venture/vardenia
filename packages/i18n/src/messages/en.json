@@ -167,7 +167,18 @@
     "closeKeep": "Keep my account",
     "closeDone": "Your account is closed. Nothing identifying you remains.",
     "closeCancelled": "{count, plural, one {1 upcoming booking was cancelled.} other {# upcoming bookings were cancelled.}}",
-    "resendVerification": "Send the confirmation link again"
+    "resendVerification": "Send the confirmation link again",
+    "rule_length": "At least 10 characters",
+    "rule_longer": "14 characters or more",
+    "rule_words": "Two words or more",
+    "rule_notCommon": "Not an obvious pattern",
+    "rule_notPersonal": "Not your name or email",
+    "strengthRequired": "Required",
+    "strengthMet": "met",
+    "strengthNotMet": "not met",
+    "strengthAllMet": "Everything is met.",
+    "strengthStillNeeded": "Still needed: {list}.",
+    "strengthAdvice": "Only the first is required. A few ordinary words are stronger than a short one with symbols in it."
   },
   "partner": {
     "eyebrow": "For partners",

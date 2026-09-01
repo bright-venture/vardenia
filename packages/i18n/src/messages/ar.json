@@ -167,7 +167,18 @@
     "closeKeep": "احتفظ بحسابي",
     "closeDone": "تم إغلاق حسابك. لم يبق أي شيء يدل عليك.",
     "closeCancelled": "{count, plural, zero {} one {تم إلغاء حجز قادم واحد.} two {تم إلغاء حجزين قادمين.} few {تم إلغاء # حجوزات قادمة.} many {تم إلغاء # حجزًا قادمًا.} other {تم إلغاء # حجز قادم.}}",
-    "resendVerification": "أعد إرسال رابط التأكيد"
+    "resendVerification": "أعد إرسال رابط التأكيد",
+    "rule_length": "10 أحرف على الأقل",
+    "rule_longer": "14 حرفًا أو أكثر",
+    "rule_words": "كلمتان أو أكثر",
+    "rule_notCommon": "ليست نمطًا شائعًا",
+    "rule_notPersonal": "لا تحتوي اسمك أو بريدك",
+    "strengthRequired": "مطلوب",
+    "strengthMet": "مستوفى",
+    "strengthNotMet": "غير مستوفى",
+    "strengthAllMet": "كل الشروط مستوفاة.",
+    "strengthStillNeeded": "ما زال مطلوبًا: {list}.",
+    "strengthAdvice": "الأول وحده مطلوب. بضع كلمات عادية أقوى من كلمة قصيرة مليئة بالرموز."
   },
   "partner": {
     "eyebrow": "للشركاء",
