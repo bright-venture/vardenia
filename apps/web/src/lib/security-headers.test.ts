@@ -113,6 +113,56 @@ describe('the analytics origin', () => {
     const csp = publicCsp('not a url', true)
     expect(csp).toBe(publicCsp(undefined, true))
   })
+
+  /**
+   * The bug this file did not catch, and shipped.
+   *
+   * Umami loads its script from `cloud.umami.is` and posts every pageview to
+   * `gateway.umami.is`. The first version of `analyticsOrigin` derived one
+   * origin from the script URL and used it for both directives, so the script
+   * loaded, `window.umami` appeared, and every send was refused by connect-src.
+   * Nothing was visible on the page; it was found by reading the browser
+   * console on production.
+   *
+   * The test above passes with Plausible either way, which is why it did not
+   * help: Plausible reports to the host it is served from.
+   */
+  it('allows the host the data is sent to, which is not always the script host', () => {
+    const csp = publicCsp('https://cloud.umami.is/script.js', true)
+    expect(directive(csp, 'script-src'), 'script host').toContain('https://cloud.umami.is')
+    expect(directive(csp, 'connect-src'), 'send host').toContain('https://gateway.umami.is')
+  })
+
+  it('sends every Umami region to the same gateway', () => {
+    for (const host of ['cloud.umami.is', 'eu.umami.is', 'analytics.umami.is']) {
+      const csp = publicCsp(`https://${host}/script.js`, true)
+      expect(directive(csp, 'connect-src'), host).toContain('https://gateway.umami.is')
+    }
+  })
+
+  it('does not invent a gateway for a provider that reports to itself', () => {
+    const csp = publicCsp('https://plausible.io/js/script.js', true)
+    expect(directive(csp, 'connect-src')).not.toContain('umami')
+  })
+})
+
+/**
+ * Cloudflare Web Analytics injects its beacon at the edge on a proxied zone.
+ * The application never asks for it and cannot tell whether it is enabled, so
+ * there is no variable to gate it on - and while it was missing from the policy
+ * it produced a CSP error on every single page load in production.
+ */
+describe('the Cloudflare beacon', () => {
+  it('is allowed even with nothing configured, because it is not ours to switch off', () => {
+    expect(directive(publicCsp(undefined, true), 'script-src')).toContain(
+      'https://static.cloudflareinsights.com',
+    )
+  })
+
+  /** It posts to /cdn-cgi/rum on our own origin, so 'self' already covers it. */
+  it('needs no connect-src entry of its own', () => {
+    expect(directive(publicCsp(undefined, true), 'connect-src')).toEqual(["'self'"])
+  })
 })
 
 describe('the admin policy', () => {

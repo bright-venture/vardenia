@@ -38,17 +38,64 @@
  * and it escapes `<`; see components/JsonLd.
  */
 
-/** The analytics origin, when one is configured. Empty otherwise. */
-function analyticsOrigin(src: string | undefined): string[] {
-  if (!src) return []
+/**
+ * Where the analytics script is fetched from, and where it reports to.
+ *
+ * # These are not the same host, and assuming they were broke analytics
+ *
+ * The first version derived one origin from the script URL and used it for both
+ * `script-src` and `connect-src`. That is correct for Plausible and wrong for
+ * Umami, which loads from `cloud.umami.is` and posts every pageview to
+ * `gateway.umami.is`. The script loaded, `window.umami` appeared, `umami.track`
+ * was a function - and every send was refused by `connect-src`, silently, with
+ * nothing visible on the page and no data in the dashboard.
+ *
+ * It shipped that way. It was found by reading the browser console on
+ * production, not by any check: the gate written for it asserted that the
+ * script origin appeared in `connect-src`, which was true and irrelevant.
+ *
+ * So the two are separate now, and the send origin is looked up rather than
+ * inferred. A provider not in the table falls back to the script origin, which
+ * is the Plausible case and the sane default.
+ */
+const ANALYTICS_INGEST: Record<string, string> = {
+  // Umami Cloud, every region: the script host varies, the gateway does not.
+  'cloud.umami.is': 'https://gateway.umami.is',
+  'eu.umami.is': 'https://gateway.umami.is',
+  'analytics.umami.is': 'https://gateway.umami.is',
+}
+
+function analyticsOrigins(src: string | undefined): { script: string[]; connect: string[] } {
+  if (!src) return { script: [], connect: [] }
   try {
-    return [new URL(src).origin]
+    const url = new URL(src)
+    const ingest = ANALYTICS_INGEST[url.hostname] ?? url.origin
+    // The script origin is allowed to connect too: a provider that reports to
+    // its own host is the common case, and listing both costs nothing.
+    return { script: [url.origin], connect: [...new Set([url.origin, ingest])] }
   } catch {
     // A malformed value must not widen the policy to nothing, and must not throw
     // during a build. Analytics simply stays blocked until the value is a URL.
-    return []
+    return { script: [], connect: [] }
   }
 }
+
+/**
+ * Cloudflare's own RUM beacon, injected at the edge on a proxied zone.
+ *
+ * This is not something the application asks for: Cloudflare Web Analytics
+ * inserts the tag itself when the zone has it enabled, so there is no variable
+ * here to gate it on and the application cannot tell whether it is on.
+ *
+ * Left out, it fails loudly and uselessly - a CSP error in the console on every
+ * page load, on a script we did not add and cannot remove from here. Allowed,
+ * it is Cloudflare's beacon on a zone already served by Cloudflare, which is a
+ * host the whole site already depends on.
+ *
+ * The beacon posts back to `/cdn-cgi/rum` on our own origin, so it needs no
+ * `connect-src` entry: `'self'` already covers it.
+ */
+const CLOUDFLARE_BEACON = 'https://static.cloudflareinsights.com'
 
 /**
  * Cloudflare's origin, but only once Turnstile is actually switched on.
@@ -90,7 +137,7 @@ export function publicCsp(
   isProduction = process.env.NODE_ENV === 'production',
   turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 ): string {
-  const analytics = analyticsOrigin(analyticsSrc)
+  const analytics = analyticsOrigins(analyticsSrc)
   const turnstile = turnstileOrigin(turnstileSiteKey)
 
   return policy({
@@ -100,8 +147,9 @@ export function publicCsp(
       "'self'",
       "'unsafe-inline'",
       ...devEval(isProduction),
-      ...analytics,
+      ...analytics.script,
       ...turnstile,
+      CLOUDFLARE_BEACON,
     ],
     // Tailwind ships a stylesheet, but Next inlines critical CSS and React
     // injects style attributes, so this cannot be 'self' alone.
@@ -113,7 +161,7 @@ export function publicCsp(
     'font-src': ["'self'", 'data:'],
     // Where a script may send data. Named explicitly, because this is what turns
     // a successful injection into a failed exfiltration.
-    'connect-src': ["'self'", ...analytics, ...turnstile],
+    'connect-src': ["'self'", ...analytics.connect, ...turnstile],
     /**
      * Turnstile renders its challenge in an iframe from Cloudflare. Without this
      * the widget mounts, loads nothing and shows an empty box - and because
