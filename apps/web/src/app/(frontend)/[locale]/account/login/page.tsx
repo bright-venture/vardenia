@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
 import { redirect } from '../../../../../i18n/routing'
+import { LogIn } from 'lucide-react'
 import { LoginForm } from '../../../../../components/LoginForm'
+import { AuthCard } from '../../../../../components/auth/AuthCard'
 import { currentCustomer } from '../../../../../lib/session'
 
 /**
@@ -54,11 +56,8 @@ export default async function LoginPage({
   const t = await getTranslations('account')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <h1 className="font-display text-ink-900 text-3xl">{t('signIn')}</h1>
-      <div className="mt-8">
-        <LoginForm next={next} />
-      </div>
-    </main>
+    <AuthCard icon={LogIn} title={t('signIn')} subtitle={t('signInSubtitle')}>
+      <LoginForm next={next} />
+    </AuthCard>
   )
 }

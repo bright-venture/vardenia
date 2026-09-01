@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
+import { KeyRound } from 'lucide-react'
 import { ResetPasswordForm } from '../../../../../../components/ResetPasswordForm'
+import { AuthCard } from '../../../../../../components/auth/AuthCard'
 
 /**
  * Where a reset link lands.
@@ -42,11 +44,8 @@ export default async function ResetPage({
   const t = await getTranslations('account')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <h1 className="font-display text-ink-900 text-3xl">{t('resetTitle')}</h1>
-      <div className="mt-8">
-        <ResetPasswordForm token={token} />
-      </div>
-    </main>
+    <AuthCard icon={KeyRound} title={t('resetTitle')}>
+      <ResetPasswordForm token={token} />
+    </AuthCard>
   )
 }

@@ -2,8 +2,17 @@
 
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Lock, Mail } from 'lucide-react'
 import { Link, useRouter } from '../i18n/routing'
-import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import {
+  FIELD_ICON,
+  HINT,
+  INPUT_ICON,
+  LABEL,
+  LINK,
+  NOTICE_ERROR,
+  PRIMARY_BUTTON,
+} from './formStyles'
 import { safeNextPath } from '../lib/safe-next'
 import { markSignedIn } from '../lib/session-hint'
 
@@ -129,54 +138,71 @@ export function LoginForm({ next }: { next?: string }) {
         </div>
       ) : null}
 
+      {/*
+        Icons inside the fields, per the reference. They are `aria-hidden`: the
+        label above each one already names it, and "envelope, Email" is a worse
+        reading of the same field. What they buy is a stack of two identical
+        boxes becoming scannable at a glance.
+      */}
       <div>
         <label className={LABEL} htmlFor={`${ids}-email`}>
           {t('email')}
         </label>
-        <input
-          id={`${ids}-email`}
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`mt-1.5 ${INPUT}`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Mail className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-email`}
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={INPUT_ICON}
+          />
+        </div>
       </div>
 
       <div>
         <label className={LABEL} htmlFor={`${ids}-password`}>
           {t('password')}
         </label>
-        <input
-          id={`${ids}-password`}
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={`mt-1.5 ${INPUT}`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Lock className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-password`}
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={INPUT_ICON}
+          />
+        </div>
+
+        {/* On the same row as the field it belongs to, per the reference, rather
+            than three lines below the button. It is also the way out of the
+            "check your email first" refusal above: a guest booker claiming
+            their record gets a reset rather than a verification mail, so the
+            reset link is what proves their address. */}
+        <p className="mt-2 flex justify-end">
+          <Link href="/account/forgot" className={`${LINK} text-xs`}>
+            {t('forgot')}
+          </Link>
+        </p>
       </div>
 
       <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
         {busy ? t('working') : t('submitSignIn')}
       </button>
 
-      <p className={HINT}>
+      <p className={`${HINT} text-center`}>
         {t('noAccount')}{' '}
         <Link href="/account/signup" className={LINK}>
           {t('signUp')}
-        </Link>
-      </p>
-
-      {/* Reachable from the one screen where somebody discovers they need it.
-          It is also the way out of the "check your email first" refusal above:
-          a guest booker claiming their record gets a reset rather than a
-          verification mail, so the reset link is what proves their address. */}
-      <p className={HINT}>
-        <Link href="/account/forgot" className={LINK}>
-          {t('forgot')}
         </Link>
       </p>
     </form>

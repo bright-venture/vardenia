@@ -5,11 +5,14 @@ import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { Turnstile, type TurnstileHandle } from './Turnstile'
+import { Lock, Mail, Phone, User } from 'lucide-react'
+import { PasswordStrength } from './ui/PasswordStrength'
 import {
   ERROR_TEXT,
+  FIELD_ICON,
   HINT,
-  INPUT,
   INPUT_ERROR,
+  INPUT_ICON,
   LABEL,
   LINK,
   NOTICE_ERROR,
@@ -64,7 +67,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const turnstile = useRef<TurnstileHandle | null>(null)
 
-  const field = (key: string) => (errors[key] ? `${INPUT} ${INPUT_ERROR}` : INPUT)
+  const field = (key: string) => (errors[key] ? `${INPUT_ICON} ${INPUT_ERROR}` : INPUT_ICON)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -151,16 +154,21 @@ export function SignupForm({ locale }: { locale: Locale }) {
         <label className={LABEL} htmlFor={`${ids}-name`}>
           {t('name')}
         </label>
-        <input
-          id={`${ids}-name`}
-          type="text"
-          required
-          autoComplete="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={`mt-1.5 ${field('name')}`}
-          aria-describedby={errors.name ? `${ids}-name-error` : undefined}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <User className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-name`}
+            type="text"
+            required
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className={field('name')}
+            aria-describedby={errors.name ? `${ids}-name-error` : undefined}
+          />
+        </div>
         {errors.name ? (
           <p id={`${ids}-name-error`} className={ERROR_TEXT}>
             {errors.name}
@@ -172,16 +180,21 @@ export function SignupForm({ locale }: { locale: Locale }) {
         <label className={LABEL} htmlFor={`${ids}-email`}>
           {t('email')}
         </label>
-        <input
-          id={`${ids}-email`}
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`mt-1.5 ${field('email')}`}
-          aria-describedby={errors.email ? `${ids}-email-error` : undefined}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Mail className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-email`}
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={field('email')}
+            aria-describedby={errors.email ? `${ids}-email-error` : undefined}
+          />
+        </div>
         {errors.email ? (
           <p id={`${ids}-email-error`} className={ERROR_TEXT}>
             {errors.email}
@@ -193,41 +206,62 @@ export function SignupForm({ locale }: { locale: Locale }) {
         <label className={LABEL} htmlFor={`${ids}-password`}>
           {t('password')}
         </label>
-        <input
-          id={`${ids}-password`}
-          type="password"
-          required
-          minLength={10}
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={`mt-1.5 ${field('password')}`}
-          aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Lock className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-password`}
+            type="password"
+            required
+            minLength={10}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={field('password')}
+            aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
+          />
+        </div>
+
         {errors.password ? (
           <p id={`${ids}-password-error`} className={ERROR_TEXT}>
             {errors.password}
           </p>
-        ) : (
-          <p id={`${ids}-password-hint`} className={HINT}>
-            {t('passwordHint')}
-          </p>
-        )}
+        ) : null}
+
+        {/*
+          The meter carries the hint, so the hint is not printed twice.
+
+          It measures length and warns about guessable patterns - it does not
+          demand a capital, a digit and a symbol the way the component it is
+          adapted from does. That checklist would contradict both the sentence
+          beside it and the server: see ui/PasswordStrength, and the rule itself
+          in packages/core/booking-request.
+        */}
+        <PasswordStrength value={password} className={errors.password ? 'mt-3' : 'mt-2.5'} />
+        <span id={`${ids}-password-hint`} className="sr-only">
+          {t('passwordHint')}
+        </span>
       </div>
 
       <div>
         <label className={LABEL} htmlFor={`${ids}-phone`}>
           {t('phone')}
         </label>
-        <input
-          id={`${ids}-phone`}
-          type="tel"
-          autoComplete="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className={`mt-1.5 ${INPUT}`}
-          aria-describedby={`${ids}-phone-hint`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Phone className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-phone`}
+            type="tel"
+            autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={INPUT_ICON}
+            aria-describedby={`${ids}-phone-hint`}
+          />
+        </div>
         <p id={`${ids}-phone-hint`} className={HINT}>
           {t('phoneOptional')}
         </p>
@@ -260,7 +294,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
         {busy ? t('working') : t('submitSignUp')}
       </button>
 
-      <p className={HINT}>
+      <p className={`${HINT} text-center`}>
         {t('haveAccount')}{' '}
         <Link href="/account/login" className={LINK}>
           {t('signIn')}

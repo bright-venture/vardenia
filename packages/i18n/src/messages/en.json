@@ -113,6 +113,16 @@
     "email": "Email",
     "password": "Password",
     "passwordHint": "At least 10 characters. Length beats punctuation.",
+    "signInSubtitle": "To see your bookings and the places you have saved.",
+    "signUpSubtitle": "Book a table or a room, and keep your bookings in one place.",
+    "strengthLabel": "Password strength",
+    "strengthEmpty": "Nothing yet",
+    "strengthWeak": "Weak",
+    "strengthFair": "Fair",
+    "strengthGood": "Good",
+    "strengthStrong": "Strong",
+    "strengthAnnounce": "Password strength: {label}.",
+    "strengthGuessable": "Commonly guessed",
     "name": "Your name",
     "phone": "Phone",
     "phoneOptional": "Optional",
@@ -194,7 +204,8 @@
     "requestsWaiting": "{count, plural, one {1 request is waiting for an answer} other {# requests are waiting for an answer}}",
     "reviewRequests": "Review them",
     "noMatches": "No bookings match these filters.",
-    "today": "Today"
+    "today": "Today",
+    "signInSubtitle": "For business owners. Manage your bookings and your listing."
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

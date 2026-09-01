@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
+import { KeyRound } from 'lucide-react'
 import { ForgotPasswordForm } from '../../../../../components/ForgotPasswordForm'
+import { AuthCard } from '../../../../../components/auth/AuthCard'
 
 /**
  * Asking for a reset link.
@@ -32,12 +34,8 @@ export default async function ForgotPage({ params }: { params: Promise<{ locale:
   const t = await getTranslations('account')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <h1 className="font-display text-ink-900 text-3xl">{t('forgot')}</h1>
-      <p className="text-ink-500 mt-3 text-sm">{t('forgotIntro')}</p>
-      <div className="mt-8">
-        <ForgotPasswordForm />
-      </div>
-    </main>
+    <AuthCard icon={KeyRound} title={t('forgot')} subtitle={t('forgotIntro')}>
+      <ForgotPasswordForm />
+    </AuthCard>
   )
 }

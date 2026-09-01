@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
+import { KeyRound } from 'lucide-react'
 import { ForgotPasswordForm } from '../../../../../components/ForgotPasswordForm'
+import { AuthCard } from '../../../../../components/auth/AuthCard'
 
 /**
  * A partner who cannot get in.
@@ -39,13 +41,13 @@ export default async function PartnerForgotPage({
   const partner = await getTranslations('partner')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{partner('eyebrow')}</p>
-      <h1 className="font-display text-ink-900 mt-3 text-3xl">{t('forgot')}</h1>
-      <p className="text-ink-500 mt-3 text-sm">{t('forgotIntro')}</p>
-      <div className="mt-8">
-        <ForgotPasswordForm collection="business-users" signInHref="/partner/login" />
-      </div>
-    </main>
+    <AuthCard
+      icon={KeyRound}
+      eyebrow={partner('eyebrow')}
+      title={t('forgot')}
+      subtitle={t('forgotIntro')}
+    >
+      <ForgotPasswordForm collection="business-users" signInHref="/partner/login" />
+    </AuthCard>
   )
 }

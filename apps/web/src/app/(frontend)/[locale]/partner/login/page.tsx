@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
 import { redirect } from '../../../../../i18n/routing'
+import { Store } from 'lucide-react'
 import { PartnerLoginForm } from '../../../../../components/PartnerLoginForm'
+import { AuthCard } from '../../../../../components/auth/AuthCard'
 import { currentOwner } from '../../../../../lib/session'
 
 /**
@@ -45,12 +47,16 @@ export default async function PartnerLoginPage({
   const t = await getTranslations('partner')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('eyebrow')}</p>
-      <h1 className="font-display text-ink-900 mt-3 text-3xl">{t('signIn')}</h1>
-      <div className="mt-8">
-        <PartnerLoginForm />
-      </div>
-    </main>
+    /* A different icon and an eyebrow, because the two sign-in screens are
+       otherwise identical and a partner who lands on the customer one should be
+       able to tell at a glance. */
+    <AuthCard
+      icon={Store}
+      eyebrow={t('eyebrow')}
+      title={t('signIn')}
+      subtitle={t('signInSubtitle')}
+    >
+      <PartnerLoginForm />
+    </AuthCard>
   )
 }

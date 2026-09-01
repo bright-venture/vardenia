@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
+import { KeyRound } from 'lucide-react'
 import { ResetPasswordForm } from '../../../../../../components/ResetPasswordForm'
+import { AuthCard } from '../../../../../../components/auth/AuthCard'
 
 /**
  * Where a partner's password link lands - both the invitation sent when staff
@@ -40,16 +42,12 @@ export default async function PartnerResetPage({
   const partner = await getTranslations('partner')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{partner('eyebrow')}</p>
-      <h1 className="font-display text-ink-900 mt-3 text-3xl">{t('resetTitle')}</h1>
-      <div className="mt-8">
-        <ResetPasswordForm
-          token={token}
-          endpoint="/api/business-users/reset-password"
-          signInHref="/partner/login"
-        />
-      </div>
-    </main>
+    <AuthCard icon={KeyRound} eyebrow={partner('eyebrow')} title={t('resetTitle')}>
+      <ResetPasswordForm
+        token={token}
+        endpoint="/api/business-users/reset-password"
+        signInHref="/partner/login"
+      />
+    </AuthCard>
   )
 }

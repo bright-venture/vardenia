@@ -45,6 +45,24 @@ export const INPUT =
 export const INPUT_ERROR =
   'border-state-danger focus:border-state-danger focus:ring-state-danger/30'
 
+/**
+ * An input with an icon sitting inside its leading edge.
+ *
+ * Used on the sign-in and sign-up cards, where the icon is what makes a stack of
+ * identical boxes scannable. Pair it with `FIELD_ICON` on a span inside a
+ * `relative` wrapper.
+ *
+ * `ps-10` rather than `pl-10`: on the Arabic pages the field runs right to left
+ * and a left pad would put the gap on the wrong side of the text, under nothing.
+ * The reference this is adapted from uses `left-3` and `pl-10` throughout, which
+ * is the single most common way a bilingual form breaks.
+ */
+export const INPUT_ICON = `${'block w-full border border-ink-100 bg-surface-base py-2.5 pe-3 ps-10 text-sm text-ink-900 transition-colors placeholder:text-ink-300 focus:border-ink-300 focus:outline-none focus:ring-2 focus:ring-gold-300 disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-500'}`
+
+/** The icon itself. `start-3` is logical, for the same reason as above. */
+export const FIELD_ICON =
+  'pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-500'
+
 export const LABEL = 'block text-xs font-semibold uppercase tracking-wider text-ink-500'
 
 export const HINT = 'mt-1.5 text-xs text-ink-500'

@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { redirect } from '../../../../../i18n/routing'
+import { UserPlus } from 'lucide-react'
 import { SignupForm } from '../../../../../components/SignupForm'
+import { AuthCard } from '../../../../../components/auth/AuthCard'
 import { currentCustomer } from '../../../../../lib/session'
 
 /**
@@ -37,13 +39,10 @@ export default async function SignupPage({ params }: { params: Promise<{ locale:
   const t = await getTranslations('account')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
-      <h1 className="font-display text-ink-900 text-3xl">{t('signUp')}</h1>
-      <div className="mt-8">
-        {/* Passed through so the verification email arrives in the language the
-            person was reading when they signed up. */}
-        <SignupForm locale={locale as Locale} />
-      </div>
-    </main>
+    <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpSubtitle')}>
+      {/* Passed through so the verification email arrives in the language the
+          person was reading when they signed up. */}
+      <SignupForm locale={locale as Locale} />
+    </AuthCard>
   )
 }

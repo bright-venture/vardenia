@@ -2,12 +2,14 @@
 
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Lock } from 'lucide-react'
 import { Link } from '../i18n/routing'
+import { PasswordStrength } from './ui/PasswordStrength'
 import {
   ERROR_TEXT,
-  HINT,
-  INPUT,
+  FIELD_ICON,
   INPUT_ERROR,
+  INPUT_ICON,
   LABEL,
   LINK,
   NOTICE_ERROR,
@@ -129,26 +131,35 @@ export function ResetPasswordForm({
         <label className={LABEL} htmlFor={`${ids}-password`}>
           {t('newPassword')}
         </label>
-        <input
-          id={`${ids}-password`}
-          type="password"
-          required
-          minLength={10}
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={`mt-1.5 ${errors.password ? `${INPUT} ${INPUT_ERROR}` : INPUT}`}
-          aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Lock className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-password`}
+            type="password"
+            required
+            minLength={10}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={errors.password ? `${INPUT_ICON} ${INPUT_ERROR}` : INPUT_ICON}
+            aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
+          />
+        </div>
+
         {errors.password ? (
           <p id={`${ids}-password-error`} className={ERROR_TEXT}>
             {errors.password}
           </p>
-        ) : (
-          <p id={`${ids}-password-hint`} className={HINT}>
-            {t('passwordHint')}
-          </p>
-        )}
+        ) : null}
+
+        {/* The other place a password is chosen, so it gets the same meter as
+            sign-up. The hint it used to print is inside the meter now. */}
+        <PasswordStrength value={password} className={errors.password ? 'mt-3' : 'mt-2.5'} />
+        <span id={`${ids}-password-hint`} className="sr-only">
+          {t('passwordHint')}
+        </span>
       </div>
 
       <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>

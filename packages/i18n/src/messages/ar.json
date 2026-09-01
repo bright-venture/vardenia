@@ -113,6 +113,16 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "passwordHint": "10 أحرف على الأقل. الطول أهم من الرموز.",
+    "signInSubtitle": "لمتابعة حجوزاتك والأماكن التي حفظتها.",
+    "signUpSubtitle": "احجز طاولة أو غرفة، واحتفظ بحجوزاتك في مكان واحد.",
+    "strengthLabel": "قوة كلمة المرور",
+    "strengthEmpty": "لا شيء بعد",
+    "strengthWeak": "ضعيفة",
+    "strengthFair": "مقبولة",
+    "strengthGood": "جيدة",
+    "strengthStrong": "قوية",
+    "strengthAnnounce": "قوة كلمة المرور: {label}.",
+    "strengthGuessable": "سهلة التخمين",
     "name": "الاسم",
     "phone": "الهاتف",
     "phoneOptional": "اختياري",
@@ -194,7 +204,8 @@
     "requestsWaiting": "{count, plural, one {طلب واحد ينتظر رداً} other {# طلبات تنتظر رداً}}",
     "reviewRequests": "مراجعتها",
     "noMatches": "لا توجد حجوزات تطابق هذه الفلاتر.",
-    "today": "اليوم"
+    "today": "اليوم",
+    "signInSubtitle": "لأصحاب الأعمال. أدر حجوزاتك وصفحتك."
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

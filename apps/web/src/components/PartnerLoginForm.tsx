@@ -2,8 +2,17 @@
 
 import { useId, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Lock, Mail } from 'lucide-react'
 import { Link, useRouter } from '../i18n/routing'
-import { HINT, INPUT, LABEL, LINK, NOTICE_ERROR, PRIMARY_BUTTON } from './formStyles'
+import {
+  FIELD_ICON,
+  HINT,
+  INPUT_ICON,
+  LABEL,
+  LINK,
+  NOTICE_ERROR,
+  PRIMARY_BUTTON,
+} from './formStyles'
 import { markSignedIn } from '../lib/session-hint'
 
 /**
@@ -85,46 +94,59 @@ export function PartnerLoginForm() {
         <label className={LABEL} htmlFor={`${ids}-email`}>
           {t('email')}
         </label>
-        <input
-          id={`${ids}-email`}
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`mt-1.5 ${INPUT}`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Mail className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-email`}
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={INPUT_ICON}
+          />
+        </div>
       </div>
 
       <div>
         <label className={LABEL} htmlFor={`${ids}-password`}>
           {t('password')}
         </label>
-        <input
-          id={`${ids}-password`}
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={`mt-1.5 ${INPUT}`}
-        />
+        <div className="relative mt-1.5">
+          <span className={FIELD_ICON} aria-hidden>
+            <Lock className="size-4" strokeWidth={1.75} />
+          </span>
+          <input
+            id={`${ids}-password`}
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={INPUT_ICON}
+          />
+        </div>
+
+        {/* A forgotten password is the only self-service route here, and it is
+            also how a new partner gets in the first time. */}
+        <p className="mt-2 flex justify-end">
+          <Link href="/partner/forgot" className={`${LINK} text-xs`}>
+            {t('forgot')}
+          </Link>
+        </p>
       </div>
 
       <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
         {busy ? t('working') : t('signIn')}
       </button>
 
-      {/* No sign-up link, deliberately. See the note at the top. A forgotten
-          password is the only self-service route, and it is also how a new
-          partner gets in the first time. */}
-      <p className={HINT}>
-        <Link href="/partner/forgot" className={LINK}>
-          {t('forgot')}
-        </Link>
-      </p>
-
-      <p className={HINT}>{t('noSelfSignup')}</p>
+      {/* No sign-up link, deliberately. See the note at the top. This sentence
+          is the whole reason: it says accounts come from us, so somebody who
+          cannot find a "create account" button knows that is on purpose rather
+          than a page that failed to load. */}
+      <p className={`${HINT} border-ink-100 border-t pt-5 text-center`}>{t('noSelfSignup')}</p>
     </form>
   )
 }
