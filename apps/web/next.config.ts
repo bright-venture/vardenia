@@ -74,16 +74,19 @@ const nextConfig: NextConfig = {
   },
   images: {
     /**
-     * WebP only. AVIF was here and was costing real money.
+     * WebP only, because AVIF is what the host actually serves anyway.
      *
-     * Every `/_next/image` request that misses the cache runs the optimiser as a
-     * serverless function, and AVIF encoding is roughly an order of magnitude
-     * more CPU than WebP for a few percent smaller file. The originals in
-     * storage are already WebP - the Media collection converts them - so this
-     * was paying to re-encode an efficient format into a slower one.
+     * This list said `['image/avif', 'image/webp']`, and the assumption behind
+     * removing it was that AVIF encoding - roughly an order of magnitude more
+     * CPU than WebP - was part of the Netlify compute bill. Measured against
+     * production instead of assumed: four widths of the same photograph, all
+     * requested with `Accept: image/avif,image/webp`, all came back
+     * `content-type: image/webp`. Netlify's image optimiser does not produce
+     * AVIF for this site, so nothing was ever encoding it.
      *
-     * On the Netlify bill that showed up as compute far out of proportion to
-     * traffic: 5.2 credits of functions against 0.69 of web requests.
+     * So this saves nothing. It stays because the config should not advertise a
+     * format the host will not emit - the next person to read it would draw the
+     * same wrong conclusion. The real saving is `minimumCacheTTL` below.
      */
     formats: ['image/webp'],
 

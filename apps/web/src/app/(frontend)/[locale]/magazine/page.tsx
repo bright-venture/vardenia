@@ -29,14 +29,27 @@ import { ButtonLink } from '../../../../components/ui'
  *
  * A minute was chosen against database latency alone - a round trip costs 300ms,
  * a minute-old list costs nothing - and on that reasoning shorter always looked
- * better. It missed what the window actually buys on a host that bills for
- * compute: every expiry is a function invocation and two queries to Frankfurt,
- * paid the next time anybody asks for the page. At sixty seconds, one reader
- * idly refreshing a listing regenerates it sixty times an hour.
+ * better. It missed that on a host billing for compute, every expiry is a
+ * function invocation and two queries to Frankfurt, paid the next time anybody
+ * asks for the page.
  *
- * The Netlify bill showed it as compute out of proportion to traffic. An hour is
- * sixty times fewer regenerations for content that is published editorial and
- * changes when a person presses a button.
+ * # How much this actually saves today: less than it looks
+ *
+ * Regeneration is request-driven, not a timer, so a page nobody visits costs
+ * nothing at any window. A live listing page was serving with `Age: 13299` -
+ * stale for three and a half hours - which is what low traffic against a
+ * sixty-second window really looks like.
+ *
+ * So this is insurance rather than a measured saving: it is the number that
+ * decides the bill the day the magazine ships and the scans start. Under real
+ * traffic a minute means one reader refreshing a page regenerates it sixty times
+ * an hour, for editorial that changes when a person presses a button.
+ *
+ * # It costs the reader nothing
+ *
+ * Stale-while-revalidate: a stale page is served immediately and refreshed
+ * behind the request. Lengthening the window changes how current the content is,
+ * never how long anybody waits for it.
  *
  * # An hour is not how long an edit takes to appear
  *
