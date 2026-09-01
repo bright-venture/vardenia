@@ -5,6 +5,7 @@ import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionIndex } from '../../../components/home/SectionIndex'
+import { PrintInterlude } from '../../../components/home/PrintInterlude'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
@@ -97,7 +98,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <main>
-      <Hero />
+      {/* The count is already in hand from the query below, so the masthead
+          states a real figure without a round trip of its own. */}
+      <Hero places={listings.totalDocs} />
 
       <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
         <SectionIndex locale={locale} />
@@ -159,17 +162,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Band>
       ) : null}
 
-      <Band tone="inverse" compact>
-        <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
-          <div className="max-w-[52ch]">
-            <h2 className="text-surface-base text-2xl sm:text-3xl">{t('businessTitle')}</h2>
-            <p className="text-cedar-100/70 mt-3 text-sm leading-relaxed">{t('businessBody')}</p>
+      <PrintInterlude />
+
+      {/*
+        The design ends on a bordered box on the ivory ground rather than a
+        third dark band. That matters here specifically: the print interlude
+        directly above is navy, and two inverted sections back to back read as
+        one long dark tail rather than as two arguments.
+      */}
+      <section className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+        <div className="border-ink-100 grid items-center gap-8 border p-10 lg:grid-cols-[1fr_auto] lg:p-14">
+          <div>
+            <h2 className="text-ink-900 text-2xl sm:text-3xl lg:text-4xl">{t('businessTitle')}</h2>
+            <p className="text-ink-500 mt-4 max-w-xl leading-relaxed">{t('businessBody')}</p>
           </div>
           <ButtonLink href="/add-your-business" variant="gold" size="lg" className="shrink-0">
             {t('addBusiness')}
           </ButtonLink>
         </div>
-      </Band>
+      </section>
     </main>
   )
 }

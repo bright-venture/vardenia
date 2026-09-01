@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { ArrowUpRight } from 'lucide-react'
 import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
@@ -31,14 +32,26 @@ import { Link } from '../../i18n/routing'
  */
 
 /**
- * The hover thumbnail in the design is deliberately absent.
+ * One photograph per section, revealed on hover.
  *
- * It shows a photograph per section, and there is no photography yet - every
- * listing in production still carries the shared placeholder. A row that
- * reveals a grey rectangle on hover is worse than a row that reveals nothing,
- * so the slot is left out rather than filled with a stand-in. Add it here when
- * there are pictures.
+ * Keyed by the section's own URL path rather than by its category, because that
+ * is what the filenames are named after and a second mapping would be a second
+ * thing to keep in step. A missing key renders no thumbnail rather than a
+ * broken image, so adding a section before its picture is a quiet gap.
+ *
+ * Hidden below `lg` and revealed only on hover, so it costs a phone nothing:
+ * the element is not rendered at all at small sizes, and `loading="lazy"` keeps
+ * it off the critical path everywhere else.
  */
+const SECTION_IMAGES: Record<string, string> = {
+  stay: '/images/cat-stay.jpg',
+  'eat-and-drink': '/images/cat-eat.jpg',
+  experiences: '/images/cat-experiences.jpg',
+  weddings: '/images/cat-weddings.jpg',
+  lifestyle: '/images/cat-lifestyle.jpg',
+  health: '/images/cat-health.jpg',
+  'getting-around': '/images/cat-around.jpg',
+}
 
 export function SectionIndex({ locale }: { locale: Locale }) {
   const ar = locale === 'ar'
@@ -69,10 +82,35 @@ export function SectionIndex({ locale }: { locale: Locale }) {
                 {ar ? section.descriptionAr : section.descriptionEn}
               </span>
 
+              {SECTION_IMAGES[section.path] ? (
+                <span className="ms-auto hidden h-28 w-44 shrink-0 overflow-hidden opacity-0 transition-opacity duration-500 group-hover:opacity-100 lg:block">
+                  {/* Decorative: the row already names the section and says what
+                      is in it, so a description here would be read out twice. */}
+                  <Image
+                    src={SECTION_IMAGES[section.path]!}
+                    alt=""
+                    aria-hidden
+                    width={176}
+                    height={112}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+              ) : null}
+
+              {/*
+                `ms-auto` is margin-inline-start, so it already pushes the arrow
+                to the end of the row in both directions - no ltr/rtl variant
+                needed. It is dropped at `lg`, where the thumbnail takes over
+                that job and the arrow simply follows it.
+
+                `rtl:-scale-x-100` still mirrors the glyph itself, so it points
+                up-and-outward rather than up-and-into the text.
+              */}
               <ArrowUpRight
                 aria-hidden
                 size={22}
-                className="text-ink-300 group-hover:text-gold-700 ms-auto shrink-0 transition-colors duration-300 rtl:-scale-x-100"
+                className="text-ink-300 group-hover:text-gold-700 ms-auto shrink-0 transition-colors duration-300 lg:ms-0 rtl:-scale-x-100"
               />
             </Link>
           </li>
