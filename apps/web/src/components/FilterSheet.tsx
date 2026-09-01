@@ -86,7 +86,7 @@ function Toggle({
       {typeof count === 'number' ? (
         <span
           className={`font-mono text-[11px] tabular-nums ${
-            active ? 'opacity-70' : count === 0 ? 'text-ink-300' : 'text-ink-500'
+            active ? 'opacity-70' : count === 0 ? 'text-ink-500' : 'text-ink-500'
           }`}
         >
           {count}

@@ -69,7 +69,7 @@ export default function ErrorBoundary({
       </div>
 
       {error.digest ? (
-        <p className="text-ink-300 mt-8 text-xs">
+        <p className="text-ink-500 mt-8 text-xs">
           {ar ? 'رقم الخطأ:' : 'Reference:'}{' '}
           <code className="text-ink-500" dir="ltr">
             {error.digest}

@@ -147,7 +147,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             Two links do not make a category, and this is where a reader looks
             for them. */}
         <div className="border-ink-100 mt-16 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-          <p className="text-ink-300 text-xs">
+          <p className="text-ink-500 text-xs">
             &copy; {new Date().getFullYear()} Vardenia.{' '}
             {ar ? 'كل الحقوق محفوظة.' : 'All rights reserved.'}
           </p>

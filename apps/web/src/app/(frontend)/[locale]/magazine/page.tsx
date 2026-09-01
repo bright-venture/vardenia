@@ -89,7 +89,7 @@ export default async function MagazinePage({ params }: Props) {
           </Link>
 
           <div>
-            <p className="text-ink-300 text-xs uppercase tracking-widest">
+            <p className="text-ink-500 text-xs uppercase tracking-widest">
               {ar ? 'العدد الحالي' : 'Current issue'}
             </p>
             <h2 className="font-display text-ink-900 mt-2 text-3xl leading-snug">
@@ -111,7 +111,7 @@ export default async function MagazinePage({ params }: Props) {
 
       <section className="border-ink-100 mt-16 border-t pt-12">
         <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+          <h2 className="text-ink-500 text-xs uppercase tracking-widest">
             {ar ? 'أحدث المقالات' : 'Latest articles'}
           </h2>
           <Link

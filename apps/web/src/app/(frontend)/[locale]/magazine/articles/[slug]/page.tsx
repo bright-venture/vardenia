@@ -118,7 +118,7 @@ export default async function ArticlePage({ params }: Params) {
               {formatDate(new Date(article.publishedAt), locale as Locale)}
             </time>
           ) : null}
-          {credit ? <span className="text-ink-300">{credit}</span> : null}
+          {credit ? <span className="text-ink-500">{credit}</span> : null}
         </div>
 
         {/*
@@ -142,7 +142,7 @@ export default async function ArticlePage({ params }: Params) {
 
       {featured.length > 0 ? (
         <section className="mx-auto mt-16 max-w-6xl px-6">
-          <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+          <h2 className="text-ink-500 text-xs uppercase tracking-widest">
             {ar ? 'أماكن وردت في هذا المقال' : 'Places in this story'}
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

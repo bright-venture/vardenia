@@ -61,15 +61,32 @@ export const colors = {
    * failing colour on the site rather than an edge case. The palette it replaces
    * managed 5.46:1.
    *
-   * 64% is the first step that clears AA, at 4.56:1. Two shades darker than
-   * drawn, and the alternative was shipping a readability regression as part of
-   * a redesign. Worth showing the designer; not worth waiting to fix.
+   * It was first set to #746c63, which clears AA on `surface.base` at 4.56 and
+   * was measured against nothing else. The footer sits on `surface.raised` and
+   * the filter panels on `surface.sunken`, both darker, and there it came out
+   * at 4.31 and 4.10 - failing, on furniture that appears on every route. Found
+   * by auditing production, not by any test.
+   *
+   * So it is tuned against `surface.sunken`, the darkest ground it can land on:
+   * 4.53 there, 5.03 on base. A token used across three surfaces has to clear
+   * the worst of them, not the one it happened to be drawn against.
+   *
+   * # 300 is decoration and must never carry text
+   *
+   * It is 1.90 on sunken. That is right for what it is - a taupe tint for rules,
+   * aria-hidden numbering and disabled marks - and hopeless for anything a
+   * person reads. No value for a 300 step both stays a tint and clears 4.5, so
+   * the fix is at the call site rather than here.
+   *
+   * The palette this replaced had the same flaw (2.42 on white) and 41
+   * components had quietly adopted it for eyebrow headings, dates and credits.
+   * Those moved to 500.
    */
   ink: {
     50: '#efe7d9',
     100: '#cec7bc',
     300: '#b7a58d',
-    500: '#746c63',
+    500: '#6e655d',
     700: '#4a3e33',
     900: '#2a211b',
     950: '#1a1410',
@@ -142,8 +159,19 @@ export const colors = {
    * decoration. Amber keeps it distinguishable from the brand gold.
    */
   state: {
-    success: '#3f7250',
-    warning: '#b4600f',
+    /**
+     * Each of these clears 4.5:1 against every ground it can land on, which is
+     * four: the three surfaces plus `gold.100`, the wash behind a TO CONFIRM
+     * block. Checking only `surface.base` is how `warning` shipped at 3.72 on
+     * its own wash and `success` at 4.46 on a sunken panel - both found by
+     * auditing rendered pages, neither by a test.
+     *
+     * These are the colours that say "this worked" and "this did not". They are
+     * read before the brand is, so they get the strictest treatment here and the
+     * least licence to be pretty.
+     */
+    success: '#3e714f',
+    warning: '#9b530d',
     danger: '#a83228',
     info: '#2f5f7f',
   },

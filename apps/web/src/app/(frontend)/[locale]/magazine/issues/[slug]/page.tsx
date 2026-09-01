@@ -101,7 +101,7 @@ export default async function IssuePage({ params }: Params) {
         </div>
 
         <div>
-          <p className="text-ink-300 text-xs uppercase tabular-nums tracking-widest">
+          <p className="text-ink-500 text-xs uppercase tabular-nums tracking-widest">
             {ar ? `العدد ${issue.issueNumber}` : `Issue ${issue.issueNumber}`}
           </p>
           <h1 className="font-display text-ink-900 mt-2 text-4xl leading-tight md:text-5xl">
@@ -141,7 +141,7 @@ export default async function IssuePage({ params }: Params) {
       </div>
 
       <section className="mt-16">
-        <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+        <h2 className="text-ink-500 text-xs uppercase tracking-widest">
           {ar ? 'في هذا العدد' : 'In this issue'}
         </h2>
 

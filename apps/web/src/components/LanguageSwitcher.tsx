@@ -56,7 +56,7 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
     <div className="flex items-center gap-1 text-xs">
       {LOCALES.map((locale, index) => (
         <span key={locale} className="flex items-center gap-1">
-          {index > 0 ? <span className="text-ink-300">/</span> : null}
+          {index > 0 ? <span className="text-ink-500">/</span> : null}
           {locale === current ? (
             <span aria-current="true" className="text-ink-900 font-semibold">
               {LABELS[locale]}

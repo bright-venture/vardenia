@@ -168,7 +168,7 @@ export default async function ListingPage({ params }: Params) {
                 being, and the brand ground is navy now. */}
             {listing.verified ? <span className="text-state-success">{t('verified')}</span> : null}
             {open !== null ? (
-              <span className={open ? 'text-state-success' : 'text-ink-300'}>
+              <span className={open ? 'text-state-success' : 'text-ink-500'}>
                 {open ? t('openNow') : locale === 'ar' ? 'مغلق الآن' : 'Closed now'}
               </span>
             ) : null}
@@ -192,7 +192,7 @@ export default async function ListingPage({ params }: Params) {
 
           {gallery.length > 0 ? (
             <section className="mt-14">
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {locale === 'ar' ? 'الصور' : 'Gallery'}
               </h2>
               <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -229,7 +229,7 @@ export default async function ListingPage({ params }: Params) {
         <aside className="flex flex-col gap-10">
           {listing.address ? (
             <section>
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {locale === 'ar' ? 'العنوان' : 'Address'}
               </h2>
               <p className="text-ink-700 mt-3 whitespace-pre-line text-sm">{listing.address}</p>
@@ -248,7 +248,7 @@ export default async function ListingPage({ params }: Params) {
 
           {Array.isArray(listing.openingHours) && listing.openingHours.length > 0 ? (
             <section>
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {locale === 'ar' ? 'ساعات العمل' : 'Opening hours'}
               </h2>
               <div className="mt-3">
@@ -262,7 +262,7 @@ export default async function ListingPage({ params }: Params) {
 
           {Array.isArray(listing.amenities) && listing.amenities.length > 0 ? (
             <section>
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {locale === 'ar' ? 'المرافق' : 'Amenities'}
               </h2>
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -280,7 +280,7 @@ export default async function ListingPage({ params }: Params) {
 
           {Array.isArray(listing.subcategories) && listing.subcategories.length > 0 ? (
             <section>
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {locale === 'ar' ? 'التصنيف' : 'Type'}
               </h2>
               <ul className="text-ink-700 mt-3 flex flex-wrap gap-2 text-sm">

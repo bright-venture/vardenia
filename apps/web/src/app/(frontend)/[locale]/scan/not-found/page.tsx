@@ -51,7 +51,7 @@ export default async function ScanNotFoundPage({
       </p>
 
       {code ? (
-        <p className="text-ink-300 mt-4 text-sm">
+        <p className="text-ink-500 mt-4 text-sm">
           {ar ? 'الرمز الذي تلقيناه:' : 'Code received:'}{' '}
           <code className="text-ink-700" dir="ltr">
             {code}

@@ -118,7 +118,7 @@ export function Stars({
       </span>
       <span className="text-ink-700 font-mono text-xs tabular-nums" aria-hidden>
         {shown}
-        {count === undefined ? null : <span className="text-ink-300"> ({count})</span>}
+        {count === undefined ? null : <span className="text-ink-500"> ({count})</span>}
       </span>
       {showSource ? (
         <span className="text-ink-300 text-[11px]" aria-hidden>

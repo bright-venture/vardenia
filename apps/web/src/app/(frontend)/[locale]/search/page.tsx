@@ -72,7 +72,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
           {results.listings.totalDocs > 0 ? (
             <section className="mt-12">
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {ar ? 'أماكن' : 'Places'}
               </h2>
               <ListingGrid
@@ -85,7 +85,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
           {results.articles.totalDocs > 0 ? (
             <section className="mt-16">
-              <h2 className="text-ink-300 text-xs uppercase tracking-widest">
+              <h2 className="text-ink-500 text-xs uppercase tracking-widest">
                 {ar ? 'مقالات' : 'Reading'}
               </h2>
               <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

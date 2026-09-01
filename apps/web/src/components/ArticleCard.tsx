@@ -44,7 +44,7 @@ export function ArticleCard({
           className="rounded-lg"
         />
 
-        <p className="text-ink-300 mt-4 font-mono text-[10px] uppercase tracking-[0.12em]">
+        <p className="text-ink-500 mt-4 font-mono text-[10px] uppercase tracking-[0.12em]">
           {kindLabel(kind, locale)}
         </p>
         {/* Editorial fields, so `dir="auto"` for the same reason as the listing
@@ -62,9 +62,9 @@ export function ArticleCard({
         ) : null}
 
         {pageLabel ? (
-          <p className="text-ink-300 mt-2 font-mono text-xs tabular-nums">{pageLabel}</p>
+          <p className="text-ink-500 mt-2 font-mono text-xs tabular-nums">{pageLabel}</p>
         ) : publishedAt ? (
-          <time className="text-ink-300 mt-2 block text-xs" dateTime={publishedAt}>
+          <time className="text-ink-500 mt-2 block text-xs" dateTime={publishedAt}>
             {formatDate(new Date(publishedAt), locale)}
           </time>
         ) : null}

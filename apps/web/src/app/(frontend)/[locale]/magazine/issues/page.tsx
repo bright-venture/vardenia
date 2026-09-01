@@ -73,14 +73,14 @@ export default async function IssuesPage({ params }: Props) {
                       />
                     ) : null}
                   </div>
-                  <p className="text-ink-300 mt-3 text-xs uppercase tabular-nums tracking-widest">
+                  <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">
                     {ar ? `العدد ${issue.issueNumber}` : `Issue ${issue.issueNumber}`}
                   </p>
                   <h2 className="font-display text-ink-900 mt-1 text-xl leading-snug">
                     {issue.title}
                   </h2>
                   {issue.publishedAt ? (
-                    <time className="text-ink-300 mt-1 block text-xs" dateTime={issue.publishedAt}>
+                    <time className="text-ink-500 mt-1 block text-xs" dateTime={issue.publishedAt}>
                       {formatDate(new Date(issue.publishedAt), locale as Locale)}
                     </time>
                   ) : null}

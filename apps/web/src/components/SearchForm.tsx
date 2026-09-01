@@ -44,7 +44,7 @@ export function SearchForm({
           autoFocus={autoFocus}
           maxLength={80}
           placeholder={ar ? 'فندق، مطعم، مقال' : 'A hotel, a restaurant, an article'}
-          className="border-ink-100 focus:border-ink-300 text-ink-900 placeholder:text-ink-300 w-full rounded-md border px-4 py-2 text-sm outline-none transition-colors"
+          className="border-ink-100 focus:border-ink-300 text-ink-900 placeholder:text-ink-500 w-full rounded-md border px-4 py-2 text-sm outline-none transition-colors"
         />
         <button
           type="submit"

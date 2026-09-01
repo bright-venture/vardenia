@@ -153,7 +153,7 @@ export function ListingCard({
           ) : null}
 
           {reference ? (
-            <p className="text-ink-300 mt-3 font-mono text-[10px] tracking-[0.1em]">{reference}</p>
+            <p className="text-ink-500 mt-3 font-mono text-[10px] tracking-[0.1em]">{reference}</p>
           ) : null}
         </div>
       </Link>

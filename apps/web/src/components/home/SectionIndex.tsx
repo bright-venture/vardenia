@@ -110,7 +110,7 @@ export function SectionIndex({ locale }: { locale: Locale }) {
               <ArrowUpRight
                 aria-hidden
                 size={22}
-                className="text-ink-300 group-hover:text-gold-700 ms-auto shrink-0 transition-colors duration-300 lg:ms-0 rtl:-scale-x-100"
+                className="text-ink-500 group-hover:text-gold-700 ms-auto shrink-0 transition-colors duration-300 lg:ms-0 rtl:-scale-x-100"
               />
             </Link>
           </li>

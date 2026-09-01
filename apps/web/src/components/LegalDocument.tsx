@@ -104,7 +104,7 @@ export function LegalDocumentView({
       className="mx-auto max-w-2xl px-6 py-16"
     >
       <h1 className="font-display text-ink-900 text-4xl">{document.title}</h1>
-      <p className="text-ink-300 mt-3 text-xs uppercase tracking-widest">
+      <p className="text-ink-500 mt-3 text-xs uppercase tracking-widest">
         Last updated {LEGAL_LAST_UPDATED}
       </p>
 

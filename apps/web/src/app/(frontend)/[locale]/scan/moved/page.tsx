@@ -49,7 +49,7 @@ export default async function ScanMovedPage({
       </p>
 
       {code ? (
-        <p className="text-ink-300 mt-4 text-sm">
+        <p className="text-ink-500 mt-4 text-sm">
           {ar ? 'الرمز:' : 'Code:'}{' '}
           <code className="text-ink-700" dir="ltr">
             {code}

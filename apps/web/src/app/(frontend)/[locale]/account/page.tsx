@@ -88,7 +88,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           about them rather than about a restaurant. Each row is closed at rest,
           so the page still opens as a short summary of what is true rather than
           as a settings panel. */}
-      <h2 className="text-ink-300 mt-12 text-xs uppercase tracking-widest">
+      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">
         {locale === 'ar' ? 'تفاصيلك' : 'Your details'}
       </h2>
 
@@ -98,7 +98,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <ChangePassword />
       </div>
 
-      <h2 className="text-ink-300 mt-12 text-xs uppercase tracking-widest">{t('bookings')}</h2>
+      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('bookings')}</h2>
 
       {bookings.length === 0 ? (
         <div className="mt-6">

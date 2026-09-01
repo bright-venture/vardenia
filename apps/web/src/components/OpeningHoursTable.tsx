@@ -38,7 +38,7 @@ export function OpeningHoursTable({
           <div key={day} className="flex items-baseline justify-between gap-4 py-2">
             <dt className="text-ink-700">{DAY_LABELS[day][locale === 'ar' ? 'ar' : 'en']}</dt>
             <dd
-              className={range ? 'text-ink-900 tabular-nums' : 'text-ink-300'}
+              className={range ? 'text-ink-900 tabular-nums' : 'text-ink-500'}
               // Times stay left-to-right even in Arabic, or "09:00 - 23:00"
               // renders with the parts reversed.
               dir="ltr"
