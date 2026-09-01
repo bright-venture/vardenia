@@ -81,63 +81,79 @@ export function ListingCard({
 
   return (
     <article className="group">
-      <Link
-        href={`/directory/${slug}`}
-        /* The shadow is ink.900 at two alphas, written out because an arbitrary
-           shadow value cannot reference a colour class. Update it with the
-           palette - it held the old #101a1d through the 2026 rebrand. */
-        className="border-ink-100 hover:border-ink-300 flex h-full flex-col overflow-hidden rounded-lg border transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(42,33,27,0.06),0_24px_48px_-16px_rgba(42,33,27,0.18)]"
-      >
+      <Link href={`/directory/${slug}`} className="block">
         <div className="relative">
-          <Plate image={heroImage} ratio="card" interactive priority={priority} />
+          <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
+
+          {/*
+            The category moved onto the plate as a chip, and the tier badges
+            moved to the opposite corner to make room for it.
+
+            On the design's own cards this is the only label above the fold of a
+            grid, and it is the one a reader scans by: "hotel" or "restaurant"
+            narrows a page of twenty-four far faster than a name does. Set on
+            ivory so it stays legible over any photograph.
+          */}
+          <span className="bg-surface-base/95 text-ink-900 absolute start-3 top-3 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
+            {categoryLabel(category, locale)}
+          </span>
 
           {signature || verified ? (
-            <div className="absolute start-3 top-3 flex gap-1.5">
+            <div className="absolute end-3 top-3 flex gap-1.5">
               {signature ? <Tier kind="signature" locale={locale} /> : null}
               {verified ? <Tier kind="verified" locale={locale} /> : null}
             </div>
           ) : null}
         </div>
 
-        <div className="flex flex-1 flex-col gap-1.5 p-4">
-          <p className="text-ink-300 font-mono text-[10px] uppercase tracking-[0.12em]">
-            {categoryLabel(category, locale)}
-          </p>
+        {/*
+          Below the plate rather than inside a bordered box. The card chrome it
+          replaces - border, radius, lift and shadow on hover - made every
+          listing look like a control to be clicked. The photograph is the card
+          now, and the type sits under it the way a caption sits under a plate
+          in print.
+        */}
+        <div className="mt-4">
+          {place ? (
+            <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
+              {place}
+            </p>
+          ) : null}
 
-          <div className="flex items-start justify-between gap-3">
-            {/* `dir="auto"` on the two fields a person typed. The rest of this
-                card is built from the taxonomy, which is translated, so it
-                follows the page. A listing's own name and tagline fall back to
-                English until translated, and a fixed direction would be wrong at
-                one end or the other of that. */}
-            <h3 dir="auto" className="text-ink-900 text-lg leading-snug">
-              {name}
-            </h3>
-            {price ? (
-              <span className="text-gold-700 shrink-0 pt-0.5 font-mono text-sm tabular-nums">
-                {price}
-              </span>
+          {/* `dir="auto"` on the two fields a person typed. The rest of this
+              card is built from the taxonomy, which is translated, so it
+              follows the page. A listing's own name and tagline fall back to
+              English until translated, and a fixed direction would be wrong at
+              one end or the other of that. */}
+          <h3
+            dir="auto"
+            className="text-ink-900 group-hover:text-gold-700 mt-1.5 text-[1.4rem] leading-tight transition-colors"
+          >
+            {name}
+          </h3>
+
+          <div className="text-ink-500 mt-2 flex items-center gap-3 text-xs">
+            {price ? <span className="font-mono tabular-nums">{price}</span> : null}
+            {typeof googleRating === 'number' && googleRating > 0 ? (
+              <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
             ) : null}
           </div>
 
-          {place ? <p className="text-ink-500 text-sm">{place}</p> : null}
-
+          {/*
+            The design has no tagline and this keeps one, deliberately.
+            Its sample data had none to show; production has them on 127
+            listings, and a line saying what a place actually is helps a reader
+            choose more than the tighter grid does. Clamped to two lines so it
+            cannot unbalance a row. Worth putting back to the designer.
+          */}
           {tagline ? (
-            <p dir="auto" className="text-ink-500 line-clamp-2 text-sm leading-relaxed">
+            <p dir="auto" className="text-ink-500 mt-2 line-clamp-2 text-sm leading-relaxed">
               {tagline}
             </p>
           ) : null}
 
-          {typeof googleRating === 'number' && googleRating > 0 ? (
-            <div className="mt-1">
-              <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
-            </div>
-          ) : null}
-
           {reference ? (
-            <p className="text-ink-300 mt-auto pt-3 font-mono text-[10px] tracking-[0.1em]">
-              {reference}
-            </p>
+            <p className="text-ink-300 mt-3 font-mono text-[10px] tracking-[0.1em]">{reference}</p>
           ) : null}
         </div>
       </Link>

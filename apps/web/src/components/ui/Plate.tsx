@@ -19,11 +19,16 @@ import { resolveImage, type MediaField } from '../../lib/media'
  *
  * # The ratios are fixed on purpose
  *
- * Four of them, named after where they are used, because a directory whose
+ * Five of them, named after where they are used, because a directory whose
  * cards are each a different shape looks like a scrape. `card` is 4:3, `hero`
  * is 3:2, `band` is 21:9 for the strip across a section header, and `square`
  * is for an avatar or a logo. A caller cannot pass an arbitrary aspect ratio,
  * which is the point.
+ *
+ * `portrait` is 4:5, added with the 2026 design. A listing grid of upright
+ * plates reads as a magazine spread where a grid of landscape ones reads as a
+ * search result, and it is the shape a phone has room for. It asks for the
+ * stored `portrait` size, which is 900x1200 and already generated.
  *
  * # `priority` is not decorative
  *
@@ -34,6 +39,7 @@ import { resolveImage, type MediaField } from '../../lib/media'
 
 const RATIOS = {
   card: 'aspect-[4/3]',
+  portrait: 'aspect-[4/5]',
   hero: 'aspect-[3/2]',
   band: 'aspect-[21/9]',
   square: 'aspect-square',
@@ -44,6 +50,7 @@ export type PlateRatio = keyof typeof RATIOS
 /** Which stored size to ask for, per slot. Avoids handing a card a 2000px hero. */
 const PREFERRED = {
   card: 'card',
+  portrait: 'portrait',
   hero: 'hero',
   band: 'hero',
   square: 'thumbnail',

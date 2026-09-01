@@ -4,7 +4,7 @@ import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
-import { SectionShaderCards } from '../../../components/home/SectionShaderCards'
+import { SectionIndex } from '../../../components/home/SectionIndex'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
@@ -100,7 +100,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <Hero />
 
       <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
-        <SectionShaderCards locale={locale} />
+        <SectionIndex locale={locale} />
       </Band>
 
       <Band
@@ -116,6 +116,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <ListingGrid
           listings={listings.docs as ListingSummary[]}
           locale={locale}
+          // The homepage band is a taste of the directory, not a results page.
+          // See GridKind in ListingGrid.
+          kind="editorial"
           empty={t('listingsEmpty')}
           emptyBody={t('listingsEmptyBody')}
           emptyAction={

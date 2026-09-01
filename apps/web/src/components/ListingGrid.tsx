@@ -25,12 +25,34 @@ import { EmptyState } from './ui'
  * largest thing above the fold and worth preloading; below that it is actively
  * harmful.
  */
+/**
+ * Where the grid is being used, which decides its shape.
+ *
+ * `directory` is the working grid: an even three columns, every card the same
+ * size, because somebody scanning two hundred listings is comparing them and
+ * anything that makes one louder than another is in the way.
+ *
+ * `editorial` is the homepage band from the 2026 design: four columns, the
+ * first card twice as wide and twice as tall, the fourth dropped half a card.
+ * Nobody is comparing here - it is a taste of the directory, and the
+ * asymmetry is what makes six listings read as a spread rather than as the
+ * first page of results.
+ */
+export type GridKind = 'directory' | 'editorial'
+
+/** What each card contributes to the editorial layout, by position. */
+const EDITORIAL_SPANS: Record<number, string> = {
+  0: 'col-span-2 lg:row-span-2',
+  3: 'lg:translate-y-12',
+}
+
 export function ListingGrid({
   listings,
   locale,
   empty,
   emptyBody,
   emptyAction,
+  kind = 'directory',
 }: {
   listings: ListingSummary[]
   locale: Locale
@@ -39,30 +61,40 @@ export function ListingGrid({
   /** What the reader can do about it. */
   emptyBody?: string
   emptyAction?: React.ReactNode
+  kind?: GridKind
 }) {
   if (listings.length === 0) {
     return <EmptyState title={empty} body={emptyBody} action={emptyAction} />
   }
 
+  const editorial = kind === 'editorial'
+
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className={
+        editorial
+          ? 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-8'
+          : 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
+      }
+    >
       {listings.map((listing, index) => (
-        <ListingCard
-          key={listing.id}
-          slug={listing.slug ?? ''}
-          name={listing.name ?? ''}
-          tagline={listing.tagline}
-          category={listing.category}
-          governorate={listing.governorate}
-          district={listing.district}
-          priceRange={listing.priceRange as string | null}
-          verified={listing.verified}
-          googleRating={listing.googleRating}
-          googleRatingCount={listing.googleRatingCount}
-          heroImage={listing.heroImage as never}
-          priority={index === 0}
-          locale={locale}
-        />
+        <div key={listing.id} className={editorial ? EDITORIAL_SPANS[index] : undefined}>
+          <ListingCard
+            slug={listing.slug ?? ''}
+            name={listing.name ?? ''}
+            tagline={listing.tagline}
+            category={listing.category}
+            governorate={listing.governorate}
+            district={listing.district}
+            priceRange={listing.priceRange as string | null}
+            verified={listing.verified}
+            googleRating={listing.googleRating}
+            googleRatingCount={listing.googleRatingCount}
+            heroImage={listing.heroImage as never}
+            priority={index === 0}
+            locale={locale}
+          />
+        </div>
       ))}
     </div>
   )
