@@ -3,6 +3,7 @@ import { DEFAULT_PLACEMENT } from '@vardenia/core'
 import { placeholderImage } from '../seed/images'
 import { richText } from '../seed/rich-text'
 import { parseCsvTable } from '../lib/csv-parse'
+import { PLACEHOLDER_STEM } from '../lib/media'
 import { allocateCode } from '../lib/allocate-code'
 import { toListings, type ImportedListing } from './listing-row'
 
@@ -36,7 +37,7 @@ import { toListings, type ImportedListing } from './listing-row'
  */
 
 /**
- * The name the placeholder is uploaded under, and the stem it is found by.
+ * The name the placeholder is uploaded under.
  *
  * It is never stored under this name. `unguessableFilename` renames every
  * upload before it is written, keeping the slugified stem and appending 96 bits
@@ -53,8 +54,12 @@ import { toListings, type ImportedListing } from './listing-row'
  *
  * unguessableFilename.test.ts pins the property this depends on: that the stem
  * survives the rename.
+ *
+ * The stem itself comes from lib/media rather than being declared here. It was
+ * declared in both for one commit, which is the drift the comment beside it
+ * warns about: rendering needs the same answer, and a listing page that no
+ * longer recognises the stand-in would open on it at full bleed.
  */
-export const PLACEHOLDER_STEM = 'import-placeholder'
 const PLACEHOLDER_UPLOAD_NAME = `${PLACEHOLDER_STEM}.jpg`
 
 export interface ImportOptions {

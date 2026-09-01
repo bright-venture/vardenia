@@ -73,6 +73,15 @@ function toRenderableSrc(url: string): string {
  * full-height photograph would open 308 different listings on one identical
  * image. Knowing there is no photograph is what lets a page choose a different
  * shape instead of showing a lie at full bleed.
+ *
+ * # This file is the only place it is written
+ *
+ * import/run.ts builds the upload name from it and finds the existing row with
+ * it; import/photo-import.ts decides from it which listings still need
+ * photographing; the listing page decides from it what shape its masthead is.
+ * For one commit it was declared here *and* in import/run.ts, which is the
+ * failure this comment exists to prevent - three readers agreeing about a
+ * string only because nobody had changed it yet.
  */
 export const PLACEHOLDER_STEM = 'import-placeholder'
 
