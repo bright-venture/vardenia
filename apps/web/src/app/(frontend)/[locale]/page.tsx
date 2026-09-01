@@ -6,6 +6,7 @@ import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionIndex } from '../../../components/home/SectionIndex'
 import { PrintInterlude } from '../../../components/home/PrintInterlude'
+import { Marquee } from '../../../components/home/Marquee'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
@@ -163,6 +164,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       ) : null}
 
       <PrintInterlude />
+
+      {/* Between the print interlude and the sign-up box, where the design puts
+          it. It is also the one place it works: a band of large type on ivory
+          breaks the navy interlude away from the bordered box below, which
+          otherwise meet as two blocks with a hard edge between them. */}
+      <Marquee />
 
       {/*
         The design ends on a bordered box on the ivory ground rather than a
