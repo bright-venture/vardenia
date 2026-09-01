@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -29,6 +29,7 @@ import { ActionBar } from '../../../../../components/ActionBar'
 import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
+import { ScanArrival } from '../../../../../components/ScanArrival'
 import { Eyebrow, Stars } from '../../../../../components/ui'
 
 /**
@@ -244,6 +245,19 @@ export default async function ListingPage({ params }: Params) {
             </span>
             {ar ? 'الدليل' : 'Directory'}
           </Link>
+
+          {/*
+            The one moment the paper and the site meet.
+
+            Wrapped in Suspense because it reads the query string on the client:
+            in a statically rendered route Next requires that, renders the
+            fallback into the prerendered HTML and fills it in afterwards, which
+            is what lets this page stay cached. `null` as the fallback, so a
+            reader who did not scan anything never sees a placeholder.
+          */}
+          <Suspense fallback={null}>
+            <ScanArrival />
+          </Suspense>
 
           <Eyebrow inverse>
             {[categoryLabel(listing.category, locale as Locale), place].filter(Boolean).join(' · ')}

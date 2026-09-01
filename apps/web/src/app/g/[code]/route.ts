@@ -6,7 +6,7 @@ import { normalizeCode } from '@vardenia/core'
 import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { relatedId, type QrDoc } from '../../../lib/qr-doc'
-import { resolveDestination } from '../../../lib/qr-destination'
+import { markScanArrival, resolveDestination } from '../../../lib/qr-destination'
 import { rawDb } from '../../../lib/db'
 import { reportError } from '../../../lib/report'
 
@@ -99,7 +99,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return Response.redirect(`${siteUrl}/scan/moved?code=${code}`, 302)
   }
 
-  const destination = resolveDestination(qr, siteUrl)
+  /**
+   * `markScanArrival` wraps rather than replaces the resolver, and cannot throw
+   * - it hands back the untouched destination on any failure. The reader's
+   * redirect does not depend on the marker working. See lib/qr-destination.
+   */
+  const destination = markScanArrival(resolveDestination(qr, siteUrl), siteUrl)
 
   // Decide whether this scan counts. It never decides whether it works: the
   // redirect below happens either way, because a printed code must resolve for

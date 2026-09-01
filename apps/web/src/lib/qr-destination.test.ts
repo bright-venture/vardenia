@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { QR_TARGET_TYPES } from '@vardenia/core'
-import { resolveDestination } from './qr-destination'
+import { markScanArrival, resolveDestination } from './qr-destination'
 import type { QrDoc } from './qr-doc'
 
 /**
@@ -167,6 +167,103 @@ describe('the parts that must never fail', () => {
     for (const type of [...QR_TARGET_TYPES, 'nonsense', undefined]) {
       const url = resolveDestination(qr({ targetType: type as string }), SITE)
       expect(() => new URL(url), `${type} produced ${url}`).not.toThrow()
+    }
+  })
+})
+
+/**
+ * The arrival marker, which runs inside the route that must never fail.
+ *
+ * Its whole contract is that it is optional: the banner it enables is worth
+ * having and worth nothing at all next to the redirect working. So the tests
+ * that matter are the ones where it is handed something it cannot parse.
+ */
+describe('marking a scan arrival', () => {
+  it('marks a listing on our own site', () => {
+    expect(markScanArrival(`${SITE}/directory/em-sherif`, SITE)).toBe(
+      `${SITE}/directory/em-sherif?via=qr`,
+    )
+  })
+
+  it('keeps a query string the destination already had', () => {
+    const marked = markScanArrival(`${SITE}/scan/moved?code=K3M9QP2`, SITE)
+    expect(marked).toContain('code=K3M9QP2')
+    expect(marked).toContain('via=qr')
+  })
+
+  it('does not mark somebody else`s site', () => {
+    const external = 'https://example.com/menu'
+    expect(markScanArrival(external, SITE)).toBe(external)
+  })
+
+  /**
+   * Every one of these would throw in `new URL`. The redirect has to survive
+   * all of them, so each returns the destination untouched rather than raising.
+   */
+  it.each([
+    ['a relative path', '/directory/em-sherif'],
+    ['an empty string', ''],
+    ['nonsense', 'not a url at all'],
+  ])('leaves %s alone rather than throwing', (_name, destination) => {
+    expect(() => markScanArrival(destination, SITE)).not.toThrow()
+    expect(markScanArrival(destination, SITE)).toBe(destination)
+  })
+
+  it('survives a broken site URL, which would break the origin comparison', () => {
+    const destination = `${SITE}/directory/em-sherif`
+    expect(markScanArrival(destination, 'not-a-site-url')).toBe(destination)
+  })
+
+  it('is idempotent, so a code scanned twice does not stack parameters', () => {
+    const once = markScanArrival(`${SITE}/directory/em-sherif`, SITE)
+    expect(markScanArrival(once, SITE)).toBe(once)
+  })
+})
+
+/**
+ * The two functions as the route composes them.
+ *
+ * `/g/[code]` calls `markScanArrival(resolveDestination(...), siteUrl)` and
+ * nothing else stands between a printed code and the reader. Testing them
+ * separately leaves the join untested, which is where a mistake would actually
+ * live - and a live code cannot be exercised here, because qr-codes is
+ * staff-only and the development database is not reachable from a unit test.
+ */
+describe('the route`s own composition', () => {
+  const asRouteDoes = (doc: QrDoc) => markScanArrival(resolveDestination(doc, SITE), SITE)
+
+  it('marks a published listing', () => {
+    const doc = qr({
+      targetType: 'business',
+      business: { id: 7, slug: 'em-sherif', _status: 'published' },
+    } as Partial<QrDoc>)
+    expect(asRouteDoes(doc)).toBe(`${SITE}/directory/em-sherif?via=qr`)
+  })
+
+  it('marks the moved page too, so a retired code still says how it was reached', () => {
+    const doc = qr({
+      targetType: 'business',
+      business: { id: 7, slug: 'gone', _status: 'draft' },
+    } as Partial<QrDoc>)
+    const out = asRouteDoes(doc)
+    expect(out).toContain('/scan/moved')
+    expect(out).toContain('via=qr')
+  })
+
+  it('leaves an external destination untouched', () => {
+    const doc = qr({ targetType: 'external', externalUrl: 'https://example.com/menu' })
+    expect(asRouteDoes(doc)).toBe('https://example.com/menu')
+  })
+
+  /**
+   * The property that matters more than any single case: whatever the target
+   * type, the composition returns a usable absolute URL and never throws.
+   */
+  it('never throws, for any target type', () => {
+    for (const targetType of QR_TARGET_TYPES) {
+      const doc = qr({ targetType } as Partial<QrDoc>)
+      expect(() => asRouteDoes(doc)).not.toThrow()
+      expect(() => new URL(asRouteDoes(doc))).not.toThrow()
     }
   })
 })

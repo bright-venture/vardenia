@@ -68,7 +68,8 @@
     "getDirections": "Get directions",
     "clearFilters": "Clear filters",
     "emptyFiltered": "Nothing here matches every filter you have on. Try removing one, or widen the area.",
-    "emptySection": "We have not published anything here yet. New places are added with every issue."
+    "emptySection": "We have not published anything here yet. New places are added with every issue.",
+    "scanArrival": "Scanned from the magazine"
   },
   "booking": {
     "heading": "Book a table",

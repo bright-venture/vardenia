@@ -40,6 +40,41 @@ const trimmed = (siteUrl: string) => siteUrl.replace(/\/$/, '')
 const movedTo = (siteUrl: string, qr: QrDoc) =>
   `${siteUrl}/scan/moved?code=${encodeURIComponent(qr.code ?? '')}`
 
+/**
+ * Adds `?via=qr` so the page a scan lands on knows how the reader got there.
+ *
+ * # Why the listing page cannot work this out for itself
+ *
+ * It is prerendered at both locales and served from cache - that is the whole
+ * reason a scan costs about 5ms instead of two round trips to Frankfurt. Reading
+ * `searchParams` on the server would undo that. So the marker is put on the URL
+ * here and read in the browser, where it costs nothing.
+ *
+ * # Best effort, and that word is load-bearing
+ *
+ * This runs inside the one route whose stated rule is that it must never fail: a
+ * printed code is on paper for a year and cannot be recalled. So every failure
+ * mode returns the destination untouched rather than throwing. A reader who
+ * would have got to the right page still gets there; the only thing lost is a
+ * banner.
+ *
+ * # Same origin only
+ *
+ * An `external` code sends the reader to somebody else's site, and appending our
+ * analytics marker to a third party's URL is both useless and rude - it can also
+ * collide with a parameter that site already uses.
+ */
+export function markScanArrival(destination: string, rawSiteUrl: string): string {
+  try {
+    const url = new URL(destination)
+    if (url.origin !== new URL(rawSiteUrl).origin) return destination
+    url.searchParams.set('via', 'qr')
+    return url.toString()
+  } catch {
+    return destination
+  }
+}
+
 export function resolveDestination(qr: QrDoc, rawSiteUrl: string): string {
   const siteUrl = trimmed(rawSiteUrl)
 
