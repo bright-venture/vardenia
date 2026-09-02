@@ -146,3 +146,48 @@ export function formatBeirut(instant: Date, locale: 'en' | 'ar' = 'en'): string 
     hour12: false,
   }).format(instant)
 }
+
+/**
+ * Just the clock, in Beirut. "20:00".
+ *
+ * The partner's reservation book is scanned by time, not by name - a service is
+ * a sequence of clock positions - so the time is pulled out of the full date
+ * `formatBeirut` produces and set on its own.
+ *
+ * # Latin digits, even in Arabic
+ *
+ * `ar-LB` alone gives Arabic-Indic numerals, so a row read "٢٠:٠٠" beside
+ * "3 أشخاص" - next-intl formats the counts with Latin digits, and the two sat
+ * inches apart in the same row. One of them had to move, and matching the
+ * majority of the page is the smaller change.
+ *
+ * `formatBeirut` above still produces Arabic-Indic on the customer's booking
+ * confirmation. That is a real inconsistency between two screens, and which way
+ * it should be resolved is a question for a native speaker rather than for me:
+ * Lebanon writes both.
+ */
+export function beirutTime(instant: Date, locale: 'en' | 'ar' = 'en'): string {
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+    timeZone: BEIRUT,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(instant)
+}
+
+/**
+ * The heading over a day's bookings. "Thursday 3 September".
+ *
+ * No year. A reservation book is read days ahead, not years, and the year would
+ * be the widest thing in a heading that has to fit a phone.
+ *
+ * Latin digits for the day number, matching `beirutTime` above.
+ */
+export function beirutDayLabel(instant: Date, locale: 'en' | 'ar' = 'en'): string {
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+    timeZone: BEIRUT,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(instant)
+}

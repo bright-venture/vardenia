@@ -218,7 +218,10 @@
     "reviewRequests": "مراجعتها",
     "noMatches": "لا توجد حجوزات تطابق هذه الفلاتر.",
     "today": "اليوم",
-    "signInSubtitle": "لأصحاب الأعمال. أدر حجوزاتك وصفحتك."
+    "signInSubtitle": "لأصحاب الأعمال. أدر حجوزاتك وصفحتك.",
+    "tomorrow": "غدًا",
+    "summaryTonight": "الليلة: {covers, plural, zero {لا أشخاص} one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}} في {bookings, plural, one {حجز واحد} two {حجزين} few {# حجوزات} many {# حجزًا} other {# حجز}}.",
+    "summaryAwaiting": "{count, plural, one {طلب واحد ينتظر ردّك.} two {طلبان ينتظران ردّك.} few {# طلبات تنتظر ردّك.} many {# طلبًا ينتظر ردّك.} other {# طلب ينتظر ردّك.}}"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

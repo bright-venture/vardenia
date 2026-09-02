@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { BOOKING_STATUSES, type BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
-import { currentOwner, ownerBookings } from '../../../../lib/session'
+import { currentOwner, ownerBookings, ownerListings } from '../../../../lib/session'
 import {
   BOOKING_WINDOWS,
   bookingFilterQuery,
@@ -14,7 +14,7 @@ import {
   type BookingFilter,
   type BookingWindow,
 } from '../../../../lib/booking-filters'
-import { formatBeirut } from '../../../../lib/beirut'
+import { addDays, beirutDate, beirutDayLabel, beirutTime } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { BookingActions } from '../../../../components/BookingActions'
 import { SignOutButton } from '../../../../components/SignOutButton'
@@ -86,18 +86,72 @@ export default async function PartnerPage({ params, searchParams }: Props) {
   }
 
   const filter = parseBookingFilter(await searchParams)
-  const { docs, totalDocs, awaiting } = await ownerBookings(filter)
+  const [{ docs, totalDocs, awaiting }, listings] = await Promise.all([
+    ownerBookings(filter),
+    ownerListings(),
+  ])
+
+  /**
+   * Tonight, counted from what is already on the page.
+   *
+   * The upcoming list is sorted ascending, so today's bookings are its front.
+   * Anything cancelled is excluded - a cancelled table is not a cover, and
+   * counting it would overstate the evening to the person cooking for it.
+   *
+   * Only stated on the default view. On "past" or a status filter the docs are
+   * not today's and the sentence would be a guess dressed as a fact.
+   */
+  const today = beirutDate()
+  const tonight =
+    filter.window === 'upcoming'
+      ? docs.filter(
+          (row) => beirutDate(new Date(row.start)) === today && row.status !== 'cancelled',
+        )
+      : []
+
+  const covers = tonight.reduce((sum, row) => sum + (row.partySize ?? 0), 0)
+
+  const summary = [
+    tonight.length > 0 ? t('summaryTonight', { covers, bookings: tonight.length }) : '',
+    awaiting > 0 ? t('summaryAwaiting', { count: awaiting }) : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-16">
+      {/*
+        Titled with the business, not the account.
+
+        It said `owner.email` here, which tells a restaurant owner what they
+        typed to get in rather than whose book they are reading. The email moves
+        under it, small, where it belongs: it identifies the session, not the
+        page. Several listings are joined rather than switched between - a
+        switcher is worth building when somebody actually has six.
+      */}
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('eyebrow')}</p>
-          <h1 className="font-display text-ink-900 mt-3 text-3xl">{t('title')}</h1>
+        <div className="min-w-0">
+          <p className="text-gold-700 font-mono text-[11px] uppercase tracking-[0.16em]">
+            {t('eyebrow')}
+          </p>
+          <h1 className="text-ink-900 mt-2 text-3xl">
+            {listings.length > 0 ? listings.map((l) => l.name).join(' · ') : t('title')}
+          </h1>
           <p className="text-ink-500 mt-2 text-sm">{owner.email}</p>
         </div>
         <SignOutButton collection="business-users" redirectTo="/partner/login" />
       </header>
+
+      {/*
+        The sentence the owner came for, before the controls they did not.
+
+        Both halves are already in hand: `awaiting` is counted outside the filter
+        for the reason below, and today's bookings are the front of an ascending
+        upcoming list, so neither costs a query. On any other view the summary
+        says nothing rather than guessing - "tonight" is not a fact a page
+        showing last March can state.
+      */}
+      {summary ? <p className="text-ink-700 mt-6 text-sm leading-relaxed">{summary}</p> : null}
 
       {/* An account staff have not yet attached a listing to. It authenticates
           perfectly and can see nothing, which without a word of explanation
@@ -131,7 +185,7 @@ export default async function PartnerPage({ params, searchParams }: Props) {
           {isFiltered(filter) ? t('noMatches') : t('noBookings')}
         </p>
       ) : (
-        <BookingList bookings={docs} locale={locale as Locale} />
+        <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />
       )}
     </main>
   )
@@ -159,6 +213,9 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
 
   return (
     <section className="border-ink-100 mt-8 border-t pt-6" aria-label={t('filters')}>
+      {/*
+        Three windows, and they fit on a phone. Left as a wrapping row.
+      */}
       <div className="flex flex-wrap gap-2">
         {BOOKING_WINDOWS.map((value) => (
           <Chip key={value} href={href({ window: value })} active={filter.window === value}>
@@ -167,7 +224,22 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      {/*
+        Seven statuses, which is where the phone layout fell apart.
+
+        Wrapping put "Awaiting confirmation", "Confirmed", "Cancelled",
+        "Completed" and "Missed" across four ragged lines at 375px, so the
+        controls were taller than the bookings under them. This is the same
+        scrolling rail the directory uses for its sections: one line tall at
+        every width, rules above and below so it reads as a band rather than as
+        loose buttons.
+
+        `scrollbar-none` hides the bar, not the scrolling - touch, wheel and
+        keyboard all still work. The row is what scrolls, never the document:
+        that distinction is why the governorate filter on /directory wraps
+        instead, having once dragged the whole page sideways to 539px.
+      */}
+      <div className="border-ink-100 scrollbar-none mt-4 flex gap-2 overflow-x-auto border-y py-3">
         <Chip href={href({ status: 'all' })} active={filter.status === 'all'}>
           {t('statusAll')}
         </Chip>
@@ -180,7 +252,11 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
 
       {/* `window` and `status` ride along as hidden fields so that searching does
           not silently reset the other filters. */}
-      <form action={`/${locale}/partner`} method="get" className="mt-4 flex flex-wrap gap-2">
+      <form
+        action={`/${locale}/partner`}
+        method="get"
+        className="mt-4 flex flex-wrap items-center gap-2"
+      >
         {filter.status !== 'all' ? (
           <input type="hidden" name="status" value={filter.status} />
         ) : null}
@@ -191,20 +267,28 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
         <label className="sr-only" htmlFor="partner-search">
           {t('searchLabel')}
         </label>
-        <input
-          id="partner-search"
-          name="q"
-          type="search"
-          defaultValue={filter.search}
-          placeholder={t('searchPlaceholder')}
-          className="border-ink-100 text-ink-900 min-w-56 flex-1 border px-3 py-2 text-sm"
-        />
-        <button type="submit" className="border-ink-100 border px-4 py-2 text-sm">
-          {t('searchAction')}
-        </button>
+
+        {/* One bordered box on a phone rather than a field and a button that
+            wrap onto separate lines. Same shape as the search on /search. */}
+        <div className="border-ink-100 focus-within:border-gold-500 flex min-w-0 flex-1 items-stretch border transition-colors">
+          <input
+            id="partner-search"
+            name="q"
+            type="search"
+            defaultValue={filter.search}
+            placeholder={t('searchPlaceholder')}
+            className="text-ink-900 placeholder:text-ink-500 w-full min-w-0 bg-transparent px-3 py-2.5 text-sm outline-none"
+          />
+          <button
+            type="submit"
+            className="bg-cedar-900 text-surface-base hover:bg-gold-700 shrink-0 px-4 text-sm transition-colors"
+          >
+            {t('searchAction')}
+          </button>
+        </div>
 
         {isFiltered(filter) ? (
-          <Link href="/partner" className={`${LINK} self-center text-sm`}>
+          <Link href="/partner" className={`${LINK} shrink-0 text-sm`}>
             {t('clearFilters')}
           </Link>
         ) : null}
@@ -226,7 +310,14 @@ function Chip({
     <Link
       href={href}
       aria-current={active ? 'true' : undefined}
-      className={`border px-4 py-1.5 text-sm transition ${
+      /*
+        `whitespace-nowrap` and a fixed height, for the same reason
+        ui/FilterChip carries them: "Awaiting confirmation" and "Any status"
+        broke over two lines inside the scrolling rail, so every chip in the row
+        grew to 54px to match and the band came out ragged. The row already
+        scrolls sideways - there is nothing to gain by letting a label wrap.
+      */
+      className={`inline-flex h-10 shrink-0 items-center whitespace-nowrap border px-4 text-sm transition ${
         active
           ? 'border-cedar-900 bg-cedar-900 text-surface-base'
           : 'border-ink-100 text-ink-700 hover:border-ink-300'
@@ -239,63 +330,233 @@ function Chip({
 
 type BookingDoc = Awaited<ReturnType<typeof ownerBookings>>['docs'][number]
 
-async function BookingList({ bookings, locale }: { bookings: BookingDoc[]; locale: Locale }) {
+/**
+ * The coloured edge down the left of a row, and the word beside it.
+ *
+ * Colour is never the only signal - the status is also written out - for the
+ * reason ui/Tier gives about verified: a border a reader cannot distinguish is
+ * not a status, it is decoration. `state.*` rather than brand colours, because
+ * these are statuses and should stay green and gold if the brand stops being.
+ */
+const STATUS_EDGE: Record<string, string> = {
+  pending: 'border-s-gold-700',
+  confirmed: 'border-s-state-success',
+  completed: 'border-s-state-success',
+  cancelled: 'border-s-ink-100',
+  missed: 'border-s-state-danger',
+}
+
+const STATUS_TEXT: Record<string, string> = {
+  pending: 'text-gold-700',
+  confirmed: 'text-state-success',
+  completed: 'text-state-success',
+  cancelled: 'text-ink-500',
+  missed: 'text-state-danger',
+}
+
+/**
+ * The reservation book, grouped by the day it is worked.
+ *
+ * # Why the time is the biggest thing on the row
+ *
+ * The guest's name used to be. But nobody scans a service by name - a kitchen
+ * scans it by clock, and decides a table from the time and the number of
+ * covers. Those two now sit together in their own column, in mono so the digits
+ * line up down the page, and everything else is the detail beside them.
+ *
+ * # Why it is grouped
+ *
+ * A flat list is right for four bookings and wrong for four hundred. A venue
+ * thinks in services: tonight, then Saturday. The headings also give the page
+ * somewhere to breathe when there are thirty rows.
+ *
+ * # Cancelled recedes rather than disappears
+ *
+ * It is still a fact about the evening - a table that was booked and is not
+ * coming - so it stays readable and stops competing: struck time, muted, no
+ * fill. Before this it had the same weight as a live booking, which is the
+ * opposite of true.
+ */
+async function BookingList({
+  bookings,
+  locale,
+  showBusiness,
+}: {
+  bookings: BookingDoc[]
+  locale: Locale
+  /** Only worth printing on a row when the account manages more than one. */
+  showBusiness: boolean
+}) {
   const status = await getTranslations('bookingStatus')
   const t = await getTranslations('partner')
   const booking = await getTranslations('booking')
 
+  const today = beirutDate()
+  const tomorrow = addDays(today, 1)
+
+  /** Consecutive rows on the same calendar day, in the order they arrived. */
+  const days: Array<{ key: string; label: string; rows: BookingDoc[] }> = []
+
+  for (const row of bookings) {
+    const key = beirutDate(new Date(row.start))
+    const last = days[days.length - 1]
+
+    if (last?.key === key) {
+      last.rows.push(row)
+      continue
+    }
+
+    const named = beirutDayLabel(new Date(row.start), locale)
+    days.push({
+      key,
+      label:
+        key === today
+          ? `${t('today')} · ${named}`
+          : key === tomorrow
+            ? `${t('tomorrow')} · ${named}`
+            : named,
+      rows: [row],
+    })
+  }
+
   return (
-    <ul className="mt-4 flex flex-col gap-3">
-      {bookings.map((row) => {
-        const business = row.business
-        const name = typeof business === 'object' && business ? (business.name ?? '') : ''
+    <div className="mt-6">
+      {days.map((day) => (
+        <section key={day.key} className="mt-8 first:mt-0">
+          <h2 className="border-ink-100 text-ink-500 border-b pb-2 font-mono text-[11px] uppercase tracking-[0.14em]">
+            {day.label}
+          </h2>
 
-        /**
-         * From `guest`, not from the populated relationship, which an owner is
-         * not allowed to read. See ownerBookings. A booking whose customer row
-         * has gone still renders, with the name simply missing.
-         */
-        const guestName = row.guest?.name || t('guestUnknown')
+          <ul>
+            {day.rows.map((row) => {
+              const business = row.business
+              const name = typeof business === 'object' && business ? (business.name ?? '') : ''
+              const cancelled = row.status === 'cancelled'
 
-        return (
-          <li key={row.id} className="border-ink-100 bg-surface-raised border p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-ink-900 font-semibold">{guestName}</span>
-              <span className="text-ink-500 text-xs uppercase tracking-wider">
-                {status(row.status as BookingStatus)}
-              </span>
-            </div>
+              /**
+               * From `guest`, not from the populated relationship, which an owner
+               * is not allowed to read. See ownerBookings. A booking whose
+               * customer row has gone still renders, with the name missing.
+               */
+              const guestName = row.guest?.name || t('guestUnknown')
 
-            <p className="text-ink-700 mt-2 text-sm">{formatBeirut(new Date(row.start), locale)}</p>
+              return (
+                <li
+                  key={row.id}
+                  className={`border-ink-100 flex gap-4 border-b border-s-[3px] py-4 ps-3 ${
+                    STATUS_EDGE[row.status ?? ''] ?? 'border-s-ink-100'
+                  } ${cancelled ? 'opacity-60' : ''}`}
+                >
+                  {/* The clock and the covers, together and first. `w-16` holds
+                      the column steady whether the time is 09:00 or 20:00, so
+                      the names beside it line up down the page. */}
+                  <div className="w-16 shrink-0">
+                    <p
+                      className={`text-ink-900 font-mono text-lg tabular-nums ${
+                        cancelled ? 'line-through' : ''
+                      }`}
+                    >
+                      {beirutTime(new Date(row.start), locale)}
+                    </p>
+                    <p className="text-ink-500 mt-0.5 font-mono text-[11px]">
+                      {t('people', { count: row.partySize })}
+                    </p>
+                  </div>
 
-            <p className="text-ink-500 mt-1 text-xs">
-              {name} &middot; {t('people', { count: row.partySize })} &middot;{' '}
-              {booking('reference')} <span className="select-all font-mono">{row.reference}</span>
-            </p>
+                  <div className="min-w-0 flex-1">
+                    {/*
+                      The status, on a phone.
 
-            {/* The one thing a venue needs when the evening changes. Shown, not
-                hidden behind a click: ringing a guest to move a table by an hour
-                is the ordinary case, not an exception. */}
-            {row.guest?.phone ? (
-              <p className="text-ink-500 mt-1 text-xs">
-                <a href={`tel:${row.guest.phone}`} className={LINK}>
-                  {row.guest.phone}
-                </a>
-              </p>
-            ) : null}
+                      It sits in its own column on the right at `sm` and above.
+                      At 375px that column is wide enough for "Awaiting
+                      confirmation" and narrow enough to crush everything beside
+                      it: the guest's name wrapped onto two lines, the reference
+                      onto three, and a one-sentence note onto four. Moving it
+                      above the name on small screens gives the detail column
+                      the whole width back.
+                    */}
+                    <p
+                      className={`mb-1 font-mono text-[10px] uppercase tracking-[0.12em] sm:hidden ${
+                        STATUS_TEXT[row.status ?? ''] ?? 'text-ink-500'
+                      }`}
+                    >
+                      {status(row.status as BookingStatus)}
+                    </p>
 
-            {/* What the customer asked us to pass on. The reason a kitchen needs
-                to read this before the evening, not after. */}
-            {row.notes ? (
-              <p className="text-ink-700 border-ink-100 mt-3 border-s-2 ps-3 text-sm">
-                {row.notes}
-              </p>
-            ) : null}
+                    <p className={`${cancelled ? 'text-ink-500' : 'text-ink-900 font-medium'}`}>
+                      {guestName}
+                    </p>
 
-            <BookingActions id={row.id} status={row.status as BookingStatus} ended={row.ended} />
-          </li>
-        )
-      })}
-    </ul>
+                    {/*
+                      The listing's name only when there is more than one to tell
+                      apart. With a single listing it repeats the page title on
+                      every row and costs a line on the narrowest screen.
+                    */}
+                    <p className="text-ink-500 mt-1 text-xs">
+                      {showBusiness ? `${name} · ` : ''}
+                      {booking('reference')}{' '}
+                      <span className="select-all font-mono">{row.reference}</span>
+                    </p>
+
+                    {/* The one thing a venue needs when the evening changes.
+                        Shown, not hidden behind a click: ringing a guest to move
+                        a table by an hour is the ordinary case. Dropped for a
+                        cancelled booking - there is nobody to ring. */}
+                    {row.guest?.phone && !cancelled ? (
+                      <p className="mt-1 text-xs">
+                        {/* `dir="ltr"`, or bidi reorders the groups of a phone
+                            number on the Arabic page: +961 3 411 208 renders as
+                            208 411 3 961+, which is not a typographic nicety -
+                            it is a number somebody would dial wrong. Same
+                            reason OpeningHoursTable pins its times. */}
+                        <a
+                          href={`tel:${row.guest.phone}`}
+                          dir="ltr"
+                          className={`${LINK} inline-block`}
+                        >
+                          {row.guest.phone}
+                        </a>
+                      </p>
+                    ) : null}
+
+                    {/* What the customer asked us to pass on. The reason a
+                        kitchen needs to read this before the evening.
+
+                        `dir="auto"`: a guest writes this in whichever language
+                        they booked in, so an English note on the Arabic page
+                        would otherwise have its full stop thrown to the left. */}
+                    {row.notes && !cancelled ? (
+                      <p
+                        dir="auto"
+                        className="text-ink-700 border-ink-100 mt-3 border-s-2 ps-3 text-sm"
+                      >
+                        {row.notes}
+                      </p>
+                    ) : null}
+
+                    {/* Inline, on the row that needs answering. This is the only
+                        thing on the page that costs somebody something while it
+                        waits, and it used to require finding a filter first. */}
+                    <BookingActions
+                      id={row.id}
+                      status={row.status as BookingStatus}
+                      ended={row.ended}
+                    />
+                  </div>
+
+                  <p
+                    className={`hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] sm:block ${
+                      STATUS_TEXT[row.status ?? ''] ?? 'text-ink-500'
+                    }`}
+                  >
+                    {status(row.status as BookingStatus)}
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
   )
 }

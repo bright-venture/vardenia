@@ -203,6 +203,49 @@ export const currentOwner = cache(async (): Promise<OwnerSession | null> => {
 })
 
 /**
+ * The listings this account manages, by name.
+ *
+ * # Why the dashboard needs them
+ *
+ * It used to title itself with the account's email address, which tells a
+ * restaurant owner what they typed to get in rather than whose reservation book
+ * they are looking at. A partner should land on "Italian Stories".
+ *
+ * It matters most in the case the email fallback handled worst: an owner with no
+ * bookings yet. The names could otherwise be lifted off the populated business
+ * on a booking row, which works exactly when there is already something on the
+ * page and fails when the page is empty.
+ *
+ * One indexed query by id, on a route that is `force-dynamic` and already makes
+ * two. Wrapped in `cache()` so a component asking twice does not ask twice.
+ */
+export const ownerListings = cache(
+  async (): Promise<Array<{ id: number; name: string; slug: string }>> => {
+    const owner = await currentOwner()
+    if (!owner || owner.businessIds.length === 0) return []
+
+    const payload = await getPayload({ config })
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where: { id: { in: owner.businessIds } },
+      limit: owner.businessIds.length,
+      depth: 0,
+      // Published or not: an owner may manage a listing staff have not published
+      // yet, and it is still theirs.
+      overrideAccess: true,
+      select: { name: true, slug: true },
+    })
+
+    return result.docs.map((doc) => ({
+      id: Number(doc.id),
+      name: String(doc.name ?? ''),
+      slug: String(doc.slug ?? ''),
+    }))
+  },
+)
+
+/**
  * The bookings this owner may see.
  *
  * `overrideAccess: false` with the owner's own `user`, so the constraint comes

@@ -218,7 +218,10 @@
     "reviewRequests": "Review them",
     "noMatches": "No bookings match these filters.",
     "today": "Today",
-    "signInSubtitle": "For business owners. Manage your bookings and your listing."
+    "signInSubtitle": "For business owners. Manage your bookings and your listing.",
+    "tomorrow": "Tomorrow",
+    "summaryTonight": "Tonight: {covers, plural, one {1 cover} other {# covers}} across {bookings, plural, one {1 booking} other {# bookings}}.",
+    "summaryAwaiting": "{count, plural, one {1 request needs your answer.} other {# requests need your answer.}}"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",
