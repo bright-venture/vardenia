@@ -269,6 +269,57 @@ tables and none off.
 
 ---
 
+## Running a script against production: use the whole environment
+
+Every command-line tool here - `migrate`, `seed`, `import:listings`, `photos:import`,
+`listings:unpublish` - loads the root `.env` and then lets anything already set in the shell
+win. That makes it tempting to reach production by overriding one variable:
+
+```bash
+# WRONG. Only the database moved.
+DATABASE_URL="<production>" pnpm --filter @vardenia/web photos:import photos --credit ... --rights supplied
+```
+
+That works for `migrate`, which touches nothing but the database. It is silently wrong for
+anything that writes a file, and `photos:import` is the case that proved it.
+
+**What happened on 2026-09-02.** 153 photographs were imported with only `DATABASE_URL`
+overridden. The media rows were written to production; the image files were uploaded to the
+**development** storage bucket, because `S3_ENDPOINT` still came from the root `.env` and the
+two Supabase projects have different endpoints. Every listing page then pointed at a correct
+production URL that returned 400. The database looked perfect and the site showed broken
+images.
+
+Nothing catches this. `checkSeedTarget` guards the database and there is no equivalent for
+storage, so the run reported complete success.
+
+**So export the whole file instead of one variable:**
+
+```bash
+set -a && . ./.env.prod && set +a
+pnpm --filter @vardenia/web photos:import photos --credit "..." --rights supplied \
+  --target "$(node -e "const u=new URL(process.env.DATABASE_URL);console.log(u.username+'@'+u.hostname+'/'+u.pathname.slice(1))")"
+```
+
+`--target` still has to name the database out loud; that guard is unchanged and is what stops
+the reverse mistake.
+
+**And check the file, not the row.** A media row proves a database write, never an upload:
+
+```sql
+select filename from payload.media where filename not like 'import-placeholder%' limit 1;
+```
+
+Then request that filename from `<S3_ENDPOINT project>.storage.supabase.co/storage/v1/object/public/media/<filename>`
+and confirm it is a `200`, not a `400`.
+
+**Recovering from it** does not need a re-import. The rows, the filenames and every generated
+size are already correct - only the bytes are in the wrong bucket, so copying the objects
+across fixes it with no database change and no orphaned rows. Read the keys out of the
+production `media` table so the copy can only touch what the site asks for.
+
+---
+
 ## What we deliberately don't use
 
 Supabase bundles authentication, realtime updates and edge functions. Vardenia uses none of
