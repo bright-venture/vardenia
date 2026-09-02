@@ -221,7 +221,11 @@
     "signInSubtitle": "For business owners. Manage your bookings and your listing.",
     "tomorrow": "Tomorrow",
     "summaryTonight": "Tonight: {covers, plural, one {1 cover} other {# covers}} across {bookings, plural, one {1 booking} other {# bookings}}.",
-    "summaryAwaiting": "{count, plural, one {1 request needs your answer.} other {# requests need your answer.}}"
+    "summaryAwaiting": "{count, plural, one {1 request needs your answer.} other {# requests need your answer.}}",
+    "viewListing": "View your listing",
+    "notPublishedYet": "Your listing is not published yet. Your Vardenia contact will tell you when it goes live.",
+    "guestVisits": "{count, plural, one {Been here once} other {Been here # times}}",
+    "guestMissed": "{count, plural, one {Did not arrive once} other {Did not arrive # times}}"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

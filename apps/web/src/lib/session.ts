@@ -1,7 +1,7 @@
 import { isTerminalStatus, type BookingStatus } from '@vardenia/core'
 import { cache } from 'react'
 import { headers as nextHeaders } from 'next/headers'
-import { getPayload } from 'payload'
+import { getPayload, type TypedUser } from 'payload'
 import config from '../payload.config'
 import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from '../access/index'
 import { bookingFilterWhere, DEFAULT_FILTER, type BookingFilter } from './booking-filters'
@@ -218,32 +218,48 @@ export const currentOwner = cache(async (): Promise<OwnerSession | null> => {
  *
  * One indexed query by id, on a route that is `force-dynamic` and already makes
  * two. Wrapped in `cache()` so a component asking twice does not ask twice.
+ *
+ * # `published` decides whether there is anywhere to send them
+ *
+ * The dashboard offers a link to the listing as the public sees it, and a draft
+ * has no public page - `/directory/[slug]` would 404 on a listing the owner can
+ * see perfectly well from here. So the status comes back with the name and the
+ * link is only offered where it leads somewhere. `!== 'draft'` rather than
+ * `=== 'published'`, matching what Payload's own draft filter does, so a row
+ * written before drafts were switched on does not read as unpublished.
  */
-export const ownerListings = cache(
-  async (): Promise<Array<{ id: number; name: string; slug: string }>> => {
-    const owner = await currentOwner()
-    if (!owner || owner.businessIds.length === 0) return []
+export interface OwnerListing {
+  id: number
+  name: string
+  slug: string
+  /** Whether `/directory/[slug]` exists for the public. */
+  published: boolean
+}
 
-    const payload = await getPayload({ config })
+export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
+  const owner = await currentOwner()
+  if (!owner || owner.businessIds.length === 0) return []
 
-    const result = await payload.find({
-      collection: 'businesses',
-      where: { id: { in: owner.businessIds } },
-      limit: owner.businessIds.length,
-      depth: 0,
-      // Published or not: an owner may manage a listing staff have not published
-      // yet, and it is still theirs.
-      overrideAccess: true,
-      select: { name: true, slug: true },
-    })
+  const payload = await getPayload({ config })
 
-    return result.docs.map((doc) => ({
-      id: Number(doc.id),
-      name: String(doc.name ?? ''),
-      slug: String(doc.slug ?? ''),
-    }))
-  },
-)
+  const result = await payload.find({
+    collection: 'businesses',
+    where: { id: { in: owner.businessIds } },
+    limit: owner.businessIds.length,
+    depth: 0,
+    // Published or not: an owner may manage a listing staff have not published
+    // yet, and it is still theirs.
+    overrideAccess: true,
+    select: { name: true, slug: true, _status: true },
+  })
+
+  return result.docs.map((doc) => ({
+    id: Number(doc.id),
+    name: String(doc.name ?? ''),
+    slug: String(doc.slug ?? ''),
+    published: (doc as { _status?: unknown })._status !== 'draft',
+  }))
+})
 
 /**
  * The bookings this owner may see.
@@ -275,6 +291,13 @@ export const ownerListings = cache(
 export interface OwnerBookingGuest {
   name: string
   phone: string
+  /**
+   * Times this guest has sat down here before, counted across this owner's own
+   * listings and nowhere else. See `withGuests` for why that boundary holds.
+   */
+  visits: number
+  /** Of the bookings behind them, the ones nobody arrived for. */
+  missed: number
 }
 
 /**
@@ -370,7 +393,7 @@ export async function ownerBookings(
   })
 
   const now = Date.now()
-  const withEnded = (await withGuests(payload, result.docs)).map((doc) => {
+  const withEnded = (await withGuests(payload, result.docs, user)).map((doc) => {
     const end = new Date(doc.end).getTime()
     /**
      * An unparseable date counts as not yet ended - the safe direction. The
@@ -388,15 +411,36 @@ export async function ownerBookings(
 }
 
 /**
- * Puts the guest's name and phone on each booking, and only those two fields.
+ * Puts the guest's name, phone and history on each booking, and nothing else.
  *
- * Split out of `ownerBookings` when that grew filters. Unchanged in what it
- * does: `depth: 1` does not populate `customer` for an owner, because Customers
- * is `selfOrStaff` and an owner is neither.
+ * Split out of `ownerBookings` when that grew filters. `depth: 1` does not
+ * populate `customer` for an owner, because Customers is `selfOrStaff` and an
+ * owner is neither, so the name and phone are read here with access overridden
+ * and only those two fields are copied onto the row.
+ *
+ * # The history is a different kind of fact, and is fetched differently
+ *
+ * A restaurant deciding whether to hold a table on a Saturday wants to know
+ * whether this person has eaten there before, and whether they once booked and
+ * never came. Both are the venue's own record of its own guest.
+ *
+ * What it must never become is a report on where else somebody eats. So unlike
+ * the name lookup, the history query runs with `overrideAccess: false` and the
+ * owner's `user`, which puts the Bookings collection's own
+ * `{ business: { in: ownedBusinessIds(user) } }` constraint in front of it in
+ * the database. A guest who dines at four listed restaurants shows as a regular
+ * at each one and reveals nothing at any of them about the other three.
+ *
+ * One query for the whole page rather than one per row. It counts up to a
+ * thousand past bookings across the guests currently on screen, which is a great
+ * many more than a venue with a hundred rows on one page has taken; past that it
+ * would undercount, and the fix on that day is a grouped count in SQL, not a
+ * larger limit.
  */
 async function withGuests<T extends { customer?: unknown }>(
   payload: Awaited<ReturnType<typeof getPayload>>,
   docs: T[],
+  user: TypedUser,
 ): Promise<(T & { guest: OwnerBookingGuest | null })[]> {
   const customerIds = [
     ...new Set(
@@ -413,18 +457,60 @@ async function withGuests<T extends { customer?: unknown }>(
   const guests = new Map<string, OwnerBookingGuest>()
 
   if (customerIds.length > 0) {
-    const found = await payload.find({
-      collection: 'customers',
-      where: { id: { in: customerIds } },
-      limit: customerIds.length,
-      depth: 0,
-      overrideAccess: true,
-    })
+    const [found, history] = await Promise.all([
+      payload.find({
+        collection: 'customers',
+        where: { id: { in: customerIds } },
+        limit: customerIds.length,
+        depth: 0,
+        overrideAccess: true,
+      }),
+      payload.find({
+        collection: 'bookings',
+        where: {
+          customer: { in: customerIds },
+          /**
+           * Only what actually happened. `pending` and `cancelled` are dropped:
+           * a request nobody answered and a table somebody called off are not
+           * visits, and counting them would let anyone inflate their own
+           * standing at a restaurant by booking and cancelling.
+           */
+          status: { in: ['confirmed', 'completed', 'no-show'] },
+          // Behind them, not ahead. A booking for next Friday is not a visit yet.
+          end: { less_than: new Date().toISOString() },
+        },
+        limit: 1000,
+        depth: 0,
+        // The whole boundary. See the note above this function.
+        overrideAccess: false,
+        user,
+        select: { customer: true, status: true },
+      }),
+    ])
+
+    const visits = new Map<string, number>()
+    const missed = new Map<string, number>()
+
+    for (const row of history.docs) {
+      const value = (row as { customer?: unknown }).customer
+      const id =
+        typeof value === 'number' || typeof value === 'string'
+          ? value
+          : ((value as { id?: number | string } | null)?.id ?? null)
+      if (id === null) continue
+
+      const key = String(id)
+      const tally = row.status === 'no-show' ? missed : visits
+      tally.set(key, (tally.get(key) ?? 0) + 1)
+    }
 
     for (const doc of found.docs) {
-      guests.set(String(doc.id), {
+      const key = String(doc.id)
+      guests.set(key, {
         name: String((doc as { name?: unknown }).name ?? ''),
         phone: String((doc as { phone?: unknown }).phone ?? ''),
+        visits: visits.get(key) ?? 0,
+        missed: missed.get(key) ?? 0,
       })
     }
   }

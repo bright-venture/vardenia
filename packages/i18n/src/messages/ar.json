@@ -221,7 +221,11 @@
     "signInSubtitle": "لأصحاب الأعمال. أدر حجوزاتك وصفحتك.",
     "tomorrow": "غدًا",
     "summaryTonight": "الليلة: {covers, plural, zero {لا أشخاص} one {شخص واحد} two {شخصان} few {# أشخاص} many {# شخصًا} other {# شخص}} في {bookings, plural, one {حجز واحد} two {حجزين} few {# حجوزات} many {# حجزًا} other {# حجز}}.",
-    "summaryAwaiting": "{count, plural, one {طلب واحد ينتظر ردّك.} two {طلبان ينتظران ردّك.} few {# طلبات تنتظر ردّك.} many {# طلبًا ينتظر ردّك.} other {# طلب ينتظر ردّك.}}"
+    "summaryAwaiting": "{count, plural, one {طلب واحد ينتظر ردّك.} two {طلبان ينتظران ردّك.} few {# طلبات تنتظر ردّك.} many {# طلبًا ينتظر ردّك.} other {# طلب ينتظر ردّك.}}",
+    "viewListing": "اعرض صفحتك",
+    "notPublishedYet": "صفحتك لم تُنشر بعد. سيخبرك مسؤول التواصل في فاردينيا عند نشرها.",
+    "guestVisits": "{count, plural, one {زار مرة واحدة} two {زار مرتين} few {زار # مرات} many {زار # مرة} other {زار # مرة}}",
+    "guestMissed": "{count, plural, one {لم يحضر مرة واحدة} two {لم يحضر مرتين} few {لم يحضر # مرات} many {لم يحضر # مرة} other {لم يحضر # مرة}}"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

@@ -111,6 +111,9 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   const covers = tonight.reduce((sum, row) => sum + (row.partySize ?? 0), 0)
 
+  /** Only a published listing has a public page to send anybody to. */
+  const published = listings.filter((listing) => listing.published && listing.slug)
+
   const summary = [
     tonight.length > 0 ? t('summaryTonight', { covers, bookings: tonight.length }) : '',
     awaiting > 0 ? t('summaryAwaiting', { count: awaiting }) : '',
@@ -138,6 +141,32 @@ export default async function PartnerPage({ params, searchParams }: Props) {
             {listings.length > 0 ? listings.map((l) => l.name).join(' · ') : t('title')}
           </h1>
           <p className="text-ink-500 mt-2 text-sm">{owner.email}</p>
+
+          {/*
+            The way out to their own listing, as the public reads it.
+
+            An owner had no way to see the page they are listed on without
+            hunting for it, which meant nobody ever looked - and the listing is
+            the thing they are paying for. It is also the cheapest possible
+            version of asking them for photographs: most of these still carry
+            the import placeholder, and a restaurateur who sees that on their
+            own page tends to send something better without being asked.
+
+            A draft has no public page, so it gets no link rather than a link to
+            a 404. When a listing exists and none of them are published, that is
+            said in a sentence - silence there reads as a missing feature.
+          */}
+          {published.length > 0 ? (
+            <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              {published.map((listing) => (
+                <Link key={listing.id} href={`/directory/${listing.slug}`} className={LINK}>
+                  {published.length > 1 ? listing.name : t('viewListing')}
+                </Link>
+              ))}
+            </p>
+          ) : listings.length > 0 ? (
+            <p className="text-ink-500 mt-3 text-sm">{t('notPublishedYet')}</p>
+          ) : null}
         </div>
         <SignOutButton collection="business-users" redirectTo="/partner/login" />
       </header>
@@ -343,16 +372,25 @@ const STATUS_EDGE: Record<string, string> = {
   confirmed: 'border-s-state-success',
   completed: 'border-s-state-success',
   cancelled: 'border-s-ink-100',
-  missed: 'border-s-state-danger',
-}
+  /**
+   * `no-show`, not `missed`. Both tables were keyed on the word the interface
+   * prints rather than the value the database stores, so the one status worth
+   * spotting from across a room fell through to the neutral fallback and drew
+   * itself grey. The `satisfies` is what makes that a compile error rather than
+   * a colour nobody notices is missing: it rejects a key that is not a real
+   * status. It cannot require every status to be listed, since the fallback is
+   * deliberate, so a new status still needs a colour adding by hand.
+   */
+  'no-show': 'border-s-state-danger',
+} satisfies Partial<Record<BookingStatus, string>>
 
 const STATUS_TEXT: Record<string, string> = {
   pending: 'text-gold-700',
   confirmed: 'text-state-success',
   completed: 'text-state-success',
   cancelled: 'text-ink-500',
-  missed: 'text-state-danger',
-}
+  'no-show': 'text-state-danger',
+} satisfies Partial<Record<BookingStatus, string>>
 
 /**
  * The reservation book, grouped by the day it is worked.
@@ -486,6 +524,40 @@ async function BookingList({
                     <p className={`${cancelled ? 'text-ink-500' : 'text-ink-900 font-medium'}`}>
                       {guestName}
                     </p>
+
+                    {/*
+                      Who this person is to the venue, in one line under their
+                      name.
+
+                      A dashboard that says "Rania Haddad, two people, 20:00"
+                      tells a restaurant nothing it did not already know from
+                      the request. Whether she has eaten there nine times is the
+                      difference between a table and the good table, and it is
+                      the venue's own record of its own guest - see withGuests
+                      for why it can never become a report on where else she
+                      eats.
+
+                      The no-show count is the other half and reads harsher, so
+                      it is only printed when it is not zero and it counts
+                      rather than judges. It is the honest answer to the one
+                      question an owner has when a request comes in for a
+                      Saturday they could sell twice over. Dropped for a
+                      cancelled row, where nobody is deciding anything.
+                    */}
+                    {!cancelled && row.guest && (row.guest.visits > 0 || row.guest.missed > 0) ? (
+                      <p className="mt-1 flex flex-wrap gap-x-3 text-xs">
+                        {row.guest.visits > 0 ? (
+                          <span className="text-ink-500">
+                            {t('guestVisits', { count: row.guest.visits })}
+                          </span>
+                        ) : null}
+                        {row.guest.missed > 0 ? (
+                          <span className="text-state-danger">
+                            {t('guestMissed', { count: row.guest.missed })}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
 
                     {/*
                       The listing's name only when there is more than one to tell
