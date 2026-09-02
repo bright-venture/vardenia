@@ -13,6 +13,7 @@ import { Users } from './collections/Users'
 import { BusinessUsers } from './collections/BusinessUsers'
 import { Customers } from './collections/Customers'
 import { Bookings } from './collections/Bookings'
+import { Closures } from './collections/Closures'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
@@ -160,6 +161,7 @@ export default buildConfig({
     BusinessUsers,
     Customers,
     Bookings,
+    Closures,
     ScanEvents,
     ErrorEvents,
     RateLimits,

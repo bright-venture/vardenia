@@ -5,6 +5,7 @@ import {
   unavailableMessage,
   UNAVAILABLE_REASONS,
   type BookingRules,
+  type ClosedPeriod,
   type ExistingBooking,
 } from './availability'
 import type { OpeningHour } from './hours'
@@ -34,6 +35,7 @@ const ENABLED: BookingRules = { enabled: true, capacity: 1 }
 const check = (overrides: {
   rules?: BookingRules | null
   hours?: OpeningHour[] | null
+  closures?: ClosedPeriod[] | null
   existing?: ExistingBooking[]
   start?: string
   end?: string
@@ -42,6 +44,7 @@ const check = (overrides: {
   now?: Date
 }) =>
   checkAvailability({
+    closures: overrides.closures,
     /**
      * `'rules' in overrides` rather than `overrides.rules ?? ENABLED`.
      *
@@ -213,6 +216,134 @@ describe('opening hours', () => {
     )
     // 2026-09-01 is a Tuesday.
     expect(check({ hours: closedTuesday })).toMatchObject({ ok: false, reason: 'closed' })
+  })
+})
+
+/**
+ * Closed dates: the fortnight in August, the refurbishment, the wedding.
+ *
+ * Every boundary here is one a venue hits the first time they use it. Inclusive
+ * ends are the one that costs money if it is wrong: "closed the 14th to the
+ * 16th" means three days shut, and a half-open range quietly takes a booking on
+ * the 16th at a restaurant with the shutters down.
+ *
+ * The dates are Beirut calendar days, which is why the instants below are
+ * written in UTC and the assertions are about the Lebanese day they fall on.
+ */
+describe('closed dates', () => {
+  /** 2026-09-01T18:00Z is 21:00 on the 1st in Beirut. */
+  const on = (startsOn: string, endsOn = startsOn): ClosedPeriod[] => [{ startsOn, endsOn }]
+
+  it('refuses a booking on a day the venue has closed', () => {
+    expect(check({ closures: on('2026-09-01') })).toMatchObject({
+      ok: false,
+      reason: 'closed-period',
+    })
+  })
+
+  it('takes a booking the day before and the day after', () => {
+    const shut = on('2026-09-02')
+    expect(check({ closures: shut })).toEqual({ ok: true })
+    expect(
+      check({
+        closures: shut,
+        start: '2026-09-03T18:00:00Z',
+        end: '2026-09-03T20:00:00Z',
+      }),
+    ).toEqual({ ok: true })
+  })
+
+  /** Both ends are shut, not just the middle. */
+  it.each([
+    ['the first day', '2026-09-01T18:00:00Z'],
+    ['a day in the middle', '2026-09-02T18:00:00Z'],
+    ['the last day', '2026-09-03T18:00:00Z'],
+  ])('closes %s of an inclusive range', (_label, start) => {
+    expect(
+      check({
+        closures: on('2026-09-01', '2026-09-03'),
+        start,
+        end: new Date(new Date(start).getTime() + 7_200_000).toISOString(),
+      }),
+    ).toMatchObject({ ok: false, reason: 'closed-period' })
+  })
+
+  it('reopens the day after the range ends', () => {
+    expect(
+      check({
+        closures: on('2026-09-01', '2026-09-03'),
+        start: '2026-09-04T18:00:00Z',
+        end: '2026-09-04T20:00:00Z',
+      }),
+    ).toEqual({ ok: true })
+  })
+
+  /**
+   * The reason the day is computed in Beirut rather than in UTC.
+   *
+   * 22:00 UTC on the 1st is 01:00 on the 2nd in Lebanon. A venue that closed
+   * only the 2nd would take this booking if the comparison used the UTC day,
+   * and would find a table sitting down on a night they are shut.
+   */
+  it('uses the Beirut day, not the UTC one, after midnight', () => {
+    expect(
+      check({
+        closures: on('2026-09-02'),
+        start: '2026-09-01T22:00:00Z',
+        end: '2026-09-01T23:30:00Z',
+        hours: null,
+      }),
+    ).toMatchObject({ ok: false, reason: 'closed-period' })
+  })
+
+  /**
+   * A holiday and a closed weekday are both "no" and they are different
+   * sentences, so the order they are checked in decides which one the customer
+   * reads. "Closed at that time" invites them to try an hour later and be
+   * refused again.
+   */
+  it('says the place is closed for the period rather than shut at that hour', () => {
+    const closedTuesday: OpeningHour[] = [{ day: 'tue', closed: true }]
+    expect(check({ closures: on('2026-09-01'), hours: closedTuesday })).toMatchObject({
+      ok: false,
+      reason: 'closed-period',
+    })
+  })
+
+  /**
+   * Controls. None of these may shut a listing, because a malformed date
+   * compares with `<=` against real ones and would refuse every booking at a
+   * venue that never asked for it.
+   */
+  it.each([
+    ['no closures at all', undefined],
+    ['an empty list', []],
+    ['null', null],
+    ['a range with an impossible day', [{ startsOn: '2026-02-31', endsOn: '2026-02-31' }]],
+    [
+      'a range with a month that does not exist',
+      [{ startsOn: '2026-13-01', endsOn: '2026-13-05' }],
+    ],
+    ['an empty string', [{ startsOn: '', endsOn: '' }]],
+    ['something that is not a date', [{ startsOn: 'august', endsOn: 'august' }]],
+  ])('takes the booking with %s', (_label, closures) => {
+    expect(check({ closures: closures as ClosedPeriod[] | null | undefined })).toEqual({ ok: true })
+  })
+
+  /** It is a closure, not a way to book in the past or at a full venue. */
+  it('does not override the checks that come before it', () => {
+    expect(check({ closures: on('2026-09-01'), rules: { enabled: false } })).toMatchObject({
+      ok: false,
+      reason: 'bookings-disabled',
+    })
+
+    expect(
+      check({
+        closures: on('2026-08-01'),
+        start: '2026-08-01T18:00:00Z',
+        end: '2026-08-01T20:00:00Z',
+      }),
+    ).toMatchObject({ ok: false, reason: 'in-the-past' })
   })
 })
 

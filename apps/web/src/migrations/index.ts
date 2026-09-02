@@ -16,6 +16,7 @@ import * as migration_20260826_092448_home_qr_target from './20260826_092448_hom
 import * as migration_20260826_123026_rate_limits from './20260826_123026_rate_limits'
 import * as migration_20260826_140000_row_level_security from './20260826_140000_row_level_security'
 import * as migration_20260827_103453_import_batch from './20260827_103453_import_batch'
+import * as migration_20260902_080847_closures_and_decline_reason from './20260902_080847_closures_and_decline_reason'
 
 /**
  * The order here is the order they run in, and two entries depend on it.
@@ -28,7 +29,7 @@ import * as migration_20260827_103453_import_batch from './20260827_103453_impor
  * to 181600 so the filename and the dependency agree.
  *
  * `migrate:create` rewrites this file wholesale and has now deleted this comment
- * ten times. Restore it. If you add a migration by hand, re-read the list
+ * eleven times. Restore it. If you add a migration by hand, re-read the list
  * afterwards rather than trusting the regeneration - and be aware the generator
  * diffs against the JSON snapshots here, not the database, so a hand-written
  * migration leaves it out of step until the next generated one catches up.
@@ -43,6 +44,12 @@ import * as migration_20260827_103453_import_batch from './20260827_103453_impor
  *
  * Anything stored in those tables is gone when this runs. On production that is
  * whatever was entered while the collection existed, which was a day.
+ *
+ * # 20260902_080847_closures_and_decline_reason adds a line by hand
+ *
+ * Everything in it is generated except one `ENABLE ROW LEVEL SECURITY`. A table
+ * created after the RLS migration does not inherit it - Postgres has no default
+ * - so every new collection needs that line adding. Check the next one.
  */
 export const migrations = [
   {
@@ -134,5 +141,10 @@ export const migrations = [
     up: migration_20260827_103453_import_batch.up,
     down: migration_20260827_103453_import_batch.down,
     name: '20260827_103453_import_batch',
+  },
+  {
+    up: migration_20260902_080847_closures_and_decline_reason.up,
+    down: migration_20260902_080847_closures_and_decline_reason.down,
+    name: '20260902_080847_closures_and_decline_reason',
   },
 ]

@@ -129,6 +129,20 @@ const copyFor = (status: BookingStatus, locale: 'en' | 'ar'): Copy | null => {
   return null
 }
 
+/**
+ * Who is speaking, when a reason is included.
+ *
+ * The sentence after this comes from the restaurant, not from us, and the reader
+ * has to be able to tell. Without the attribution a blunt "we are fully booked"
+ * reads as Vardenia's verdict on their evening, and a rude one would read as
+ * ours. Kept beside the copy rather than in the messages file because this is
+ * email, which has no `next-intl` around it.
+ */
+const REASON_LABEL: Record<'en' | 'ar', string> = {
+  en: 'The business said:',
+  ar: 'قال المكان:',
+}
+
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -174,6 +188,7 @@ function renderBookingEmail({
   end,
   partySize,
   locale,
+  reason,
 }: {
   copy: Copy
   name: string
@@ -182,10 +197,13 @@ function renderBookingEmail({
   end: Date
   partySize: number
   locale: 'en' | 'ar'
+  /** What the venue said, when they said anything. See `REASON_LABEL`. */
+  reason?: string
 }): BookingEmailContent {
   const rtl = locale === 'ar'
   const when = formatWhen(start, locale)
   const until = formatTime(end, locale)
+  const said = (reason ?? '').trim()
 
   const rows: [string, string][] = [
     [copy.whenLabel, when],
@@ -200,6 +218,7 @@ function renderBookingEmail({
     `${name},`,
     '',
     copy.intro,
+    ...(said ? ['', `${REASON_LABEL[locale]} ${said}`] : []),
     '',
     ...rows.map(([label, value]) => `${label}: ${value}`),
     '',
@@ -215,6 +234,11 @@ function renderBookingEmail({
     <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(copy.heading)}</h1>
     <p style="margin:0 0 8px;font-size:15px;">${escapeHtml(name)},</p>
     <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(copy.intro)}</p>
+    ${
+      said
+        ? `<p style="margin:0 0 24px;padding:12px 16px;border-${rtl ? 'right' : 'left'}:3px solid ${emailPalette.edge};font-size:15px;line-height:1.6;color:${emailPalette.body};"><span style="color:${emailPalette.quiet};">${escapeHtml(REASON_LABEL[locale])}</span> ${escapeHtml(said)}</p>`
+        : ''
+    }
     <table style="width:100%;border-collapse:collapse;font-size:15px;">
       ${rows
         .map(
@@ -388,6 +412,12 @@ export interface BookingOutcomeArgs {
   end: Date
   partySize: number
   locale: 'en' | 'ar'
+  /**
+   * What the venue said, when they wrote anything. Optional and usually absent:
+   * a restaurant answering thirty requests at the end of a shift is not going to
+   * explain each one, and the message has to read properly without it.
+   */
+  reason?: string
 }
 
 /** Pure, like the confirmation content, so the wording is testable. */
@@ -399,9 +429,25 @@ export function bookingOutcomeContent({
   end,
   partySize,
   locale,
+  reason,
 }: Omit<BookingOutcomeArgs, 'payload' | 'to'>): BookingEmailContent {
   const copy = OUTCOME_COPY[locale][outcome]
-  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale })
+  return renderBookingEmail({
+    copy,
+    name,
+    reference,
+    start,
+    end,
+    partySize,
+    locale,
+    /**
+     * Only on the bad news. `confirmed` carries no reason today, and if a venue
+     * ever leaves one on a booking they then accept, "the business said: we are
+     * fully booked" underneath "Booking confirmed" would be a contradiction we
+     * printed ourselves.
+     */
+    reason: outcome === 'confirmed' ? undefined : reason,
+  })
 }
 
 /**

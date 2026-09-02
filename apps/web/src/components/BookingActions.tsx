@@ -66,10 +66,22 @@ export function BookingActions({
   const [busy, setBusy] = useState<BookingStatus | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
 
+  /**
+   * Which action is waiting on a reason, if any.
+   *
+   * Turning somebody away is the one action here that sends a message written in
+   * the venue's name, so it gets a step rather than firing on the first click.
+   * That is the same instinct the button weights already encode: accepting is
+   * the primary, everything else is deliberately quieter, and declining
+   * somebody's evening should take a moment's thought.
+   */
+  const [asking, setAsking] = useState<BookingStatus | null>(null)
+  const [reason, setReason] = useState('')
+
   const actions = availableActions('owner', status, ended)
   if (actions.length === 0) return null
 
-  async function change(to: BookingStatus) {
+  async function change(to: BookingStatus, withReason = '') {
     setProblem(null)
     setBusy(to)
 
@@ -78,10 +90,20 @@ export function BookingActions({
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ status: to }),
+        /**
+         * The reason rides along with the status in one PATCH rather than a
+         * second request. `notifyBookingStatus` writes to the customer from
+         * `afterChange` on the same write, so a reason arriving a moment later
+         * would land after the email had already gone.
+         */
+        body: JSON.stringify(
+          withReason ? { status: to, declineReason: withReason } : { status: to },
+        ),
       })
 
       if (response.ok) {
+        setAsking(null)
+        setReason('')
         // The list is server-rendered, so the new status only appears once the
         // server component runs again.
         router.refresh()
@@ -107,22 +129,79 @@ export function BookingActions({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        {actions.map((to) => (
-          <button
-            key={to}
-            type="button"
-            disabled={busy !== null}
-            onClick={() => change(to)}
-            // Accepting is the common action on a pending booking, so it gets
-            // the weight. Everything else is deliberately quieter - declining
-            // somebody's evening should take a moment's thought.
-            className={`${to === 'confirmed' ? PRIMARY_BUTTON : SECONDARY_BUTTON} px-4 py-2 text-xs`}
-          >
-            {busy === to ? t('working') : t(labelFor(status, to))}
-          </button>
-        ))}
-      </div>
+      {asking ? (
+        /*
+          A form, so Enter sends it and Escape is the browser's own affair. The
+          field is optional and says so: a venue that just wants the request gone
+          presses the button and types nothing, which is the same single decision
+          it always was, one click deeper.
+        */
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            void change(asking, reason.trim())
+          }}
+          className="border-ink-100 mt-1 border-s-2 ps-3"
+        >
+          <label className="text-ink-700 block text-xs" htmlFor={`reason-${id}`}>
+            {t('declineReasonLabel')}
+          </label>
+          <p className="text-ink-500 mt-0.5 text-[11px]">{t('declineReasonHint')}</p>
+
+          <input
+            id={`reason-${id}`}
+            type="text"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            // Matches the field on the Bookings collection, so the limit is felt
+            // where it is typed rather than reported as an error afterwards.
+            maxLength={200}
+            autoFocus
+            placeholder={t('declineReasonPlaceholder')}
+            className="border-ink-100 focus-within:border-gold-500 text-ink-900 placeholder:text-ink-500 mt-2 w-full border bg-transparent px-3 py-2 text-sm outline-none transition-colors"
+          />
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={busy !== null}
+              className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {busy === asking ? t('working') : t(labelFor(status, asking))}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => {
+                setAsking(null)
+                setReason('')
+              }}
+              className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {common('close')}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {actions.map((to) => (
+            <button
+              key={to}
+              type="button"
+              disabled={busy !== null}
+              // Cancelling is the only action that writes to the guest in the
+              // venue's name, so it asks first. Everything else fires.
+              onClick={() => (to === 'cancelled' ? setAsking(to) : change(to))}
+              // Accepting is the common action on a pending booking, so it gets
+              // the weight. Everything else is deliberately quieter - declining
+              // somebody's evening should take a moment's thought.
+              className={`${to === 'confirmed' ? PRIMARY_BUTTON : SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {busy === to ? t('working') : t(labelFor(status, to))}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

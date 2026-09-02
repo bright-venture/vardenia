@@ -7,6 +7,7 @@ import {
   type Interval,
 } from '@vardenia/core'
 import { isOpenNow, type OpeningHour } from './hours'
+import { beirutDate } from './beirut'
 
 /**
  * Can this booking be made?
@@ -39,6 +40,7 @@ export const UNAVAILABLE_REASONS = [
   'too-long',
   'party-too-small',
   'party-too-large',
+  'closed-period',
   'closed',
   'at-capacity',
 ] as const
@@ -77,6 +79,34 @@ export interface ExistingBooking {
   status: BookingStatus
   /** Excluded from the capacity count, so editing a booking does not conflict with itself. */
   id?: string | number
+}
+
+/**
+ * A period the venue has said it is shut, as Beirut calendar days, inclusive at
+ * both ends. See the Closures collection for why these are text and not
+ * timestamps.
+ */
+export interface ClosedPeriod {
+  startsOn: string
+  endsOn: string
+}
+
+/**
+ * A Beirut calendar day, and nothing that merely looks like one.
+ *
+ * The shape check alone is not enough: `2026-02-31` matches the pattern and is
+ * not a date. Round-tripping through `Date` rejects it, and `2026-13-01` with
+ * it. Lives here rather than beside the collection that validates on write,
+ * because this is where a bad value would do its damage - a malformed string
+ * compares with `<=` against real dates and would shut a listing for a period
+ * nobody can read back.
+ */
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
+
+export function isCalendarDay(value: unknown): value is string {
+  if (typeof value !== 'string' || !ISO_DAY.test(value)) return false
+  const parsed = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
 }
 
 export interface AvailabilityRequest {
@@ -121,12 +151,15 @@ export function resolveRules(rules: BookingRules | null | undefined) {
 export function checkAvailability({
   rules,
   hours,
+  closures,
   existing,
   request,
   now = new Date(),
 }: {
   rules: BookingRules | null | undefined
   hours: OpeningHour[] | null | undefined
+  /** Holidays and shutdowns the venue has entered. Omitted means none. */
+  closures?: ClosedPeriod[] | null
   existing: ExistingBooking[]
   request: AvailabilityRequest
   now?: Date
@@ -172,6 +205,32 @@ export function checkAvailability({
   }
   if (party > config.maxPartySize) {
     return { ok: false, reason: 'party-too-large', detail: { maxPartySize: config.maxPartySize } }
+  }
+
+  /**
+   * A holiday beats the weekly timetable, and is checked first for that reason.
+   *
+   * Both answers are "no", but they are different sentences. A venue shut for
+   * the fortnight in August is not "closed at that time" - which invites the
+   * reader to try an hour later on the same day, and get the same refusal. The
+   * order here is what decides which of the two the customer is told.
+   *
+   * Compared on the Beirut calendar day, because that is what a closed day is.
+   * The alternative - comparing instants - makes a booking at 01:00 on the 15th
+   * fall on the 14th in UTC, and a venue that closed only the 14th would refuse
+   * it. `beirutDate` is the same function the dashboard groups rows by, so the
+   * day a customer is refused is the day the owner sees on their own screen.
+   */
+  if (closures && closures.length > 0) {
+    const day = beirutDate(start)
+    const shut = closures.some(
+      (period) =>
+        isCalendarDay(period.startsOn) &&
+        isCalendarDay(period.endsOn) &&
+        day >= period.startsOn &&
+        day <= period.endsOn,
+    )
+    if (shut) return { ok: false, reason: 'closed-period' }
   }
 
   /**
@@ -242,6 +301,15 @@ const MESSAGES: Record<UnavailableReason, { en: string; ar: string }> = {
   'too-short': {
     en: 'That booking is too short.',
     ar: 'مدة الحجز قصيرة جدًا.',
+  },
+  /**
+   * Deliberately different from `closed`, which is the weekly timetable talking.
+   * "Not open at that time" invites the reader to try an hour later and be
+   * refused again; this one tells them to try another day.
+   */
+  'closed-period': {
+    en: 'This place is closed on that date. Please try another day.',
+    ar: 'هذا المكان مغلق في ذلك التاريخ. يرجى اختيار يوم آخر.',
   },
   'too-long': {
     en: 'That booking is too long.',

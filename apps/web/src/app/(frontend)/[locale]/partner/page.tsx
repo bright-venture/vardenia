@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { BOOKING_STATUSES, type BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
-import { currentOwner, ownerBookings, ownerListings } from '../../../../lib/session'
+import { currentOwner, ownerBookings, ownerClosures, ownerListings } from '../../../../lib/session'
 import {
   BOOKING_WINDOWS,
   bookingFilterQuery,
@@ -14,9 +14,16 @@ import {
   type BookingFilter,
   type BookingWindow,
 } from '../../../../lib/booking-filters'
-import { addDays, beirutDate, beirutDayLabel, beirutTime } from '../../../../lib/beirut'
+import {
+  addDays,
+  beirutCalendarDayLabel,
+  beirutDate,
+  beirutDayLabel,
+  beirutTime,
+} from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { BookingActions } from '../../../../components/BookingActions'
+import { ClosedDates } from '../../../../components/ClosedDates'
 import { SignOutButton } from '../../../../components/SignOutButton'
 
 /**
@@ -86,9 +93,10 @@ export default async function PartnerPage({ params, searchParams }: Props) {
   }
 
   const filter = parseBookingFilter(await searchParams)
-  const [{ docs, totalDocs, awaiting }, listings] = await Promise.all([
+  const [{ docs, totalDocs, awaiting }, listings, closures] = await Promise.all([
     ownerBookings(filter),
     ownerListings(),
+    ownerClosures(),
   ])
 
   /**
@@ -216,6 +224,36 @@ export default async function PartnerPage({ params, searchParams }: Props) {
       ) : (
         <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />
       )}
+
+      {/*
+        Below the book, not above it.
+
+        Closed dates are set once a season; bookings are read every service. The
+        thing somebody opened this page for stays at the top, and this waits at
+        the bottom for the evening they remember they are shut in August.
+
+        The dates are formatted here rather than in the client component: they
+        are Beirut calendar days, and `beirutCalendarDayLabel` is a server-side
+        concern for the same reason every other time on this page is - a
+        browser's own timezone must never get a vote on which day a venue said it
+        was closed.
+      */}
+      <ClosedDates
+        listings={listings.map((listing) => ({ id: listing.id, name: listing.name }))}
+        closures={closures.map((closure) => ({
+          id: closure.id,
+          business: closure.business,
+          label:
+            closure.startsOn === closure.endsOn
+              ? beirutCalendarDayLabel(closure.startsOn, locale as Locale)
+              : t('closedRange', {
+                  from: beirutCalendarDayLabel(closure.startsOn, locale as Locale),
+                  to: beirutCalendarDayLabel(closure.endsOn, locale as Locale),
+                }),
+          note: closure.note,
+          bookings: closure.bookings,
+        }))}
+      />
     </main>
   )
 }

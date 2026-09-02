@@ -9,6 +9,7 @@ import {
   type BookingStatus,
 } from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from '../lib/availability'
+import { beirutDate } from '../lib/beirut'
 
 /**
  * Which collection a session came from, as a role.
@@ -172,6 +173,9 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const end = asDate(data.end)
   if (!start || !end) return data
 
+  /** The Beirut day this booking falls on. See the Closures collection. */
+  const bookingDay = beirutDate(start)
+
   const business = await payload
     .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
     .catch(() => null)
@@ -210,6 +214,30 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
     },
   })
 
+  /**
+   * The days this venue has said it is shut.
+   *
+   * Read with access overridden, because this hook runs as whoever is booking -
+   * a customer, who cannot read the Closures collection at all - and the
+   * ordinary path would find nothing. A closure nobody can see is a closure that
+   * does not close anything.
+   *
+   * Only the periods that could contain this booking are fetched, which for a
+   * single interval is at most a handful of rows. `endsOn` is inclusive, so the
+   * comparison is `>=` on the day the booking starts.
+   */
+  const closed = await payload.find({
+    collection: 'closures',
+    depth: 0,
+    limit: 50,
+    pagination: false,
+    overrideAccess: true,
+    where: {
+      and: [{ business: { equals: businessId } }, { endsOn: { greater_than_equal: bookingDay } }],
+    },
+    select: { startsOn: true, endsOn: true },
+  })
+
   const occupied: ExistingBooking[] = existing.docs.flatMap((doc) => {
     const docStart = asDate((doc as { start?: unknown }).start)
     const docEnd = asDate((doc as { end?: unknown }).end)
@@ -227,6 +255,10 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const verdict = checkAvailability({
     rules,
     hours,
+    closures: closed.docs.map((doc) => ({
+      startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
+      endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
+    })),
     existing: occupied,
     request: {
       interval: { start, end },

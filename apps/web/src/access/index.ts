@@ -101,6 +101,18 @@ export const isAdminFieldLevel: FieldAccess = ({ req }) => rolesOf(req.user).inc
 export const isStaffFieldLevel: FieldAccess = ({ req }) => isStaffUser(req.user)
 
 /**
+ * A field the venue may write and the customer may only read.
+ *
+ * Field-level, because the document itself is one a customer can legitimately
+ * update - they may cancel their own booking - and the question here is narrower
+ * than that: who gets to put words in a message we send on somebody's behalf.
+ * The venue writes the reason a booking was turned down; the guest reads it in
+ * the email and cannot edit it into their own record.
+ */
+export const isStaffOrOwnerFieldLevel: FieldAccess = ({ req }) =>
+  isStaffUser(req.user) || collectionOf(req.user) === BUSINESS_USER_COLLECTION
+
+/**
  * Public reads are limited to published documents; staff also see drafts.
  *
  * Returns a query constraint rather than false, so Payload filters in the

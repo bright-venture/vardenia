@@ -37,6 +37,7 @@ interface BookingDoc {
   partySize?: number
   locale?: string
   customer?: unknown
+  declineReason?: string
 }
 
 const idOf = (value: unknown): number | string | null => {
@@ -145,6 +146,13 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
       partySize: Number(current.partySize ?? 1),
       // Captured when they booked. See the field on the Bookings collection.
       locale: current.locale === 'ar' ? 'ar' : 'en',
+      /**
+       * Read off the saved document, not off the request, so it reaches the
+       * customer however the booking was answered - the dashboard, the admin
+       * panel, or a staff member on the phone. That is the same reason this is a
+       * hook rather than a call behind the Decline button.
+       */
+      reason: String(current.declineReason ?? ''),
     })
   } catch (error) {
     await reportError(error, {

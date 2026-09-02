@@ -176,6 +176,32 @@ export function beirutTime(instant: Date, locale: 'en' | 'ar' = 'en'): string {
 }
 
 /**
+ * A calendar day written out. "14 August 2026".
+ *
+ * Takes the `YYYY-MM-DD` a closure stores rather than an instant, and carries the
+ * year because a closed period is read months ahead - "14 August" alone is
+ * ambiguous on a list that runs past new year.
+ *
+ * The instant is built at midday UTC, which is 14:00 or 15:00 in Beirut and
+ * therefore unambiguously inside the day asked for. Midnight would not be: the
+ * hour either side of it is exactly where a timezone conversion turns one date
+ * into its neighbour, and this function exists to display the day a venue typed.
+ *
+ * Latin digits, matching `beirutTime` and `beirutDayLabel`.
+ */
+export function beirutCalendarDayLabel(day: string, locale: 'en' | 'ar' = 'en'): string {
+  const instant = new Date(`${day}T12:00:00Z`)
+  if (Number.isNaN(instant.getTime())) return day
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+    timeZone: BEIRUT,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(instant)
+}
+
+/**
  * The heading over a day's bookings. "Thursday 3 September".
  *
  * No year. A reservation book is read days ahead, not years, and the year would

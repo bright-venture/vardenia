@@ -214,6 +214,95 @@ describe('bookingOutcomeContent', () => {
 })
 
 /**
+ * The reason a venue gives, which is the difference between a door closing and
+ * a suggestion to try another evening.
+ *
+ * The attribution is the load-bearing part. Every one of these checks that the
+ * sentence arrives *and* that it arrives marked as the restaurant's, because an
+ * unattributed "we are fully booked" reads as Vardenia's verdict, and a blunt
+ * one would read as our rudeness.
+ */
+describe('a reason from the venue', () => {
+  const base = {
+    name: 'Sami',
+    reference: 'ABCD1234',
+    start: new Date('2026-09-01T17:00:00Z'),
+    end: new Date('2026-09-01T19:00:00Z'),
+    partySize: 2,
+    locale: 'en' as const,
+  }
+
+  it('reaches the customer in both parts, attributed', () => {
+    const mail = bookingOutcomeContent({
+      ...base,
+      outcome: 'declined',
+      reason: 'We are closed that week',
+    })
+
+    expect(mail.text).toContain('The business said:')
+    expect(mail.text).toContain('We are closed that week')
+    expect(mail.html).toContain('The business said:')
+    expect(mail.html).toContain('We are closed that week')
+  })
+
+  it('is attributed in Arabic too, not left in English', () => {
+    const mail = bookingOutcomeContent({
+      ...base,
+      outcome: 'declined',
+      locale: 'ar',
+      reason: 'المكان مغلق ذلك الأسبوع',
+    })
+
+    expect(mail.text).toContain('قال المكان:')
+    expect(mail.text).not.toContain('The business said')
+  })
+
+  /**
+   * The control. Absent, empty and blank must all read exactly like the message
+   * did before this field existed - a venue answering thirty requests at the end
+   * of a shift explains none of them, so the silent case is the common one.
+   */
+  it('leaves no trace when there is none, or only spaces', () => {
+    const without = bookingOutcomeContent({ ...base, outcome: 'declined' })
+    const empty = bookingOutcomeContent({ ...base, outcome: 'declined', reason: '' })
+    const blank = bookingOutcomeContent({ ...base, outcome: 'declined', reason: '   ' })
+
+    expect(without.text).not.toContain('The business said')
+    expect(without.html).not.toContain('The business said')
+    expect(empty.text).toBe(without.text)
+    expect(blank.text).toBe(without.text)
+    expect(blank.html).toBe(without.html)
+  })
+
+  /**
+   * A reason left on a booking the venue then accepts would print "the business
+   * said: we are fully booked" underneath "Booking confirmed" - a contradiction
+   * we would have written ourselves.
+   */
+  it('is never printed under good news', () => {
+    const mail = bookingOutcomeContent({
+      ...base,
+      outcome: 'confirmed',
+      reason: 'Fully booked',
+    })
+
+    expect(mail.text).not.toContain('Fully booked')
+    expect(mail.html).not.toContain('Fully booked')
+  })
+
+  it('escapes markup, like every other value in these messages', () => {
+    const mail = bookingOutcomeContent({
+      ...base,
+      outcome: 'cancelled',
+      reason: '<script>alert(1)</script>',
+    })
+
+    expect(mail.html).not.toContain('<script>')
+    expect(mail.html).toContain('&lt;script&gt;')
+  })
+})
+
+/**
  * What the venue is told, which turns on one fact: was the table actually held?
  *
  * A confirmed booking freed a table. A pending one was only ever a request the

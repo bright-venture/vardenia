@@ -1,6 +1,12 @@
 import type { Access, CollectionConfig, Where } from 'payload'
 import { BOOKING_STATUSES, generateBookingReference } from '@vardenia/core'
-import { isAdmin, isStaff, isStaffFieldLevel, ownedBusinessIds } from '../access/index'
+import {
+  isAdmin,
+  isStaff,
+  isStaffFieldLevel,
+  isStaffOrOwnerFieldLevel,
+  ownedBusinessIds,
+} from '../access/index'
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
 import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
 
@@ -200,6 +206,41 @@ export const Bookings: CollectionConfig = {
       admin: {
         description: 'The language this customer is written to in.',
         position: 'sidebar',
+      },
+    },
+
+    /**
+     * Why the venue turned this booking down, in their words.
+     *
+     * A decline used to arrive as a flat "the business was not able to take this
+     * booking" and nothing else, which reads as a door closing. "We are closed
+     * that week" or "we only have the 21:30 sitting left" is the same refusal
+     * and an entirely different message - the second one tells the guest what to
+     * try instead.
+     *
+     * Optional, always. A venue answering thirty requests at the end of a shift
+     * must not be made to justify each one, and a required field would only
+     * teach people to type a full stop.
+     *
+     * # Who may write it
+     *
+     * The venue and staff, never the customer, even though a customer may update
+     * this document to cancel their own booking. Field-level access is the only
+     * thing that separates those two: without it, a customer's PATCH could set
+     * the sentence we attribute to the restaurant. They may read it - it is a
+     * message written to them - and it reaches them by email either way.
+     *
+     * Capped rather than a textarea. It goes into an email as one line, and a
+     * limit is what keeps it that.
+     */
+    {
+      name: 'declineReason',
+      type: 'text',
+      maxLength: 200,
+      access: { update: isStaffOrOwnerFieldLevel },
+      admin: {
+        description:
+          'Optional. Sent to the guest when a booking is declined or called off. One line.',
       },
     },
 

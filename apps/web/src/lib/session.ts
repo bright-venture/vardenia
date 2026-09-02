@@ -5,6 +5,7 @@ import { getPayload, type TypedUser } from 'payload'
 import config from '../payload.config'
 import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from '../access/index'
 import { bookingFilterWhere, DEFAULT_FILTER, type BookingFilter } from './booking-filters'
+import { beirutDate } from './beirut'
 import type { Booking } from '../payload-types'
 
 /**
@@ -260,6 +261,115 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
     published: (doc as { _status?: unknown })._status !== 'draft',
   }))
 })
+
+/**
+ * The days this owner's listings are shut, from today onwards.
+ *
+ * # Why each one carries a booking count
+ *
+ * Entering a closure does not cancel anything. That is deliberate and it is the
+ * safe direction: a venue closing a week in March must not have its confirmed
+ * tables cancelled underneath it by a rule nobody pressed, with the guests
+ * emailed automatically. But the silent version of that is worse - a restaurant
+ * marks itself closed, believes it is dealt with, and four families arrive.
+ *
+ * So the count is the whole point of this function. The closure stops new
+ * bookings; the number beside it says how many are already there, and what
+ * happens to those is the decision of the person who promised them a table.
+ *
+ * Counted with one query for every closure rather than one each, and only when
+ * there is a closure to count against.
+ */
+export interface OwnerClosure {
+  id: number
+  business: number
+  startsOn: string
+  endsOn: string
+  note: string
+  /** Live bookings already falling inside this period. Nothing is cancelled for them. */
+  bookings: number
+}
+
+export async function ownerClosures(): Promise<OwnerClosure[]> {
+  const payload = await getPayload({ config })
+
+  const auth = await payload
+    .auth({ headers: await nextHeaders() })
+    .catch(() => ({ user: null }) as { user: null })
+
+  const user = auth.user
+  if (!user || user.collection !== BUSINESS_USER_COLLECTION) return []
+
+  const today = beirutDate()
+
+  /**
+   * `overrideAccess: false` with the owner's own session, so the Closures
+   * collection applies `{ business: { in: ownedBusinessIds(user) } }` in the
+   * database. Nothing here decides whose closures these are.
+   *
+   * Only the ones that have not finished. A venue does not need last August on
+   * screen, and a list that only grows is a list nobody reads.
+   */
+  const found = await payload.find({
+    collection: 'closures',
+    where: { endsOn: { greater_than_equal: today } },
+    sort: 'startsOn',
+    limit: 50,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+
+  const closures = found.docs.map((doc) => ({
+    id: Number(doc.id),
+    business: Number(
+      typeof doc.business === 'object' && doc.business ? doc.business.id : doc.business,
+    ),
+    startsOn: String(doc.startsOn ?? ''),
+    endsOn: String(doc.endsOn ?? ''),
+    note: String(doc.note ?? ''),
+    bookings: 0,
+  }))
+
+  if (closures.length === 0) return closures
+
+  /**
+   * Every live booking from today onwards, tallied against the closures in one
+   * pass. `pending` and `confirmed` only: a table already cancelled is not a
+   * family who will arrive to a locked door, which is the only thing this number
+   * is for.
+   */
+  const live = await payload.find({
+    collection: 'bookings',
+    where: {
+      and: [
+        { status: { in: ['pending', 'confirmed'] } },
+        { start: { greater_than_equal: `${today}T00:00:00.000Z` } },
+      ],
+    },
+    limit: 500,
+    depth: 0,
+    overrideAccess: false,
+    user,
+    select: { business: true, start: true },
+  })
+
+  for (const booking of live.docs) {
+    const day = beirutDate(new Date(String(booking.start)))
+    const businessId = Number(
+      typeof booking.business === 'object' && booking.business
+        ? booking.business.id
+        : booking.business,
+    )
+
+    for (const closure of closures) {
+      if (closure.business !== businessId) continue
+      if (day >= closure.startsOn && day <= closure.endsOn) closure.bookings += 1
+    }
+  }
+
+  return closures
+}
 
 /**
  * The bookings this owner may see.
