@@ -3,6 +3,7 @@ import path from 'node:path'
 import type { Payload } from 'payload'
 import { can, tierOf } from '@vardenia/core'
 import { isPlaceholder } from '../lib/media'
+import { slugifyStem, STEM_LIMIT } from '../hooks/unguessableFilename'
 
 /**
  * Uploads a tree of photograph folders onto the listings they belong to.
@@ -36,6 +37,45 @@ import { isPlaceholder } from '../lib/media'
  * because the common re-run is somebody adding the folders that were missing
  * last time, not replacing what worked.
  */
+
+/**
+ * The stem an upload for this listing is stored under, marker and all.
+ *
+ * `unguessableFilename` slugifies the name it is given and clips it to
+ * STEM_LIMIT before appending its randomness. Naming a file `<slug>-cover` and
+ * letting that happen loses the `-cover` for any slug long enough to reach the
+ * limit, and `-cover` is the only thing that says who uploaded it:
+ *
+ *   slug      boogie-strike-bowling-billiards-bowling-billiards-darts-games
+ *   asked for boogie-strike-bowling-billiards-bowling-billiards-darts-games-cover.jpg
+ *   stored as boogie-strike-bowling-billiards-bowling-billiards-darts-game-<hex>.webp
+ *
+ * So the marker is not the part that gets clipped. The slug is trimmed to leave
+ * room for it, which costs a few characters of a name nobody types and keeps
+ * the one piece of it that carries meaning.
+ *
+ * Found because `photos:import --remove` reported 15 of 153 listings as
+ * "the photograph was not uploaded by this tool" - which was the check working
+ * exactly as written, on evidence that had been destroyed before it got there.
+ */
+export function uploadStem(slug: string, marker: string): string {
+  const room = STEM_LIMIT - marker.length - 1
+  const clipped = slugifyStem(slug).slice(0, room).replace(/-+$/g, '')
+  return clipped ? `${clipped}-${marker}` : marker
+}
+
+/**
+ * What the namer produced before it reserved that room.
+ *
+ * Every photograph imported before this was fixed is stored under this shape,
+ * and `isOurUpload` has to keep recognising them or a re-run would treat 153
+ * real uploads as somebody else's work. It is still an exact comparison against
+ * a value derived from the slug, so it grants nothing it should not: the only
+ * filenames it accepts are ones this tool demonstrably wrote.
+ */
+export function legacyUploadStem(slug: string, marker: string): string {
+  return slugifyStem(`${slug}-${marker}`)
+}
 
 /** What Media accepts. HEIC is deliberately absent - see the note in Media.ts. */
 const MIME_BY_EXTENSION: Record<string, string> = {
@@ -256,11 +296,12 @@ export async function runPhotoImport(
             usageRights: options.usageRights,
           },
           // The stem survives unguessableFilename, so a photograph can be
-          // traced back to the listing it was uploaded for.
+          // traced back to the listing it was uploaded for. `uploadStem` is
+          // what makes that true for a long slug as well as a short one.
           file: {
             data,
             mimetype: MIME_BY_EXTENSION[extension] as string,
-            name: `${folder}-${index === null ? 'cover' : String(index + 1).padStart(2, '0')}${extension}`,
+            name: `${uploadStem(folder, index === null ? 'cover' : String(index + 1).padStart(2, '0'))}${extension}`,
             size: data.length,
           },
           depth: 0,

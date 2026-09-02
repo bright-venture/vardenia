@@ -39,6 +39,17 @@ import type { CollectionBeforeOperationHook } from 'payload'
 /** 96 bits. Long enough that guessing is not a strategy, short enough to read. */
 const SUFFIX_BYTES = 12
 
+/**
+ * How much of the original name survives.
+ *
+ * Exported because anything that builds a filename it later has to recognise
+ * has to know this number. The photo importer names uploads `<slug>-cover`, and
+ * for a slug long enough to reach this limit the `-cover` was clipped off - so
+ * the tool could no longer tell its own uploads from a photograph somebody had
+ * supplied. See uploadStem in import/photo-import.
+ */
+export const STEM_LIMIT = 60
+
 /** Lowercase, dashes, no runs, clipped. Empty when there is nothing usable left. */
 export function slugifyStem(stem: string): string {
   return stem
@@ -47,7 +58,7 @@ export function slugifyStem(stem: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 60)
+    .slice(0, STEM_LIMIT)
     .replace(/-+$/g, '')
 }
 
