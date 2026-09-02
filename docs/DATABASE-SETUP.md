@@ -179,18 +179,93 @@ Two things about it are worth knowing:
 - **Regenerating it is almost never right.** It describes a point in history. New changes go
   in new migrations.
 
-### The `dev` row
+### The `dev` row, and the prompt it causes
 
 `payload_migrations` contains a row named `dev` with `batch = -1`. Payload writes it whenever
 push alters the database, to record that this database was built by pushing rather than by
 migrating.
 
-Its effect: `payload migrate` on this database first asks "you've run in dev mode, data loss
-may occur, proceed?". In a non-interactive shell that prompt cannot be answered, so the
-command **exits successfully having done nothing**. Worth knowing before wiring `migrate`
-into any script that points at a development database.
+Its effect: `payload migrate` first asks
 
-Production never has this row, so it never prompts.
+> It looks like you've run Payload in dev mode, meaning you've dynamically pushed changes to
+> your database. If you'd like to run migrations, data loss will occur. Would you like to
+> proceed? (y/N)
+
+In a non-interactive shell that prompt cannot be answered, so the command **exits
+successfully having done nothing**. Worth knowing before wiring `migrate` into any script.
+
+**Production has this row too, and this section used to say it did not.** It was written on
+2026-08-27 at 12:28 UTC, so something ran push against production once. The `NODE_ENV` set
+inline in `netlify.toml` is what stops that happening on a deploy - read the comment there
+before removing it.
+
+So the prompt appears on production, every time, and it is expected. Answering `N` is always
+safe: the command exits having changed nothing.
+
+Batch 9 was applied over that row at 16:50 the same day, and batch 10 on 2026-09-02. Both
+answered `y` and both applied cleanly. The warning is Payload reciting a generic script
+because of a row from August, not a statement about your data.
+
+**Before answering `y`, run these three read-only queries.** They take a few seconds and turn
+the prompt into a checklist:
+
+```sql
+-- 1. Is the row the only reason for the prompt, or is something else odd?
+select name, batch, created_at from payload.payload_migrations where batch = -1;
+
+-- 2. Does the thing the migration creates already exist? Substitute your table.
+select to_regclass('payload.<new_table>');
+
+-- 3. Does the column it adds already exist? Substitute yours.
+select column_name from information_schema.columns
+where table_schema = 'payload' and table_name = '<table>' and column_name = '<new_column>';
+```
+
+If the only batch `-1` row is `dev`, nothing the migration creates exists yet, and the
+migration's `up` contains no `DROP`, then `y` is safe - there is nothing for it to collide
+with and nothing for it to destroy. If any of those three is not true, stop and work out why
+before proceeding.
+
+Afterwards, confirm what actually landed rather than trusting the exit code:
+
+```sql
+select name, batch from payload.payload_migrations where name = '<migration_name>';
+select relname, relrowsecurity from pg_class
+where relname = '<new_table>' and relnamespace = 'payload'::regnamespace;
+```
+
+The second one matters for every new table. See the next section.
+
+### Row level security does not arrive on its own
+
+`20260826_140000_row_level_security` turned RLS on for every table that existed when it ran.
+Postgres has no default for it, so **a table created by a later migration arrives without
+it** and nothing complains. Every migration that creates a table has to say so itself:
+
+```sql
+ALTER TABLE "payload"."<new_table>" ENABLE ROW LEVEL SECURITY;
+```
+
+`migrate:create` will not write that line. Add it by hand, below the generated block, with a
+comment saying why - otherwise the next person to regenerate the file will drop it.
+
+No policies. RLS with none denies by default, which is the stricter answer, and there is no
+Supabase Auth here for a policy to reference. See the migration's own comment for the full
+reasoning, including why the connection role does not notice.
+
+Development loses this on every boot, because push reconciles the schema against the
+collection definitions and RLS is not part of those. That is expected. Verify it against
+production:
+
+```sql
+select relname, relrowsecurity from pg_class
+where relnamespace = 'payload'::regnamespace and relkind = 'r'
+order by relrowsecurity, relname;
+```
+
+Anything with `relrowsecurity = f` is a table added since the hardening migration whose own
+migration forgot the line. On 2026-09-02, after `closures` was added, production reported 46
+tables and none off.
 
 ---
 
