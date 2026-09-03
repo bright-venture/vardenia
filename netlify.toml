@@ -107,9 +107,33 @@
 
 # How long a browser may keep an optimised image.
 #
+# ## THIS BLOCK IS ALSO IGNORED. The setting that works is in Cloudflare.
+#
+# Deployed and measured on 2026-09-03. The same deploy's other change landed
+# correctly, so the deploy was live and this rule was simply not applied:
+#
+#   curl -sI '.../_next/image?url=%2Fimages%2Fhero.jpg&w=750&q=75'
+#   Cache-Control: public, max-age=14400, must-revalidate
+#
+# Netlify's Image CDN sets its own Cache-Control on `/_next/image` and a
+# `[[headers]]` rule does not override it. So this is the second place to
+# confidently declare a cache lifetime that never reaches a reader - see the
+# note on `minimumCacheTTL` in next.config.ts for the first.
+#
+# It stays because it is correct for any deploy that does not put Netlify's
+# image CDN in front, and costs nothing where one does. It is not the thing
+# doing the work.
+#
+# **The header readers actually get comes from a Cloudflare Cache Rule**
+# (Browser TTL: Override origin) on `/_next/image*`. Cloudflare is in front of
+# Netlify, so it wins whatever the origin says. Change it there, not here.
+#
+# ---
+#
 # `images.minimumCacheTTL` in next.config.ts is set to a year and does nothing
-# here. The plugin above rewrites `/_next/image` onto Netlify's own Image CDN,
-# which applies its own policy and ignores Next's - measured on the live site:
+# here either. The plugin above rewrites `/_next/image` onto Netlify's own Image
+# CDN, which applies its own policy and ignores Next's - measured on the live
+# site:
 #
 #   /_next/image    Cache-Control: max-age=14400          (4 hours)
 #   /_next/static   Cache-Control: max-age=31536000, immutable
@@ -119,6 +143,8 @@
 # the Netlify bill, and it is the largest single thing on it.
 #
 # # Thirty days, not a year, and the reason is `public/images`
+#
+# This is the number to set in the Cloudflare rule, not just here.
 #
 # The listing photographs are safe to cache forever: their filenames carry a
 # content hash (`3ind-judy-cover-b6fb339cefba6bcef5e6cd1d-900x1200.webp`), so a
