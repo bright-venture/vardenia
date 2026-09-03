@@ -41,14 +41,16 @@ export async function GET(request: NextRequest) {
     'Category',
     'Governorate',
     'Tier',
-    'No photograph',
-    'No gallery',
-    'No opening hours',
-    'No description',
-    'No tagline',
-    'No Arabic name',
-    'No map location',
-    'Bookings off',
+    // Every column asks what the listing has, so a cell reads "Photograph: no"
+    // rather than "No photograph: no". `toCsv` writes a boolean as yes or no.
+    'Photograph',
+    'Gallery',
+    'Opening hours',
+    'Description',
+    'Tagline',
+    'Arabic name',
+    'Map location',
+    'Bookings on',
   ]
 
   const rows: CsvValue[][] = gaps.map((g) => [
@@ -59,14 +61,14 @@ export async function GET(request: NextRequest) {
     g.category,
     g.governorate,
     g.tier,
-    g.noPhotograph,
-    g.noGallery,
-    g.noHours,
-    g.noDescription,
-    g.noTagline,
-    g.noArabicName,
-    g.noLocation,
-    g.bookingsOff,
+    g.hasPhotograph,
+    g.hasGallery,
+    g.hasHours,
+    g.hasDescription,
+    g.hasTagline,
+    g.hasArabicName,
+    g.hasLocation,
+    g.bookingsOn,
   ])
 
   const stamp = new Date().toISOString().slice(0, 10)

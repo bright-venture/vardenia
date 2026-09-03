@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import { placeholderId } from '../import/run'
+import { PLACEHOLDER_STEM } from './media'
 
 /**
  * What is still missing from every listing, as a worklist.
@@ -30,6 +30,17 @@ import { placeholderId } from '../import/run'
  * do the rest.
  */
 
+/**
+ * Every flag says what the listing HAS, never what it lacks.
+ *
+ * The first version named them `noPhotograph`, `noGallery` and so on, which put
+ * "No photograph: no" in a spreadsheet cell - a double negative the reader has
+ * to unpick on every row of three hundred, and exactly the sort of thing that
+ * gets misread at speed into working on the listings that were already done.
+ *
+ * `missing` still counts what is absent, because that is what the file is
+ * sorted by and "8 things missing" is the sentence somebody actually wants.
+ */
 export interface ListingGap {
   name: string
   slug: string
@@ -37,16 +48,16 @@ export interface ListingGap {
   category: string
   governorate: string
   tier: string
-  /** How many of the checks below this listing fails. Sort on it. */
+  /** How many of the flags below are false. Sort on it, descending. */
   missing: number
-  noPhotograph: boolean
-  noGallery: boolean
-  noHours: boolean
-  noDescription: boolean
-  noTagline: boolean
-  noArabicName: boolean
-  noLocation: boolean
-  bookingsOff: boolean
+  hasPhotograph: boolean
+  hasGallery: boolean
+  hasHours: boolean
+  hasDescription: boolean
+  hasTagline: boolean
+  hasArabicName: boolean
+  hasLocation: boolean
+  bookingsOn: boolean
 }
 
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
@@ -93,13 +104,39 @@ export function isUntranslated(arabic: string | undefined, english: string): boo
  * reads like the thing it is.
  *
  * `depth: 0` throughout. The only relationship this needs is the hero image, and
- * it needs one fact about it - whether it is still the shared import placeholder
- * - which is one id comparison rather than 308 populated documents. Populating
- * them took longer than five minutes over a pooled connection when the unpublish
- * tool tried it.
+ * it needs one fact about it - whether it is still an import placeholder - which
+ * is a set lookup against one extra query rather than 308 populated documents.
+ * Populating them took longer than five minutes over a pooled connection when
+ * the unpublish tool tried it.
  */
 export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
-  const placeholder = String(await placeholderId(payload))
+  /**
+   * Every placeholder, not the first one.
+   *
+   * This started as `placeholderId(payload)` and a single id comparison, which
+   * was wrong and quietly so: the development database holds several hundred
+   * rows whose filename carries the placeholder stem, and a listing pointing at
+   * any but the first was reported as having a real photograph. 305 of 314 rows
+   * said "Photograph: yes" about the shared grey stand-in.
+   *
+   * Production happens to have exactly one today, which is why it looked fine
+   * there - and is exactly the kind of thing that would start lying the first
+   * time an import minted a second.
+   *
+   * The rest of the codebase tests the filename rather than the id, for this
+   * reason. See PLACEHOLDER_STEM and isPlaceholder in lib/media.
+   */
+  const stand = await payload.find({
+    collection: 'media',
+    where: { filename: { like: PLACEHOLDER_STEM } },
+    limit: 1000,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+    select: { filename: true },
+  })
+
+  const placeholders = new Set(stand.docs.map((doc) => String(doc.id)))
 
   const query = (locale: 'en' | 'ar') =>
     payload.find({
@@ -152,30 +189,34 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
       governorate: text(doc.governorate),
       tier: text(doc.tier),
       missing: 0,
-      // Absent or still the shared stand-in. Both mean "no photograph of this
-      // place", and only the second one looks fine on the page.
-      noPhotograph: !heroId || heroId === placeholder,
-      noGallery: count(doc.gallery) === 0,
-      noHours: count(doc.openingHours) === 0,
-      noDescription: emptyRichText(doc.description),
-      noTagline: text(doc.tagline) === '',
-      noArabicName: isUntranslated(arabicNames.get(String(doc.id)), doc.name),
+      // A photograph of this place, so the shared stand-in does not count. Only
+      // the placeholder case looks finished on the page, which is why it is the
+      // one worth catching.
+      hasPhotograph: Boolean(heroId) && !placeholders.has(heroId),
+      hasGallery: count(doc.gallery) > 0,
+      hasHours: count(doc.openingHours) > 0,
+      hasDescription: !emptyRichText(doc.description),
+      hasTagline: text(doc.tagline) !== '',
+      hasArabicName: !isUntranslated(arabicNames.get(String(doc.id)), doc.name),
       // The map pin. Contact fields were dropped deliberately; see the
       // drop_contact_fields migration.
-      noLocation: !doc.location,
-      bookingsOff: doc.booking?.enabled !== true,
+      hasLocation: Boolean(doc.location),
+      bookingsOn: doc.booking?.enabled === true,
     }
 
+    // Counted off the same flags the file prints, so the number and the columns
+    // can never disagree - a mismatch there is the one thing that would make
+    // somebody stop trusting the sort.
     gap.missing = [
-      gap.noPhotograph,
-      gap.noGallery,
-      gap.noHours,
-      gap.noDescription,
-      gap.noTagline,
-      gap.noArabicName,
-      gap.noLocation,
-      gap.bookingsOff,
-    ].filter(Boolean).length
+      gap.hasPhotograph,
+      gap.hasGallery,
+      gap.hasHours,
+      gap.hasDescription,
+      gap.hasTagline,
+      gap.hasArabicName,
+      gap.hasLocation,
+      gap.bookingsOn,
+    ].filter((has) => !has).length
 
     return gap
   })
