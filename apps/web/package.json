@@ -43,6 +43,7 @@
     "next": "^15.1.4",
     "next-intl": "^4.13.7",
     "payload": "^3.20.0",
+    "pg": "8.20.0",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@types/node": "^22.10.5",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.4",
     "@types/react-dom": "^19.0.2",

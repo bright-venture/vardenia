@@ -1,13 +1,11 @@
 import { unstable_cache } from 'next/cache'
 import { after } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getPayload } from 'payload'
 import { normalizeCode } from '@vardenia/core'
-import config from '../../../payload.config'
 import { clientIp, evaluateScan } from '../../../lib/scan-guard'
 import { relatedId, type QrDoc } from '../../../lib/qr-doc'
 import { markScanArrival, resolveDestination } from '../../../lib/qr-destination'
-import { rawDb } from '../../../lib/db'
+import { assertScanSchema, lookupCode, recordScan } from '../../../lib/qr-fast'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -21,6 +19,23 @@ import { reportError } from '../../../lib/report'
  *  2. **It must never 404.** A printed code is permanent. Unknown or retired
  *     codes land on a helpful page, never a dead end - the magazine is in
  *     circulation for a year and a broken scan is a broken brand promise.
+ *
+ * # Nothing here imports Payload, and that is the point
+ *
+ * This route used to open with `import config from '../../../payload.config'`,
+ * which cost a measured 3245ms on a cold function before any work began -
+ * `getPayload()` another 1181ms, the first query 911ms. About 5.3 seconds spent
+ * loading a rich-text editor and an image pipeline to turn seven characters into
+ * a URL. It was not theoretical: the designer scanned a printed code and waited
+ * five to six seconds.
+ *
+ * Warm, it answers in 0.3s. So the whole cost landed on the first reader after a
+ * quiet spell, which for a magazine is most readers.
+ *
+ * `lib/qr-fast` does the lookup and the scan write over a plain connection. Keep
+ * it that way: a single `import` of anything that reaches payload.config puts
+ * all five seconds back, silently, and the only place it shows up is somebody
+ * standing in a restaurant.
  */
 
 export const dynamic = 'force-dynamic'
@@ -60,18 +75,12 @@ export const dynamic = 'force-dynamic'
  */
 const QR_TTL = 60 * 60
 
-async function lookup(payload: Awaited<ReturnType<typeof getPayload>>, code: string) {
+function lookup(code: string) {
   const run = async () => {
-    const result = await payload.find({
-      collection: 'qr-codes',
-      where: { code: { equals: code } },
-      limit: 1,
-      depth: 1,
-    })
     // `null` rather than undefined: undefined is not JSON, and the cache stores
     // JSON. A miss has to be cacheable too, or a wrong code is the one request
     // shape that always hits the database.
-    return result.docs[0] ?? null
+    return (await lookupCode(code)) ?? null
   }
 
   return unstable_cache(run, ['qr-code', code], {
@@ -89,9 +98,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return Response.redirect(`${siteUrl}/scan/not-found`, 302)
   }
 
-  const payload = await getPayload({ config })
-
-  const qr = await lookup(payload, code)
+  const qr = await lookup(code)
   if (!qr) {
     return Response.redirect(`${siteUrl}/scan/not-found?code=${code}`, 302)
   }
@@ -118,11 +125,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // Logged after the redirect is already on the wire.
   after(async () => {
     if (!verdict.count) {
-      payload.logger.debug({ code, reason: verdict.reason }, 'Scan not counted')
+      // `console` rather than `payload.logger`: the logger belongs to an
+      // instance this route no longer creates, and creating one to write a debug
+      // line would reintroduce the five seconds. Netlify captures stdout.
+      console.debug(`[scan] not counted: ${code} (${verdict.reason})`)
       return
     }
     try {
-      await recordScan(payload, qr, request)
+      // Checks the hand-written table and column names still exist. Once per
+      // process, on the write path rather than the read path, so a rename costs
+      // an analytics row and never a reader's redirect. See lib/qr-fast.
+      await assertScanSchema()
+      await logScan(qr, request)
     } catch (error) {
       /**
        * The reader got where they were going, so nothing looks wrong. What is
@@ -157,92 +171,65 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-async function recordScan(
-  payload: Awaited<ReturnType<typeof getPayload>>,
-  qr: QrDoc,
-  request: NextRequest,
-) {
+/**
+ * The scan log row, written without Payload.
+ *
+ * `scan-events` has no hooks and its `create` access is `() => false` - the rule
+ * existed so nothing but this route could write one, and it was already bypassed
+ * here with `overrideAccess`. So the document API was contributing validation of
+ * a shape this function builds itself, at the price of the import this route no
+ * longer makes. See lib/qr-fast for what replaced it, including the schema check
+ * that guards the hand-written column names.
+ */
+async function logScan(qr: QrDoc, request: NextRequest) {
   const userAgent = request.headers.get('user-agent') ?? ''
-  const businessId = relatedId(qr.business)
 
-  await payload.create({
-    collection: 'scan-events',
-    data: {
-      code: qr.code,
-      qrCode: qr.id,
-      business: businessId ?? null,
-      scannedAt: new Date().toISOString(),
-      placement: qr.placement,
-      /**
-       * Geo comes from whatever CDN is in front, city-level only, and is null
-       * when there is none. Vercel and Cloudflare each set their own pair.
-       *
-       * # Country arrives, city does not, and they are two separate settings
-       *
-       * This note used to say that putting the domain behind Cloudflare
-       * supplied both. It does not, and the first real scans proved it: two
-       * scans of a printed home code recorded `country=LB` and `city=NULL`.
-       *
-       * Cloudflare sends `cf-ipcountry` as soon as IP Geolocation is on, which
-       * it is. `cf-ipcity` comes from a different switch - Rules -> Transform
-       * Rules -> Managed Transforms -> **Add visitor location headers** - which
-       * also adds cf-region, cf-timezone and the lat/long pair. Nothing here
-       * changes when it is turned on; the header simply starts arriving.
-       *
-       * Netlify, the origin, sets neither, so a deployment reached directly on
-       * *.netlify.app rather than through the proxied domain records nothing.
-       */
-      city: request.headers.get('x-vercel-ip-city') ?? request.headers.get('cf-ipcity'),
-      country: request.headers.get('x-vercel-ip-country') ?? request.headers.get('cf-ipcountry'),
-      platform: detectPlatform(userAgent),
-      // A camera-app scan arrives with no referrer; a shared link usually has one.
-      isDirectScan: !request.headers.get('referer'),
-    },
-    // Bypasses the `create: () => false` rule - this route is the only writer.
-    overrideAccess: true,
+  await recordScan({
+    code: qr.code,
+    qrCodeId: qr.id,
+    businessId: relatedId(qr.business),
+    placement: qr.placement ?? null,
+    /**
+     * Geo comes from whatever CDN is in front, city-level only, and is null
+     * when there is none. Vercel and Cloudflare each set their own pair.
+     *
+     * # Country arrives, city does not, and they are two separate settings
+     *
+     * This note used to say that putting the domain behind Cloudflare
+     * supplied both. It does not, and the first real scans proved it: two
+     * scans of a printed home code recorded `country=LB` and `city=NULL`.
+     *
+     * Cloudflare sends `cf-ipcountry` as soon as IP Geolocation is on, which
+     * it is. `cf-ipcity` comes from a different switch - Rules -> Transform
+     * Rules -> Managed Transforms -> **Add visitor location headers** - which
+     * also adds cf-region, cf-timezone and the lat/long pair. Nothing here
+     * changes when it is turned on; the header simply starts arriving.
+     *
+     * Netlify, the origin, sets neither, so a deployment reached directly on
+     * *.netlify.app rather than through the proxied domain records nothing.
+     */
+    city: request.headers.get('x-vercel-ip-city') ?? request.headers.get('cf-ipcity'),
+    country: request.headers.get('x-vercel-ip-country') ?? request.headers.get('cf-ipcountry'),
+    platform: detectPlatform(userAgent),
+    // A camera-app scan arrives with no referrer; a shared link usually has one.
+    isDirectScan: !request.headers.get('referer'),
   })
-
-  await incrementScanCount(payload, qr.id)
 }
 
 /**
- * Bump the denormalised counter on the QR code.
+ * The counter moved into the same statement as the log row.
  *
- * Deliberately raw SQL rather than payload.update(). Reading the count into
- * JavaScript, adding one, and writing it back loses increments whenever two
- * scans overlap, which was demonstrated in practice: two requests produced two
- * scan-events rows but a counter of 1. Two people scanning the same table tent
- * at once is the normal case, not the edge case, and this number is what an
- * advertiser sees at renewal.
+ * It used to be a second call here, wrapped in its own try/catch so a failed
+ * counter could not lose the scan event that had already been written. Now both
+ * are one CTE in `recordScan`, so either both land or neither does - which is
+ * the better of the two, because a scan-events row with no matching increment
+ * was the shape that made the counter and the log disagree.
  *
- * `scan_count = scan_count + 1` makes Postgres do the arithmetic under a row
- * lock, so concurrent scans cannot lose one.
- *
- * Schema and table names come from the adapter's own config, never from the
- * request, so interpolating them is safe. The id is parameterised.
- *
- * Everything here is caught. This counter is a convenience shown in the admin
- * list; scan-events is the authoritative record and has already been written by
- * the time we get here. A reader holding a printed code must always be
- * redirected, so no failure in this function is allowed to reach them - but it
- * does get logged loudly, because a counter that silently stops moving is the
- * failure that costs a renewal argument.
+ * The arithmetic is still `scan_count = scan_count + 1` in the database, for the
+ * reason it always was: reading the value into JavaScript and writing it back
+ * loses increments when two people scan the same table card at once, which was
+ * demonstrated rather than assumed - two requests, two rows, a counter of 1.
  */
-async function incrementScanCount(
-  payload: Awaited<ReturnType<typeof getPayload>>,
-  qrId: number | string,
-) {
-  try {
-    const db = rawDb(payload)
-
-    await db.pool.query(
-      `update "${db.schema}"."${db.table('qr_codes')}" set scan_count = scan_count + 1 where id = $1`,
-      [qrId],
-    )
-  } catch (error) {
-    await reportError(error, { source: 'qr.scan-counter', extra: { qrId } })
-  }
-}
 
 function detectPlatform(userAgent: string): 'ios' | 'android' | 'web' | 'unknown' {
   if (!userAgent) return 'unknown'
