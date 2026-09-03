@@ -120,6 +120,24 @@ const LISTINGS_TTL = 60 * 60
  *
  * Tagged `businesses` so a future `revalidateTag` on publish can clear it
  * immediately rather than waiting out the window.
+ *
+ * # No composite index, and that is measured rather than assumed
+ *
+ * Every column filtered on here is indexed on its own, and a filtered read
+ * touches three at once, so a composite on `(category, governorate, _status)`
+ * is the obvious next move. Against production on 2026-09-03:
+ *
+ *   Index Scan using businesses_category_idx  (actual time=0.136..0.588 rows=62)
+ *     Filter: (_status = 'published' AND governorate = 'mount-lebanon')
+ *     Rows Removed by Filter: 84
+ *   Planning Time: 2.752 ms
+ *   Execution Time: 0.755 ms
+ *
+ * Planning already costs three and a half times what execution does, and each
+ * extra index makes planning slower - so a composite would be a net loss at
+ * this size. `Rows Removed by Filter` scales with category size, so re-run that
+ * EXPLAIN when execution time overtakes planning time. That is the trigger, not
+ * a row count somebody picked.
  */
 export async function findListings({
   locale,

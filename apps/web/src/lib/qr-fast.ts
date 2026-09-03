@@ -54,6 +54,25 @@ import type { QrDoc } from './qr-doc'
  * Never closed. The instance is frozen between requests and thawed for the next
  * one, so a pool that survives is the point: it is what makes the second scan
  * cost nothing.
+ *
+ * # Audited on 2026-09-03 and left at two
+ *
+ * Measured on production: `max_connections` is 60 with 3 reserved, and 16 were
+ * in use with 1 active. That ceiling is not the one that binds, though -
+ * `DATABASE_URL` points at the transaction pooler on 6543, which multiplexes
+ * many client connections onto far fewer Postgres ones. The number to watch is
+ * the pooler's client limit, and exhausting it would take roughly a hundred
+ * warm instances at this setting.
+ *
+ * Transaction-mode pooling also forbids named prepared statements. Every query
+ * here passes parameters without a `name`, so `pg` uses unnamed statements and
+ * the extended protocol works - confirmed by the scan write landing in
+ * production rather than by reading the documentation.
+ *
+ * What none of that establishes is behaviour under real concurrency. That needs
+ * a load test against the deployed site, not a different number here, and it is
+ * worth doing before the magazine puts a few thousand people in front of one
+ * printed code on one evening.
  */
 let pool: Pool | null = null
 
