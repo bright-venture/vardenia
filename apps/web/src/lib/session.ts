@@ -6,6 +6,7 @@ import config from '../payload.config'
 import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from '../access/index'
 import { bookingFilterWhere, DEFAULT_FILTER, type BookingFilter } from './booking-filters'
 import { beirutDate } from './beirut'
+import { findEvery } from './find-every'
 import type { Booking } from '../payload-types'
 
 /**
@@ -452,10 +453,15 @@ export interface OwnerBookingGuest {
   /**
    * Times this guest has sat down here before, counted across this owner's own
    * listings and nowhere else. See `withGuests` for why that boundary holds.
+   *
+   * `null` means the count could not be made reliably, not zero. A venue with
+   * more past bookings than one read can cover gets no number rather than a low
+   * one - undercounting a regular is exactly the error that turns a loyal guest
+   * away, so "unknown" is the only honest alternative.
    */
-  visits: number
-  /** Of the bookings behind them, the ones nobody arrived for. */
-  missed: number
+  visits: number | null
+  /** Of the bookings behind them, the ones nobody arrived for. `null` as above. */
+  missed: number | null
 }
 
 /**
@@ -589,11 +595,19 @@ export async function ownerBookings(
  * the database. A guest who dines at four listed restaurants shows as a regular
  * at each one and reveals nothing at any of them about the other three.
  *
- * One query for the whole page rather than one per row. It counts up to a
- * thousand past bookings across the guests currently on screen, which is a great
- * many more than a venue with a hundred rows on one page has taken; past that it
- * would undercount, and the fix on that day is a grouped count in SQL, not a
- * larger limit.
+ * One read for the whole page rather than one per row, paged rather than capped
+ * at a round number. It used to be `limit: 1000` with a comment admitting it
+ * would undercount past that, which is the wrong trade for this particular
+ * number: a venue looks at "been here 8 times" to decide whether to hold a
+ * table, and a silent undercount turns a regular away.
+ *
+ * So it pages, and when it genuinely cannot finish - fifty thousand past
+ * bookings among the hundred guests on one screen - the counts come back `null`
+ * and the dashboard prints nothing rather than something low. A missing line is
+ * read as "we do not know"; a wrong number is read as fact.
+ *
+ * The fix on that day is still the grouped count in SQL that the old comment
+ * named. This just stops being wrong in the meantime.
  */
 async function withGuests<T extends { customer?: unknown }>(
   payload: Awaited<ReturnType<typeof getPayload>>,
@@ -623,7 +637,7 @@ async function withGuests<T extends { customer?: unknown }>(
         depth: 0,
         overrideAccess: true,
       }),
-      payload.find({
+      findEvery<{ customer?: unknown; status?: string }>(payload, {
         collection: 'bookings',
         where: {
           customer: { in: customerIds },
@@ -637,7 +651,6 @@ async function withGuests<T extends { customer?: unknown }>(
           // Behind them, not ahead. A booking for next Friday is not a visit yet.
           end: { less_than: new Date().toISOString() },
         },
-        limit: 1000,
         depth: 0,
         // The whole boundary. See the note above this function.
         overrideAccess: false,
@@ -667,8 +680,13 @@ async function withGuests<T extends { customer?: unknown }>(
       guests.set(key, {
         name: String((doc as { name?: unknown }).name ?? ''),
         phone: String((doc as { phone?: unknown }).phone ?? ''),
-        visits: visits.get(key) ?? 0,
-        missed: missed.get(key) ?? 0,
+        /**
+         * `null`, not a partial count, when the read could not finish. A number
+         * that is merely low reads as fact and is acted on; the dashboard
+         * prints nothing for null. See the note above this function.
+         */
+        visits: history.complete ? (visits.get(key) ?? 0) : null,
+        missed: history.complete ? (missed.get(key) ?? 0) : null,
       })
     }
   }

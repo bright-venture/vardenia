@@ -485,14 +485,22 @@ async function BookingList({
                       Saturday they could sell twice over. Dropped for a
                       cancelled row, where nobody is deciding anything.
                     */}
-                    {!cancelled && row.guest && (row.guest.visits > 0 || row.guest.missed > 0) ? (
+                    {/*
+                      `visits` and `missed` are null when the history could not
+                      be counted reliably - see OwnerBookingGuest. Null prints
+                      nothing at all, which reads as "we do not know"; a low
+                      number would read as fact and be acted on.
+                    */}
+                    {!cancelled &&
+                    row.guest &&
+                    ((row.guest.visits ?? 0) > 0 || (row.guest.missed ?? 0) > 0) ? (
                       <p className="mt-1 flex flex-wrap gap-x-3 text-xs">
-                        {row.guest.visits > 0 ? (
+                        {row.guest.visits ? (
                           <span className="text-ink-500">
                             {t('guestVisits', { count: row.guest.visits })}
                           </span>
                         ) : null}
-                        {row.guest.missed > 0 ? (
+                        {row.guest.missed ? (
                           <span className="text-state-danger">
                             {t('guestMissed', { count: row.guest.missed })}
                           </span>

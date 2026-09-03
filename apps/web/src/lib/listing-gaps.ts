@@ -1,56 +1,7 @@
 import type { Payload } from 'payload'
 import type { Business } from '../payload-types'
 import { PLACEHOLDER_STEM } from './media'
-
-/**
- * Every document matching a query, fetched a page at a time.
- *
- * # Why not `limit: 1000, pagination: false`, which is what this replaced
- *
- * Because that silently returns the first thousand and says nothing. Payload
- * applies `limit` even with pagination off, and then reports the truncated
- * count as the total - verified against production:
- *
- *   ?limit=5                    ->  5 docs, totalDocs=153
- *   ?limit=5&pagination=false   ->  5 docs, totalDocs=5     <-
- *   ?pagination=false           -> 153 docs, totalDocs=153
- *
- * So a caller cannot even detect the truncation from the response. On a
- * worklist that is the worst possible failure: it does not look broken, it
- * looks finished, and the listings past the cut are simply never worked.
- *
- * Dropping `limit` entirely would return everything and is what the third line
- * above does, but it trades a silent wrong answer for an unbounded read. This
- * pages instead: bounded per query, complete overall.
- *
- * # The ceiling throws rather than truncates
- *
- * Fifty thousand listings is far past the point where a report should be
- * fetching whole documents to count blank fields - that is a `GROUP BY`. If it
- * is ever reached, the run fails and says so, because the one thing this
- * function must never do again is quietly return part of the answer.
- */
-const PAGE_SIZE = 500
-const MAX_PAGES = 100
-
-async function findEvery<T>(
-  payload: Payload,
-  args: Omit<Parameters<Payload['find']>[0], 'limit' | 'page' | 'pagination'>,
-): Promise<T[]> {
-  const all: T[] = []
-
-  for (let page = 1; page <= MAX_PAGES; page += 1) {
-    const result = await payload.find({ ...args, limit: PAGE_SIZE, page })
-    all.push(...(result.docs as T[]))
-    if (!result.hasNextPage) return all
-  }
-
-  throw new Error(
-    `listing-gaps: stopped after ${MAX_PAGES * PAGE_SIZE} documents from ` +
-      `"${String(args.collection)}". Rewrite this as an aggregate query rather ` +
-      'than raising the ceiling.',
-  )
-}
+import { FIND_EVERY_CEILING, findEvery } from './find-every'
 
 /**
  * What is still missing from every listing, as a worklist.
@@ -185,7 +136,7 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
     select: { filename: true },
   })
 
-  const placeholders = new Set(stand.map((doc) => String(doc.id)))
+  const placeholders = new Set(stand.docs.map((doc) => String(doc.id)))
 
   const query = (locale: 'en' | 'ar') =>
     findEvery<Business>(payload, {
@@ -200,8 +151,26 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
 
   const [english, arabic] = await Promise.all([query('en'), query('ar')])
 
+  /**
+   * A report that quietly omits listings is worse than no report, so this one
+   * refuses rather than degrading. See find-every for why the choice is the
+   * caller's.
+   */
+  for (const [label, result] of [
+    ['media', stand],
+    ['businesses (en)', english],
+    ['businesses (ar)', arabic],
+  ] as const) {
+    if (!result.complete) {
+      throw new Error(
+        `listing-gaps: stopped after ${FIND_EVERY_CEILING} documents from ${label}. ` +
+          'Rewrite this as an aggregate query rather than raising the ceiling.',
+      )
+    }
+  }
+
   const arabicNames = new Map<string, string>()
-  for (const doc of arabic) {
+  for (const doc of arabic.docs) {
     /**
      * Payload falls back to the default locale for an unset localised field, so
      * an Arabic name that was never written comes back as the English one. That
@@ -216,7 +185,7 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
     arabicNames.set(String(doc.id), text(doc.name))
   }
 
-  const rows = english.map((doc) => {
+  const rows = english.docs.map((doc) => {
     /**
      * The generated `Business` type rather than `Record<string, unknown>`.
      *
