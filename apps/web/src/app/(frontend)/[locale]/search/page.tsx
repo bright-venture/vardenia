@@ -97,6 +97,8 @@ export default async function SearchPage({ params, searchParams }: Props) {
                 <ListingGrid
                   listings={results.listings.docs}
                   locale={locale}
+                  // Listings are the first block of results on the page.
+                  eager
                   empty={ar ? 'لا شيء' : 'Nothing'}
                 />
               </div>

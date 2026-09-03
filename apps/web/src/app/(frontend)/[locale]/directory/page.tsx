@@ -184,6 +184,9 @@ async function DirectoryResults({
       <ListingGrid
         listings={result.docs}
         locale={locale}
+        // The results are the page. The first card is the largest thing above the
+        // fold, so its image is worth preloading. See ListingGrid.
+        eager
         empty={t('resultCount', { count: 0 })}
         emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
         emptyAction={

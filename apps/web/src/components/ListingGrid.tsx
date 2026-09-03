@@ -18,12 +18,25 @@ import { EmptyState } from './ui'
  * moment a reader is most likely to leave, and a bare "No listings match" tells
  * them nothing about which of their five filters to drop. See ui/EmptyState.
  *
- * # Only the first card preloads its image
+ * # Only the first card preloads its image, and only when asked
  *
  * `priority` on every card would have twenty images competing for a phone's
- * bandwidth with the one at the top of the screen. On the first card it is the
- * largest thing above the fold and worth preloading; below that it is actively
- * harmful.
+ * bandwidth with the one at the top of the screen. On the first card of a
+ * results page it is the largest thing above the fold and worth preloading.
+ *
+ * This used to apply that to the first card everywhere, which was wrong on two
+ * of the five pages that use this grid, and measurably so. On the homepage the
+ * grid sits under a full-height hero that is itself `priority`, so the page
+ * emitted two `<link rel="preload" as="image">` tags and the one that was not
+ * the LCP competed with the one that was - on a throttled mobile connection,
+ * which is where Lighthouse measured an LCP of 6.5s. On a listing page the
+ * "More like this" grid is at the very bottom, and it preloaded there too, on
+ * all 153 of them.
+ *
+ * So the caller says. `eager` defaults to off, which is the direction that
+ * fails quietly rather than expensively, and matches what ui/Plate already says
+ * about `priority`: callers opt in per page rather than getting a default that
+ * is wrong somewhere.
  */
 /**
  * Where the grid is being used, which decides its shape.
@@ -73,6 +86,7 @@ export function ListingGrid({
   emptyBody,
   emptyAction,
   kind = 'directory',
+  eager = false,
 }: {
   listings: ListingSummary[]
   locale: Locale
@@ -82,6 +96,13 @@ export function ListingGrid({
   emptyBody?: string
   emptyAction?: React.ReactNode
   kind?: GridKind
+  /**
+   * Whether this grid is the first thing on the screen.
+   *
+   * Only the caller knows. See the note above the component: the grid used to
+   * decide for itself and was wrong on two of its five pages.
+   */
+  eager?: boolean
 }) {
   if (listings.length === 0) {
     return <EmptyState title={empty} body={emptyBody} action={emptyAction} />
@@ -105,7 +126,7 @@ export function ListingGrid({
             googleRating={listing.googleRating}
             googleRatingCount={listing.googleRatingCount}
             heroImage={listing.heroImage as never}
-            priority={index === 0}
+            priority={eager && index === 0}
             locale={locale}
           />
         </div>

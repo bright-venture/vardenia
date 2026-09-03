@@ -146,7 +146,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           }
         >
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {articles.docs.map((article, index) => (
+            {/*
+              No `priority` on the first card, unlike the grids on /directory
+              and /magazine/articles. This band sits below the hero, the section
+              index and the listings, so preloading its image made the homepage
+              request a second `as="image"` resource that competed with the
+              actual LCP. See ListingGrid for the same mistake and its fix.
+            */}
+            {articles.docs.map((article) => (
               <ArticleCard
                 key={article.id}
                 slug={article.slug ?? ''}
@@ -155,7 +162,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 kind={article.kind}
                 publishedAt={article.publishedAt}
                 heroImage={article.heroImage as never}
-                priority={index === 0}
                 locale={locale}
               />
             ))}

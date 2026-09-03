@@ -179,6 +179,8 @@ async function SectionResults({
       <ListingGrid
         listings={result.docs}
         locale={locale}
+        // A section page is a results page: the grid starts near the top.
+        eager
         empty={t('resultCount', { count: 0 })}
         // Says which way out exists, rather than restating the problem. See
         // ui/EmptyState: the title is what happened, the body is what to do.
