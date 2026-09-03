@@ -14,6 +14,17 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   /**
+   * Stop announcing the stack on every response.
+   *
+   * The live site was returning `x-powered-by: Next.js, Payload`, which tells
+   * anyone looking exactly what to look up advisories for and that a Payload
+   * admin panel exists to find. It is not a vulnerability and removing it is
+   * not a defence - `/admin` is discoverable anyway - but there is no reason to
+   * put it in the response.
+   */
+  poweredByHeader: false,
+
+  /**
    * Separate build directories for dev and production.
    *
    * # The bug this fixes

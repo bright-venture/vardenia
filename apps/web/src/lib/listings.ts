@@ -65,10 +65,36 @@ export interface ListingQuery {
 }
 
 /**
- * How long a directory result stays cached. Matches the 60s on every other
- * public page, so the whole site has one staleness story rather than several.
+ * How long a directory result stays cached.
+ *
+ * # This number governs far more than it looks like it does
+ *
+ * It was sixty seconds, and it silently set the ISR window for every page that
+ * reads a listing. Next takes the *minimum* of a page's own `revalidate` and
+ * the shortest cache entry that page consumes, so `export const revalidate =
+ * 3600` on directory/[slug] and on the homepage were both being clamped back to
+ * sixty by this constant. The build manifest is where that shows:
+ *
+ *   before   /en 60   /en/directory/beit-douma 60   (both declare 3600)
+ *   after    /en 3600 /en/directory/beit-douma 3600
+ *
+ * So the comment that used to sit here - "matches the 60s on every other public
+ * page" - had cause and effect backwards. Nothing else chose sixty seconds.
+ * This did, for everything.
+ *
+ * # An hour is not staler than a minute here
+ *
+ * Every entry below is tagged `businesses`, and publishing a listing fires
+ * `revalidateTag('businesses')` from hooks/revalidateListings. An edit clears
+ * these immediately whatever this number says. The window only decides how
+ * often an unchanged page is rebuilt from scratch - and a rebuild means loading
+ * payload.config, measured at 4,158ms and 337MB.
+ *
+ * At sixty seconds the homepage alone was entitled to 1,440 rebuilds a day to
+ * produce an identical page. That is the cost this removes; freshness was never
+ * what the sixty seconds was buying.
  */
-const LISTINGS_TTL = 60
+const LISTINGS_TTL = 60 * 60
 
 /**
  * Cached across requests, and this is the one that mattered most.

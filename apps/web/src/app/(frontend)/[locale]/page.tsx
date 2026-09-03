@@ -60,6 +60,22 @@ import { findArticles } from '../../../lib/articles'
  * case the helper was written to keep consistent: the canonical of the Arabic
  * homepage is `/ar`, not `/ar/`.
  */
+/**
+ * An hour, stated rather than inherited.
+ *
+ * There was no `revalidate` here at all, so Next inferred one from the shortest
+ * data cache the page touches. That was `LISTINGS_TTL`, and it was sixty
+ * seconds - which is how the busiest page in the product came to be entitled to
+ * 1,440 rebuilds a day for content that changes weekly.
+ *
+ * Setting it here alone does nothing: Next takes the minimum of this and the
+ * caches the page reads, so the real fix was raising `LISTINGS_TTL`. See the
+ * note on it in lib/listings for why an hour is not staler than a minute when
+ * publishing already clears the tag. This stays so the intent is written down
+ * where somebody reading the page will find it.
+ */
+export const revalidate = 3600
+
 export async function generateMetadata({
   params,
 }: {
