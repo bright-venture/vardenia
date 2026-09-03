@@ -235,6 +235,15 @@ export interface OwnerListing {
   slug: string
   /** Whether `/directory/[slug]` exists for the public. */
   published: boolean
+  /**
+   * The printed code for this listing, if one has been minted.
+   *
+   * Read here so the dashboard can offer it as a download. It is taken from the
+   * owner's own listing rather than from anything in the request, which is what
+   * keeps `/qr/[code]` safe to leave open: the route only checks that a code
+   * exists, and the only codes a partner is ever handed are their own.
+   */
+  code: string
 }
 
 export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
@@ -251,15 +260,54 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
     // Published or not: an owner may manage a listing staff have not published
     // yet, and it is still theirs.
     overrideAccess: true,
-    select: { name: true, slug: true, _status: true },
+    select: { name: true, slug: true, _status: true, qrCode: true },
   })
 
-  return result.docs.map((doc) => ({
-    id: Number(doc.id),
-    name: String(doc.name ?? ''),
-    slug: String(doc.slug ?? ''),
-    published: (doc as { _status?: unknown })._status !== 'draft',
-  }))
+  /**
+   * The codes, in one query rather than by populating the relationship.
+   *
+   * `depth: 1` here would be three or four extra documents for an account with
+   * one listing and a needless round trip per listing for anyone else. Same
+   * reason `ownerBookings` fetches guests separately.
+   */
+  const codeIds = result.docs
+    .map((doc) => {
+      const value = (doc as { qrCode?: unknown }).qrCode
+      if (typeof value === 'number' || typeof value === 'string') return value
+      return (value as { id?: number | string } | null)?.id ?? null
+    })
+    .filter((id): id is number | string => id !== null)
+
+  const codes = new Map<string, string>()
+  if (codeIds.length > 0) {
+    const found = await payload.find({
+      collection: 'qr-codes',
+      where: { id: { in: codeIds } },
+      limit: codeIds.length,
+      depth: 0,
+      overrideAccess: true,
+      select: { code: true },
+    })
+    for (const doc of found.docs) {
+      codes.set(String(doc.id), String((doc as { code?: unknown }).code ?? ''))
+    }
+  }
+
+  return result.docs.map((doc) => {
+    const value = (doc as { qrCode?: unknown }).qrCode
+    const codeId =
+      typeof value === 'number' || typeof value === 'string'
+        ? value
+        : ((value as { id?: number | string } | null)?.id ?? null)
+
+    return {
+      id: Number(doc.id),
+      name: String(doc.name ?? ''),
+      slug: String(doc.slug ?? ''),
+      published: (doc as { _status?: unknown })._status !== 'draft',
+      code: codeId === null ? '' : (codes.get(String(codeId)) ?? ''),
+    }
+  })
 })
 
 /**

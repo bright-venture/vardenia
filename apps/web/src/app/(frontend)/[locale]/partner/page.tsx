@@ -24,6 +24,7 @@ import {
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { BookingActions } from '../../../../components/BookingActions'
 import { ClosedDates } from '../../../../components/ClosedDates'
+import { QrCodePanel } from '../../../../components/QrCodePanel'
 import { SignOutButton } from '../../../../components/SignOutButton'
 
 /**
@@ -238,6 +239,18 @@ export default async function PartnerPage({ params, searchParams }: Props) {
         browser's own timezone must never get a vote on which day a venue said it
         was closed.
       */}
+      {/*
+        Above the closed dates, because it is the one section here a partner
+        might act on today. Closed dates are set once a season.
+      */}
+      <QrCodePanel
+        listings={listings.map((listing) => ({
+          id: listing.id,
+          name: listing.name,
+          code: listing.code,
+        }))}
+      />
+
       <ClosedDates
         listings={listings.map((listing) => ({ id: listing.id, name: listing.name }))}
         closures={closures.map((closure) => ({

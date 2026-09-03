@@ -38,6 +38,16 @@ export function ReportsNavLink() {
       </a>
 
       <a
+        href="/reports/listings"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={linkStyle}
+        title="What every listing is still missing. Sort by Missing to find the emptiest."
+      >
+        Listing gaps (CSV)
+      </a>
+
+      <a
         href="/qr/sheet"
         target="_blank"
         rel="noopener noreferrer"
