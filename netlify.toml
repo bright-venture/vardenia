@@ -104,3 +104,38 @@
 # apps/web/.next is served as static files and every dynamic route 404s.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# How long a browser may keep an optimised image.
+#
+# `images.minimumCacheTTL` in next.config.ts is set to a year and does nothing
+# here. The plugin above rewrites `/_next/image` onto Netlify's own Image CDN,
+# which applies its own policy and ignores Next's - measured on the live site:
+#
+#   /_next/image    Cache-Control: max-age=14400          (4 hours)
+#   /_next/static   Cache-Control: max-age=31536000, immutable
+#
+# Four hours means every returning reader refetches every photograph on the
+# directory several times a week. That is the bandwidth and web-request line on
+# the Netlify bill, and it is the largest single thing on it.
+#
+# # Thirty days, not a year, and the reason is `public/images`
+#
+# The listing photographs are safe to cache forever: their filenames carry a
+# content hash (`3ind-judy-cover-b6fb339cefba6bcef5e6cd1d-900x1200.webp`), so a
+# replaced photograph is a different URL. The ten files in `public/images` are
+# not - `hero.jpg` stays `hero.jpg`. A year would pin a replaced hero in every
+# returning reader's browser until 2027, with no way to reach them.
+#
+# Thirty days is still 180 times fewer revalidations than four hours, and a
+# design change propagates within a month. Make it a year once those ten files
+# are content-addressed too - importing them from `src` rather than serving them
+# from `public` is what does that.
+#
+# `stale-while-revalidate` lets the browser paint the old file immediately and
+# fetch the new one behind it, so the day the cache does expire costs nobody a
+# blank masthead.
+[[headers]]
+  for = "/_next/image*"
+
+  [headers.values]
+    Cache-Control = "public, max-age=2592000, stale-while-revalidate=86400"

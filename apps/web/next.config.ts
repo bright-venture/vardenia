@@ -86,7 +86,9 @@ const nextConfig: NextConfig = {
      *
      * So this saves nothing. It stays because the config should not advertise a
      * format the host will not emit - the next person to read it would draw the
-     * same wrong conclusion. The real saving is `minimumCacheTTL` below.
+     * same wrong conclusion. This pointed at `minimumCacheTTL` below as the real
+     * saving, which turned out to be inert here for the same reason: Netlify
+     * serves these images, not Next. The saving lives in netlify.toml.
      */
     formats: ['image/webp'],
 
@@ -98,10 +100,28 @@ const nextConfig: NextConfig = {
      * on it. For a site whose images almost never change, that is a function
      * invocation per image per minute of traffic, forever.
      *
-     * A year is safe here specifically because upload URLs are immutable:
+     * A year is safe for uploads specifically because their URLs are immutable:
      * hooks/unguessableFilename gives every file 96 bits of randomness in its
      * name, so replacing an image produces a new URL rather than new bytes at
-     * the old one. There is no stale-image failure mode to protect against.
+     * the old one.
+     *
+     * # It does nothing in production, and this used to claim otherwise
+     *
+     * `@netlify/plugin-nextjs` rewrites `/_next/image` onto Netlify's own Image
+     * CDN, which applies its own policy and never reads this value. Measured on
+     * the live site, months after this was set:
+     *
+     *   /_next/image    Cache-Control: max-age=14400      (4 hours)
+     *   /_next/static   Cache-Control: max-age=31536000, immutable
+     *
+     * The `netlify-vary` header on those responses is what gives it away. So
+     * the "real saving" claimed above was never collected, and the note that
+     * said so has been corrected rather than deleted - believing a setting is
+     * working is worse than knowing it is not.
+     *
+     * The header that actually applies is in netlify.toml. This stays because
+     * it is still correct for `next start`, for local development and for any
+     * host that does not replace the optimiser.
      */
     minimumCacheTTL: 60 * 60 * 24 * 365,
 
