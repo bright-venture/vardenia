@@ -38,7 +38,7 @@ const TONES = {
     fill: 'text-gold-500',
     value: 'text-ink-700',
     muted: 'text-ink-500',
-    source: 'text-ink-300',
+    source: 'text-ink-500',
   },
   inverse: {
     track: 'text-cedar-100/25',

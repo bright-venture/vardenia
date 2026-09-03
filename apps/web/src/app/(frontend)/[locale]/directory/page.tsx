@@ -208,7 +208,7 @@ async function DirectoryResults({
         <nav className="mt-16 flex items-center justify-center gap-2" aria-label="Pagination">
           {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
             n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-300 px-1">
+              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1">
                 &hellip;
               </span>
             ) : (

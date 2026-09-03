@@ -21,12 +21,23 @@ import { colors } from '@vardenia/tokens'
  * has to be checked against the darkest of them, and that is arithmetic, which
  * is what a test is for.
  *
+ * # It happened again, in the gap this comment used to describe
+ *
+ * The paragraph here said `ink.300` was "deliberately never used for text" and
+ * excluded it on that basis. A Lighthouse run on production found it used for
+ * text in five places - the section numerals on the homepage, the rating source
+ * label, two pagination ellipses and the expand glyph on the account forms - at
+ * 2.11 against `surface.base`, which fails even the large-text threshold.
+ *
+ * Documenting an assumption is not enforcing it. `ink.300 is only ever an icon`
+ * below now checks the source rather than trusting the sentence, which is the
+ * same lesson as the paragraph above and had to be learnt twice.
+ *
  * # What it does not cover
  *
  * Text over a photograph, which has no fixed ground - the masthead is measured
  * by compositing its gradient over the actual image, and that lives with the
- * component. And `ink.300`, which is decoration: it is 1.90 on sunken, is
- * deliberately never used for text, and would fail here if it were listed.
+ * component.
  */
 
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as number[]
@@ -126,5 +137,79 @@ describe('the ink scale', () => {
         lums[i - 1]!,
       )
     }
+  })
+})
+
+/**
+ * Tokens carrying an opacity modifier, which the pairs above cannot see.
+ *
+ * `text-cedar-100/50` is not a token - it is a token and a number, composited
+ * by the browser - so nothing in the palette test knows it exists. It measured
+ * 4.27 on the navy band, which passes for large text and fails for the 11px and
+ * 12px uppercase it was actually used on.
+ */
+describe('cedar on the navy ground, at the alphas the site uses', () => {
+  const over = (fg: string, bg: string, alpha: number) => {
+    const f = hex(fg)
+    const b = hex(bg)
+    const mix = f.map((c, i) => Math.round(c * alpha + b[i]! * (1 - alpha)))
+    return '#' + mix.map((c) => c.toString(16).padStart(2, '0')).join('')
+  }
+
+  it('is readable at 70 percent, which is what the small type uses', () => {
+    const blended = over(colors.cedar[100], colors.cedar[900], 0.7)
+    expect(contrast(blended, colors.cedar[900])).toBeGreaterThanOrEqual(AA_NORMAL)
+  })
+
+  /** Pins why 50 was replaced, so nobody restores it as a design tweak. */
+  it('is not readable at 50 percent', () => {
+    const blended = over(colors.cedar[100], colors.cedar[900], 0.5)
+    expect(contrast(blended, colors.cedar[900])).toBeLessThan(AA_NORMAL)
+  })
+})
+
+/**
+ * The rule the header paragraph used to only assert.
+ *
+ * `ink.300` is 2.11 on `surface.base`, so it may tint an icon and must never
+ * carry a glyph. Both remaining uses are SVG icons and both carry a `size-`
+ * class; a text usage would not. Crude, and it catches the exact five that
+ * shipped.
+ */
+describe('ink.300 is only ever an icon', () => {
+  it('is too light for text on any ground the site uses', () => {
+    expect(contrast(colors.ink[300], colors.surface.base)).toBeLessThan(AA_NORMAL)
+  })
+
+  it('appears in the source only alongside an icon size', async () => {
+    const { readFileSync, readdirSync, statSync } = await import('node:fs')
+    const { join } = await import('node:path')
+
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((entry) => {
+        const full = join(dir, entry)
+        if (statSync(full).isDirectory()) return walk(full)
+        return full.endsWith('.tsx') ? [full] : []
+      })
+
+    const offenders: string[] = []
+
+    // Vitest runs with the package as the working directory, so this reaches
+    // every component regardless of where this test file sits.
+    for (const file of walk(join(process.cwd(), 'src'))) {
+      const lines = readFileSync(file, 'utf8').split(/\r?\n/)
+
+      for (const [index, line] of lines.entries()) {
+        if (!line.includes('text-ink-300')) continue
+        // An icon carries a `size-` class. A glyph does not.
+        if (/\bsize-/.test(line)) continue
+        offenders.push(`${file.replace(process.cwd(), '')}:${index + 1}`)
+      }
+    }
+
+    expect(
+      offenders,
+      'text-ink-300 without a size- class is text, and ink.300 measures 2.11',
+    ).toEqual([])
   })
 })

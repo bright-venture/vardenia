@@ -67,7 +67,7 @@ export async function PrintInterlude() {
                 and an RTL paragraph would move its slash to the wrong end. */}
             <span
               dir="ltr"
-              className="text-cedar-100/50 font-mono text-xs uppercase tracking-[0.2em]"
+              className="text-cedar-100/70 font-mono text-xs uppercase tracking-[0.2em]"
             >
               /g/K3M9QP2
             </span>

@@ -154,7 +154,7 @@ export async function Hero({ places }: { places: number }) {
               minLength={2}
               aria-label={t('searchAction')}
               placeholder={t('searchPlaceholder')}
-              className="text-surface-base placeholder:text-cedar-100/50 w-full bg-transparent px-5 py-4 focus:outline-none"
+              className="text-surface-base placeholder:text-cedar-100/70 w-full bg-transparent px-5 py-4 focus:outline-none"
             />
             <button
               type="submit"
@@ -182,7 +182,7 @@ export async function Hero({ places }: { places: number }) {
                 <dd className="text-surface-base font-mono text-xl tabular-nums">{value}</dd>
                 <span
                   aria-hidden
-                  className="text-cedar-100/50 font-mono text-[11px] uppercase tracking-[0.16em]"
+                  className="text-cedar-100/70 font-mono text-[11px] uppercase tracking-[0.16em]"
                 >
                   {label}
                 </span>

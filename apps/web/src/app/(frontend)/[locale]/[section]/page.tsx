@@ -198,7 +198,7 @@ async function SectionResults({
         <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
           {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
             n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-300 px-1 py-1">
+              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1 py-1">
                 &hellip;
               </span>
             ) : (

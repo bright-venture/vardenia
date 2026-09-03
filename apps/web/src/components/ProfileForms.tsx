@@ -112,7 +112,7 @@ function Panel({
         </span>
         <span
           aria-hidden
-          className="text-ink-300 transition-transform duration-200 group-open:rotate-45"
+          className="text-ink-500 transition-transform duration-200 group-open:rotate-45"
         >
           +
         </span>

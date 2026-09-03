@@ -65,7 +65,7 @@ export function SectionIndex({ locale }: { locale: Locale }) {
               href={`/${section.path}`}
               className="border-ink-100 group flex items-center gap-5 border-b py-5 lg:gap-10 lg:py-7"
             >
-              <span aria-hidden className="text-ink-300 font-mono text-xs tabular-nums">
+              <span aria-hidden className="text-ink-500 font-mono text-xs tabular-nums">
                 {String(index + 1).padStart(2, '0')}
               </span>
 
