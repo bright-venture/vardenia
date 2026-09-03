@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { BOOKING_STATUSES, type BookingStatus } from '@vardenia/core'
-import { Link } from '../../../../i18n/routing'
-import { currentOwner, ownerBookings, ownerClosures, ownerListings } from '../../../../lib/session'
+import { Link } from '../../../../../i18n/routing'
+import { currentOwner, ownerBookings, ownerListings } from '../../../../../lib/session'
 import {
   BOOKING_WINDOWS,
   bookingFilterQuery,
@@ -13,19 +13,10 @@ import {
   parseBookingFilter,
   type BookingFilter,
   type BookingWindow,
-} from '../../../../lib/booking-filters'
-import {
-  addDays,
-  beirutCalendarDayLabel,
-  beirutDate,
-  beirutDayLabel,
-  beirutTime,
-} from '../../../../lib/beirut'
-import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
-import { BookingActions } from '../../../../components/BookingActions'
-import { ClosedDates } from '../../../../components/ClosedDates'
-import { QrCodePanel } from '../../../../components/QrCodePanel'
-import { SignOutButton } from '../../../../components/SignOutButton'
+} from '../../../../../lib/booking-filters'
+import { addDays, beirutDate, beirutDayLabel, beirutTime } from '../../../../../lib/beirut'
+import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../../components/formStyles'
+import { BookingActions } from '../../../../../components/BookingActions'
 
 /**
  * The reservation book: every booking for the listings this account manages,
@@ -94,10 +85,9 @@ export default async function PartnerPage({ params, searchParams }: Props) {
   }
 
   const filter = parseBookingFilter(await searchParams)
-  const [{ docs, totalDocs, awaiting }, listings, closures] = await Promise.all([
+  const [{ docs, totalDocs, awaiting }, listings] = await Promise.all([
     ownerBookings(filter),
     ownerListings(),
-    ownerClosures(),
   ])
 
   /**
@@ -120,9 +110,6 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   const covers = tonight.reduce((sum, row) => sum + (row.partySize ?? 0), 0)
 
-  /** Only a published listing has a public page to send anybody to. */
-  const published = listings.filter((listing) => listing.published && listing.slug)
-
   const summary = [
     tonight.length > 0 ? t('summaryTonight', { covers, bookings: tonight.length }) : '',
     awaiting > 0 ? t('summaryAwaiting', { count: awaiting }) : '',
@@ -131,55 +118,7 @@ export default async function PartnerPage({ params, searchParams }: Props) {
     .join(' ')
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-16">
-      {/*
-        Titled with the business, not the account.
-
-        It said `owner.email` here, which tells a restaurant owner what they
-        typed to get in rather than whose book they are reading. The email moves
-        under it, small, where it belongs: it identifies the session, not the
-        page. Several listings are joined rather than switched between - a
-        switcher is worth building when somebody actually has six.
-      */}
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-gold-700 font-mono text-[11px] uppercase tracking-[0.16em]">
-            {t('eyebrow')}
-          </p>
-          <h1 className="text-ink-900 mt-2 text-3xl">
-            {listings.length > 0 ? listings.map((l) => l.name).join(' · ') : t('title')}
-          </h1>
-          <p className="text-ink-500 mt-2 text-sm">{owner.email}</p>
-
-          {/*
-            The way out to their own listing, as the public reads it.
-
-            An owner had no way to see the page they are listed on without
-            hunting for it, which meant nobody ever looked - and the listing is
-            the thing they are paying for. It is also the cheapest possible
-            version of asking them for photographs: most of these still carry
-            the import placeholder, and a restaurateur who sees that on their
-            own page tends to send something better without being asked.
-
-            A draft has no public page, so it gets no link rather than a link to
-            a 404. When a listing exists and none of them are published, that is
-            said in a sentence - silence there reads as a missing feature.
-          */}
-          {published.length > 0 ? (
-            <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              {published.map((listing) => (
-                <Link key={listing.id} href={`/directory/${listing.slug}`} className={LINK}>
-                  {published.length > 1 ? listing.name : t('viewListing')}
-                </Link>
-              ))}
-            </p>
-          ) : listings.length > 0 ? (
-            <p className="text-ink-500 mt-3 text-sm">{t('notPublishedYet')}</p>
-          ) : null}
-        </div>
-        <SignOutButton collection="business-users" redirectTo="/partner/login" />
-      </header>
-
+    <>
       {/*
         The sentence the owner came for, before the controls they did not.
 
@@ -190,13 +129,6 @@ export default async function PartnerPage({ params, searchParams }: Props) {
         showing last March can state.
       */}
       {summary ? <p className="text-ink-700 mt-6 text-sm leading-relaxed">{summary}</p> : null}
-
-      {/* An account staff have not yet attached a listing to. It authenticates
-          perfectly and can see nothing, which without a word of explanation
-          looks like the page is broken. */}
-      {owner.businessIds.length === 0 ? (
-        <p className={`${NOTICE_INFO} mt-8`}>{t('noListings')}</p>
-      ) : null}
 
       {/* Counted outside the filter and shown above it. A request waiting for an
           answer is the only thing here costing somebody something while it sits,
@@ -225,49 +157,7 @@ export default async function PartnerPage({ params, searchParams }: Props) {
       ) : (
         <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />
       )}
-
-      {/*
-        Below the book, not above it.
-
-        Closed dates are set once a season; bookings are read every service. The
-        thing somebody opened this page for stays at the top, and this waits at
-        the bottom for the evening they remember they are shut in August.
-
-        The dates are formatted here rather than in the client component: they
-        are Beirut calendar days, and `beirutCalendarDayLabel` is a server-side
-        concern for the same reason every other time on this page is - a
-        browser's own timezone must never get a vote on which day a venue said it
-        was closed.
-      */}
-      {/*
-        Above the closed dates, because it is the one section here a partner
-        might act on today. Closed dates are set once a season.
-      */}
-      <QrCodePanel
-        listings={listings.map((listing) => ({
-          id: listing.id,
-          name: listing.name,
-          code: listing.code,
-        }))}
-      />
-
-      <ClosedDates
-        listings={listings.map((listing) => ({ id: listing.id, name: listing.name }))}
-        closures={closures.map((closure) => ({
-          id: closure.id,
-          business: closure.business,
-          label:
-            closure.startsOn === closure.endsOn
-              ? beirutCalendarDayLabel(closure.startsOn, locale as Locale)
-              : t('closedRange', {
-                  from: beirutCalendarDayLabel(closure.startsOn, locale as Locale),
-                  to: beirutCalendarDayLabel(closure.endsOn, locale as Locale),
-                }),
-          note: closure.note,
-          bookings: closure.bookings,
-        }))}
-      />
-    </main>
+    </>
   )
 }
 

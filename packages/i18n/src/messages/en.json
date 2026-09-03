@@ -246,7 +246,11 @@
     "qrTitle": "Your QR code",
     "qrIntro": "This is the code printed beside your listing. Put it on a table card, a window or a menu, and anyone who scans it opens your page. Every scan is counted.",
     "qrSvg": "Download for print (SVG)",
-    "qrPng": "Download as an image (PNG)"
+    "qrPng": "Download as an image (PNG)",
+    "tabBookings": "Bookings",
+    "tabListing": "Your listing",
+    "publicPageTitle": "Your page on Vardenia",
+    "backToSite": "Back to Vardenia"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",
