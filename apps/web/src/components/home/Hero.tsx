@@ -88,6 +88,28 @@ export async function Hero({ places }: { places: number }) {
         `priority` because it is the largest element above the fold on the
         busiest page: without it the browser discovers the file late and the
         masthead flashes navy first.
+
+        # `fetchPriority` is set by hand, and has to be
+
+        `priority` alone emits the preload link but not the priority hint - both
+        the `<link rel="preload" as="image">` and this tag came out of production
+        with no `fetchpriority` at all, and Lighthouse's `lcp-discovery` check
+        failed on exactly that while its other two checks passed. Passing it
+        explicitly is the documented escape hatch.
+
+        # Quality 60 rather than the default 75
+
+        Measured against production at the width a phone actually requests:
+
+          q=50  36,240 bytes
+          q=60  41,737 bytes
+          q=65  45,345 bytes
+          q=75  45,376 bytes   <- the default, and identical to 65
+
+        Seventy-five buys nothing over sixty-five here; sixty saves 8%. This
+        photograph carries a navy gradient and white type across it, so the
+        detail that quality preserves is detail nobody sees. Not lower, because
+        the top of the frame is open sky and banding shows there first.
       */}
       <Image
         src="/images/hero.jpg"
@@ -95,6 +117,8 @@ export async function Hero({ places }: { places: number }) {
         aria-hidden
         fill
         priority
+        fetchPriority="high"
+        quality={60}
         sizes="100vw"
         className="-z-10 object-cover"
       />
