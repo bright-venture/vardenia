@@ -19,8 +19,31 @@ import { clientIp } from './scan-guard'
  * each keeps its own tally, so the effective limit multiplies by the instance
  * count. That is a weaker guarantee, not a broken one - the point is bounding
  * a scraper, and a limit that is three times too generous still does that.
- * Moving both this and the scan guard to a shared store is one job, best done
- * when the deployment shape is known.
+ *
+ * # Where that weaker guarantee is not good enough, and where it is
+ *
+ * The deployment shape is known now: Netlify functions, several warm at once.
+ * So the choice is made per endpoint rather than deferred.
+ *
+ * Counted in Postgres (`shared: true`), because repeating the request is the
+ * attack and a per-instance tally is not a limit:
+ *
+ *   - every auth path - login, forgot-password, reset-password, unlock, verify
+ *     (see app/(payload)/api/[...slug])
+ *   - the five /auth routes, which check passwords or send mail
+ *   - /booking/request, which writes a row and sends mail
+ *
+ * Counted in memory, deliberately:
+ *
+ *   - REST and GraphQL reads. The data is public, `withApiLimits` caps the page
+ *     size and `graphQL.maxComplexity` caps the query, so the worst outcome is
+ *     a scraper reading the directory faster than we would like - which the CDN
+ *     absorbs anyway. A database round trip on every public read would cost more
+ *     than the abuse does.
+ *   - /booking/availability, a read with no side effect.
+ *
+ * The scan guard is the remaining one, and it stays per-instance on purpose:
+ * see the note on /g/ in `withRateLimit` below.
  */
 
 /** Fixed window. Simple to reason about and cheap to keep. */
@@ -56,6 +79,21 @@ const MAX_PER_WINDOW = 300
  * still guard the guessing case per account; this guards the cost per caller.
  */
 const AUTH_PER_WINDOW = 10
+
+/**
+ * Writes that cost something to be wrong about, but are not sign-ins.
+ *
+ * Its own number, and that is the whole point: buckets are keyed by
+ * `${budget}:${ip}` (see checkRate), so reusing `AUTH_PER_WINDOW` here would put
+ * bookings and logins in one counter - a customer booking four tables would eat
+ * the allowance that lets them sign in. Two numbers, two buckets.
+ *
+ * Twenty a minute is far above somebody booking dinner and far below a script
+ * aiming confirmation emails at a mailbox. `/booking/request` already demands a
+ * verified account, so this is not the first line of defence; it bounds what one
+ * account can cost once it exists.
+ */
+const WRITE_PER_WINDOW = 20
 
 /** Stop the map growing without bound on a long-lived server. */
 const SWEEP_INTERVAL_MS = 5 * 60_000
@@ -261,4 +299,4 @@ export function __resetRateLimit() {
   lastSweep = 0
 }
 
-export const RATE_LIMIT = { WINDOW_MS, MAX_PER_WINDOW, AUTH_PER_WINDOW } as const
+export const RATE_LIMIT = { WINDOW_MS, MAX_PER_WINDOW, AUTH_PER_WINDOW, WRITE_PER_WINDOW } as const

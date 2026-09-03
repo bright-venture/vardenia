@@ -5,7 +5,7 @@ import config from '../../../payload.config'
 import { CUSTOMER_COLLECTION } from '../../../access/index'
 import { createBooking } from '../../../lib/booking-service'
 import { sendBookingConfirmation } from '../../../lib/booking-email'
-import { withRateLimit } from '../../../lib/rate-limit'
+import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -41,146 +41,159 @@ const STATUS_FOR = {
   error: 500,
 } as const
 
-export const POST = withRateLimit(async (request: Request) => {
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return json({ ok: false, message: 'Expected a JSON body.' }, 400)
-  }
+export const POST = withRateLimit(
+  async (request: Request) => {
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return json({ ok: false, message: 'Expected a JSON body.' }, 400)
+    }
 
-  const parsed = bookingRequestSchema.safeParse(body)
-  if (!parsed.success) {
-    return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
-  }
+    const parsed = bookingRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
+    }
 
-  const payload = await getPayload({ config })
+    const payload = await getPayload({ config })
 
-  /**
-   * A booking needs a proven account behind it.
-   *
-   * This route used to be fully public: it took an email address, created a
-   * customer record for it if none existed, and made the booking. Frictionless,
-   * and fine while a booking was a request for a table.
-   *
-   * It is not fine once a booking can carry a deposit. Taking money against an
-   * address nobody has confirmed means the party on the other end is a string
-   * somebody typed, which is no basis for a refund, a dispute or a no-show
-   * charge. Requiring the account now is far cheaper than retrofitting identity
-   * onto bookings that already exist.
-   *
-   * Two refusals, told apart by status so the form can say the right thing:
-   * 401 means sign in, 403 means the address is not proven yet. Those are
-   * different problems with different fixes, and one message for both would
-   * send half the readers to the wrong place.
-   */
-  const auth = await payload
-    .auth({ headers: await nextHeaders() })
-    .catch(() => ({ user: null }) as { user: null })
+    /**
+     * A booking needs a proven account behind it.
+     *
+     * This route used to be fully public: it took an email address, created a
+     * customer record for it if none existed, and made the booking. Frictionless,
+     * and fine while a booking was a request for a table.
+     *
+     * It is not fine once a booking can carry a deposit. Taking money against an
+     * address nobody has confirmed means the party on the other end is a string
+     * somebody typed, which is no basis for a refund, a dispute or a no-show
+     * charge. Requiring the account now is far cheaper than retrofitting identity
+     * onto bookings that already exist.
+     *
+     * Two refusals, told apart by status so the form can say the right thing:
+     * 401 means sign in, 403 means the address is not proven yet. Those are
+     * different problems with different fixes, and one message for both would
+     * send half the readers to the wrong place.
+     */
+    const auth = await payload
+      .auth({ headers: await nextHeaders() })
+      .catch(() => ({ user: null }) as { user: null })
 
-  const customer = auth.user
-  if (!customer || customer.collection !== CUSTOMER_COLLECTION) {
-    return json({ ok: false, code: 'signed-out', message: 'Sign in to book a table.' }, 401)
-  }
+    const customer = auth.user
+    if (!customer || customer.collection !== CUSTOMER_COLLECTION) {
+      return json({ ok: false, code: 'signed-out', message: 'Sign in to book a table.' }, 401)
+    }
 
-  if (!customer._verified) {
-    return json(
-      {
-        ok: false,
-        code: 'unverified',
-        message: 'Confirm your email address before booking. Check your inbox for the link.',
-      },
-      403,
-    )
-  }
+    if (!customer._verified) {
+      return json(
+        {
+          ok: false,
+          code: 'unverified',
+          message: 'Confirm your email address before booking. Check your inbox for the link.',
+        },
+        403,
+      )
+    }
 
-  /**
-   * Payload types an id as `string | number` because an adapter may use either.
-   * This one is Postgres with serial ids, so it is a number - narrowed here
-   * rather than widening the service, and refused rather than coerced if that
-   * assumption ever stops holding, because `Number('abc')` is NaN and a booking
-   * owned by NaN is worse than one that failed.
-   */
-  const customerId = Number(customer.id)
-  if (!Number.isInteger(customerId)) {
-    await reportError(new Error(`Customer id is not an integer: ${String(customer.id)}`), {
-      source: 'booking.request',
-      path: '/booking/request',
-    })
-    return json({ ok: false, message: 'We could not complete that booking.' }, 500)
-  }
-
-  const outcome = await createBooking({
-    payload,
-    request: parsed.data,
-    customerId,
-  })
-
-  if (!outcome.ok) {
-    // Reported because "unavailable" is ordinary and "error" is not; without
-    // this the two are indistinguishable in production. The email is not
-    // attached - lib/report would scrub it anyway, and a booking that failed is
-    // a bug in our code rather than a fact about the customer.
-    if (outcome.code === 'error') {
-      await reportError(new Error(outcome.message), {
+    /**
+     * Payload types an id as `string | number` because an adapter may use either.
+     * This one is Postgres with serial ids, so it is a number - narrowed here
+     * rather than widening the service, and refused rather than coerced if that
+     * assumption ever stops holding, because `Number('abc')` is NaN and a booking
+     * owned by NaN is worse than one that failed.
+     */
+    const customerId = Number(customer.id)
+    if (!Number.isInteger(customerId)) {
+      await reportError(new Error(`Customer id is not an integer: ${String(customer.id)}`), {
         source: 'booking.request',
         path: '/booking/request',
-        group: 'booking.request.unexpected',
-        extra: { business: parsed.data.business },
       })
+      return json({ ok: false, message: 'We could not complete that booking.' }, 500)
     }
-    return json({ ok: false, message: outcome.message }, STATUS_FOR[outcome.code])
-  }
 
-  /**
-   * Awaited rather than fired and forgotten, so a failure is logged against this
-   * request rather than surfacing as an unhandled rejection with no context.
-   * It still cannot fail the booking - see the note at the top.
-   */
-  await sendBookingConfirmation({
-    payload,
-    // The account's address and name, not the form's. Nothing else would make
-    // sense now that the booking belongs to a proven account.
-    to: String(customer.email),
-    name: String(customer.name ?? ''),
-    reference: outcome.reference,
-    status: outcome.status,
-    start: new Date(parsed.data.start),
-    end: new Date(parsed.data.end),
-    partySize: parsed.data.partySize,
-    locale: parsed.data.locale ?? 'en',
-  }).catch(async (error) => {
-    /**
-     * The most consequential silent failure in the product. The booking is real
-     * and the customer has no message saying so, which they discover by turning
-     * up or by not turning up. The reference is attached because it is the one
-     * thing that makes this recoverable by hand.
-     */
-    await reportError(error, {
-      source: 'booking.confirmation-email',
-      path: '/booking/request',
-      extra: { reference: outcome.reference },
+    const outcome = await createBooking({
+      payload,
+      request: parsed.data,
+      customerId,
     })
-  })
 
-  /**
-   * The reference is the whole receipt. It is what the customer quotes on the
-   * phone and the only handle they have on the booking, so it goes back even
-   * though the email carries it too - an email that lands in spam should not
-   * cost somebody their reference.
-   */
-  /**
-   * The address is echoed back so the success panel can say where the
-   * confirmation went. The form no longer collects it - it belongs to the
-   * account - so this is the only way it can name it.
-   */
-  return json(
-    {
-      ok: true,
+    if (!outcome.ok) {
+      // Reported because "unavailable" is ordinary and "error" is not; without
+      // this the two are indistinguishable in production. The email is not
+      // attached - lib/report would scrub it anyway, and a booking that failed is
+      // a bug in our code rather than a fact about the customer.
+      if (outcome.code === 'error') {
+        await reportError(new Error(outcome.message), {
+          source: 'booking.request',
+          path: '/booking/request',
+          group: 'booking.request.unexpected',
+          extra: { business: parsed.data.business },
+        })
+      }
+      return json({ ok: false, message: outcome.message }, STATUS_FOR[outcome.code])
+    }
+
+    /**
+     * Awaited rather than fired and forgotten, so a failure is logged against this
+     * request rather than surfacing as an unhandled rejection with no context.
+     * It still cannot fail the booking - see the note at the top.
+     */
+    await sendBookingConfirmation({
+      payload,
+      // The account's address and name, not the form's. Nothing else would make
+      // sense now that the booking belongs to a proven account.
+      to: String(customer.email),
+      name: String(customer.name ?? ''),
       reference: outcome.reference,
       status: outcome.status,
-      email: String(customer.email),
-    },
-    201,
-  )
-})
+      start: new Date(parsed.data.start),
+      end: new Date(parsed.data.end),
+      partySize: parsed.data.partySize,
+      locale: parsed.data.locale ?? 'en',
+    }).catch(async (error) => {
+      /**
+       * The most consequential silent failure in the product. The booking is real
+       * and the customer has no message saying so, which they discover by turning
+       * up or by not turning up. The reference is attached because it is the one
+       * thing that makes this recoverable by hand.
+       */
+      await reportError(error, {
+        source: 'booking.confirmation-email',
+        path: '/booking/request',
+        extra: { reference: outcome.reference },
+      })
+    })
+
+    /**
+     * The reference is the whole receipt. It is what the customer quotes on the
+     * phone and the only handle they have on the booking, so it goes back even
+     * though the email carries it too - an email that lands in spam should not
+     * cost somebody their reference.
+     */
+    /**
+     * The address is echoed back so the success panel can say where the
+     * confirmation went. The form no longer collects it - it belongs to the
+     * account - so this is the only way it can name it.
+     */
+    return json(
+      {
+        ok: true,
+        reference: outcome.reference,
+        status: outcome.status,
+        email: String(customer.email),
+      },
+      201,
+    )
+  },
+  /**
+   * Twenty a minute, counted in Postgres rather than in this process.
+   *
+   * This route writes a booking and sends at least one email, so it is in the
+   * "costs something to be wrong about" category that the auth routes are in -
+   * and a per-instance tally is not a limit when several instances are warm.
+   * Its own budget rather than the auth one so a customer booking dinner cannot
+   * spend the allowance that lets them sign in. See lib/rate-limit.
+   */
+  RATE_LIMIT.WRITE_PER_WINDOW,
+  { shared: true },
+)
