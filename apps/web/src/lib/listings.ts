@@ -513,6 +513,29 @@ export async function countByGovernorate({
   })()
 }
 
+/**
+ * How many printed codes exist, for the homepage masthead's third figure.
+ *
+ * The masthead deliberately showed two stats and refused a third, because the
+ * commissioned design's "printed codes" number was invented and every other
+ * figure on the site is measured. The redesign wants the third stat, so this
+ * makes it real rather than fabricated: a count of the qr-codes collection.
+ *
+ * `overrideAccess: true` because a count is an aggregate, not a document - it
+ * leaks no code and no listing - and the anonymous read rules on the collection
+ * would otherwise return zero. Cached on the same hour the rest of the homepage
+ * is, so it is one extra round trip to Frankfurt per hour, not per view.
+ */
+export async function countCodes(): Promise<number> {
+  const run = async () => {
+    const payload = await client()
+    const { totalDocs } = await payload.count({ collection: 'qr-codes', overrideAccess: true })
+    return totalDocs
+  }
+
+  return unstable_cache(run, ['code-count'], { revalidate: LISTINGS_TTL, tags: ['qr-codes'] })()
+}
+
 /** How many places the foot of a listing page offers. Three fills one row. */
 const RELATED_COUNT = 3
 

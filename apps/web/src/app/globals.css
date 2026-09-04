@@ -149,6 +149,15 @@
     animation-delay: 0ms !important;
     transition-duration: 0.001ms !important;
   }
+
+  /* The homepage hero clip. A muted, looping background video needs no
+     JavaScript - the browser autoplays it - so the masthead stays a server
+     component and nothing on the page can restart it on scroll. But autoplay
+     ignores this preference, so for a reader who asked for less movement the
+     video is removed entirely and the poster image behind it stands in. */
+  .hero-video {
+    display: none !important;
+  }
 }
 
 /* Editorial body copy rendered from the CMS rich text field. Scoped to one

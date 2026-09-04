@@ -1,118 +1,66 @@
 import Image from 'next/image'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
-import { Eyebrow, Rule } from '../ui'
+import { HeroFilm } from './HeroFilm'
 
 /**
  * The masthead.
  *
- * # What it has to say in one screen
+ * # A film, pinned to a clock rather than the scrollbar
  *
- * That this is Lebanon, that it is a magazine as well as a website, and that
- * the listings were checked by a person. The last one is the whole proposition:
- * anyone can scrape a list of restaurants, and the reason to trust this one is
- * that somebody went. So the promise is in the sub-line rather than buried on
- * the about page.
+ * The commissioned redesign opens on cinematic Lebanon footage - five clips
+ * cross-faded in sequence. The prototype drove that sequence from scroll
+ * position, which is the behaviour the designer asked us to drop: scrubbing a
+ * video with the scrollbar makes it jump and restart. So the sequence advances
+ * on its own timer and reads nothing from scroll - see components/home/HeroFilm,
+ * the one small client island in an otherwise server-rendered masthead. Scroll
+ * touches the hero not at all, so the film plays straight through under it.
  *
- * # The photograph, and the navy still underneath it
+ * The poster underneath is the real first paint. It is a `next/image` with
+ * `priority`, so it is the LCP element and arrives fast; the 10MB clip streams in
+ * behind the type afterwards and fades over the still once it can play. If the
+ * clip never loads - a slow line, a blocked request - the poster is simply what
+ * stays, which is the same still the video would have shown.
  *
- * This used to argue for a typographic masthead on a flat ground, because there
- * were no photographs. There is one now - supplied with the commissioned design
- * - so the prediction in that argument gets to come true: the type already had
- * a dark ground to sit on, and the picture went behind it without a redesign.
+ * A reader who asked their system for less motion gets the poster and no video
+ * at all; see the `.hero-video` rule in globals.css, which removes it rather
+ * than merely slowing it, because autoplay does not honour the preference on its
+ * own.
  *
- * The gradient over it is not decoration. It is what keeps the headline legible
- * whatever the image does, and it is why the navy is still declared on the
- * element: if the file ever fails to load, the masthead is the old flat ground
- * rather than white type on white.
+ * # The navy underneath everything
  *
- * # The load sequence
- *
- * Four elements rise in order over about half a second. It is the one
- * orchestrated moment on the site; everything else moves only to confirm a
- * press. The whole thing is CSS animation on a server-rendered element, so the
- * page stays static and there is no client component in the masthead.
- *
- * Anyone who has asked their machine for less movement gets none of it - see
- * the reduced-motion rule in globals.css, which cancels the animation rather
- * than merely shortening it.
+ * `bg-cedar-900` is declared on the element so that before the poster decodes,
+ * and if it never does, the masthead is the brand navy with white type on it
+ * rather than white type on white. The gradients over the video are not
+ * decoration: they are what keeps the headline legible whatever frame the clip
+ * is on.
  *
  * # The headline is three keys, not one
  *
- * Because one word of it is set in italic gold and the line breaks in a chosen
- * place. A single string would either lose the emphasis or embed markup in the
- * message catalogue, which is worse: a translator would have to reproduce tags
- * correctly to avoid breaking the page.
- *
- * # No locale prop
- *
- * `getTranslations` reads the locale the page already set with
- * `setRequestLocale`, so passing it again would be a second source of truth for
- * the same fact. Components that take a `locale` do so because they format a
- * date or pick a label synchronously; this one only reads strings.
+ * One word is set in italic gold and the line breaks in a chosen place. A single
+ * string would either lose the emphasis or embed markup in the message
+ * catalogue, which a translator would then have to reproduce to avoid breaking
+ * the page.
  */
-export async function Hero({ places }: { places: number }) {
+export async function Hero({ places, codes }: { places: number; codes: number }) {
   const t = await getTranslations('home')
   /**
-   * Read rather than passed, so the "no locale prop" rule above still holds.
-   * It is needed for one thing only: a plain GET form cannot use the localised
-   * `Link`, so its action has to be built by hand.
+   * Read rather than passed: a plain GET form cannot use the localised `Link`,
+   * so its `action` is the one thing here built by hand from the locale.
    */
   const locale = await getLocale()
 
   return (
-    <header className="bg-cedar-900 relative isolate overflow-hidden">
-      {/* Two soft washes, so the flat ground has some depth without an image.
-          Behind the content on the z-axis, and inert to a screen reader.
-
-          The two rgba values are gold.500 and cedar.700 written out, because a
-          gradient stop cannot take a Tailwind colour class. That makes them the
-          one place on this page a rebrand does not reach on its own: the 2026
-          palette change turned the whole site navy and left this corner green,
-          because these still held the old #c9a227 and #1b4438. If you change
-          the palette, grep the components for `rgba(` before believing it. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10"
-        style={{
-          backgroundImage:
-            'radial-gradient(120% 90% at 78% 8%, rgba(155,106,32,0.20), transparent 58%), radial-gradient(80% 70% at 8% 92%, rgba(21,34,78,0.9), transparent 62%)',
-        }}
-      />
-
+    <header className="bg-cedar-900 text-surface-base relative isolate flex min-h-[88svh] flex-col justify-end overflow-hidden">
       {/*
-        `alt=""` and aria-hidden together, because this is the ground the
-        masthead sits on rather than content. A description of it would be read
-        out before the headline and tell a screen reader nothing it needs.
-
-        `priority` because it is the largest element above the fold on the
-        busiest page: without it the browser discovers the file late and the
-        masthead flashes navy first.
-
-        # `fetchPriority` is set by hand, and has to be
-
-        `priority` alone emits the preload link but not the priority hint - both
-        the `<link rel="preload" as="image">` and this tag came out of production
-        with no `fetchpriority` at all, and Lighthouse's `lcp-discovery` check
-        failed on exactly that while its other two checks passed. Passing it
-        explicitly is the documented escape hatch.
-
-        # Quality 60 rather than the default 75
-
-        Measured against production at the width a phone actually requests:
-
-          q=50  36,240 bytes
-          q=60  41,737 bytes
-          q=65  45,345 bytes
-          q=75  45,376 bytes   <- the default, and identical to 65
-
-        Seventy-five buys nothing over sixty-five here; sixty saves 8%. This
-        photograph carries a navy gradient and white type across it, so the
-        detail that quality preserves is detail nobody sees. Not lower, because
-        the top of the frame is open sky and banding shows there first.
+        The poster, and the LCP. `priority` + an explicit `fetchPriority` for the
+        same reason the old still had them: it is the largest thing above the
+        fold on the busiest page, and `priority` alone emits the preload link but
+        not the priority hint. `aria-hidden` because it is the ground the type
+        sits on, not content.
       */}
       <Image
-        src="/images/hero.jpg"
+        src="/videos/hero-sea-poster.jpg"
         alt=""
         aria-hidden
         fill
@@ -120,50 +68,58 @@ export async function Hero({ places }: { places: number }) {
         fetchPriority="high"
         quality={60}
         sizes="100vw"
-        className="-z-10 object-cover"
+        className="-z-20 object-cover"
       />
 
       {/*
-        Dense at the foot where the type is, thinning towards the top so the
-        picture is still a picture. Same direction as the design's.
+        The film - five clips cross-faded on a timer - sits over the poster and,
+        once the first frame can play, hides it. The layers carry no `poster`
+        attribute: an unloaded video is transparent, so the `next/image` poster
+        behind shows through until the first frame is ready. Removed entirely
+        under reduced motion, leaving that poster. See components/home/HeroFilm.
+      */}
+      <HeroFilm />
+
+      {/*
+        Dense navy at the foot where the type is, thinning upward so the clip is
+        still a clip. A top wash and a start-edge wash keep the header nav and the
+        first line legible over a bright frame. `rtl:` mirrors the side wash so it
+        always falls on the reading edge.
       */}
       <div
         aria-hidden
-        className="from-cedar-900 via-cedar-900/60 to-cedar-900/25 absolute inset-0 -z-10 bg-gradient-to-t"
+        className="from-cedar-900 via-cedar-900/40 to-cedar-900/15 absolute inset-0 -z-10 bg-gradient-to-t"
+      />
+      <div
+        aria-hidden
+        className="from-cedar-900/55 absolute inset-x-0 top-0 -z-10 h-56 bg-gradient-to-b to-transparent"
+      />
+      <div
+        aria-hidden
+        className="from-cedar-900/40 absolute inset-0 -z-10 bg-gradient-to-r to-transparent rtl:bg-gradient-to-l"
       />
 
-      <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+      <div className="mx-auto w-full max-w-6xl px-6 pt-40 pb-16 sm:pb-24">
         <div className="max-w-3xl">
-          <div className="animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.05s_both]">
-            <Eyebrow inverse>{t('eyebrow')}</Eyebrow>
-          </div>
+          <p className="text-gold-300 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.05s_both] font-mono text-[11px] tracking-[0.2em] uppercase">
+            {t('eyebrow')}
+          </p>
 
-          <h1 className="text-surface-base mt-5 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.18s_both] text-[clamp(2.75rem,8vw,5.5rem)] font-normal">
+          <h1 className="text-surface-base mt-5 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.18s_both] text-[clamp(2.75rem,8vw,5.5rem)] leading-[0.98] font-normal">
             {t('headlineA')}
             <br />
             {t('headlineB')} <em className="text-gold-300 italic">{t('headlineEmphasis')}</em>
           </h1>
 
-          <Rule
-            inverse
-            className="mt-8 origin-left animate-[foil_1.1s_cubic-bezier(0,0,0,1)_0.5s_both]"
-          />
-
-          <p className="text-cedar-100/75 mt-7 max-w-[52ch] animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.42s_both] text-base leading-relaxed sm:text-lg">
+          <p className="text-cedar-100/80 mt-7 max-w-[52ch] animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.42s_both] text-base leading-relaxed sm:text-lg">
             {t('intro')}
           </p>
 
           {/*
-            A search field where two buttons used to be, which is the design's
-            call and the right one: the header already carries Discover and
-            Magazine, so the buttons were a second copy of the navigation. A
-            reader who knows what they are looking for could not say so from the
-            front page at all.
-
             A plain GET form, so it works with no JavaScript and its result is a
-            real shareable URL - the same reason the directory filters are links
-            rather than state. `action` is built by hand because a form cannot
-            use the localised `Link`.
+            real shareable URL - the same reason the directory filters are links.
+            `action` is built by hand because a form cannot use the localised
+            `Link`.
           */}
           <form
             action={`/${locale}/search`}
@@ -189,24 +145,26 @@ export async function Hero({ places }: { places: number }) {
           </form>
 
           {/*
-            Two figures, both true and both read from what the page already has.
-
-            The design shows a third - a count of printed codes - and it is
-            invented there. Every other number on this site is measured, so
-            rather than fabricate one or add a database round trip to the
-            homepage for a vanity figure, there are two.
+            Three figures, all read from what the page already has: two counts it
+            fetched anyway, and the code count from its own cached query. The
+            design's third stat used to be invented; see lib/listings countCodes
+            for why it is now measured instead.
           */}
           <dl className="border-cedar-100/20 mt-10 flex animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.7s_both] flex-wrap gap-x-10 gap-y-3 border-t pt-5">
+            {/* Latin digits with a thousands separator in both languages: a
+                reference code and a price mark are Latin here too, and the mono
+                face is a Latin one. */}
             {[
-              [places, t('statsPlaces')],
-              [SECTIONS.length, t('statsSections')],
+              [places.toLocaleString('en-US'), t('statsPlaces')],
+              [String(SECTIONS.length).padStart(2, '0'), t('statsSections')],
+              [codes.toLocaleString('en-US'), t('statsCodes')],
             ].map(([value, label]) => (
-              <div key={String(label)} className="flex items-baseline gap-2.5">
+              <div key={label} className="flex items-baseline gap-2.5">
                 <dt className="sr-only">{label}</dt>
                 <dd className="text-surface-base font-mono text-xl tabular-nums">{value}</dd>
                 <span
                   aria-hidden
-                  className="text-cedar-100/70 font-mono text-[11px] uppercase tracking-[0.16em]"
+                  className="text-cedar-100/60 font-mono text-[11px] tracking-[0.16em] uppercase"
                 >
                   {label}
                 </span>
@@ -214,6 +172,16 @@ export async function Hero({ places }: { places: number }) {
             ))}
           </dl>
         </div>
+      </div>
+
+      {/* The one persistent cue. `animate-bounce` is stilled under reduced motion
+          by the blanket rule in globals.css. */}
+      <div
+        aria-hidden
+        className="text-cedar-100/70 pointer-events-none absolute end-6 bottom-5 flex items-center gap-3 lg:end-10"
+      >
+        <span className="font-mono text-[11px] tracking-[0.16em] uppercase">{t('scroll')}</span>
+        <span className="animate-bounce">&darr;</span>
       </div>
     </header>
   )

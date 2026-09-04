@@ -5,12 +5,13 @@ import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionIndex } from '../../../components/home/SectionIndex'
+import { Manifesto } from '../../../components/home/Manifesto'
 import { PrintInterlude } from '../../../components/home/PrintInterlude'
-import { Marquee } from '../../../components/home/Marquee'
+import { RegionIndex } from '../../../components/home/RegionIndex'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
-import { findListings, type ListingSummary } from '../../../lib/listings'
+import { findListings, countCodes, type ListingSummary } from '../../../lib/listings'
 import { findArticles } from '../../../lib/articles'
 
 /**
@@ -108,16 +109,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
    * `findListings` with no filter is the cacheable path, so this is usually a
    * cache read rather than a round trip to Frankfurt.
    */
-  const [listings, articles] = await Promise.all([
+  const [listings, articles, codes] = await Promise.all([
     findListings({ locale, perPage: 6 }),
     findArticles({ locale, perPage: 3 }),
+    // The masthead's third figure. Cached on the same hour as the rest of the
+    // page, so it is not a per-view round trip. See lib/listings countCodes.
+    countCodes(),
   ])
 
   return (
     <main>
-      {/* The count is already in hand from the query below, so the masthead
-          states a real figure without a round trip of its own. */}
-      <Hero places={listings.totalDocs} />
+      {/* The place count is already in hand from the query above; the code count
+          is its own cached figure. The masthead states real numbers either way. */}
+      <Hero places={listings.totalDocs} codes={codes} />
 
       <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
         <SectionIndex locale={locale} />
@@ -185,19 +189,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Band>
       ) : null}
 
+      {/* The dark pause, then the print interlude - the redesign's order. Two
+          navy bands in a row is deliberate here: the manifesto is a bare
+          sentence and the interlude an argument with a picture, so they read as
+          a claim and its evidence rather than as one long dark tail. */}
+      <Manifesto />
+
       <PrintInterlude />
 
-      {/* Between the print interlude and the sign-up box, where the design puts
-          it. It is also the one place it works: a band of large type on ivory
-          breaks the navy interlude away from the bordered box below, which
-          otherwise meet as two blocks with a hard edge between them. */}
-      <Marquee />
+      {/* The region index closes the dark run and hands the reader somewhere to
+          go, on its own photographic ground rather than a third flat band. */}
+      <RegionIndex
+        locale={locale}
+        eyebrow={t('regionsEyebrow')}
+        title={t('regionsTitle')}
+      />
 
       {/*
-        The design ends on a bordered box on the ivory ground rather than a
-        third dark band. That matters here specifically: the print interlude
-        directly above is navy, and two inverted sections back to back read as
-        one long dark tail rather than as two arguments.
+        The design ends on a bordered box on the ivory ground rather than another
+        dark band, so the page returns to paper before the sign-up.
       */}
       <section className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <div className="border-ink-100 grid items-center gap-8 border p-10 lg:grid-cols-[1fr_auto] lg:p-14">
