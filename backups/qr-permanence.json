@@ -1,0 +1,2175 @@
+{
+  "version": 1,
+  "count": 310,
+  "codes": [
+    {
+      "code": "02KY7K5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faraya-797-chalets"
+    },
+    {
+      "code": "02S3AAP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "alain-francis"
+    },
+    {
+      "code": "06AQGZ3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "wild-adventures-chouan-lake-outings-hiking-swimming"
+    },
+    {
+      "code": "06R6QMX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "trinity5-faraya"
+    },
+    {
+      "code": "0A4PNYZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "baguette-de-paris"
+    },
+    {
+      "code": "0JHVTKR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-falamanki"
+    },
+    {
+      "code": "0N0PGB1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amarilla-beach-club"
+    },
+    {
+      "code": "0W5ZSWK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "portofinolb"
+    },
+    {
+      "code": "0WX35Q3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mountain-services-and-transport"
+    },
+    {
+      "code": "13075D4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-faris-wa-lucia"
+    },
+    {
+      "code": "1D8BBG9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "villa-joie"
+    },
+    {
+      "code": "1KP0E8S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bamboo-asian-cuisine"
+    },
+    {
+      "code": "1Q01SP1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "veer-boutique-hotel-and-resort"
+    },
+    {
+      "code": "1R9FNV6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-nazha"
+    },
+    {
+      "code": "2063JZF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "k-village-lebanon"
+    },
+    {
+      "code": "23NJR1A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "padel-pulse-adonis-padel-courts"
+    },
+    {
+      "code": "29Z63TD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "el-mexicano-faraya"
+    },
+    {
+      "code": "2F5TAVB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "emilys-cafe-bar"
+    },
+    {
+      "code": "2FD0HK5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "italian-stories"
+    },
+    {
+      "code": "2G5CS53",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-storia"
+    },
+    {
+      "code": "32NTDZQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chapo-bar"
+    },
+    {
+      "code": "33YFBHZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "telepherique-du-liban-cable-car-ride"
+    },
+    {
+      "code": "3CBX9GW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ehmej-mouneh-festival-ehmej"
+    },
+    {
+      "code": "3GN30KR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "teleferique-cafe-resto"
+    },
+    {
+      "code": "3J8MYEJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-montagnou-kfardebian"
+    },
+    {
+      "code": "3JT6ZGM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lescape"
+    },
+    {
+      "code": "3NKTYQB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "notre-dame-du-mont"
+    },
+    {
+      "code": "3P8K0TH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chubby-fish-faqra-club"
+    },
+    {
+      "code": "3PFG5HD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zero-latency-lb-free-roam-virtual-reality-gaming"
+    },
+    {
+      "code": "3R1XQ7A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ocean-blue"
+    },
+    {
+      "code": "3RNBS6E",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "boulevard-zouk-mikaelkaslik-padel-events-entertainment"
+    },
+    {
+      "code": "3SRJRBN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "boogie-strike-bowling-jouniehsarba-area-bowling-billiards-darts-ping-pong-arcade-games"
+    },
+    {
+      "code": "3W3GYJD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cheese-on-top"
+    },
+    {
+      "code": "3XYY3A9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "aiden-chalets-faraya"
+    },
+    {
+      "code": "41DKA5B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "real-action-paintball-rap-jeita-outdoor-paintball-games"
+    },
+    {
+      "code": "42N7RJC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-rose"
+    },
+    {
+      "code": "4677ZCP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "olicci-resto"
+    },
+    {
+      "code": "49KW4FJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cable-car"
+    },
+    {
+      "code": "4FHS4HN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amelia"
+    },
+    {
+      "code": "4FJ4ZT0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "naim-mhanna"
+    },
+    {
+      "code": "4H9QF3X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bab-el-mina-guest-house-byblos-port-byblos"
+    },
+    {
+      "code": "4HC8V4S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-marsa-halat"
+    },
+    {
+      "code": "4RX1G06",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bab-el-mina"
+    },
+    {
+      "code": "4XAKYHS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "maram-restaurant"
+    },
+    {
+      "code": "4Y0CR1N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "vista-del-mar-hotel-maameltein"
+    },
+    {
+      "code": "51A0Q39",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-el-osta-guest-house"
+    },
+    {
+      "code": "51YPDDJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "abou-jihad"
+    },
+    {
+      "code": "52XGKBG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "old-patio"
+    },
+    {
+      "code": "547VP5Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "regency-palace-hotel"
+    },
+    {
+      "code": "58VXQX8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "abdo-feghaly"
+    },
+    {
+      "code": "5HCBHC2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "goldeneye-superyachts-private-yacht-and-boat-rentals"
+    },
+    {
+      "code": "5N285Y0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-du-port"
+    },
+    {
+      "code": "5PTPTD2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-petit-coin-bleu"
+    },
+    {
+      "code": "5VQXGY7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pit-stop-karting-go-kart-racing"
+    },
+    {
+      "code": "5XVMFBR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sunrise-hotel-sahel-aalma"
+    },
+    {
+      "code": "60QKPX3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "nippon-sushi-and-grill"
+    },
+    {
+      "code": "62DK6Z7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "padel-house-kaslik-padel"
+    },
+    {
+      "code": "64X2R04",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "u-961-scuba-diving-lebanon-scuba-diving-courses"
+    },
+    {
+      "code": "6G6SNQZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "solemar-beach-resort"
+    },
+    {
+      "code": "6GGRC0T",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kyma-restaurant"
+    },
+    {
+      "code": "6H70QYM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-tourelle"
+    },
+    {
+      "code": "6KFKACA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hacienda-de-pepe"
+    },
+    {
+      "code": "6NY7AA1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "table-fine"
+    },
+    {
+      "code": "6PSHTV9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "guardians-of-the-falls-professional-canyoning-rappelling-waterfalls-canyon-exploration"
+    },
+    {
+      "code": "6VT94M8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chalets-de-faraya"
+    },
+    {
+      "code": "72CDZZ8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-plancha"
+    },
+    {
+      "code": "7307HH6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jeita-grotto-upper-grotto-exploration-underground-boat-experience"
+    },
+    {
+      "code": "75B99QJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-harb-ayadina"
+    },
+    {
+      "code": "782K4AG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hajj-nasr"
+    },
+    {
+      "code": "789KZ0D",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dar-lazrak"
+    },
+    {
+      "code": "7BF9076",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "murray-resto-2"
+    },
+    {
+      "code": "7JQCBG1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "scappa-resort"
+    },
+    {
+      "code": "7NQPCMV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "olivera"
+    },
+    {
+      "code": "7W36A80",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "fawk-el-rih"
+    },
+    {
+      "code": "7XRGARM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "middle-beach-hotel-resort"
+    },
+    {
+      "code": "803WVPZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "terre-brune-hotel-faqra"
+    },
+    {
+      "code": "851M3K0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "quick-fish-byblos"
+    },
+    {
+      "code": "87C1TTY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pepes-fishing-club"
+    },
+    {
+      "code": "87KQZMK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faqra-roman-ruins-archaeological-visit"
+    },
+    {
+      "code": "88S5XF8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "atcl-automobile-touring-club-du-liban-swimming-sailing-water-sports-tennis-and-marina-activities"
+    },
+    {
+      "code": "897CTFM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "heaven-on-earth"
+    },
+    {
+      "code": "8BWCXPG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-trottoir-de-tonic"
+    },
+    {
+      "code": "8CX1ZE8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "perch-faraya-kfardebian"
+    },
+    {
+      "code": "8DJDA3E",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-chill-hill-experience-wata-el-joz"
+    },
+    {
+      "code": "8EAEH2A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mayada-mahfouz"
+    },
+    {
+      "code": "8GWFWBW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "oakridge-mountain-resort"
+    },
+    {
+      "code": "8TG43QC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "baher-el-hawa"
+    },
+    {
+      "code": "93FGGN1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "malena"
+    },
+    {
+      "code": "96KSRVF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-padel-club-padel-courts"
+    },
+    {
+      "code": "96M1TSA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "a-la-minute"
+    },
+    {
+      "code": "995P5E2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "boneless-28"
+    },
+    {
+      "code": "99SR3F9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tania-ballane"
+    },
+    {
+      "code": "9XNZBJP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ourea-faqra"
+    },
+    {
+      "code": "A149GY8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-pelican"
+    },
+    {
+      "code": "A29NXR6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-fishing-club-guesthouse"
+    },
+    {
+      "code": "A8EC0ZQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "nasma"
+    },
+    {
+      "code": "AC9F7CM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "paradise-guesthouse"
+    },
+    {
+      "code": "AQBQ2NH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kababji"
+    },
+    {
+      "code": "AVFJMRH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sia-resort"
+    },
+    {
+      "code": "AZ54HJ9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "midi"
+    },
+    {
+      "code": "AZHSH6X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "raja-saade"
+    },
+    {
+      "code": "AZXPE29",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "aal-baher"
+    },
+    {
+      "code": "B81HB4C",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faqra-club-horse-horse-riding"
+    },
+    {
+      "code": "B81HDCB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-comptoir"
+    },
+    {
+      "code": "BF10BPE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hallab"
+    },
+    {
+      "code": "BPV8TTG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byout-ghalboun"
+    },
+    {
+      "code": "BRM66WT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "khandwich"
+    },
+    {
+      "code": "BXQ3SYG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sushi-star"
+    },
+    {
+      "code": "C0ZK9E4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sup-byblos-routes-stand-up-paddleboarding-tours"
+    },
+    {
+      "code": "C1352WT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chabablaki-cafe"
+    },
+    {
+      "code": "C3PZKBX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marea-by-the-sea-halat"
+    },
+    {
+      "code": "C5BX15N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "obi-sushi"
+    },
+    {
+      "code": "CA1WQPR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cali-burger"
+    },
+    {
+      "code": "CCQGJ11",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "aal-shat"
+    },
+    {
+      "code": "CDCXZFS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jounieh-international-festival"
+    },
+    {
+      "code": "CFHBDHS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tabarja-kfaryassine-summer-festival"
+    },
+    {
+      "code": "CG0GJYY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-garden-house"
+    },
+    {
+      "code": "CGV23VJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "3ind-judy"
+    },
+    {
+      "code": "CPXVBY5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "indira-guesthouse"
+    },
+    {
+      "code": "CR5FWHK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dream-park-lebanon-amusement-rides-and-entertainment"
+    },
+    {
+      "code": "CS7ZTEB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "margherita-mare"
+    },
+    {
+      "code": "CXR5SZS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "captain-leylek-yachting-services-boat-yacht-rentalstours"
+    },
+    {
+      "code": "D0K7PTA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "palms-beach-house"
+    },
+    {
+      "code": "D37B6HH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-escape-project-escape-rooms"
+    },
+    {
+      "code": "D3SQM8B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "garden-master-bedrooms-residence"
+    },
+    {
+      "code": "D9G5TCN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "reston-hotel"
+    },
+    {
+      "code": "DEPT8BC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "codex-adventures-byblos-outdoor-escape-games"
+    },
+    {
+      "code": "DHNF3AB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-perfect-getaway"
+    },
+    {
+      "code": "DKHKP61",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "les-tagueurs-splash-room"
+    },
+    {
+      "code": "DW2XGM1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chabrouh-dam-atvutv-outings-with-prox"
+    },
+    {
+      "code": "E18KXGK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "brainscape-escape-room-games-and-puzzles"
+    },
+    {
+      "code": "E1930TY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jabal-moussa-biosphere-reserve-chouwen-area-hiking-and-nature-trails"
+    },
+    {
+      "code": "E3H2T2Y",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "boogie-strike-bowling-billiards-bowling-billiards-darts-games"
+    },
+    {
+      "code": "E4BY5H8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cana"
+    },
+    {
+      "code": "E70BJXH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "octopusteam-diving-center-scuba-diving-at-atcl"
+    },
+    {
+      "code": "EDWNHMF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "strand"
+    },
+    {
+      "code": "EFXAJPS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "annual-arak-festival-okaibeh-nahr-ibrahim-area"
+    },
+    {
+      "code": "EM7GPAF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marias-restaurant"
+    },
+    {
+      "code": "EPZQ13Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "portemilio-hotel-resort"
+    },
+    {
+      "code": "EVXJEA9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "adonai-le-petit-libanais"
+    },
+    {
+      "code": "F3S7TMJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dale-corazon-lebanon-explorers-nahr-ibrahim-jannet-yahchouch-hiking-river-swimming-and-guided-outings"
+    },
+    {
+      "code": "F86ZNYD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pizza-montana"
+    },
+    {
+      "code": "F91YHMK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-rachid-okaibe"
+    },
+    {
+      "code": "F9S6N6F",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "elie-khalil"
+    },
+    {
+      "code": "FA48AAX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "boha"
+    },
+    {
+      "code": "FA5ETZQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-guest-house"
+    },
+    {
+      "code": "FAF0WZY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "nova-strike-laser-tag-games"
+    },
+    {
+      "code": "FC45FBY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "samira-ezzo"
+    },
+    {
+      "code": "FCG5TQF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "casa-pepe"
+    },
+    {
+      "code": "FCYV8VH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "halat-sur-mer-halat"
+    },
+    {
+      "code": "FDKFEC6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jeser-al-kanater"
+    },
+    {
+      "code": "FJ360SP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-marsa-byblos"
+    },
+    {
+      "code": "FJ3N5M0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ski-shop"
+    },
+    {
+      "code": "FM30G6W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dar-karam"
+    },
+    {
+      "code": "FN64B0D",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "paragliding-lebanon-tandem-paragliding-over-jounieh-bay"
+    },
+    {
+      "code": "FTMREE6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mzaar-ski-resort-skiing-snowboarding-hiking-summer-mountain-activities"
+    },
+    {
+      "code": "G67E38A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-peche"
+    },
+    {
+      "code": "G7W9A30",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "burger-king-byblos"
+    },
+    {
+      "code": "G7ZM6PX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chateau-du-comte"
+    },
+    {
+      "code": "G8P8R1A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "avedis-kalpaklian"
+    },
+    {
+      "code": "GBZ9HS3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "snowcat-arctic-cat-club-snowmobile-rentals-and-winter-snow-rides"
+    },
+    {
+      "code": "GCFFT2X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "intercontinental-mzaar-mountain-resort-spa"
+    },
+    {
+      "code": "GF7D7Y5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "nero-resto-bar"
+    },
+    {
+      "code": "GGYFGE0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sapori-e-vini"
+    },
+    {
+      "code": "GKB4T25",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sienna-by-savory"
+    },
+    {
+      "code": "GKGE6P9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "murray-resto"
+    },
+    {
+      "code": "GNPFG6Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "freyas-apartment"
+    },
+    {
+      "code": "H2KMQPN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "locanda-a-la-granda"
+    },
+    {
+      "code": "H4K7C7A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "alsa-restaurant"
+    },
+    {
+      "code": "H6GSP56",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "four-season-halat-halat"
+    },
+    {
+      "code": "H8EFJD3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "farsha-bey"
+    },
+    {
+      "code": "HAESJYK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "gilgamesh-grill"
+    },
+    {
+      "code": "HG8828X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kankoun"
+    },
+    {
+      "code": "HGV0MNE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zaatar-w-zeit"
+    },
+    {
+      "code": "HJRWE1H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-bosta"
+    },
+    {
+      "code": "HKD7RJP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "malak-al-tawouk"
+    },
+    {
+      "code": "HKRX21Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-table-hafroun-byblos-district"
+    },
+    {
+      "code": "HRCT4KV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mateus-boutique-hotel"
+    },
+    {
+      "code": "HRZBDFW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-zoughaib"
+    },
+    {
+      "code": "J2X27XB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-raclot"
+    },
+    {
+      "code": "JGJ8JY5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "libre-resto-bar"
+    },
+    {
+      "code": "JWBGPJR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-jet-lounge-jet-skis-water-activities"
+    },
+    {
+      "code": "K0KQVW9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jabbour-restaurant"
+    },
+    {
+      "code": "K0WFHYM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "big-jockey"
+    },
+    {
+      "code": "K1J5R7W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "princessa-hotel"
+    },
+    {
+      "code": "K1R6M1Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tabarja-hills"
+    },
+    {
+      "code": "K665JRY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "roadster-diner-byblos"
+    },
+    {
+      "code": "K712EJE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mountain-chalet"
+    },
+    {
+      "code": "KB35H5N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "parasailing-lebanon-haret-sakherjounieh-parasailing-over-jounieh-bay"
+    },
+    {
+      "code": "KCYCAWR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zar"
+    },
+    {
+      "code": "KF92WWN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "burj-on-bay"
+    },
+    {
+      "code": "KGZXB0V",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "feast-of-the-assumption-eid-el-saydeh"
+    },
+    {
+      "code": "KJABC6G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-village-dinner-kfarhbab"
+    },
+    {
+      "code": "KPPA0QE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mzaar-summer-festival"
+    },
+    {
+      "code": "KXRA771",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-massif-de-laqlouq"
+    },
+    {
+      "code": "M1H0HHX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "luxor-hotel"
+    },
+    {
+      "code": "M1YDM4Y",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-baylassan"
+    },
+    {
+      "code": "M6M1VQR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "greeco"
+    },
+    {
+      "code": "MB7GHQW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "crepaway-byblos"
+    },
+    {
+      "code": "MBW27W1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pasta-factory"
+    },
+    {
+      "code": "MF1YJ1P",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "shooterz-club-football-basketball-tennis-sports-activities"
+    },
+    {
+      "code": "MY0DEFM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bashir-choucair"
+    },
+    {
+      "code": "N3ATDN0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marbella-hotel-sahel-alma"
+    },
+    {
+      "code": "N7K8V49",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-sami"
+    },
+    {
+      "code": "N7T53MX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hollywood-inn-boutique-hotel"
+    },
+    {
+      "code": "NE42G4W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ehmej-festival-ehmej-jbeil-district"
+    },
+    {
+      "code": "NFNKZ26",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-youssef"
+    },
+    {
+      "code": "NGGCAHW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "arcadia-guesthouses"
+    },
+    {
+      "code": "NMYNPBX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faraya-street-festival"
+    },
+    {
+      "code": "NY4PG9R",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "caim"
+    },
+    {
+      "code": "P0H3F15",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ahwet-zeitouna"
+    },
+    {
+      "code": "P5T3WH5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-quai"
+    },
+    {
+      "code": "P9W2075",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "baydar-jdoudna-hrajel"
+    },
+    {
+      "code": "PATJFR2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-international-festival"
+    },
+    {
+      "code": "PD0G0M8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "skoon"
+    },
+    {
+      "code": "PFGR6YP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sandwich-w-noss"
+    },
+    {
+      "code": "PHYP5HB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sanctum-diving-unlimited-aqua-marina-ii-scuba-snorkeling-boat-dives-wreck-dives-night-dives"
+    },
+    {
+      "code": "PNBERPN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-creperie-ghazir"
+    },
+    {
+      "code": "PQVRD41",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "prox-riding-club-atvs-utvs-buggies-snowmobiles-mountain-excursions"
+    },
+    {
+      "code": "Q3G3HTC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "go-and-flow"
+    },
+    {
+      "code": "Q6J9WV8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-padelist-la-cite-jounieh-padel-courts"
+    },
+    {
+      "code": "Q80BVYF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "memories-guesthouse"
+    },
+    {
+      "code": "Q8JC0S2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-loris-guesthouse"
+    },
+    {
+      "code": "QME7JBP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "alaa-el-hashem"
+    },
+    {
+      "code": "QMMCK15",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "barbar"
+    },
+    {
+      "code": "QMYGJGC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sailing-plus-yacht-charter-and-boating-experiences"
+    },
+    {
+      "code": "QPVGEWQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-sami-2"
+    },
+    {
+      "code": "QTHR4GG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zaatar-w-zeit-2"
+    },
+    {
+      "code": "QWQJZ3Y",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-playa-lebanon"
+    },
+    {
+      "code": "QY3YJNC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "samket-el-king-bouar"
+    },
+    {
+      "code": "R03KY8R",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "el-molino-mexican"
+    },
+    {
+      "code": "R0YA2W4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "linas-byblos"
+    },
+    {
+      "code": "R318S70",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "edde-yard"
+    },
+    {
+      "code": "R8AWMN7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "se"
+    },
+    {
+      "code": "RDRGKJC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "baydar-mechmech"
+    },
+    {
+      "code": "RGB2ZCJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "holiday-suites-hotel-beach-resort"
+    },
+    {
+      "code": "RJNYCRQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-en-blanc-et-rose"
+    },
+    {
+      "code": "RMR706G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "our-lady-of-lebanon-harissa-shrine-visit-panoramic-viewpoint-harissa-park"
+    },
+    {
+      "code": "S3XA4AV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sheer-climbing-house-faitroun-indoor-rock-climbing-and-climbing-training"
+    },
+    {
+      "code": "S6HGHR0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kaspera-resto"
+    },
+    {
+      "code": "S6X9GA8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dream-house-laqlouq"
+    },
+    {
+      "code": "SBH4CCH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "malaz"
+    },
+    {
+      "code": "SEE55CQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "meateor-bbq"
+    },
+    {
+      "code": "SJ17G6Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faqra-hills-hotel"
+    },
+    {
+      "code": "SKN3QQE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marcelle-saliba"
+    },
+    {
+      "code": "SPW3T8Y",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dar-al-amar"
+    },
+    {
+      "code": "SQSE8DQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lindos-daou"
+    },
+    {
+      "code": "STWBBR4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pop-in-bakery"
+    },
+    {
+      "code": "SVP33G7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kalea"
+    },
+    {
+      "code": "SVSNMWD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "serab-residencia"
+    },
+    {
+      "code": "SXESPPX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "halat-sailing-club"
+    },
+    {
+      "code": "SY4ZBDJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jounieh-beer-festival"
+    },
+    {
+      "code": "TBS83BZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-galet"
+    },
+    {
+      "code": "TFSFMY3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dimitriades-guest-house"
+    },
+    {
+      "code": "TFT0D39",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-ziad-beach"
+    },
+    {
+      "code": "TG5B7GZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marianne-mhanna"
+    },
+    {
+      "code": "TGKN17F",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "padel-pro-byblos-seaside-padel-courts"
+    },
+    {
+      "code": "TJTHHDM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-trad"
+    },
+    {
+      "code": "TPE9BP4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-boat-rental-boat-trips-from-byblos-port"
+    },
+    {
+      "code": "TW5PHDY",
+      "targetType": "home",
+      "placement": "magazine-page",
+      "active": true
+    },
+    {
+      "code": "TX6QV4M",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jalset-al-erzalhrajel"
+    },
+    {
+      "code": "TYR062A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "injoy-gaming-lounge"
+    },
+    {
+      "code": "TYZ4435",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "fekharet-dayeatna"
+    },
+    {
+      "code": "TZXG1T2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-grande-maison"
+    },
+    {
+      "code": "V53N2T0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "h-village"
+    },
+    {
+      "code": "V6552Y6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "set-el-kel"
+    },
+    {
+      "code": "V7PT296",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zouk-mikael-international-festival"
+    },
+    {
+      "code": "V8Z703A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "explorers-of-lebanon-kayaking-canoeing-and-outdoor-tours"
+    },
+    {
+      "code": "VAS080X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-sultan-brahim"
+    },
+    {
+      "code": "VAZ0B8K",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "feniqia-restaurant"
+    },
+    {
+      "code": "VHBHAER",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-brun-kfarhbab"
+    },
+    {
+      "code": "VK5BR3Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "elie-mansour"
+    },
+    {
+      "code": "VN5Z84P",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sama-judy"
+    },
+    {
+      "code": "VTMVEKY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kingos"
+    },
+    {
+      "code": "VVA9AB9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "deek-duke"
+    },
+    {
+      "code": "VW7XX6H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "casadar-guesthouse"
+    },
+    {
+      "code": "VYS01GZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jalset-karak"
+    },
+    {
+      "code": "VZJ0EJZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "samira-matta"
+    },
+    {
+      "code": "WA2PF42",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "casa-dunia-guesthouse-hosting-lebanon"
+    },
+    {
+      "code": "WDGM0RN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "eye-park-amusement-rides-and-recreational-activities"
+    },
+    {
+      "code": "WF1NH7D",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-creperie"
+    },
+    {
+      "code": "WKJ5PJ6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "monte-cassino-hotel"
+    },
+    {
+      "code": "WT3SPDN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hayali-suites-hotel"
+    },
+    {
+      "code": "WXH5W79",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "komuro"
+    },
+    {
+      "code": "WYTBPQW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pasta-pronto"
+    },
+    {
+      "code": "X1DGG0C",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-el-bahr"
+    },
+    {
+      "code": "X1JH9Z6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "el-mar-fish-seafood-okaibe"
+    },
+    {
+      "code": "X35ADHZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ninas-guesthouse-hosting-lebanon-old-souk-next-to-st-john-church"
+    },
+    {
+      "code": "XFX33YC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "elsy-nader"
+    },
+    {
+      "code": "Y0W775E",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-wadih"
+    },
+    {
+      "code": "YEEK34B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "rai-byblos"
+    },
+    {
+      "code": "YKFVGR9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "damask-rose-lebanese-guest-house"
+    },
+    {
+      "code": "YM49WW8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tamerland"
+    },
+    {
+      "code": "YNWWVK6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-noun"
+    },
+    {
+      "code": "YXH5XW6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-mina"
+    },
+    {
+      "code": "YXQBYC1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "rikkyz-faraya"
+    },
+    {
+      "code": "YY1WK62",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bab-el-hara-byblos"
+    },
+    {
+      "code": "YY4JS5Y",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-royal-hotel"
+    },
+    {
+      "code": "YYXJD01",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "eddys-street-food"
+    },
+    {
+      "code": "Z2RT57Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amar-harissa"
+    },
+    {
+      "code": "Z3TBJ8S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-el-sokhn"
+    },
+    {
+      "code": "Z5QEBZX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "octopusteam-diving-center-at-atcl-diving"
+    },
+    {
+      "code": "Z5XM18J",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ahwet-jounieh"
+    },
+    {
+      "code": "Z75PJHY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "scuba-diving-lovers-lebanon-sdll-scuba-diving-courses-dive-trips"
+    },
+    {
+      "code": "Z7H10JK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "brouhaha-intown"
+    },
+    {
+      "code": "ZBN8FWF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-creative-circle-art-workshops-and-creative-activities"
+    },
+    {
+      "code": "ZN0GGZ2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "evox-gaming-lounge-console-and-competitive-gaming"
+    },
+    {
+      "code": "ZQ64G12",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hotel-xperience"
+    },
+    {
+      "code": "ZSZHKWS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "overhang-climbing-gym-indoor-rock-climbing"
+    },
+    {
+      "code": "ZXMP7VF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-fun-planet-water-park-swimming"
+    }
+  ]
+}
