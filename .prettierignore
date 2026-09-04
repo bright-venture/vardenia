@@ -17,6 +17,12 @@ apps/web/src/payload-types.ts
 # ordering comment in it is restored by hand every time.
 apps/web/src/migrations/*.json
 
+# Written by `backup:export`, byte for byte, in a fixed key order and sorted by
+# code so its diff is the alarm (see apps/web/src/backup/permanence.ts). Prettier
+# reformatting it would be one more thing that changes the file without a code
+# changing, which is exactly what the format is built to avoid. The script owns it.
+backups/*.json
+
 # Build output and dependencies.
 **/.next/
 **/dist/

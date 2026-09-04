@@ -25,7 +25,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "listings:unpublish": "tsx src/import/unpublish.ts"
+    "listings:unpublish": "tsx src/import/unpublish.ts",
+    "backup:export": "tsx src/backup/export-cli.ts",
+    "backup:restore": "tsx src/backup/restore-cli.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.20.0",

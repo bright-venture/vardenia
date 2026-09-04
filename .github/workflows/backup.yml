@@ -1,0 +1,70 @@
+name: Back up the permanence layer
+
+# The one irreplaceable thing in the database is the map from a printed code to
+# what it opens: that code was minted once and is now on paper. The free Supabase
+# plan takes no backups, so this makes one every night - the codes and their
+# target slugs, all of it public data, committed to the repo. Git is the history:
+# offsite from Supabase, versioned, and diffable, which matters because a code is
+# not meant to change what it points at on its own, so a line moving in that file
+# is an alarm. See apps/web/src/backup/permanence.ts and backups/README.md.
+#
+# Personal data (bookings, customers) is deliberately not here. It waits for
+# Supabase's own backups once there is anything worth losing.
+
+on:
+  schedule:
+    # 03:17 UTC daily. Off-peak, and an odd minute so it does not pile onto the
+    # top of the hour with everyone else's cron.
+    - cron: '17 3 * * *'
+  # So it can be run by hand from the Actions tab, for a snapshot on demand.
+  workflow_dispatch: {}
+
+concurrency:
+  # Never let two exports race to commit the same file.
+  group: backup-permanence
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      # The only thing this job does is commit the backup file.
+      contents: write
+
+    env:
+      # Read-only use, so the transaction pooler is fine. Set this repository
+      # secret to production's connection string. It is the only secret the job
+      # needs: the export talks to Postgres directly and never boots Payload.
+      DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Exits non-zero, and writes nothing, if any printed code no longer
+      # resolves. A failed run here is the alarm, not a nuisance: it means a code
+      # on paper has stopped pointing anywhere.
+      - name: Export
+        run: pnpm --filter @vardenia/web backup:export
+
+      - name: Commit if the layer changed
+        run: |
+          git add backups/qr-permanence.json
+          # --cached, so a brand-new file (the very first snapshot) counts as a
+          # change too; a plain `git diff` only sees tracked files and would skip it.
+          if git diff --cached --quiet; then
+            echo "No change since the last snapshot."
+            exit 0
+          fi
+          git config user.name "vardenia-backup"
+          git config user.email "backup@users.noreply.github.com"
+          git commit -m "Back up the QR permanence layer"
+          git push
