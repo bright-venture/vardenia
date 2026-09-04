@@ -218,6 +218,17 @@ a.v-pop .v-pop-meta {
   font-size: 0.72rem;
   color: #6e655d; /* ink.500 */
 }
+a.v-pop-dir {
+  display: inline-block;
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #7e5518; /* gold.700 */
+}
+a.v-pop-dir:hover {
+  color: #543810; /* gold.900 */
+}
 .leaflet-control-attribution {
   background: rgba(247, 240, 228, 0.85);
   color: #6e655d;

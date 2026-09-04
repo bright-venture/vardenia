@@ -67,7 +67,16 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-export function DirectoryMap({ pins, label }: { pins: MapPin[]; label: string }) {
+export function DirectoryMap({
+  pins,
+  label,
+  directionsLabel,
+}: {
+  pins: MapPin[]
+  label: string
+  /** "Get directions", already localised, for the link in each popup. */
+  directionsLabel: string
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
@@ -98,8 +107,14 @@ export function DirectoryMap({ pins, label }: { pins: MapPin[]; label: string })
       const key = process.env.NEXT_PUBLIC_MAPTILER_KEY
       // MapTiler when a key is present; OpenStreetMap's own tiles otherwise, so
       // the map works the moment this ships and upgrades when the key is added.
+      //
+      // `streets-v2` is the familiar, Google-like basemap: roads, labels and
+      // places in colour. Swap the style slug for a different look without any
+      // other change - `dataviz-light` and `basic-v2` are quieter, `outdoor-v2`
+      // leans terrain. The OSM fallback below is only ever the unstyled default,
+      // which is the plain look until the key is set.
       const tileUrl = key
-        ? `https://api.maptiler.com/maps/dataviz-light/{z}/{x}/{y}{r}.png?key=${key}`
+        ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}{r}.png?key=${key}`
         : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
       const attribution = key
         ? '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -138,10 +153,16 @@ export function DirectoryMap({ pins, label }: { pins: MapPin[]; label: string })
           keyboard: true,
           alt: pin.name,
         })
+        // Payload stores a point as [lng, lat] and this pin carries them apart;
+        // Google Maps directions want "lat,lng", so the order is set here once.
+        const directions = `https://www.google.com/maps/dir/?api=1&destination=${pin.lat},${pin.lng}`
         marker.bindPopup(
           `<a class="v-pop" href="${pin.href}"><strong>${escapeHtml(pin.name)}</strong>${
             meta ? `<span class="v-pop-meta">${meta}</span>` : ''
-          }</a>`,
+          }</a>` +
+            `<a class="v-pop-dir" href="${directions}" target="_blank" rel="noopener noreferrer">${escapeHtml(
+              directionsLabel,
+            )} ↗</a>`,
         )
         return marker
       })
@@ -182,7 +203,7 @@ export function DirectoryMap({ pins, label }: { pins: MapPin[]; label: string })
       map?.remove()
       mapRef.current = null
     }
-  }, [signature, pins])
+  }, [signature, pins, directionsLabel])
 
   return (
     <div

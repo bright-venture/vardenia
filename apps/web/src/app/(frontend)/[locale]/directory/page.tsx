@@ -235,6 +235,7 @@ async function DirectoryResults({
         points && points.length > 0 ? (
           <DirectoryMap
             label={ar ? 'خريطة الدليل' : 'Directory map'}
+            directionsLabel={t('getDirections')}
             pins={points.map((p): MapPin => ({
               slug: p.slug,
               name: p.name,
@@ -249,19 +250,25 @@ async function DirectoryResults({
             }))}
           />
         ) : (
-          // The same empty state the grid shows, reused so a map with no pins reads
-          // identically to a list with no cards.
+          // Distinct from the list's empty state on purpose. The list is empty
+          // when nothing is published; the map is empty when things ARE published
+          // but none carries coordinates yet, which is the common case while the
+          // catalogue is being located. Saying "nothing published" here would be
+          // wrong and would read as a broken map. The action points back to the
+          // list, where those places do appear.
           <ListingGrid
             listings={[]}
             locale={locale}
-            empty={t('resultCount', { count: 0 })}
-            emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+            empty={ar ? 'لا شيء على الخريطة بعد' : 'Nothing to map yet'}
+            emptyBody={
+              ar
+                ? 'لا يحمل أيٌّ من هذه الأماكن موقعاً محدداً على الخريطة بعد. المواقع تُضاف تدريجياً؛ حتى ذلك الحين تجدها كلها في القائمة.'
+                : 'None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.'
+            }
             emptyAction={
-              anyFilterApplied(state) ? (
-                <Link href="/directory" className={LINK}>
-                  {t('clearFilters')}
-                </Link>
-              ) : null
+              <Link href={listHref} className={LINK}>
+                {ar ? 'اعرض القائمة' : 'View the list'}
+              </Link>
             }
           />
         )
