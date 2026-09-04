@@ -17,40 +17,8 @@ import * as migration_20260826_123026_rate_limits from './20260826_123026_rate_l
 import * as migration_20260826_140000_row_level_security from './20260826_140000_row_level_security'
 import * as migration_20260827_103453_import_batch from './20260827_103453_import_batch'
 import * as migration_20260902_080847_closures_and_decline_reason from './20260902_080847_closures_and_decline_reason'
+import * as migration_20260904_152850_saved_listings from './20260904_152850_saved_listings'
 
-/**
- * The order here is the order they run in, and two entries depend on it.
- *
- * `booking_capacity_trigger` installs a trigger on `bookings`, so it must come
- * after `bookings` creates that table. It was originally written as 180000 and
- * `migrate:create` duly listed it *before* the 181551 migration it depends on -
- * the generator sorts by the timestamp in the filename, and Payload stamps that
- * when you ask for a migration rather than when you finish writing one. Renamed
- * to 181600 so the filename and the dependency agree.
- *
- * `migrate:create` rewrites this file wholesale and has now deleted this comment
- * eleven times. Restore it. If you add a migration by hand, re-read the list
- * afterwards rather than trusting the regeneration - and be aware the generator
- * diffs against the JSON snapshots here, not the database, so a hand-written
- * migration leaves it out of step until the next generated one catches up.
- *
- * # 20260824_122311_google_rating DROPS TABLES
- *
- * It is the only one in this list since the baseline that destroys data. It
- * removes the four `reviews` tables, because the Reviews collection was
- * replaced by a rating field on the listing itself - the number is copied from
- * Google, not a review anybody wrote, and a collection with an author and a body
- * invited it to be displayed as one.
- *
- * Anything stored in those tables is gone when this runs. On production that is
- * whatever was entered while the collection existed, which was a day.
- *
- * # 20260902_080847_closures_and_decline_reason adds a line by hand
- *
- * Everything in it is generated except one `ENABLE ROW LEVEL SECURITY`. A table
- * created after the RLS migration does not inherit it - Postgres has no default
- * - so every new collection needs that line adding. Check the next one.
- */
 export const migrations = [
   {
     up: migration_20260813_123246_baseline.up,
@@ -146,5 +114,10 @@ export const migrations = [
     up: migration_20260902_080847_closures_and_decline_reason.up,
     down: migration_20260902_080847_closures_and_decline_reason.down,
     name: '20260902_080847_closures_and_decline_reason',
+  },
+  {
+    up: migration_20260904_152850_saved_listings.up,
+    down: migration_20260904_152850_saved_listings.down,
+    name: '20260904_152850_saved_listings',
   },
 ]

@@ -26,6 +26,7 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
+import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
@@ -348,8 +349,11 @@ export default async function ListingPage({ params }: Params) {
             </p>
           ) : null}
 
-          <div className={listing.tagline ? 'mt-10' : ''}>
+          {/* Directions (only with coordinates) sits beside Save (always). A
+              listing with no location still offers the heart. */}
+          <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
             <ActionBar name={listing.name ?? ''} coordinates={point} />
+            <SaveButton slug={slug} variant="button" />
           </div>
 
           {/*

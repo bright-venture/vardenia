@@ -136,6 +136,11 @@
     "upcoming": "Upcoming",
     "past": "Past",
     "signInToSee": "Sign in to see your bookings.",
+    "savedLink": "Saved places",
+    "savedTitle": "Saved places",
+    "savedSubtitle": "Your shortlist. Tap the heart on any listing to keep it here.",
+    "noSaved": "You have not saved anything yet. Tap the heart on a place to keep it here.",
+    "signInToSaved": "Sign in to see the places you have saved.",
     "verifyBanner": "Your email is not confirmed yet. Follow the link we sent you.",
     "verifyTitle": "Confirm your email",
     "verifyDone": "Your email is confirmed. You can sign in now.",
@@ -257,6 +262,8 @@
     "loading": "Loading...",
     "error": "Something went wrong. Please try again.",
     "retry": "Retry",
-    "close": "Close"
+    "close": "Close",
+    "save": "Save",
+    "saved": "Saved"
   }
 }

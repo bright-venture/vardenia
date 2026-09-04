@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
+import { SavedProvider } from '../../../components/SavedProvider'
+import { getPathname } from '../../../i18n/routing'
 import { Analytics } from '../../../components/Analytics'
 import { JsonLd } from '../../../components/JsonLd'
 import { isIndexingAllowed } from '../../../lib/indexing'
@@ -80,6 +82,12 @@ export default async function FrontendLayout({
   // Required for static rendering of localized routes.
   setRequestLocale(locale)
 
+  // Static both: the words come from the message catalogue and the sign-in path
+  // from the router. Nothing here reads a cookie, so the layout - and every page
+  // under it - stays statically rendered. See components/SavedProvider.
+  const t = await getTranslations('common')
+  const loginPath = getPathname({ locale, href: '/account/login' })
+
   return (
     // The font variables go on <html> rather than <body> so that anything
     // rendered into a portal or outside the body flow still resolves them.
@@ -110,9 +118,11 @@ export default async function FrontendLayout({
             kilobytes, so the whole thing still ships rather than being sliced
             per route - `messages={null}` is the opt-out if that ever changes. */}
         <NextIntlClientProvider locale={locale}>
-          <SiteHeader locale={locale as Locale} />
-          <div className="flex-1">{children}</div>
-          <SiteFooter locale={locale as Locale} />
+          <SavedProvider loginPath={loginPath} saveLabel={t('save')} savedLabel={t('saved')}>
+            <SiteHeader locale={locale as Locale} />
+            <div className="flex-1">{children}</div>
+            <SiteFooter locale={locale as Locale} />
+          </SavedProvider>
         </NextIntlClientProvider>
       </body>
     </html>

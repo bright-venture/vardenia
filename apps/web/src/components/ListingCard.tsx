@@ -3,6 +3,7 @@ import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
 import { Plate, Stars, Tier } from './ui'
+import { SaveButton } from './SaveButton'
 
 interface Props {
   slug: string
@@ -115,6 +116,16 @@ export function ListingCard({
                 {verified ? <Tier kind="verified" locale={locale} /> : null}
               </div>
             ) : null}
+          </div>
+
+          {/*
+            The heart, in the plate's end-bottom corner where the top row's
+            category and tier badges never reach. It is interactive inside the
+            card's anchor, so it stops the click reaching the link - see
+            SaveButton. Positioned by the card; the button itself is placeless.
+          */}
+          <div className="absolute bottom-3 end-3 z-10">
+            <SaveButton slug={slug} />
           </div>
         </div>
 
