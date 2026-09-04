@@ -139,6 +139,99 @@ const LISTINGS_TTL = 60 * 60
  * EXPLAIN when execution time overtakes planning time. That is the trigger, not
  * a row count somebody picked.
  */
+/**
+ * Translate the public filter set into a Payload `where`.
+ *
+ * Extracted so the grid, the map and anything else that lists places apply
+ * identical filters. A filtered map that quietly disagreed with the list beside
+ * it - one amenity handled differently, say - would be worse than no map at all,
+ * and the amenity intersection below is subtle enough that a second hand-written
+ * copy would drift from this one within a release or two.
+ */
+async function buildListingWhere(
+  payload: Awaited<ReturnType<typeof client>>,
+  {
+    category,
+    subcategory,
+    governorate,
+    district,
+    priceRange,
+    amenities,
+  }: Pick<
+    ListingQuery,
+    'category' | 'subcategory' | 'governorate' | 'district' | 'priceRange' | 'amenities'
+  >,
+): Promise<Where> {
+  const where: Where = {}
+  if (category) where.category = { equals: category }
+  /**
+   * `subcategories`, plural, and `in` rather than `equals`.
+   *
+   * The field is `hasMany`, so a listing carries a list and the query asks
+   * whether the wanted slug is in it. The singular name is not merely wrong,
+   * it throws - "the following path cannot be queried" - and it threw from
+   * inside the Suspense boundary, so the page still answered 200 with the
+   * failure buried in the streamed body. Worth remembering: a 200 from a
+   * streamed route says nothing about whether the query ran.
+   */
+  if (subcategory) where.subcategories = { in: [subcategory] }
+  if (governorate) where.governorate = { equals: governorate }
+  if (district) where.district = { equals: district }
+  if (priceRange) where.priceRange = { equals: priceRange }
+
+  /**
+   * Every amenity, not any of them.
+   *
+   * A reader who ticks "wheelchair accessible" and "pool" wants both. `in`
+   * is an OR, so the list would grow with each tick - the opposite of what a
+   * filter does, and for the accessibility one in particular a list that
+   * grows as you narrow it is actively misleading.
+   *
+   * # Why this is several queries and not one clause
+   *
+   * There is no operator for it. Checked against the running database rather
+   * than assumed: `all` throws ("adapter.operators[queryOperator] is not a
+   * function" - the Postgres adapter does not implement it), `in` gives OR,
+   * and an `and` of two `equals` on the same field returns nothing, because
+   * both conditions land on one join of the amenities table and no single
+   * row can be two values at once.
+   *
+   * So the intersection is done here: the ids matching each amenity, folded
+   * together. Correct, and it keeps pagination and the total count honest,
+   * which filtering the fetched page afterwards would not.
+   *
+   * The ceiling: this reads every matching id per amenity, so at tens of
+   * thousands of listings it stops being cheap. The fix then is a
+   * denormalised text[] column with a GIN index and a `@>` containment
+   * query - a migration, not a rewrite. Nowhere near that yet.
+   */
+  if (amenities?.length) {
+    let intersection: (number | string)[] | null = null
+
+    for (const slug of amenities) {
+      const matching = await payload.find({
+        collection: 'businesses',
+        where: { amenities: { in: [slug] } },
+        depth: 0,
+        pagination: false,
+        overrideAccess: false,
+      })
+
+      const ids: (number | string)[] = matching.docs.map((doc) => doc.id)
+      intersection = intersection === null ? ids : intersection.filter((id) => ids.includes(id))
+
+      if (intersection.length === 0) break
+    }
+
+    // An id that cannot exist, rather than an empty `in` - Payload treats
+    // that as no constraint at all and would return the whole catalogue for
+    // a filter that matched nothing.
+    where.id = intersection?.length ? { in: intersection } : { equals: -1 }
+  }
+
+  return where
+}
+
 export async function findListings({
   locale,
   category,
@@ -154,72 +247,14 @@ export async function findListings({
     {
       const payload = await client()
 
-      const where: Where = {}
-      if (category) where.category = { equals: category }
-      /**
-       * `subcategories`, plural, and `in` rather than `equals`.
-       *
-       * The field is `hasMany`, so a listing carries a list and the query asks
-       * whether the wanted slug is in it. The singular name is not merely wrong,
-       * it throws - "the following path cannot be queried" - and it threw from
-       * inside the Suspense boundary, so the page still answered 200 with the
-       * failure buried in the streamed body. Worth remembering: a 200 from a
-       * streamed route says nothing about whether the query ran.
-       */
-      if (subcategory) where.subcategories = { in: [subcategory] }
-      if (governorate) where.governorate = { equals: governorate }
-      if (district) where.district = { equals: district }
-      if (priceRange) where.priceRange = { equals: priceRange }
-
-      /**
-       * Every amenity, not any of them.
-       *
-       * A reader who ticks "wheelchair accessible" and "pool" wants both. `in`
-       * is an OR, so the list would grow with each tick - the opposite of what a
-       * filter does, and for the accessibility one in particular a list that
-       * grows as you narrow it is actively misleading.
-       *
-       * # Why this is several queries and not one clause
-       *
-       * There is no operator for it. Checked against the running database rather
-       * than assumed: `all` throws ("adapter.operators[queryOperator] is not a
-       * function" - the Postgres adapter does not implement it), `in` gives OR,
-       * and an `and` of two `equals` on the same field returns nothing, because
-       * both conditions land on one join of the amenities table and no single
-       * row can be two values at once.
-       *
-       * So the intersection is done here: the ids matching each amenity, folded
-       * together. Correct, and it keeps pagination and the total count honest,
-       * which filtering the fetched page afterwards would not.
-       *
-       * The ceiling: this reads every matching id per amenity, so at tens of
-       * thousands of listings it stops being cheap. The fix then is a
-       * denormalised text[] column with a GIN index and a `@>` containment
-       * query - a migration, not a rewrite. Nowhere near that yet.
-       */
-      if (amenities?.length) {
-        let intersection: (number | string)[] | null = null
-
-        for (const slug of amenities) {
-          const matching = await payload.find({
-            collection: 'businesses',
-            where: { amenities: { in: [slug] } },
-            depth: 0,
-            pagination: false,
-            overrideAccess: false,
-          })
-
-          const ids: (number | string)[] = matching.docs.map((doc) => doc.id)
-          intersection = intersection === null ? ids : intersection.filter((id) => ids.includes(id))
-
-          if (intersection.length === 0) break
-        }
-
-        // An id that cannot exist, rather than an empty `in` - Payload treats
-        // that as no constraint at all and would return the whole catalogue for
-        // a filter that matched nothing.
-        where.id = intersection?.length ? { in: intersection } : { equals: -1 }
-      }
+      const where = await buildListingWhere(payload, {
+        category,
+        subcategory,
+        governorate,
+        district,
+        priceRange,
+        amenities,
+      })
 
       return payload.find({
         collection: 'businesses',
@@ -268,6 +303,128 @@ export async function findListings({
       String(page),
       String(perPage),
     ],
+    { revalidate: LISTINGS_TTL, tags: ['businesses'] },
+  )()
+}
+
+/** One pin. Only the fields a marker and its popup actually use. */
+export interface MapPoint {
+  slug: string
+  name: string
+  /** Payload stores a point as `[lng, lat]`; these are pulled apart on read. */
+  lat: number
+  lng: number
+  tier: string
+  category: string | null
+  priceRange: string | null
+  governorate: string | null
+  district: string | null
+}
+
+/**
+ * Every place matching the current filters that has coordinates, for the map.
+ *
+ * # Not `findListings` with a big page size
+ *
+ * The map needs one thing the grid does not: all of the matches at once, because
+ * a pin that only appears on page two of a paginated fetch is a pin missing from
+ * the map. And it needs far less of each - a marker is a dot and a name, not a
+ * hero image and a rich-text body - so this selects six columns and reads at
+ * `depth: 0` rather than pulling whole documents the way the grid does at
+ * `depth: 1`. Running the grid query with `perPage: 1000` would fetch hundreds of
+ * full listings to render hundreds of dots.
+ *
+ * # Only places with a location
+ *
+ * `location` is optional on a listing, and much of the imported catalogue has
+ * none yet, so the filter is part of the query rather than a courtesy: a listing
+ * with no coordinates cannot be a pin, and the caller is told how many were
+ * dropped so the count beside the map stays honest.
+ *
+ * The 1000 ceiling is the one `countByGovernorate` and `findAllListingSlugs`
+ * share: fine at the current few hundred, and the day it is not, the fix is a
+ * bounding-box clause (`location` `within` the viewport) rather than a redesign -
+ * which is also what turns this into a live "search this area" map later.
+ */
+export async function findListingsForMap({
+  locale,
+  category,
+  subcategory,
+  governorate,
+  district,
+  priceRange,
+  amenities,
+}: Omit<ListingQuery, 'page' | 'perPage'>): Promise<MapPoint[]> {
+  const run = async (): Promise<MapPoint[]> => {
+    const payload = await client()
+
+    const where = await buildListingWhere(payload, {
+      category,
+      subcategory,
+      governorate,
+      district,
+      priceRange,
+      amenities,
+    })
+    // A pin needs a point. Narrow at the database rather than fetching the whole
+    // catalogue and discarding the coordinateless half here.
+    where.location = { exists: true }
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where,
+      locale,
+      depth: 0,
+      limit: 1000,
+      pagination: false,
+      overrideAccess: false,
+      sort: ['-tier', 'name'],
+      select: {
+        slug: true,
+        name: true,
+        location: true,
+        tier: true,
+        category: true,
+        priceRange: true,
+        governorate: true,
+        district: true,
+      },
+    })
+
+    const points: MapPoint[] = []
+    for (const doc of result.docs) {
+      // `exists: true` should have guaranteed this, but a point is a pair of
+      // numbers and a marker placed at a half-null coordinate lands in the sea
+      // off West Africa rather than failing - so the shape is checked, not trusted.
+      const loc = doc.location
+      if (!Array.isArray(loc)) continue
+      const [lng, lat] = loc as [unknown, unknown]
+      if (typeof lat !== 'number' || typeof lng !== 'number') continue
+
+      points.push({
+        slug: typeof doc.slug === 'string' ? doc.slug : '',
+        name: typeof doc.name === 'string' ? doc.name : '',
+        lat,
+        lng,
+        tier: typeof doc.tier === 'string' ? doc.tier : 'free',
+        category: typeof doc.category === 'string' ? doc.category : null,
+        priceRange: doc.priceRange == null ? null : String(doc.priceRange),
+        governorate: typeof doc.governorate === 'string' ? doc.governorate : null,
+        district: typeof doc.district === 'string' ? doc.district : null,
+      })
+    }
+    return points
+  }
+
+  // Cached on the same rule and tag as the grid, so the common views - a section,
+  // optionally by governorate - are a single Frankfurt round trip, and a
+  // published edit clears both on the one `businesses` revalidation.
+  const cacheable = !district && !priceRange && !amenities?.length
+  if (!cacheable) return run()
+
+  return unstable_cache(
+    run,
+    ['listings-map', locale, category ?? '', subcategory ?? '', governorate ?? ''],
     { revalidate: LISTINGS_TTL, tags: ['businesses'] },
   )()
 }

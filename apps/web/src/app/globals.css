@@ -226,3 +226,54 @@
     @apply border-gold-300 text-ink-500 border-s-2 ps-5 italic;
   }
 }
+
+/*
+  Leaflet, brought onto the ivory palette.
+
+  Leaflet ships its own popup chrome - white, rounded, a blue link - which reads
+  as a different product dropped onto the page. These overrides are the few rules
+  that repaint it as Vardenia: squared corners, paper ground, ink type. Outside
+  the @layer blocks on purpose, so they win over Leaflet's own stylesheet without
+  a specificity fight. See components/DirectoryMap.
+*/
+.leaflet-container {
+  background: #efe4cf; /* surface.sunken, so the gaps between tiles are not grey. */
+  font-family: var(--font-body);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 0;
+  background: #f7f0e4; /* surface.base */
+  color: #2a211b; /* ink.900 */
+  box-shadow: 0 6px 24px rgba(11, 23, 57, 0.18);
+}
+.leaflet-popup-tip {
+  background: #f7f0e4;
+}
+.leaflet-popup-content {
+  margin: 0.75rem 1rem;
+}
+a.v-pop {
+  display: block;
+  text-decoration: none;
+  color: #2a211b; /* ink.900 */
+}
+a.v-pop strong {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+a.v-pop .v-pop-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #6e655d; /* ink.500 */
+}
+.leaflet-control-attribution {
+  background: rgba(247, 240, 228, 0.85);
+  color: #6e655d;
+}
+.leaflet-control-attribution a {
+  color: #7e5518; /* gold.700 */
+}

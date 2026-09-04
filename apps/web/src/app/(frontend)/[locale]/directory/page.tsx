@@ -5,9 +5,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
-import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, findListings } from '../../../../lib/listings'
+import { Link, getPathname } from '../../../../i18n/routing'
+import { countByGovernorate, findListings, findListingsForMap } from '../../../../lib/listings'
+import { placeLabel, priceLabel } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
+import { DirectoryMap, type MapPin } from '../../../../components/DirectoryMap'
 import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
 import {
@@ -37,7 +39,7 @@ import {
 
 interface Props {
   params: Promise<{ locale: string }>
-  searchParams: Promise<RawFilterParams & { category?: string; page?: string }>
+  searchParams: Promise<RawFilterParams & { category?: string; page?: string; view?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -108,8 +110,9 @@ async function DirectoryResults({
    * the status can no longer change. A crawler sees the shell of a page that no
    * longer exists. Middleware answers with a real 308 before any of this runs.
    */
-  const { page, ...raw } = await searchParams
+  const { page, view, ...raw } = await searchParams
   const t = await getTranslations('directory')
+  const ar = locale === 'ar'
 
   /**
    * No subcategory here, so an empty list is passed and that row is dropped.
@@ -121,17 +124,27 @@ async function DirectoryResults({
    */
   const state = parseFilterState(raw, [])
 
-  // In parallel, for the reason given on the section page: the counts are a
-  // separate cache entry and should not add a round trip in front of the grid.
-  const [result, counts] = await Promise.all([
-    findListings({
-      locale,
-      ...state,
-      page: Number(page) || 1,
-    }),
+  /**
+   * `?view=map` is the same directory, drawn as pins instead of cards.
+   *
+   * It is read here rather than in the shell for the same reason the chips are:
+   * which view is showing depends on the query string, and deciding it in the
+   * static shell would flash the list and then swap to the map.
+   */
+  const isMap = view === 'map'
+
+  /**
+   * The counts feed the filter chips in both views, so they are fetched either
+   * way. Only the body's data source changes with the view, and the branch not
+   * taken resolves to null without touching the database - the map never fetches
+   * a grid page it will not show, and the list never fetches every coordinate.
+   */
+  const [counts, result, points] = await Promise.all([
     // No category here - /directory is every section at once, so the counts are
     // "listings in this governorate" across the whole directory.
     countByGovernorate({ locale }),
+    isMap ? Promise.resolve(null) : findListings({ locale, ...state, page: Number(page) || 1 }),
+    isMap ? findListingsForMap({ locale, ...state }) : Promise.resolve(null),
   ])
 
   const pageHref = (n: number) => {
@@ -139,14 +152,51 @@ async function DirectoryResults({
     return href.includes('?') ? `${href}&page=${n}` : `${href}?page=${n}`
   }
 
+  /**
+   * The List/Map switch preserves every active filter: a filtered map is just the
+   * filtered list's URL with `view=map` added. So the toggle never drops what the
+   * reader narrowed to, and a filtered map is as shareable as a filtered list.
+   */
+  const listHref = filterHref('/directory', state, {})
+  const mapHref = listHref.includes('?') ? `${listHref}&view=map` : `${listHref}?view=map`
+
+  const total = isMap ? (points?.length ?? 0) : (result?.totalDocs ?? 0)
+
   return (
     <>
-      {/* Hidden at zero: the empty state below already says it. */}
-      {result.totalDocs > 0 ? (
-        <p className="text-ink-500 mt-3 font-mono text-sm tabular-nums">
-          {t('resultCount', { count: result.totalDocs })}
-        </p>
-      ) : null}
+      {/*
+        The result count and the view switch share a row: the count on the start
+        edge, the List/Map toggle on the end edge. Both depend on the query, so
+        both live here inside the boundary rather than in the static shell.
+      */}
+      <div className="mt-3 flex items-end justify-between gap-4">
+        <div>
+          {/* Hidden at zero: the empty state below already says it. */}
+          {total > 0 ? (
+            <p className="text-ink-500 font-mono text-sm tabular-nums">
+              {t('resultCount', { count: total })}
+            </p>
+          ) : null}
+          {isMap ? (
+            <p className="text-ink-500 mt-1 text-xs">
+              {ar
+                ? 'تظهر على الخريطة الأماكن ذات الموقع المحدد فقط.'
+                : 'Only places with a pinned location appear on the map.'}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Two views of one query. FilterChip carries the active state, so the
+            current view reads the same as a selected filter does. */}
+        <div className="flex shrink-0 gap-2" aria-label={ar ? 'طريقة العرض' : 'View'}>
+          <FilterChip href={listHref} active={!isMap}>
+            {ar ? 'قائمة' : 'List'}
+          </FilterChip>
+          <FilterChip href={mapHref} active={isMap}>
+            {ar ? 'خريطة' : 'Map'}
+          </FilterChip>
+        </div>
+      </div>
 
       {/*
         Navigation, not a filter: these go to the section pages, which is where
@@ -181,53 +231,93 @@ async function DirectoryResults({
         counts={counts}
       />
 
-      <ListingGrid
-        listings={result.docs}
-        locale={locale}
-        // The results are the page. The first card is the largest thing above the
-        // fold, so its image is worth preloading. See ListingGrid.
-        eager
-        empty={t('resultCount', { count: 0 })}
-        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
-        emptyAction={
-          anyFilterApplied(state) ? (
-            <Link href="/directory" className={LINK}>
-              {t('clearFilters')}
-            </Link>
-          ) : null
-        }
-      />
+      {isMap ? (
+        points && points.length > 0 ? (
+          <DirectoryMap
+            label={ar ? 'خريطة الدليل' : 'Directory map'}
+            pins={points.map(
+              (p): MapPin => ({
+                slug: p.slug,
+                name: p.name,
+                lat: p.lat,
+                lng: p.lng,
+                tier: p.tier,
+                // Built here, not in the client: the routing helper is server-side,
+                // and a function cannot be handed to a client component as a prop.
+                href: getPathname({ locale, href: `/directory/${p.slug}` }),
+                place: placeLabel(p.governorate, p.district, locale),
+                price: priceLabel(p.priceRange) ?? '',
+              }),
+            )}
+          />
+        ) : (
+          // The same empty state the grid shows, reused so a map with no pins reads
+          // identically to a list with no cards.
+          <ListingGrid
+            listings={[]}
+            locale={locale}
+            empty={t('resultCount', { count: 0 })}
+            emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+            emptyAction={
+              anyFilterApplied(state) ? (
+                <Link href="/directory" className={LINK}>
+                  {t('clearFilters')}
+                </Link>
+              ) : null
+            }
+          />
+        )
+      ) : (
+        <>
+          <ListingGrid
+            listings={result?.docs ?? []}
+            locale={locale}
+            // The results are the page. The first card is the largest thing above
+            // the fold, so its image is worth preloading. See ListingGrid.
+            eager
+            empty={t('resultCount', { count: 0 })}
+            emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+            emptyAction={
+              anyFilterApplied(state) ? (
+                <Link href="/directory" className={LINK}>
+                  {t('clearFilters')}
+                </Link>
+              ) : null
+            }
+          />
 
-      {/*
-        Square cells, navy for the current page, per the design. The windowing
-        stays: the design draws every page number because its sample data has
-        four, and 308 listings at 24 a page is thirteen - which on a phone is a
-        second row of controls under the results. `pageWindow` keeps it to one.
-      */}
-      {result.totalPages > 1 ? (
-        <nav className="mt-16 flex items-center justify-center gap-2" aria-label="Pagination">
-          {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
-            n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1">
-                &hellip;
-              </span>
-            ) : (
-              <Link
-                key={n}
-                href={pageHref(n)}
-                aria-current={n === result.page ? 'page' : undefined}
-                className={
-                  n === result.page
-                    ? 'bg-cedar-900 text-surface-base inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums'
-                    : 'text-ink-500 hover:bg-surface-raised hover:text-ink-900 inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums transition-colors'
-                }
-              >
-                {n}
-              </Link>
-            ),
-          )}
-        </nav>
-      ) : null}
+          {/*
+            Square cells, navy for the current page, per the design. The windowing
+            stays: the design draws every page number because its sample data has
+            four, and 308 listings at 24 a page is thirteen - which on a phone is a
+            second row of controls under the results. `pageWindow` keeps it to one.
+          */}
+          {(result?.totalPages ?? 0) > 1 ? (
+            <nav className="mt-16 flex items-center justify-center gap-2" aria-label="Pagination">
+              {pageWindow(result?.page ?? 1, result?.totalPages ?? 1).map((n, i) =>
+                n === 'gap' ? (
+                  <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1">
+                    &hellip;
+                  </span>
+                ) : (
+                  <Link
+                    key={n}
+                    href={pageHref(n)}
+                    aria-current={n === result?.page ? 'page' : undefined}
+                    className={
+                      n === result?.page
+                        ? 'bg-cedar-900 text-surface-base inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums'
+                        : 'text-ink-500 hover:bg-surface-raised hover:text-ink-900 inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums transition-colors'
+                    }
+                  >
+                    {n}
+                  </Link>
+                ),
+              )}
+            </nav>
+          ) : null}
+        </>
+      )}
     </>
   )
 }

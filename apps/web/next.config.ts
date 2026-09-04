@@ -14,6 +14,30 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   /**
+   * The site's 404 is a global-not-found, and it has to be.
+   *
+   * There is no root `app/layout.tsx` here on purpose: `(frontend)` and
+   * `(payload)` are two separate root layouts, because the public site and
+   * Payload's admin panel cannot share a document shell. Next calls that
+   * "multiple root layouts", and its consequence is that a plain
+   * `app/not-found.tsx` has no single root layout to render inside - the build
+   * fails with "not-found.tsx doesn't have a root layout".
+   *
+   * `global-not-found` is Next's answer to exactly that: one 404 that supplies
+   * its own `<html>` and `<body>` and stands outside every layout - which is how
+   * src/app/global-not-found.tsx was already written. The flag is still
+   * experimental in 15.4, so it is named here rather than assumed.
+   *
+   * Without both halves - this flag and the `global-not-found` filename - the app
+   * does not build. It only appeared to work on an older Next that tolerated a
+   * self-contained root `not-found.tsx`; the versions Payload 3.87 supports
+   * (>= 15.4.11) do not.
+   */
+  experimental: {
+    globalNotFound: true,
+  },
+
+  /**
    * Stop announcing the stack on every response.
    *
    * The live site was returning `x-powered-by: Next.js, Payload`, which tells
