@@ -103,35 +103,6 @@
   }
 }
 
-/* The homepage band of place names, sliding forever.
-
-   The track holds the list twice over, so moving it by exactly half its width
-   lands on the start of the second copy and the loop is invisible. That only
-   holds if half the track really is one copy, which is why the spacing lives
-   inside each item rather than as a `gap` on the flex row: a gap adds one extra
-   space between the two halves, and 50% then stops slightly short of the seam.
-
-   Right to left gets its own keyframe rather than a mirrored transform. In an
-   RTL row the items are laid out from the right, so the same negative shift
-   would pull the band away from the reader instead of feeding it towards them. */
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes marquee-rtl {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(50%);
-  }
-}
-
 /* Anyone who has asked their system for less movement gets the finished state
    immediately rather than a faster version of the same motion. `animation:
    none` on an element whose opacity starts at 0 would leave it invisible, which
@@ -163,38 +134,6 @@
 /* Editorial body copy rendered from the CMS rich text field. Scoped to one
    class so CMS content can never restyle the rest of the page. */
 @layer components {
-  /*
-    The marquee's motion, kept out of the component for one reason: the
-    reduced-motion rule above cannot switch it off.
-
-    That rule forces `animation-duration` to 0.001ms on everything, which is
-    right for the masthead's one-shot animations - they jump to their finished
-    state. This one runs `infinite`, so the same rule would loop it thousands of
-    times a second: a strobing band, for a reader who asked for less movement.
-
-    So the cancel here sets `animation-name: none`, which the blanket rule does
-    not touch, and it lists the RTL selector too - `[dir='rtl'] .marquee-track`
-    is more specific than `.marquee-track`, so an Arabic reader with reduced
-    motion would otherwise keep the animation the class-only rule removed.
-
-    60s is a drift rather than a scroll. It is decoration, and anything fast
-    enough to read word by word pulls the eye off the page.
-  */
-  .marquee-track {
-    animation: marquee 60s linear infinite;
-  }
-
-  [dir='rtl'] .marquee-track {
-    animation-name: marquee-rtl;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .marquee-track,
-    [dir='rtl'] .marquee-track {
-      animation-name: none;
-    }
-  }
-
   /* A row that scrolls sideways without a visible bar.
      Used by the filter row, where a scrollbar under eight chips would take a
      third of the row's height and look like a rendering fault. The row is still

@@ -81,7 +81,7 @@ export function RegionIndex({
       />
 
       <div className="relative mx-auto max-w-6xl px-6 py-24 sm:py-32">
-        <p className="text-gold-300 font-mono text-[11px] tracking-[0.2em] uppercase">{eyebrow}</p>
+        <p className="text-gold-300 font-mono text-[11px] uppercase tracking-[0.2em]">{eyebrow}</p>
         <h2 className="text-surface-base/90 mt-3 max-w-xl text-3xl leading-tight sm:text-4xl lg:text-5xl">
           {title}
         </h2>

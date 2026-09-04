@@ -199,11 +199,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       {/* The region index closes the dark run and hands the reader somewhere to
           go, on its own photographic ground rather than a third flat band. */}
-      <RegionIndex
-        locale={locale}
-        eyebrow={t('regionsEyebrow')}
-        title={t('regionsTitle')}
-      />
+      <RegionIndex locale={locale} eyebrow={t('regionsEyebrow')} title={t('regionsTitle')} />
 
       {/*
         The design ends on a bordered box on the ivory ground rather than another

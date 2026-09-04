@@ -60,7 +60,7 @@ export async function Hero({ places, codes }: { places: number; codes: number })
         sits on, not content.
       */}
       <Image
-        src="/videos/hero-sea-poster.jpg"
+        src="/videos/hero-mountain-poster.jpg"
         alt=""
         aria-hidden
         fill
@@ -99,13 +99,13 @@ export async function Hero({ places, codes }: { places: number; codes: number })
         className="from-cedar-900/40 absolute inset-0 -z-10 bg-gradient-to-r to-transparent rtl:bg-gradient-to-l"
       />
 
-      <div className="mx-auto w-full max-w-6xl px-6 pt-40 pb-16 sm:pb-24">
+      <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-40 sm:pb-24">
         <div className="max-w-3xl">
-          <p className="text-gold-300 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.05s_both] font-mono text-[11px] tracking-[0.2em] uppercase">
+          <p className="text-gold-300 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.05s_both] font-mono text-[11px] uppercase tracking-[0.2em]">
             {t('eyebrow')}
           </p>
 
-          <h1 className="text-surface-base mt-5 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.18s_both] text-[clamp(2.75rem,8vw,5.5rem)] leading-[0.98] font-normal">
+          <h1 className="text-surface-base mt-5 animate-[rise_0.9s_cubic-bezier(0,0,0,1)_0.18s_both] text-[clamp(2.75rem,8vw,5.5rem)] font-normal leading-[0.98]">
             {t('headlineA')}
             <br />
             {t('headlineB')} <em className="text-gold-300 italic">{t('headlineEmphasis')}</em>
@@ -164,7 +164,7 @@ export async function Hero({ places, codes }: { places: number; codes: number })
                 <dd className="text-surface-base font-mono text-xl tabular-nums">{value}</dd>
                 <span
                   aria-hidden
-                  className="text-cedar-100/60 font-mono text-[11px] tracking-[0.16em] uppercase"
+                  className="text-cedar-100/60 font-mono text-[11px] uppercase tracking-[0.16em]"
                 >
                   {label}
                 </span>
@@ -178,9 +178,9 @@ export async function Hero({ places, codes }: { places: number; codes: number })
           by the blanket rule in globals.css. */}
       <div
         aria-hidden
-        className="text-cedar-100/70 pointer-events-none absolute end-6 bottom-5 flex items-center gap-3 lg:end-10"
+        className="text-cedar-100/70 pointer-events-none absolute bottom-5 end-6 flex items-center gap-3 lg:end-10"
       >
-        <span className="font-mono text-[11px] tracking-[0.16em] uppercase">{t('scroll')}</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em]">{t('scroll')}</span>
         <span className="animate-bounce">&darr;</span>
       </div>
     </header>

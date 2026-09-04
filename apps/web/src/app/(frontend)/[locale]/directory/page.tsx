@@ -235,20 +235,18 @@ async function DirectoryResults({
         points && points.length > 0 ? (
           <DirectoryMap
             label={ar ? 'خريطة الدليل' : 'Directory map'}
-            pins={points.map(
-              (p): MapPin => ({
-                slug: p.slug,
-                name: p.name,
-                lat: p.lat,
-                lng: p.lng,
-                tier: p.tier,
-                // Built here, not in the client: the routing helper is server-side,
-                // and a function cannot be handed to a client component as a prop.
-                href: getPathname({ locale, href: `/directory/${p.slug}` }),
-                place: placeLabel(p.governorate, p.district, locale),
-                price: priceLabel(p.priceRange) ?? '',
-              }),
-            )}
+            pins={points.map((p): MapPin => ({
+              slug: p.slug,
+              name: p.name,
+              lat: p.lat,
+              lng: p.lng,
+              tier: p.tier,
+              // Built here, not in the client: the routing helper is server-side,
+              // and a function cannot be handed to a client component as a prop.
+              href: getPathname({ locale, href: `/directory/${p.slug}` }),
+              place: placeLabel(p.governorate, p.district, locale),
+              price: priceLabel(p.priceRange) ?? '',
+            }))}
           />
         ) : (
           // The same empty state the grid shows, reused so a map with no pins reads

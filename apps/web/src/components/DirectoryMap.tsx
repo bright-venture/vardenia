@@ -77,10 +77,7 @@ export function DirectoryMap({ pins, label }: { pins: MapPin[]; label: string })
    * filters actually change the set - not on every unrelated re-render, which
    * would tear the map down and refetch every tile.
    */
-  const signature = useMemo(
-    () => pins.map((p) => `${p.slug}:${p.lat},${p.lng}`).join('|'),
-    [pins],
-  )
+  const signature = useMemo(() => pins.map((p) => `${p.slug}:${p.lat},${p.lng}`).join('|'), [pins])
 
   useEffect(() => {
     const container = containerRef.current

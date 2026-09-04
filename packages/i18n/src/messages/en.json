@@ -50,19 +50,7 @@
     "printTitle": "Issue 01 is at the printer",
     "printBody": "Every place in the magazine carries a code. Point a phone at it and the listing opens, with the hours as they are today rather than as they were the day it printed.",
     "printCta": "Read the magazine",
-    "printImageAlt": "A printed Vardenia issue open on a table",
-    "marquee": [
-      "Byblos",
-      "Jounieh",
-      "Kaslik",
-      "Faraya",
-      "Ghazir",
-      "Harissa",
-      "Kfardebian",
-      "Zouk",
-      "Tabarja",
-      "Nahr Ibrahim"
-    ]
+    "printImageAlt": "A printed Vardenia issue open on a table"
   },
   "directory": {
     "searchPlaceholder": "Search hotels, restaurants, experiences...",

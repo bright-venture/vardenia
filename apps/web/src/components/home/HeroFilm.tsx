@@ -39,16 +39,23 @@
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * The sequence. Sea first, because the poster is its still - so the first thing
- * painted and the first thing played are the same frame. The rest are an order
- * the designer set: coast, waterfall, hillside, mountain dusk.
+ * The sequence, ordered light-first for load weight.
+ *
+ * The sea clip is the designer's opener and its still is the poster, but it is
+ * also 10MB against 0.4-1.2MB for the others. Leading with it meant the first
+ * thing the page streamed was that 10MB, on the masthead of the busiest page.
+ * So the light clips lead and sea plays last: by the time the cycle reaches it -
+ * four holds, near half a minute in - a reader either left long ago or is
+ * plainly staying, and its weight is theirs to spend rather than everyone's on
+ * arrival. The poster (see components/home/Hero) is a still of this first clip,
+ * so the first frame painted and the first frame played are the same.
  */
 const CLIPS = [
-  '/videos/hero-sea.mp4',
-  '/videos/hero-coast.mp4',
-  '/videos/hero-waterfall.mp4',
-  '/videos/hero-cross.mp4',
   '/videos/hero-mountain.mp4',
+  '/videos/hero-waterfall.mp4',
+  '/videos/hero-coast.mp4',
+  '/videos/hero-cross.mp4',
+  '/videos/hero-sea.mp4',
 ]
 
 /** How long each clip holds before the crossfade to the next begins. */
@@ -57,8 +64,7 @@ const HOLD_MS = 7000
 const FADE_MS = 1000
 
 const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export function HeroFilm() {
   const [active, setActive] = useState(0)
