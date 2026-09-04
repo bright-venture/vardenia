@@ -17,10 +17,16 @@
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,mjs}\"",
-    "clean": "turbo run clean && rimraf node_modules"
+    "clean": "turbo run clean && rimraf node_modules",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,mjs}": "prettier --write"
   },
   "devDependencies": {
     "@vardenia/tsconfig": "workspace:*",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "rimraf": "^6.0.1",
