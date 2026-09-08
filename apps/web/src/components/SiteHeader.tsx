@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
+import { Heart } from 'lucide-react'
 import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
 import { AccountLink } from './AccountLink'
+import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { MenuLink } from './header/MenuLink'
@@ -120,6 +122,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           >
             <SEARCH_ICON className="size-4" strokeWidth={1.75} aria-hidden />
           </Link>
+          {/* Shown only to a signed-in reader; see SavedNavLink. */}
+          <SavedNavLink label={t('saved')} />
           <AccountLink locale={locale} />
           {language}
         </div>
@@ -157,6 +161,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
             <MenuLink href="/magazine" title={t('magazine')} icon={MAGAZINE_ICON} />
             <MenuLink href="/search" title={ar ? 'بحث' : 'Search'} icon={SEARCH_ICON} />
+            {/* Always listed here as a destination: on a phone the menu is the
+                way around, and a signed-out tap lands on the sign-in prompt. */}
+            <MenuLink href="/account/saved" title={t('saved')} icon={Heart} />
             <MenuLink
               href="/add-your-business"
               title={ar ? 'أضف عملك' : 'Add your business'}

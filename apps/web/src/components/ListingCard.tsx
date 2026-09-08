@@ -2,6 +2,7 @@ import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
+import { isOpenNow } from '../lib/hours'
 import { Plate, Stars, Tier } from './ui'
 import { SaveButton } from './SaveButton'
 
@@ -28,6 +29,8 @@ interface Props {
   googleRatingCount?: number | null
   /** Reference code, printed under the QR on the page this listing appears on. */
   reference?: string | null
+  /** The place's opening hours, for the "Open now" cue. Shape as stored. */
+  openingHours?: unknown
   /** Set on the first card above the fold so its image preloads. */
   priority?: boolean
   locale: Locale
@@ -74,11 +77,18 @@ export function ListingCard({
   googleRating,
   googleRatingCount,
   reference,
+  openingHours,
   priority = false,
   locale,
 }: Props) {
   const price = priceLabel(priceRange)
   const place = placeLabel(governorate, district, locale)
+  // Only ever shown when confidently open. `null` (no hours) and `false`
+  // (closed) both render nothing: a grid of "Closed" badges is noise, and a card
+  // is a reason to visit, not a warning off. Computed at render, so it carries
+  // the same up-to-an-hour staleness the listing page's badge does on a cached
+  // page - the accepted trade there, and the same one here.
+  const open = isOpenNow(openingHours as never) === true
 
   return (
     <article className="group">
@@ -155,10 +165,18 @@ export function ListingCard({
             {name}
           </h3>
 
-          <div className="text-ink-500 mt-2 flex items-center gap-3 text-xs">
+          <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
             {price ? <span className="font-mono tabular-nums">{price}</span> : null}
             {typeof googleRating === 'number' && googleRating > 0 ? (
               <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
+            ) : null}
+            {/* A status, so it takes the semantic green rather than a brand
+                colour - the same call the listing page makes. */}
+            {open ? (
+              <span className="text-state-success inline-flex items-center gap-1.5 font-medium">
+                <span aria-hidden className="bg-state-success size-1.5 rounded-full" />
+                {locale === 'ar' ? 'مفتوح الآن' : 'Open now'}
+              </span>
             ) : null}
           </div>
 

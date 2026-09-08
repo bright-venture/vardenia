@@ -39,12 +39,18 @@ import {
 interface SavedContextValue {
   isSaved: (slug: string) => boolean
   toggle: (slug: string) => void
+  /** How many places are saved, for the header link. */
+  count: number
+  /** null until the first GET answers, then true or false. */
+  signedIn: boolean | null
   labels: { save: string; saved: string }
 }
 
 const SavedContext = createContext<SavedContextValue>({
   isSaved: () => false,
   toggle: () => {},
+  count: 0,
+  signedIn: false,
   labels: { save: 'Save', saved: 'Saved' },
 })
 
@@ -146,8 +152,14 @@ export function SavedProvider({
   )
 
   const value = useMemo<SavedContextValue>(
-    () => ({ isSaved, toggle, labels: { save: saveLabel, saved: savedLabel } }),
-    [isSaved, toggle, saveLabel, savedLabel],
+    () => ({
+      isSaved,
+      toggle,
+      count: slugs.size,
+      signedIn,
+      labels: { save: saveLabel, saved: savedLabel },
+    }),
+    [isSaved, toggle, slugs, signedIn, saveLabel, savedLabel],
   )
 
   return <SavedContext.Provider value={value}>{children}</SavedContext.Provider>

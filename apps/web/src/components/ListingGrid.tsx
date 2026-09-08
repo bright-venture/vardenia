@@ -126,6 +126,7 @@ export function ListingGrid({
             googleRating={listing.googleRating}
             googleRatingCount={listing.googleRatingCount}
             heroImage={listing.heroImage as never}
+            openingHours={listing.openingHours}
             priority={eager && index === 0}
             locale={locale}
           />
