@@ -17,7 +17,7 @@ import * as migration_20260826_123026_rate_limits from './20260826_123026_rate_l
 import * as migration_20260826_140000_row_level_security from './20260826_140000_row_level_security'
 import * as migration_20260827_103453_import_batch from './20260827_103453_import_batch'
 import * as migration_20260902_080847_closures_and_decline_reason from './20260902_080847_closures_and_decline_reason'
-import * as migration_20260904_152850_saved_listings from './20260904_152850_saved_listings'
+import * as migration_20260908_070400_saved_listings from './20260908_070400_saved_listings'
 
 export const migrations = [
   {
@@ -116,8 +116,8 @@ export const migrations = [
     name: '20260902_080847_closures_and_decline_reason',
   },
   {
-    up: migration_20260904_152850_saved_listings.up,
-    down: migration_20260904_152850_saved_listings.down,
-    name: '20260904_152850_saved_listings',
+    up: migration_20260908_070400_saved_listings.up,
+    down: migration_20260908_070400_saved_listings.down,
+    name: '20260908_070400_saved_listings',
   },
 ]

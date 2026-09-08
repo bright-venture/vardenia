@@ -6318,6 +6318,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "customer_listing_idx": {
+          "name": "customer_listing_idx",
+          "columns": [
+            {
+              "expression": "customer_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "listing_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -8710,6 +8731,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "98de0d9c-8bd3-40ea-afd9-ff5ef0f28d3f",
+  "id": "5a10bb1f-20e9-4e1a-ba40-ac17720214b1",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
