@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 import { closeRatherThanDelete } from '../hooks/closeRatherThanDelete'
+import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
@@ -114,7 +115,11 @@ export const Customers: CollectionConfig = {
   },
 
   hooks: {
-    beforeDelete: [closeRatherThanDelete],
+    // After closeRatherThanDelete: when it lets a hard delete through (a customer
+    // with no bookings), the saves must go first or the delete fails on their
+    // not-null foreign key. When it anonymises instead, the anonymise path clears
+    // them itself - see closeCustomerAccount. hooks/cleanupSavedListings.
+    beforeDelete: [closeRatherThanDelete, cleanupSavedListings('customer')],
   },
 
   fields: [

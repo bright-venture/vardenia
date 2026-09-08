@@ -13,6 +13,7 @@ import { categoryOptions, districtOptions, governorateOptions, subcategoryOption
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
+import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { guardSort } from '../hooks/guardSort'
 import {
   revalidateListingsAfterChange,
@@ -65,7 +66,14 @@ export const Businesses: CollectionConfig = {
     // Bookings are the other thing that makes a listing undeletable, and the
     // database already refused those - just not in words. See
     // hooks/blockBusinessWithBookings.
-    beforeDelete: [protectBusinessWithPrintedCode, blockBusinessWithBookings],
+    // cleanupSavedListings last: it only runs once the guards above have let the
+    // delete through, and it clears the saves that would otherwise fail the
+    // delete on a not-null foreign key. See hooks/cleanupSavedListings.
+    beforeDelete: [
+      protectBusinessWithPrintedCode,
+      blockBusinessWithBookings,
+      cleanupSavedListings('listing'),
+    ],
   },
   fields: [
     { name: 'name', type: 'text', required: true, localized: true, index: true },

@@ -172,6 +172,22 @@ export async function closeCustomerAccount(
       .catch(() => {})
   }
 
+  /**
+   * The shortlist goes too. A save is only an id pointing at a listing, so it
+   * holds nothing identifying, but a closed account should own nothing at all -
+   * and unlike the customer row, which is anonymised rather than removed to
+   * protect a venue's booking record, nothing depends on a save surviving. The
+   * hard-delete path clears these through hooks/cleanupSavedListings; this is the
+   * anonymise path, which never deletes the row and so must clear them here.
+   */
+  await payload
+    .delete({
+      collection: 'saved-listings',
+      where: { customer: { equals: customerId } },
+      overrideAccess: true,
+    })
+    .catch(() => {})
+
   await payload.update({
     collection: 'customers',
     id: customerId,

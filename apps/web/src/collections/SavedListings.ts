@@ -41,6 +41,12 @@ const createRows: Access = ({ req }) => {
 export const SavedListings: CollectionConfig = {
   slug: 'saved-listings',
 
+  // One save per customer per listing. The toggle in app/save/route reads before
+  // it writes, but two near-simultaneous saves of the same place would both find
+  // nothing and both insert; this makes the second insert fail instead, so a
+  // double-click cannot leave a duplicate that then needs two clicks to clear.
+  indexes: [{ fields: ['customer', 'listing'], unique: true }],
+
   admin: {
     useAsTitle: 'id',
     defaultColumns: ['customer', 'listing', 'createdAt'],

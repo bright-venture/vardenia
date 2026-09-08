@@ -17,6 +17,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "saved_listings_listing_idx" ON "payload"."saved_listings" USING btree ("listing_id");
   CREATE INDEX "saved_listings_updated_at_idx" ON "payload"."saved_listings" USING btree ("updated_at");
   CREATE INDEX "saved_listings_created_at_idx" ON "payload"."saved_listings" USING btree ("created_at");
+  CREATE UNIQUE INDEX "saved_listings_customer_id_listing_id_idx" ON "payload"."saved_listings" USING btree ("customer_id","listing_id");
   ALTER TABLE "payload"."payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_saved_listings_fk" FOREIGN KEY ("saved_listings_id") REFERENCES "payload"."saved_listings"("id") ON DELETE cascade ON UPDATE no action;
   CREATE INDEX "payload_locked_documents_rels_saved_listings_id_idx" ON "payload"."payload_locked_documents_rels" USING btree ("saved_listings_id");`)
 

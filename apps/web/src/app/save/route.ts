@@ -107,12 +107,27 @@ export async function POST(request: Request): Promise<Response> {
     // `customer` is forced to the caller by the collection's beforeValidate hook
     // regardless; it is named here only because it is a required field and the
     // create type insists on it. The hook is what actually guarantees it.
-    await payload.create({
-      collection: 'saved-listings',
-      data: { listing: Number(listing.id), customer: Number(user.id) },
-      overrideAccess: false,
-      user,
-    })
+    try {
+      await payload.create({
+        collection: 'saved-listings',
+        data: { listing: Number(listing.id), customer: Number(user.id) },
+        overrideAccess: false,
+        user,
+      })
+    } catch (err) {
+      // A near-simultaneous save can win the unique (customer, listing) index and
+      // make this insert fail. If the row now exists, that is the outcome the
+      // caller wanted, not an error; anything else is a real failure.
+      const again = await payload.find({
+        collection: 'saved-listings',
+        where: { listing: { equals: listing.id } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: false,
+        user,
+      })
+      if (!again.docs[0]) throw err
+    }
     saved = true
   }
 
