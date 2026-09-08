@@ -71,11 +71,18 @@ export function DirectoryMap({
   pins,
   label,
   directionsLabel,
+  frame,
 }: {
   pins: MapPin[]
   label: string
   /** "Get directions", already localised, for the link in each popup. */
   directionsLabel: string
+  /**
+   * The `[[south, west], [north, east]]` box the map opens on and will not leave:
+   * Lebanon for the general map, a single governorate when one is filtered. See
+   * lib/region-bounds.
+   */
+  frame: [[number, number], [number, number]]
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
@@ -167,28 +174,34 @@ export function DirectoryMap({
         return marker
       })
 
-      const group = markers.length ? L.featureGroup(markers).addTo(map) : null
-      const bounds = group ? group.getBounds() : null
+      if (markers.length) L.featureGroup(markers).addTo(map)
+      const frameBounds = L.latLngBounds(frame[0], frame[1])
 
       /**
-       * Frame the pins only once the container has a real width.
+       * Frame the map on the region box, once the container has a real width.
        *
-       * `fitBounds` turns geography into pixels, so it needs the map's true size -
-       * and that size is not reliably known at init. The container may still be
-       * settling, or (the case that stranded every marker thousands of pixels
-       * off-screen) the map may have mounted while its tab was hidden and 0px
-       * wide, then been shown. A ResizeObserver waits for a genuine width, squares
-       * the tiles to it, and fits the pins the first time round. Later resizes - a
-       * rotated phone, a widened window - keep the tiles square without yanking
-       * the view back from wherever the reader has panned to.
+       * The frame is the country or a governorate, not the pins: the reader asked
+       * for "Mount Lebanon" and should get a map of Mount Lebanon, not a tight zoom
+       * on the two places in it that happen to have coordinates. So the fit is to
+       * `frameBounds`, and the map is then clamped to it - no panning past the box,
+       * no zooming out past the point where the whole box is on screen.
+       *
+       * It waits for a genuine width because `fitBounds` turns geography into
+       * pixels and needs the map's true size, which is not reliable at init: the
+       * container may still be settling, or (the case that stranded every marker
+       * off-screen) the map may have mounted while its tab was hidden and 0px wide,
+       * then been shown. Later resizes keep the tiles square.
        */
       let fitted = false
       const observer = new ResizeObserver(() => {
-        if (!mapRef.current) return
+        const m = mapRef.current
+        if (!m) return
         if (container.clientWidth < 100) return // Hidden or not yet laid out.
-        mapRef.current.invalidateSize()
-        if (!fitted && bounds) {
-          mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 })
+        m.invalidateSize()
+        if (!fitted) {
+          m.fitBounds(frameBounds, { padding: [20, 20] })
+          m.setMaxBounds(frameBounds.pad(0.06))
+          m.setMinZoom(m.getBoundsZoom(frameBounds))
           fitted = true
         }
       })
@@ -203,7 +216,7 @@ export function DirectoryMap({
       map?.remove()
       mapRef.current = null
     }
-  }, [signature, pins, directionsLabel])
+  }, [signature, pins, directionsLabel, frame])
 
   return (
     <div

@@ -8,6 +8,7 @@ import { alternatesFor } from '../../../../lib/seo'
 import { Link, getPathname } from '../../../../i18n/routing'
 import { countByGovernorate, findListings, findListingsForMap } from '../../../../lib/listings'
 import { placeLabel, priceLabel } from '../../../../lib/labels'
+import { boundsForRegion } from '../../../../lib/region-bounds'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { DirectoryMap, type MapPin } from '../../../../components/DirectoryMap'
 import { LINK } from '../../../../components/formStyles'
@@ -236,6 +237,7 @@ async function DirectoryResults({
           <DirectoryMap
             label={ar ? 'خريطة الدليل' : 'Directory map'}
             directionsLabel={t('getDirections')}
+            frame={boundsForRegion(state.governorate)}
             pins={points.map((p): MapPin => ({
               slug: p.slug,
               name: p.name,

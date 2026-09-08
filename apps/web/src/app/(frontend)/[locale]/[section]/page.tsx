@@ -5,9 +5,13 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
-import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, findListings } from '../../../../lib/listings'
+import { Link, getPathname } from '../../../../i18n/routing'
+import { countByGovernorate, findListings, findListingsForMap } from '../../../../lib/listings'
+import { placeLabel, priceLabel } from '../../../../lib/labels'
+import { boundsForRegion } from '../../../../lib/region-bounds'
 import { ListingGrid } from '../../../../components/ListingGrid'
+import { DirectoryMap, type MapPin } from '../../../../components/DirectoryMap'
+import { FilterChip } from '../../../../components/FilterChip'
 import { LINK } from '../../../../components/formStyles'
 import {
   ListingFilters,
@@ -49,7 +53,7 @@ export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
-  searchParams: Promise<RawFilterParams & { page?: string }>
+  searchParams: Promise<RawFilterParams & { page?: string; view?: string }>
 }
 
 /** Seven sections in two languages, all prerendered at build time. */
@@ -117,8 +121,9 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { page, ...raw } = await searchParams
+  const { page, view, ...raw } = await searchParams
   const t = await getTranslations('directory')
+  const ar = locale === 'ar'
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
 
@@ -126,22 +131,25 @@ async function SectionResults({
   // same things. See parseFilterState.
   const state = parseFilterState(raw, children)
 
+  // `?view=map` is this section as pins instead of cards, exactly as on the
+  // directory. Read here rather than in the shell for the same reason: which
+  // view is showing depends on the query string.
+  const isMap = view === 'map'
+
   /**
-   * The listings and the per-governorate counts, in parallel.
-   *
-   * Sequential would put a second round trip to Frankfurt in front of the
-   * render for a number that is decoration on the row above the grid. The
-   * counts are cached separately and far more aggressively than the listings -
-   * see countByGovernorate - so in practice this is one query plus a cache read.
+   * Counts feed the filter chips either way; only the body's source changes with
+   * the view, and the branch not taken resolves to null without a query. Same
+   * shape as the directory, scoped to this section's category. In parallel, so a
+   * second Frankfurt round trip does not sit in front of the render.
    */
-  const [result, counts] = await Promise.all([
-    findListings({
-      locale,
-      category: section.category,
-      ...state,
-      page: Number(page) || 1,
-    }),
+  const [counts, result, points] = await Promise.all([
     countByGovernorate({ locale, category: section.category, subcategory: state.subcategory }),
+    isMap
+      ? Promise.resolve(null)
+      : findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
+    isMap
+      ? findListingsForMap({ locale, category: section.category, ...state })
+      : Promise.resolve(null),
   ])
 
   const base = `/${section.path}`
@@ -156,17 +164,41 @@ async function SectionResults({
     return href.includes('?') ? `${href}&page=${n}` : `${href}?page=${n}`
   }
 
+  // The List/Map switch keeps every active filter, so a filtered map is the
+  // filtered list's URL with view=map added.
+  const listHref = filterHref(base, state, {})
+  const mapHref = listHref.includes('?') ? `${listHref}&view=map` : `${listHref}?view=map`
+
+  const total = isMap ? (points?.length ?? 0) : (result?.totalDocs ?? 0)
+
   return (
     <>
-      {/*
-        The count line is hidden at zero, because the empty state below says the
-        same sentence. Both rendered, "No places found" appeared twice within a
-        few hundred pixels - once as a subtitle and once inside the box - which
-        reads as a glitch rather than as emphasis.
-      */}
-      {result.totalDocs > 0 ? (
-        <p className="text-ink-500 mt-3 text-sm">{t('resultCount', { count: result.totalDocs })}</p>
-      ) : null}
+      <div className="mt-3 flex items-end justify-between gap-4">
+        <div>
+          {/* Hidden at zero: the empty state below says the same sentence. */}
+          {total > 0 ? (
+            <p className="text-ink-500 font-mono text-sm tabular-nums">
+              {t('resultCount', { count: total })}
+            </p>
+          ) : null}
+          {isMap ? (
+            <p className="text-ink-500 mt-1 text-xs">
+              {ar
+                ? 'تظهر على الخريطة الأماكن ذات الموقع المحدد فقط.'
+                : 'Only places with a pinned location appear on the map.'}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="flex shrink-0 gap-2" aria-label={ar ? 'طريقة العرض' : 'View'}>
+          <FilterChip href={listHref} active={!isMap}>
+            {ar ? 'قائمة' : 'List'}
+          </FilterChip>
+          <FilterChip href={mapHref} active={isMap}>
+            {ar ? 'خريطة' : 'Map'}
+          </FilterChip>
+        </div>
+      </div>
 
       <ListingFilters
         base={base}
@@ -176,48 +208,89 @@ async function SectionResults({
         counts={counts}
       />
 
-      <ListingGrid
-        listings={result.docs}
-        locale={locale}
-        // A section page is a results page: the grid starts near the top.
-        eager
-        empty={t('resultCount', { count: 0 })}
-        // Says which way out exists, rather than restating the problem. See
-        // ui/EmptyState: the title is what happened, the body is what to do.
-        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
-        emptyAction={
-          anyFilterApplied(state) ? (
-            <Link href={base} className={LINK}>
-              {t('clearFilters')}
-            </Link>
-          ) : null
-        }
-      />
-
-      {result.totalPages > 1 ? (
-        <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
-          {pageWindow(result.page ?? 1, result.totalPages).map((n, i) =>
-            n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1 py-1">
-                &hellip;
-              </span>
-            ) : (
-              <Link
-                key={n}
-                href={pageHref(n)}
-                aria-current={n === result.page ? 'page' : undefined}
-                className={
-                  n === result.page
-                    ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
-                    : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
-                }
-              >
-                {n}
+      {isMap ? (
+        points && points.length > 0 ? (
+          <DirectoryMap
+            label={ar ? `خريطة ${nameFor(section, locale)}` : `${nameFor(section, locale)} map`}
+            directionsLabel={t('getDirections')}
+            frame={boundsForRegion(state.governorate)}
+            pins={points.map((p): MapPin => ({
+              slug: p.slug,
+              name: p.name,
+              lat: p.lat,
+              lng: p.lng,
+              tier: p.tier,
+              href: getPathname({ locale, href: `/directory/${p.slug}` }),
+              place: placeLabel(p.governorate, p.district, locale),
+              price: priceLabel(p.priceRange) ?? '',
+            }))}
+          />
+        ) : (
+          // Distinct from the list's empty state: the list is empty when nothing
+          // is published, the map when things are published but none carries
+          // coordinates yet. See the directory for the same distinction.
+          <ListingGrid
+            listings={[]}
+            locale={locale}
+            empty={ar ? 'لا شيء على الخريطة بعد' : 'Nothing to map yet'}
+            emptyBody={
+              ar
+                ? 'لا يحمل أيٌّ من هذه الأماكن موقعاً محدداً على الخريطة بعد. المواقع تُضاف تدريجياً؛ حتى ذلك الحين تجدها كلها في القائمة.'
+                : 'None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.'
+            }
+            emptyAction={
+              <Link href={listHref} className={LINK}>
+                {ar ? 'اعرض القائمة' : 'View the list'}
               </Link>
-            ),
-          )}
-        </nav>
-      ) : null}
+            }
+          />
+        )
+      ) : (
+        <>
+          <ListingGrid
+            listings={result?.docs ?? []}
+            locale={locale}
+            // A section page is a results page: the grid starts near the top.
+            eager
+            empty={t('resultCount', { count: 0 })}
+            // Says which way out exists, rather than restating the problem. See
+            // ui/EmptyState: the title is what happened, the body is what to do.
+            emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+            emptyAction={
+              anyFilterApplied(state) ? (
+                <Link href={base} className={LINK}>
+                  {t('clearFilters')}
+                </Link>
+              ) : null
+            }
+          />
+
+          {(result?.totalPages ?? 0) > 1 ? (
+            <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
+              {pageWindow(result?.page ?? 1, result?.totalPages ?? 1).map((n, i) =>
+                n === 'gap' ? (
+                  <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1 py-1">
+                    &hellip;
+                  </span>
+                ) : (
+                  <Link
+                    key={n}
+                    href={pageHref(n)}
+                    aria-current={n === result?.page ? 'page' : undefined}
+                    className={
+                      n === result?.page
+                        ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
+                        : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
+                    }
+                  >
+                    {n}
+                  </Link>
+                ),
+              )}
+            </nav>
+          ) : null}
+        </>
+      )}
     </>
   )
 }
