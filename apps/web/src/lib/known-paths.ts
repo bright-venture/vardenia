@@ -70,6 +70,9 @@ export const UNMATCHED_PREFIXES = [
   'admin',
   'auth',
   'booking',
+  // The save/unsave endpoint, an action rather than a page. Excluded from the
+  // matcher alongside auth and booking, so it is never rewritten into a locale.
+  'save',
   'g',
   'qr',
   'reports',

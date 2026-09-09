@@ -35,6 +35,8 @@ function harness({ bookings = 0, deletedAt = null, cancelled = 0 }: Options = {}
       updates.push(args)
       return {}
     }),
+    // closeCustomerAccount deletes the customer's shortlist on the way through.
+    delete: vi.fn(async () => ({})),
   }
 
   // The cancellations happen inside closeCustomerAccount, which finds them

@@ -70,6 +70,7 @@ describe('anonymisedCustomer', () => {
 describe('closeCustomerAccount', () => {
   function harness(bookings: Record<string, unknown>[] = []) {
     const calls: Record<string, unknown>[] = []
+    const deletes: Record<string, unknown>[] = []
 
     const payload = {
       find: vi.fn(async () => ({ docs: bookings, totalDocs: bookings.length })),
@@ -77,9 +78,13 @@ describe('closeCustomerAccount', () => {
         calls.push(args)
         return {}
       }),
+      delete: vi.fn(async (args: Record<string, unknown>) => {
+        deletes.push(args)
+        return {}
+      }),
     } as unknown as Payload
 
-    return { payload, calls }
+    return { payload, calls, deletes }
   }
 
   it('opens its own transaction for every write', async () => {
@@ -104,6 +109,23 @@ describe('closeCustomerAccount', () => {
     const cleared = calls.filter((c) => (c.data as { notes?: unknown })?.notes === null)
     expect(cleared).toHaveLength(1)
     expect(cleared[0]?.id).toBe(1)
+  })
+
+  /**
+   * The shortlist is the anonymise path's own to clear. The hard-delete path
+   * removes a customer's saves through a beforeDelete hook, but this path never
+   * deletes the row - it anonymises it - so a save would otherwise outlive the
+   * person it belonged to. Its own write, not joined to the caller's transaction.
+   */
+  it("deletes the customer's shortlist, which anonymising the row would leave behind", async () => {
+    const { payload, deletes } = harness()
+
+    await closeCustomerAccount(payload, 7)
+
+    const saved = deletes.find((d) => d.collection === 'saved-listings')
+    expect(saved).toBeDefined()
+    expect((saved?.where as { customer?: { equals?: unknown } })?.customer?.equals).toBe(7)
+    expect(saved).not.toHaveProperty('req')
   })
 })
 
