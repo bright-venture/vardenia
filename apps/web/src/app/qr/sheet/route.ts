@@ -77,6 +77,30 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  /**
+   * Every import batch there is, for the picker at the top of the sheet, so a
+   * batch is chosen with a click rather than typed into the URL. Businesses that
+   * were not imported carry no `importBatch` and are left out. Newest first,
+   * because the batch someone wants is almost always the one they just ran.
+   */
+  const batched = await payload.find({
+    collection: 'businesses',
+    where: { importBatch: { exists: true } },
+    limit: 5000,
+    depth: 0,
+    overrideAccess: true,
+    select: { importBatch: true },
+  })
+  const batches = [
+    ...new Set(
+      batched.docs
+        .map((doc) => (doc as { importBatch?: string | null }).importBatch)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ]
+    .sort()
+    .reverse()
+
   const result = await payload.find({
     collection: 'qr-codes',
     where: {
@@ -123,7 +147,15 @@ export async function GET(request: NextRequest) {
   )
 
   return new Response(
-    page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n'), issueId, batch),
+    page(
+      issueLabel,
+      result.docs.length,
+      result.totalDocs,
+      cards.join('\n'),
+      issueId,
+      batch,
+      batches,
+    ),
     {
       headers: {
         'content-type': 'text/html; charset=utf-8',
@@ -243,6 +275,26 @@ function downloads(issueId: number | null, batch: string | null): string {
 </p>`
 }
 
+/**
+ * The batch chooser. A row of links rather than a dropdown, to match the
+ * download buttons and to need no JavaScript - clicking one reloads the sheet
+ * narrowed to that batch, and the download buttons then carry it too. Absent
+ * entirely until there is at least one import to choose between.
+ */
+function batchLinks(batches: string[], current: string | null): string {
+  if (batches.length === 0) return ''
+
+  const link = (value: string | null, text: string): string => {
+    const href = value === null ? '/qr/sheet' : `/qr/sheet?batch=${encodeURIComponent(value)}`
+    const on = value === current ? ' class="on" aria-current="true"' : ''
+    return `<a href="${href}"${on}>${escape(text)}</a>`
+  }
+
+  return `<p class="batches"><span>Import batch:</span> ${link(null, 'All')} ${batches
+    .map((name) => link(name, name))
+    .join(' ')}</p>`
+}
+
 function page(
   title: string,
   count: number,
@@ -250,6 +302,7 @@ function page(
   cards: string,
   issueId: number | null,
   batch: string | null,
+  batches: string[],
 ): string {
   return `<!doctype html>
 <html lang="en">
@@ -271,8 +324,15 @@ function page(
     border: 1px solid #bbb; border-radius: 4px; color: #111; text-decoration: none;
   }
   .downloads span { color: #666; }
-  /* The buttons are for the screen. On paper they are two grey boxes. */
-  @media print { .downloads { display: none; } }
+  .batches { margin: 12px 0 0; font-size: 13px; }
+  .batches > span { color: #666; margin-inline-end: 4px; }
+  .batches a {
+    display: inline-block; margin-inline-end: 6px; padding: 3px 8px;
+    border: 1px solid #ddd; border-radius: 4px; color: #333; text-decoration: none;
+  }
+  .batches a.on { border-color: #111; background: #111; color: #fff; }
+  /* Chooser and buttons are for the screen. On paper they are clutter. */
+  @media print { .downloads, .batches { display: none; } }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
   .card {
     margin: 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px;
@@ -305,6 +365,7 @@ function page(
 <header>
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
+  ${batchLinks(batches, batch)}
   ${downloads(issueId, batch)}
   ${unsafeBaseBanner()}
   ${truncationBanner(count, total)}
