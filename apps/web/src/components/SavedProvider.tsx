@@ -16,13 +16,18 @@
  *
  * Reading the session in the layout would make every page under it dynamic, and
  * static rendering is the whole performance story of this site. So the provider
- * reads the session hint on mount - a non-httpOnly cookie the middleware keeps
- * true (see lib/session-hint) - and only when it names a customer does it ask
- * `GET /save`: a 200 carries the saved slugs, a 401 means the hint had drifted
- * and they are signed out after all. Anyone the hint does not call a customer is
- * settled with no request, which is most of the traffic on a public directory.
- * The layout stays static and reads no cookie; the only thing it hands down is
- * the sign-in path and the two words for the button, all of which are static.
+ * reads the session hint - a non-httpOnly cookie the middleware keeps agreeing
+ * with the real token (see lib/session-hint) - and only when it names a customer
+ * does it ask `GET /save`: a 200 carries the saved slugs, a 401 means the hint
+ * had drifted and they are signed out after all. Anyone the hint does not call a
+ * customer is settled with no request, which is most of the traffic on a public
+ * directory. The layout stays static and reads no cookie; the only thing it
+ * hands down is the sign-in path and the two words for the button.
+ *
+ * The hint is read reactively, not once. A sign-in or sign-out in this tab
+ * changes the cookie and re-renders the provider, so the hearts follow the
+ * session without a reload: they light up when a customer signs in and empty
+ * when they sign out. See `subscribeHint` above for the cross-tab half of that.
  *
  * A signed-in reader sees their hearts light up a beat after the page paints,
  * which is the accepted cost of pages that stay ignorant of sessions. A signed-out
@@ -36,9 +41,26 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react'
 import { sessionAudience } from '../lib/session-hint'
+
+/**
+ * The session hint lives in a cookie, which changes with no React event to
+ * announce it. Re-reading it when a tab is focused or becomes visible catches a
+ * sign-in or sign-out that happened in another tab; one in this tab is caught by
+ * the re-render its own navigation already causes. The header's AccountLink
+ * subscribes exactly this way, for the same reason.
+ */
+const subscribeHint = (onChange: () => void) => {
+  document.addEventListener('visibilitychange', onChange)
+  window.addEventListener('focus', onChange)
+  return () => {
+    document.removeEventListener('visibilitychange', onChange)
+    window.removeEventListener('focus', onChange)
+  }
+}
 
 interface SavedContextValue {
   isSaved: (slug: string) => boolean
@@ -74,50 +96,72 @@ export function SavedProvider({
   savedLabel: string
   children: ReactNode
 }) {
+  /**
+   * Whether a customer is signed in, read reactively from the session hint (a
+   * non-httpOnly cookie the middleware keeps agreeing with the real token; see
+   * lib/session-hint). `useSyncExternalStore` gives the server `false` and the
+   * browser the live value, so every page prerenders signed-out and the browser
+   * corrects it - and because the value is re-read whenever this re-renders, a
+   * sign-in or sign-out in this very tab flips it with no reload.
+   *
+   * A partner counts as not-a-customer here: they hold a session, but not one
+   * that can save, so pressing a heart should send them to sign in as a customer.
+   */
+  const isCustomer = useSyncExternalStore(
+    subscribeHint,
+    () => sessionAudience() === 'customer',
+    () => false,
+  )
+
   const [slugs, setSlugs] = useState<Set<string>>(() => new Set())
 
   /**
-   * Settled from the session hint at first render, not left null for an effect to
-   * fill in - a non-httpOnly cookie the middleware keeps agreeing with the real
-   * token on every page (see lib/session-hint). Everyone the hint does not call a
-   * customer is `false` immediately and makes no request; a customer is `null`,
-   * unknown until the GET below brings their saves, so the header link does not
-   * flash before it does. This is what stops a fully static, mostly anonymous
-   * site from firing a dynamic, Payload-booting GET for readers who can never save.
-   *
-   * On the server the hint cannot be read and this is `false`, which renders the
-   * signed-out view - the same view the client paints for a customer whose saves
-   * have not arrived yet, so hydration matches either way.
+   * The `GET /save` verdict for a signed-in customer: null while it is still out,
+   * true once their saves are loaded, false if the hint had drifted and they turn
+   * out to be signed out after all. Only a customer ever fetches, so for everyone
+   * else this stays null - `signedIn` below consults it only when the hint says
+   * customer.
    */
-  const [signedIn, setSignedIn] = useState<boolean | null>(() =>
-    sessionAudience() === 'customer' ? null : false,
-  )
+  const [verdict, setVerdict] = useState<boolean | null>(null)
+
+  // Both halves: the hint names a customer, and the GET has not refused. Derived
+  // rather than stored so a hint change - a sign-out in this tab - empties the
+  // hearts at once, with no effect left to run first.
+  const signedIn: boolean | null = isCustomer ? verdict : false
 
   useEffect(() => {
-    // Non-customers were settled to `false` above and need nothing more; only a
-    // customer makes the round trip, because the hint carries no slugs and the
-    // hearts need the saved set. A hint that has drifted the wrong way is
-    // corrected by the GET's own 401 (and the POST's).
-    if (sessionAudience() !== 'customer') return
+    // Only a customer fetches; the hint has already turned everyone else away
+    // with no request, which is what keeps a static, mostly anonymous site from
+    // booting Payload on every first page load. The saved set is the one thing
+    // the hint cannot carry and the hearts need.
+    if (!isCustomer) return
 
     let cancelled = false
     fetch('/save', { headers: { accept: 'application/json' } })
       .then(async (r) => {
         if (cancelled) return
+        // The hint said customer but the token is gone: drifted, and signed out.
         if (r.status === 401) {
-          setSignedIn(false)
+          setVerdict(false)
           return
         }
         if (!r.ok) return
         const data = (await r.json()) as { slugs?: string[] }
-        setSignedIn(true)
+        setVerdict(true)
         setSlugs(new Set(data.slugs ?? []))
       })
       .catch(() => {})
+
     return () => {
       cancelled = true
+      // Leaving a customer session in this tab (a sign-out, or a switch to a
+      // different account): drop the loaded saves and the verdict, so whoever
+      // signs in next starts clean rather than seeing the last customer's hearts
+      // for the beat before their own saves arrive.
+      setVerdict(null)
+      setSlugs(new Set())
     }
-  }, [])
+  }, [isCustomer])
 
   const flip = useCallback((slug: string) => {
     setSlugs((prev) => {
@@ -152,13 +196,13 @@ export function SavedProvider({
           // A session can lapse between load and press. Send them to sign in and
           // put the heart back rather than lying about a save that did not happen.
           if (r.status === 401) {
-            setSignedIn(false)
+            setVerdict(false)
             flip(slug)
             goSignIn()
             return null
           }
           if (!r.ok) throw new Error(String(r.status))
-          setSignedIn(true)
+          setVerdict(true)
           return r.json() as Promise<{ saved?: boolean }>
         })
         .then((data) => {
