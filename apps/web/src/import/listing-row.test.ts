@@ -9,6 +9,7 @@ import {
   priceBand,
   seasonalityFrom,
   tagsFrom,
+  toListing,
   toListings,
 } from './listing-row'
 
@@ -186,6 +187,49 @@ describe('the rows that need a person', () => {
     const listing = byName('Autumn Harvest')
     expect(listing?.seasonality).toEqual([])
     expect(listing?.warnings.join(' ')).toContain('not a season the site offers')
+  })
+})
+
+/**
+ * The Chouf file brought headings the Keserwan one never had, mapped to existing
+ * subcategories rather than growing the taxonomy. Each one has to land in a real
+ * category, in a subcategory that belongs to it, in a district the site knows -
+ * the same silent-mistake surface the whole-file tests guard, checked on the
+ * exact mappings this file added.
+ */
+describe('the Chouf headings, mapped to existing subcategories', () => {
+  const EXPECTED: Record<string, [string, string]> = {
+    Getaways: ['hospitality', 'guest-houses'],
+    'Coffee Shops': ['food-and-beverage', 'coffee-shops'],
+    Nightlife: ['food-and-beverage', 'nightlife'],
+    Pools: ['food-and-beverage', 'beach-clubs'],
+    'Boat Rentals': ['tourism', 'adventure'],
+    'Hidden Gems': ['tourism', 'eco-tourism'],
+    Gyms: ['healthcare', 'wellness'],
+    Malls: ['lifestyle', 'luxury-shopping'],
+  }
+
+  it('sends each heading to its intended category, subcategory and the Chouf district', () => {
+    for (const [heading, [category, subcategory]] of Object.entries(EXPECTED)) {
+      const listing = toListing({
+        ID: 'X',
+        Category: heading,
+        'Name / Listing': 'A Chouf Place',
+        Location: 'Deir el Qamar',
+        District: 'Chouf District',
+        'Overview / Description': 'A place in the Chouf hills.',
+      })
+
+      expect(listing, heading).not.toBeNull()
+      expect(listing!.category, heading).toBe(category)
+      expect(listing!.subcategories, heading).toEqual([subcategory])
+      // The subcategory really is a child of the category it was filed under.
+      expect(SUBCATEGORY_PARENT[subcategory], heading).toBe(category)
+      expect(listing!.governorate, heading).toBe('mount-lebanon')
+      expect(listing!.district, heading).toBe('chouf')
+      // A clean Chouf row needs nobody: known district, known category, no season.
+      expect(listing!.warnings, heading).toHaveLength(0)
+    }
   })
 })
 

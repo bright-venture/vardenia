@@ -59,27 +59,56 @@ export interface ImportedListing {
 /**
  * Category and subcategory per sheet heading.
  *
- * `tour-guides` and `festivals` were added to the taxonomy for this import.
- * Squashing 29 listings into `adventure` would have made the section filters
- * describe something they do not contain, and a filter that lies is worse than
- * a category that is new.
+ * # The Keserwan file
+ *
+ * `tour-guides` and `festivals` were added to the taxonomy for it. Squashing 29
+ * listings into `adventure` would have made the section filters describe
+ * something they do not contain, and a filter that lies is worse than a category
+ * that is new.
+ *
+ * # The Chouf file
+ *
+ * It arrived with eight headings the Keserwan one never had - Getaways, Coffee
+ * Shops, Pools, Gyms, Hidden Gems, Nightlife, Malls, Boat Rentals - and the
+ * decision there was the opposite: map each to the nearest existing subcategory
+ * rather than grow the taxonomy, because a new subcategory ships to every section
+ * filter on both web and mobile and that is a product change, not an import one.
+ *
+ * The fits are read from what the listings actually are, not from the word:
+ * Getaways are the boutique guesthouses and villas rented for a short escape;
+ * Pools are day pool-and-water resorts, which is what `beach-clubs` already
+ * covers; Gyms have no fitness slug so they sit under `wellness`; Hidden Gems in
+ * this file are natural sites - a waterfall, a grotto - so `eco-tourism`; Boat
+ * Rentals are marine activities, so `adventure`; Malls take the one shopping slug.
+ * A few are approximate, and a person can move a listing afterwards; the point is
+ * that every row lands somewhere real rather than being skipped.
  */
 const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory: string }> = {
   Hotels: { category: 'hospitality', subcategory: 'luxury-hotels' },
   'Guest Houses': { category: 'hospitality', subcategory: 'guest-houses' },
+  Getaways: { category: 'hospitality', subcategory: 'guest-houses' },
   Restaurants: { category: 'food-and-beverage', subcategory: 'restaurants' },
+  'Coffee Shops': { category: 'food-and-beverage', subcategory: 'coffee-shops' },
+  Nightlife: { category: 'food-and-beverage', subcategory: 'nightlife' },
+  Pools: { category: 'food-and-beverage', subcategory: 'beach-clubs' },
   Activities: { category: 'tourism', subcategory: 'adventure' },
+  'Boat Rentals': { category: 'tourism', subcategory: 'adventure' },
   'Tour Guides': { category: 'tourism', subcategory: 'tour-guides' },
   Festivals: { category: 'tourism', subcategory: 'festivals' },
+  'Hidden Gems': { category: 'tourism', subcategory: 'eco-tourism' },
+  Gyms: { category: 'healthcare', subcategory: 'wellness' },
+  Malls: { category: 'lifestyle', subcategory: 'luxury-shopping' },
 }
 
-/** Both districts in this file are Mount Lebanon; nothing else appears. */
+/** The districts across both files, all in Mount Lebanon; nothing else appears. */
 const DISTRICT_BY_HEADING: Record<string, string> = {
   'Keserwan District': 'keserwan',
   'Byblos / Jbeil District': 'jbeil',
   // Six rows span both. Keserwan wins because the directory is a Keserwan one,
   // and the row is flagged so a person can split it later if it matters.
   'Keserwan + Byblos / Jbeil Districts': 'keserwan',
+  // The Chouf file. One district, no towns split across two.
+  'Chouf District': 'chouf',
 }
 
 const GOVERNORATE = 'mount-lebanon'
