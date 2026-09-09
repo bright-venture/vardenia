@@ -66,6 +66,28 @@ const FADE_MS = 1000
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/**
+ * How eagerly the browser may fetch each clip before it is played.
+ *
+ * The first clip is `auto`: it plays the moment the page settles, and its still
+ * is the poster, so it is worth having ready. The rest carry `metadata` and
+ * buffer during the seven seconds the clip before them holds - all except the
+ * sea clip, which is `none`.
+ *
+ * Sea is ~10MB against 0.4-1.2MB for the others, and `metadata` is not the small
+ * fetch it sounds like: a reader has to reach an MP4's moov atom to read the
+ * metadata, and if the file was not written front-loaded the browser pulls a
+ * large slice of those ten megabytes to find it - on page load, for a clip that
+ * does not show for nearly half a minute. `none` fetches nothing until the
+ * sequence primes it a hold before its turn, which is when it was going to
+ * buffer anyway.
+ */
+const preloadFor = (src: string, index: number): 'auto' | 'metadata' | 'none' => {
+  if (index === 0) return 'auto'
+  if (src.includes('hero-sea')) return 'none'
+  return 'metadata'
+}
+
 export function HeroFilm() {
   const [active, setActive] = useState(0)
   const videos = useRef<(HTMLVideoElement | null)[]>([])
@@ -109,10 +131,9 @@ export function HeroFilm() {
           muted
           loop
           playsInline
-          // Only the first clip is worth fetching ahead of play; the rest carry
-          // metadata until the sequence reaches them, then buffer during the
-          // seven seconds the clip before them is on screen.
-          preload={i === 0 ? 'auto' : 'metadata'}
+          // See preloadFor: first clip eager, sea fetched only when primed, the
+          // rest metadata until their turn comes round.
+          preload={preloadFor(src, i)}
           aria-hidden
         >
           <source src={src} type="video/mp4" />

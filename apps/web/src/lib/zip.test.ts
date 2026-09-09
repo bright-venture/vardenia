@@ -1,63 +1,33 @@
-import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
+import { unzipSync } from 'fflate'
 import { describe, expect, it } from 'vitest'
 import { createZip, crc32, safeFileName } from './zip'
 
 /**
  * The ZIP writer, checked by having something else open the archive.
  *
- * # Why the tests shell out
+ * # Why a second implementation reads it back
  *
- * Because a test that reads the bytes back with my own parser proves only that
- * I am consistent, not that I am right. A ZIP is opened by Windows Explorer, by
- * macOS Archive Utility, by whatever the designer uses - none of which share my
- * reading of the spec. So the archives below are handed to Python's `zipfile`,
- * which is an independent implementation that has been wrong-file-detecting for
- * twenty years, and asked to list, verify and extract them.
+ * A test that reads the bytes back with my own parser proves only that I am
+ * consistent, not that I am right. A ZIP is opened by Windows Explorer, by macOS
+ * Archive Utility, by whatever the designer uses - none of which share my reading
+ * of the spec. So the archives below are handed to fflate's `unzipSync`, an
+ * independent implementation that parses the central directory, follows each
+ * entry's offset to its local header, and returns the bytes it finds. If our
+ * offsets, sizes or name flags are wrong, an independent reader is what shows it.
  *
- * A malformed archive is worse than no archive: it downloads happily and fails
- * when somebody opens it, quite possibly on the day it is needed.
+ * This used to shell out to Python's `zipfile`, which meant the suite failed on
+ * any machine without Python on the PATH. fflate is the same kind of check - a
+ * separate codebase's reading of the format - with no external binary.
+ *
+ * The one thing fflate does not do is re-check the CRC of stored data, so that
+ * guarantee is kept where it belongs: the `crc32` describe below pins the writer
+ * against the format's published check value, which every implementation agrees
+ * on. A malformed archive is worse than no archive: it downloads happily and
+ * fails when somebody opens it, quite possibly on the day it is needed.
  */
 
 const utf8 = (text: string) => new TextEncoder().encode(text)
-
-/** Runs Python against the archive and returns whatever it prints. */
-function inspect(zip: Uint8Array, script: string): string {
-  const dir = mkdtempSync(path.join(tmpdir(), 'vardenia-zip-'))
-  const archive = path.join(dir, 'test.zip')
-
-  try {
-    writeFileSync(archive, zip)
-
-    /**
-     * PYTHONIOENCODING, and the newline squash, are both Windows.
-     *
-     * Python writing an Arabic filename to a cp1252 console throws rather than
-     * printing, and `print` emits CRLF - which turned "OK" into "OK
-" and
-     * failed three tests that had nothing wrong with the archive.
-     */
-    return execFileSync('python', ['-c', script, archive], {
-      encoding: 'utf8',
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
-    })
-      .replace(/\r\n/g, '\n')
-      .trim()
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-}
-
-const LIST = `
-import sys, zipfile
-with zipfile.ZipFile(sys.argv[1]) as z:
-    bad = z.testzip()
-    print('CORRUPT:' + bad if bad else 'OK')
-    for name in z.namelist():
-        print(name + '|' + z.read(name).decode('utf-8'))
-`
+const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes)
 
 describe('crc32', () => {
   /** The published check value for this input, which every CRC-32 agrees on. */
@@ -77,37 +47,33 @@ describe('an archive a real unzip can open', () => {
       { name: 'second.txt', data: utf8('world') },
     ])
 
-    const out = inspect(zip, LIST).split('\n')
-    expect(out[0]).toBe('OK')
-    expect(out).toContain('first.txt|hello')
-    expect(out).toContain('second.txt|world')
+    const out = unzipSync(zip)
+    expect(Object.keys(out).sort()).toEqual(['first.txt', 'second.txt'])
+    expect(decode(out['first.txt']!)).toBe('hello')
+    expect(decode(out['second.txt']!)).toBe('world')
   })
 
   it('makes a folder out of a slash in the name', () => {
     const zip = createZip([{ name: 'codes/svg/one.txt', data: utf8('x') }])
-    expect(inspect(zip, LIST)).toContain('codes/svg/one.txt|x')
+    expect(decode(unzipSync(zip)['codes/svg/one.txt']!)).toBe('x')
   })
 
   it('keeps a non-ASCII name readable', () => {
+    // Only decoded back to Arabic if the UTF-8 name flag (bit 11) is set; an
+    // independent reader honouring that flag is the point of the assertion.
     const zip = createZip([{ name: 'مطعم-K3M9QP2.txt', data: utf8('arabic') }])
-    expect(inspect(zip, LIST)).toContain('مطعم-K3M9QP2.txt|arabic')
+    expect(decode(unzipSync(zip)['مطعم-K3M9QP2.txt']!)).toBe('arabic')
   })
 
   it('handles an empty file', () => {
     const zip = createZip([{ name: 'empty.txt', data: new Uint8Array(0) }])
-    expect(inspect(zip, LIST).split('\n')[0]).toBe('OK')
+    const out = unzipSync(zip)
+    expect(out['empty.txt']).toBeDefined()
+    expect(out['empty.txt']!.length).toBe(0)
   })
 
   it('handles an archive with nothing in it', () => {
-    const out = inspect(
-      createZip([]),
-      `
-import sys, zipfile
-with zipfile.ZipFile(sys.argv[1]) as z:
-    print('OK', len(z.namelist()))
-`,
-    )
-    expect(out).toBe('OK 0')
+    expect(Object.keys(unzipSync(createZip([])))).toHaveLength(0)
   })
 
   /**
@@ -121,18 +87,11 @@ with zipfile.ZipFile(sys.argv[1]) as z:
       data: utf8('x'.repeat(index * 37)),
     }))
 
-    const out = inspect(
-      createZip(entries),
-      `
-import sys, zipfile
-with sys.argv[1] and zipfile.ZipFile(sys.argv[1]) as z:
-    assert z.testzip() is None, 'corrupt'
-    sizes = {i.filename: i.file_size for i in z.infolist()}
-    ok = all(len(z.read(n)) == s for n, s in sizes.items())
-    print('OK' if ok else 'MISMATCH', len(sizes))
-`,
-    )
-    expect(out).toBe('OK 60')
+    const out = unzipSync(createZip(entries))
+    expect(Object.keys(out)).toHaveLength(60)
+    for (const { name, data } of entries) {
+      expect(out[name]!).toEqual(data)
+    }
   })
 
   /** Binary, because a PNG is what the export actually ships. */
@@ -141,23 +100,7 @@ with sys.argv[1] and zipfile.ZipFile(sys.argv[1]) as z:
     for (let i = 0; i < data.length; i += 1) data[i] = (i * 7) % 256
 
     const zip = createZip([{ name: 'binary.bin', data }])
-    const dir = mkdtempSync(path.join(tmpdir(), 'vardenia-zip-'))
-
-    try {
-      const archive = path.join(dir, 'test.zip')
-      writeFileSync(archive, zip)
-      execFileSync('python', [
-        '-c',
-        `import sys, zipfile
-with zipfile.ZipFile(sys.argv[1]) as z: z.extractall(sys.argv[2])`,
-        archive,
-        dir,
-      ])
-
-      expect(new Uint8Array(readFileSync(path.join(dir, 'binary.bin')))).toEqual(data)
-    } finally {
-      rmSync(dir, { recursive: true, force: true })
-    }
+    expect(unzipSync(zip)['binary.bin']!).toEqual(data)
   })
 })
 
