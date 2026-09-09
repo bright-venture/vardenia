@@ -7,7 +7,8 @@ import { populated, type QrDoc } from '../../../lib/qr-doc'
  * A contact sheet of every code, ready to print or hand to the layout team.
  *
  * `/qr/sheet` covers everything active; `/qr/sheet?issue=1` narrows to the codes
- * assigned to one print issue. Optional `?size=30` sets the printed millimetre
+ * assigned to one print issue, and `/qr/sheet?batch=import-2026-09-09` narrows to
+ * the codes for one import run. Optional `?size=30` sets the printed millimetre
  * size of each code.
  *
  * HTML rather than a generated PDF. The browser's own print dialogue produces a
@@ -53,11 +54,35 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  /**
+   * `?batch=` narrows to one import run. The batch name lives on the business
+   * (`importBatch`) and a code points at a business, so this resolves the
+   * businesses first, then filters the codes to them. overrideAccess because the
+   * route is already staff-gated and a batch should resolve whether its listings
+   * are published or still drafts.
+   */
+  const batch = url.searchParams.get('batch')?.trim() || null
+  let businessIds: (number | string)[] | null = null
+  if (batch) {
+    const businesses = await payload.find({
+      collection: 'businesses',
+      where: { importBatch: { equals: batch } },
+      limit: 1000,
+      depth: 0,
+      overrideAccess: true,
+    })
+    businessIds = businesses.docs.map((doc) => doc.id)
+    if (businessIds.length === 0) {
+      return new Response(`No listings found for the batch "${batch}".`, { status: 404 })
+    }
+  }
+
   const result = await payload.find({
     collection: 'qr-codes',
     where: {
       active: { equals: true },
       ...(issueId !== null ? { issue: { equals: issueId } } : {}),
+      ...(businessIds ? { business: { in: businessIds } } : {}),
     },
     // A print run is a few hundred codes at most, and a sheet split across pages
     // is a sheet somebody prints half of.
@@ -68,7 +93,7 @@ export async function GET(request: NextRequest) {
     user,
   })
 
-  let issueLabel = 'All active codes'
+  let issueLabel = batch ? `Batch ${batch}` : 'All active codes'
   if (issueId !== null) {
     // findByID throws rather than returning null for a missing document, and a
     // number that does not exist is an ordinary typo, not a server fault.
@@ -98,7 +123,7 @@ export async function GET(request: NextRequest) {
   )
 
   return new Response(
-    page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n'), issueId),
+    page(issueLabel, result.docs.length, result.totalDocs, cards.join('\n'), issueId, batch),
     {
       headers: {
         'content-type': 'text/html; charset=utf-8',
@@ -202,11 +227,11 @@ function unsafeBaseBanner(): string {
  * the sheet to one issue and then downloads everything has been given the wrong
  * files, and would not find out until the layout.
  */
-function downloads(issueId: number | null): string {
+function downloads(issueId: number | null, batch: string | null): string {
   const query = (format: string, transparent = false) =>
     `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}${
-      transparent ? '&transparent=1' : ''
-    }`
+      batch ? `&batch=${encodeURIComponent(batch)}` : ''
+    }${transparent ? '&transparent=1' : ''}`
 
   return `<p class="downloads">
   <a href="${query('svg')}">Download all as SVG</a>
@@ -224,6 +249,7 @@ function page(
   total: number,
   cards: string,
   issueId: number | null,
+  batch: string | null,
 ): string {
   return `<!doctype html>
 <html lang="en">
@@ -279,7 +305,7 @@ function page(
 <header>
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
-  ${downloads(issueId)}
+  ${downloads(issueId, batch)}
   ${unsafeBaseBanner()}
   ${truncationBanner(count, total)}
 </header>

@@ -14,8 +14,9 @@ import { createZip, safeFileName, type ZipEntry } from '../../../lib/zip'
  * `/qr/export` - every code as its own file, in a zip.
  *
  * `?format=svg` (default) or `?format=png`, `?issue=1` to narrow to one print
- * issue, `?size=40` for the printed millimetre size, `?transparent=1` to drop
- * the white background from every file.
+ * issue, `?batch=import-2026-09-09` to narrow to one import run, `?size=40` for
+ * the printed millimetre size, `?transparent=1` to drop the white background
+ * from every file.
  *
  * # Why files rather than the sheet
  *
@@ -136,6 +137,34 @@ export async function GET(request: NextRequest) {
   const transparent = url.searchParams.get('transparent') === '1'
 
   /**
+   * `?batch=` narrows to the codes for one import run. The batch name lives on
+   * the business (`importBatch`), and a code points at a business, so this is a
+   * two-step: the businesses in the batch, then the codes that target them.
+   * overrideAccess because the route is already staff-gated, and the batch
+   * should resolve whether its listings are published or still drafts.
+   */
+  const batch = url.searchParams.get('batch')?.trim() || null
+  let businessIds: (number | string)[] | null = null
+  if (batch) {
+    const businesses = await payload.find({
+      collection: 'businesses',
+      where: { importBatch: { equals: batch } },
+      limit: 1000,
+      depth: 0,
+      overrideAccess: true,
+    })
+    businessIds = businesses.docs.map((doc) => doc.id)
+    if (businessIds.length === 0) {
+      return new Response(
+        `No listings found for the batch "${batch}", so there is nothing to export.`,
+        {
+          status: 404,
+        },
+      )
+    }
+  }
+
+  /**
    * The sheet's own print size, not the QR library's default.
    *
    * Leaving it to the library gave 1024px regardless of what the code is
@@ -149,6 +178,7 @@ export async function GET(request: NextRequest) {
     where: {
       active: { equals: true },
       ...(issueId !== null ? { issue: { equals: issueId } } : {}),
+      ...(businessIds ? { business: { in: businessIds } } : {}),
     },
     limit: 1000,
     depth: 1,
@@ -214,7 +244,11 @@ export async function GET(request: NextRequest) {
   }
 
   const stamp = new Date().toISOString().slice(0, 10)
-  const label = issueId === null ? 'all' : `issue-${issueId}`
+  const label = batch
+    ? `batch-${safeFileName(batch)}`
+    : issueId === null
+      ? 'all'
+      : `issue-${issueId}`
   const bg = transparent ? '-transparent' : ''
   const filename = `vardenia-qr-${label}-${format}${bg}-${stamp}.zip`
 
