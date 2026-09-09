@@ -26,7 +26,10 @@ export function SaveButton({
   const saved = isSaved(slug)
   const text = saved ? labels.saved : labels.save
 
-  // The card wraps the whole plate in a link; the heart must not follow it.
+  // Defence in depth. The heart is a sibling of the card's link now, not nested
+  // inside it (see ListingCard's stretched link), so there is no anchor here to
+  // suppress - but a heart that swallows its own click stays correct wherever it
+  // is dropped, including back inside something clickable.
   const handle = (event: MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()

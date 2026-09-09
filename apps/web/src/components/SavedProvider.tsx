@@ -16,10 +16,13 @@
  *
  * Reading the session in the layout would make every page under it dynamic, and
  * static rendering is the whole performance story of this site. So the provider
- * asks `GET /save` once on mount: a 200 means signed in and carries the saved
- * slugs, a 401 means signed out. The layout stays static and reads no cookie; the
- * only thing it hands down is the sign-in path and the two words for the button,
- * all of which are static.
+ * reads the session hint on mount - a non-httpOnly cookie the middleware keeps
+ * true (see lib/session-hint) - and only when it names a customer does it ask
+ * `GET /save`: a 200 carries the saved slugs, a 401 means the hint had drifted
+ * and they are signed out after all. Anyone the hint does not call a customer is
+ * settled with no request, which is most of the traffic on a public directory.
+ * The layout stays static and reads no cookie; the only thing it hands down is
+ * the sign-in path and the two words for the button, all of which are static.
  *
  * A signed-in reader sees their hearts light up a beat after the page paints,
  * which is the accepted cost of pages that stay ignorant of sessions. A signed-out
@@ -35,6 +38,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { sessionAudience } from '../lib/session-hint'
 
 interface SavedContextValue {
   isSaved: (slug: string) => boolean
@@ -71,10 +75,31 @@ export function SavedProvider({
   children: ReactNode
 }) {
   const [slugs, setSlugs] = useState<Set<string>>(() => new Set())
-  // null until the first GET answers: unknown, signed in, or signed out.
-  const [signedIn, setSignedIn] = useState<boolean | null>(null)
+
+  /**
+   * Settled from the session hint at first render, not left null for an effect to
+   * fill in - a non-httpOnly cookie the middleware keeps agreeing with the real
+   * token on every page (see lib/session-hint). Everyone the hint does not call a
+   * customer is `false` immediately and makes no request; a customer is `null`,
+   * unknown until the GET below brings their saves, so the header link does not
+   * flash before it does. This is what stops a fully static, mostly anonymous
+   * site from firing a dynamic, Payload-booting GET for readers who can never save.
+   *
+   * On the server the hint cannot be read and this is `false`, which renders the
+   * signed-out view - the same view the client paints for a customer whose saves
+   * have not arrived yet, so hydration matches either way.
+   */
+  const [signedIn, setSignedIn] = useState<boolean | null>(() =>
+    sessionAudience() === 'customer' ? null : false,
+  )
 
   useEffect(() => {
+    // Non-customers were settled to `false` above and need nothing more; only a
+    // customer makes the round trip, because the hint carries no slugs and the
+    // hearts need the saved set. A hint that has drifted the wrong way is
+    // corrected by the GET's own 401 (and the POST's).
+    if (sessionAudience() !== 'customer') return
+
     let cancelled = false
     fetch('/save', { headers: { accept: 'application/json' } })
       .then(async (r) => {

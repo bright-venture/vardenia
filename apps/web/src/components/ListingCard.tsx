@@ -43,8 +43,15 @@ interface Props {
  *
  * A card with a linked heading and an unlinked image gives a reader two targets
  * where they perceive one, and on a phone the image is the part a thumb lands
- * on. One anchor wrapping everything is also the only version that a keyboard
- * user tabs through once rather than twice.
+ * on. So the anchor's hit area covers the whole card and a keyboard user tabs
+ * through it once.
+ *
+ * It is a stretched link, not an anchor wrapped around everything: the anchor is
+ * on the name alone and its `::after` is stretched over the card. The card also
+ * carries a save button, and a button nested inside an anchor is invalid HTML
+ * that behaves unpredictably; keeping the anchor small lets the heart sit beside
+ * it rather than inside it, above the overlay on z-index so it takes its own
+ * clicks.
  *
  * # What is on it, and why in this order
  *
@@ -91,113 +98,124 @@ export function ListingCard({
   const open = isOpenNow(openingHours as never) === true
 
   return (
-    <article className="group">
-      <Link href={`/directory/${slug}`} className="block">
-        <div className="relative">
-          <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
+    // `relative` is the containing block for the stretched link below: the anchor
+    // wraps only the name, but its `::after` is absolutely positioned against this
+    // article and covers the whole card, so a click anywhere on it opens the
+    // listing while the anchor stays small enough to hold nothing interactive.
+    <article className="group relative">
+      <div className="relative">
+        <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
 
-          {/*
-            The category moved onto the plate as a chip, and the tier badges sit
-            at the far end of the same row.
+        {/*
+          The category moved onto the plate as a chip, and the tier badges sit
+          at the far end of the same row.
 
-            On the design's own cards the category is the only label above the
-            fold of a grid, and it is the one a reader scans by: "hotel" or
-            "restaurant" narrows a page of twenty-four far faster than a name
-            does. Set on ivory so it stays legible over any photograph.
+          On the design's own cards the category is the only label above the
+          fold of a grid, and it is the one a reader scans by: "hotel" or
+          "restaurant" narrows a page of twenty-four far faster than a name
+          does. Set on ivory so it stays legible over any photograph.
 
-            # One flex row, not two absolutes
+          # One flex row, not two absolutes
 
-            They were two absolutely positioned corners, which is what the design
-            draws and what breaks: at two columns on a 375px phone the card is
-            about 150px wide, and "HOSPITALITY" ran straight under "VERIFIED".
-            A row that spans the plate cannot overlap however narrow it gets -
-            the badge keeps its size and the category truncates, which is the
-            right way round because a clipped word is still readable and a
-            covered one is not.
-          */}
-          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
-            <span className="bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
-              {categoryLabel(category, locale)}
-            </span>
+          They were two absolutely positioned corners, which is what the design
+          draws and what breaks: at two columns on a 375px phone the card is
+          about 150px wide, and "HOSPITALITY" ran straight under "VERIFIED".
+          A row that spans the plate cannot overlap however narrow it gets -
+          the badge keeps its size and the category truncates, which is the
+          right way round because a clipped word is still readable and a
+          covered one is not.
+        */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
+          <span className="bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
+            {categoryLabel(category, locale)}
+          </span>
 
-            {signature || verified ? (
-              <div className="ms-auto flex shrink-0 gap-1.5">
-                {signature ? <Tier kind="signature" locale={locale} /> : null}
-                {verified ? <Tier kind="verified" locale={locale} /> : null}
-              </div>
-            ) : null}
-          </div>
-
-          {/*
-            The heart, in the plate's end-bottom corner where the top row's
-            category and tier badges never reach. It is interactive inside the
-            card's anchor, so it stops the click reaching the link - see
-            SaveButton. Positioned by the card; the button itself is placeless.
-          */}
-          <div className="absolute bottom-3 end-3 z-10">
-            <SaveButton slug={slug} />
-          </div>
+          {signature || verified ? (
+            <div className="ms-auto flex shrink-0 gap-1.5">
+              {signature ? <Tier kind="signature" locale={locale} /> : null}
+              {verified ? <Tier kind="verified" locale={locale} /> : null}
+            </div>
+          ) : null}
         </div>
 
         {/*
-          Below the plate rather than inside a bordered box. The card chrome it
-          replaces - border, radius, lift and shadow on hover - made every
-          listing look like a control to be clicked. The photograph is the card
-          now, and the type sits under it the way a caption sits under a plate
-          in print.
+          The heart, in the plate's end-bottom corner where the top row's
+          category and tier badges never reach. It is a sibling of the card's
+          link, not nested inside it - a button inside an anchor is invalid, and
+          the stretched link below is what lets it sit outside one. Its `z-10`
+          puts it above that anchor's `::after` overlay, so a press lands on the
+          heart and a press anywhere else on the card follows the link.
         */}
-        <div className="mt-4">
-          {place ? (
-            <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
-              {place}
-            </p>
-          ) : null}
+        <div className="absolute bottom-3 end-3 z-10">
+          <SaveButton slug={slug} />
+        </div>
+      </div>
 
-          {/* `dir="auto"` on the two fields a person typed. The rest of this
-              card is built from the taxonomy, which is translated, so it
-              follows the page. A listing's own name and tagline fall back to
-              English until translated, and a fixed direction would be wrong at
-              one end or the other of that. */}
-          <h3
-            dir="auto"
-            className="text-ink-900 group-hover:text-gold-700 mt-1.5 text-[1.4rem] leading-tight transition-colors"
+      {/*
+        Below the plate rather than inside a bordered box. The card chrome it
+        replaces - border, radius, lift and shadow on hover - made every
+        listing look like a control to be clicked. The photograph is the card
+        now, and the type sits under it the way a caption sits under a plate
+        in print.
+      */}
+      <div className="mt-4">
+        {place ? (
+          <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">{place}</p>
+        ) : null}
+
+        {/* `dir="auto"` on the two fields a person typed. The rest of this
+            card is built from the taxonomy, which is translated, so it
+            follows the page. A listing's own name and tagline fall back to
+            English until translated, and a fixed direction would be wrong at
+            one end or the other of that. */}
+        <h3
+          dir="auto"
+          className="text-ink-900 group-hover:text-gold-700 mt-1.5 text-[1.4rem] leading-tight transition-colors"
+        >
+          {/* The link is on the name and nothing else; `after:inset-0` stretches
+              its hit area over the whole article (see the `relative` above). The
+              anchor holds only text, so the heart can be a sibling rather than a
+              button nested in a link. */}
+          <Link
+            href={`/directory/${slug}`}
+            className="after:absolute after:inset-0 after:content-['']"
           >
             {name}
-          </h3>
+          </Link>
+        </h3>
 
-          <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-            {price ? <span className="font-mono tabular-nums">{price}</span> : null}
-            {typeof googleRating === 'number' && googleRating > 0 ? (
-              <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
-            ) : null}
-            {/* A status, so it takes the semantic green rather than a brand
-                colour - the same call the listing page makes. */}
-            {open ? (
-              <span className="text-state-success inline-flex items-center gap-1.5 font-medium">
-                <span aria-hidden className="bg-state-success size-1.5 rounded-full" />
-                {locale === 'ar' ? 'مفتوح الآن' : 'Open now'}
-              </span>
-            ) : null}
-          </div>
-
-          {/*
-            The design has no tagline and this keeps one, deliberately.
-            Its sample data had none to show; production has them on 127
-            listings, and a line saying what a place actually is helps a reader
-            choose more than the tighter grid does. Clamped to two lines so it
-            cannot unbalance a row. Worth putting back to the designer.
-          */}
-          {tagline ? (
-            <p dir="auto" className="text-ink-500 mt-2 line-clamp-2 text-sm leading-relaxed">
-              {tagline}
-            </p>
+        <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          {price ? <span className="font-mono tabular-nums">{price}</span> : null}
+          {typeof googleRating === 'number' && googleRating > 0 ? (
+            <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
           ) : null}
-
-          {reference ? (
-            <p className="text-ink-500 mt-3 font-mono text-[10px] tracking-[0.1em]">{reference}</p>
+          {/* A status, so it takes the semantic green rather than a brand
+              colour - the same call the listing page makes. */}
+          {open ? (
+            <span className="text-state-success inline-flex items-center gap-1.5 font-medium">
+              <span aria-hidden className="bg-state-success size-1.5 rounded-full" />
+              {locale === 'ar' ? 'مفتوح الآن' : 'Open now'}
+            </span>
           ) : null}
         </div>
-      </Link>
+
+        {/*
+          The design has no tagline and this keeps one, deliberately.
+          Its sample data had none to show; production has them on 127
+          listings, and a line saying what a place actually is helps a reader
+          choose more than the tighter grid does. Clamped to two lines so it
+          cannot unbalance a row. Worth putting back to the designer.
+        */}
+        {tagline ? (
+          <p dir="auto" className="text-ink-500 mt-2 line-clamp-2 text-sm leading-relaxed">
+            {tagline}
+          </p>
+        ) : null}
+
+        {reference ? (
+          <p className="text-ink-500 mt-3 font-mono text-[10px] tracking-[0.1em]">{reference}</p>
+        ) : null}
+      </div>
     </article>
   )
 }
