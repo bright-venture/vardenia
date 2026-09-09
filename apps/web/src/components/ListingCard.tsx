@@ -102,7 +102,12 @@ export function ListingCard({
     // wraps only the name, but its `::after` is absolutely positioned against this
     // article and covers the whole card, so a click anywhere on it opens the
     // listing while the anchor stays small enough to hold nothing interactive.
-    <article className="group relative">
+    //
+    // The focus ring is on the whole card, not the name: a stretched link is
+    // keyboard-focused on its small anchor, and a ring around two words of a
+    // heading is easy to miss on a grid. `has-[a:focus-visible]` moves it to the
+    // card, and the anchor drops its own outline below so the two do not stack.
+    <article className="has-[a:focus-visible]:outline-gold-500 group relative has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
       <div className="relative">
         <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
 
@@ -147,7 +152,7 @@ export function ListingCard({
           heart and a press anywhere else on the card follows the link.
         */}
         <div className="absolute bottom-3 end-3 z-10">
-          <SaveButton slug={slug} />
+          <SaveButton slug={slug} name={name} />
         </div>
       </div>
 
@@ -178,7 +183,7 @@ export function ListingCard({
               button nested in a link. */}
           <Link
             href={`/directory/${slug}`}
-            className="after:absolute after:inset-0 after:content-['']"
+            className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
           >
             {name}
           </Link>

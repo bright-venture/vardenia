@@ -104,6 +104,15 @@ describe('ListingCard', () => {
     expect(html).toContain('aria-label="Verified by Vardenia"')
   })
 
+  /**
+   * Every card carries a save heart, and an icon has no text of its own. Naming
+   * the listing in its label is what stops a grid being a row of buttons all
+   * called "Save", which a screen reader cannot tell apart.
+   */
+  it('names the listing on its save button', () => {
+    expect(render()).toContain('aria-label="Save Le Royal Hotel"')
+  })
+
   it('survives an image that is only an id, which is what depth 0 gives', () => {
     expect(() => render({ heroImage: 7 })).not.toThrow()
   })

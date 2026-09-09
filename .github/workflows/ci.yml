@@ -64,6 +64,14 @@ jobs:
       - name: Test
         run: pnpm test
 
+      # The coverage ratchet, enforced. `pnpm test` above runs every package's
+      # suite for a fast pass/fail; this re-runs the web suite under coverage so
+      # the thresholds in apps/web/vitest.config.ts gate the build. The web suite
+      # is seconds, so running it twice is cheaper than wiring coverage into the
+      # turbo task and slowing every local `pnpm test`.
+      - name: Coverage floor
+        run: pnpm --filter @vardenia/web test:coverage
+
       # The Postgres service above is created empty for every run and thrown
       # away with the machine, so this is free to write to. Payload creates its
       # tables on connect (push is on whenever NODE_ENV is not production), but

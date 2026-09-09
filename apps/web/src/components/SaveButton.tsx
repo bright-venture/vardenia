@@ -18,13 +18,22 @@ import { useSaved } from './SavedProvider'
 export function SaveButton({
   slug,
   variant = 'icon',
+  name,
 }: {
   slug: string
   variant?: 'icon' | 'button'
+  /**
+   * The listing's name, for the icon button's accessible label. Without it a
+   * grid of cards is a row of buttons all named "Save", indistinguishable to a
+   * screen reader navigating by control. The button variant has visible text and
+   * sits on a single listing's page, so it does not need this.
+   */
+  name?: string
 }) {
   const { isSaved, toggle, labels } = useSaved()
   const saved = isSaved(slug)
   const text = saved ? labels.saved : labels.save
+  const label = name ? `${text} ${name}` : text
 
   // Defence in depth. The heart is a sibling of the card's link now, not nested
   // inside it (see ListingCard's stretched link), so there is no anchor here to
@@ -62,7 +71,7 @@ export function SaveButton({
       type="button"
       onClick={handle}
       aria-pressed={saved}
-      aria-label={text}
+      aria-label={label}
       title={text}
       className={`bg-surface-base/85 focus-visible:outline-gold-500 pointer-events-auto inline-flex size-9 items-center justify-center rounded-full backdrop-blur transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
         saved ? 'text-gold-700' : 'text-ink-700 hover:text-gold-700'
