@@ -291,14 +291,49 @@ export function parseRating(raw: string): number | null {
 /**
  * The tagline the site shows under a name.
  *
- * Taken from the first clause of the description, because the field is capped
- * at 120 characters and the descriptions here start with exactly that kind of
- * phrase: "5-star mountain resort | Luxury rooms and suites, spa...".
+ * The field is capped at 120 characters, so this has to be a short, clean
+ * phrase. The two source files put that phrase in different shapes.
+ *
+ * The Keserwan file front-loads it: "5-star mountain resort | Luxury rooms and
+ * suites, spa...". When a pipe is present, the lead before it is the tagline.
+ *
+ * The Chouf file has no pipe - its descriptions are flowing prose. Taking the
+ * whole thing and cutting at 120 produced a paragraph clipped mid-word ("...an
+ * overnight stay in the Chouf. Traditiona"), which is worse than none. So with
+ * no pipe this takes the first sentence, and only if that still runs long does
+ * it stop, at a word boundary rather than inside a word.
  */
-function taglineFrom(description: string, type: string): string | null {
-  const source = description.split('|')[0]?.trim() || type.trim()
+export function taglineFrom(description: string, type: string): string | null {
+  const lead = description.includes('|')
+    ? (description.split('|')[0] ?? '').trim()
+    : firstSentence(description)
+
+  const source = lead || type.trim()
   if (!source) return null
-  return source.length <= 120 ? source : `${source.slice(0, 117).trimEnd()}...`
+  if (source.length <= 120) return source
+
+  // Too long even so: cut at the last word boundary before the cap, never inside
+  // a word, and drop any punctuation left dangling at the cut so the ellipsis
+  // reads cleanly. The fallback covers a 117-character first "word", not prose.
+  const clipped = source
+    .slice(0, 117)
+    .replace(/\s+\S*$/u, '')
+    .replace(/[\s.,;:!?…—–-]+$/u, '')
+  return `${clipped || source.slice(0, 117).trimEnd()}...`
+}
+
+/**
+ * The first sentence of a piece of prose.
+ *
+ * A sentence ends at `.`, `!` or `?` followed by a space and a capital or a
+ * quote, or by the end of the text. The forty-character floor is what stops an
+ * abbreviation ending it early: "Paradise Villa No. 1 turns time..." must not
+ * become "Paradise Villa No.", and "No." is nowhere near forty characters in.
+ */
+function firstSentence(text: string): string {
+  const trimmed = text.trim()
+  const match = trimmed.match(/^([\s\S]{40,}?[.!?])(?:\s+["“A-Z]|$)/u)
+  return (match?.[1] ?? trimmed).trim()
 }
 
 const value = (row: Record<string, string>, key: string): string => (row[key] ?? '').trim()

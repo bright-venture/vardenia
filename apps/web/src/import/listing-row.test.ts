@@ -9,6 +9,7 @@ import {
   priceBand,
   seasonalityFrom,
   tagsFrom,
+  taglineFrom,
   toListing,
   toListings,
 } from './listing-row'
@@ -380,6 +381,56 @@ describe('seasonalityFrom', () => {
 
   it('is empty for an empty cell', () => {
     expect(seasonalityFrom('')).toEqual([])
+  })
+})
+
+describe('taglineFrom', () => {
+  it('takes the lead before a pipe, which is how the Keserwan file writes it', () => {
+    expect(taglineFrom('5-star mountain resort | Luxury rooms and suites, spa', '')).toBe(
+      '5-star mountain resort',
+    )
+  })
+
+  it('takes the first sentence of prose, which is how the Chouf file writes it', () => {
+    const desc =
+      'Set in Deir El Qamar, Beit El Qamar gives travelers a distinctive base for an overnight stay. Traditional Lebanese-style rooms and suites.'
+    const tagline = taglineFrom(desc, '')
+    expect(tagline).toBe(
+      'Set in Deir El Qamar, Beit El Qamar gives travelers a distinctive base for an overnight stay.',
+    )
+    expect(tagline!.length).toBeLessThanOrEqual(120)
+    // The whole point: not the paragraph clipped mid-word.
+    expect(tagline).not.toContain('Traditiona')
+  })
+
+  it('does not let an abbreviation end the sentence early', () => {
+    const desc =
+      'Paradise Villa No. 1 turns time in Deir el Qamar into a relaxed escape at the center of the stay. Private villa in a quiet area.'
+    const tagline = taglineFrom(desc, '')
+    expect(tagline).not.toBe('Paradise Villa No.')
+    expect(tagline).toContain('Paradise Villa No. 1')
+  })
+
+  it('cuts a long, unbroken sentence at a word boundary rather than inside a word', () => {
+    const long =
+      'Bacha Resort offers a straightforward way to slow down for a day by the water in Deir el Qamar with pools terraces and shaded seating for families'
+    const tagline = taglineFrom(long, '')!
+    expect(tagline.length).toBeLessThanOrEqual(120)
+    expect(tagline.endsWith('...')).toBe(true)
+
+    const stem = tagline.slice(0, -3)
+    // The character in the source right after the kept text is whitespace, so
+    // the cut fell between words, not through one.
+    expect(long.startsWith(stem)).toBe(true)
+    expect(long[stem.length]).toMatch(/\s/)
+  })
+
+  it('is null when there is nothing to make one from', () => {
+    expect(taglineFrom('', '')).toBeNull()
+  })
+
+  it('falls back to the type when the description is empty', () => {
+    expect(taglineFrom('', 'Guesthouse')).toBe('Guesthouse')
   })
 })
 
