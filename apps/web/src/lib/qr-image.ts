@@ -58,6 +58,26 @@ export type QrFormat = 'svg' | 'png'
 export { isPrintSafeBaseUrl, scanUrl } from './qr-url'
 
 /**
+ * The two backgrounds a code can be drawn on.
+ *
+ * `#ffffff` is the printer's default and the safe one: a QR scanner needs light
+ * quiet modules under the dark ones, and white guarantees the contrast whatever
+ * the code lands on. `#ffffff00` is the same white with its alpha at zero, which
+ * node-qrcode reads as "leave the light modules transparent" - the dark part on
+ * nothing, for dropping onto a coloured layout or a photograph.
+ *
+ * # Transparent is not for print, and the callers say so
+ *
+ * A transparent code printed onto anything but a light, even ground loses the
+ * contrast the quiet zone exists to guarantee, and a scanner that could read it
+ * on screen fails on the page. So this is offered for placement into artwork,
+ * where the designer controls what sits behind it, and the print paths keep the
+ * white.
+ */
+const LIGHT = '#ffffff'
+const TRANSPARENT_LIGHT = '#ffffff00'
+
+/**
  * Vector, because print scales it.
  *
  * The width and height are rewritten in millimetres so the file lands in a
@@ -67,13 +87,17 @@ export { isPrintSafeBaseUrl, scanUrl } from './qr-url'
  */
 export async function qrSvg(
   code: string,
-  { siteUrl, sizeMm = DEFAULT_PRINT_MM }: { siteUrl?: string; sizeMm?: number } = {},
+  {
+    siteUrl,
+    sizeMm = DEFAULT_PRINT_MM,
+    transparent = false,
+  }: { siteUrl?: string; sizeMm?: number; transparent?: boolean } = {},
 ): Promise<string> {
   const svg = await QRCode.toString(scanUrl(code, siteUrl), {
     type: 'svg',
     errorCorrectionLevel: ERROR_CORRECTION,
     margin: QUIET_ZONE_MODULES,
-    color: { dark: '#000000', light: '#ffffff' },
+    color: { dark: '#000000', light: transparent ? TRANSPARENT_LIGHT : LIGHT },
   })
 
   // Clamped at both ends, and NaN falls back rather than reaching the attribute
@@ -99,14 +123,18 @@ export async function qrSvg(
  */
 export async function qrPng(
   code: string,
-  { siteUrl, pixels = 1024 }: { siteUrl?: string; pixels?: number } = {},
+  {
+    siteUrl,
+    pixels = 1024,
+    transparent = false,
+  }: { siteUrl?: string; pixels?: number; transparent?: boolean } = {},
 ): Promise<Buffer> {
   return QRCode.toBuffer(scanUrl(code, siteUrl), {
     type: 'png',
     errorCorrectionLevel: ERROR_CORRECTION,
     margin: QUIET_ZONE_MODULES,
     width: Math.min(4096, Math.max(64, pixels)),
-    color: { dark: '#000000', light: '#ffffff' },
+    color: { dark: '#000000', light: transparent ? TRANSPARENT_LIGHT : LIGHT },
   })
 }
 

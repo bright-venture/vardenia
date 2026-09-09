@@ -10,25 +10,25 @@ rather than the category marked PASS and forgotten.
 
 ## Results
 
-| #   | Category         | Before | After     | What changed                                     |
-| --- | ---------------- | ------ | --------- | ------------------------------------------------ |
-| 1   | SECRETS_EXPOSURE | PASS   | PASS      |                                                  |
-| 2   | DATABASE_ACCESS  | LOW    | PASS      | Row level security on all 45 production tables   |
-| 3   | AUTH_MIDDLEWARE  | PASS   | PASS      |                                                  |
-| 4   | ACCESS_CONTROL   | PASS   | PASS      |                                                  |
-| 5   | FRONTEND_SECRETS | PASS   | PASS      |                                                  |
-| 6   | SSRF             | N/A    | N/A       | Nothing fetches a user-supplied URL              |
-| 7   | CSRF             | LOW    | PASS      | Secure flag on every session cookie              |
-| 8   | SECURITY_HEADERS | MEDIUM | PASS      | Content-Security-Policy, public and admin        |
-| 9   | CORS             | PASS   | PASS      |                                                  |
-| 10  | RATE_LIMITING    | MEDIUM | PASS      | Auth budget counted in Postgres, not per process |
-| 11  | SQL_INJECTION    | PASS   | PASS      |                                                  |
-| 12  | XSS              | PASS   | PASS      |                                                  |
-| 13  | PAYMENT_WEBHOOKS | N/A    | N/A       | No payments yet                                  |
-| 14  | FILE_UPLOADS     | PASS   | PASS      | Uploads renamed to an unguessable filename       |
-| 15  | ERROR_HANDLING   | PASS   | PASS      |                                                  |
-| 16  | PASSWORD_HASHING | PASS   | NOT MOVED | Payload hardcodes PBKDF2; see below              |
-| 17  | DEPENDENCIES     | LOW    | PASS      | 9 advisories down to 4, none reaching the site   |
+| #   | Category         | Before | After     | What changed                                               |
+| --- | ---------------- | ------ | --------- | ---------------------------------------------------------- |
+| 1   | SECRETS_EXPOSURE | PASS   | PASS      |                                                            |
+| 2   | DATABASE_ACCESS  | LOW    | PASS      | Row level security on all 45 production tables             |
+| 3   | AUTH_MIDDLEWARE  | PASS   | PASS      |                                                            |
+| 4   | ACCESS_CONTROL   | PASS   | PASS      |                                                            |
+| 5   | FRONTEND_SECRETS | PASS   | PASS      |                                                            |
+| 6   | SSRF             | N/A    | N/A       | Nothing fetches a user-supplied URL                        |
+| 7   | CSRF             | LOW    | PASS      | Secure flag on every session cookie                        |
+| 8   | SECURITY_HEADERS | MEDIUM | PASS      | Content-Security-Policy, public and admin                  |
+| 9   | CORS             | PASS   | PASS      |                                                            |
+| 10  | RATE_LIMITING    | MEDIUM | PASS      | Auth budget counted in Postgres, not per process           |
+| 11  | SQL_INJECTION    | PASS   | PASS      |                                                            |
+| 12  | XSS              | PASS   | PASS      |                                                            |
+| 13  | PAYMENT_WEBHOOKS | N/A    | N/A       | No payments yet                                            |
+| 14  | FILE_UPLOADS     | PASS   | PASS      | Uploads renamed to an unguessable filename                 |
+| 15  | ERROR_HANDLING   | PASS   | PASS      |                                                            |
+| 16  | PASSWORD_HASHING | PASS   | NOT MOVED | Payload hardcodes PBKDF2; see below                        |
+| 17  | DEPENDENCIES     | LOW    | MEDIUM    | Regressed: Next's 15.5.x patches blocked by Payload's peer |
 
 Category 2 is applied. Production reports row level security on all 45 tables,
 the connection role still bypasses it, and no table forces it. One grant inside
@@ -110,22 +110,51 @@ sharp re-encodes; the check asserts the suffix and a plausible image extension.
 
 ### 17. Dependencies
 
-`vitest` to `^3.2.6` and a `vite` override at `^6.4.3`. That clears the critical
-and both highs that reached the website. Nine advisories are now four:
+The earlier pass here upgraded `vitest` and added a `vite` override at `^6.4.3`,
+which cleared the advisories that reached the site and left four. That number has
+since moved hard the other way, and not through anything installed: `pnpm audit
+--prod` now reports 59 paths, 52 distinct advisories. Almost all of the rise is
+one event. Next.js shipped its 15.5.x security train through the autumn, and this
+site cannot take it.
 
-| Severity | Package    | Reaches     | Fix             |
-| -------- | ---------- | ----------- | --------------- |
-| high     | image-size | apps/mobile | none exists     |
-| high     | image-size | apps/mobile | none exists     |
-| moderate | esbuild    | apps/web    | build time only |
-| moderate | uuid       | apps/mobile | unreachable     |
+Where they actually reach:
 
-`image-size` and `uuid` arrive only through the Expo mobile app's bundler, which
-is not deployed and is not part of the website. The earlier version of this
-document said those were in the web tree; that came from a workspace-wide
-`pnpm why` and was wrong.
+| Reaches          | Count | Note                                            |
+| ---------------- | ----- | ----------------------------------------------- |
+| web, via Next    | 26    | blocked by Payload's peer range - see below     |
+| fixed here       | 6     | fast-uri x4, sharp, esbuild - overrides applied |
+| web, no patch    | 1     | Payload's own default account-unlock grant      |
+| apps/mobile only | 19    | Expo's build tree; not deployed, not the site   |
 
-The upgrade needed no config changes. 1191 assertions pass on the new versions.
+**The 19 mobile advisories do not touch the website.** `@xmldom/xmldom`,
+`image-size`, `js-yaml`, `uuid` and `decode-uri-component` all arrive through
+`@vardenia/mobile`'s Expo toolchain, which builds an app rather than answering a
+request. Same reasoning as the earlier `image-size`/`uuid` note, now most of the
+list.
+
+**The 26 Next advisories are blocked, not accepted by choice.**
+`@payloadcms/next` peers on `... <15.5.0 || >=16.2.6 <17.0.0`, so it refuses
+every 15.5.x, which is exactly where all of these are fixed. Two are critical: an
+unauthenticated RCE that is Windows-host only, which Netlify's Linux cannot land,
+and an RCE in the image optimizer, which it can. The rest are middleware and
+proxy bypasses, SSRF in Server Actions and rewrites, and denial of service. The
+supported way out is not a 15.5.x override, which Payload rejects, but Next
+16.2.6+, which it allows - a major upgrade to be taken deliberately, not slipped
+in through `pnpm.overrides`. Until then this is the largest standing risk on the
+site, and the reason to watch for a Payload release that widens the range.
+
+**Six were cleared here, at patch level.** `fast-uri`'s four highs (SSRF and host
+confusion) are fixed at 3.1.6, `sharp`'s libheif hole at 0.35.4, and `esbuild`'s
+dev-server flaw at 0.25.0 - a one-digit bump to the `sharp` pin and two new
+`pnpm.overrides`, none of them a breaking change. That takes the audit from 59
+paths to 53 and leaves the 26 Next advisories and the one unpatched Payload grant
+as the only web-reaching ones, neither fixable without an upstream move.
+
+**The overrides themselves are on notice.** pnpm 9.15 still reads them from
+`package.json` but now warns that a later pnpm will not. The pins are in the
+lockfile, so production carries them today, but a jump to pnpm 10 that does not
+first move them into `pnpm-workspace.yaml` would drop `undici`, `sharp` and the
+rest in silence. Move them when the package manager moves.
 
 ## Category 2, and the one grant that could not be removed
 

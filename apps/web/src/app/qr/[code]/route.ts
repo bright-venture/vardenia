@@ -18,6 +18,7 @@ import {
  *   format=svg|png   overrides the extension; svg when neither is given
  *   size=25          printed size in millimetres (svg), pixels (png)
  *   download=1       forces a save dialog instead of rendering in the tab
+ *   transparent=1    drops the white background, leaving only the dark modules
  *
  * The code must already exist. Generating an image for any arbitrary string
  * would be one line shorter and would let somebody paste a typo into the layout
@@ -52,6 +53,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const url = new URL(request.url)
   const download = url.searchParams.get('download') === '1'
+  // `?transparent=1` drops the white background, leaving the dark modules on
+  // nothing - for dropping a code onto a coloured layout. Not for print; see
+  // lib/qr-image. The filename carries the word so the two do not get confused
+  // in a downloads folder.
+  const transparent = url.searchParams.get('transparent') === '1'
+  const suffix = transparent ? '-transparent' : ''
 
   /**
    * `?format=` wins, then the file extension, then SVG.
@@ -66,11 +73,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (format === 'png') {
     const pixels = Number(url.searchParams.get('size')) || 1024
-    const png = await qrPng(code, { pixels })
+    const png = await qrPng(code, { pixels, transparent })
     return new Response(new Uint8Array(png), {
       headers: {
         'content-type': 'image/png',
-        ...disposition(download, `${code}.png`),
+        ...disposition(download, `${code}${suffix}.png`),
         // A code is immutable, so its image never changes. Private, because the
         // sheet route behind it is staff-only and a shared CDN cache is a
         // needless place to leave anything.
@@ -80,11 +87,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
-  const svg = await qrSvg(code, { sizeMm })
+  const svg = await qrSvg(code, { sizeMm, transparent })
   return new Response(svg, {
     headers: {
       'content-type': 'image/svg+xml; charset=utf-8',
-      ...disposition(download, `${code}.svg`),
+      ...disposition(download, `${code}${suffix}.svg`),
       'cache-control': 'private, max-age=31536000, immutable',
     },
   })

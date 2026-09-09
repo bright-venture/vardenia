@@ -203,13 +203,18 @@ function unsafeBaseBanner(): string {
  * files, and would not find out until the layout.
  */
 function downloads(issueId: number | null): string {
-  const query = (format: string) =>
-    `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}`
+  const query = (format: string, transparent = false) =>
+    `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}${
+      transparent ? '&transparent=1' : ''
+    }`
 
   return `<p class="downloads">
   <a href="${query('svg')}">Download all as SVG</a>
   <a href="${query('png')}">Download all as PNG</a>
-  <span>One file per code, named after the business. SVG for print.</span>
+  <a href="${query('svg', true)}">SVG, transparent background</a>
+  <a href="${query('png', true)}">PNG, transparent background</a>
+  <span>One file per code, named after the business. SVG for print; transparent
+  drops the white for placing a code on a coloured layout, and is not for print.</span>
 </p>`
 }
 

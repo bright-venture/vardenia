@@ -1,3 +1,4 @@
+import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_PRINT_MM,
@@ -140,6 +141,40 @@ describe('qrPng', () => {
     const png = await qrPng(CODE, { siteUrl: 'https://vardenia.com', pixels: 100000 })
     expect(png.byteLength).toBeGreaterThan(0)
   }, 30_000)
+})
+
+/**
+ * The dark code on nothing, for dropping onto a coloured layout. The default
+ * stays white, which is the only safe ground for a scanner; transparent is opt
+ * in and, on both formats, really removes the light rather than recolouring it.
+ */
+describe('transparent background', () => {
+  it('drops the white ground from the SVG, keeping only the dark code', async () => {
+    const opaque = await qrSvg(CODE, { siteUrl: 'https://vardenia.com' })
+    const clear = await qrSvg(CODE, { siteUrl: 'https://vardenia.com', transparent: true })
+
+    // The default paints a white background path across the whole viewBox; the
+    // transparent one omits it, so the dark modules sit on nothing.
+    expect(opaque).toContain('fill="#ffffff"')
+    expect(clear).not.toContain('#ffffff')
+    expect(clear).toContain('stroke="#000000"')
+  })
+
+  it('makes the PNG background genuinely transparent, and opaque by default', async () => {
+    const opts = { siteUrl: 'https://vardenia.com', pixels: 64 } as const
+    const clear = await qrPng(CODE, { ...opts, transparent: true })
+    const opaque = await qrPng(CODE, opts)
+
+    // The top-left pixel is quiet zone, light in both. Its alpha, the fourth
+    // channel, is 0 when the background was dropped and 255 when it was kept.
+    const cornerAlpha = async (png: Buffer): Promise<number> => {
+      const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+      return data[3]!
+    }
+
+    expect(await cornerAlpha(clear)).toBe(0)
+    expect(await cornerAlpha(opaque)).toBe(255)
+  })
 })
 
 describe('parseCodeParam', () => {

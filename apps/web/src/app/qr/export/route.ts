@@ -14,7 +14,8 @@ import { createZip, safeFileName, type ZipEntry } from '../../../lib/zip'
  * `/qr/export` - every code as its own file, in a zip.
  *
  * `?format=svg` (default) or `?format=png`, `?issue=1` to narrow to one print
- * issue, `?size=40` for the printed millimetre size.
+ * issue, `?size=40` for the printed millimetre size, `?transparent=1` to drop
+ * the white background from every file.
  *
  * # Why files rather than the sheet
  *
@@ -130,6 +131,10 @@ export async function GET(request: NextRequest) {
 
   const format: QrFormat = formatFromWord(url.searchParams.get('format')) ?? 'svg'
 
+  // `?transparent=1` drops the white background from every file in the archive,
+  // for placing a code onto a coloured layout. Not for print; see lib/qr-image.
+  const transparent = url.searchParams.get('transparent') === '1'
+
   /**
    * The sheet's own print size, not the QR library's default.
    *
@@ -202,15 +207,16 @@ export async function GET(request: NextRequest) {
 
     const data =
       format === 'png'
-        ? new Uint8Array(await qrPng(qr.code, { pixels: pixelsFor(sizeMm) }))
-        : new TextEncoder().encode(await qrSvg(qr.code, { sizeMm }))
+        ? new Uint8Array(await qrPng(qr.code, { pixels: pixelsFor(sizeMm), transparent }))
+        : new TextEncoder().encode(await qrSvg(qr.code, { sizeMm, transparent }))
 
     entries.push({ name, data })
   }
 
   const stamp = new Date().toISOString().slice(0, 10)
   const label = issueId === null ? 'all' : `issue-${issueId}`
-  const filename = `vardenia-qr-${label}-${format}-${stamp}.zip`
+  const bg = transparent ? '-transparent' : ''
+  const filename = `vardenia-qr-${label}-${format}${bg}-${stamp}.zip`
 
   const zip = createZip(entries)
 

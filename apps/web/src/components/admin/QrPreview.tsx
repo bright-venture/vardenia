@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useFormFields } from '@payloadcms/ui'
 import { isPrintSafeBaseUrl, scanUrl } from '../../lib/qr-url'
 
@@ -12,6 +13,10 @@ import { isPrintSafeBaseUrl, scanUrl } from '../../lib/qr-url'
  */
 export function QrPreview() {
   const code = useFormFields(([fields]) => fields?.code?.value as string | undefined)
+  // Off by default: the white background is the safe, print-ready one, and a
+  // transparent code is only right when the person placing it controls what sits
+  // behind it. See lib/qr-image.
+  const [transparent, setTransparent] = useState(false)
 
   if (!code) {
     return (
@@ -20,6 +25,8 @@ export function QrPreview() {
       </div>
     )
   }
+
+  const bg = transparent ? '&transparent=1' : ''
 
   return (
     <div style={wrap}>
@@ -32,11 +39,20 @@ export function QrPreview() {
           gain. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`/qr/${code}?format=png&size=320`}
+        src={`/qr/${code}?format=png&size=320${bg}`}
         alt={`QR code ${code}`}
         width={160}
         height={160}
-        style={{ display: 'block', border: '1px solid #ddd', borderRadius: 4, background: '#fff' }}
+        style={{
+          display: 'block',
+          border: '1px solid #ddd',
+          borderRadius: 4,
+          // A checkerboard when transparent, so the dropped-out background is
+          // visible here rather than hidden behind a white panel.
+          background: transparent
+            ? 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px'
+            : '#fff',
+        }}
       />
       <div>
         <p style={{ margin: '0 0 8px', fontSize: 13 }}>
@@ -44,16 +60,27 @@ export function QrPreview() {
           currently points at. Re-point it any time. The code itself never changes.
         </p>
         <p style={{ margin: 0, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <a href={`/qr/${code}?download=1`} style={link}>
-            Download SVG for print
+          <a href={`/qr/${code}?download=1${bg}`} style={link}>
+            Download SVG{transparent ? ' (transparent)' : ' for print'}
           </a>
-          <a href={`/qr/${code}?format=png&size=2048&download=1`} style={link}>
-            Download PNG
+          <a href={`/qr/${code}?format=png&size=2048&download=1${bg}`} style={link}>
+            Download PNG{transparent ? ' (transparent)' : ''}
           </a>
         </p>
+        <label
+          style={{ ...hint, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
+        >
+          <input
+            type="checkbox"
+            checked={transparent}
+            onChange={(event) => setTransparent(event.target.checked)}
+          />
+          Transparent background (drop the white, keep only the dark code)
+        </label>
         <p style={hint}>
-          Use the SVG for anything printed. Keep the white border around the code: cropping it is
-          the most common reason a printed code stops scanning.
+          {transparent
+            ? 'Transparent has no white border to keep, so use it only where you control the background - a coloured layout or a photo - and not for print.'
+            : 'Use the SVG for anything printed. Keep the white border around the code: cropping it is the most common reason a printed code stops scanning.'}
         </p>
         {isPrintSafeBaseUrl() ? null : (
           <p style={warn}>
