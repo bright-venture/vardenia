@@ -50,16 +50,23 @@ funnelled through one function.
 
 Payload CMS owns all content, in Postgres. Collections:
 
-| Collection    | Purpose                                              |
-| ------------- | ---------------------------------------------------- |
-| `businesses`  | The directory listing. The central document.         |
-| `qr-codes`    | Permanent short codes with editable destinations.    |
-| `scan-events` | Append-only scan log - the evidence behind renewals. |
-| `articles`    | Editorial, shared between web and print.             |
-| `issues`      | Print editions, with print run and page ranges.      |
-| `pages`       | Static marketing pages.                              |
-| `media`       | Images and video, with rights tracking.              |
-| `users`       | Vardenia staff only. Businesses have no accounts.    |
+| Collection       | Purpose                                                        |
+| ---------------- | -------------------------------------------------------------- |
+| `businesses`     | The directory listing. The central document.                   |
+| `qr-codes`       | Permanent short codes with editable destinations.              |
+| `scan-events`    | Append-only scan log - the evidence behind renewals.           |
+| `bookings`       | Reservations: one interval, one business, capacity-checked.    |
+| `customers`      | The public who signed up - they book and keep a shortlist.     |
+| `business-users` | Partner logins for the venue dashboard.                        |
+| `saved-listings` | A customer's shortlist rows.                                   |
+| `closures`       | Venue closed-date ranges.                                      |
+| `reviews`        | Review records (present; not yet surfaced on the site).        |
+| `articles`       | Editorial, shared between web and print.                       |
+| `issues`         | Print editions, with print run and page ranges.                |
+| `media`          | Images and video, with rights tracking and unguessable names.  |
+| `rate-limits`    | The shared auth rate-limit counter, in Postgres.               |
+| `error-events`   | Server error log.                                              |
+| `users`          | Vardenia staff and admin - the only accounts that reach admin. |
 
 ### Taxonomy is code, not data
 
@@ -109,33 +116,43 @@ history.
 
 ## Access control
 
-Two roles, both Vardenia staff, in `apps/web/src/access/`:
+Four kinds of account across three auth collections, kept deliberately apart in
+`apps/web/src/access/`. The separation is a property of the schema, not of a check: a
+customer must never be able to authenticate against the collection that reaches the admin
+panel.
 
-- **staff** - creates and edits all content: listings, articles, issues, pages, media.
-- **admin** - all of that, plus identity (accounts), the permanence layer (QR codes, scan
-  events) and commercial flags (`tier`, `verified`).
+- **staff** (`users`) - creates and edits all content: listings, articles, issues, media.
+- **admin** (`users`) - all of that, plus identity (accounts), the permanence layer (QR
+  codes, scan events) and commercial flags (`tier`, `verified`).
+- **customers** - the public who signed up. They book and keep a shortlist, and see their
+  own bookings and saves, nothing else.
+- **partners** (`business-users`) - a venue signing in to a light dashboard to see the
+  bookings for the businesses it manages, and its own printable code.
 
-There were four roles at first. The extra two barely changed behaviour, and one documented
-difference, "sales cannot publish articles", was never actually enforced. A role that does
-not change what someone can do is worse than no role, because it reads as a guarantee
-nobody is checking. Split them again when two real people genuinely need different powers,
-and enforce the difference in the same commit that introduces it.
+There were four staff roles at first. The extra two barely changed behaviour, and one
+documented difference, "sales cannot publish articles", was never actually enforced. A role
+that does not change what someone can do is worse than no role, because it reads as a
+guarantee nobody is checking. Split them again when two real people genuinely need
+different powers, and enforce the difference in the same commit that introduces it.
 
-**Listed businesses do not get accounts.** Every change to a listing goes through the team.
-That is an editorial decision before it is a technical one: a curated title cannot let its
+**Partners sign in, but they do not edit their listing.** The dashboard reports (their
+bookings) and gives (their code); every change to the listing itself still goes through the
+team. That is an editorial decision before a technical one: a curated title cannot let its
 subjects edit their own entries, or the standard drifts to whatever each business wants to
-say about itself.
+say about itself. The cost is that listings only stay current if the team keeps them
+current - a staffing commitment, priced into the editorial calendar, not solved later with
+a self-serve portal nobody planned.
 
-The consequence for this codebase is a large simplification. There is no such thing as a
-logged-in outsider, so access control only ever separates two audiences, staff and the
-public. No per-record scoping, no ownership graph, no "can this user see this row" logic.
+> This changed. An earlier version of this document said listed businesses have no accounts
+> and there is no logged-in outsider, so access "only ever separates staff and the public,
+> no per-record scoping". Customers, partners, and per-record scoping all exist now.
 
-The cost is that listings only stay current if the team keeps them current. That is a
-staffing commitment, not a software one, and it should be priced into the editorial
-calendar rather than solved later with a self-service portal nobody planned for.
-
-If self-service is ever wanted, it is a new role plus per-record scoping, and it deserves
-its own ADR rather than being reintroduced quietly.
+**Access is per-record, expressed as query constraints.** Every access rule returns a
+where-clause rather than a boolean, so Payload filters in the database. A customer asking
+`/api/bookings` gets their own rows and no way to page past them - not a full list they
+were merely not shown, and not even a count of what exists. A partner gets only the
+bookings for the businesses they own. See `collections/Bookings.ts`, where the access rules
+are the substance of the file, and `SavedListings.ts` and `Customers.ts` for the same shape.
 
 On the `Commercial` tab, contract dates, sales owner and internal notes carry field-level
 `read: isStaffFieldLevel` and are stripped from every unauthenticated response.
