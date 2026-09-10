@@ -2,7 +2,7 @@
 
 import { useId, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import { Link, usePathname } from '../i18n/routing'
 import { trackEvent } from '../lib/analytics'
 import { sessionAudience } from '../lib/session-hint'
@@ -381,7 +381,7 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
             >
               {model.durationOptions.map((minutes) => (
                 <option key={minutes} value={minutes}>
-                  {durationLabel(minutes, locale)}
+                  {durationLabel(minutes, dataLocale(locale))}
                 </option>
               ))}
             </select>

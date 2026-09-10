@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { isLocale, type Locale } from '@vardenia/i18n'
+import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import type { BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
 import { currentCustomer, customerBookings, partitionBookings } from '../../../../lib/session'
@@ -176,7 +176,7 @@ async function BookingList({
               </div>
 
               <p className="text-ink-700 mt-2 text-sm">
-                {formatBeirut(new Date(booking.start), locale)}
+                {formatBeirut(new Date(booking.start), dataLocale(locale))}
               </p>
 
               <p className="text-ink-500 mt-1 text-xs">

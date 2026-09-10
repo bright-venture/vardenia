@@ -2,88 +2,104 @@
 
 import NextLink from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { LOCALES, type Locale } from '@vardenia/i18n'
+import { ChevronDown } from 'lucide-react'
+import { LOCALES, LOCALE_META, type Locale } from '@vardenia/i18n'
 import { getPathname, usePathname } from '../i18n/routing'
 
 /**
  * Switches language without losing the reader's place.
  *
  * `usePathname` from our routing helper returns the path with the locale prefix
- * already stripped, so passing it back to `Link` with a different `locale`
- * rebuilds the same page in the other language. Reading a listing and switching
- * to Arabic keeps you on that listing.
+ * already stripped, so passing it back with a different `locale` rebuilds the
+ * same page in the other language. Reading a listing and switching to French
+ * keeps you on that listing.
  *
  * This is not a convenience feature. `localeDetection` is off (see
  * i18n/routing.ts, and the redirect loop that made it necessary), which means
- * until this exists an Arabic reader landing on an English URL has no route to
- * Arabic except editing the address bar.
+ * until this exists a reader landing on an English URL has no route to another
+ * language except editing the address bar.
  *
- * Both languages are always shown rather than a toggle labelled with the other
- * one: a reader who does not read the current language cannot be expected to
- * parse a label written in it.
+ * # A disclosure, not a row
+ *
+ * It used to be an inline `EN / ع` row, which stopped scaling the moment the
+ * site went past two languages. A native `<details>` is a dropdown that opens
+ * with no JavaScript, so it keeps working during static generation and for a
+ * reader with scripting off. Each entry is labelled in its own language and
+ * carries its own `dir` and `lang`, because a reader who does not read the
+ * current language cannot be expected to find theirs written in it.
  *
  * The href is built with `getPathname` and handed to a plain next/link rather
- * than to next-intl's `Link` with a `locale` prop. That prop forces the prefix
- * on, so the English link rendered as /en/directory/le-royal-hotel and then
- * 307'd to /directory/le-royal-hotel. It worked, but it put a non-canonical URL
- * in the markup for crawlers and cost a redirect on every switch, and under
- * `localePrefix: 'as-needed'` the unprefixed form is the real address.
+ * than to next-intl's `Link` with a `locale` prop, which forces the prefix on
+ * and cost a 307 and a non-canonical URL in the markup on every switch. Under
+ * `localePrefix: 'as-needed'` the unprefixed form is the real English address.
  */
-
-const LABELS: Record<Locale, string> = {
-  en: 'EN',
-  ar: 'ع',
-}
-
-const FULL_NAMES: Record<Locale, string> = {
-  en: 'English',
-  ar: 'العربية',
-}
 
 /**
  * The links themselves, given a query string rather than reading one.
  *
  * Split out so the header can render it during static generation. Reading the
  * query string requires `useSearchParams`, which forces the nearest Suspense
- * boundary to render on the client - and with this component sitting in the
- * layout, an unbounded one would opt every page in the site out of static
- * rendering. This half has no hooks that care, so it serves as the fallback.
+ * boundary to render on the client - and with this component in the layout, an
+ * unbounded one would opt every page out of static rendering. This half has no
+ * hooks that care, so it serves as the fallback.
  */
 export function LanguageSwitcherLinks({ current, search }: { current: Locale; search: string }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex items-center gap-1 text-xs">
-      {LOCALES.map((locale, index) => (
-        <span key={locale} className="flex items-center gap-1">
-          {index > 0 ? <span className="text-ink-500">/</span> : null}
-          {locale === current ? (
-            <span aria-current="true" className="text-ink-900 font-semibold">
-              {LABELS[locale]}
-            </span>
-          ) : (
-            <NextLink
-              href={`${getPathname({ href: pathname, locale })}${search}`}
-              hrefLang={locale}
-              aria-label={FULL_NAMES[locale]}
-              className="text-ink-500 hover:text-ink-900 transition-colors"
-            >
-              {LABELS[locale]}
-            </NextLink>
-          )}
+    <details className="relative text-xs">
+      <summary className="text-ink-700 hover:text-ink-900 flex cursor-pointer list-none items-center gap-1.5 transition-colors [&::-webkit-details-marker]:hidden">
+        <span dir={LOCALE_META[current].dir} lang={current}>
+          {LOCALE_META[current].nativeLabel}
         </span>
-      ))}
-    </div>
+        <ChevronDown aria-hidden size={13} />
+      </summary>
+
+      <ul className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-2 max-h-80 w-44 overflow-auto border py-1 shadow-lg">
+        {LOCALES.map((locale) => {
+          const meta = LOCALE_META[locale]
+
+          if (locale === current) {
+            return (
+              <li key={locale}>
+                <span
+                  aria-current="true"
+                  dir={meta.dir}
+                  lang={locale}
+                  className="text-ink-900 block px-3 py-1.5 font-semibold"
+                >
+                  {meta.nativeLabel}
+                </span>
+              </li>
+            )
+          }
+
+          return (
+            <li key={locale}>
+              <NextLink
+                href={`${getPathname({ href: pathname, locale })}${search}`}
+                hrefLang={locale}
+                dir={meta.dir}
+                lang={locale}
+                className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 block px-3 py-1.5 transition-colors"
+              >
+                {meta.nativeLabel}
+              </NextLink>
+            </li>
+          )
+        })}
+      </ul>
+    </details>
   )
 }
 
 /**
  * Carries the query string across the switch.
  *
- * Without this, a reader filtering the directory by category and switching to
- * Arabic landed on /ar/directory with the filter gone - and the same for a page
- * number. The path was preserved and the state on top of it was not, which is
- * the half of "keeps you where you were" nobody notices until they use it.
+ * Without this, a reader filtering the directory by category and switching
+ * language landed on /ar/directory with the filter gone - and the same for a
+ * page number. The path was preserved and the state on top of it was not, which
+ * is the half of "keeps you where you were" nobody notices until they use it.
  */
 export function LanguageSwitcher({ current }: { current: Locale }) {
   const params = useSearchParams()

@@ -80,10 +80,31 @@ something that changes twice a year.
 
 ### Localization
 
-English and Arabic. Arabic is RTL, which is the reason direction is derived from exactly
-one function (`dirFor()` in `@vardenia/i18n`) and never hardcoded. Payload's field-level
-localization stores both languages on the same document with English fallback, so a
-half-translated listing degrades gracefully instead of rendering blank.
+Two layers, deliberately different widths.
+
+The **interface** is offered in ten languages (`LOCALES` in `@vardenia/i18n`): English at
+the root, the rest prefixed. English is the default; nothing is guessed from the browser, so
+a reader picks a language with the switcher. Only English and Arabic have a message
+catalogue today; every other locale renders through English fallback (`getMessages`), so
+choosing French gives a French URL on a real, working page rather than a broken one, and a
+`fr.json` drops in later with no code change. `hreflang` is advertised only for the
+translated pair (`lib/seo`), because telling Google a page is French when it is English is
+worse than saying nothing.
+
+The **content** is stored in English and Arabic only (`TRANSLATED_LOCALES`), which is what
+the editorial team writes. Payload's field-level localization stores both on the same
+document with English fallback, so a half-translated listing degrades gracefully instead of
+rendering blank. A UI locale the CMS does not store is queried in English via
+`dataLocale(locale)`, applied at every Payload `find` with a locale - so the data side stays
+matched to the `payload._locales` enum in the database. Widening it (adding a real content
+language) is a migration made on purpose, plus a translation tab per field in the admin, not
+a side effect of adding a switcher language.
+
+Arabic is RTL, which is the reason direction is derived from exactly one function
+(`dirFor()` in `@vardenia/i18n`) and never hardcoded; Urdu is the other RTL locale. Chinese,
+Hindi, Bengali and Russian carry scripts the loaded fonts do not cover, so a font per script
+is added in `apps/web/src/app/fonts.ts` before those translations go live - until then they
+render English in a Latin font, which needs nothing.
 
 Slugs are deliberately **not** localized - see `apps/web/src/fields/slug.ts` for why.
 

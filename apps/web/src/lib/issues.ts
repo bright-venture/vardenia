@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { getPayload } from 'payload'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 
 /**
@@ -20,7 +20,7 @@ export async function findIssues(locale: Locale) {
   const payload = await client()
   return payload.find({
     collection: 'issues',
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     // Newest edition first, which is what a reader wants; the archive runs down.
     sort: ['-issueNumber'],
@@ -35,7 +35,7 @@ export const findIssueBySlug = cache(async (slug: string, locale: Locale) => {
   const result = await payload.find({
     collection: 'issues',
     where: { slug: { equals: slug } },
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     limit: 1,
     overrideAccess: false,
@@ -68,7 +68,7 @@ export async function findArticlesInIssue(issueId: number | string, locale: Loca
   const result = await payload.find({
     collection: 'articles',
     where: { 'print.issue': { equals: issueId } },
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     limit: 200,
     sort: ['print.pageFrom'],

@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { getPayload } from 'payload'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 
 /**
@@ -21,7 +21,7 @@ export const findArticleBySlug = cache(async (slug: string, locale: Locale) => {
   const result = await payload.find({
     collection: 'articles',
     where: { slug: { equals: slug } },
-    locale,
+    locale: dataLocale(locale),
     // Deep enough to resolve hero image, the issue, and the hero images of any
     // featured listings, which the cards need.
     depth: 3,
@@ -56,7 +56,7 @@ export async function findArticles({
   const payload = await client()
   return payload.find({
     collection: 'articles',
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     page,
     limit: perPage,

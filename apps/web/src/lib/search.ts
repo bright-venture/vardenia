@@ -1,5 +1,5 @@
 import { getPayload, type Where } from 'payload'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 
 /**
@@ -79,7 +79,7 @@ async function searchListings(locale: Locale, q: string, limit: number) {
   const result = await payload.find({
     collection: 'businesses',
     where,
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     limit,
     // Paying listings first, then alphabetical - the same order the directory
@@ -109,7 +109,7 @@ async function searchArticles(locale: Locale, q: string, limit: number) {
   return payload.find({
     collection: 'articles',
     where,
-    locale,
+    locale: dataLocale(locale),
     depth: 1,
     limit,
     sort: ['-publishedAt', '-createdAt'],

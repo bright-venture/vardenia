@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { isLocale, type Locale } from '@vardenia/i18n'
+import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { BOOKING_STATUSES, type BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../../i18n/routing'
 import { currentOwner, ownerBookings, ownerListings } from '../../../../../lib/session'
@@ -385,7 +385,7 @@ async function BookingList({
       continue
     }
 
-    const named = beirutDayLabel(new Date(row.start), locale)
+    const named = beirutDayLabel(new Date(row.start), dataLocale(locale))
     days.push({
       key,
       label:
@@ -435,7 +435,7 @@ async function BookingList({
                         cancelled ? 'line-through' : ''
                       }`}
                     >
-                      {beirutTime(new Date(row.start), locale)}
+                      {beirutTime(new Date(row.start), dataLocale(locale))}
                     </p>
                     <p className="text-ink-500 mt-0.5 font-mono text-[11px]">
                       {t('people', { count: row.partySize })}

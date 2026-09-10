@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 
 /**
@@ -35,7 +35,7 @@ export const findListingBySlug = cache(async (slug: string, locale: Locale) => {
   const result = await payload.find({
     collection: 'businesses',
     where: { slug: { equals: slug } },
-    locale,
+    locale: dataLocale(locale),
     // Deep enough to resolve hero image, gallery and logo in one round trip.
     depth: 2,
     limit: 1,
@@ -259,7 +259,7 @@ export async function findListings({
       return payload.find({
         collection: 'businesses',
         where,
-        locale,
+        locale: dataLocale(locale),
         depth: 1,
         page,
         limit: perPage,
@@ -373,7 +373,7 @@ export async function findListingsForMap({
     const result = await payload.find({
       collection: 'businesses',
       where,
-      locale,
+      locale: dataLocale(locale),
       depth: 0,
       limit: 1000,
       pagination: false,
@@ -483,7 +483,7 @@ export async function countByGovernorate({
     const result = await payload.find({
       collection: 'businesses',
       where,
-      locale,
+      locale: dataLocale(locale),
       limit: 1000,
       depth: 0,
       pagination: false,
@@ -643,7 +643,7 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
     const result = await payload.find({
       collection: 'businesses',
       where: { category: { equals: category } },
-      locale,
+      locale: dataLocale(locale),
       depth: 1,
       limit: POOL_SIZE,
       sort: ['-tier', 'name'],

@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload, type TypedUser } from 'payload'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import { CUSTOMER_COLLECTION } from '../access/index'
 import type { ListingSummary } from './listings'
@@ -103,7 +103,7 @@ export async function savedListingsForCurrent(
   const listings = await payload.find({
     collection: 'businesses',
     where: { id: { in: ids } },
-    locale,
+    locale: dataLocale(locale),
     limit: ids.length,
     depth: 1,
     overrideAccess: false,

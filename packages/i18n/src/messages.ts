@@ -15,9 +15,18 @@ export type Messages = typeof en
  *
  * Both catalogues are small and always shipped, so an explicit map beats lazy
  * loading - one fewer request on a mobile connection in a hotel lobby.
+ *
+ * # English is the fallback
+ *
+ * Only the translated locales have a catalogue here. Every other supported locale
+ * (see LOCALES) resolves to English, so its pages render in English rather than
+ * throwing on a missing catalogue. Writing a translation is then two steps and no
+ * code change: add `xx.json` beside these, and add it to the map below. A partial
+ * file would need a deep merge over English here; none exists yet, so this stays a
+ * plain lookup with a fallback.
  */
-const CATALOGUES: Record<Locale, Messages> = { en, ar: ar as Messages }
+const CATALOGUES: Partial<Record<Locale, Messages>> = { en, ar: ar as Messages }
 
 export function getMessages(locale: Locale): Messages {
-  return CATALOGUES[locale]
+  return CATALOGUES[locale] ?? en
 }

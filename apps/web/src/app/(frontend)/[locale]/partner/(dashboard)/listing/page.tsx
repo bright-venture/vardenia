@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { isLocale, type Locale } from '@vardenia/i18n'
+import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../../i18n/routing'
 import { currentOwner, ownerClosures, ownerListings } from '../../../../../../lib/session'
 import { beirutCalendarDayLabel } from '../../../../../../lib/beirut'
@@ -115,10 +115,10 @@ export default async function PartnerListingPage({ params }: Props) {
           business: closure.business,
           label:
             closure.startsOn === closure.endsOn
-              ? beirutCalendarDayLabel(closure.startsOn, locale as Locale)
+              ? beirutCalendarDayLabel(closure.startsOn, dataLocale(locale as Locale))
               : t('closedRange', {
-                  from: beirutCalendarDayLabel(closure.startsOn, locale as Locale),
-                  to: beirutCalendarDayLabel(closure.endsOn, locale as Locale),
+                  from: beirutCalendarDayLabel(closure.startsOn, dataLocale(locale as Locale)),
+                  to: beirutCalendarDayLabel(closure.endsOn, dataLocale(locale as Locale)),
                 }),
           note: closure.note,
           bookings: closure.bookings,
