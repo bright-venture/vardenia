@@ -10,7 +10,15 @@
 # dependsOn: ["^build"].
 
 [build]
-  # Two commands, and the order matters.
+  # Three commands, and the order matters.
+  #
+  # scripts/deploy-migrate.sh runs first, and only on production deploys. It
+  # applies any pending migration to the prod database before the new code that
+  # needs it goes live, using the session pooler (migrations need it; the app
+  # uses the transaction pooler). This exists because prod once drifted a
+  # migration behind the code and every write to the changed tables failed until
+  # it was run by hand. See the script for the details; it is a no-op on preview
+  # and branch builds, which must never write to the production database.
   #
   # src/payload-types.ts is generated from the collection definitions and is
   # deliberately not committed - a stale checked-in type file is worse than
@@ -32,7 +40,7 @@
   #
   # `next build` sets NODE_ENV=production itself, so the second command is
   # already safe.
-  command = "NODE_ENV=production pnpm --filter @vardenia/web generate:types && pnpm turbo run build --filter=@vardenia/web"
+  command = "bash scripts/deploy-migrate.sh && NODE_ENV=production pnpm --filter @vardenia/web generate:types && pnpm turbo run build --filter=@vardenia/web"
   publish = "apps/web/.next"
 
 [build.environment]
