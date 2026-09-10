@@ -1,4 +1,14 @@
-import { Amiri, Fraunces, IBM_Plex_Mono, Manrope, Noto_Sans_Arabic } from 'next/font/google'
+import {
+  Amiri,
+  Fraunces,
+  IBM_Plex_Mono,
+  Manrope,
+  Noto_Sans_Arabic,
+  Noto_Sans_Bengali,
+  Noto_Sans_Devanagari,
+  Noto_Sans_SC,
+  Noto_Serif,
+} from 'next/font/google'
 
 /**
  * The brand faces, actually fetched.
@@ -47,7 +57,11 @@ export const fraunces = Fraunces({
 })
 
 export const manrope = Manrope({
-  subsets: ['latin'],
+  // Cyrillic rides along here so Russian body text renders in the brand face
+  // rather than falling through to a system sans. Manrope covers it; the display
+  // face (Fraunces) does not, which is why Russian headings get their own serif
+  // below. The subset is only fetched for glyphs a page actually uses.
+  subsets: ['latin', 'cyrillic'],
   display: 'swap',
   variable: '--font-manrope',
 })
@@ -85,6 +99,59 @@ export const notoArabic = Noto_Sans_Arabic({
   weight: ['400', '500', '600'],
 })
 
+/**
+ * Faces for the scripts the Latin and Arabic families do not cover.
+ *
+ * The UI is translated into ten languages (see @vardenia/i18n). Four carry
+ * scripts nothing loaded above can draw: Russian (Cyrillic, body handled by
+ * Manrope above, so only a display serif is needed here), Chinese, Hindi
+ * (Devanagari) and Bengali. Each gets a Noto face, wired per language in
+ * globals.css with a `:lang()` block exactly as Arabic is. A face is only
+ * fetched by a reader whose page is in that language, so a French visitor never
+ * downloads the Chinese one.
+ *
+ * `preload: false` on all of them: preloading pushes the font on the very first
+ * paint of every page, which is right for the always-on brand faces and wrong
+ * for these, which most visitors never see. They load when a page in their
+ * language is served instead. Noto Sans SC in particular is large (Google slices
+ * it into many unicode-range files), so preloading it site-wide would be a real
+ * cost paid by everyone for a few.
+ */
+export const notoSerif = Noto_Serif({
+  // A Cyrillic serif for Russian headings, so the masthead stays a serif the way
+  // Fraunces is for Latin and Amiri is for Arabic, rather than switching to sans
+  // mid-brand. Fraunces has no Cyrillic, which is the whole reason this exists.
+  subsets: ['latin', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-noto-serif',
+  weight: ['400', '500'],
+  preload: false,
+})
+
+export const notoSC = Noto_Sans_SC({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-noto-sc',
+  weight: ['400', '500', '700'],
+  preload: false,
+})
+
+export const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ['devanagari', 'latin'],
+  display: 'swap',
+  variable: '--font-noto-devanagari',
+  weight: ['400', '500', '700'],
+  preload: false,
+})
+
+export const notoBengali = Noto_Sans_Bengali({
+  subsets: ['bengali', 'latin'],
+  display: 'swap',
+  variable: '--font-noto-bengali',
+  weight: ['400', '500', '700'],
+  preload: false,
+})
+
 /** Every face, for the `<html>` class. Order does not matter; presence does. */
 export const FONT_VARIABLES = [
   fraunces.variable,
@@ -92,4 +159,8 @@ export const FONT_VARIABLES = [
   plexMono.variable,
   amiri.variable,
   notoArabic.variable,
+  notoSerif.variable,
+  notoSC.variable,
+  notoDevanagari.variable,
+  notoBengali.variable,
 ].join(' ')

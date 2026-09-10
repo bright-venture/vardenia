@@ -24,6 +24,34 @@
     --font-body: var(--font-noto-arabic), 'Noto Sans Arabic', sans-serif;
   }
 
+  /* The four scripts the Latin and Arabic families do not cover, one block each,
+     same pattern as Arabic above: a display face and a body face per language.
+     Faces come from app/fonts.ts. Each stack ends in a system font of the right
+     script so that, if the self-hosted face is still swapping in, the fallback is
+     a real glyph rather than tofu.
+
+     Russian body is Manrope (it carries Cyrillic, see fonts.ts), so only the
+     display serif is overridden here. Chinese has no editorial serif that is
+     worth its download, so Noto Sans SC serves both roles. */
+  :root:lang(ru) {
+    --font-display: var(--font-noto-serif), Georgia, 'Times New Roman', serif;
+  }
+
+  :root:lang(zh) {
+    --font-display: var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-body: var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  :root:lang(hi) {
+    --font-display: var(--font-noto-devanagari), 'Nirmala UI', serif;
+    --font-body: var(--font-noto-devanagari), 'Nirmala UI', sans-serif;
+  }
+
+  :root:lang(bn) {
+    --font-display: var(--font-noto-bengali), 'Nirmala UI', serif;
+    --font-body: var(--font-noto-bengali), 'Nirmala UI', sans-serif;
+  }
+
   body {
     font-family: var(--font-body);
   }

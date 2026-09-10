@@ -24,9 +24,15 @@ import { getPathname, usePathname } from '../i18n/routing'
  * It used to be an inline `EN / ع` row, which stopped scaling the moment the
  * site went past two languages. A native `<details>` is a dropdown that opens
  * with no JavaScript, so it keeps working during static generation and for a
- * reader with scripting off. Each entry is labelled in its own language and
- * carries its own `dir` and `lang`, because a reader who does not read the
- * current language cannot be expected to find theirs written in it.
+ * reader with scripting off.
+ *
+ * Each entry is labelled with the language's English name (Arabic, Chinese),
+ * not its endonym (العربية, 中文). Endonyms read well to a native speaker but
+ * turn the menu into a wall of scripts a given reader mostly cannot decode, and
+ * they surfaced before any font for those scripts was loaded, so several showed
+ * as tofu boxes. English names stay legible in one script until a language is
+ * genuinely translated and its font is in place. `hrefLang` still carries the
+ * real target locale for crawlers.
  *
  * The href is built with `getPathname` and handed to a plain next/link rather
  * than to next-intl's `Link` with a `locale` prop, which forces the prefix on
@@ -49,9 +55,7 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
   return (
     <details className="relative text-xs">
       <summary className="text-ink-700 hover:text-ink-900 flex cursor-pointer list-none items-center gap-1.5 transition-colors [&::-webkit-details-marker]:hidden">
-        <span dir={LOCALE_META[current].dir} lang={current}>
-          {LOCALE_META[current].nativeLabel}
-        </span>
+        <span>{LOCALE_META[current].label}</span>
         <ChevronDown aria-hidden size={13} />
       </summary>
 
@@ -62,13 +66,8 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
           if (locale === current) {
             return (
               <li key={locale}>
-                <span
-                  aria-current="true"
-                  dir={meta.dir}
-                  lang={locale}
-                  className="text-ink-900 block px-3 py-1.5 font-semibold"
-                >
-                  {meta.nativeLabel}
+                <span aria-current="true" className="text-ink-900 block px-3 py-1.5 font-semibold">
+                  {meta.label}
                 </span>
               </li>
             )
@@ -79,11 +78,9 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
               <NextLink
                 href={`${getPathname({ href: pathname, locale })}${search}`}
                 hrefLang={locale}
-                dir={meta.dir}
-                lang={locale}
                 className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 block px-3 py-1.5 transition-colors"
               >
-                {meta.nativeLabel}
+                {meta.label}
               </NextLink>
             </li>
           )

@@ -84,12 +84,13 @@ Two layers, deliberately different widths.
 
 The **interface** is offered in ten languages (`LOCALES` in `@vardenia/i18n`): English at
 the root, the rest prefixed. English is the default; nothing is guessed from the browser, so
-a reader picks a language with the switcher. Only English and Arabic have a message
-catalogue today; every other locale renders through English fallback (`getMessages`), so
-choosing French gives a French URL on a real, working page rather than a broken one, and a
-`fr.json` drops in later with no code change. `hreflang` is advertised only for the
-translated pair (`lib/seo`), because telling Google a page is French when it is English is
-worse than saying nothing.
+a reader picks a language with the switcher, which lists each language by its English name
+(Arabic, Chinese) rather than its endonym. All ten have a full message catalogue
+(`packages/i18n/src/messages/*.json`, kept at identical key sets); `getMessages` still falls
+back to English if a locale is ever missing, so a page renders rather than throws.
+`hreflang` is advertised only for the pair with translated content (`lib/seo`), because
+telling Google a page is French when its listings are still English is worse than saying
+nothing.
 
 The **content** is stored in English and Arabic only (`TRANSLATED_LOCALES`), which is what
 the editorial team writes. Payload's field-level localization stores both on the same
@@ -102,9 +103,11 @@ a side effect of adding a switcher language.
 
 Arabic is RTL, which is the reason direction is derived from exactly one function
 (`dirFor()` in `@vardenia/i18n`) and never hardcoded; Urdu is the other RTL locale. Chinese,
-Hindi, Bengali and Russian carry scripts the loaded fonts do not cover, so a font per script
-is added in `apps/web/src/app/fonts.ts` before those translations go live - until then they
-render English in a Latin font, which needs nothing.
+Hindi, Bengali and Russian carry scripts the Latin and Arabic families do not draw, so each
+has its own Noto face in `apps/web/src/app/fonts.ts`, wired per language with a `:lang()`
+block in `globals.css` exactly as Arabic is. Those faces are `preload: false` and only
+fetched by a reader whose page is in that language, so a French visitor never downloads the
+Chinese one.
 
 Slugs are deliberately **not** localized - see `apps/web/src/fields/slug.ts` for why.
 
