@@ -221,7 +221,8 @@ hotel in the Mediterranean.
 ## What is deliberately deferred
 
 - **Payments / advertiser self-serve checkout.** Sales is consultative at this stage; a
-  Stripe integration before there are ten advertisers is speculative work.
+  Stripe integration before there are ten advertisers is speculative work. Booking payments
+  are their own deferral, with the provider and per-type questions in ADR 0007.
 - **A separate analytics warehouse.** `scan-events` in Postgres is fine into the millions.
   See ADR 0004 for the trigger and the migration path.
 - **Shared UI components between web and mobile.** We share tokens, not components. The
