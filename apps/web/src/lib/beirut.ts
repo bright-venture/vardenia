@@ -1,3 +1,5 @@
+import type { Locale } from '@vardenia/i18n'
+
 /**
  * Wall-clock time in Beirut, converted to an instant.
  *
@@ -135,7 +137,7 @@ export function addDays(date: string, days: number): string {
  * Used on the confirmation panel, so what the customer is shown back is the same
  * clock the restaurant works to, whatever their phone is set to.
  */
-export function formatBeirut(instant: Date, locale: 'en' | 'ar' = 'en'): string {
+export function formatBeirut(instant: Date, locale: Locale = 'en'): string {
   return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB' : 'en-GB', {
     timeZone: BEIRUT,
     weekday: 'long',
@@ -166,7 +168,7 @@ export function formatBeirut(instant: Date, locale: 'en' | 'ar' = 'en'): string 
  * it should be resolved is a question for a native speaker rather than for me:
  * Lebanon writes both.
  */
-export function beirutTime(instant: Date, locale: 'en' | 'ar' = 'en'): string {
+export function beirutTime(instant: Date, locale: Locale = 'en'): string {
   return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
     timeZone: BEIRUT,
     hour: '2-digit',
@@ -189,7 +191,7 @@ export function beirutTime(instant: Date, locale: 'en' | 'ar' = 'en'): string {
  *
  * Latin digits, matching `beirutTime` and `beirutDayLabel`.
  */
-export function beirutCalendarDayLabel(day: string, locale: 'en' | 'ar' = 'en'): string {
+export function beirutCalendarDayLabel(day: string, locale: Locale = 'en'): string {
   const instant = new Date(`${day}T12:00:00Z`)
   if (Number.isNaN(instant.getTime())) return day
 
@@ -209,7 +211,7 @@ export function beirutCalendarDayLabel(day: string, locale: 'en' | 'ar' = 'en'):
  *
  * Latin digits for the day number, matching `beirutTime` above.
  */
-export function beirutDayLabel(instant: Date, locale: 'en' | 'ar' = 'en'): string {
+export function beirutDayLabel(instant: Date, locale: Locale = 'en'): string {
   return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
     timeZone: BEIRUT,
     weekday: 'long',

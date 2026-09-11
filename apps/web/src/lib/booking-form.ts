@@ -1,3 +1,4 @@
+import type { Locale } from '@vardenia/i18n'
 import { resolveRules, type BookingRules } from './availability'
 import { addDays, beirutDate, beirutInstant } from './beirut'
 
@@ -201,7 +202,7 @@ export function toInterval(input: IntervalInput): { start: string; end: string }
 }
 
 /** "2 hours", "1 hour 30 minutes", "3 nights" - for a dropdown label. */
-export function durationLabel(minutes: number, locale: 'en' | 'ar' = 'en'): string {
+export function durationLabel(minutes: number, locale: Locale = 'en'): string {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
 

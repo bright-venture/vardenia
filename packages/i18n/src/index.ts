@@ -37,30 +37,25 @@ export type Locale = (typeof LOCALES)[number]
 export const DEFAULT_LOCALE: Locale = 'en'
 
 /**
- * The locales with real content: their own message catalogue, and the locales
- * the CMS stores localized fields in. Everything else falls back to English.
- *
- * This is deliberately narrower than LOCALES. The UI is offered in ten languages;
- * the curated data (listing names, articles, category labels) is written in two.
- * A French reader gets a French URL, English chrome (until fr.json exists), and
- * English listings (until the editorial team translates them) - one honest
- * fallback rather than a promise the content cannot keep. Widening the data side
- * is a bigger step: it grows the CMS locale enum (a migration) and puts a tab per
- * language on every localized field in the admin, so it waits until a language is
- * genuinely being translated at the content level.
+ * The locales the CMS has its own message catalogue for. The rest fall back to
+ * English message strings (see messages.ts). This is about UI copy only; CMS
+ * content is localized over every locale (see below).
  */
 export const TRANSLATED_LOCALES = ['en', 'ar'] as const
-export type ContentLocale = (typeof TRANSLATED_LOCALES)[number]
+export type ContentLocale = Locale
 
 /**
  * The locale to query the CMS in for a given UI locale.
  *
- * The CMS localizes over TRANSLATED_LOCALES only, so a UI locale it does not
- * store maps to English - the same fallback the rest of the site uses. Pass this,
- * not the raw UI locale, to any Payload `find` with a `locale`.
+ * The CMS now localizes content over every UI locale (see the localization
+ * block in payload.config and the locale-expansion migration), so this is the
+ * identity - the raw locale is a valid data locale. It stays as a named function
+ * because every Payload `find` with a `locale` goes through it, which is the one
+ * place to change if the data locales and UI locales ever diverge again. Fields
+ * with no translation fall back to English via `fallback: true`.
  */
 export function dataLocale(locale: Locale): ContentLocale {
-  return locale === 'ar' ? 'ar' : 'en'
+  return locale
 }
 
 export const LOCALE_META = {

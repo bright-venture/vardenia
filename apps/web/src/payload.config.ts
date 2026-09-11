@@ -6,7 +6,7 @@ import sharp from 'sharp'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
-import { TRANSLATED_LOCALES, DEFAULT_LOCALE } from '@vardenia/i18n'
+import { LOCALES, LOCALE_META, DEFAULT_LOCALE } from '@vardenia/i18n'
 
 import { DB_SCHEMA, assertDatabaseInternals } from './lib/db'
 import { Users } from './collections/Users'
@@ -275,22 +275,18 @@ export default buildConfig({
   },
 
   /**
-   * Content localization stays English and Arabic, the two languages the
-   * editorial team actually writes in - deliberately narrower than the ten UI
-   * locales in @vardenia/i18n. The UI is offered in ten languages via message
-   * fallback; the curated content is stored in two, and a UI locale the CMS does
-   * not store is queried in English through `dataLocale` at each call site. This
-   * matches the `payload._locales` enum in the database, so widening it is a
-   * migration made on purpose, not a side effect of adding a switcher language.
+   * Content localization over all ten UI locales, matching the switcher.
    *
-   * Arabic falls back to English so a half-translated listing renders sensibly
-   * instead of showing empty fields - critical while the team catches up.
+   * The `payload._locales` enum in the database carries the same ten values (see
+   * the locale-expansion migration); widening it was a deliberate step, not a
+   * side effect. Most fields are only written in English and Arabic today, and
+   * `fallback: true` falls every other locale back to English (the default), so
+   * an untranslated listing renders in English rather than blank. Names and
+   * addresses are proper nouns and are left in English on purpose; taglines and
+   * descriptions are the fields meant to carry translations.
    */
   localization: {
-    locales: TRANSLATED_LOCALES.map((code) => ({
-      code,
-      label: code === 'ar' ? 'العربية' : 'English',
-    })),
+    locales: LOCALES.map((code) => ({ code, label: LOCALE_META[code].label })),
     defaultLocale: DEFAULT_LOCALE,
     fallback: true,
   },

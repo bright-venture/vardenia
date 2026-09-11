@@ -26,6 +26,7 @@
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "listings:unpublish": "tsx src/import/unpublish.ts",
+    "translate:taglines": "tsx src/import/translate-taglines.ts",
     "backup:export": "tsx src/backup/export-cli.ts",
     "backup:restore": "tsx src/backup/restore-cli.ts"
   },
