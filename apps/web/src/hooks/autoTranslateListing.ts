@@ -80,7 +80,10 @@ export const autoTranslateListing: CollectionAfterChangeHook = async ({
     try {
       if (taglineChanged && taglineSource && !current.tagline?.[target]) {
         const translated = await translateText(taglineSource, DEFAULT_LOCALE, target)
-        if (translated) data.tagline = translated
+        // The tagline field is capped at 120 chars; a translation can run longer.
+        if (translated)
+          data.tagline =
+            translated.length > 120 ? `${translated.slice(0, 119).trimEnd()}…` : translated
       }
       if (
         descriptionChanged &&
@@ -92,6 +95,11 @@ export const autoTranslateListing: CollectionAfterChangeHook = async ({
       }
 
       if (Object.keys(data).length === 0) continue
+
+      // `name` is a required localized field, so a per-locale update must carry
+      // it or validation rejects the write. Names are proper nouns and stay
+      // English; this keeps the English name in the target locale's slot.
+      if (typeof doc.name === 'string') data.name = doc.name
 
       await req.payload.update({
         collection: 'businesses',

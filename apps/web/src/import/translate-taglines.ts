@@ -45,6 +45,10 @@ const { default: config } = await import('../payload.config')
 
 const TARGET_LOCALES = LOCALES.filter((l) => l !== 'en' && l !== 'ar')
 
+// The tagline field is capped at 120 characters; a translation can run longer
+// than its English source, so trim to fit rather than have the write rejected.
+const cap = (text: string) => (text.length > 120 ? `${text.slice(0, 119).trimEnd()}…` : text)
+
 type Row = { id: number; slug: string; en: string } & Partial<Record<Locale, string>>
 
 function parseArgs(argv: string[]): { target: string | null; dryRun: boolean } {
@@ -113,13 +117,28 @@ async function main(): Promise<void> {
   }
 
   const payload = await getPayload({ config })
+
+  // `name` is a required localized field, so a per-locale update that omits it
+  // fails validation for that locale. Names are proper nouns and stay English,
+  // so we carry the English name into each write to satisfy the check.
+  const names = new Map<number, string>()
+  const all = await payload.find({
+    collection: 'businesses',
+    locale: 'en',
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  for (const doc of all.docs) if (typeof doc.name === 'string') names.set(doc.id, doc.name)
+
   let written = 0
   let skipped = 0
 
   for (const row of rows) {
+    const name = names.get(row.id)
     for (const locale of TARGET_LOCALES) {
       const tagline = row[locale]
-      if (!tagline) {
+      if (!tagline || !name) {
         skipped += 1
         continue
       }
@@ -128,7 +147,7 @@ async function main(): Promise<void> {
           collection: 'businesses',
           id: row.id,
           locale,
-          data: { tagline },
+          data: { name, tagline: cap(tagline) },
           overrideAccess: true,
         })
         written += 1

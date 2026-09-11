@@ -124,13 +124,28 @@ async function main(): Promise<void> {
   }
 
   const payload = await getPayload({ config })
+
+  // `name` is a required localized field; a per-locale update that omits it
+  // fails validation. Names are proper nouns and stay English, so carry the
+  // English name into each write.
+  const names = new Map<number, string>()
+  const all = await payload.find({
+    collection: 'businesses',
+    locale: 'en',
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  for (const doc of all.docs) if (typeof doc.name === 'string') names.set(doc.id, doc.name)
+
   let written = 0
   let skipped = 0
 
   for (const row of rows) {
+    const name = names.get(row.id)
     for (const locale of TARGET_LOCALES) {
       const text = row[locale]
-      if (!text) {
+      if (!text || !name) {
         skipped += 1
         continue
       }
@@ -139,7 +154,7 @@ async function main(): Promise<void> {
           collection: 'businesses',
           id: row.id,
           locale,
-          data: { description: richText(text, locale) as never },
+          data: { name, description: richText(text, locale) as never },
           depth: 0,
           overrideAccess: true,
           // The auto-translate hook must not fire off this backfill write.
