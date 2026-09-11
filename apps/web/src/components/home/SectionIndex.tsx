@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../../i18n/routing'
+import { sectionName, sectionSummary } from '../../lib/labels'
 
 /**
  * The seven sections, as a contents page.
@@ -55,7 +56,6 @@ const SECTION_IMAGES: Record<string, string> = {
 }
 
 export function SectionIndex({ locale }: { locale: Locale }) {
-  const ar = locale === 'ar'
   const t = useTranslations('directory')
 
   return (
@@ -77,11 +77,11 @@ export function SectionIndex({ locale }: { locale: Locale }) {
                 direction feels like a glitch rather than a response.
               */}
               <span className="font-display text-ink-900 group-hover:text-gold-700 text-2xl transition-[transform,color] duration-300 group-hover:translate-x-2 sm:text-4xl lg:text-5xl rtl:group-hover:-translate-x-2">
-                {ar ? section.ar : section.en}
+                {sectionName(section, locale)}
               </span>
 
               <span className="text-ink-500 hidden max-w-[240px] text-xs leading-snug lg:block">
-                {ar ? section.descriptionAr : section.descriptionEn}
+                {sectionSummary(section, locale)}
               </span>
 
               {SECTION_IMAGES[section.path] ? (

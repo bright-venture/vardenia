@@ -7,7 +7,7 @@ import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link, getPathname } from '../../../../i18n/routing'
 import { countByGovernorate, findListings, findListingsForMap } from '../../../../lib/listings'
-import { placeLabel, priceLabel } from '../../../../lib/labels'
+import { placeLabel, priceLabel, sectionName } from '../../../../lib/labels'
 import { boundsForRegion } from '../../../../lib/region-bounds'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { DirectoryMap, type MapPin } from '../../../../components/DirectoryMap'
@@ -62,7 +62,7 @@ export function generateStaticParams() {
 }
 
 const nameFor = (section: SiteSection, locale: string) =>
-  locale === 'ar' ? section.ar : section.en
+  sectionName(section, isLocale(locale) ? locale : DEFAULT_LOCALE)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, section: path } = await params

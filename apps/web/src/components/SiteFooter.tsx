@@ -3,6 +3,7 @@ import { SECTIONS } from '@vardenia/core'
 import type { LucideIcon } from 'lucide-react'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
+import { sectionName } from '../lib/labels'
 import {
   ABOUT_ICON,
   ADVERTISE_ICON,
@@ -86,13 +87,10 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations()
-  // `ar` remains only for the section names, which are taxonomy (en/ar) from
-  // @vardenia/core. Every other label here is UI chrome and comes from `t`.
-  const ar = locale === 'ar'
 
   const discover: FooterLink[] = SECTIONS.map((section) => ({
     href: `/${section.path}`,
-    label: ar ? section.ar : section.en,
+    label: sectionName(section, locale),
     icon: SECTION_ICONS[section.category],
   }))
 

@@ -11,6 +11,7 @@ import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { MenuLink } from './header/MenuLink'
 import { BUSINESS_ICON, CONTACT_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS } from './navIcons'
+import { sectionName, sectionSummary } from '../lib/labels'
 
 /**
  * The site header.
@@ -44,10 +45,6 @@ import { BUSINESS_ICON, CONTACT_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS 
  */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
-  // `ar` still drives the taxonomy labels below (section names and descriptions
-  // live in @vardenia/core as en/ar constants); everything that is UI chrome now
-  // goes through `t`.
-  const ar = locale === 'ar'
 
   const sectionMenu = (
     <div className="grid w-[34rem] grid-cols-2 gap-1">
@@ -55,8 +52,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         <MenuLink
           key={section.path}
           href={`/${section.path}`}
-          title={ar ? section.ar : section.en}
-          description={ar ? section.descriptionAr : section.descriptionEn}
+          title={sectionName(section, locale)}
+          description={sectionSummary(section, locale)}
           icon={SECTION_ICONS[section.category]}
         />
       ))}
@@ -155,7 +152,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <MenuLink
                 key={section.path}
                 href={`/${section.path}`}
-                title={ar ? section.ar : section.en}
+                title={sectionName(section, locale)}
                 icon={SECTION_ICONS[section.category]}
               />
             ))}

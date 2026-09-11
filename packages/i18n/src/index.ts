@@ -103,3 +103,6 @@ export function formatDate(value: Date, locale: Locale): string {
     year: 'numeric',
   }).format(value)
 }
+
+// Taxonomy display labels for the eight UI languages beyond English and Arabic.
+export { taxonomyLabel, sectionLabel, sectionDescription } from './taxonomy'

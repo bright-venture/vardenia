@@ -7,7 +7,7 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link, getPathname } from '../../../../i18n/routing'
 import { countByGovernorate, findListings, findListingsForMap } from '../../../../lib/listings'
-import { placeLabel, priceLabel } from '../../../../lib/labels'
+import { placeLabel, priceLabel, sectionName } from '../../../../lib/labels'
 import { boundsForRegion } from '../../../../lib/region-bounds'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { DirectoryMap, type MapPin } from '../../../../components/DirectoryMap'
@@ -212,7 +212,7 @@ async function DirectoryResults({
         </FilterChip>
         {SECTIONS.map((section) => (
           <FilterChip key={section.path} href={`/${section.path}`} active={false}>
-            {locale === 'ar' ? section.ar : section.en}
+            {sectionName(section, locale)}
           </FilterChip>
         ))}
       </nav>

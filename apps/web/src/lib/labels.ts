@@ -7,23 +7,38 @@
  * a data problem visible on the page instead of silently blank.
  */
 
-import { AMENITIES, GOVERNORATES, PRICE_RANGES, TAXONOMY } from '@vardenia/core'
-import type { Locale } from '@vardenia/i18n'
+import { AMENITIES, GOVERNORATES, PRICE_RANGES, TAXONOMY, type SiteSection } from '@vardenia/core'
+import { sectionDescription, sectionLabel, taxonomyLabel, type Locale } from '@vardenia/i18n'
 
+/**
+ * Regions keep English and Arabic only: a governorate or district is a proper
+ * noun, so every other language falls back to the English label (Beirut stays
+ * Beirut). Categories, subcategories, amenities and price bands go through
+ * `localize`, which additionally consults the taxonomy translations in
+ * @vardenia/i18n for the other eight UI languages, falling back to core's
+ * English when there is no override.
+ */
 const pick = (entry: { en: string; ar: string }, locale: Locale) =>
   locale === 'ar' ? entry.ar : entry.en
+
+const localize = (entry: { slug: string; en: string; ar: string }, locale: Locale) =>
+  locale === 'ar'
+    ? entry.ar
+    : locale === 'en'
+      ? entry.en
+      : (taxonomyLabel(entry.slug, locale) ?? entry.en)
 
 export function categoryLabel(slug: string | null | undefined, locale: Locale): string {
   if (!slug) return ''
   const found = TAXONOMY.find((c) => c.slug === slug)
-  return found ? pick(found, locale) : slug
+  return found ? localize(found, locale) : slug
 }
 
 export function subcategoryLabel(slug: string | null | undefined, locale: Locale): string {
   if (!slug) return ''
   for (const category of TAXONOMY) {
     const child = category.children.find((c) => c.slug === slug)
-    if (child) return pick(child, locale)
+    if (child) return localize(child, locale)
   }
   return slug
 }
@@ -57,10 +72,17 @@ export function placeLabel(
 
 export function amenityLabel(slug: string, locale: Locale): string {
   const found = AMENITIES.find((a) => a.slug === slug)
-  return found ? pick(found, locale) : slug
+  return found ? localize(found, locale) : slug
 }
 
-/** "$$$" for a stored band, in either language. Marks are not translated. */
+/** The word for a price band, e.g. "Upscale", in the reader's language. */
+export function priceBandLabel(slug: string | null | undefined, locale: Locale): string {
+  if (!slug) return ''
+  const found = PRICE_RANGES.find((p) => p.slug === String(slug))
+  return found ? localize(found, locale) : String(slug)
+}
+
+/** "$$$" for a stored band. Marks are not translated. */
 export function priceMarks(slug: string | null | undefined): string | null {
   return PRICE_RANGES.find((p) => p.slug === String(slug))?.marks ?? null
 }
@@ -70,4 +92,27 @@ export function priceLabel(range: string | number | null | undefined): string | 
   const value = typeof range === 'string' ? Number(range) : range
   if (!value || Number.isNaN(value) || value < 1 || value > 4) return null
   return '$'.repeat(value)
+}
+
+/**
+ * A section's name and one-line summary, in the reader's language.
+ *
+ * English and Arabic are the section's own fields (they seed the taxonomy and
+ * print); the other eight UI languages come from the section translations in
+ * @vardenia/i18n, falling back to the English field.
+ */
+export function sectionName(section: SiteSection, locale: Locale): string {
+  return locale === 'ar'
+    ? section.ar
+    : locale === 'en'
+      ? section.en
+      : (sectionLabel(section.path, locale) ?? section.en)
+}
+
+export function sectionSummary(section: SiteSection, locale: Locale): string {
+  return locale === 'ar'
+    ? section.descriptionAr
+    : locale === 'en'
+      ? section.descriptionEn
+      : (sectionDescription(section.path, locale) ?? section.descriptionEn)
 }

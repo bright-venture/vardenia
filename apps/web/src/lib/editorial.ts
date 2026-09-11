@@ -1,6 +1,10 @@
-import type { Locale } from '@vardenia/i18n'
+import { taxonomyLabel, type Locale } from '@vardenia/i18n'
 
-/** Display labels for the article `kind` select. */
+/**
+ * Display labels for the article `kind` select. English and Arabic are the
+ * canonical pair (they seed the CMS select); the other eight UI languages come
+ * from the taxonomy translations in @vardenia/i18n, falling back to English.
+ */
 const KIND_LABELS: Record<string, { en: string; ar: string }> = {
   feature: { en: 'Feature', ar: 'تحقيق' },
   guide: { en: 'Destination guide', ar: 'دليل الوجهة' },
@@ -13,7 +17,12 @@ const KIND_LABELS: Record<string, { en: string; ar: string }> = {
 export function kindLabel(kind: string | null | undefined, locale: Locale): string {
   if (!kind) return ''
   const found = KIND_LABELS[kind]
-  return found ? (locale === 'ar' ? found.ar : found.en) : kind
+  if (!found) return kind
+  return locale === 'ar'
+    ? found.ar
+    : locale === 'en'
+      ? found.en
+      : (taxonomyLabel(kind, locale) ?? found.en)
 }
 
 /**

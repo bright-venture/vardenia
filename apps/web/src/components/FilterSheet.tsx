@@ -5,7 +5,13 @@ import { useTranslations } from 'next-intl'
 import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import { amenityLabel, districtLabel, governorateLabel, subcategoryLabel } from '../lib/labels'
+import {
+  amenityLabel,
+  districtLabel,
+  governorateLabel,
+  priceBandLabel,
+  subcategoryLabel,
+} from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -111,9 +117,6 @@ export function FilterSheet({
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
 }) {
-  // `ar` remains for the price-band names, which are taxonomy (en/ar) from
-  // @vardenia/core; the sheet's own chrome uses `t`.
-  const ar = locale === 'ar'
   const t = useTranslations('filters')
   const router = useRouter()
   const ref = useRef<HTMLDialogElement>(null)
@@ -380,7 +383,7 @@ export function FilterSheet({
                         ? 'bg-cedar-900 text-gold-300'
                         : 'text-ink-700 hover:bg-surface-sunken'
                     }`}
-                    title={ar ? p.ar : p.en}
+                    title={priceBandLabel(p.slug, locale)}
                   >
                     {p.marks}
                   </button>
