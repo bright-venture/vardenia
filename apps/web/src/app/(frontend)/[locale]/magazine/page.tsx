@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
@@ -67,12 +67,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
-  const ar = locale === 'ar'
+  const t = await getTranslations({ locale })
   return {
-    title: ar ? 'المجلة' : 'Magazine',
-    description: ar
-      ? 'تحقيقات وأدلة وجهات وأعداد فاردينيا المطبوعة.'
-      : 'Features, destination guides and the Vardenia print archive.',
+    title: t('magazine.title'),
+    description: t('magazine.metaDescription'),
     alternates: alternatesFor('/magazine', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
@@ -82,7 +80,7 @@ export default async function MagazinePage({ params }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const [articles, issues] = await Promise.all([
     findArticles({ locale, perPage: 6 }),
     findIssues(locale),
@@ -95,10 +93,10 @@ export default async function MagazinePage({ params }: Props) {
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header>
         <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {ar ? 'اكتشف لبنان' : 'Discover Lebanon'}
+          {t('magazine.discoverLebanon')}
         </p>
         <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {ar ? 'المجلة' : 'Magazine'}
+          {t('magazine.title')}
         </h1>
       </header>
 
@@ -120,7 +118,7 @@ export default async function MagazinePage({ params }: Props) {
 
           <div>
             <p className="text-ink-500 text-xs uppercase tracking-widest">
-              {ar ? 'العدد الحالي' : 'Current issue'}
+              {t('magazine.currentIssue')}
             </p>
             <h2 className="font-display text-ink-900 mt-2 text-3xl leading-snug">
               <Link href={`/magazine/issues/${current.slug}`}>{current.title}</Link>
@@ -129,10 +127,10 @@ export default async function MagazinePage({ params }: Props) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href={`/magazine/issues/${current.slug}`} variant="solid">
-                {ar ? 'ماذا في هذا العدد' : 'What is in this issue'}
+                {t('magazine.whatsInIssue')}
               </ButtonLink>
               <ButtonLink href="/magazine/issues" variant="outline">
-                {ar ? 'كل الأعداد' : 'All issues'}
+                {t('magazine.allIssues')}
               </ButtonLink>
             </div>
           </div>
@@ -142,20 +140,18 @@ export default async function MagazinePage({ params }: Props) {
       <section className="border-ink-100 mt-16 border-t pt-12">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-            {ar ? 'أحدث المقالات' : 'Latest articles'}
+            {t('magazine.latestArticles')}
           </h2>
           <Link
             href="/magazine/articles"
             className="text-gold-700 text-sm underline underline-offset-4"
           >
-            {ar ? 'كل المقالات' : 'All articles'}
+            {t('magazine.allArticles')}
           </Link>
         </div>
 
         {articles.docs.length === 0 ? (
-          <p className="text-ink-500 mt-6 text-sm">
-            {ar ? 'لا توجد مقالات بعد.' : 'No articles yet.'}
-          </p>
+          <p className="text-ink-500 mt-6 text-sm">{t('magazine.noArticles')}</p>
         ) : (
           <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {articles.docs.map((article) => (

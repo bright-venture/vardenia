@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
-import { isLocale, type Locale } from '@vardenia/i18n'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { useTranslations } from 'next-intl'
+import { isLocale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { search } from '../../../../lib/search'
 import { ListingGrid } from '../../../../components/ListingGrid'
@@ -35,8 +36,9 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
+  const t = await getTranslations({ locale })
   return {
-    title: locale === 'ar' ? 'بحث' : 'Search',
+    title: t('search.title'),
     robots: { index: false, follow: true },
   }
 }
@@ -47,13 +49,13 @@ export default async function SearchPage({ params, searchParams }: Props) {
   setRequestLocale(locale)
 
   const { q } = await searchParams
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const results = await search({ locale, q: q ?? '' })
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
       <header>
-        <Eyebrow>{ar ? 'فاردينيا' : 'Vardenia'}</Eyebrow>
+        <Eyebrow>{t('common.brand')}</Eyebrow>
         {/*
           The same masthead treatment the directory got: a mono kicker over a
           title set as large as the page can carry. A search page is a real
@@ -61,18 +63,16 @@ export default async function SearchPage({ params, searchParams }: Props) {
           submits to it - and at `text-4xl` it read as a utility screen bolted
           onto the side of the product.
         */}
-        <h1 className="text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">
-          {ar ? 'بحث' : 'Search'}
-        </h1>
+        <h1 className="text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">{t('search.title')}</h1>
         <div className="mt-10 max-w-2xl">
           <SearchForm locale={locale} initial={results.query ?? ''} />
         </div>
       </header>
 
       {results.query === null ? (
-        <Prompt locale={locale} />
+        <Prompt />
       ) : results.total === 0 ? (
-        <NoResults locale={locale} query={results.query} />
+        <NoResults query={results.query} />
       ) : (
         <>
           {/*
@@ -85,21 +85,19 @@ export default async function SearchPage({ params, searchParams }: Props) {
             dir="auto"
             className="text-ink-500 mt-14 font-mono text-[11px] uppercase tracking-[0.16em]"
           >
-            {ar
-              ? `${results.total} نتيجة لـ "${results.query}"`
-              : `${results.total} ${results.total === 1 ? 'result' : 'results'} for "${results.query}"`}
+            {t('search.resultCount', { count: results.total, query: results.query })}
           </p>
 
           {results.listings.totalDocs > 0 ? (
             <section className="mt-8">
-              <h2 className="text-ink-900 text-3xl">{ar ? 'أماكن' : 'Places'}</h2>
+              <h2 className="text-ink-900 text-3xl">{t('search.places')}</h2>
               <div className="mt-8">
                 <ListingGrid
                   listings={results.listings.docs}
                   locale={locale}
                   // Listings are the first block of results on the page.
                   eager
-                  empty={ar ? 'لا شيء' : 'Nothing'}
+                  empty={t('search.nothing')}
                 />
               </div>
             </section>
@@ -107,7 +105,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
           {results.articles.totalDocs > 0 ? (
             <section className="border-ink-100 mt-16 border-t pt-10">
-              <h2 className="text-ink-900 text-3xl">{ar ? 'مقالات' : 'Reading'}</h2>
+              <h2 className="text-ink-900 text-3xl">{t('search.reading')}</h2>
               <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {results.articles.docs.map((article) => (
                   <ArticleCard
@@ -131,14 +129,10 @@ export default async function SearchPage({ params, searchParams }: Props) {
 }
 
 /** Before anything has been typed. */
-function Prompt({ locale }: { locale: Locale }) {
-  const ar = locale === 'ar'
+function Prompt() {
+  const t = useTranslations('search')
   return (
-    <p className="font-display text-ink-500 mt-14 max-w-lg text-2xl leading-snug">
-      {ar
-        ? 'ابحث عن فندق أو مطعم أو مقال. حرفان على الأقل.'
-        : 'Look for a hotel, a restaurant, or something to read. Two letters or more.'}
-    </p>
+    <p className="font-display text-ink-500 mt-14 max-w-lg text-2xl leading-snug">{t('prompt')}</p>
   )
 }
 
@@ -149,25 +143,21 @@ function Prompt({ locale }: { locale: Locale }) {
  * young, "nothing matched" is usually a fact about us rather than about the
  * search, and browsing is the thing that actually helps.
  */
-function NoResults({ locale, query }: { locale: Locale; query: string }) {
-  const ar = locale === 'ar'
+function NoResults({ query }: { query: string }) {
+  const t = useTranslations('search')
   return (
     <div className="mt-14">
       {/* The query set in display type rather than the apology. `dir="auto"` so
           an Arabic term is not reversed inside an English sentence. */}
       <p dir="auto" className="font-display text-ink-700 max-w-lg text-2xl leading-snug">
-        {ar ? `لا نتائج لـ "${query}".` : `Nothing matched "${query}".`}
+        {t('noResultsFor', { query })}
       </p>
-      <p className="text-ink-500 mt-3 text-sm">
-        {ar
-          ? 'جرّب كلمة أقصر، أو تصفّح الدليل.'
-          : 'Try a shorter word, or browse the directory instead.'}
-      </p>
+      <p className="text-ink-500 mt-3 text-sm">{t('noResultsHint')}</p>
       <Link
         href="/directory"
         className="text-gold-700 hover:text-ink-900 mt-6 inline-block underline underline-offset-4"
       >
-        {ar ? 'تصفّح الدليل' : 'Browse the directory'}
+        {t('browse')}
       </Link>
     </div>
   )

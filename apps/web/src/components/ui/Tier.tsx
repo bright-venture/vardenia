@@ -1,4 +1,4 @@
-import type { Locale } from '@vardenia/i18n'
+import { useTranslations } from 'next-intl'
 
 /**
  * The badge on a listing that says what kind of listing it is.
@@ -15,19 +15,14 @@ import type { Locale } from '@vardenia/i18n'
  * has to refuse. So verified is cedar - the brand saying it stands behind this
  * - and signature is gold, the commercial mark. A place can carry both.
  *
- * # Why the label is written out per locale
+ * # Why the label comes from the catalogue
  *
- * Same reason as ListingCard: this is synchronous and already has the locale.
- * What it must not be is the English string on a site half its readers use in
- * Arabic.
+ * `useTranslations` is isomorphic in next-intl, so this stays synchronous and
+ * needs no locale prop while still reading the right language. What it must not
+ * be is the English string on a site whose readers use it in ten languages.
  */
 
-const LABELS = {
-  verified: { en: 'Verified', ar: 'موثّق' },
-  signature: { en: 'Signature', ar: 'مميّز' },
-} as const
-
-export type TierKind = keyof typeof LABELS
+export type TierKind = 'verified' | 'signature'
 
 /**
  * Both measured on the ivory ground, because a badge is small type and small
@@ -39,31 +34,12 @@ const STYLES = {
   signature: 'bg-gold-700 text-surface-base',
 } as const
 
-/**
- * The long form, for a tooltip and for anyone listening rather than looking.
- *
- * The verified pair is the wording that was already on the site and already
- * reviewed by an Arabic speaker, kept verbatim rather than improved. A better
- * English sentence is not worth an unreviewed Arabic one.
- *
- * The signature pair is new and its Arabic has NOT been reviewed yet.
- */
-const DESCRIPTIONS = {
-  verified: { en: 'Verified by Vardenia', ar: 'موثّق من فاردينيا' },
-  signature: { en: 'A Vardenia Signature listing', ar: 'إدراج مميّز من فاردينيا' },
-} as const
-
-export function Tier({
-  kind,
-  locale,
-  className = '',
-}: {
-  kind: TierKind
-  locale: Locale
-  className?: string
-}) {
-  const ar = locale === 'ar'
-  const full = ar ? DESCRIPTIONS[kind].ar : DESCRIPTIONS[kind].en
+export function Tier({ kind, className = '' }: { kind: TierKind; className?: string }) {
+  const t = useTranslations()
+  // The long form, for a tooltip and for anyone listening rather than looking.
+  // Verified reuses the directory description (already reviewed in Arabic); the
+  // signature long form lives under `tier`.
+  const full = kind === 'verified' ? t('directory.verified') : t('tier.signatureLong')
 
   return (
     /**
@@ -82,7 +58,7 @@ export function Tier({
       title={full}
       className={`font-mono text-[9.5px] font-medium uppercase tracking-[0.13em] ${STYLES[kind]} px-2 py-1 ${className}`}
     >
-      {ar ? LABELS[kind].ar : LABELS[kind].en}
+      {t(`tier.${kind}`)}
     </span>
   )
 }

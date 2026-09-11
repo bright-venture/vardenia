@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { AMENITIES, AMENITY_SLUGS, GOVERNORATES, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
@@ -179,7 +180,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-export function ListingFilters({
+export async function ListingFilters({
   base,
   state,
   subcategories,
@@ -207,7 +208,7 @@ export function ListingFilters({
    */
   counts?: Record<string, number>
 }) {
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
 
   /**
@@ -284,7 +285,7 @@ export function ListingFilters({
           earlier version of this comment being wrong about the cause.
         */}
         <div className="min-w-0 flex-1">
-          <Row label={ar ? 'المحافظة' : 'Governorate'}>
+          <Row label={t('directory.governorate')}>
             {/*
               "All of Lebanon" carries the total, so the row adds up: the sum of
               the regions shown plus those behind Filters is the number on the
@@ -295,7 +296,7 @@ export function ListingFilters({
               active={!state.governorate}
               count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
             >
-              {ar ? 'كل لبنان' : 'All of Lebanon'}
+              {t('filters.allOfLebanon')}
             </FilterChip>
             {shown.map((g) => (
               <FilterChip
@@ -332,7 +333,7 @@ export function ListingFilters({
         is one tap rather than a round trip through the modal.
       */}
       {narrowed || state.subcategory ? (
-        <Row label={ar ? 'الفلاتر المطبقة' : 'Applied filters'}>
+        <Row label={t('directory.appliedFilters')}>
           {state.subcategory ? (
             <FilterChip href={href({ subcategory: undefined })} active>
               {subcategoryLabel(state.subcategory, locale)}
@@ -381,7 +382,7 @@ export function ListingFilters({
             href={base}
             className="text-gold-700 hover:text-ink-900 text-sm underline underline-offset-4"
           >
-            {ar ? 'مسح الفلاتر' : 'Clear filters'}
+            {t('filters.clearFilters')}
           </Link>
         </p>
       ) : null}

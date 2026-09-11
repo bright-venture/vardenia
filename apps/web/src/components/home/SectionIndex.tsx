@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { ArrowUpRight } from 'lucide-react'
 import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
@@ -55,9 +56,10 @@ const SECTION_IMAGES: Record<string, string> = {
 
 export function SectionIndex({ locale }: { locale: Locale }) {
   const ar = locale === 'ar'
+  const t = useTranslations('directory')
 
   return (
-    <nav aria-label={ar ? 'أقسام الدليل' : 'Directory sections'}>
+    <nav aria-label={t('sections')}>
       <ul className="border-ink-100 border-t">
         {SECTIONS.map((section, index) => (
           <li key={section.path}>

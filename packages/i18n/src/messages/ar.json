@@ -11,7 +11,14 @@
     "regions": "المناطق",
     "about": "من نحن",
     "advertise": "أعلن معنا",
-    "saved": "الأماكن المحفوظة"
+    "saved": "الأماكن المحفوظة",
+    "search": "بحث",
+    "menu": "القائمة",
+    "aboutVardenia": "عن فاردينيا",
+    "aboutVardeniaNote": "من نحن وكيف نصنع الدليل",
+    "addBusinessNote": "انضم إلى الدليل مطبوعاً ورقمياً",
+    "questions": "أسئلة شائعة",
+    "contact": "اتصل بنا"
   },
   "home": {
     "eyebrow": "العدد الأول, بيروت وجبل لبنان",
@@ -64,7 +71,35 @@
     "clearFilters": "مسح الفلاتر",
     "emptyFiltered": "لا شيء هنا يطابق كل الفلاتر المختارة. جرّب إزالة أحدها أو توسيع المنطقة.",
     "emptySection": "لم ننشر شيئاً هنا بعد. نضيف أماكن جديدة مع كل عدد.",
-    "scanArrival": "من رمز في المجلة"
+    "scanArrival": "من رمز في المجلة",
+    "title": "الدليل",
+    "discoverLebanon": "اكتشف لبنان",
+    "view": "طريقة العرض",
+    "list": "قائمة",
+    "map": "خريطة",
+    "all": "الكل",
+    "directoryMap": "خريطة الدليل",
+    "nothingToMap": "لا شيء على الخريطة بعد",
+    "viewList": "اعرض القائمة",
+    "closedNow": "مغلق الآن",
+    "address": "العنوان",
+    "type": "التصنيف",
+    "price": "السعر",
+    "openingHours": "ساعات العمل",
+    "showWeek": "عرض الأسبوع",
+    "gallery": "الصور",
+    "nearby": "قريب من هنا",
+    "moreLikeThis": "أماكن مشابهة",
+    "browse": "تصفّح الدليل",
+    "closed": "مغلق",
+    "governorate": "المحافظة",
+    "appliedFilters": "الفلاتر المطبقة",
+    "sections": "أقسام الدليل",
+    "metaDescription": "فنادق ومطاعم وتجارب مختارة في لبنان.",
+    "mapPinnedOnly": "تظهر على الخريطة الأماكن ذات الموقع المحدد فقط.",
+    "nothingToMapBody": "لا يحمل أيٌّ من هذه الأماكن موقعاً محدداً على الخريطة بعد. المواقع تُضاف تدريجياً؛ حتى ذلك الحين تجدها كلها في القائمة.",
+    "sectionMap": "خريطة {name}",
+    "ctaBanner": "فنادق ومطاعم وتجارب مختارة في لبنان، في المجلة وعلى الإنترنت."
   },
   "booking": {
     "heading": "احجز طاولة",
@@ -179,7 +214,8 @@
     "strengthAdvice": "الأول وحده مطلوب. الطول يبقى أهم من كل ما سواه.",
     "rule_number": "رقم",
     "rule_symbol": "رمز خاص",
-    "rule_case": "حرف كبير وآخر صغير"
+    "rule_case": "حرف كبير وآخر صغير",
+    "details": "تفاصيلك"
   },
   "partner": {
     "eyebrow": "للشركاء",
@@ -265,6 +301,119 @@
     "retry": "إعادة المحاولة",
     "close": "إغلاق",
     "save": "حفظ",
-    "saved": "محفوظ"
+    "saved": "محفوظ",
+    "brand": "فاردينيا",
+    "homepage": "الصفحة الرئيسية",
+    "onGoogle": "على غوغل"
+  },
+  "footer": {
+    "discover": "اكتشف",
+    "read": "اقرأ",
+    "company": "الشركة",
+    "business": "للأعمال",
+    "issues": "الأعداد",
+    "articles": "مقالات",
+    "directory": "الدليل",
+    "about": "من نحن",
+    "questions": "أسئلة شائعة",
+    "contact": "اتصل بنا",
+    "addBusiness": "أضف عملك",
+    "partnerWithUs": "كن شريكاً",
+    "advertise": "أعلن معنا",
+    "partnerSignIn": "دخول الشركاء",
+    "rights": "كل الحقوق محفوظة.",
+    "legal": "قانوني",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام",
+    "tagline": "دليل لبنان للسياحة ونمط الحياة، منسّق وموثّق."
+  },
+  "filters": {
+    "filters": "الفلاتر",
+    "close": "إغلاق",
+    "region": "المنطقة",
+    "allOfLebanon": "كل لبنان",
+    "kind": "النوع",
+    "district": "القضاء",
+    "price": "السعر",
+    "features": "المرافق",
+    "clearAll": "مسح الكل",
+    "showResults": "عرض النتائج",
+    "clearFilters": "مسح الفلاتر"
+  },
+  "magazine": {
+    "title": "المجلة",
+    "discoverLebanon": "اكتشف لبنان",
+    "articles": "المقالات",
+    "issues": "الأعداد",
+    "noArticles": "لا توجد مقالات بعد.",
+    "noIssues": "لا توجد أعداد بعد.",
+    "placesInStory": "أماكن وردت في هذا المقال",
+    "printArchive": "أرشيف أعداد فاردينيا المطبوعة.",
+    "readDigital": "تصفح النسخة الرقمية",
+    "inThisIssue": "في هذا العدد",
+    "currentIssue": "العدد الحالي",
+    "whatsInIssue": "ماذا في هذا العدد",
+    "allIssues": "كل الأعداد",
+    "latestArticles": "أحدث المقالات",
+    "allArticles": "كل المقالات",
+    "metaDescription": "تحقيقات وأدلة وجهات وأعداد فاردينيا المطبوعة.",
+    "articlesMetaDescription": "تحقيقات وأدلة وجهات ومقابلات من فاردينيا.",
+    "issueNumber": "العدد {number}",
+    "pageCount": "{count} صفحة",
+    "issueMetaDescription": "العدد {number} من فاردينيا.",
+    "noArticlesInIssue": "لم تُضف مقالات إلى هذا العدد بعد."
+  },
+  "search": {
+    "title": "بحث",
+    "places": "أماكن",
+    "reading": "مقالات",
+    "nothing": "لا شيء",
+    "placeholder": "فندق، مطعم، مقال",
+    "browse": "تصفّح الدليل",
+    "resultCount": "{count} نتيجة لـ \"{query}\"",
+    "prompt": "ابحث عن فندق أو مطعم أو مقال. حرفان على الأقل.",
+    "noResultsFor": "لا نتائج لـ \"{query}\".",
+    "noResultsHint": "جرّب كلمة أقصر، أو تصفّح الدليل."
+  },
+  "errorPage": {
+    "title": "حدث خطأ ما",
+    "tryAgain": "إعادة المحاولة",
+    "browse": "تصفّح الدليل",
+    "reference": "رقم الخطأ:",
+    "body": "المشكلة من جهتنا وليست منك. حاول مرة أخرى بعد لحظات، أو تصفّح الدليل."
+  },
+  "scan": {
+    "moved": "هذه القائمة لم تعد متاحة",
+    "code": "الرمز:",
+    "notFound": "لم نتعرف على هذا الرمز",
+    "codeReceived": "الرمز الذي تلقيناه:",
+    "browse": "تصفّح الدليل",
+    "homepage": "الصفحة الرئيسية",
+    "movedBody": "الرمز صحيح، لكن هذه الوجهة لم تعد مدرجة لدينا. قد يكون المكان أغلق أو انتهت فترة إدراجه. إليك بدائل قريبة.",
+    "notFoundBody": "قد يكون الرمز غير واضح في الطباعة، أو أُدخل بشكل غير صحيح. جرّب المسح مرة أخرى، أو تصفّح الدليل."
+  },
+  "days": {
+    "mon": "الاثنين",
+    "tue": "الثلاثاء",
+    "wed": "الأربعاء",
+    "thu": "الخميس",
+    "fri": "الجمعة",
+    "sat": "السبت",
+    "sun": "الأحد"
+  },
+  "stars": {
+    "rating": "{rating} من 5",
+    "ratingCount": "{rating} من 5، من {count} تقييم"
+  },
+  "article": {
+    "byAuthor": "بقلم {name}",
+    "paidPartnership": "محتوى مدفوع.",
+    "paidPartnershipWith": "محتوى مدفوع بالتعاون مع {sponsor}.",
+    "pageLabel": "صفحة {range}"
+  },
+  "tier": {
+    "verified": "موثّق",
+    "signature": "مميّز",
+    "signatureLong": "إدراج مميّز من فاردينيا"
   }
 }

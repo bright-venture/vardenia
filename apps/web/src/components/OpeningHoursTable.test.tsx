@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from '@vardenia/i18n/messages'
 import { OpeningHoursTable } from './OpeningHoursTable'
 import type { OpeningHour } from '../lib/hours'
 
@@ -18,7 +20,11 @@ import type { OpeningHour } from '../lib/hours'
  */
 
 const render = (hours: OpeningHour[] | null | undefined, locale: 'en' | 'ar' = 'en') =>
-  renderToStaticMarkup(<OpeningHoursTable hours={hours} locale={locale} />)
+  renderToStaticMarkup(
+    <NextIntlClientProvider locale={locale} timeZone="Asia/Beirut" messages={getMessages(locale)}>
+      <OpeningHoursTable hours={hours} />
+    </NextIntlClientProvider>,
+  )
 
 const text = (html: string) =>
   html

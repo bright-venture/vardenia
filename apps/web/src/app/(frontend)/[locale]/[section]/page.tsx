@@ -91,12 +91,12 @@ export default async function SectionPage({ params, searchParams }: Props) {
   const section = sectionForPath(path)
   if (!section) notFound()
 
+  const t = await getTranslations('directory')
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header>
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {locale === 'ar' ? 'اكتشف لبنان' : 'Discover Lebanon'}
-        </p>
+        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('discoverLebanon')}</p>
         <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
           {nameFor(section, locale)}
         </h1>
@@ -123,7 +123,6 @@ async function SectionResults({
 }) {
   const { page, view, ...raw } = await searchParams
   const t = await getTranslations('directory')
-  const ar = locale === 'ar'
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
 
@@ -181,21 +180,15 @@ async function SectionResults({
               {t('resultCount', { count: total })}
             </p>
           ) : null}
-          {isMap ? (
-            <p className="text-ink-500 mt-1 text-xs">
-              {ar
-                ? 'تظهر على الخريطة الأماكن ذات الموقع المحدد فقط.'
-                : 'Only places with a pinned location appear on the map.'}
-            </p>
-          ) : null}
+          {isMap ? <p className="text-ink-500 mt-1 text-xs">{t('mapPinnedOnly')}</p> : null}
         </div>
 
-        <div className="flex shrink-0 gap-2" aria-label={ar ? 'طريقة العرض' : 'View'}>
+        <div className="flex shrink-0 gap-2" aria-label={t('view')}>
           <FilterChip href={listHref} active={!isMap}>
-            {ar ? 'قائمة' : 'List'}
+            {t('list')}
           </FilterChip>
           <FilterChip href={mapHref} active={isMap}>
-            {ar ? 'خريطة' : 'Map'}
+            {t('map')}
           </FilterChip>
         </div>
       </div>
@@ -211,7 +204,7 @@ async function SectionResults({
       {isMap ? (
         points && points.length > 0 ? (
           <DirectoryMap
-            label={ar ? `خريطة ${nameFor(section, locale)}` : `${nameFor(section, locale)} map`}
+            label={t('sectionMap', { name: nameFor(section, locale) })}
             directionsLabel={t('getDirections')}
             frame={boundsForRegion(state.governorate)}
             pins={points.map((p): MapPin => ({
@@ -232,15 +225,11 @@ async function SectionResults({
           <ListingGrid
             listings={[]}
             locale={locale}
-            empty={ar ? 'لا شيء على الخريطة بعد' : 'Nothing to map yet'}
-            emptyBody={
-              ar
-                ? 'لا يحمل أيٌّ من هذه الأماكن موقعاً محدداً على الخريطة بعد. المواقع تُضاف تدريجياً؛ حتى ذلك الحين تجدها كلها في القائمة.'
-                : 'None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.'
-            }
+            empty={t('nothingToMap')}
+            emptyBody={t('nothingToMapBody')}
             emptyAction={
               <Link href={listHref} className={LINK}>
-                {ar ? 'اعرض القائمة' : 'View the list'}
+                {t('viewList')}
               </Link>
             }
           />

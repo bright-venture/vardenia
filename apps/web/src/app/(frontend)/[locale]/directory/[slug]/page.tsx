@@ -111,7 +111,6 @@ export default async function ListingPage({ params }: Params) {
   const listing = await findListingBySlug(slug, locale)
   if (!listing) notFound()
 
-  const ar = locale === 'ar'
   const t = await getTranslations('directory')
   /**
    * A real photograph, or nothing.
@@ -237,7 +236,7 @@ export default async function ListingPage({ params }: Params) {
             <span aria-hidden className="rtl:-scale-x-100">
               &larr;
             </span>
-            {ar ? 'الدليل' : 'Directory'}
+            {t('title')}
           </Link>
 
           {/*
@@ -288,7 +287,6 @@ export default async function ListingPage({ params }: Params) {
                     ? listing.googleRatingCount
                     : undefined
                 }
-                locale={locale as Locale}
                 inverse
               />
             ) : null}
@@ -309,7 +307,7 @@ export default async function ListingPage({ params }: Params) {
                     open ? 'bg-state-success' : 'bg-cedar-100/50'
                   }`}
                 />
-                {open ? t('openNow') : ar ? 'مغلق الآن' : 'Closed now'}
+                {open ? t('openNow') : t('closedNow')}
               </span>
             ) : null}
 
@@ -376,7 +374,7 @@ export default async function ListingPage({ params }: Params) {
             {hasRows ? (
               <dl>
                 {listing.address ? (
-                  <Row label={ar ? 'العنوان' : 'Address'}>
+                  <Row label={t('address')}>
                     <p className="whitespace-pre-line">{listing.address}</p>
                     {point ? (
                       <a
@@ -392,7 +390,7 @@ export default async function ListingPage({ params }: Params) {
                 ) : null}
 
                 {subcategories.length > 0 ? (
-                  <Row label={ar ? 'التصنيف' : 'Type'}>
+                  <Row label={t('type')}>
                     {subcategories
                       .map((sub) => subcategoryLabel(sub, locale as Locale))
                       .join(' · ')}
@@ -400,7 +398,7 @@ export default async function ListingPage({ params }: Params) {
                 ) : null}
 
                 {price ? (
-                  <Row label={ar ? 'السعر' : 'Price'}>
+                  <Row label={t('price')}>
                     <span className="font-mono tabular-nums">{price}</span>
                   </Row>
                 ) : null}
@@ -426,10 +424,10 @@ export default async function ListingPage({ params }: Params) {
               <details className="border-ink-100 group border-b py-5">
                 <summary className="flex cursor-pointer list-none items-center gap-4 sm:grid sm:grid-cols-[180px_1fr]">
                   <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                    {ar ? 'ساعات العمل' : 'Opening hours'}
+                    {t('openingHours')}
                   </span>
                   <span className="text-ink-700 ms-auto text-sm sm:ms-0">
-                    {ar ? 'عرض الأسبوع' : 'Show the week'}
+                    {t('showWeek')}
                     <span
                       aria-hidden
                       className="text-ink-500 ms-2 inline-block transition-transform group-open:rotate-180"
@@ -439,10 +437,7 @@ export default async function ListingPage({ params }: Params) {
                   </span>
                 </summary>
                 <div className="mt-4 sm:ps-[180px]">
-                  <OpeningHoursTable
-                    hours={listing.openingHours as never}
-                    locale={locale as Locale}
-                  />
+                  <OpeningHoursTable hours={listing.openingHours as never} />
                 </div>
               </details>
             ) : null}
@@ -476,7 +471,7 @@ export default async function ListingPage({ params }: Params) {
           {gallery.length > 0 ? (
             <section className="mt-16">
               <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                {ar ? 'الصور' : 'Gallery'}
+                {t('gallery')}
               </h2>
               <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
                 {gallery.map((image) => (
@@ -536,10 +531,8 @@ export default async function ListingPage({ params }: Params) {
       {related.length > 0 ? (
         <section className="bg-surface-raised border-ink-100 border-t">
           <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-            <Eyebrow>{ar ? 'قريب من هنا' : 'Nearby'}</Eyebrow>
-            <h2 className="text-ink-900 mt-3 text-3xl sm:text-4xl">
-              {ar ? 'أماكن مشابهة' : 'More like this'}
-            </h2>
+            <Eyebrow>{t('nearby')}</Eyebrow>
+            <h2 className="text-ink-900 mt-3 text-3xl sm:text-4xl">{t('moreLikeThis')}</h2>
             <div className="mt-10">
               <ListingGrid
                 listings={related}
@@ -560,9 +553,7 @@ export default async function ListingPage({ params }: Params) {
       <section className="bg-cedar-900">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-6 py-12">
           <p className="text-surface-base font-display max-w-xl text-xl leading-snug">
-            {ar
-              ? 'فنادق ومطاعم وتجارب مختارة في لبنان، في المجلة وعلى الإنترنت.'
-              : 'Curated hotels, restaurants and experiences across Lebanon, in print and online.'}
+            {t('ctaBanner')}
           </p>
           {/*
             Gold outline on navy. The kit's ButtonLink has no variant for this -
@@ -574,7 +565,7 @@ export default async function ListingPage({ params }: Params) {
             href="/directory"
             className="border-gold-300 text-gold-300 hover:bg-gold-300 hover:text-cedar-900 inline-flex h-12 items-center border px-6 text-sm font-semibold transition-colors"
           >
-            {ar ? 'تصفّح الدليل' : 'Browse the directory'}
+            {t('browse')}
           </Link>
         </div>
       </section>

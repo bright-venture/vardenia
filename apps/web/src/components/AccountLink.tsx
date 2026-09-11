@@ -1,7 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import type { Locale } from '@vardenia/i18n'
+import { useTranslations } from 'next-intl'
 import { Link } from '../i18n/routing'
 import { sessionAudience } from '../lib/session-hint'
 
@@ -43,8 +43,8 @@ const subscribe = (onChange: () => void) => {
   }
 }
 
-export function AccountLink({ locale }: { locale: Locale }) {
-  const ar = locale === 'ar'
+export function AccountLink() {
+  const t = useTranslations()
 
   // Third argument is the server snapshot: nothing is known there, so the
   // signed-out links are what gets prerendered.
@@ -53,7 +53,7 @@ export function AccountLink({ locale }: { locale: Locale }) {
   if (audience === 'customer') {
     return (
       <Link href="/account" className="text-ink-700 hover:text-ink-900 transition-colors">
-        {ar ? 'حسابك' : 'Your account'}
+        {t('account.title')}
       </Link>
     )
   }
@@ -70,7 +70,7 @@ export function AccountLink({ locale }: { locale: Locale }) {
   if (audience === 'partner') {
     return (
       <Link href="/partner" className="text-ink-700 hover:text-ink-900 transition-colors">
-        {ar ? 'حجوزاتك' : 'Your bookings'}
+        {t('account.bookings')}
       </Link>
     )
   }
@@ -78,7 +78,7 @@ export function AccountLink({ locale }: { locale: Locale }) {
   return (
     <span className="flex items-center gap-3">
       <Link href="/account/login" className="text-ink-700 hover:text-ink-900 transition-colors">
-        {ar ? 'تسجيل الدخول' : 'Sign in'}
+        {t('account.signIn')}
       </Link>
       {/* The one deliberately solid control in the header. Opening an account is
           the only thing here we are asking a reader to do, rather than offering. */}
@@ -86,7 +86,7 @@ export function AccountLink({ locale }: { locale: Locale }) {
         href="/account/signup"
         className="bg-cedar-900 text-surface-base px-4 py-2 text-sm transition-opacity hover:opacity-90"
       >
-        {ar ? 'إنشاء حساب' : 'Sign up'}
+        {t('account.signUp')}
       </Link>
     </span>
   )

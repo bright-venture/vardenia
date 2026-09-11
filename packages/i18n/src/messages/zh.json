@@ -11,7 +11,14 @@
     "regions": "地区",
     "about": "关于",
     "advertise": "在我们这里投放广告",
-    "saved": "已收藏的地点"
+    "saved": "已收藏的地点",
+    "search": "搜索",
+    "menu": "菜单",
+    "aboutVardenia": "关于 Vardenia",
+    "aboutVardeniaNote": "我们是谁，以及名录如何编成",
+    "addBusinessNote": "登上印刷版与线上",
+    "questions": "常见问题",
+    "contact": "联系"
   },
   "home": {
     "eyebrow": "第 01 期，贝鲁特与黎巴嫩山",
@@ -64,7 +71,35 @@
     "clearFilters": "清除筛选",
     "emptyFiltered": "没有内容符合您启用的全部筛选条件。试着去掉一个，或扩大范围。",
     "emptySection": "我们尚未在此发布任何内容。每一期都会加入新的地点。",
-    "scanArrival": "从杂志扫码而来"
+    "scanArrival": "从杂志扫码而来",
+    "title": "名录",
+    "discoverLebanon": "探索黎巴嫩",
+    "view": "视图",
+    "list": "列表",
+    "map": "地图",
+    "all": "全部",
+    "directoryMap": "名录地图",
+    "nothingToMap": "暂无可显示在地图上的内容",
+    "viewList": "查看列表",
+    "closedNow": "现已关闭",
+    "address": "地址",
+    "type": "类型",
+    "price": "价格",
+    "openingHours": "营业时间",
+    "showWeek": "显示本周",
+    "gallery": "图库",
+    "nearby": "附近",
+    "moreLikeThis": "更多类似",
+    "browse": "浏览名录",
+    "closed": "休息",
+    "governorate": "省",
+    "appliedFilters": "已应用筛选",
+    "sections": "名录板块",
+    "metaDescription": "精选自黎巴嫩各地的酒店、餐厅与体验。",
+    "mapPinnedOnly": "只有标注了位置的地方才会显示在地图上。",
+    "nothingToMapBody": "这些地方目前都还没有标注位置，因此都无法显示在地图上。位置正在陆续添加；在此之前，它们都在列表中。",
+    "sectionMap": "{name} 地图",
+    "ctaBanner": "精选自黎巴嫩各地的酒店、餐厅与体验，见于印刷版与线上。"
   },
   "booking": {
     "heading": "预订餐位",
@@ -179,7 +214,8 @@
     "strengthAdvice": "只有第一项是必需的。长度对您的帮助仍大于其他任何一项。",
     "rule_number": "一个数字",
     "rule_symbol": "一个特殊字符",
-    "rule_case": "大小写字母"
+    "rule_case": "大小写字母",
+    "details": "您的资料"
   },
   "partner": {
     "eyebrow": "面向合作伙伴",
@@ -265,6 +301,119 @@
     "retry": "重试",
     "close": "关闭",
     "save": "保存",
-    "saved": "已保存"
+    "saved": "已保存",
+    "brand": "Vardenia",
+    "homepage": "前往首页",
+    "onGoogle": "来自 Google"
+  },
+  "footer": {
+    "discover": "探索",
+    "read": "阅读",
+    "company": "公司",
+    "business": "面向商户",
+    "issues": "各期",
+    "articles": "文章",
+    "directory": "名录",
+    "about": "关于",
+    "questions": "常见问题",
+    "contact": "联系",
+    "addBusiness": "添加您的商户",
+    "partnerWithUs": "成为合作伙伴",
+    "advertise": "投放广告",
+    "partnerSignIn": "合作伙伴登录",
+    "rights": "版权所有。",
+    "legal": "法律",
+    "privacy": "隐私",
+    "terms": "条款",
+    "tagline": "黎巴嫩旅游与生活方式指南，精选并核实。"
+  },
+  "filters": {
+    "filters": "筛选",
+    "close": "关闭筛选",
+    "region": "地区",
+    "allOfLebanon": "全黎巴嫩",
+    "kind": "种类",
+    "district": "区",
+    "price": "价格",
+    "features": "设施",
+    "clearAll": "全部清除",
+    "showResults": "显示结果",
+    "clearFilters": "清除筛选"
+  },
+  "magazine": {
+    "title": "杂志",
+    "discoverLebanon": "探索黎巴嫩",
+    "articles": "文章",
+    "issues": "各期",
+    "noArticles": "暂无文章。",
+    "noIssues": "暂无期号。",
+    "placesInStory": "本文提到的地方",
+    "printArchive": "Vardenia 印刷版存档。",
+    "readDigital": "阅读电子版",
+    "inThisIssue": "本期内容",
+    "currentIssue": "本期",
+    "whatsInIssue": "本期有什么",
+    "allIssues": "所有期号",
+    "latestArticles": "最新文章",
+    "allArticles": "所有文章",
+    "metaDescription": "特写、目的地指南以及 Vardenia 的印刷版存档。",
+    "articlesMetaDescription": "来自 Vardenia 的特写、目的地指南与访谈。",
+    "issueNumber": "第 {number} 期",
+    "pageCount": "{count} 页",
+    "issueMetaDescription": "Vardenia 第 {number} 期。",
+    "noArticlesInIssue": "本期尚未添加文章。"
+  },
+  "search": {
+    "title": "搜索",
+    "places": "地点",
+    "reading": "文章",
+    "nothing": "无",
+    "placeholder": "酒店、餐厅、文章",
+    "browse": "浏览名录",
+    "resultCount": "“{query}” 的 {count} 条结果",
+    "prompt": "找一家酒店、一家餐厅，或一篇可读的文章。至少两个字符。",
+    "noResultsFor": "没有与“{query}”匹配的结果。",
+    "noResultsHint": "试试更短的词，或浏览名录。"
+  },
+  "errorPage": {
+    "title": "出了点问题",
+    "tryAgain": "重试",
+    "browse": "浏览名录",
+    "reference": "参考编号：",
+    "body": "这是我们这边的问题，不是您的。请稍后重试，或浏览名录。"
+  },
+  "scan": {
+    "moved": "该记录已不再可用",
+    "code": "代码：",
+    "notFound": "我们找不到该代码",
+    "codeReceived": "收到的代码：",
+    "browse": "浏览名录",
+    "homepage": "前往首页",
+    "movedBody": "您的扫描成功了。这个地方只是不再收录于我们的名录，可能是已停业或收录期已满。以下是可以改看的内容。",
+    "notFoundBody": "该代码可能扫描得不完整，或输入时有个字符不对。请再扫一次，或浏览名录。"
+  },
+  "days": {
+    "mon": "星期一",
+    "tue": "星期二",
+    "wed": "星期三",
+    "thu": "星期四",
+    "fri": "星期五",
+    "sat": "星期六",
+    "sun": "星期日"
+  },
+  "stars": {
+    "rating": "{rating} 分（满分 5）",
+    "ratingCount": "{rating} 分（满分 5），来自 {count} 条评分"
+  },
+  "article": {
+    "byAuthor": "作者：{name}",
+    "paidPartnership": "付费合作。",
+    "paidPartnershipWith": "与 {sponsor} 的付费合作。",
+    "pageLabel": "第 {range} 页"
+  },
+  "tier": {
+    "verified": "已核实",
+    "signature": "臻选",
+    "signatureLong": "Vardenia 臻选商户"
   }
 }

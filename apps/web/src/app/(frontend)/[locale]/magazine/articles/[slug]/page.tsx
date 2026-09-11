@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { findArticleBySlug, findAllArticleSlugs } from '../../../../../../lib/articles'
@@ -71,7 +71,7 @@ export default async function ArticlePage({ params }: Params) {
   const article = await findArticleBySlug(slug, locale)
   if (!article) notFound()
 
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const hero = resolveImage(article.heroImage as never, 'hero')
   const credit = printCredit(article.print as never, locale)
   const sponsor = article.sponsoredBy as { name?: string | null } | null
@@ -112,7 +112,7 @@ export default async function ArticlePage({ params }: Params) {
         {article.excerpt ? <p className="text-ink-700 mt-6 text-lg">{article.excerpt}</p> : null}
 
         <div className="text-ink-500 border-ink-100 mt-8 flex flex-wrap gap-x-4 gap-y-1 border-t pt-4 text-sm">
-          {author?.name ? <span>{ar ? `بقلم ${author.name}` : `By ${author.name}`}</span> : null}
+          {author?.name ? <span>{t('article.byAuthor', { name: author.name })}</span> : null}
           {article.publishedAt ? (
             <time dateTime={article.publishedAt}>
               {formatDate(new Date(article.publishedAt), locale as Locale)}
@@ -127,9 +127,9 @@ export default async function ArticlePage({ params }: Params) {
         */}
         {article.kind === 'sponsored' ? (
           <p className="border-gold-500 bg-gold-100 text-ink-700 mt-6 border-s-2 px-4 py-3 text-sm">
-            {ar
-              ? `محتوى مدفوع${sponsor?.name ? ` بالتعاون مع ${sponsor.name}` : ''}.`
-              : `Paid partnership${sponsor?.name ? ` with ${sponsor.name}` : ''}.`}
+            {sponsor?.name
+              ? t('article.paidPartnershipWith', { sponsor: sponsor.name })
+              : t('article.paidPartnership')}
           </p>
         ) : null}
 
@@ -143,7 +143,7 @@ export default async function ArticlePage({ params }: Params) {
       {featured.length > 0 ? (
         <section className="mx-auto mt-16 max-w-6xl px-6">
           <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-            {ar ? 'أماكن وردت في هذا المقال' : 'Places in this story'}
+            {t('magazine.placesInStory')}
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((business) => (

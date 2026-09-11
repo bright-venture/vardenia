@@ -11,7 +11,14 @@
     "regions": "Regions",
     "about": "About",
     "advertise": "Advertise with us",
-    "saved": "Saved places"
+    "saved": "Saved places",
+    "search": "Search",
+    "menu": "Menu",
+    "aboutVardenia": "About Vardenia",
+    "aboutVardeniaNote": "Who we are and how the directory is made",
+    "addBusinessNote": "Get listed in print and online",
+    "questions": "Questions",
+    "contact": "Contact"
   },
   "home": {
     "eyebrow": "Issue 01, Beirut and Mount Lebanon",
@@ -64,7 +71,35 @@
     "clearFilters": "Clear filters",
     "emptyFiltered": "Nothing here matches every filter you have on. Try removing one, or widen the area.",
     "emptySection": "We have not published anything here yet. New places are added with every issue.",
-    "scanArrival": "Scanned from the magazine"
+    "scanArrival": "Scanned from the magazine",
+    "title": "Directory",
+    "discoverLebanon": "Discover Lebanon",
+    "view": "View",
+    "list": "List",
+    "map": "Map",
+    "all": "All",
+    "directoryMap": "Directory map",
+    "nothingToMap": "Nothing to map yet",
+    "viewList": "View the list",
+    "closedNow": "Closed now",
+    "address": "Address",
+    "type": "Type",
+    "price": "Price",
+    "openingHours": "Opening hours",
+    "showWeek": "Show the week",
+    "gallery": "Gallery",
+    "nearby": "Nearby",
+    "moreLikeThis": "More like this",
+    "browse": "Browse the directory",
+    "closed": "Closed",
+    "governorate": "Governorate",
+    "appliedFilters": "Applied filters",
+    "sections": "Directory sections",
+    "metaDescription": "Curated hotels, restaurants and experiences across Lebanon.",
+    "mapPinnedOnly": "Only places with a pinned location appear on the map.",
+    "nothingToMapBody": "None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.",
+    "sectionMap": "{name} map",
+    "ctaBanner": "Curated hotels, restaurants and experiences across Lebanon, in print and online."
   },
   "booking": {
     "heading": "Book a table",
@@ -179,7 +214,8 @@
     "strengthAdvice": "Only the first is required. Length still does more for you than any of the others.",
     "rule_number": "A number",
     "rule_symbol": "A special character",
-    "rule_case": "Upper and lower case"
+    "rule_case": "Upper and lower case",
+    "details": "Your details"
   },
   "partner": {
     "eyebrow": "For partners",
@@ -265,6 +301,119 @@
     "retry": "Retry",
     "close": "Close",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "brand": "Vardenia",
+    "homepage": "Go to homepage",
+    "onGoogle": "on Google"
+  },
+  "footer": {
+    "discover": "Discover",
+    "read": "Read",
+    "company": "Company",
+    "business": "For business",
+    "issues": "Issues",
+    "articles": "Articles",
+    "directory": "Directory",
+    "about": "About",
+    "questions": "Questions",
+    "contact": "Contact",
+    "addBusiness": "Add your business",
+    "partnerWithUs": "Partner with us",
+    "advertise": "Advertise",
+    "partnerSignIn": "Partner sign in",
+    "rights": "All rights reserved.",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "tagline": "Lebanon's tourism and lifestyle guide, curated and verified."
+  },
+  "filters": {
+    "filters": "Filters",
+    "close": "Close filters",
+    "region": "Region",
+    "allOfLebanon": "All of Lebanon",
+    "kind": "Kind",
+    "district": "District",
+    "price": "Price",
+    "features": "Features",
+    "clearAll": "Clear all",
+    "showResults": "Show results",
+    "clearFilters": "Clear filters"
+  },
+  "magazine": {
+    "title": "Magazine",
+    "discoverLebanon": "Discover Lebanon",
+    "articles": "Articles",
+    "issues": "Issues",
+    "noArticles": "No articles yet.",
+    "noIssues": "No issues yet.",
+    "placesInStory": "Places in this story",
+    "printArchive": "The Vardenia print archive.",
+    "readDigital": "Read the digital edition",
+    "inThisIssue": "In this issue",
+    "currentIssue": "Current issue",
+    "whatsInIssue": "What is in this issue",
+    "allIssues": "All issues",
+    "latestArticles": "Latest articles",
+    "allArticles": "All articles",
+    "metaDescription": "Features, destination guides and the Vardenia print archive.",
+    "articlesMetaDescription": "Features, destination guides and interviews from Vardenia.",
+    "issueNumber": "Issue {number}",
+    "pageCount": "{count, plural, one {# page} other {# pages}}",
+    "issueMetaDescription": "Issue {number} of Vardenia.",
+    "noArticlesInIssue": "No articles have been added to this issue yet."
+  },
+  "search": {
+    "title": "Search",
+    "places": "Places",
+    "reading": "Reading",
+    "nothing": "Nothing",
+    "placeholder": "A hotel, a restaurant, an article",
+    "browse": "Browse the directory",
+    "resultCount": "{count, plural, one {# result} other {# results}} for \"{query}\"",
+    "prompt": "Look for a hotel, a restaurant, or something to read. Two letters or more.",
+    "noResultsFor": "Nothing matched \"{query}\".",
+    "noResultsHint": "Try a shorter word, or browse the directory instead."
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "tryAgain": "Try again",
+    "browse": "Browse the directory",
+    "reference": "Reference:",
+    "body": "This is on our side, not yours. Try again in a moment, or browse the directory."
+  },
+  "scan": {
+    "moved": "This listing is no longer available",
+    "code": "Code:",
+    "notFound": "We could not find that code",
+    "codeReceived": "Code received:",
+    "browse": "Browse the directory",
+    "homepage": "Go to homepage",
+    "movedBody": "Your scan worked. This place is simply no longer listed with us, either because it closed or because its listing ended. Here is where to look instead.",
+    "notFoundBody": "The code may have scanned imperfectly, or been typed with a character out of place. Try scanning again, or browse the directory instead."
+  },
+  "days": {
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday",
+    "sun": "Sunday"
+  },
+  "stars": {
+    "rating": "{rating} out of 5",
+    "ratingCount": "{rating} out of 5, from {count, plural, one {# rating} other {# ratings}}"
+  },
+  "article": {
+    "byAuthor": "By {name}",
+    "paidPartnership": "Paid partnership.",
+    "paidPartnershipWith": "Paid partnership with {sponsor}.",
+    "pageLabel": "{count, plural, one {Page {range}} other {Pages {range}}}"
+  },
+  "tier": {
+    "verified": "Verified",
+    "signature": "Signature",
+    "signatureLong": "A Vardenia Signature listing"
   }
 }

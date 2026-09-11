@@ -43,7 +43,10 @@ import { BUSINESS_ICON, CONTACT_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS 
  * do rather than offer.
  */
 export async function SiteHeader({ locale }: { locale: Locale }) {
-  const t = await getTranslations('nav')
+  const t = await getTranslations()
+  // `ar` still drives the taxonomy labels below (section names and descriptions
+  // live in @vardenia/core as en/ar constants); everything that is UI chrome now
+  // goes through `t`.
   const ar = locale === 'ar'
 
   const sectionMenu = (
@@ -62,8 +65,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           to see everything at once when none of the seven is quite it. */}
       <MenuLink
         href="/directory"
-        title={ar ? 'الدليل كامل' : 'The whole directory'}
-        description={ar ? 'كل الأماكن في مكان واحد' : 'Every listing, filtered how you like'}
+        title={t('home.wholeDirectory')}
+        description={t('home.wholeDirectoryNote')}
         icon={SEARCH_ICON}
       />
     </div>
@@ -73,18 +76,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <div className="grid w-[22rem] gap-1">
       <MenuLink
         href="/about"
-        title={ar ? 'من نحن' : 'About Vardenia'}
-        description={ar ? 'قصتنا وكيف نعمل' : 'Who we are and how the directory is made'}
+        title={t('nav.aboutVardenia')}
+        description={t('nav.aboutVardeniaNote')}
         icon={MAGAZINE_ICON}
       />
       <MenuLink
         href="/add-your-business"
-        title={ar ? 'أضف عملك' : 'Add your business'}
-        description={ar ? 'كن جزءاً من الدليل' : 'Get listed in print and online'}
+        title={t('home.addBusiness')}
+        description={t('nav.addBusinessNote')}
         icon={BUSINESS_ICON}
       />
-      <MenuLink href="/faq" title={ar ? 'أسئلة شائعة' : 'Questions'} icon={CONTACT_ICON} />
-      <MenuLink href="/contact" title={ar ? 'اتصل بنا' : 'Contact'} icon={CONTACT_ICON} />
+      <MenuLink href="/faq" title={t('nav.questions')} icon={CONTACT_ICON} />
+      <MenuLink href="/contact" title={t('nav.contact')} icon={CONTACT_ICON} />
     </div>
   )
 
@@ -102,29 +105,29 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             Vardenia
           </Link>
 
-          <nav aria-label={t('directory')} className="hidden items-center gap-1 lg:flex">
-            <DropdownNav label={ar ? 'اكتشف' : 'Discover'}>{sectionMenu}</DropdownNav>
+          <nav aria-label={t('nav.directory')} className="hidden items-center gap-1 lg:flex">
+            <DropdownNav label={t('nav.discover')}>{sectionMenu}</DropdownNav>
             <Link
               href="/magazine"
               className="text-ink-700 hover:text-ink-900 px-2 py-1.5 text-sm transition-colors"
             >
-              {t('magazine')}
+              {t('nav.magazine')}
             </Link>
-            <DropdownNav label={ar ? 'عن فاردينيا' : 'About'}>{aboutMenu}</DropdownNav>
+            <DropdownNav label={t('nav.about')}>{aboutMenu}</DropdownNav>
           </nav>
         </div>
 
         <div className="hidden items-center gap-4 lg:flex">
           <Link
             href="/search"
-            aria-label={ar ? 'بحث' : 'Search'}
+            aria-label={t('nav.search')}
             className="text-ink-700 hover:text-ink-900 p-1.5 transition-colors"
           >
             <SEARCH_ICON className="size-4" strokeWidth={1.75} aria-hidden />
           </Link>
           {/* Shown only to a signed-in reader; see SavedNavLink. */}
-          <SavedNavLink label={t('saved')} />
-          <AccountLink locale={locale} />
+          <SavedNavLink label={t('nav.saved')} />
+          <AccountLink />
           {language}
         </div>
 
@@ -134,18 +137,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         <details className="relative lg:hidden">
           <summary
             className="text-ink-700 flex cursor-pointer list-none items-center gap-2 text-sm"
-            aria-label={ar ? 'القائمة' : 'Menu'}
+            aria-label={t('nav.menu')}
           >
             <span className="flex flex-col gap-[3px]" aria-hidden>
               <span className="bg-ink-700 block h-[1.5px] w-5" />
               <span className="bg-ink-700 block h-[1.5px] w-5" />
               <span className="bg-ink-700 block h-[1.5px] w-5" />
             </span>
-            {ar ? 'القائمة' : 'Menu'}
+            {t('nav.menu')}
           </summary>
 
           <nav
-            aria-label={t('directory')}
+            aria-label={t('nav.directory')}
             className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 max-h-[80vh] w-[19rem] overflow-y-auto border p-2 shadow-xl"
           >
             {SECTIONS.map((section) => (
@@ -159,14 +162,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
             <span className="border-ink-100 my-2 block border-t" />
 
-            <MenuLink href="/magazine" title={t('magazine')} icon={MAGAZINE_ICON} />
-            <MenuLink href="/search" title={ar ? 'بحث' : 'Search'} icon={SEARCH_ICON} />
+            <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
+            <MenuLink href="/search" title={t('nav.search')} icon={SEARCH_ICON} />
             {/* Always listed here as a destination: on a phone the menu is the
                 way around, and a signed-out tap lands on the sign-in prompt. */}
-            <MenuLink href="/account/saved" title={t('saved')} icon={Heart} />
+            <MenuLink href="/account/saved" title={t('nav.saved')} icon={Heart} />
             <MenuLink
               href="/add-your-business"
-              title={ar ? 'أضف عملك' : 'Add your business'}
+              title={t('home.addBusiness')}
               icon={BUSINESS_ICON}
             />
 
@@ -178,7 +181,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 thumb can actually hit without enlarging them on desktop, where
                 they sit in a tight bar and a pointer is precise. */}
             <div className="flex items-center justify-between gap-3 p-2 [&_a]:px-2 [&_a]:py-2.5">
-              <AccountLink locale={locale} />
+              <AccountLink />
               {language}
             </div>
           </nav>

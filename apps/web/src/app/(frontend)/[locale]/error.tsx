@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Link } from '../../../i18n/routing'
 
 /**
@@ -27,8 +27,7 @@ export default function ErrorBoundary({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const locale = useLocale()
-  const ar = locale === 'ar'
+  const t = useTranslations()
 
   useEffect(() => {
     // Reaches the browser console and any client-side monitoring. The server
@@ -38,19 +37,13 @@ export default function ErrorBoundary({
 
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center px-6 py-24">
-      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-        {ar ? 'فاردينيا' : 'Vardenia'}
-      </p>
+      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('common.brand')}</p>
 
       <h1 className="font-display text-ink-900 mt-4 text-3xl leading-tight md:text-4xl">
-        {ar ? 'حدث خطأ ما' : 'Something went wrong'}
+        {t('errorPage.title')}
       </h1>
 
-      <p className="text-ink-500 mt-5">
-        {ar
-          ? 'المشكلة من جهتنا وليست منك. حاول مرة أخرى بعد لحظات، أو تصفّح الدليل.'
-          : 'This is on our side, not yours. Try again in a moment, or browse the directory.'}
-      </p>
+      <p className="text-ink-500 mt-5">{t('errorPage.body')}</p>
 
       <div className="mt-10 flex flex-wrap gap-3">
         <button
@@ -58,19 +51,19 @@ export default function ErrorBoundary({
           onClick={reset}
           className="bg-cedar-900 text-surface-base hover:bg-cedar-700 px-5 py-3 text-sm font-semibold transition-colors"
         >
-          {ar ? 'إعادة المحاولة' : 'Try again'}
+          {t('errorPage.tryAgain')}
         </button>
         <Link
           href="/directory"
           className="border-ink-100 text-ink-900 hover:border-ink-300 border px-5 py-3 text-sm font-semibold transition-colors"
         >
-          {ar ? 'تصفّح الدليل' : 'Browse the directory'}
+          {t('errorPage.browse')}
         </Link>
       </div>
 
       {error.digest ? (
         <p className="text-ink-500 mt-8 text-xs">
-          {ar ? 'رقم الخطأ:' : 'Reference:'}{' '}
+          {t('errorPage.reference')}{' '}
           <code className="text-ink-500" dir="ltr">
             {error.digest}
           </code>

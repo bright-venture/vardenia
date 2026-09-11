@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { getPathname } from '../i18n/routing'
 
@@ -26,8 +27,8 @@ export function SearchForm({
   initial?: string
   autoFocus?: boolean
 }) {
-  const ar = locale === 'ar'
-  const label = ar ? 'ابحث' : 'Search'
+  const t = useTranslations()
+  const label = t('search.title')
 
   return (
     <form action={getPathname({ href: '/search', locale })} method="get" role="search">
@@ -54,7 +55,7 @@ export function SearchForm({
           defaultValue={initial}
           autoFocus={autoFocus}
           maxLength={80}
-          placeholder={ar ? 'فندق، مطعم، مقال' : 'A hotel, a restaurant, an article'}
+          placeholder={t('search.placeholder')}
           className="text-ink-900 placeholder:text-ink-500 w-full bg-transparent px-5 py-4 outline-none"
         />
         <button

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
@@ -88,6 +89,7 @@ export function ListingCard({
   priority = false,
   locale,
 }: Props) {
+  const t = useTranslations('directory')
   const price = priceLabel(priceRange)
   const place = placeLabel(governorate, district, locale)
   // Only ever shown when confidently open. `null` (no hours) and `false`
@@ -137,8 +139,8 @@ export function ListingCard({
 
           {signature || verified ? (
             <div className="ms-auto flex shrink-0 gap-1.5">
-              {signature ? <Tier kind="signature" locale={locale} /> : null}
-              {verified ? <Tier kind="verified" locale={locale} /> : null}
+              {signature ? <Tier kind="signature" /> : null}
+              {verified ? <Tier kind="verified" /> : null}
             </div>
           ) : null}
         </div>
@@ -192,14 +194,14 @@ export function ListingCard({
         <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {price ? <span className="font-mono tabular-nums">{price}</span> : null}
           {typeof googleRating === 'number' && googleRating > 0 ? (
-            <Stars rating={googleRating} count={googleRatingCount ?? undefined} locale={locale} />
+            <Stars rating={googleRating} count={googleRatingCount ?? undefined} />
           ) : null}
           {/* A status, so it takes the semantic green rather than a brand
               colour - the same call the listing page makes. */}
           {open ? (
             <span className="text-state-success inline-flex items-center gap-1.5 font-medium">
               <span aria-hidden className="bg-state-success size-1.5 rounded-full" />
-              {locale === 'ar' ? 'مفتوح الآن' : 'Open now'}
+              {t('openNow')}
             </span>
           ) : null}
         </div>

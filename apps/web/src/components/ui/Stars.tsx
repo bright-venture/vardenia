@@ -1,4 +1,4 @@
-import type { Locale } from '@vardenia/i18n'
+import { useTranslations } from 'next-intl'
 
 /**
  * A rating, drawn.
@@ -78,7 +78,6 @@ function Star({ fill, tone }: { fill: number; tone: (typeof TONES)[keyof typeof 
 export function Stars({
   rating,
   count,
-  locale,
   className = '',
   showSource = true,
   inverse = false,
@@ -86,7 +85,6 @@ export function Stars({
   rating: number
   /** How many ratings the average is over. Omitted when it is not known. */
   count?: number
-  locale: Locale
   className?: string
   /** Set on the cedar ground, where the ink greys are invisible. See TONES. */
   inverse?: boolean
@@ -101,9 +99,9 @@ export function Stars({
    */
   showSource?: boolean
 }) {
+  const t = useTranslations()
   const clamped = Math.max(0, Math.min(5, rating))
   const shown = clamped.toFixed(1)
-  const ar = locale === 'ar'
   const tone = inverse ? TONES.inverse : TONES.light
 
   /**
@@ -113,15 +111,12 @@ export function Stars({
    * listener would otherwise hear "4.5 out of 5" with no idea who said so,
    * which is the one piece of context that changes what the number means.
    */
-  const source = ar ? 'على غوغل' : 'on Google'
+  const source = t('common.onGoogle')
 
-  const base = ar ? `${shown} من 5` : `${shown} out of 5`
   const withCount =
     count === undefined
-      ? base
-      : ar
-        ? `${base}، من ${count} تقييم`
-        : `${base}, from ${count} ratings`
+      ? t('stars.rating', { rating: shown })
+      : t('stars.ratingCount', { rating: shown, count })
 
   const label = showSource ? `${withCount} ${source}` : withCount
 

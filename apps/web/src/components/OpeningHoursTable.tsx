@@ -1,17 +1,12 @@
-import type { Locale } from '@vardenia/i18n'
-import { DAY_LABELS, formatDay, orderedHours, type OpeningHour } from '../lib/hours'
+import { useTranslations } from 'next-intl'
+import { formatDay, orderedHours, type OpeningHour } from '../lib/hours'
 
 /**
  * Hours, always in week order and always with every day listed. A day missing
  * from the table reads as an oversight; an explicit "Closed" reads as fact.
  */
-export function OpeningHoursTable({
-  hours,
-  locale,
-}: {
-  hours: OpeningHour[] | null | undefined
-  locale: Locale
-}) {
+export function OpeningHoursTable({ hours }: { hours: OpeningHour[] | null | undefined }) {
+  const t = useTranslations()
   /**
    * Nothing published means nothing to show, not "closed all week".
    *
@@ -36,14 +31,14 @@ export function OpeningHoursTable({
         const range = formatDay(entry)
         return (
           <div key={day} className="flex items-baseline justify-between gap-4 py-2">
-            <dt className="text-ink-700">{DAY_LABELS[day][locale === 'ar' ? 'ar' : 'en']}</dt>
+            <dt className="text-ink-700">{t(`days.${day}`)}</dt>
             <dd
               className={range ? 'text-ink-900 tabular-nums' : 'text-ink-500'}
               // Times stay left-to-right even in Arabic, or "09:00 - 23:00"
               // renders with the parts reversed.
               dir="ltr"
             >
-              {range ?? (locale === 'ar' ? 'مغلق' : 'Closed')}
+              {range ?? t('directory.closed')}
             </dd>
           </div>
         )

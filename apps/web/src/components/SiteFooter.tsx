@@ -85,7 +85,9 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 }
 
 export async function SiteFooter({ locale }: { locale: Locale }) {
-  const t = await getTranslations('nav')
+  const t = await getTranslations()
+  // `ar` remains only for the section names, which are taxonomy (en/ar) from
+  // @vardenia/core. Every other label here is UI chrome and comes from `t`.
   const ar = locale === 'ar'
 
   const discover: FooterLink[] = SECTIONS.map((section) => ({
@@ -95,28 +97,28 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
   }))
 
   const read: FooterLink[] = [
-    { href: '/magazine', label: t('magazine'), icon: MAGAZINE_ICON },
-    { href: '/magazine/issues', label: ar ? 'الأعداد' : 'Issues', icon: ISSUE_ICON },
-    { href: '/magazine/articles', label: ar ? 'مقالات' : 'Articles', icon: ARTICLE_ICON },
-    { href: '/directory', label: ar ? 'الدليل' : 'Directory', icon: BUSINESS_ICON },
+    { href: '/magazine', label: t('nav.magazine'), icon: MAGAZINE_ICON },
+    { href: '/magazine/issues', label: t('footer.issues'), icon: ISSUE_ICON },
+    { href: '/magazine/articles', label: t('footer.articles'), icon: ARTICLE_ICON },
+    { href: '/directory', label: t('footer.directory'), icon: BUSINESS_ICON },
   ]
 
   const company: FooterLink[] = [
-    { href: '/about', label: ar ? 'من نحن' : 'About', icon: ABOUT_ICON },
-    { href: '/faq', label: ar ? 'أسئلة شائعة' : 'Questions', icon: HELP_ICON },
-    { href: '/contact', label: ar ? 'اتصل بنا' : 'Contact', icon: CONTACT_ICON },
+    { href: '/about', label: t('footer.about'), icon: ABOUT_ICON },
+    { href: '/faq', label: t('footer.questions'), icon: HELP_ICON },
+    { href: '/contact', label: t('footer.contact'), icon: CONTACT_ICON },
   ]
 
   const business: FooterLink[] = [
     {
       href: '/add-your-business',
-      label: ar ? 'أضف عملك' : 'Add your business',
+      label: t('footer.addBusiness'),
       icon: BUSINESS_ICON,
     },
-    { href: '/partner-with-us', label: ar ? 'كن شريكاً' : 'Partner with us', icon: PARTNER_ICON },
-    { href: '/advertise', label: ar ? 'أعلن معنا' : 'Advertise', icon: ADVERTISE_ICON },
+    { href: '/partner-with-us', label: t('footer.partnerWithUs'), icon: PARTNER_ICON },
+    { href: '/advertise', label: t('footer.advertise'), icon: ADVERTISE_ICON },
     // Last, and in this column rather than orphaned under the editorial links.
-    { href: '/partner', label: ar ? 'دخول الشركاء' : 'Partner sign in', icon: SIGN_IN_ICON },
+    { href: '/partner', label: t('footer.partnerSignIn'), icon: SIGN_IN_ICON },
   ]
 
   return (
@@ -126,9 +128,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           <div className="lg:col-span-4">
             <p className="font-display text-ink-900 text-xl">Vardenia</p>
             <p className="text-ink-500 mt-3 max-w-xs text-sm leading-relaxed">
-              {ar
-                ? 'دليل لبنان للسياحة ونمط الحياة، منسّق وموثّق.'
-                : "Lebanon's tourism and lifestyle guide, curated and verified."}
+              {t('footer.tagline')}
             </p>
             {/* Social accounts go here when they exist. Left out rather than
                 pointed at invented handles, for the same reason the contact
@@ -136,10 +136,10 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
-            <FooterColumn title={ar ? 'اكتشف' : 'Discover'} links={discover} />
-            <FooterColumn title={ar ? 'اقرأ' : 'Read'} links={read} />
-            <FooterColumn title={ar ? 'الشركة' : 'Company'} links={company} />
-            <FooterColumn title={ar ? 'للأعمال' : 'For business'} links={business} />
+            <FooterColumn title={t('footer.discover')} links={discover} />
+            <FooterColumn title={t('footer.read')} links={read} />
+            <FooterColumn title={t('footer.company')} links={company} />
+            <FooterColumn title={t('footer.business')} links={business} />
           </div>
         </div>
 
@@ -148,19 +148,18 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
             for them. */}
         <div className="border-ink-100 mt-16 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
           <p className="text-ink-500 text-xs">
-            &copy; {new Date().getFullYear()} Vardenia.{' '}
-            {ar ? 'كل الحقوق محفوظة.' : 'All rights reserved.'}
+            &copy; {new Date().getFullYear()} Vardenia. {t('footer.rights')}
           </p>
 
-          <nav aria-label={ar ? 'قانوني' : 'Legal'} className="flex items-center gap-5 text-xs">
+          <nav aria-label={t('footer.legal')} className="flex items-center gap-5 text-xs">
             <Link
               href="/legal/privacy"
               className="text-ink-500 hover:text-ink-900 transition-colors"
             >
-              {ar ? 'سياسة الخصوصية' : 'Privacy'}
+              {t('footer.privacy')}
             </Link>
             <Link href="/legal/terms" className="text-ink-500 hover:text-ink-900 transition-colors">
-              {ar ? 'شروط الاستخدام' : 'Terms'}
+              {t('footer.terms')}
             </Link>
           </nav>
         </div>

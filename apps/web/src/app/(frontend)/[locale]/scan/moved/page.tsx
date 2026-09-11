@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale } from '@vardenia/i18n'
 import { Link } from '../../../../../i18n/routing'
 
@@ -30,27 +30,21 @@ export default async function ScanMovedPage({
   setRequestLocale(locale)
 
   const { code } = await searchParams
-  const ar = locale === 'ar'
+  const t = await getTranslations()
 
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-24">
-      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-        {ar ? 'فاردينيا' : 'Vardenia'}
-      </p>
+      <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('common.brand')}</p>
 
       <h1 className="font-display text-ink-900 mt-4 text-3xl leading-tight md:text-4xl">
-        {ar ? 'هذه القائمة لم تعد متاحة' : 'This listing is no longer available'}
+        {t('scan.moved')}
       </h1>
 
-      <p className="text-ink-500 mt-5">
-        {ar
-          ? 'الرمز صحيح، لكن هذه الوجهة لم تعد مدرجة لدينا. قد يكون المكان أغلق أو انتهت فترة إدراجه. إليك بدائل قريبة.'
-          : 'Your scan worked. This place is simply no longer listed with us, either because it closed or because its listing ended. Here is where to look instead.'}
-      </p>
+      <p className="text-ink-500 mt-5">{t('scan.movedBody')}</p>
 
       {code ? (
         <p className="text-ink-500 mt-4 text-sm">
-          {ar ? 'الرمز:' : 'Code:'}{' '}
+          {t('scan.code')}{' '}
           <code className="text-ink-700" dir="ltr">
             {code}
           </code>
@@ -62,13 +56,13 @@ export default async function ScanMovedPage({
           href="/directory"
           className="bg-cedar-900 text-surface-base hover:bg-cedar-700 px-5 py-3 text-sm font-semibold transition-colors"
         >
-          {ar ? 'تصفّح الدليل' : 'Browse the directory'}
+          {t('scan.browse')}
         </Link>
         <Link
           href="/"
           className="border-ink-100 text-ink-900 hover:border-ink-300 border px-5 py-3 text-sm font-semibold transition-colors"
         >
-          {ar ? 'الصفحة الرئيسية' : 'Go to homepage'}
+          {t('scan.homepage')}
         </Link>
       </div>
     </main>

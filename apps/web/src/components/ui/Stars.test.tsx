@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { NextIntlClientProvider } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
+import { getMessages } from '@vardenia/i18n/messages'
 import { Stars } from './Stars'
 
 /**
@@ -16,8 +18,15 @@ import { Stars } from './Stars'
  * that actually contains the numbers.
  */
 
-const render = (props: Partial<Parameters<typeof Stars>[0]> = {}) =>
-  renderToStaticMarkup(<Stars rating={4.5} locale={'en' as Locale} {...props} />)
+const render = ({
+  locale = 'en',
+  ...props
+}: Partial<Parameters<typeof Stars>[0]> & { locale?: Locale } = {}) =>
+  renderToStaticMarkup(
+    <NextIntlClientProvider locale={locale} timeZone="Asia/Beirut" messages={getMessages(locale)}>
+      <Stars rating={4.5} {...props} />
+    </NextIntlClientProvider>,
+  )
 
 describe('Stars', () => {
   it('gives the label an element that can carry it', () => {

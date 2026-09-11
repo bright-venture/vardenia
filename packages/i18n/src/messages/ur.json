@@ -11,7 +11,14 @@
     "regions": "علاقے",
     "about": "تعارف",
     "advertise": "ہمارے ساتھ اشتہار دیں",
-    "saved": "محفوظ مقامات"
+    "saved": "محفوظ مقامات",
+    "search": "تلاش کریں",
+    "menu": "مینو",
+    "aboutVardenia": "Vardenia کے بارے میں",
+    "aboutVardeniaNote": "ہم کون ہیں اور فہرست کیسے بنتی ہے",
+    "addBusinessNote": "پرنٹ اور آن لائن میں شامل ہوں",
+    "questions": "سوالات",
+    "contact": "رابطہ"
   },
   "home": {
     "eyebrow": "شمارہ 01، بیروت اور کوہِ لبنان",
@@ -64,7 +71,35 @@
     "clearFilters": "فلٹر ہٹائیں",
     "emptyFiltered": "آپ کے لگائے تمام فلٹرز سے یہاں کچھ میل نہیں کھاتا۔ ایک فلٹر ہٹا کر دیکھیں، یا علاقہ بڑھائیں۔",
     "emptySection": "ہم نے یہاں ابھی کچھ شائع نہیں کیا۔ ہر شمارے کے ساتھ نئے مقامات شامل ہوتے ہیں۔",
-    "scanArrival": "میگزین سے اسکین کیا گیا"
+    "scanArrival": "میگزین سے اسکین کیا گیا",
+    "title": "فہرست",
+    "discoverLebanon": "لبنان کو دریافت کریں",
+    "view": "منظر",
+    "list": "فہرست",
+    "map": "نقشہ",
+    "all": "سب",
+    "directoryMap": "فہرست کا نقشہ",
+    "nothingToMap": "نقشے پر دکھانے کو ابھی کچھ نہیں",
+    "viewList": "فہرست دیکھیں",
+    "closedNow": "ابھی بند",
+    "address": "پتہ",
+    "type": "قسم",
+    "price": "قیمت",
+    "openingHours": "اوقاتِ کار",
+    "showWeek": "پورا ہفتہ دکھائیں",
+    "gallery": "گیلری",
+    "nearby": "قریب",
+    "moreLikeThis": "اس جیسے مزید",
+    "browse": "فہرست دیکھیں",
+    "closed": "بند",
+    "governorate": "گورنری",
+    "appliedFilters": "لاگو فلٹر",
+    "sections": "فہرست کے حصے",
+    "metaDescription": "پورے لبنان سے منتخب ہوٹل، ریستوران اور تجربات۔",
+    "mapPinnedOnly": "نقشے پر صرف وہ مقامات نظر آتے ہیں جن کا مقام متعین ہے۔",
+    "nothingToMapBody": "ان میں سے کسی جگہ کا ابھی کوئی متعین مقام نہیں، اس لیے کوئی بھی نقشے پر نہیں آ سکتا۔ مقامات شامل کیے جا رہے ہیں؛ تب تک وہ سب فہرست میں ہیں۔",
+    "sectionMap": "{name} کا نقشہ",
+    "ctaBanner": "پورے لبنان سے منتخب ہوٹل، ریستوران اور تجربات، پرنٹ اور آن لائن دونوں میں۔"
   },
   "booking": {
     "heading": "میز بک کریں",
@@ -179,7 +214,8 @@
     "strengthAdvice": "صرف پہلا لازمی ہے۔ لمبائی اب بھی باقی سب سے زیادہ آپ کے کام آتی ہے۔",
     "rule_number": "ایک ہندسہ",
     "rule_symbol": "ایک خاص علامت",
-    "rule_case": "بڑے اور چھوٹے حروف"
+    "rule_case": "بڑے اور چھوٹے حروف",
+    "details": "آپ کی تفصیلات"
   },
   "partner": {
     "eyebrow": "شراکت داروں کے لیے",
@@ -265,6 +301,119 @@
     "retry": "دوبارہ کوشش کریں",
     "close": "بند کریں",
     "save": "محفوظ کریں",
-    "saved": "محفوظ ہو گیا"
+    "saved": "محفوظ ہو گیا",
+    "brand": "Vardenia",
+    "homepage": "ہوم پیج پر جائیں",
+    "onGoogle": "گوگل پر"
+  },
+  "footer": {
+    "discover": "دریافت",
+    "read": "پڑھیں",
+    "company": "کمپنی",
+    "business": "کاروبار کے لیے",
+    "issues": "شمارے",
+    "articles": "مضامین",
+    "directory": "فہرست",
+    "about": "تعارف",
+    "questions": "سوالات",
+    "contact": "رابطہ",
+    "addBusiness": "اپنا کاروبار شامل کریں",
+    "partnerWithUs": "ہمارے شراکت دار بنیں",
+    "advertise": "اشتہار دیں",
+    "partnerSignIn": "شراکت دار سائن اِن",
+    "rights": "جملہ حقوق محفوظ ہیں۔",
+    "legal": "قانونی",
+    "privacy": "رازداری",
+    "terms": "شرائط",
+    "tagline": "لبنان کی سیاحت اور طرزِ زندگی کی رہنما، منتخب اور تصدیق شدہ۔"
+  },
+  "filters": {
+    "filters": "فلٹر",
+    "close": "فلٹر بند کریں",
+    "region": "علاقہ",
+    "allOfLebanon": "پورا لبنان",
+    "kind": "قسم",
+    "district": "ضلع",
+    "price": "قیمت",
+    "features": "سہولیات",
+    "clearAll": "سب ہٹائیں",
+    "showResults": "نتائج دکھائیں",
+    "clearFilters": "فلٹر ہٹائیں"
+  },
+  "magazine": {
+    "title": "میگزین",
+    "discoverLebanon": "لبنان کو دریافت کریں",
+    "articles": "مضامین",
+    "issues": "شمارے",
+    "noArticles": "ابھی کوئی مضمون نہیں۔",
+    "noIssues": "ابھی کوئی شمارہ نہیں۔",
+    "placesInStory": "اس مضمون کے مقامات",
+    "printArchive": "Vardenia کا پرنٹ آرکائیو۔",
+    "readDigital": "ڈیجیٹل ایڈیشن پڑھیں",
+    "inThisIssue": "اس شمارے میں",
+    "currentIssue": "موجودہ شمارہ",
+    "whatsInIssue": "اس شمارے میں کیا ہے",
+    "allIssues": "تمام شمارے",
+    "latestArticles": "تازہ ترین مضامین",
+    "allArticles": "تمام مضامین",
+    "metaDescription": "فیچرز، منزلوں کی رہنمائی اور Vardenia کا پرنٹ آرکائیو۔",
+    "articlesMetaDescription": "Vardenia کی طرف سے فیچرز، منزلوں کی رہنمائی اور انٹرویوز۔",
+    "issueNumber": "شمارہ {number}",
+    "pageCount": "{count, plural, one {# صفحہ} other {# صفحات}}",
+    "issueMetaDescription": "Vardenia کا شمارہ {number}۔",
+    "noArticlesInIssue": "اس شمارے میں ابھی کوئی مضمون شامل نہیں کیا گیا۔"
+  },
+  "search": {
+    "title": "تلاش کریں",
+    "places": "مقامات",
+    "reading": "مطالعہ",
+    "nothing": "کچھ نہیں",
+    "placeholder": "ہوٹل، ریستوران، مضمون",
+    "browse": "فہرست دیکھیں",
+    "resultCount": "\"{query}\" کے لیے {count, plural, one {# نتیجہ} other {# نتائج}}",
+    "prompt": "کوئی ہوٹل، ریستوران، یا پڑھنے کے لیے کچھ تلاش کریں۔ کم از کم دو حروف۔",
+    "noResultsFor": "\"{query}\" سے کچھ میل نہیں کھایا۔",
+    "noResultsHint": "کوئی چھوٹا لفظ آزمائیں، یا فہرست دیکھیں۔"
+  },
+  "errorPage": {
+    "title": "کچھ غلط ہو گیا",
+    "tryAgain": "دوبارہ کوشش کریں",
+    "browse": "فہرست دیکھیں",
+    "reference": "حوالہ:",
+    "body": "یہ ہماری طرف سے ہے، آپ کی طرف سے نہیں۔ ایک لمحے بعد دوبارہ کوشش کریں، یا فہرست دیکھیں۔"
+  },
+  "scan": {
+    "moved": "یہ اندراج اب دستیاب نہیں",
+    "code": "کوڈ:",
+    "notFound": "ہمیں وہ کوڈ نہیں ملا",
+    "codeReceived": "موصول کوڈ:",
+    "browse": "فہرست دیکھیں",
+    "homepage": "ہوم پیج پر جائیں",
+    "movedBody": "آپ کا اسکین کامیاب رہا۔ یہ جگہ بس اب ہمارے ہاں درج نہیں، یا تو بند ہو گئی یا اس کی فہرست ختم ہو گئی۔ اس کے بجائے یہاں دیکھیں۔",
+    "notFoundBody": "ہو سکتا ہے کوڈ ٹھیک سے اسکین نہ ہوا ہو، یا کوئی حرف غلط ٹائپ ہو گیا ہو۔ دوبارہ اسکین کریں، یا فہرست دیکھیں۔"
+  },
+  "days": {
+    "mon": "پیر",
+    "tue": "منگل",
+    "wed": "بدھ",
+    "thu": "جمعرات",
+    "fri": "جمعہ",
+    "sat": "ہفتہ",
+    "sun": "اتوار"
+  },
+  "stars": {
+    "rating": "5 میں سے {rating}",
+    "ratingCount": "5 میں سے {rating}، {count, plural, one {# ریٹنگ} other {# ریٹنگز}} سے"
+  },
+  "article": {
+    "byAuthor": "بقلم {name}",
+    "paidPartnership": "معاوضہ شدہ شراکت۔",
+    "paidPartnershipWith": "{sponsor} کے ساتھ معاوضہ شدہ شراکت۔",
+    "pageLabel": "صفحہ {range}"
+  },
+  "tier": {
+    "verified": "تصدیق شدہ",
+    "signature": "پریمیم",
+    "signatureLong": "ایک Vardenia پریمیم اندراج"
   }
 }

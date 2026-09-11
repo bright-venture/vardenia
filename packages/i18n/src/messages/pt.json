@@ -11,7 +11,14 @@
     "regions": "Regiões",
     "about": "Sobre",
     "advertise": "Anuncie conosco",
-    "saved": "Lugares salvos"
+    "saved": "Lugares salvos",
+    "search": "Buscar",
+    "menu": "Menu",
+    "aboutVardenia": "Sobre a Vardenia",
+    "aboutVardeniaNote": "Quem somos e como o diretório é feito",
+    "addBusinessNote": "Apareça no impresso e online",
+    "questions": "Perguntas",
+    "contact": "Contato"
   },
   "home": {
     "eyebrow": "Edição 01, Beirute e o Monte Líbano",
@@ -64,7 +71,35 @@
     "clearFilters": "Limpar filtros",
     "emptyFiltered": "Nada aqui corresponde a todos os filtros ativos. Tente remover um, ou ampliar a área.",
     "emptySection": "Ainda não publicamos nada aqui. Novos lugares são adicionados a cada edição.",
-    "scanArrival": "Escaneado a partir da revista"
+    "scanArrival": "Escaneado a partir da revista",
+    "title": "Diretório",
+    "discoverLebanon": "Descubra o Líbano",
+    "view": "Visualização",
+    "list": "Lista",
+    "map": "Mapa",
+    "all": "Todos",
+    "directoryMap": "Mapa do diretório",
+    "nothingToMap": "Nada para mapear ainda",
+    "viewList": "Ver a lista",
+    "closedNow": "Fechado agora",
+    "address": "Endereço",
+    "type": "Tipo",
+    "price": "Preço",
+    "openingHours": "Horário de funcionamento",
+    "showWeek": "Mostrar a semana",
+    "gallery": "Galeria",
+    "nearby": "Por perto",
+    "moreLikeThis": "Mais como este",
+    "browse": "Explorar o diretório",
+    "closed": "Fechado",
+    "governorate": "Governorado",
+    "appliedFilters": "Filtros aplicados",
+    "sections": "Seções do diretório",
+    "metaDescription": "Hotéis, restaurantes e experiências selecionados por todo o Líbano.",
+    "mapPinnedOnly": "No mapa aparecem apenas os lugares com localização fixada.",
+    "nothingToMapBody": "Nenhum destes lugares tem ainda uma localização fixada, então nenhum pode aparecer no mapa. As localizações estão sendo adicionadas; até lá, estão todos na lista.",
+    "sectionMap": "Mapa de {name}",
+    "ctaBanner": "Hotéis, restaurantes e experiências selecionados por todo o Líbano, no impresso e online."
   },
   "booking": {
     "heading": "Reservar mesa",
@@ -179,7 +214,8 @@
     "strengthAdvice": "Só o primeiro é obrigatório. O comprimento ainda faz mais por você do que qualquer um dos outros.",
     "rule_number": "Um número",
     "rule_symbol": "Um caractere especial",
-    "rule_case": "Maiúsculas e minúsculas"
+    "rule_case": "Maiúsculas e minúsculas",
+    "details": "Seus dados"
   },
   "partner": {
     "eyebrow": "Para parceiros",
@@ -265,6 +301,119 @@
     "retry": "Tentar de novo",
     "close": "Fechar",
     "save": "Salvar",
-    "saved": "Salvo"
+    "saved": "Salvo",
+    "brand": "Vardenia",
+    "homepage": "Ir para o início",
+    "onGoogle": "no Google"
+  },
+  "footer": {
+    "discover": "Descobrir",
+    "read": "Ler",
+    "company": "Empresa",
+    "business": "Para empresas",
+    "issues": "Edições",
+    "articles": "Artigos",
+    "directory": "Diretório",
+    "about": "Sobre",
+    "questions": "Perguntas",
+    "contact": "Contato",
+    "addBusiness": "Adicione seu negócio",
+    "partnerWithUs": "Seja nosso parceiro",
+    "advertise": "Anunciar",
+    "partnerSignIn": "Acesso de parceiros",
+    "rights": "Todos os direitos reservados.",
+    "legal": "Jurídico",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "tagline": "O guia de turismo e estilo de vida do Líbano, selecionado e verificado."
+  },
+  "filters": {
+    "filters": "Filtros",
+    "close": "Fechar filtros",
+    "region": "Região",
+    "allOfLebanon": "Todo o Líbano",
+    "kind": "Tipo",
+    "district": "Distrito",
+    "price": "Preço",
+    "features": "Comodidades",
+    "clearAll": "Limpar tudo",
+    "showResults": "Ver resultados",
+    "clearFilters": "Limpar filtros"
+  },
+  "magazine": {
+    "title": "Revista",
+    "discoverLebanon": "Descubra o Líbano",
+    "articles": "Artigos",
+    "issues": "Edições",
+    "noArticles": "Ainda não há artigos.",
+    "noIssues": "Ainda não há edições.",
+    "placesInStory": "Lugares nesta matéria",
+    "printArchive": "O arquivo impresso da Vardenia.",
+    "readDigital": "Ler a edição digital",
+    "inThisIssue": "Nesta edição",
+    "currentIssue": "Edição atual",
+    "whatsInIssue": "O que há nesta edição",
+    "allIssues": "Todas as edições",
+    "latestArticles": "Artigos recentes",
+    "allArticles": "Todos os artigos",
+    "metaDescription": "Reportagens, guias de destinos e o arquivo impresso da Vardenia.",
+    "articlesMetaDescription": "Reportagens, guias de destinos e entrevistas da Vardenia.",
+    "issueNumber": "Edição {number}",
+    "pageCount": "{count, plural, one {# página} other {# páginas}}",
+    "issueMetaDescription": "Edição {number} da Vardenia.",
+    "noArticlesInIssue": "Ainda não foram adicionados artigos a esta edição."
+  },
+  "search": {
+    "title": "Buscar",
+    "places": "Lugares",
+    "reading": "Leituras",
+    "nothing": "Nada",
+    "placeholder": "Um hotel, um restaurante, um artigo",
+    "browse": "Explorar o diretório",
+    "resultCount": "{count, plural, one {# resultado} other {# resultados}} para \"{query}\"",
+    "prompt": "Procure um hotel, um restaurante ou algo para ler. Duas letras ou mais.",
+    "noResultsFor": "Nada corresponde a \"{query}\".",
+    "noResultsHint": "Tente uma palavra mais curta, ou explore o diretório."
+  },
+  "errorPage": {
+    "title": "Algo deu errado",
+    "tryAgain": "Tentar de novo",
+    "browse": "Explorar o diretório",
+    "reference": "Referência:",
+    "body": "O problema é nosso, não seu. Tente de novo em instantes, ou explore o diretório."
+  },
+  "scan": {
+    "moved": "Esta ficha não está mais disponível",
+    "code": "Código:",
+    "notFound": "Não encontramos esse código",
+    "codeReceived": "Código recebido:",
+    "browse": "Explorar o diretório",
+    "homepage": "Ir para o início",
+    "movedBody": "Sua leitura funcionou. Este lugar simplesmente não está mais no nosso diretório, porque fechou ou porque sua ficha terminou. Veja onde procurar.",
+    "notFoundBody": "O código pode ter sido lido de forma imperfeita, ou digitado com um caractere fora do lugar. Tente escanear de novo, ou explore o diretório."
+  },
+  "days": {
+    "mon": "Segunda-feira",
+    "tue": "Terça-feira",
+    "wed": "Quarta-feira",
+    "thu": "Quinta-feira",
+    "fri": "Sexta-feira",
+    "sat": "Sábado",
+    "sun": "Domingo"
+  },
+  "stars": {
+    "rating": "{rating} de 5",
+    "ratingCount": "{rating} de 5, de {count, plural, one {# avaliação} other {# avaliações}}"
+  },
+  "article": {
+    "byAuthor": "Por {name}",
+    "paidPartnership": "Parceria paga.",
+    "paidPartnershipWith": "Parceria paga com {sponsor}.",
+    "pageLabel": "{count, plural, one {Página {range}} other {Páginas {range}}}"
+  },
+  "tier": {
+    "verified": "Verificado",
+    "signature": "Signature",
+    "signatureLong": "Uma ficha Signature da Vardenia"
   }
 }

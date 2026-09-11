@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
@@ -110,7 +111,10 @@ export function FilterSheet({
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
 }) {
+  // `ar` remains for the price-band names, which are taxonomy (en/ar) from
+  // @vardenia/core; the sheet's own chrome uses `t`.
   const ar = locale === 'ar'
+  const t = useTranslations('filters')
   const router = useRouter()
   const ref = useRef<HTMLDialogElement>(null)
   const [open, setOpen] = useState(false)
@@ -217,7 +221,7 @@ export function FilterSheet({
         >
           <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
         </svg>
-        {ar ? 'الفلاتر' : 'Filters'}
+        {t('filters')}
         {/* 11px, so the least forgiving text on the site for contrast. Ivory on
             gold.700 is 5.79:1; the navy-on-gold.500 it replaces was 3.74. */}
         {count > 0 ? (
@@ -234,7 +238,7 @@ export function FilterSheet({
       */}
       <dialog
         ref={ref}
-        aria-label={ar ? 'الفلاتر' : 'Filters'}
+        aria-label={t('filters')}
         /*
           The margins do the positioning, and they have to be classes.
 
@@ -258,11 +262,11 @@ export function FilterSheet({
           />
 
           <div className="border-ink-100 flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
-            <h2 className="text-xl">{ar ? 'الفلاتر' : 'Filters'}</h2>
+            <h2 className="text-xl">{t('filters')}</h2>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label={ar ? 'إغلاق' : 'Close filters'}
+              aria-label={t('close')}
               className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 grid size-9 place-items-center transition-colors"
             >
               <svg
@@ -293,13 +297,13 @@ export function FilterSheet({
               filterHref does: a district belongs to somewhere else, and the
               pair would return nothing while looking deliberate.
             */}
-            <Group title={ar ? 'المنطقة' : 'Region'}>
+            <Group title={t('region')}>
               <Toggle
                 active={!draft.governorate}
                 onClick={() => set({ governorate: undefined, district: undefined })}
                 count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
               >
-                {ar ? 'كل لبنان' : 'All of Lebanon'}
+                {t('allOfLebanon')}
               </Toggle>
               {GOVERNORATES.map((g) => (
                 <Toggle
@@ -319,7 +323,7 @@ export function FilterSheet({
             </Group>
 
             {subcategories.length > 0 ? (
-              <Group title={ar ? 'النوع' : 'Kind'}>
+              <Group title={t('kind')}>
                 {subcategories.map((child) => (
                   <Toggle
                     key={child.slug}
@@ -340,7 +344,7 @@ export function FilterSheet({
                 twenty-eight districts across eight governorates is not a
                 choice anybody can make. */}
             {districts.length > 1 ? (
-              <Group title={ar ? 'القضاء' : 'District'}>
+              <Group title={t('district')}>
                 {districts.map((d) => (
                   <Toggle
                     key={d.slug}
@@ -357,11 +361,11 @@ export function FilterSheet({
 
             {/* A segmented control rather than chips: the four bands are one
                 scale, and chips would imply they can be combined. */}
-            <Group title={ar ? 'السعر' : 'Price'}>
+            <Group title={t('price')}>
               <div
                 className="border-ink-100 flex overflow-hidden border"
                 role="group"
-                aria-label={ar ? 'السعر' : 'Price'}
+                aria-label={t('price')}
               >
                 {PRICE_RANGES.map((p) => (
                   <button
@@ -384,7 +388,7 @@ export function FilterSheet({
               </div>
             </Group>
 
-            <Group title={ar ? 'المرافق' : 'Features'}>
+            <Group title={t('features')}>
               {displayAmenities.map((a) => (
                 <Toggle
                   key={a.slug}
@@ -403,14 +407,14 @@ export function FilterSheet({
               onClick={clear}
               className="text-ink-500 hover:text-ink-900 text-sm underline underline-offset-4 transition-colors"
             >
-              {ar ? 'مسح الكل' : 'Clear all'}
+              {t('clearAll')}
             </button>
             <button
               type="button"
               onClick={apply}
               className="bg-cedar-900 text-surface-base hover:bg-cedar-700 h-11 flex-1 px-6 text-sm font-medium transition-[background-color,transform] active:scale-[0.985] sm:max-w-[240px]"
             >
-              {ar ? 'عرض النتائج' : 'Show results'}
+              {t('showResults')}
             </button>
           </div>
         </div>

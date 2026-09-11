@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../../lib/seo'
 import { Link } from '../../../../../i18n/routing'
@@ -41,12 +41,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
-  const ar = locale === 'ar'
+  const t = await getTranslations({ locale })
   return {
-    title: ar ? 'المقالات' : 'Articles',
-    description: ar
-      ? 'تحقيقات وأدلة وجهات ومقابلات من فاردينيا.'
-      : 'Features, destination guides and interviews from Vardenia.',
+    title: t('magazine.articles'),
+    description: t('magazine.articlesMetaDescription'),
     alternates: alternatesFor('/magazine/articles', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
@@ -56,16 +54,16 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const ar = locale === 'ar'
+  const t = await getTranslations()
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header>
         <Link href="/magazine" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {ar ? 'المجلة' : 'Magazine'}
+          {t('magazine.title')}
         </Link>
         <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {ar ? 'المقالات' : 'Articles'}
+          {t('magazine.articles')}
         </h1>
       </header>
 
@@ -86,16 +84,14 @@ async function ArticleResults({
   locale: Locale
   searchParams: Props['searchParams']
 }) {
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const { page } = await searchParams
   const result = await findArticles({ locale, page: Number(page) || 1 })
 
   return (
     <>
       {result.docs.length === 0 ? (
-        <p className="text-ink-500 mt-16 text-center">
-          {ar ? 'لا توجد مقالات بعد.' : 'No articles yet.'}
-        </p>
+        <p className="text-ink-500 mt-16 text-center">{t('magazine.noArticles')}</p>
       ) : (
         <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {result.docs.map((article) => (

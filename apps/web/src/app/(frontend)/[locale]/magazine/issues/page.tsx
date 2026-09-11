@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../../lib/seo'
 import { Link } from '../../../../../i18n/routing'
@@ -24,10 +24,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
-  const ar = locale === 'ar'
+  const t = await getTranslations({ locale })
   return {
-    title: ar ? 'الأعداد' : 'Issues',
-    description: ar ? 'أرشيف أعداد فاردينيا المطبوعة.' : 'The Vardenia print archive.',
+    title: t('magazine.issues'),
+    description: t('magazine.printArchive'),
     alternates: alternatesFor('/magazine/issues', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
@@ -37,24 +37,22 @@ export default async function IssuesPage({ params }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const result = await findIssues(locale)
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <header>
         <Link href="/magazine" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {ar ? 'المجلة' : 'Magazine'}
+          {t('magazine.title')}
         </Link>
         <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {ar ? 'الأعداد' : 'Issues'}
+          {t('magazine.issues')}
         </h1>
       </header>
 
       {result.docs.length === 0 ? (
-        <p className="text-ink-500 mt-16 text-center">
-          {ar ? 'لا توجد أعداد بعد.' : 'No issues yet.'}
-        </p>
+        <p className="text-ink-500 mt-16 text-center">{t('magazine.noIssues')}</p>
       ) : (
         <div className="mt-10 grid gap-8 sm:grid-cols-3 lg:grid-cols-4">
           {result.docs.map((issue) => {
@@ -74,7 +72,7 @@ export default async function IssuesPage({ params }: Props) {
                     ) : null}
                   </div>
                   <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">
-                    {ar ? `العدد ${issue.issueNumber}` : `Issue ${issue.issueNumber}`}
+                    {t('magazine.issueNumber', { number: issue.issueNumber })}
                   </p>
                   <h2 className="font-display text-ink-900 mt-1 text-xl leading-snug">
                     {issue.title}

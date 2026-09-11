@@ -11,7 +11,14 @@
     "regions": "Régions",
     "about": "À propos",
     "advertise": "Annoncez chez nous",
-    "saved": "Lieux enregistrés"
+    "saved": "Lieux enregistrés",
+    "search": "Rechercher",
+    "menu": "Menu",
+    "aboutVardenia": "À propos de Vardenia",
+    "aboutVardeniaNote": "Qui nous sommes et comment se fait l’annuaire",
+    "addBusinessNote": "Figurez dans le magazine et en ligne",
+    "questions": "Questions",
+    "contact": "Contact"
   },
   "home": {
     "eyebrow": "Numéro 01, Beyrouth et le Mont-Liban",
@@ -64,7 +71,35 @@
     "clearFilters": "Effacer les filtres",
     "emptyFiltered": "Rien ici ne correspond à tous les filtres actifs. Essayez d'en retirer un, ou d'élargir la zone.",
     "emptySection": "Nous n'avons encore rien publié ici. De nouveaux lieux sont ajoutés à chaque numéro.",
-    "scanArrival": "Scanné depuis le magazine"
+    "scanArrival": "Scanné depuis le magazine",
+    "title": "Annuaire",
+    "discoverLebanon": "Découvrez le Liban",
+    "view": "Affichage",
+    "list": "Liste",
+    "map": "Carte",
+    "all": "Tout",
+    "directoryMap": "Carte de l'annuaire",
+    "nothingToMap": "Rien à afficher sur la carte pour le moment",
+    "viewList": "Voir la liste",
+    "closedNow": "Fermé maintenant",
+    "address": "Adresse",
+    "type": "Type",
+    "price": "Prix",
+    "openingHours": "Heures d'ouverture",
+    "showWeek": "Afficher la semaine",
+    "gallery": "Galerie",
+    "nearby": "À proximité",
+    "moreLikeThis": "Dans le même esprit",
+    "browse": "Parcourir l'annuaire",
+    "closed": "Fermé",
+    "governorate": "Gouvernorat",
+    "appliedFilters": "Filtres appliqués",
+    "sections": "Sections de l'annuaire",
+    "metaDescription": "Hôtels, restaurants et expériences sélectionnés partout au Liban.",
+    "mapPinnedOnly": "Seuls les lieux avec une position localisée apparaissent sur la carte.",
+    "nothingToMapBody": "Aucun de ces lieux n'a encore de position localisée, aucun ne peut donc apparaître sur la carte. Les positions sont ajoutées peu à peu ; en attendant, ils sont tous dans la liste.",
+    "sectionMap": "Carte de {name}",
+    "ctaBanner": "Hôtels, restaurants et expériences sélectionnés partout au Liban, sur papier et en ligne."
   },
   "booking": {
     "heading": "Réserver une table",
@@ -179,7 +214,8 @@
     "strengthAdvice": "Seul le premier est requis. La longueur fait toujours plus pour vous que tous les autres.",
     "rule_number": "Un chiffre",
     "rule_symbol": "Un caractère spécial",
-    "rule_case": "Majuscules et minuscules"
+    "rule_case": "Majuscules et minuscules",
+    "details": "Vos informations"
   },
   "partner": {
     "eyebrow": "Pour les partenaires",
@@ -265,6 +301,119 @@
     "retry": "Réessayer",
     "close": "Fermer",
     "save": "Enregistrer",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "brand": "Vardenia",
+    "homepage": "Aller à l'accueil",
+    "onGoogle": "sur Google"
+  },
+  "footer": {
+    "discover": "Découvrir",
+    "read": "Lire",
+    "company": "Entreprise",
+    "business": "Pour les professionnels",
+    "issues": "Numéros",
+    "articles": "Articles",
+    "directory": "Annuaire",
+    "about": "À propos",
+    "questions": "Questions",
+    "contact": "Contact",
+    "addBusiness": "Ajouter votre établissement",
+    "partnerWithUs": "Devenir partenaire",
+    "advertise": "Annoncer",
+    "partnerSignIn": "Espace partenaire",
+    "rights": "Tous droits réservés.",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "terms": "Conditions d'utilisation",
+    "tagline": "Le guide du tourisme et de l'art de vivre au Liban, sélectionné et vérifié."
+  },
+  "filters": {
+    "filters": "Filtres",
+    "close": "Fermer les filtres",
+    "region": "Région",
+    "allOfLebanon": "Tout le Liban",
+    "kind": "Type",
+    "district": "District",
+    "price": "Prix",
+    "features": "Équipements",
+    "clearAll": "Tout effacer",
+    "showResults": "Voir les résultats",
+    "clearFilters": "Effacer les filtres"
+  },
+  "magazine": {
+    "title": "Magazine",
+    "discoverLebanon": "Découvrez le Liban",
+    "articles": "Articles",
+    "issues": "Numéros",
+    "noArticles": "Aucun article pour le moment.",
+    "noIssues": "Aucun numéro pour le moment.",
+    "placesInStory": "Lieux cités dans cet article",
+    "printArchive": "Les archives imprimées de Vardenia.",
+    "readDigital": "Lire l'édition numérique",
+    "inThisIssue": "Dans ce numéro",
+    "currentIssue": "Numéro actuel",
+    "whatsInIssue": "Au sommaire de ce numéro",
+    "allIssues": "Tous les numéros",
+    "latestArticles": "Derniers articles",
+    "allArticles": "Tous les articles",
+    "metaDescription": "Reportages, guides de destinations et les archives imprimées de Vardenia.",
+    "articlesMetaDescription": "Reportages, guides de destinations et entretiens de Vardenia.",
+    "issueNumber": "Numéro {number}",
+    "pageCount": "{count, plural, one {# page} other {# pages}}",
+    "issueMetaDescription": "Numéro {number} de Vardenia.",
+    "noArticlesInIssue": "Aucun article n'a encore été ajouté à ce numéro."
+  },
+  "search": {
+    "title": "Rechercher",
+    "places": "Lieux",
+    "reading": "À lire",
+    "nothing": "Rien",
+    "placeholder": "Un hôtel, un restaurant, un article",
+    "browse": "Parcourir l'annuaire",
+    "resultCount": "{count, plural, one {# résultat} other {# résultats}} pour \"{query}\"",
+    "prompt": "Cherchez un hôtel, un restaurant, ou de quoi lire. Deux lettres au moins.",
+    "noResultsFor": "Rien ne correspond à \"{query}\".",
+    "noResultsHint": "Essayez un mot plus court, ou parcourez l'annuaire."
+  },
+  "errorPage": {
+    "title": "Une erreur s'est produite",
+    "tryAgain": "Réessayer",
+    "browse": "Parcourir l'annuaire",
+    "reference": "Référence :",
+    "body": "C'est de notre côté, pas du vôtre. Réessayez dans un instant, ou parcourez l'annuaire."
+  },
+  "scan": {
+    "moved": "Cette fiche n'est plus disponible",
+    "code": "Code :",
+    "notFound": "Nous n'avons pas trouvé ce code",
+    "codeReceived": "Code reçu :",
+    "browse": "Parcourir l'annuaire",
+    "homepage": "Aller à l'accueil",
+    "movedBody": "Votre scan a fonctionné. Ce lieu n'est simplement plus référencé chez nous, parce qu'il a fermé ou que sa fiche a pris fin. Voici où chercher à la place.",
+    "notFoundBody": "Le code a peut-être été mal scanné, ou saisi avec un caractère de travers. Réessayez de scanner, ou parcourez l'annuaire."
+  },
+  "days": {
+    "mon": "Lundi",
+    "tue": "Mardi",
+    "wed": "Mercredi",
+    "thu": "Jeudi",
+    "fri": "Vendredi",
+    "sat": "Samedi",
+    "sun": "Dimanche"
+  },
+  "stars": {
+    "rating": "{rating} sur 5",
+    "ratingCount": "{rating} sur 5, sur {count, plural, one {# avis} other {# avis}}"
+  },
+  "article": {
+    "byAuthor": "Par {name}",
+    "paidPartnership": "Partenariat rémunéré.",
+    "paidPartnershipWith": "Partenariat rémunéré avec {sponsor}.",
+    "pageLabel": "{count, plural, one {Page {range}} other {Pages {range}}}"
+  },
+  "tier": {
+    "verified": "Vérifié",
+    "signature": "Signature",
+    "signatureLong": "Une fiche Signature de Vardenia"
   }
 }

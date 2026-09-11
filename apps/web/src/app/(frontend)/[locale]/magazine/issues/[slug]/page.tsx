@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../../i18n/routing'
 import {
@@ -54,13 +54,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   // Issues carry no SEO group - there are few of them and their metadata is
   // formulaic - so the fallbacks do all the work here.
+  const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
     title: issue.title,
-    description:
-      locale === 'ar'
-        ? `العدد ${issue.issueNumber} من فاردينيا.`
-        : `Issue ${issue.issueNumber} of Vardenia.`,
+    description: t('magazine.issueMetaDescription', { number: issue.issueNumber }),
     fallbackImage: issue.cover as never,
     path: `/magazine/issues/${slug}`,
     locale,
@@ -75,7 +73,7 @@ export default async function IssuePage({ params }: Params) {
   const issue = await findIssueBySlug(slug, locale)
   if (!issue) notFound()
 
-  const ar = locale === 'ar'
+  const t = await getTranslations()
   const cover = resolveImage(issue.cover as never, 'portrait')
   const articles = await findArticlesInIssue(issue.id, locale)
   const edition = resolveImage(issue.digitalEdition as never, 'card')
@@ -83,7 +81,7 @@ export default async function IssuePage({ params }: Params) {
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
       <Link href="/magazine/issues" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-        {ar ? 'الأعداد' : 'Issues'}
+        {t('magazine.issues')}
       </Link>
 
       <div className="mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
@@ -102,7 +100,7 @@ export default async function IssuePage({ params }: Params) {
 
         <div>
           <p className="text-ink-500 text-xs uppercase tabular-nums tracking-widest">
-            {ar ? `العدد ${issue.issueNumber}` : `Issue ${issue.issueNumber}`}
+            {t('magazine.issueNumber', { number: issue.issueNumber })}
           </p>
           <h1 className="font-display text-ink-900 mt-2 text-4xl leading-tight md:text-5xl">
             {issue.title}
@@ -117,7 +115,7 @@ export default async function IssuePage({ params }: Params) {
             ) : null}
             {issue.pageCount ? (
               <span className="tabular-nums">
-                {ar ? `${issue.pageCount} صفحة` : `${issue.pageCount} pages`}
+                {t('magazine.pageCount', { count: issue.pageCount })}
               </span>
             ) : null}
           </div>
@@ -134,7 +132,7 @@ export default async function IssuePage({ params }: Params) {
               rel="noopener noreferrer"
               className="bg-cedar-900 text-surface-base hover:bg-cedar-700 mt-8 inline-block px-5 py-3 text-sm font-semibold transition-colors"
             >
-              {ar ? 'تصفح النسخة الرقمية' : 'Read the digital edition'}
+              {t('magazine.readDigital')}
             </a>
           ) : null}
         </div>
@@ -142,15 +140,11 @@ export default async function IssuePage({ params }: Params) {
 
       <section className="mt-16">
         <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-          {ar ? 'في هذا العدد' : 'In this issue'}
+          {t('magazine.inThisIssue')}
         </h2>
 
         {articles.length === 0 ? (
-          <p className="text-ink-500 mt-4 text-sm">
-            {ar
-              ? 'لم تُضف مقالات إلى هذا العدد بعد.'
-              : 'No articles have been added to this issue yet.'}
-          </p>
+          <p className="text-ink-500 mt-4 text-sm">{t('magazine.noArticlesInIssue')}</p>
         ) : (
           <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {articles.map((article) => {
@@ -160,12 +154,10 @@ export default async function IssuePage({ params }: Params) {
               } | null
               const from = print?.pageFrom
               const to = print?.pageTo
+              const isRange = to != null && to !== from
+              const range = isRange ? `${from}-${to}` : String(from)
               const pageLabel =
-                from != null
-                  ? ar
-                    ? `صفحة ${to != null && to !== from ? `${from}-${to}` : from}`
-                    : `Page${to != null && to !== from ? 's' : ''} ${to != null && to !== from ? `${from}-${to}` : from}`
-                  : null
+                from != null ? t('article.pageLabel', { count: isRange ? 2 : 1, range }) : null
 
               return (
                 <ArticleCard

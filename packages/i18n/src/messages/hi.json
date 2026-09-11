@@ -11,7 +11,14 @@
     "regions": "क्षेत्र",
     "about": "परिचय",
     "advertise": "हमारे साथ विज्ञापन दें",
-    "saved": "सहेजे गए स्थान"
+    "saved": "सहेजे गए स्थान",
+    "search": "खोजें",
+    "menu": "मेन्यू",
+    "aboutVardenia": "Vardenia के बारे में",
+    "aboutVardeniaNote": "हम कौन हैं और निर्देशिका कैसे बनती है",
+    "addBusinessNote": "प्रिंट और ऑनलाइन में शामिल हों",
+    "questions": "सवाल",
+    "contact": "संपर्क"
   },
   "home": {
     "eyebrow": "अंक 01, बेरूत और माउंट लेबनान",
@@ -64,7 +71,35 @@
     "clearFilters": "फ़िल्टर हटाएँ",
     "emptyFiltered": "आपके लगाए सभी फ़िल्टर से यहाँ कुछ मेल नहीं खाता। एक फ़िल्टर हटाकर देखें, या क्षेत्र बढ़ाएँ।",
     "emptySection": "हमने यहाँ अभी कुछ प्रकाशित नहीं किया है। हर अंक के साथ नई जगहें जुड़ती हैं।",
-    "scanArrival": "पत्रिका से स्कैन किया गया"
+    "scanArrival": "पत्रिका से स्कैन किया गया",
+    "title": "निर्देशिका",
+    "discoverLebanon": "लेबनान को जानें",
+    "view": "दृश्य",
+    "list": "सूची",
+    "map": "नक़्शा",
+    "all": "सभी",
+    "directoryMap": "निर्देशिका का नक़्शा",
+    "nothingToMap": "नक़्शे पर दिखाने को अभी कुछ नहीं",
+    "viewList": "सूची देखें",
+    "closedNow": "अभी बंद",
+    "address": "पता",
+    "type": "श्रेणी",
+    "price": "क़ीमत",
+    "openingHours": "खुलने का समय",
+    "showWeek": "पूरा हफ़्ता दिखाएँ",
+    "gallery": "गैलरी",
+    "nearby": "आस-पास",
+    "moreLikeThis": "ऐसे और",
+    "browse": "निर्देशिका देखें",
+    "closed": "बंद",
+    "governorate": "गवर्नरेट",
+    "appliedFilters": "लागू फ़िल्टर",
+    "sections": "निर्देशिका के खंड",
+    "metaDescription": "पूरे लेबनान से चुने हुए होटल, रेस्तराँ और अनुभव।",
+    "mapPinnedOnly": "नक़्शे पर केवल वे जगहें दिखती हैं जिनका स्थान तय है।",
+    "nothingToMapBody": "इनमें से किसी जगह का अभी तक कोई स्थान तय नहीं है, इसलिए कोई भी नक़्शे पर नहीं दिख सकता। स्थान जोड़े जा रहे हैं; तब तक वे सब सूची में हैं।",
+    "sectionMap": "{name} का नक़्शा",
+    "ctaBanner": "पूरे लेबनान से चुने हुए होटल, रेस्तराँ और अनुभव, प्रिंट और ऑनलाइन दोनों में।"
   },
   "booking": {
     "heading": "मेज़ बुक करें",
@@ -179,7 +214,8 @@
     "strengthAdvice": "सिर्फ़ पहला ज़रूरी है। लंबाई अब भी बाक़ी सबसे ज़्यादा आपके काम आती है।",
     "rule_number": "एक अंक",
     "rule_symbol": "एक विशेष चिह्न",
-    "rule_case": "बड़े और छोटे अक्षर"
+    "rule_case": "बड़े और छोटे अक्षर",
+    "details": "आपका विवरण"
   },
   "partner": {
     "eyebrow": "साझेदारों के लिए",
@@ -265,6 +301,119 @@
     "retry": "फिर कोशिश करें",
     "close": "बंद करें",
     "save": "सहेजें",
-    "saved": "सहेजा गया"
+    "saved": "सहेजा गया",
+    "brand": "Vardenia",
+    "homepage": "होम पेज पर जाएँ",
+    "onGoogle": "गूगल पर"
+  },
+  "footer": {
+    "discover": "खोजें",
+    "read": "पढ़ें",
+    "company": "कंपनी",
+    "business": "व्यवसाय के लिए",
+    "issues": "अंक",
+    "articles": "लेख",
+    "directory": "निर्देशिका",
+    "about": "परिचय",
+    "questions": "सवाल",
+    "contact": "संपर्क",
+    "addBusiness": "अपना व्यवसाय जोड़ें",
+    "partnerWithUs": "हमारे साझेदार बनें",
+    "advertise": "विज्ञापन दें",
+    "partnerSignIn": "साझेदार साइन इन",
+    "rights": "सर्वाधिकार सुरक्षित।",
+    "legal": "कानूनी",
+    "privacy": "गोपनीयता",
+    "terms": "शर्तें",
+    "tagline": "लेबनान की पर्यटन और जीवनशैली गाइड, चुनी और सत्यापित।"
+  },
+  "filters": {
+    "filters": "फ़िल्टर",
+    "close": "फ़िल्टर बंद करें",
+    "region": "क्षेत्र",
+    "allOfLebanon": "पूरा लेबनान",
+    "kind": "प्रकार",
+    "district": "ज़िला",
+    "price": "क़ीमत",
+    "features": "सुविधाएँ",
+    "clearAll": "सब हटाएँ",
+    "showResults": "नतीजे दिखाएँ",
+    "clearFilters": "फ़िल्टर हटाएँ"
+  },
+  "magazine": {
+    "title": "पत्रिका",
+    "discoverLebanon": "लेबनान को जानें",
+    "articles": "लेख",
+    "issues": "अंक",
+    "noArticles": "अभी कोई लेख नहीं।",
+    "noIssues": "अभी कोई अंक नहीं।",
+    "placesInStory": "इस लेख की जगहें",
+    "printArchive": "Vardenia का प्रिंट संग्रह।",
+    "readDigital": "डिजिटल संस्करण पढ़ें",
+    "inThisIssue": "इस अंक में",
+    "currentIssue": "मौजूदा अंक",
+    "whatsInIssue": "इस अंक में क्या है",
+    "allIssues": "सभी अंक",
+    "latestArticles": "ताज़ा लेख",
+    "allArticles": "सभी लेख",
+    "metaDescription": "फ़ीचर, गंतव्य गाइड और Vardenia का प्रिंट संग्रह।",
+    "articlesMetaDescription": "Vardenia से फ़ीचर, गंतव्य गाइड और साक्षात्कार।",
+    "issueNumber": "अंक {number}",
+    "pageCount": "{count, plural, one {# पेज} other {# पेज}}",
+    "issueMetaDescription": "Vardenia का अंक {number}।",
+    "noArticlesInIssue": "इस अंक में अभी कोई लेख नहीं जोड़ा गया है।"
+  },
+  "search": {
+    "title": "खोजें",
+    "places": "जगहें",
+    "reading": "पढ़ने के लिए",
+    "nothing": "कुछ नहीं",
+    "placeholder": "कोई होटल, कोई रेस्तराँ, कोई लेख",
+    "browse": "निर्देशिका देखें",
+    "resultCount": "\"{query}\" के लिए {count, plural, one {# नतीजा} other {# नतीजे}}",
+    "prompt": "कोई होटल, रेस्तराँ, या पढ़ने के लिए कुछ खोजें। कम से कम दो अक्षर।",
+    "noResultsFor": "\"{query}\" से कुछ मेल नहीं खाया।",
+    "noResultsHint": "कोई छोटा शब्द आज़माएँ, या निर्देशिका देखें।"
+  },
+  "errorPage": {
+    "title": "कुछ ग़लत हो गया",
+    "tryAgain": "फिर कोशिश करें",
+    "browse": "निर्देशिका देखें",
+    "reference": "संदर्भ:",
+    "body": "यह हमारी ओर से है, आपकी नहीं। एक पल में फिर कोशिश करें, या निर्देशिका देखें।"
+  },
+  "scan": {
+    "moved": "यह प्रविष्टि अब उपलब्ध नहीं है",
+    "code": "कोड:",
+    "notFound": "हमें वह कोड नहीं मिला",
+    "codeReceived": "मिला कोड:",
+    "browse": "निर्देशिका देखें",
+    "homepage": "होम पेज पर जाएँ",
+    "movedBody": "आपका स्कैन काम कर गया। यह जगह बस अब हमारे यहाँ सूचीबद्ध नहीं है, या तो बंद हो गई या उसकी लिस्टिंग खत्म हो गई। इसके बजाय यहाँ देखें।",
+    "notFoundBody": "हो सकता है कोड ठीक से स्कैन न हुआ हो, या कोई अक्षर ग़लत टाइप हो गया हो। दोबारा स्कैन करें, या निर्देशिका देखें।"
+  },
+  "days": {
+    "mon": "सोमवार",
+    "tue": "मंगलवार",
+    "wed": "बुधवार",
+    "thu": "गुरुवार",
+    "fri": "शुक्रवार",
+    "sat": "शनिवार",
+    "sun": "रविवार"
+  },
+  "stars": {
+    "rating": "5 में से {rating}",
+    "ratingCount": "5 में से {rating}, {count, plural, one {# रेटिंग} other {# रेटिंग}} पर आधारित"
+  },
+  "article": {
+    "byAuthor": "{name} द्वारा",
+    "paidPartnership": "सशुल्क साझेदारी।",
+    "paidPartnershipWith": "{sponsor} के साथ सशुल्क साझेदारी।",
+    "pageLabel": "पेज {range}"
+  },
+  "tier": {
+    "verified": "सत्यापित",
+    "signature": "प्रीमियम",
+    "signatureLong": "एक Vardenia प्रीमियम प्रविष्टि"
   }
 }

@@ -45,12 +45,10 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
+  const t = await getTranslations({ locale })
   return {
-    title: locale === 'ar' ? 'الدليل' : 'Directory',
-    description:
-      locale === 'ar'
-        ? 'فنادق ومطاعم وتجارب مختارة في لبنان.'
-        : 'Curated hotels, restaurants and experiences across Lebanon.',
+    title: t('directory.title'),
+    description: t('directory.metaDescription'),
     alternates: alternatesFor('/directory', isLocale(locale) ? locale : DEFAULT_LOCALE),
   }
 }
@@ -59,6 +57,8 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
+
+  const t = await getTranslations('directory')
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
@@ -72,10 +72,10 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       */}
       <header>
         <p className="text-gold-700 font-mono text-[11px] uppercase tracking-[0.2em]">
-          {locale === 'ar' ? 'اكتشف لبنان' : 'Discover Lebanon'}
+          {t('discoverLebanon')}
         </p>
         <h1 className="font-display text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">
-          {locale === 'ar' ? 'الدليل' : 'Directory'}
+          {t('title')}
         </h1>
       </header>
 
@@ -113,7 +113,6 @@ async function DirectoryResults({
    */
   const { page, view, ...raw } = await searchParams
   const t = await getTranslations('directory')
-  const ar = locale === 'ar'
 
   /**
    * No subcategory here, so an empty list is passed and that row is dropped.
@@ -178,23 +177,17 @@ async function DirectoryResults({
               {t('resultCount', { count: total })}
             </p>
           ) : null}
-          {isMap ? (
-            <p className="text-ink-500 mt-1 text-xs">
-              {ar
-                ? 'تظهر على الخريطة الأماكن ذات الموقع المحدد فقط.'
-                : 'Only places with a pinned location appear on the map.'}
-            </p>
-          ) : null}
+          {isMap ? <p className="text-ink-500 mt-1 text-xs">{t('mapPinnedOnly')}</p> : null}
         </div>
 
         {/* Two views of one query. FilterChip carries the active state, so the
             current view reads the same as a selected filter does. */}
-        <div className="flex shrink-0 gap-2" aria-label={ar ? 'طريقة العرض' : 'View'}>
+        <div className="flex shrink-0 gap-2" aria-label={t('view')}>
           <FilterChip href={listHref} active={!isMap}>
-            {ar ? 'قائمة' : 'List'}
+            {t('list')}
           </FilterChip>
           <FilterChip href={mapHref} active={isMap}>
-            {ar ? 'خريطة' : 'Map'}
+            {t('map')}
           </FilterChip>
         </div>
       </div>
@@ -212,10 +205,10 @@ async function DirectoryResults({
       */}
       <nav
         className="border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
-        aria-label="Browse by section"
+        aria-label={t('sections')}
       >
         <FilterChip href="/directory" active>
-          {locale === 'ar' ? 'الكل' : 'All'}
+          {t('all')}
         </FilterChip>
         {SECTIONS.map((section) => (
           <FilterChip key={section.path} href={`/${section.path}`} active={false}>
@@ -235,7 +228,7 @@ async function DirectoryResults({
       {isMap ? (
         points && points.length > 0 ? (
           <DirectoryMap
-            label={ar ? 'خريطة الدليل' : 'Directory map'}
+            label={t('directoryMap')}
             directionsLabel={t('getDirections')}
             frame={boundsForRegion(state.governorate)}
             pins={points.map((p): MapPin => ({
@@ -261,15 +254,11 @@ async function DirectoryResults({
           <ListingGrid
             listings={[]}
             locale={locale}
-            empty={ar ? 'لا شيء على الخريطة بعد' : 'Nothing to map yet'}
-            emptyBody={
-              ar
-                ? 'لا يحمل أيٌّ من هذه الأماكن موقعاً محدداً على الخريطة بعد. المواقع تُضاف تدريجياً؛ حتى ذلك الحين تجدها كلها في القائمة.'
-                : 'None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.'
-            }
+            empty={t('nothingToMap')}
+            emptyBody={t('nothingToMapBody')}
             emptyAction={
               <Link href={listHref} className={LINK}>
-                {ar ? 'اعرض القائمة' : 'View the list'}
+                {t('viewList')}
               </Link>
             }
           />
