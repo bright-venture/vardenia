@@ -15,6 +15,7 @@ import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { guardSort } from '../hooks/guardSort'
+import { autoTranslateListing } from '../hooks/autoTranslateListing'
 import {
   revalidateListingsAfterChange,
   revalidateListingsAfterDelete,
@@ -59,7 +60,7 @@ export const Businesses: CollectionConfig = {
     // The cached directory is keyed per filter, so publishing has to clear all
     // of them or the unfiltered view keeps serving an answer from before the
     // listing existed. See hooks/revalidateListings.
-    afterChange: [ensureQrCode, revalidateListingsAfterChange],
+    afterChange: [ensureQrCode, autoTranslateListing, revalidateListingsAfterChange],
     afterDelete: [revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
     // listing mints a new one. Refused rather than warned about.
