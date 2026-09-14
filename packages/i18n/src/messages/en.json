@@ -99,7 +99,11 @@
     "mapPinnedOnly": "Only places with a pinned location appear on the map.",
     "nothingToMapBody": "None of these places has a pinned location yet, so none can appear on the map. Locations are being added; until then they are all in the list.",
     "sectionMap": "{name} map",
-    "ctaBanner": "Curated hotels, restaurants and experiences across Lebanon, in print and online."
+    "ctaBanner": "Curated hotels, restaurants and experiences across Lebanon, in print and online.",
+    "youAreHere": "You are here",
+    "locating": "Finding your location…",
+    "locateUnavailable": "We could not access your location.",
+    "outsideArea": "You are outside this area."
   },
   "booking": {
     "heading": "Book a table",

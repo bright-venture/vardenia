@@ -230,6 +230,13 @@ async function DirectoryResults({
           <DirectoryMap
             label={t('directoryMap')}
             directionsLabel={t('getDirections')}
+            locate={{
+              nearMe: t('nearMe'),
+              youAreHere: t('youAreHere'),
+              locating: t('locating'),
+              unavailable: t('locateUnavailable'),
+              outsideArea: t('outsideArea'),
+            }}
             frame={boundsForRegion(state.governorate)}
             pins={points.map((p): MapPin => ({
               slug: p.slug,

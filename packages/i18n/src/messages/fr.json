@@ -99,7 +99,11 @@
     "mapPinnedOnly": "Seuls les lieux avec une position localisée apparaissent sur la carte.",
     "nothingToMapBody": "Aucun de ces lieux n'a encore de position localisée, aucun ne peut donc apparaître sur la carte. Les positions sont ajoutées peu à peu ; en attendant, ils sont tous dans la liste.",
     "sectionMap": "Carte de {name}",
-    "ctaBanner": "Hôtels, restaurants et expériences sélectionnés partout au Liban, sur papier et en ligne."
+    "ctaBanner": "Hôtels, restaurants et expériences sélectionnés partout au Liban, sur papier et en ligne.",
+    "youAreHere": "Vous êtes ici",
+    "locating": "Localisation en cours…",
+    "locateUnavailable": "Impossible d’accéder à votre position.",
+    "outsideArea": "Vous êtes en dehors de cette zone."
   },
   "booking": {
     "heading": "Réserver une table",

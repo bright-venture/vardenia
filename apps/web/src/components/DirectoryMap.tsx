@@ -15,20 +15,25 @@
  * Leaflet with raster tiles asks for none of that. Tiles are `<img>` elements,
  * and `img-src` already allows `https:`, so the map needs no CSP change at all.
  * The library is bundled from npm rather than a CDN, which keeps `script-src` at
- * `'self'`.
+ * `'self'`. The clustering plugin (leaflet.markercluster) is bundled the same
+ * way and needs no network of its own.
  *
  * # Why it initialises in an effect
  *
  * Leaflet touches `window` and `document` the moment it is imported, which is
  * fatal during server rendering - and a client component still renders on the
- * server for its first paint. So `leaflet` is imported dynamically inside the
- * effect, where the code only ever runs in the browser. The container ships in
- * the SSR'd HTML as an empty sized box; the map fills it after hydration.
+ * server for its first paint. So `leaflet` (and its cluster plugin) is imported
+ * dynamically inside the effect, where the code only ever runs in the browser.
+ * The container ships in the SSR'd HTML as an empty sized box; the map fills it
+ * after hydration. Only the plugin's stylesheets are imported at module top,
+ * which is inert on the server.
  */
 
-import { useEffect, useMemo, useRef } from 'react'
-import type { Map as LeafletMap } from 'leaflet'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { DivIcon, Layer, Map as LeafletMap, Marker } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 /** One pin, with every label already resolved server-side. */
 export interface MapPin {
@@ -47,7 +52,7 @@ export interface MapPin {
 }
 
 // The brand's navy and gold, inlined rather than imported: this file already
-// pulls in Leaflet's stylesheet, and two dots do not justify dragging the whole
+// pulls in Leaflet's stylesheet, and a few dots do not justify dragging the whole
 // token module into the client bundle. Kept in step with packages/tokens.
 const NAVY = '#0b1739'
 const GOLD = '#9b6a20'
@@ -67,11 +72,44 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
+/**
+ * The slice of leaflet.markercluster this file uses, typed on our side rather
+ * than through the plugin's ambient augmentation - so `L.markerClusterGroup`
+ * is known to the compiler without a module-augmentation import that would have
+ * to run on the server to take effect.
+ */
+interface ClusterMarker {
+  getChildCount(): number
+}
+interface MarkerClusterGroup extends Layer {
+  addLayer(layer: Layer): this
+  addTo(map: LeafletMap): this
+}
+interface ClusterCapableL {
+  markerClusterGroup(options?: {
+    iconCreateFunction?: (cluster: ClusterMarker) => DivIcon
+    maxClusterRadius?: number
+    showCoverageOnHover?: boolean
+    spiderfyOnMaxZoom?: boolean
+    chunkedLoading?: boolean
+  }): MarkerClusterGroup
+}
+
+/** Localized chrome for the "near me" control. */
+export interface LocateLabels {
+  nearMe: string
+  youAreHere: string
+  locating: string
+  unavailable: string
+  outsideArea: string
+}
+
 export function DirectoryMap({
   pins,
   label,
   directionsLabel,
   frame,
+  locate,
 }: {
   pins: MapPin[]
   label: string
@@ -83,10 +121,16 @@ export function DirectoryMap({
    * lib/region-bounds.
    */
   frame: [[number, number], [number, number]]
+  /** Localized strings for the geolocation control. */
+  locate: LocateLabels
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<LeafletMap | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
+  /** Set inside the effect so the button can drive the map without a rebuild. */
+  const locateRef = useRef<(() => void) | null>(null)
+
+  const [status, setStatus] = useState<string | null>(null)
 
   /**
    * A stable fingerprint of the pins, so the effect below rebuilds only when the
@@ -107,6 +151,9 @@ export function DirectoryMap({
       // namespace hangs off `.default` - `(await import('leaflet')).map` is
       // undefined, `.default.map` is the function.
       const L = (await import('leaflet')).default
+      // Extends the same L instance in place with `markerClusterGroup`. Imported
+      // after leaflet and only in the browser, for the SSR reason above.
+      await import('leaflet.markercluster')
       // Between the await starting and finishing the component may have
       // unmounted, or a newer set of pins may have replaced this one.
       if (cancelled || !containerRef.current) return
@@ -114,12 +161,6 @@ export function DirectoryMap({
       const key = process.env.NEXT_PUBLIC_MAPTILER_KEY
       // MapTiler when a key is present; OpenStreetMap's own tiles otherwise, so
       // the map works the moment this ships and upgrades when the key is added.
-      //
-      // `streets-v2` is the familiar, Google-like basemap: roads, labels and
-      // places in colour. Swap the style slug for a different look without any
-      // other change - `dataviz-light` and `basic-v2` are quieter, `outdoor-v2`
-      // leans terrain. The OSM fallback below is only ever the unstyled default,
-      // which is the plain look until the key is set.
       const tileUrl = key
         ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}{r}.png?key=${key}`
         : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -174,8 +215,94 @@ export function DirectoryMap({
         return marker
       })
 
-      if (markers.length) L.featureGroup(markers).addTo(map)
+      /**
+       * Cluster overlapping pins into a count bubble that splits apart on zoom.
+       *
+       * The directory is dense in a few places - central Beirut above all - where
+       * a dozen listings share a block and their dots merge into an unreadable
+       * blob. Clustering replaces that blob with one numbered circle that opens as
+       * you zoom in, which is the difference between a map you can use downtown and
+       * one you cannot. Sparse governorates are unaffected: a lone pin never
+       * clusters with itself.
+       */
+      if (markers.length) {
+        const clusters = (L as unknown as ClusterCapableL).markerClusterGroup({
+          maxClusterRadius: 48,
+          showCoverageOnHover: false,
+          spiderfyOnMaxZoom: true,
+          chunkedLoading: true,
+          iconCreateFunction: (cluster) => {
+            const count = cluster.getChildCount()
+            const size = count < 10 ? 34 : count < 50 ? 40 : 48
+            return L.divIcon({
+              className: '',
+              html:
+                `<div style="width:${size}px;height:${size}px;border-radius:9999px;` +
+                `background:${NAVY};border:2px solid ${PAPER};color:${PAPER};` +
+                `display:flex;align-items:center;justify-content:center;` +
+                `font:600 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace;` +
+                `box-shadow:0 2px 8px rgba(11,23,57,.45)">${count}</div>`,
+              iconSize: [size, size],
+              iconAnchor: [size / 2, size / 2],
+            })
+          },
+        })
+        for (const marker of markers) clusters.addLayer(marker)
+        clusters.addTo(map)
+      }
+
       const frameBounds = L.latLngBounds(frame[0], frame[1])
+
+      /**
+       * "Near me": drop a marker at the reader's location and fly to it.
+       *
+       * Defined here, where `L` and the map are in scope, and exposed through a ref
+       * so the button outside the map can call it without rebuilding anything. The
+       * marker is added straight to the map, not the cluster, so it never folds
+       * into a count and always reads as "you".
+       *
+       * A reader outside the framed region - the country, or the filtered
+       * governorate - is told so rather than flown to a clamped edge of a box they
+       * are not in. The frame's own `maxBounds` would otherwise swallow the pan and
+       * look broken.
+       */
+      let userMarker: Marker | null = null
+      locateRef.current = () => {
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+          setStatus(locate.unavailable)
+          return
+        }
+        setStatus(locate.locating)
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const m = mapRef.current
+            if (!m) return
+            const here = L.latLng(position.coords.latitude, position.coords.longitude)
+            if (!frameBounds.contains(here)) {
+              setStatus(locate.outsideArea)
+              return
+            }
+            const icon = L.divIcon({
+              className: '',
+              html: `<span style="display:block;width:18px;height:18px;border-radius:9999px;background:${GOLD};border:3px solid ${PAPER};box-shadow:0 0 0 4px rgba(155,106,32,.3),0 1px 6px rgba(11,23,57,.5)"></span>`,
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            })
+            if (userMarker) userMarker.setLatLng(here)
+            else
+              userMarker = L.marker(here, {
+                icon,
+                title: locate.youAreHere,
+                alt: locate.youAreHere,
+                keyboard: false,
+              }).addTo(m)
+            m.flyTo(here, Math.max(m.getZoom(), 14), { duration: 0.6 })
+            setStatus(null)
+          },
+          () => setStatus(locate.unavailable),
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+        )
+      }
 
       /**
        * Frame the map on the region box, once the container has a real width.
@@ -211,19 +338,55 @@ export function DirectoryMap({
 
     return () => {
       cancelled = true
+      locateRef.current = null
       observerRef.current?.disconnect()
       observerRef.current = null
       map?.remove()
       mapRef.current = null
     }
-  }, [signature, pins, directionsLabel, frame])
+  }, [signature, pins, directionsLabel, frame, locate])
 
   return (
-    <div
-      ref={containerRef}
-      role="application"
-      aria-label={label}
-      className="border-ink-100 relative z-0 mt-10 h-[70vh] min-h-[420px] w-full overflow-hidden border"
-    />
+    <div className="relative mt-10">
+      <div
+        ref={containerRef}
+        role="application"
+        aria-label={label}
+        className="border-ink-100 relative z-0 h-[70vh] min-h-[420px] w-full overflow-hidden border"
+      />
+
+      {/* Sits above the map (Leaflet panes are z-index 400-700; this clears them). */}
+      <button
+        type="button"
+        onClick={() => locateRef.current?.()}
+        className="border-ink-100 text-ink-900 hover:bg-surface-raised absolute right-3 top-3 z-[1000] inline-flex items-center gap-2 border bg-[#f7f0e4] px-3 py-2 font-mono text-xs shadow-sm transition-colors"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+        </svg>
+        {locate.nearMe}
+      </button>
+
+      {status ? (
+        <p
+          role="status"
+          aria-live="polite"
+          className="border-ink-100 text-ink-900 absolute bottom-3 left-3 z-[1000] max-w-[70%] border bg-[#f7f0e4] px-3 py-2 text-xs shadow-sm"
+        >
+          {status}
+        </p>
+      ) : null}
+    </div>
   )
 }

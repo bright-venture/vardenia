@@ -99,7 +99,11 @@
     "mapPinnedOnly": "En el mapa solo aparecen los lugares con una ubicación fijada.",
     "nothingToMapBody": "Ninguno de estos lugares tiene todavía una ubicación fijada, así que ninguno puede aparecer en el mapa. Las ubicaciones se van añadiendo; hasta entonces, están todos en la lista.",
     "sectionMap": "Mapa de {name}",
-    "ctaBanner": "Hoteles, restaurantes y experiencias seleccionados por todo el Líbano, en papel y en línea."
+    "ctaBanner": "Hoteles, restaurantes y experiencias seleccionados por todo el Líbano, en papel y en línea.",
+    "youAreHere": "Estás aquí",
+    "locating": "Buscando tu ubicación…",
+    "locateUnavailable": "No pudimos acceder a tu ubicación.",
+    "outsideArea": "Estás fuera de esta zona."
   },
   "booking": {
     "heading": "Reservar mesa",

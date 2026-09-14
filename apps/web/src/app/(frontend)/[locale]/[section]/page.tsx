@@ -206,6 +206,13 @@ async function SectionResults({
           <DirectoryMap
             label={t('sectionMap', { name: nameFor(section, locale) })}
             directionsLabel={t('getDirections')}
+            locate={{
+              nearMe: t('nearMe'),
+              youAreHere: t('youAreHere'),
+              locating: t('locating'),
+              unavailable: t('locateUnavailable'),
+              outsideArea: t('outsideArea'),
+            }}
             frame={boundsForRegion(state.governorate)}
             pins={points.map((p): MapPin => ({
               slug: p.slug,

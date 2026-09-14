@@ -212,8 +212,13 @@ export const BASE_HEADERS = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
+    // `geolocation=(self)` lets the site's own pages ask for a location - the
+    // directory map's "Near me" needs it - while still denying it to any
+    // third-party iframe. `()` would have blocked our own pages too, which is
+    // why the map's geolocation silently failed with the API refused before it
+    // could prompt. Camera and microphone stay fully off; nothing here uses them.
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+    value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()',
   },
   {
     key: 'Strict-Transport-Security',
