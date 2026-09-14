@@ -5,6 +5,14 @@ import { adminRedirectFor, PAYLOAD_COOKIE, tokenCollection } from './lib/admin-g
 import { legacyCategoryRedirect } from './lib/legacy-urls'
 import { isUnknownTopLevelPath } from './lib/known-paths'
 import { HINT_VALUE, SESSION_HINT } from './lib/session-hint'
+import {
+  COMING_SOON_COOKIE,
+  COMING_SOON_PATH,
+  PREVIEW_MAX_AGE,
+  PREVIEW_QUERY,
+  comingSoonConfig,
+  comingSoonDecision,
+} from './lib/coming-soon'
 
 const intl = createMiddleware(routing)
 
@@ -111,6 +119,71 @@ export function syncSessionHint(request: NextRequest, response: NextResponse): N
 }
 
 /**
+ * Whether the browser will accept a `Secure` cookie, read from what the edge
+ * actually saw rather than the internal protocol. The same reasoning as
+ * syncSessionHint: Netlify terminates TLS and forwards over http, so
+ * `nextUrl.protocol` reads `http:` on a request the reader made over https.
+ */
+function isSecureRequest(request: NextRequest): boolean {
+  const forwarded = request.headers.get('x-forwarded-proto')
+  return forwarded
+    ? forwarded.split(',')[0]?.trim() === 'https'
+    : request.nextUrl.protocol === 'https:'
+}
+
+/**
+ * The pre-launch gate. Returns a response when it wants to intervene, or null to
+ * let the request carry on to the normal locale routing below.
+ *
+ * By the time this runs, `/admin` has already returned above, and `/api`, the
+ * static assets and the file routes never reached the middleware at all (see the
+ * matcher). So everything this sees is a public page, which is exactly what the
+ * gate is meant to cover.
+ *
+ * The three outcomes come from lib/coming-soon:
+ *   pass   the gate is off, or a valid preview cookie is held - do nothing
+ *   grant  the preview link matched - set the cookie and bounce to a clean URL
+ *   gate   rewrite to the splash, keeping the visitor's URL in the bar
+ */
+function comingSoonGate(request: NextRequest): NextResponse | null {
+  const { enabled, token } = comingSoonConfig()
+
+  const decision = comingSoonDecision({
+    enabled,
+    token,
+    queryToken: request.nextUrl.searchParams.get(PREVIEW_QUERY),
+    cookieToken: request.cookies.get(COMING_SOON_COOKIE)?.value,
+  })
+
+  if (decision === 'pass') return null
+
+  if (decision === 'grant') {
+    // Drop the cookie and redirect to the same page without the token, so the
+    // secret never lingers in the address bar, history or a shared screenshot.
+    const clean = request.nextUrl.clone()
+    clean.searchParams.delete(PREVIEW_QUERY)
+    const response = NextResponse.redirect(clean)
+    response.cookies.set(COMING_SOON_COOKIE, token as string, {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: isSecureRequest(request),
+      maxAge: PREVIEW_MAX_AGE,
+    })
+    return response
+  }
+
+  // decision === 'gate'. The splash renders itself, so a request already there
+  // is served rather than rewritten into itself.
+  if (request.nextUrl.pathname === COMING_SOON_PATH) return NextResponse.next()
+
+  const url = request.nextUrl.clone()
+  url.pathname = COMING_SOON_PATH
+  url.search = ''
+  return NextResponse.rewrite(url)
+}
+
+/**
  * Two jobs, kept apart.
  *
  * `/admin` is Payload's and gets locale routing nowhere near it - see the
@@ -134,6 +207,11 @@ export default function middleware(request: NextRequest): NextResponse {
     // Staff, or nobody. Payload answers, as it always has.
     return NextResponse.next()
   }
+
+  // Pre-launch gate. Off unless COMING_SOON is set, so this is a no-op in the
+  // normal course of things and the site behaves exactly as before.
+  const gated = comingSoonGate(request)
+  if (gated) return gated
 
   /**
    * `/directory?category=...` moved to the section pages. Answered here so it
