@@ -87,6 +87,17 @@ describe('filterHref', () => {
     )
   })
 
+  it('adds open now as a flag, last in the order', () => {
+    expect(filterHref(base, empty, { openNow: true })).toBe('/stay?open=1')
+    const full = state({ governorate: 'beirut', amenities: ['pool'], openNow: true })
+    expect(filterHref(base, full, {})).toBe('/stay?where=beirut&has=pool&open=1')
+  })
+
+  it('toggles open now off by flipping the flag', () => {
+    const current = state({ openNow: true })
+    expect(filterHref(base, current, { openNow: false })).toBe('/stay')
+  })
+
   it('clears back to the bare path when every facet goes', () => {
     const full = state({ subcategory: 'x', governorate: 'y', amenities: ['pool'] })
     expect(
@@ -131,6 +142,7 @@ describe('parseFilterState', () => {
       district: 'keserwan',
       priceRange: '3',
       amenities: ['pool', 'wifi'],
+      openNow: false,
     })
   })
 
@@ -173,6 +185,14 @@ describe('parseFilterState', () => {
       district: undefined,
       priceRange: undefined,
       amenities: [],
+      openNow: false,
     })
+  })
+
+  it('reads the open-now flag only from the exact value', () => {
+    expect(parseFilterState({ open: '1' }, children).openNow).toBe(true)
+    for (const open of ['0', 'true', 'yes', '', undefined]) {
+      expect(parseFilterState({ open }, children).openNow).toBe(false)
+    }
   })
 })

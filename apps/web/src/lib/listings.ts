@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
+import { isOpenNow, type OpeningHour } from './hours'
 
 /**
  * Read side for the public directory.
@@ -60,6 +61,13 @@ export interface ListingQuery {
   priceRange?: string
   /** Every one of these, not any. See the query below. */
   amenities?: string[]
+  /**
+   * Only places open right now, in Beirut time. Unlike every other filter this
+   * is not a database clause: opening hours are structured per-day text, and the
+   * answer depends on the current minute, so it is evaluated in memory with
+   * isOpenNow and the query is never cached (see findListings).
+   */
+  openNow?: boolean
   page?: number
   perPage?: number
 }
@@ -240,36 +248,79 @@ export async function findListings({
   district,
   priceRange,
   amenities,
+  openNow,
   page = 1,
   perPage = 24,
 }: ListingQuery) {
   const run = async () => {
-    {
-      const payload = await client()
+    const payload = await client()
 
-      const where = await buildListingWhere(payload, {
-        category,
-        subcategory,
-        governorate,
-        district,
-        priceRange,
-        amenities,
-      })
+    const where = await buildListingWhere(payload, {
+      category,
+      subcategory,
+      governorate,
+      district,
+      priceRange,
+      amenities,
+    })
 
-      return payload.find({
+    if (openNow) {
+      /**
+       * Open-now is evaluated against the live minute in Beirut, so it is never
+       * cached (see `cacheable` below) and the whole matching set is fetched and
+       * filtered here rather than page by page - filtering one page would leave
+       * short pages and a wrong total. Then the open set is paginated in memory,
+       * so the count and the page controls stay honest. The catalogue is small
+       * enough that this is cheap; when it is not, this is where a scheduled
+       * "open now" materialisation would go.
+       */
+      const all = await payload.find({
         collection: 'businesses',
         where,
         locale: dataLocale(locale),
         depth: 1,
-        page,
-        limit: perPage,
-        // Paying listings first, then alphabetical. Tier ranking lives in
-        // packages/core; this is the crude version until the list page grows
-        // real relevance sorting.
+        limit: 1000,
+        pagination: false,
         sort: ['-tier', 'name'],
         overrideAccess: false,
       })
+
+      const open = all.docs.filter(
+        (doc) => isOpenNow(doc.openingHours as OpeningHour[] | null | undefined) === true,
+      )
+      const totalDocs = open.length
+      const totalPages = Math.max(1, Math.ceil(totalDocs / perPage))
+      const current = Math.min(Math.max(1, page), totalPages)
+      const start = (current - 1) * perPage
+
+      return {
+        ...all,
+        docs: open.slice(start, start + perPage),
+        totalDocs,
+        totalPages,
+        page: current,
+        limit: perPage,
+        hasNextPage: current < totalPages,
+        hasPrevPage: current > 1,
+        pagingCounter: start + 1,
+        nextPage: current < totalPages ? current + 1 : null,
+        prevPage: current > 1 ? current - 1 : null,
+      }
     }
+
+    return payload.find({
+      collection: 'businesses',
+      where,
+      locale: dataLocale(locale),
+      depth: 1,
+      page,
+      limit: perPage,
+      // Paying listings first, then alphabetical. Tier ranking lives in
+      // packages/core; this is the crude version until the list page grows
+      // real relevance sorting.
+      sort: ['-tier', 'name'],
+      overrideAccess: false,
+    })
   }
 
   /**
@@ -288,7 +339,9 @@ export async function findListings({
    * So a deeply filtered view queries directly. It is rarer, it is a person
    * genuinely narrowing something down, and 350ms is a fair price for it.
    */
-  const cacheable = !district && !priceRange && !amenities?.length
+  // openNow is excluded too: its answer changes by the minute, so caching it for
+  // an hour would show a closed place as open for most of that hour.
+  const cacheable = !district && !priceRange && !amenities?.length && !openNow
 
   if (!cacheable) return run()
 
@@ -354,6 +407,7 @@ export async function findListingsForMap({
   district,
   priceRange,
   amenities,
+  openNow,
 }: Omit<ListingQuery, 'page' | 'perPage'>): Promise<MapPoint[]> {
   const run = async (): Promise<MapPoint[]> => {
     const payload = await client()
@@ -388,11 +442,17 @@ export async function findListingsForMap({
         priceRange: true,
         governorate: true,
         district: true,
+        // Only needed to answer open-now; not carried onto the returned MapPoint.
+        openingHours: true,
       },
     })
 
     const points: MapPoint[] = []
     for (const doc of result.docs) {
+      // The list and the map must agree, so open-now is applied here too, live.
+      if (openNow && isOpenNow(doc.openingHours as OpeningHour[] | null | undefined) !== true) {
+        continue
+      }
       // `exists: true` should have guaranteed this, but a point is a pair of
       // numbers and a marker placed at a half-null coordinate lands in the sea
       // off West Africa rather than failing - so the shape is checked, not trusted.
@@ -418,8 +478,9 @@ export async function findListingsForMap({
 
   // Cached on the same rule and tag as the grid, so the common views - a section,
   // optionally by governorate - are a single Frankfurt round trip, and a
-  // published edit clears both on the one `businesses` revalidation.
-  const cacheable = !district && !priceRange && !amenities?.length
+  // published edit clears both on the one `businesses` revalidation. openNow is
+  // excluded for the same reason as the grid: its answer changes by the minute.
+  const cacheable = !district && !priceRange && !amenities?.length && !openNow
   if (!cacheable) return run()
 
   return unstable_cache(

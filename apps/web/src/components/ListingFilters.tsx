@@ -58,6 +58,8 @@ export interface FilterState {
   district?: string
   priceRange?: string
   amenities: string[]
+  /** Show only places open right now, in Beirut time. Evaluated live, not cached. */
+  openNow?: boolean
 }
 
 /**
@@ -73,7 +75,8 @@ export function anyFilterApplied(state: FilterState): boolean {
     Boolean(state.governorate) ||
     Boolean(state.district) ||
     Boolean(state.priceRange) ||
-    state.amenities.length > 0
+    state.amenities.length > 0 ||
+    Boolean(state.openNow)
   )
 }
 
@@ -99,6 +102,7 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
   if (next.district) params.set('district', next.district)
   if (next.priceRange) params.set('price', next.priceRange)
   if (next.amenities.length > 0) params.set('has', [...next.amenities].sort().join(','))
+  if (next.openNow) params.set('open', '1')
 
   /**
    * `toString` escapes the comma to `%2C`. It is correct and it is ugly, and
@@ -117,6 +121,7 @@ export interface RawFilterParams {
   district?: string
   price?: string
   has?: string
+  open?: string
 }
 
 /**
@@ -150,6 +155,9 @@ export function parseFilterState(
       .split(',')
       .filter((slug) => AMENITY_SLUGS.includes(slug))
       .sort(),
+    // Only the exact value the toggle sets, so a crafted query cannot invent a
+    // new cache key or an ambiguous "on".
+    openNow: raw.open === '1',
   }
 }
 
@@ -243,7 +251,8 @@ export async function ListingFilters({
   const narrowed =
     Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)
 
-  const anyFilter = Boolean(state.subcategory) || Boolean(state.governorate) || narrowed
+  const anyFilter =
+    Boolean(state.subcategory) || Boolean(state.governorate) || narrowed || Boolean(state.openNow)
 
   /*
    * `mb-8` matching the `mt-8` above it, so the bar is a band with air on both
@@ -311,6 +320,18 @@ export async function ListingFilters({
               </FilterChip>
             ))}
           </Row>
+        </div>
+
+        {/*
+          Open now, kept out of the sheet on purpose. It is the one filter whose
+          answer changes through the day and the one a reader on a street reaches
+          for most, so it sits in the bar as a single toggle rather than four taps
+          deep. Its href flips the flag, so tapping an active chip clears it.
+        */}
+        <div className="shrink-0">
+          <FilterChip href={href({ openNow: !state.openNow })} active={Boolean(state.openNow)}>
+            {t('directory.openNow')}
+          </FilterChip>
         </div>
 
         {/* Region, kind, district, price and the sixteen amenities live in here. */}
