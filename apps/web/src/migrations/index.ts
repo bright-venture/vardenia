@@ -19,6 +19,7 @@ import * as migration_20260827_103453_import_batch from './20260827_103453_impor
 import * as migration_20260902_080847_closures_and_decline_reason from './20260902_080847_closures_and_decline_reason'
 import * as migration_20260908_070400_saved_listings from './20260908_070400_saved_listings'
 import * as migration_20260911_090000_locale_expansion from './20260911_090000_locale_expansion'
+import * as migration_20260915_120830_room_types_booking from './20260915_120830_room_types_booking'
 
 export const migrations = [
   {
@@ -125,5 +126,10 @@ export const migrations = [
     up: migration_20260911_090000_locale_expansion.up,
     down: migration_20260911_090000_locale_expansion.down,
     name: '20260911_090000_locale_expansion',
+  },
+  {
+    up: migration_20260915_120830_room_types_booking.up,
+    down: migration_20260915_120830_room_types_booking.down,
+    name: '20260915_120830_room_types_booking',
   },
 ]

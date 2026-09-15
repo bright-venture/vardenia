@@ -138,7 +138,8 @@
     "accountCreate": "创建账户",
     "accountSignIn": "登录",
     "verifyFirst": "预订前请先确认您的邮箱。注册时我们已向您发送了链接。",
-    "verifyResend": "重新发送链接"
+    "verifyResend": "重新发送链接",
+    "roomType": "房型"
   },
   "account": {
     "title": "您的账户",

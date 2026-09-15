@@ -82,6 +82,14 @@ export const bookingRequestSchema = z.object({
    */
   phone: z.string().trim().max(40).optional(),
 
+  /**
+   * For a stay, which room or unit type the guest asked for (Standard, Deluxe).
+   * Free text here; the booking service keeps it only if it matches one of the
+   * listing's configured types, so a stale or crafted value is dropped rather
+   * than stored. Absent for a table booking, which has no room type.
+   */
+  roomType: z.string().trim().max(120, 'too long').optional(),
+
   /** What the customer wants us to pass on: a dietary need, an anniversary. */
   notes: z.string().trim().max(1000, 'too long').optional(),
 

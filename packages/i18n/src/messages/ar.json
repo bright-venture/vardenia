@@ -138,7 +138,8 @@
     "accountCreate": "إنشاء حساب",
     "accountSignIn": "تسجيل الدخول",
     "verifyFirst": "أكِّد بريدك الإلكتروني قبل الحجز. أرسلنا لك رابطاً عند إنشاء الحساب.",
-    "verifyResend": "أعد إرسال الرابط"
+    "verifyResend": "أعد إرسال الرابط",
+    "roomType": "نوع الغرفة"
   },
   "account": {
     "title": "حسابك",

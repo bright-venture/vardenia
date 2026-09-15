@@ -138,7 +138,8 @@
     "accountCreate": "Criar uma conta",
     "accountSignIn": "Entrar",
     "verifyFirst": "Confirme seu e-mail antes de reservar. Enviamos um link quando você se cadastrou.",
-    "verifyResend": "Enviar o link novamente"
+    "verifyResend": "Enviar o link novamente",
+    "roomType": "Tipo de quarto"
   },
   "account": {
     "title": "Sua conta",

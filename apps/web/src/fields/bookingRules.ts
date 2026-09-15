@@ -141,5 +141,36 @@ export const bookingRulesField: Field = {
         },
       ],
     },
+
+    /**
+     * Room or unit types, for a stay.
+     *
+     * Shown only when the minimum duration marks this as a stay rather than a
+     * sitting (>= one day) - the same threshold booking-form uses to decide the
+     * form's shape, so a restaurant never sees a room-types field. Presentation
+     * only: the guest picks one and it is recorded on the booking for the venue
+     * to see, but it does not have its own inventory - capacity stays the single
+     * number above, enforced by the database trigger. Leave empty for a place
+     * with one kind of room.
+     */
+    {
+      name: 'roomTypes',
+      type: 'array',
+      labels: { singular: 'Room type', plural: 'Room types' },
+      admin: {
+        condition: (_, siblings) =>
+          siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
+        description:
+          'Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.',
+      },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        {
+          name: 'note',
+          type: 'text',
+          admin: { description: 'Optional, e.g. "Sleeps 2, sea view".' },
+        },
+      ],
+    },
   ],
 }

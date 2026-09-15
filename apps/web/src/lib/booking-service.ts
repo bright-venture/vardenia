@@ -230,6 +230,19 @@ export async function createBooking({
     }
   }
 
+  /**
+   * Keep the requested room type only if the listing actually offers it. The
+   * form sends a label the customer chose from the same list, but a stale page
+   * or a crafted request could send anything, and an arbitrary string on a
+   * booking helps no one. A mismatch is dropped rather than refused - the room
+   * type is a note for the venue, not a condition of the booking.
+   */
+  const roomTypeLabels = (rules?.roomTypes ?? [])
+    .map((entry) => (typeof entry?.label === 'string' ? entry.label.trim() : ''))
+    .filter((label) => label.length > 0)
+  const roomType =
+    request.roomType && roomTypeLabels.includes(request.roomType) ? request.roomType : undefined
+
   try {
     const booking = await payload.create({
       collection: 'bookings',
@@ -239,6 +252,7 @@ export async function createBooking({
         start: start.toISOString(),
         end: end.toISOString(),
         partySize: request.partySize,
+        ...(roomType ? { roomType } : {}),
         ...(request.notes ? { notes: request.notes } : {}),
 
         /**

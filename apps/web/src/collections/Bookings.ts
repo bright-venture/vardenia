@@ -162,6 +162,20 @@ export const Bookings: CollectionConfig = {
     },
 
     {
+      /**
+       * The room or unit type a stay asked for, as a label. Empty for a table
+       * booking, and for a stay at a place that offers only one kind of room.
+       * It is a note the venue reads, not a separate capacity - see the room
+       * types on the listing's booking rules.
+       */
+      name: 'roomType',
+      type: 'text',
+      admin: {
+        description: 'The room or unit type requested, for a stay. Empty for a table booking.',
+      },
+    },
+
+    {
       name: 'status',
       type: 'select',
       required: true,

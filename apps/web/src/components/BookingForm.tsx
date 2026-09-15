@@ -111,6 +111,7 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const [time, setTime] = useState('20:00')
   const [duration, setDuration] = useState(model.durationOptions[0] ?? 60)
   const [nights, setNights] = useState(model.nightOptions[0] ?? 1)
+  const [roomType, setRoomType] = useState(model.roomTypes[0] ?? '')
   const [partySize, setPartySize] = useState(model.defaultPartySize)
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
@@ -186,6 +187,8 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
           start: interval.start,
           end: interval.end,
           partySize,
+          // Only a stay sends one, and only when the listing offers a choice.
+          ...(model.mode === 'nights' && roomType ? { roomType } : {}),
           ...(phone.trim() ? { phone } : {}),
           ...(notes.trim() ? { notes } : {}),
           locale,
@@ -382,6 +385,29 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
               {model.durationOptions.map((minutes) => (
                 <option key={minutes} value={minutes}>
                   {durationLabel(minutes, dataLocale(locale))}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
+        {/* Room type, a stay with a choice of rooms only. Presentation: the
+            server keeps it if it matches a configured type, and it does not
+            affect availability. */}
+        {model.mode === 'nights' && model.roomTypes.length > 0 ? (
+          <div>
+            <label className={LABEL} htmlFor={`${ids}-room`}>
+              {t('roomType')}
+            </label>
+            <select
+              id={`${ids}-room`}
+              value={roomType}
+              onChange={(e) => setRoomType(e.target.value)}
+              className={`mt-1.5 ${INPUT}`}
+            >
+              {model.roomTypes.map((label) => (
+                <option key={label} value={label}>
+                  {label}
                 </option>
               ))}
             </select>

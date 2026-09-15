@@ -122,6 +122,23 @@ describe('bookingFormModel', () => {
     expect(bookingFormModel(restaurant, NOW).nightOptions).toEqual([])
     expect(bookingFormModel(hotel, NOW).durationOptions).toEqual([])
   })
+
+  it('exposes room type labels for a stay, and none for a sitting', () => {
+    const withRooms = { ...hotel, roomTypes: [{ label: 'Standard' }, { label: 'Suite' }] }
+    expect(bookingFormModel(withRooms, NOW).roomTypes).toEqual(['Standard', 'Suite'])
+    // A restaurant never asks for a room type, even if the field somehow carries one.
+    expect(
+      bookingFormModel({ ...restaurant, roomTypes: [{ label: 'Standard' }] }, NOW).roomTypes,
+    ).toEqual([])
+  })
+
+  it('drops blank and whitespace room-type labels', () => {
+    const rules = {
+      ...hotel,
+      roomTypes: [{ label: '  Deluxe  ' }, { label: '' }, { label: null }, {}],
+    }
+    expect(bookingFormModel(rules, NOW).roomTypes).toEqual(['Deluxe'])
+  })
 })
 
 describe('durationChoices', () => {

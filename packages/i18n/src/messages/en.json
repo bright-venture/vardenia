@@ -138,7 +138,8 @@
     "accountCreate": "Create an account",
     "accountSignIn": "Sign in",
     "verifyFirst": "Confirm your email address before booking. We sent you a link when you signed up.",
-    "verifyResend": "Send the link again"
+    "verifyResend": "Send the link again",
+    "roomType": "Room type"
   },
   "account": {
     "title": "Your account",

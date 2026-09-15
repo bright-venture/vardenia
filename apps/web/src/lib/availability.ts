@@ -70,6 +70,13 @@ export interface BookingRules {
   maxAdvanceDays?: number | null
   minDurationMinutes?: number | null
   maxDurationMinutes?: number | null
+  /**
+   * Room or unit types a stay can request (Standard, Deluxe). Presentation only:
+   * the availability check ignores them - capacity stays a single number, and a
+   * room type does not have its own inventory. It is here so the form and the
+   * booking service can read the configured labels from the same rules object.
+   */
+  roomTypes?: ({ label?: string | null } | null)[] | null
 }
 
 /** An existing booking, reduced to what the check actually needs. */

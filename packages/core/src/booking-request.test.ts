@@ -43,6 +43,19 @@ describe('bookingRequestSchema', () => {
     expect(bookingRequestSchema.safeParse({ ...VALID, partySize }).success).toBe(false)
   })
 
+  it('accepts and trims an optional room type', () => {
+    const parsed = bookingRequestSchema.parse({ ...VALID, roomType: '  Suite  ' })
+    expect(parsed.roomType).toBe('Suite')
+    // Absent is fine - a table booking has no room type.
+    expect(bookingRequestSchema.parse(VALID).roomType).toBeUndefined()
+  })
+
+  it('refuses a room type that is too long', () => {
+    expect(bookingRequestSchema.safeParse({ ...VALID, roomType: 'x'.repeat(121) }).success).toBe(
+      false,
+    )
+  })
+
   /**
    * The address is the key a returning customer is matched on, so `Sami@` and
    * `sami@` have to be the same person or they end up with two records and half

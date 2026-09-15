@@ -41,6 +41,12 @@ export interface BookingFormModel {
   durationOptions: number[]
   /** Selectable stay lengths in nights. Nights mode. */
   nightOptions: number[]
+  /**
+   * Room or unit types a stay may request, as labels. Nights mode only, and
+   * empty when the listing configured none - the form then asks for no room
+   * type at all rather than showing a dropdown of one.
+   */
+  roomTypes: string[]
   /** Minimum notice in minutes, for wording rather than for validation. */
   leadTimeMinutes: number
 }
@@ -133,6 +139,15 @@ export function bookingFormModel(
         : [],
     nightOptions:
       mode === 'nights' ? nightChoices(config.minDurationMinutes, config.maxDurationMinutes) : [],
+    // Only a stay has room types; a sitting never asks for one. Blank labels a
+    // half-filled CMS row might carry are dropped so the dropdown has no empty
+    // option.
+    roomTypes:
+      mode === 'nights'
+        ? (rules?.roomTypes ?? [])
+            .map((entry) => (typeof entry?.label === 'string' ? entry.label.trim() : ''))
+            .filter((label) => label.length > 0)
+        : [],
     leadTimeMinutes: config.leadTimeMinutes,
   }
 }
