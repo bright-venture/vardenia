@@ -1,20 +1,29 @@
-import { getPayload, type Where } from 'payload'
+import { getPayload } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
+import { SIMILARITY_THRESHOLD, bestFieldScore } from './search-text'
 
 /**
  * Site search, across listings and editorial.
  *
- * # What this is not
+ * # Fuzzy, and why in memory
  *
- * It is not relevance ranking. Postgres `LIKE` over a handful of columns, with
- * listings ordered by tier and articles by date - the same order those pages use
- * already. At the size of this catalogue that is honest and adequate; a query
- * that matches forty listings is not one anybody is running yet.
+ * This was a Postgres `LIKE` over a few columns: the query had to appear
+ * verbatim, so a typo or an Arabic word voweled differently found nothing. It now
+ * ranks by trigram similarity (see search-text), so "resturant" still finds the
+ * restaurants and Arabic matches whatever the diacritics.
  *
- * When it stops being adequate the answer is Postgres full text search with a
- * `tsvector` column and a GIN index, which is a migration rather than a rewrite.
- * Worth doing when a search returns more than a screen, not before.
+ * The ranking is done in memory over the published set rather than in the
+ * database. At this catalogue - a few dozen rows - that is honest and cheap, and
+ * it keeps the one rule that matters most exactly where it already is: the draft
+ * filter. Every fetch runs `overrideAccess: false`, so Payload returns only
+ * published documents and strips staff-only fields, and search cannot surface a
+ * draft by construction because it is never handed one. A raw SQL ranking would
+ * have to re-implement that filter and could get it wrong.
+ *
+ * When a search starts returning more than a screen, the move is Postgres
+ * `pg_trgm` with a GIN index, which is a change to this file alone - the scoring
+ * shape and the tests around it do not change.
  *
  * # Both collections, one query each
  *
@@ -22,13 +31,6 @@ import config from '../payload.config'
  * it. Splitting the results by type and showing both is more useful than
  * guessing which they meant, and avoids inventing a scoring rule to interleave
  * two things that have no common scale.
- *
- * # Access control is not bypassed
- *
- * `overrideAccess: false`, like every other public read. Drafts are filtered out
- * in the database, so an unpublished listing cannot be found by guessing at its
- * name - which is exactly the kind of hole a search box opens if it is written
- * as an admin query with a filter bolted on.
  */
 
 /** Longer than a database column will ever usefully match, short enough to bound the query. */
@@ -36,6 +38,15 @@ const MAX_QUERY = 80
 
 /** Enough to be a word. One letter matches most of the catalogue and means nothing. */
 const MIN_QUERY = 2
+
+/**
+ * How many published rows we pull in to rank. Comfortably above the catalogue,
+ * so in practice this fetches everything published; it is a ceiling that keeps
+ * the in-memory pass bounded rather than a page size a reader ever notices. It is
+ * also the line that says when to move to `pg_trgm`: once the published set
+ * approaches this, ranking in memory is the wrong tool.
+ */
+const CANDIDATE_CAP = 1000
 
 export interface SearchQuery {
   locale: Locale
@@ -46,10 +57,11 @@ export interface SearchQuery {
 /**
  * The query as we will actually use it, or null if there is nothing to search.
  *
- * `%` and `_` are wildcards in SQL `LIKE`. Payload parameterises the value so
- * they are not an injection risk, but left in they quietly turn a search for
- * "100%" into a match on everything - so they are stripped rather than escaped,
- * because nobody is searching for a literal underscore.
+ * `%` and `_` are wildcards in SQL `LIKE`. The ranking no longer runs a `LIKE`,
+ * but stripping them still earns its place: they are punctuation to the matcher,
+ * and a search for "100%" should compare on "100" rather than drag a stray
+ * wildcard through every score. Whitespace is collapsed and the whole thing is
+ * bounded so nothing enormous reaches the scorer.
  */
 export function normaliseQuery(raw: string | null | undefined): string | null {
   if (!raw) return null
@@ -57,6 +69,67 @@ export function normaliseQuery(raw: string | null | undefined): string | null {
   const cleaned = raw.replace(/[%_]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_QUERY)
 
   return cleaned.length >= MIN_QUERY ? cleaned : null
+}
+
+const client = async () => getPayload({ config })
+
+/**
+ * Rank a fetched set by how well each doc's chosen fields match the query, keep
+ * what clears the threshold, best first. The fetch is already ordered by the
+ * page's own tiebreak (tier then name, or date), and the sort here is stable, so
+ * two equally-relevant results keep that order rather than jump around.
+ */
+function rankByScore<T>(
+  docs: T[],
+  query: string,
+  fields: (doc: T) => (string | null | undefined)[],
+  limit: number,
+): { docs: T[]; totalDocs: number } {
+  const scored = docs
+    .map((doc) => ({ doc, score: bestFieldScore(query, fields(doc)) }))
+    .filter((entry) => entry.score >= SIMILARITY_THRESHOLD)
+    .sort((a, b) => b.score - a.score)
+
+  return { docs: scored.slice(0, limit).map((entry) => entry.doc), totalDocs: scored.length }
+}
+
+/** Listings ranked by how well the query matches the name or tagline. */
+async function searchListings(locale: Locale, q: string, limit: number) {
+  const payload = await client()
+  const result = await payload.find({
+    collection: 'businesses',
+    locale: dataLocale(locale),
+    depth: 1,
+    limit: CANDIDATE_CAP,
+    // Paying listings first, then alphabetical - the same order the directory
+    // uses, so equally-relevant results do not change rank by how you arrived.
+    sort: ['-tier', 'name'],
+    overrideAccess: false,
+  })
+
+  return rankByScore(result.docs, q, (doc) => [doc.name, doc.tagline], limit)
+}
+
+/**
+ * Articles ranked by how well the query matches the title or excerpt.
+ *
+ * The body is deliberately not scored. It is Lexical rich text stored as JSON, so
+ * matching over it matches the markup as readily as the prose - a search for
+ * "text" would rank every article ever written. The title and excerpt are the
+ * human summary and are what a reader is searching for.
+ */
+async function searchArticles(locale: Locale, q: string, limit: number) {
+  const payload = await client()
+  const result = await payload.find({
+    collection: 'articles',
+    locale: dataLocale(locale),
+    depth: 1,
+    limit: CANDIDATE_CAP,
+    sort: ['-publishedAt', '-createdAt'],
+    overrideAccess: false,
+  })
+
+  return rankByScore(result.docs, q, (doc) => [doc.title, doc.excerpt], limit)
 }
 
 export interface SearchResults {
@@ -67,62 +140,16 @@ export interface SearchResults {
   total: number
 }
 
-const client = async () => getPayload({ config })
-
-/** Listings whose name or tagline contains the query. */
-async function searchListings(locale: Locale, q: string, limit: number) {
-  const payload = await client()
-  const where: Where = {
-    or: [{ name: { like: q } }, { tagline: { like: q } }],
-  }
-
-  const result = await payload.find({
-    collection: 'businesses',
-    where,
-    locale: dataLocale(locale),
-    depth: 1,
-    limit,
-    // Paying listings first, then alphabetical - the same order the directory
-    // uses, so a listing does not change rank depending on how you arrived.
-    sort: ['-tier', 'name'],
-    overrideAccess: false,
-  })
-
-  return result
-}
-
-/**
- * Articles whose title or excerpt contains the query.
- *
- * The body is deliberately not searched. It is Lexical rich text stored as
- * JSON, so `like` over it matches the markup as readily as the prose - a search
- * for "text" would return every article ever written. Full text search over an
- * extracted plain-text column is the fix, and it belongs with the migration
- * described above.
- */
-async function searchArticles(locale: Locale, q: string, limit: number) {
-  const payload = await client()
-  const where: Where = {
-    or: [{ title: { like: q } }, { excerpt: { like: q } }],
-  }
-
-  return payload.find({
-    collection: 'articles',
-    where,
-    locale: dataLocale(locale),
-    depth: 1,
-    limit,
-    sort: ['-publishedAt', '-createdAt'],
-    overrideAccess: false,
-  })
-}
-
 export async function search({ locale, q, limit = 12 }: SearchQuery): Promise<SearchResults> {
   const query = normaliseQuery(q)
 
   if (!query) {
-    const empty = { docs: [], totalDocs: 0 } as never
-    return { query: null, listings: empty, articles: empty, total: 0 }
+    return {
+      query: null,
+      listings: { docs: [], totalDocs: 0 },
+      articles: { docs: [], totalDocs: 0 },
+      total: 0,
+    }
   }
 
   // Both at once: they are independent queries and the page needs both before
