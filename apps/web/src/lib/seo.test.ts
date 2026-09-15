@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { LOCALES } from '@vardenia/i18n'
 import { alternatesFor } from './seo'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -35,14 +36,14 @@ describe('alternatesFor', () => {
     }
   })
 
-  it('offers both languages and a default, whichever one is being rendered', () => {
-    for (const locale of ['en', 'ar'] as const) {
-      const languages = alternatesFor('/faq', locale).languages
-      expect(languages, locale).toEqual({
-        en: '/faq',
-        ar: '/ar/faq',
-        'x-default': '/faq',
-      })
+  it('offers every locale and a default, whichever one is being rendered', () => {
+    // English is unprefixed; every other locale carries its prefix; and x-default
+    // points at English. Built from LOCALES so this stays in step with the site.
+    const expected: Record<string, string> = { 'x-default': '/faq' }
+    for (const code of LOCALES) expected[code] = code === 'en' ? '/faq' : `/${code}/faq`
+
+    for (const locale of ['en', 'ar', 'fr', 'ur'] as const) {
+      expect(alternatesFor('/faq', locale).languages, locale).toEqual(expected)
     }
   })
 

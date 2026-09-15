@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { DEFAULT_LOCALE, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@vardenia/i18n'
 import { isIndexingAllowed } from './indexing'
 import { resolveImage, type MediaField } from './media'
 
@@ -133,13 +133,20 @@ export function buildMetadata({
  * and a different one as its own Arabic version is exactly the confusion
  * hreflang exists to prevent. The homepage passes '/' now, so this is no longer
  * latent.
+ *
+ * # Every locale, not just the first two
+ *
+ * This declared only English and Arabic long after the site grew to ten UI
+ * locales, so eight language versions a reader could switch to went undeclared
+ * to search engines - and it disagreed with the sitemap, which already lists all
+ * ten. The set is now built from LOCALES, so the two cannot drift again: adding
+ * a locale adds its hreflang here and its sitemap entry together.
  */
 export function alternatesFor(path: string, locale: Locale): NonNullable<Metadata['alternates']> {
   return {
     canonical: localizedPath(path, locale),
     languages: {
-      en: localizedPath(path, DEFAULT_LOCALE),
-      ar: localizedPath(path, 'ar'),
+      ...Object.fromEntries(LOCALES.map((code) => [code, localizedPath(path, code)])),
       /**
        * Where to send a reader whose language we do not publish. Google treats
        * a set without it as having no default, and picks one itself; English is

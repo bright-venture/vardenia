@@ -62,6 +62,31 @@ export async function generateMetadata({
      * with it.
      */
     robots: isIndexingAllowed() ? undefined : { index: false, follow: false },
+
+    /**
+     * The default social card for every page that does not set its own.
+     *
+     * Listings, articles and issues replace this with their own hero image
+     * through `buildMetadata`; everything else - the homepage, the directory and
+     * section indexes, the standing pages - inherits this branded card, so a link
+     * to any of them shared in a chat or a post shows the mark rather than a bare
+     * title. The image is a static file, served even while the coming-soon gate
+     * is on, so the pre-launch link previews too. `metadataBase` makes the
+     * relative path absolute, which is what a scraper needs.
+     */
+    openGraph: {
+      type: 'website',
+      siteName: 'Vardenia',
+      title: t('title'),
+      description: t('description'),
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Vardenia' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('title'),
+      description: t('description'),
+      images: ['/og-default.png'],
+    },
   }
 }
 
