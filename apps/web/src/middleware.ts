@@ -314,7 +314,7 @@ export default function middleware(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|save|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|reviews|save|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

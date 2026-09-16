@@ -14,6 +14,7 @@ import { BusinessUsers } from './collections/BusinessUsers'
 import { Customers } from './collections/Customers'
 import { Bookings } from './collections/Bookings'
 import { SavedListings } from './collections/SavedListings'
+import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
 import { Media } from './collections/Media'
 import { Businesses } from './collections/Businesses'
@@ -163,6 +164,7 @@ export default buildConfig({
     Customers,
     Bookings,
     SavedListings,
+    Reviews,
     Closures,
     ScanEvents,
     ErrorEvents,

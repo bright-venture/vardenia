@@ -440,5 +440,23 @@
     "verified": "Vérifié",
     "signature": "Signature",
     "signatureLong": "Une fiche Signature de Vardenia"
+  },
+  "review": {
+    "sectionTitle": "Avis des clients",
+    "count": "{count, plural, =0 {Aucun avis} one {1 avis} other {# avis}}",
+    "none": "Aucun avis pour l'instant. Les clients peuvent laisser un avis après une réservation terminée ici.",
+    "write": "Écrire un avis",
+    "yourRating": "Votre note",
+    "titleLabel": "Titre (facultatif)",
+    "bodyLabel": "Votre avis",
+    "submit": "Envoyer l'avis",
+    "submitting": "Envoi…",
+    "successTitle": "Merci",
+    "successBody": "Votre avis apparaîtra une fois approuvé par notre équipe.",
+    "signInPrompt": "Connectez-vous pour évaluer un lieu que vous avez réservé.",
+    "signIn": "Se connecter",
+    "notEligible": "Seuls les clients ayant terminé une réservation ici peuvent laisser un avis.",
+    "alreadyReviewed": "Vous avez déjà évalué ce lieu.",
+    "unverified": "Confirmez votre adresse e-mail avant de pouvoir laisser un avis."
   }
 }

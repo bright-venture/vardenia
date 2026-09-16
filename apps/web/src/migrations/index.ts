@@ -23,6 +23,7 @@ import * as migration_20260915_120830_room_types_booking from './20260915_120830
 import * as migration_20260916_055455_menu_field from './20260916_055455_menu_field'
 import * as migration_20260916_060545_room_type_price from './20260916_060545_room_type_price'
 import * as migration_20260916_063628_cancellation_policy from './20260916_063628_cancellation_policy'
+import * as migration_20260916_071817_reviews_collection from './20260916_071817_reviews_collection'
 
 export const migrations = [
   {
@@ -149,5 +150,10 @@ export const migrations = [
     up: migration_20260916_063628_cancellation_policy.up,
     down: migration_20260916_063628_cancellation_policy.down,
     name: '20260916_063628_cancellation_policy',
+  },
+  {
+    up: migration_20260916_071817_reviews_collection.up,
+    down: migration_20260916_071817_reviews_collection.down,
+    name: '20260916_071817_reviews_collection',
   },
 ]

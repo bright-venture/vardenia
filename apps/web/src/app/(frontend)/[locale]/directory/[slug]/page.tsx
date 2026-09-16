@@ -31,7 +31,9 @@ import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
+import { ReviewForm } from '../../../../../components/ReviewForm'
 import { Eyebrow, Stars } from '../../../../../components/ui'
+import { listingReviews } from '../../../../../lib/reviews'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -113,6 +115,7 @@ export default async function ListingPage({ params }: Params) {
 
   const t = await getTranslations('directory')
   const tCommon = await getTranslations('common')
+  const tReview = await getTranslations('review')
   /**
    * A real photograph, or nothing.
    *
@@ -202,6 +205,8 @@ export default async function ListingPage({ params }: Params) {
         : null
     return [{ label, note, price }]
   })
+
+  const reviews = await listingReviews(listing.id)
 
   const related = await findRelatedListings({
     locale,
@@ -573,6 +578,50 @@ export default async function ListingPage({ params }: Params) {
               </div>
             </section>
           ) : null}
+
+          {/*
+            Guest reviews: the average and the latest few, then the form. Distinct
+            from the Google rating in the header - that is another site's number,
+            this is Vardenia's own guests, and only from people who completed a
+            booking here. Written reviews arrive pending and show once approved.
+          */}
+          <section className="mt-16">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
+              {reviews.average !== null ? (
+                <span className="flex items-center gap-2">
+                  <Stars rating={reviews.average} />
+                  <span className="text-ink-500 text-sm">
+                    {tReview('count', { count: reviews.count })}
+                  </span>
+                </span>
+              ) : null}
+            </div>
+
+            {reviews.reviews.length > 0 ? (
+              <ul className="mt-6 space-y-6">
+                {reviews.reviews.map((r) => (
+                  <li key={r.id} className="border-ink-100 border-t pt-5">
+                    <div className="flex items-center gap-3">
+                      <Stars rating={r.rating} />
+                      <span className="text-ink-900 text-sm font-medium">{r.authorName}</span>
+                    </div>
+                    {r.title ? <p className="text-ink-900 mt-2 font-medium">{r.title}</p> : null}
+                    <p
+                      dir="auto"
+                      className="text-ink-700 mt-1 whitespace-pre-line text-sm leading-relaxed"
+                    >
+                      {r.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-ink-500 mt-4 text-sm">{tReview('none')}</p>
+            )}
+
+            <ReviewForm businessId={listing.id} locale={locale as Locale} />
+          </section>
         </div>
 
         {/*

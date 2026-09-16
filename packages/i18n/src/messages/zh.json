@@ -440,5 +440,23 @@
     "verified": "已核实",
     "signature": "臻选",
     "signatureLong": "Vardenia 臻选商户"
+  },
+  "review": {
+    "sectionTitle": "住客评价",
+    "count": "{count, plural, other {# 条评价}}",
+    "none": "暂无评价。完成在此的预订后即可评价。",
+    "write": "写评价",
+    "yourRating": "您的评分",
+    "titleLabel": "标题（可选）",
+    "bodyLabel": "您的评价",
+    "submit": "提交评价",
+    "submitting": "提交中…",
+    "successTitle": "谢谢",
+    "successBody": "您的评价将在我们团队审核后显示。",
+    "signInPrompt": "登录以评价您预订过的地方。",
+    "signIn": "登录",
+    "notEligible": "只有在此完成预订的住客才能评价。",
+    "alreadyReviewed": "您已评价过此地。",
+    "unverified": "请先验证您的邮箱后再评价。"
   }
 }

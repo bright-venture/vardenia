@@ -440,5 +440,23 @@
     "verified": "Verified",
     "signature": "Signature",
     "signatureLong": "A Vardenia Signature listing"
+  },
+  "review": {
+    "sectionTitle": "Guest reviews",
+    "count": "{count, plural, =0 {No reviews} one {1 review} other {# reviews}}",
+    "none": "No reviews yet. Guests can review a place once they've completed a booking.",
+    "write": "Write a review",
+    "yourRating": "Your rating",
+    "titleLabel": "Title (optional)",
+    "bodyLabel": "Your review",
+    "submit": "Submit review",
+    "submitting": "Submitting…",
+    "successTitle": "Thank you",
+    "successBody": "Your review will appear once our team approves it.",
+    "signInPrompt": "Sign in to review a place you have booked.",
+    "signIn": "Sign in",
+    "notEligible": "Only guests who completed a booking here can review it.",
+    "alreadyReviewed": "You have already reviewed this place.",
+    "unverified": "Confirm your email address before you can review."
   }
 }

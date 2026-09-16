@@ -440,5 +440,23 @@
     "verified": "Verificado",
     "signature": "Signature",
     "signatureLong": "Una ficha Signature de Vardenia"
+  },
+  "review": {
+    "sectionTitle": "Opiniones de huéspedes",
+    "count": "{count, plural, =0 {Sin opiniones} one {1 opinión} other {# opiniones}}",
+    "none": "Aún no hay opiniones. Los huéspedes pueden opinar tras completar una reserva aquí.",
+    "write": "Escribir una opinión",
+    "yourRating": "Tu valoración",
+    "titleLabel": "Título (opcional)",
+    "bodyLabel": "Tu opinión",
+    "submit": "Enviar opinión",
+    "submitting": "Enviando…",
+    "successTitle": "Gracias",
+    "successBody": "Tu opinión aparecerá cuando nuestro equipo la apruebe.",
+    "signInPrompt": "Inicia sesión para opinar sobre un lugar que has reservado.",
+    "signIn": "Iniciar sesión",
+    "notEligible": "Solo los huéspedes que completaron una reserva aquí pueden opinar.",
+    "alreadyReviewed": "Ya has opinado sobre este lugar.",
+    "unverified": "Confirma tu correo electrónico antes de poder opinar."
   }
 }
