@@ -52,6 +52,11 @@ export async function BookingPanel({
    */
   const model = bookingFormModel(rules)
 
+  // Shown under the form when set. Read off the same rules the form uses, at the
+  // page's locale, so it is the Arabic policy on an Arabic page.
+  const cancellationPolicy =
+    typeof rules?.cancellationPolicy === 'string' ? rules.cancellationPolicy.trim() : ''
+
   /*
    * Square, and it sets no margin of its own.
    *
@@ -70,6 +75,17 @@ export async function BookingPanel({
       <div className="mt-6">
         <BookingForm businessId={businessId} model={model} locale={locale} />
       </div>
+
+      {cancellationPolicy ? (
+        <div className="border-ink-100 mt-6 border-t pt-4">
+          <h3 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+            {t('cancellationPolicy')}
+          </h3>
+          <p dir="auto" className="text-ink-700 mt-2 whitespace-pre-line text-sm leading-relaxed">
+            {cancellationPolicy}
+          </p>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -180,5 +180,25 @@ export const bookingRulesField: Field = {
         },
       ],
     },
+
+    {
+      /**
+       * The cancellation terms, in the customer's words. Localised because it is
+       * prose a customer reads before booking, so it needs to be sayable in
+       * Arabic; untranslated locales fall back to English, like every other
+       * localised field. It is shown, not enforced - there is no payment or
+       * refund in the system yet - so it is free text rather than a notice
+       * window and a percentage. When refunds are built (see the payment ADR),
+       * a structured policy can join this.
+       */
+      name: 'cancellationPolicy',
+      type: 'textarea',
+      localized: true,
+      admin: {
+        condition: (_, siblings) => siblings?.enabled === true,
+        description:
+          'Shown to the customer before they book, e.g. "Free cancellation up to 48 hours before". Leave empty to show nothing.',
+      },
+    },
   ],
 }

@@ -142,7 +142,8 @@
     "accountSignIn": "Sign in",
     "verifyFirst": "Confirm your email address before booking. We sent you a link when you signed up.",
     "verifyResend": "Send the link again",
-    "roomType": "Room type"
+    "roomType": "Room type",
+    "cancellationPolicy": "Cancellation policy"
   },
   "account": {
     "title": "Your account",

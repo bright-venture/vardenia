@@ -22,6 +22,7 @@ import * as migration_20260911_090000_locale_expansion from './20260911_090000_l
 import * as migration_20260915_120830_room_types_booking from './20260915_120830_room_types_booking'
 import * as migration_20260916_055455_menu_field from './20260916_055455_menu_field'
 import * as migration_20260916_060545_room_type_price from './20260916_060545_room_type_price'
+import * as migration_20260916_063628_cancellation_policy from './20260916_063628_cancellation_policy'
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20260916_060545_room_type_price.up,
     down: migration_20260916_060545_room_type_price.down,
     name: '20260916_060545_room_type_price',
+  },
+  {
+    up: migration_20260916_063628_cancellation_policy.up,
+    down: migration_20260916_063628_cancellation_policy.down,
+    name: '20260916_063628_cancellation_policy',
   },
 ]

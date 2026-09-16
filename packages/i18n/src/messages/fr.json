@@ -142,7 +142,8 @@
     "accountSignIn": "Se connecter",
     "verifyFirst": "Confirmez votre adresse e-mail avant de réserver. Nous vous avons envoyé un lien à votre inscription.",
     "verifyResend": "Renvoyer le lien",
-    "roomType": "Type de chambre"
+    "roomType": "Type de chambre",
+    "cancellationPolicy": "Politique d'annulation"
   },
   "account": {
     "title": "Votre compte",

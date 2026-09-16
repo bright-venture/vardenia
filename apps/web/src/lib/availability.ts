@@ -77,6 +77,8 @@ export interface BookingRules {
    * booking service can read the configured labels from the same rules object.
    */
   roomTypes?: ({ label?: string | null; price?: number | null } | null)[] | null
+  /** Free-text cancellation terms, shown to the customer. Not enforced. */
+  cancellationPolicy?: string | null
 }
 
 /** An existing booking, reduced to what the check actually needs. */

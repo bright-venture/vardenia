@@ -142,7 +142,8 @@
     "accountSignIn": "تسجيل الدخول",
     "verifyFirst": "أكِّد بريدك الإلكتروني قبل الحجز. أرسلنا لك رابطاً عند إنشاء الحساب.",
     "verifyResend": "أعد إرسال الرابط",
-    "roomType": "نوع الغرفة"
+    "roomType": "نوع الغرفة",
+    "cancellationPolicy": "سياسة الإلغاء"
   },
   "account": {
     "title": "حسابك",
