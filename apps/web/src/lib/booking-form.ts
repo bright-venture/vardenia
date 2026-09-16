@@ -28,6 +28,13 @@ import { addDays, beirutDate, beirutInstant } from './beirut'
 
 export type BookingMode = 'nights' | 'sitting'
 
+/** One room type a stay can request: a stored label and an optional "from" price. */
+export interface RoomTypeOption {
+  label: string
+  /** Nightly "from" price in USD, or null when the listing set none. */
+  price: number | null
+}
+
 export interface BookingFormModel {
   mode: BookingMode
   /** Earliest date the customer may pick, "YYYY-MM-DD" in Beirut. */
@@ -42,11 +49,12 @@ export interface BookingFormModel {
   /** Selectable stay lengths in nights. Nights mode. */
   nightOptions: number[]
   /**
-   * Room or unit types a stay may request, as labels. Nights mode only, and
-   * empty when the listing configured none - the form then asks for no room
-   * type at all rather than showing a dropdown of one.
+   * Room or unit types a stay may request. Nights mode only, and empty when the
+   * listing configured none - the form then asks for no room type at all rather
+   * than showing a dropdown of one. `price` is the optional nightly "from" in
+   * USD; the label is what is stored on the booking.
    */
-  roomTypes: string[]
+  roomTypes: RoomTypeOption[]
   /** Minimum notice in minutes, for wording rather than for validation. */
   leadTimeMinutes: number
 }
@@ -144,9 +152,15 @@ export function bookingFormModel(
     // option.
     roomTypes:
       mode === 'nights'
-        ? (rules?.roomTypes ?? [])
-            .map((entry) => (typeof entry?.label === 'string' ? entry.label.trim() : ''))
-            .filter((label) => label.length > 0)
+        ? (rules?.roomTypes ?? []).flatMap((entry) => {
+            const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
+            if (!label) return []
+            const price =
+              typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0
+                ? entry.price
+                : null
+            return [{ label, price }]
+          })
         : [],
     leadTimeMinutes: config.leadTimeMinutes,
   }

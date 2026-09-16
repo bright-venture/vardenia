@@ -111,7 +111,7 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
   const [time, setTime] = useState('20:00')
   const [duration, setDuration] = useState(model.durationOptions[0] ?? 60)
   const [nights, setNights] = useState(model.nightOptions[0] ?? 1)
-  const [roomType, setRoomType] = useState(model.roomTypes[0] ?? '')
+  const [roomType, setRoomType] = useState(model.roomTypes[0]?.label ?? '')
   const [partySize, setPartySize] = useState(model.defaultPartySize)
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
@@ -405,9 +405,11 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
               onChange={(e) => setRoomType(e.target.value)}
               className={`mt-1.5 ${INPUT}`}
             >
-              {model.roomTypes.map((label) => (
-                <option key={label} value={label}>
-                  {label}
+              {model.roomTypes.map((room) => (
+                <option key={room.label} value={room.label}>
+                  {room.price != null
+                    ? `${room.label} · $${room.price.toLocaleString('en-US')}+`
+                    : room.label}
                 </option>
               ))}
             </select>

@@ -76,7 +76,7 @@ export interface BookingRules {
    * room type does not have its own inventory. It is here so the form and the
    * booking service can read the configured labels from the same rules object.
    */
-  roomTypes?: ({ label?: string | null } | null)[] | null
+  roomTypes?: ({ label?: string | null; price?: number | null } | null)[] | null
 }
 
 /** An existing booking, reduced to what the check actually needs. */

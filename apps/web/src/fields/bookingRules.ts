@@ -166,6 +166,14 @@ export const bookingRulesField: Field = {
       fields: [
         { name: 'label', type: 'text', required: true },
         {
+          name: 'price',
+          type: 'number',
+          min: 0,
+          admin: {
+            description: 'Nightly price "from", in USD. Optional; shown as "from $X".',
+          },
+        },
+        {
           name: 'note',
           type: 'text',
           admin: { description: 'Optional, e.g. "Sleeps 2, sea view".' },

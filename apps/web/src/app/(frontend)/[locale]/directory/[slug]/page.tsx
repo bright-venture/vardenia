@@ -188,13 +188,18 @@ export default async function ListingPage({ params }: Params) {
    * Blank labels a half-filled CMS row might carry are dropped.
    */
   const bookingGroup = (listing.booking ?? {}) as {
-    roomTypes?: ({ label?: string | null; note?: string | null } | null)[] | null
+    roomTypes?:
+      ({ label?: string | null; price?: number | null; note?: string | null } | null)[] | null
   }
   const roomTypes = (bookingGroup.roomTypes ?? []).flatMap((entry) => {
     const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
     if (!label) return []
     const note = typeof entry?.note === 'string' ? entry.note.trim() : ''
-    return [{ label, note }]
+    const price =
+      typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0
+        ? entry.price
+        : null
+    return [{ label, note, price }]
   })
 
   const related = await findRelatedListings({
@@ -512,7 +517,16 @@ export default async function ListingPage({ params }: Params) {
                     className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
                   >
                     <span className="text-ink-900">{room.label}</span>
-                    {room.note ? <span className="text-ink-500 text-sm">{room.note}</span> : null}
+                    <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
+                      {room.price != null ? (
+                        // "$120+" reads as a starting price in any language, which
+                        // a translated "from" placed before the number does not.
+                        <span className="text-ink-700 font-mono tabular-nums">
+                          ${room.price.toLocaleString('en-US')}+
+                        </span>
+                      ) : null}
+                      {room.note ? <span>{room.note}</span> : null}
+                    </span>
                   </li>
                 ))}
               </ul>

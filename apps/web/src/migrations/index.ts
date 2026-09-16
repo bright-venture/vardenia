@@ -21,6 +21,7 @@ import * as migration_20260908_070400_saved_listings from './20260908_070400_sav
 import * as migration_20260911_090000_locale_expansion from './20260911_090000_locale_expansion'
 import * as migration_20260915_120830_room_types_booking from './20260915_120830_room_types_booking'
 import * as migration_20260916_055455_menu_field from './20260916_055455_menu_field'
+import * as migration_20260916_060545_room_type_price from './20260916_060545_room_type_price'
 
 export const migrations = [
   {
@@ -137,5 +138,10 @@ export const migrations = [
     up: migration_20260916_055455_menu_field.up,
     down: migration_20260916_055455_menu_field.down,
     name: '20260916_055455_menu_field',
+  },
+  {
+    up: migration_20260916_060545_room_type_price.up,
+    down: migration_20260916_060545_room_type_price.down,
+    name: '20260916_060545_room_type_price',
   },
 ]
