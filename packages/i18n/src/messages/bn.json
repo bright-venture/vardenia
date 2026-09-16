@@ -103,7 +103,10 @@
     "youAreHere": "আপনি এখানে আছেন",
     "locating": "আপনার অবস্থান খোঁজা হচ্ছে…",
     "locateUnavailable": "আমরা আপনার অবস্থান পাইনি।",
-    "outsideArea": "আপনি এই এলাকার বাইরে।"
+    "outsideArea": "আপনি এই এলাকার বাইরে।",
+    "menu": "মেনু",
+    "viewMenu": "মেনু দেখুন",
+    "rooms": "রুম"
   },
   "booking": {
     "heading": "টেবিল বুক করুন",

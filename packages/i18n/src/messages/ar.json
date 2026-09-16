@@ -103,7 +103,10 @@
     "youAreHere": "أنت هنا",
     "locating": "جارٍ تحديد موقعك…",
     "locateUnavailable": "تعذّر الوصول إلى موقعك.",
-    "outsideArea": "أنت خارج هذه المنطقة."
+    "outsideArea": "أنت خارج هذه المنطقة.",
+    "menu": "القائمة",
+    "viewMenu": "عرض القائمة",
+    "rooms": "الغرف"
   },
   "booking": {
     "heading": "احجز طاولة",

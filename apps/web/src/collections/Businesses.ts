@@ -111,6 +111,24 @@ export const Businesses: CollectionConfig = {
             { name: 'logo', type: 'upload', relationTo: 'media' },
 
             {
+              /**
+               * A menu, as a file. Restaurants and cafes keep one as a PDF or a
+               * photo, so this takes either (the media collection allows both)
+               * and the listing shows a "View menu" link when it is set. Not
+               * restricted to food listings - a hotel restaurant has a menu too -
+               * but it is only shown when a file is attached, so a listing with
+               * none is unaffected.
+               */
+              name: 'menu',
+              type: 'upload',
+              relationTo: 'media',
+              admin: {
+                description:
+                  'A PDF or photo of the menu. Shown as a "View menu" link on the listing.',
+              },
+            },
+
+            {
               name: 'amenities',
               type: 'select',
               hasMany: true,

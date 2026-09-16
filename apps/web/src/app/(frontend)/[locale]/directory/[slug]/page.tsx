@@ -170,6 +170,33 @@ export default async function ListingPage({ params }: Params) {
   const hasRows = Boolean(listing.address) || subcategories.length > 0 || Boolean(price)
   const hasFacts = hasRows || hours.length > 0
 
+  /**
+   * The menu, when a file is attached. It is a PDF or a photo in the media
+   * collection, opened in a new tab rather than embedded - a PDF cannot be shown
+   * inline reliably and a menu photo is large. `depth: 2` on the fetch means the
+   * upload is populated, so its URL is on the document here.
+   */
+  const menu = listing.menu
+  const menuHref =
+    menu && typeof menu === 'object' && typeof (menu as { url?: unknown }).url === 'string'
+      ? (menu as { url: string }).url
+      : null
+
+  /**
+   * Room or unit types, for a stay. Read from the same booking group the form
+   * uses, so the section on the page and the dropdown in the form never disagree.
+   * Blank labels a half-filled CMS row might carry are dropped.
+   */
+  const bookingGroup = (listing.booking ?? {}) as {
+    roomTypes?: ({ label?: string | null; note?: string | null } | null)[] | null
+  }
+  const roomTypes = (bookingGroup.roomTypes ?? []).flatMap((entry) => {
+    const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
+    if (!label) return []
+    const note = typeof entry?.note === 'string' ? entry.note.trim() : ''
+    return [{ label, note }]
+  })
+
   const related = await findRelatedListings({
     locale,
     slug,
@@ -466,6 +493,49 @@ export default async function ListingPage({ params }: Params) {
             <div dir="auto" className="prose-vardenia mt-14 max-w-2xl">
               <RichText data={listing.description as never} />
             </div>
+          ) : null}
+
+          {/*
+            Rooms, for a stay. The types the listing offers, with the venue's own
+            note beside each - the same set a guest picks from in the booking
+            form, shown here so they can weigh the options before opening it.
+          */}
+          {roomTypes.length > 0 ? (
+            <section className="mt-14">
+              <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                {t('rooms')}
+              </h2>
+              <ul className="border-ink-100 mt-4 border-t">
+                {roomTypes.map((room) => (
+                  <li
+                    key={room.label}
+                    className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
+                  >
+                    <span className="text-ink-900">{room.label}</span>
+                    {room.note ? <span className="text-ink-500 text-sm">{room.note}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {/* The menu, as a link to the file. Restaurants and cafes keep one as a
+              PDF or a photo; it opens in a new tab. */}
+          {menuHref ? (
+            <section className="mt-14">
+              <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                {t('menu')}
+              </h2>
+              <a
+                href={menuHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border-ink-100 text-ink-900 hover:bg-surface-raised mt-4 inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium transition-colors"
+              >
+                {t('viewMenu')}
+                <span aria-hidden>&#8599;</span>
+              </a>
+            </section>
           ) : null}
 
           {gallery.length > 0 ? (

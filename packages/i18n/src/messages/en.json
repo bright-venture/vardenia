@@ -103,7 +103,10 @@
     "youAreHere": "You are here",
     "locating": "Finding your location…",
     "locateUnavailable": "We could not access your location.",
-    "outsideArea": "You are outside this area."
+    "outsideArea": "You are outside this area.",
+    "menu": "Menu",
+    "viewMenu": "View menu",
+    "rooms": "Rooms"
   },
   "booking": {
     "heading": "Book a table",

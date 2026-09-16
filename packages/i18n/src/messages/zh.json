@@ -103,7 +103,10 @@
     "youAreHere": "您在这里",
     "locating": "正在定位…",
     "locateUnavailable": "无法获取您的位置。",
-    "outsideArea": "您不在此区域内。"
+    "outsideArea": "您不在此区域内。",
+    "menu": "菜单",
+    "viewMenu": "查看菜单",
+    "rooms": "房型"
   },
   "booking": {
     "heading": "预订餐位",

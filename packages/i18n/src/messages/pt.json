@@ -103,7 +103,10 @@
     "youAreHere": "Você está aqui",
     "locating": "Localizando você…",
     "locateUnavailable": "Não foi possível acessar sua localização.",
-    "outsideArea": "Você está fora desta área."
+    "outsideArea": "Você está fora desta área.",
+    "menu": "Cardápio",
+    "viewMenu": "Ver o cardápio",
+    "rooms": "Quartos"
   },
   "booking": {
     "heading": "Reservar mesa",

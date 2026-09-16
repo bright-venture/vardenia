@@ -103,7 +103,10 @@
     "youAreHere": "آپ یہاں ہیں",
     "locating": "آپ کا مقام تلاش کیا جا رہا ہے…",
     "locateUnavailable": "ہم آپ کا مقام حاصل نہیں کر سکے۔",
-    "outsideArea": "آپ اس علاقے سے باہر ہیں۔"
+    "outsideArea": "آپ اس علاقے سے باہر ہیں۔",
+    "menu": "مینو",
+    "viewMenu": "مینو دیکھیں",
+    "rooms": "کمرے"
   },
   "booking": {
     "heading": "میز بک کریں",
