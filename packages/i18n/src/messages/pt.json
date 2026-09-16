@@ -295,7 +295,22 @@
     "tabBookings": "Reservas",
     "tabListing": "Sua ficha",
     "publicPageTitle": "Sua página na Vardenia",
-    "backToSite": "Voltar para a Vardenia"
+    "backToSite": "Voltar para a Vardenia",
+    "tabScans": "Leituras",
+    "scansIntro": "Com que frequência os seus códigos impressos são lidos, de onde e em que dispositivo.",
+    "scansAllTime": "Leituras, no total",
+    "scansWindow": "Últimos {days} dias",
+    "scansDirect": "Leituras diretas",
+    "scansDirectHint": "Da câmera do telefone, não um link compartilhado",
+    "scansPerDay": "Leituras por dia",
+    "scansByDevice": "Por dispositivo",
+    "scansByCountry": "Por país",
+    "scansNone": "Ainda sem leituras. Os seus códigos começam a contar na primeira leitura.",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "Web",
+    "deviceOther": "Outro",
+    "countryUnknown": "Desconhecido"
   },
   "bookingStatus": {
     "pending": "Aguardando confirmação",

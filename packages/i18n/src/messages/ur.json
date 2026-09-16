@@ -295,7 +295,22 @@
     "tabBookings": "بکنگ",
     "tabListing": "آپ کا اندراج",
     "publicPageTitle": "Vardenia پر آپ کا صفحہ",
-    "backToSite": "Vardenia پر واپس جائیں"
+    "backToSite": "Vardenia پر واپس جائیں",
+    "tabScans": "اسکینز",
+    "scansIntro": "آپ کے چھپے ہوئے کوڈ کتنی بار، کہاں سے اور کس ڈیوائس پر اسکین ہوتے ہیں۔",
+    "scansAllTime": "کل اسکینز",
+    "scansWindow": "پچھلے {days} دن",
+    "scansDirect": "براہِ راست اسکین",
+    "scansDirectHint": "فون کیمرے سے، شیئر کیے گئے لنک سے نہیں",
+    "scansPerDay": "روزانہ اسکین",
+    "scansByDevice": "ڈیوائس کے مطابق",
+    "scansByCountry": "ملک کے مطابق",
+    "scansNone": "ابھی کوئی اسکین نہیں۔ پہلی بار اسکین ہوتے ہی آپ کے کوڈ گننا شروع ہو جاتے ہیں۔",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "ویب",
+    "deviceOther": "دیگر",
+    "countryUnknown": "نامعلوم"
   },
   "bookingStatus": {
     "pending": "تصدیق کے منتظر",

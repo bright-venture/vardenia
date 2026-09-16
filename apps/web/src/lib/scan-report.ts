@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { rawDb } from './db'
+import { addDays, beirutDate } from './beirut'
 
 /**
  * Turning the scan log into the numbers a renewal conversation runs on.
@@ -185,4 +186,125 @@ export function parseRange(params: URLSearchParams, now = new Date()): ReportRan
 
   // A reversed range would silently return nothing; swap rather than mislead.
   return start <= end ? { from: start, to: end } : { from: end, to: start }
+}
+
+/**
+ * A single listing-owner's scan figures, for the partner dashboard.
+ *
+ * This is the same scan log as `listingScanReport` above, but aggregated for one
+ * account rather than for the whole magazine, and shaped for a dashboard rather
+ * than a renewal CSV: totals, a daily series to chart, and a breakdown by device
+ * and country. The scan log is staff-only, so a partner never reads a row of it;
+ * these counts are scoped to exactly the listings the account manages, from
+ * `owner.businessIds` in the session and never from anything the browser sent.
+ * That `business_id = ANY(...)` filter is the whole security boundary.
+ *
+ * The daily series is grouped by the Beirut calendar day, so a scan at 01:00
+ * belongs to that night's business rather than to the UTC day before.
+ */
+export interface ScanReport {
+  /** Every scan ever recorded for these listings. */
+  total: number
+  /** Days the window and the breakdowns cover. */
+  windowDays: number
+  /** Scans within the window. */
+  windowTotal: number
+  /** Within the window, scans with no referrer - a camera-app scan of a printed code. */
+  direct: number
+  /** One entry per day in the window, oldest first, zero-filled. */
+  daily: { day: string; count: number }[]
+  /** Device breakdown within the window, largest first. */
+  platforms: { platform: string; count: number }[]
+  /** Country breakdown within the window, largest first, top few. */
+  countries: { country: string; count: number }[]
+}
+
+const OWNER_WINDOW_DAYS = 30
+const OWNER_COUNTRY_LIMIT = 6
+
+/** The window's calendar days in Beirut, oldest first - the x-axis of the chart. */
+function ownerWindowDays(now: Date, days: number): string[] {
+  const today = beirutDate(now)
+  const out: string[] = []
+  for (let i = days - 1; i >= 0; i -= 1) out.push(addDays(today, -i))
+  return out
+}
+
+/** Overlay the grouped counts onto a zero-filled day range, so gaps read as zero. */
+export function fillDaily(
+  rows: { day: string; count: number }[],
+  days: string[],
+): { day: string; count: number }[] {
+  const byDay = new Map(rows.map((r) => [r.day, r.count]))
+  return days.map((day) => ({ day, count: byDay.get(day) ?? 0 }))
+}
+
+const EMPTY_REPORT = (now: Date): ScanReport => ({
+  total: 0,
+  windowDays: OWNER_WINDOW_DAYS,
+  windowTotal: 0,
+  direct: 0,
+  daily: fillDaily([], ownerWindowDays(now, OWNER_WINDOW_DAYS)),
+  platforms: [],
+  countries: [],
+})
+
+export async function ownerScanReport(
+  businessIds: (string | number)[],
+  now: Date = new Date(),
+): Promise<ScanReport> {
+  const ids = businessIds.map((id) => Number(id)).filter((id) => Number.isInteger(id))
+  if (ids.length === 0) return EMPTY_REPORT(now)
+
+  const payload = await getPayload({ config })
+  const { pool, schema, table } = rawDb(payload)
+  const scanEvents = `"${schema}"."${table('scan_events')}"`
+  const since = new Date(now.getTime() - OWNER_WINDOW_DAYS * 86_400_000).toISOString()
+
+  const totalsSql = `
+    SELECT
+      count(*)::int AS total,
+      count(*) FILTER (WHERE scanned_at >= $2)::int AS window_total,
+      count(*) FILTER (WHERE scanned_at >= $2 AND is_direct_scan)::int AS direct
+    FROM ${scanEvents}
+    WHERE business_id = ANY($1::int[])`
+
+  const dailySql = `
+    SELECT (scanned_at AT TIME ZONE 'Asia/Beirut')::date::text AS day, count(*)::int AS n
+    FROM ${scanEvents}
+    WHERE business_id = ANY($1::int[]) AND scanned_at >= $2
+    GROUP BY day ORDER BY day`
+
+  const platformSql = `
+    SELECT coalesce(nullif(platform::text, ''), 'unknown') AS platform, count(*)::int AS n
+    FROM ${scanEvents}
+    WHERE business_id = ANY($1::int[]) AND scanned_at >= $2
+    GROUP BY platform ORDER BY n DESC`
+
+  const countrySql = `
+    SELECT coalesce(nullif(country, ''), '') AS country, count(*)::int AS n
+    FROM ${scanEvents}
+    WHERE business_id = ANY($1::int[]) AND scanned_at >= $2
+    GROUP BY country ORDER BY n DESC LIMIT ${OWNER_COUNTRY_LIMIT}`
+
+  const [totals, daily, platforms, countries] = await Promise.all([
+    pool.query(totalsSql, [ids, since]),
+    pool.query(dailySql, [ids, since]),
+    pool.query(platformSql, [ids, since]),
+    pool.query(countrySql, [ids, since]),
+  ])
+
+  const t = totals.rows[0] ?? {}
+  return {
+    total: Number(t.total ?? 0),
+    windowDays: OWNER_WINDOW_DAYS,
+    windowTotal: Number(t.window_total ?? 0),
+    direct: Number(t.direct ?? 0),
+    daily: fillDaily(
+      daily.rows.map((r) => ({ day: String(r.day), count: Number(r.n) })),
+      ownerWindowDays(now, OWNER_WINDOW_DAYS),
+    ),
+    platforms: platforms.rows.map((r) => ({ platform: String(r.platform), count: Number(r.n) })),
+    countries: countries.rows.map((r) => ({ country: String(r.country), count: Number(r.n) })),
+  }
 }

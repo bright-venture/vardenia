@@ -295,7 +295,22 @@
     "tabBookings": "预订",
     "tabListing": "您的记录",
     "publicPageTitle": "您在 Vardenia 的页面",
-    "backToSite": "返回 Vardenia"
+    "backToSite": "返回 Vardenia",
+    "tabScans": "扫描",
+    "scansIntro": "您的印刷二维码被扫描的频率、来源和设备。",
+    "scansAllTime": "扫描总数",
+    "scansWindow": "最近 {days} 天",
+    "scansDirect": "直接扫描",
+    "scansDirectHint": "来自手机相机，而非分享链接",
+    "scansPerDay": "每日扫描",
+    "scansByDevice": "按设备",
+    "scansByCountry": "按国家/地区",
+    "scansNone": "暂无扫描。二维码被首次扫描后开始计数。",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "安卓",
+    "deviceWeb": "网页",
+    "deviceOther": "其他",
+    "countryUnknown": "未知"
   },
   "bookingStatus": {
     "pending": "等待确认",

@@ -20,7 +20,15 @@ import { Link } from '../i18n/routing'
  * "you are here" without adding a fourth shape.
  */
 
-export function PartnerTabs({ bookings, listing }: { bookings: string; listing: string }) {
+export function PartnerTabs({
+  bookings,
+  listing,
+  scans,
+}: {
+  bookings: string
+  listing: string
+  scans: string
+}) {
   const pathname = usePathname()
 
   /**
@@ -30,14 +38,18 @@ export function PartnerTabs({ bookings, listing }: { bookings: string; listing: 
    * Arabic dashboard with nothing highlighted.
    */
   const onListing = pathname.endsWith('/partner/listing')
+  const onScans = pathname.endsWith('/partner/scans')
 
   return (
     <nav className="border-ink-100 mt-8 flex gap-6 border-b" aria-label={bookings}>
-      <Tab href="/partner" active={!onListing}>
+      <Tab href="/partner" active={!onListing && !onScans}>
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
         {listing}
+      </Tab>
+      <Tab href="/partner/scans" active={onScans}>
+        {scans}
       </Tab>
     </nav>
   )

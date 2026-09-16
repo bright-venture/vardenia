@@ -295,7 +295,22 @@
     "tabBookings": "Бронирования",
     "tabListing": "Ваша запись",
     "publicPageTitle": "Ваша страница на Vardenia",
-    "backToSite": "Назад в Vardenia"
+    "backToSite": "Назад в Vardenia",
+    "tabScans": "Сканирования",
+    "scansIntro": "Как часто сканируют ваши печатные коды, откуда и с какого устройства.",
+    "scansAllTime": "Сканирований, всего",
+    "scansWindow": "Последние {days} дней",
+    "scansDirect": "Прямые сканирования",
+    "scansDirectHint": "С камеры телефона, а не по ссылке",
+    "scansPerDay": "Сканирований в день",
+    "scansByDevice": "По устройству",
+    "scansByCountry": "По стране",
+    "scansNone": "Пока нет сканирований. Коды начинают считаться с первого сканирования.",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "Веб",
+    "deviceOther": "Другое",
+    "countryUnknown": "Неизвестно"
   },
   "bookingStatus": {
     "pending": "Ожидает подтверждения",

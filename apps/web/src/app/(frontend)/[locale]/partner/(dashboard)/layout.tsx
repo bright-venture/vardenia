@@ -78,7 +78,7 @@ export default async function DashboardLayout({
         <SignOutButton collection="business-users" redirectTo="/partner/login" />
       </header>
 
-      <PartnerTabs bookings={t('tabBookings')} listing={t('tabListing')} />
+      <PartnerTabs bookings={t('tabBookings')} listing={t('tabListing')} scans={t('tabScans')} />
 
       {/* An account staff have not yet attached a listing to. It authenticates
           perfectly and can see nothing, which without a word of explanation

@@ -295,7 +295,22 @@
     "tabBookings": "বুকিং",
     "tabListing": "আপনার এন্ট্রি",
     "publicPageTitle": "Vardenia-তে আপনার পেজ",
-    "backToSite": "Vardenia-তে ফিরে যান"
+    "backToSite": "Vardenia-তে ফিরে যান",
+    "tabScans": "স্ক্যান",
+    "scansIntro": "আপনার ছাপা কোড কত বার, কোথা থেকে এবং কোন ডিভাইসে স্ক্যান হয়।",
+    "scansAllTime": "মোট স্ক্যান",
+    "scansWindow": "গত {days} দিন",
+    "scansDirect": "সরাসরি স্ক্যান",
+    "scansDirectHint": "ফোনের ক্যামেরা থেকে, শেয়ার করা লিঙ্ক নয়",
+    "scansPerDay": "প্রতিদিন স্ক্যান",
+    "scansByDevice": "ডিভাইস অনুযায়ী",
+    "scansByCountry": "দেশ অনুযায়ী",
+    "scansNone": "এখনও কোনো স্ক্যান নেই। প্রথম স্ক্যান হলেই আপনার কোড গণনা শুরু হয়।",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "ওয়েব",
+    "deviceOther": "অন্যান্য",
+    "countryUnknown": "অজানা"
   },
   "bookingStatus": {
     "pending": "নিশ্চিতকরণের অপেক্ষায়",

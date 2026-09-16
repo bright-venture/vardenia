@@ -295,7 +295,22 @@
     "tabBookings": "Bookings",
     "tabListing": "Your listing",
     "publicPageTitle": "Your page on Vardenia",
-    "backToSite": "Back to Vardenia"
+    "backToSite": "Back to Vardenia",
+    "tabScans": "Scans",
+    "scansIntro": "How often your printed codes get scanned, where from, and on what.",
+    "scansAllTime": "Scans, all time",
+    "scansWindow": "Last {days} days",
+    "scansDirect": "Direct scans",
+    "scansDirectHint": "From a phone camera, not a shared link",
+    "scansPerDay": "Scans per day",
+    "scansByDevice": "By device",
+    "scansByCountry": "By country",
+    "scansNone": "No scans yet. Your codes start counting the first time someone scans one.",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "Web",
+    "deviceOther": "Other",
+    "countryUnknown": "Unknown"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

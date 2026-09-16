@@ -295,7 +295,22 @@
     "tabBookings": "الحجوزات",
     "tabListing": "صفحتك",
     "publicPageTitle": "صفحتك على فاردينيا",
-    "backToSite": "العودة إلى فاردينيا"
+    "backToSite": "العودة إلى فاردينيا",
+    "tabScans": "عمليات المسح",
+    "scansIntro": "عدد مرات مسح أكوادك المطبوعة، ومن أين، وبأي جهاز.",
+    "scansAllTime": "عمليات المسح، الإجمالي",
+    "scansWindow": "آخر {days} يوماً",
+    "scansDirect": "مسح مباشر",
+    "scansDirectHint": "من كاميرا الهاتف، وليس من رابط مُشارَك",
+    "scansPerDay": "عمليات المسح يومياً",
+    "scansByDevice": "حسب الجهاز",
+    "scansByCountry": "حسب البلد",
+    "scansNone": "لا توجد عمليات مسح بعد. تبدأ أكوادك بالعدّ عند أول عملية مسح.",
+    "deviceIos": "آيفون",
+    "deviceAndroid": "أندرويد",
+    "deviceWeb": "الويب",
+    "deviceOther": "أخرى",
+    "countryUnknown": "غير معروف"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

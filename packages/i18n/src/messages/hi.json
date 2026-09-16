@@ -295,7 +295,22 @@
     "tabBookings": "बुकिंग",
     "tabListing": "आपकी प्रविष्टि",
     "publicPageTitle": "Vardenia पर आपका पेज",
-    "backToSite": "Vardenia पर वापस जाएँ"
+    "backToSite": "Vardenia पर वापस जाएँ",
+    "tabScans": "स्कैन",
+    "scansIntro": "आपके छपे कोड कितनी बार, कहाँ से और किस डिवाइस पर स्कैन होते हैं।",
+    "scansAllTime": "कुल स्कैन",
+    "scansWindow": "पिछले {days} दिन",
+    "scansDirect": "सीधे स्कैन",
+    "scansDirectHint": "फ़ोन कैमरे से, साझा लिंक से नहीं",
+    "scansPerDay": "प्रतिदिन स्कैन",
+    "scansByDevice": "डिवाइस अनुसार",
+    "scansByCountry": "देश अनुसार",
+    "scansNone": "अभी कोई स्कैन नहीं। पहली बार स्कैन होते ही आपके कोड गिनने लगते हैं।",
+    "deviceIos": "iPhone",
+    "deviceAndroid": "Android",
+    "deviceWeb": "वेब",
+    "deviceOther": "अन्य",
+    "countryUnknown": "अज्ञात"
   },
   "bookingStatus": {
     "pending": "पुष्टि की प्रतीक्षा में",
