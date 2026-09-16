@@ -112,6 +112,7 @@ export default async function ListingPage({ params }: Params) {
   if (!listing) notFound()
 
   const t = await getTranslations('directory')
+  const tCommon = await getTranslations('common')
   /**
    * A real photograph, or nothing.
    *
@@ -519,10 +520,10 @@ export default async function ListingPage({ params }: Params) {
                     <span className="text-ink-900">{room.label}</span>
                     <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
                       {room.price != null ? (
-                        // "$120+" reads as a starting price in any language, which
-                        // a translated "from" placed before the number does not.
-                        <span className="text-ink-700 font-mono tabular-nums">
-                          ${room.price.toLocaleString('en-US')}+
+                        // A starting nightly rate. The number is pinned dir=ltr so
+                        // the "$120 / night" does not reorder on an Arabic page.
+                        <span dir="ltr" className="text-ink-700 font-mono tabular-nums">
+                          ${room.price.toLocaleString('en-US')} / {tCommon('perNight')}
                         </span>
                       ) : null}
                       {room.note ? <span>{room.note}</span> : null}

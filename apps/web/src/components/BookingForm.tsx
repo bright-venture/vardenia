@@ -408,7 +408,7 @@ export function BookingForm({ businessId, model, locale }: BookingFormProps) {
               {model.roomTypes.map((room) => (
                 <option key={room.label} value={room.label}>
                   {room.price != null
-                    ? `${room.label} · $${room.price.toLocaleString('en-US')}+`
+                    ? `${room.label} · $${room.price.toLocaleString('en-US')} / ${common('perNight')}`
                     : room.label}
                 </option>
               ))}
