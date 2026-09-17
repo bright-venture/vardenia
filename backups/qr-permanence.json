@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 497,
+  "count": 790,
   "codes": [
     {
       "code": "02KY7K5",
@@ -24,6 +24,13 @@
       "businessSlug": "roots-pilates-studio"
     },
     {
+      "code": "05NX1VR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ayadina"
+    },
+    {
       "code": "06AQGZ3",
       "targetType": "business",
       "placement": "magazine-page",
@@ -36,6 +43,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "trinity5-faraya"
+    },
+    {
+      "code": "077N165",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "frolic-pub-cafe"
     },
     {
       "code": "0A4PNYZ",
@@ -52,6 +66,20 @@
       "businessSlug": "plan-b"
     },
     {
+      "code": "0D3AJCN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kahwet-leila"
+    },
+    {
+      "code": "0G018SX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "abc"
+    },
+    {
       "code": "0G4ZZ3S",
       "targetType": "business",
       "placement": "magazine-page",
@@ -64,6 +92,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "prime-valley-resort"
+    },
+    {
+      "code": "0HA52MH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "duo-restaurant"
     },
     {
       "code": "0JHVTKR",
@@ -87,6 +122,27 @@
       "businessSlug": "damour-park"
     },
     {
+      "code": "0RZ38DF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "salle-des-ambassadeurs"
+    },
+    {
+      "code": "0S9Q21Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "1111-cocktail-coffee"
+    },
+    {
+      "code": "0SACKFR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "monot-suites-pool"
+    },
+    {
       "code": "0SK6F6K",
       "targetType": "business",
       "placement": "magazine-page",
@@ -108,11 +164,53 @@
       "businessSlug": "mountain-services-and-transport"
     },
     {
+      "code": "10M55MH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "barley-and-bean-coffee-house"
+    },
+    {
+      "code": "122E0CV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "eleve-wellness-cafe"
+    },
+    {
+      "code": "12W452S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-mixologist-by-the-sea"
+    },
+    {
       "code": "13075D4",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "beit-faris-wa-lucia"
+    },
+    {
+      "code": "15JREGM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ferdinand"
+    },
+    {
+      "code": "19HVB2V",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-nous"
+    },
+    {
+      "code": "1BJPZTZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "voco-beirut-central-district-by-ihg"
     },
     {
       "code": "1D8BBG9",
@@ -134,6 +232,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "bamboo-asian-cuisine"
+    },
+    {
+      "code": "1MMBNR8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lancaster-eden-bay"
     },
     {
       "code": "1NER7A0",
@@ -164,6 +269,13 @@
       "businessSlug": "beit-nazha"
     },
     {
+      "code": "1VPZ598",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sweet-corner"
+    },
+    {
       "code": "1YX7WRN",
       "targetType": "business",
       "placement": "magazine-page",
@@ -185,6 +297,13 @@
       "businessSlug": "k-village-lebanon"
     },
     {
+      "code": "21XYSBA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-chef"
+    },
+    {
       "code": "22J62MD",
       "targetType": "business",
       "placement": "magazine-page",
@@ -199,6 +318,34 @@
       "businessSlug": "padel-pulse-adonis-padel-courts"
     },
     {
+      "code": "25AQXMN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-kanz"
+    },
+    {
+      "code": "26C8JZK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "f45-training-ashrafieh"
+    },
+    {
+      "code": "279Q17N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-younes-sodeco"
+    },
+    {
+      "code": "27MTWFT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "radisson-blu-martinez-hotel"
+    },
+    {
       "code": "28EERDX",
       "targetType": "business",
       "placement": "magazine-page",
@@ -211,6 +358,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "el-mexicano-faraya"
+    },
+    {
+      "code": "2BS0XX4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "torino-express"
     },
     {
       "code": "2F5TAVB",
@@ -241,6 +395,20 @@
       "businessSlug": "kfarnis-festival"
     },
     {
+      "code": "2JY6WVD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bref"
+    },
+    {
+      "code": "2KC3MVD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "comfy-1br-apt-w-pool-gym"
+    },
+    {
       "code": "2Q8MKRG",
       "targetType": "business",
       "placement": "magazine-page",
@@ -262,11 +430,25 @@
       "businessSlug": "nabeh-merched-restaurant"
     },
     {
+      "code": "2YCSVXX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bar-national"
+    },
+    {
       "code": "2ZVJXR3",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "barouk-hills"
+    },
+    {
+      "code": "30T326K",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amazone-cafe"
     },
     {
       "code": "32NTDZQ",
@@ -276,11 +458,32 @@
       "businessSlug": "chapo-bar"
     },
     {
+      "code": "32XKSYP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hotel-de-ville"
+    },
+    {
       "code": "33YFBHZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "telepherique-du-liban-cable-car-ride"
+    },
+    {
+      "code": "35D167K",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-wurud"
+    },
+    {
+      "code": "37FYS24",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "little-byblos-cafe"
     },
     {
       "code": "39XKPSM",
@@ -297,6 +500,20 @@
       "businessSlug": "ehmej-mouneh-festival-ehmej"
     },
     {
+      "code": "3CTQF3M",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bebabel"
+    },
+    {
+      "code": "3DHRHVF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "reflect-pub"
+    },
+    {
       "code": "3ETAJWT",
       "targetType": "business",
       "placement": "magazine-page",
@@ -304,11 +521,39 @@
       "businessSlug": "official-shouf-biosphere-reserve-guides-2"
     },
     {
+      "code": "3FYY8W9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hotel-lost-ashrafieh"
+    },
+    {
       "code": "3GN30KR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "teleferique-cafe-resto"
+    },
+    {
+      "code": "3HP6F7J",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-masseria"
+    },
+    {
+      "code": "3HV7WQ0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "drink-and-sing-karaoke-pub-jbeil"
+    },
+    {
+      "code": "3HZZK55",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-toni"
     },
     {
       "code": "3J8MYEJ",
@@ -330,6 +575,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "lescape"
+    },
+    {
+      "code": "3M407ST",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-cask-barrel-mzaar"
     },
     {
       "code": "3N2MWXW",
@@ -402,6 +654,13 @@
       "businessSlug": "cheese-on-top"
     },
     {
+      "code": "3W5S9KC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dupain"
+    },
+    {
       "code": "3XYY3A9",
       "targetType": "business",
       "placement": "magazine-page",
@@ -444,6 +703,13 @@
       "businessSlug": "olicci-resto"
     },
     {
+      "code": "467VHA4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cocktails-factory"
+    },
+    {
       "code": "467VTNH",
       "targetType": "business",
       "placement": "magazine-page",
@@ -465,6 +731,27 @@
       "businessSlug": "cali-cafe-theater"
     },
     {
+      "code": "4B9NRA1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "comfy-apart-hotel"
+    },
+    {
+      "code": "4C5056R",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "gspa-g-fit"
+    },
+    {
+      "code": "4D12C61",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "why-natt"
+    },
+    {
       "code": "4FHS4HN",
       "targetType": "business",
       "placement": "magazine-page",
@@ -477,6 +764,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "naim-mhanna"
+    },
+    {
+      "code": "4G0TMF3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "eddesands-hotel-wellness-resort"
     },
     {
       "code": "4H9QF3X",
@@ -493,11 +787,25 @@
       "businessSlug": "al-marsa-halat"
     },
     {
+      "code": "4KYN66X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "whitelace-hotel-resort-spa"
+    },
+    {
       "code": "4MPKV9M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "the-village-country-club"
+    },
+    {
+      "code": "4NH1PT9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "internazionale"
     },
     {
       "code": "4PHGBGC",
@@ -507,11 +815,32 @@
       "businessSlug": "shallalat-nabeh-merched"
     },
     {
+      "code": "4Q3HJPC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "demo"
+    },
+    {
+      "code": "4QFP7MW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "riccello"
+    },
+    {
       "code": "4RX1G06",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "bab-el-mina"
+    },
+    {
+      "code": "4WTNZXD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ritage-garden"
     },
     {
       "code": "4XAKYHS",
@@ -526,6 +855,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "vista-del-mar-hotel-maameltein"
+    },
+    {
+      "code": "4ZS28CK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-smallville-hotel"
     },
     {
       "code": "51A0Q39",
@@ -570,6 +906,13 @@
       "businessSlug": "ozen-club"
     },
     {
+      "code": "5EE7YH9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-younes-ashrafieh"
+    },
+    {
       "code": "5GJM82V",
       "targetType": "business",
       "placement": "magazine-page",
@@ -582,6 +925,27 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "goldeneye-superyachts-private-yacht-and-boat-rentals"
+    },
+    {
+      "code": "5HQAVXM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-bohemian-bar"
+    },
+    {
+      "code": "5JGGY07",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "phocus-gym"
+    },
+    {
+      "code": "5MMJDMM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "groove"
     },
     {
       "code": "5N285Y0",
@@ -603,6 +967,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "le-petit-coin-bleu"
+    },
+    {
+      "code": "5R4FQ20",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jive"
+    },
+    {
+      "code": "5RANSCA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jalsat"
     },
     {
       "code": "5RZP6V9",
@@ -640,6 +1018,13 @@
       "businessSlug": "sunrise-hotel-sahel-aalma"
     },
     {
+      "code": "60FTHSZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "snow-cream-parlor-coffee-shop"
+    },
+    {
       "code": "60QKPX3",
       "targetType": "business",
       "placement": "magazine-page",
@@ -675,11 +1060,39 @@
       "businessSlug": "u-961-scuba-diving-lebanon-scuba-diving-courses"
     },
     {
+      "code": "692C7D8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "paul"
+    },
+    {
+      "code": "69E6RT4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "10-stories-hotel"
+    },
+    {
+      "code": "6AKAYNY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "off-record"
+    },
+    {
       "code": "6B4A16A",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "al-fundok"
+    },
+    {
+      "code": "6EWGMXS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tappo"
     },
     {
       "code": "6G6SNQZ",
@@ -717,6 +1130,13 @@
       "businessSlug": "fitness-road"
     },
     {
+      "code": "6NHG9PP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "drink-and-sing"
+    },
+    {
       "code": "6NY7AA1",
       "targetType": "business",
       "placement": "magazine-page",
@@ -738,11 +1158,25 @@
       "businessSlug": "chalets-de-faraya"
     },
     {
+      "code": "6X5951F",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "momaki"
+    },
+    {
       "code": "6XVRR4R",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "mountscape"
+    },
+    {
+      "code": "6ZR3QCX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bhub-723-guesthouse"
     },
     {
       "code": "729BS6V",
@@ -829,6 +1263,20 @@
       "businessSlug": "deir-el-oumara-restaurant"
     },
     {
+      "code": "7CGPGVJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zaitunay-bay-beirut-marina-boat-rental"
+    },
+    {
+      "code": "7D14YYB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "volume-beirut"
+    },
+    {
       "code": "7FQNDHF",
       "targetType": "business",
       "placement": "magazine-page",
@@ -871,6 +1319,13 @@
       "businessSlug": "chouf-yoga-festival"
     },
     {
+      "code": "7V9XMZP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "citea-apart-hotel"
+    },
+    {
       "code": "7W36A80",
       "targetType": "business",
       "placement": "magazine-page",
@@ -885,11 +1340,25 @@
       "businessSlug": "middle-beach-hotel-resort"
     },
     {
+      "code": "7Y3CF0B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sofitel-beirut-le-gabriel"
+    },
+    {
       "code": "803WVPZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "terre-brune-hotel-faqra"
+    },
+    {
+      "code": "81KFXRN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "vicoli-saifi"
     },
     {
       "code": "851M3K0",
@@ -927,6 +1396,13 @@
       "businessSlug": "heaven-on-earth"
     },
     {
+      "code": "89B4QGZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "b-residence"
+    },
+    {
       "code": "8BWCXPG",
       "targetType": "business",
       "placement": "magazine-page",
@@ -939,6 +1415,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "perch-faraya-kfardebian"
+    },
+    {
+      "code": "8DDXNRR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "baffa-house"
     },
     {
       "code": "8DJDA3E",
@@ -962,11 +1445,39 @@
       "businessSlug": "oakridge-mountain-resort"
     },
     {
+      "code": "8JFV7DM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "intercontinental-phoenicia-beirut"
+    },
+    {
       "code": "8M0G3MR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "bacha-resort-2"
+    },
+    {
+      "code": "8MXNH4C",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "starbucks"
+    },
+    {
+      "code": "8NCXP74",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "saifi-suites"
+    },
+    {
+      "code": "8NG6CAY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chidiac-cafe"
     },
     {
       "code": "8NGQFJM",
@@ -976,6 +1487,27 @@
       "businessSlug": "falcons-hill-resort"
     },
     {
+      "code": "8P9JWK9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "society-bistro"
+    },
+    {
+      "code": "8R5V09S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-toureef"
+    },
+    {
+      "code": "8SM2H9S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "blck-specialty-coffee"
+    },
+    {
       "code": "8TG43QC",
       "targetType": "business",
       "placement": "magazine-page",
@@ -983,11 +1515,32 @@
       "businessSlug": "baher-el-hawa"
     },
     {
+      "code": "8VHA810",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "incontro-cafe"
+    },
+    {
+      "code": "8XP9K5Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lancaster-plaza-beirut"
+    },
+    {
       "code": "8ZBT637",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "kfarhim-grotto"
+    },
+    {
+      "code": "90EDBR2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "royal-tulip-achrafieh"
     },
     {
       "code": "93FGGN1",
@@ -1018,6 +1571,20 @@
       "businessSlug": "a-la-minute"
     },
     {
+      "code": "97T4C00",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "center-stage"
+    },
+    {
+      "code": "98NTCF9",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "reset-matcha-coffee-house"
+    },
+    {
       "code": "995P5E2",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1039,6 +1606,13 @@
       "businessSlug": "tania-ballane"
     },
     {
+      "code": "9B64KHH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "les-creneaux"
+    },
+    {
       "code": "9C1AC40",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1053,11 +1627,46 @@
       "businessSlug": "cedars-horse-riding-club"
     },
     {
+      "code": "9GCE370",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "area-51"
+    },
+    {
+      "code": "9MDQ5BA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lamedina-hotel-beach-resort"
+    },
+    {
+      "code": "9MSSV7J",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "gefinor-rotana-rooftop-pool"
+    },
+    {
       "code": "9NB54EA",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "fadis-resto-pub"
+    },
+    {
+      "code": "9P4AVDM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "maison-des-muses-full-guesthouse"
+    },
+    {
+      "code": "9WS00AP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bundt"
     },
     {
       "code": "9WWYG2H",
@@ -1095,6 +1704,20 @@
       "businessSlug": "byblos-fishing-club-guesthouse"
     },
     {
+      "code": "A56MAR6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "terre"
+    },
+    {
+      "code": "A63Z1VG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "k-galleria"
+    },
+    {
       "code": "A70ER9F",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1102,11 +1725,32 @@
       "businessSlug": "beyt-el-jabal"
     },
     {
+      "code": "A89FZDS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dj-lab-cafe"
+    },
+    {
       "code": "A8EC0ZQ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "nasma"
+    },
+    {
+      "code": "A9RYPV3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ahm"
+    },
+    {
+      "code": "ABYH69J",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "noa-rooftop"
     },
     {
       "code": "AC9F7CM",
@@ -1123,11 +1767,32 @@
       "businessSlug": "beyt-el-jabal-restaurant"
     },
     {
+      "code": "AHJC0F0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "haven-the-cabin"
+    },
+    {
+      "code": "AJ630G2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amelia-hamra"
+    },
+    {
       "code": "AQBQ2NH",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "kababji"
+    },
+    {
+      "code": "ARR0EVJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "onno-bistro"
     },
     {
       "code": "AVBQDT7",
@@ -1165,6 +1830,20 @@
       "businessSlug": "aal-baher"
     },
     {
+      "code": "B04M9TX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "das-kuche"
+    },
+    {
+      "code": "B4HXPYG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pool-detat"
+    },
+    {
       "code": "B7WD5GV",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1186,6 +1865,20 @@
       "businessSlug": "le-comptoir"
     },
     {
+      "code": "BAXK9P7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "central-station-boutique-bar"
+    },
+    {
+      "code": "BC8VQ8B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "fenjen-ahwe"
+    },
+    {
       "code": "BD8033S",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1200,11 +1893,32 @@
       "businessSlug": "la-suite-oceana-beach-resort"
     },
     {
+      "code": "BEHACTP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "gingerco"
+    },
+    {
+      "code": "BEZXE30",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "em-sherif"
+    },
+    {
       "code": "BF10BPE",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "hallab"
+    },
+    {
+      "code": "BMM589A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-falamanki-sodeco"
     },
     {
       "code": "BPFK2AA",
@@ -1228,6 +1942,13 @@
       "businessSlug": "belle-vue-beach-resort"
     },
     {
+      "code": "BR6FBSH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-younes-badaro"
+    },
+    {
       "code": "BRM66WT",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1240,6 +1961,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "baia-beach-club"
+    },
+    {
+      "code": "BW8S1V3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "basic-outlet-stores"
+    },
+    {
+      "code": "BX71H8W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-gray-beirut"
     },
     {
       "code": "BXQ3SYG",
@@ -1277,11 +2012,25 @@
       "businessSlug": "obi-sushi"
     },
     {
+      "code": "C6K9CR6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jamclubpub"
+    },
+    {
       "code": "CA1WQPR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "cali-burger"
+    },
+    {
+      "code": "CA9SFH7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lost-and-found"
     },
     {
       "code": "CAJFEAH",
@@ -1305,6 +2054,13 @@
       "businessSlug": "jounieh-international-festival"
     },
     {
+      "code": "CDYCQ93",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zur-studios-suites"
+    },
+    {
       "code": "CFHBDHS",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1319,6 +2075,13 @@
       "businessSlug": "the-garden-house"
     },
     {
+      "code": "CG8E7D1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "scarlet"
+    },
+    {
       "code": "CGV23VJ",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1326,11 +2089,32 @@
       "businessSlug": "3ind-judy"
     },
     {
+      "code": "CPQA8SR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beyond-organic"
+    },
+    {
       "code": "CPXVBY5",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "indira-guesthouse"
+    },
+    {
+      "code": "CQ287EY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "neighbourhood"
+    },
+    {
+      "code": "CR2GA5B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "wisp"
     },
     {
       "code": "CR5FWHK",
@@ -1366,6 +2150,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "official-shouf-biosphere-reserve-guides-3"
+    },
+    {
+      "code": "CX9MKWT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "aquamarina-1"
     },
     {
       "code": "CXR5SZS",
@@ -1424,11 +2215,25 @@
       "businessSlug": "reston-hotel"
     },
     {
+      "code": "DCXZFSN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-key-beirut"
+    },
+    {
       "code": "DEPT8BC",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "codex-adventures-byblos-outdoor-escape-games"
+    },
+    {
+      "code": "DGNKXWR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faraya-village-club"
     },
     {
       "code": "DHNF3AB",
@@ -1452,6 +2257,13 @@
       "businessSlug": "qamara-restaurant-and-cafe"
     },
     {
+      "code": "DRB8M6G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dar-el-nimer-for-arts-and-culture"
+    },
+    {
       "code": "DS2RD9S",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1464,6 +2276,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "chabrouh-dam-atvutv-outings-with-prox"
+    },
+    {
+      "code": "DX2W386",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pate-a-choux-sodeco"
     },
     {
       "code": "DZ4SQX8",
@@ -1494,6 +2313,20 @@
       "businessSlug": "moon-hill-restaurant"
     },
     {
+      "code": "E2KK9HA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "meetup-coffee-shop"
+    },
+    {
+      "code": "E33ZRQ5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-backburner-saifi"
+    },
+    {
       "code": "E3H2T2Y",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1522,6 +2355,20 @@
       "businessSlug": "deir-el-qamar-street-festival"
     },
     {
+      "code": "E8QEVN7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "panorama-cafe"
+    },
+    {
+      "code": "EA2E61W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "feers"
+    },
+    {
       "code": "EADD2PC",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1529,11 +2376,32 @@
       "businessSlug": "sultana-cafe-resto"
     },
     {
+      "code": "EAXCS3G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "crowne-plaza-beirut"
+    },
+    {
+      "code": "ECMB12H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "rouge-bonbon"
+    },
+    {
       "code": "EDWNHMF",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "strand"
+    },
+    {
+      "code": "EEDQ2ZC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "movenpick-hotel-beirut"
     },
     {
       "code": "EFXAJPS",
@@ -1555,6 +2423,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "portemilio-hotel-resort"
+    },
+    {
+      "code": "ER9NGEK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "saint-georges-yacht-club-pools-resort"
     },
     {
       "code": "EV5C3V6",
@@ -1592,11 +2467,32 @@
       "businessSlug": "classio"
     },
     {
+      "code": "F0SFYXT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "park-tower-suites"
+    },
+    {
+      "code": "F39WX4W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "albe"
+    },
+    {
       "code": "F3S7TMJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "dale-corazon-lebanon-explorers-nahr-ibrahim-jannet-yahchouch-hiking-river-swimming-and-guided-outings"
+    },
+    {
+      "code": "F43823C",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tilia-hotel-beirut"
     },
     {
       "code": "F4NE801",
@@ -1611,6 +2507,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "bruw-coffee-lounge"
+    },
+    {
+      "code": "F7TTBWV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "siwar-center-siwar-resort"
     },
     {
       "code": "F86ZNYD",
@@ -1639,6 +2542,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "passage-atv-tours"
+    },
+    {
+      "code": "FA3PX50",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-grand-meshmosh-hotel"
     },
     {
       "code": "FA48AAX",
@@ -1725,6 +2635,13 @@
       "businessSlug": "sidoon-diving-academy"
     },
     {
+      "code": "FKMT4ZX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-petit-gris"
+    },
+    {
       "code": "FM30G6W",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1744,6 +2661,34 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "mzaar-ski-resort-skiing-snowboarding-hiking-summer-mountain-activities"
+    },
+    {
+      "code": "FY41CKM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "flo-bake-and-brew"
+    },
+    {
+      "code": "FZ3CZQ6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kalei-coffee-co-rmeil"
+    },
+    {
+      "code": "G1HRD89",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-sushi-bar"
+    },
+    {
+      "code": "G1P74M3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "barbell-house"
     },
     {
       "code": "G2A6WK2",
@@ -1781,6 +2726,13 @@
       "businessSlug": "lavender-getaway"
     },
     {
+      "code": "G5VF7MX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "riwaq"
+    },
+    {
       "code": "G67E38A",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1809,6 +2761,27 @@
       "businessSlug": "avedis-kalpaklian"
     },
     {
+      "code": "GA3QB6P",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-royal-hotels"
+    },
+    {
+      "code": "GA8DA43",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ashtar-jazz-bar"
+    },
+    {
+      "code": "GBWEPMV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jalset-tarap"
+    },
+    {
       "code": "GBZ9HS3",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1823,11 +2796,25 @@
       "businessSlug": "intercontinental-mzaar-mountain-resort-spa"
     },
     {
+      "code": "GENQNHD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-tamanna"
+    },
+    {
       "code": "GF7D7Y5",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "nero-resto-bar"
+    },
+    {
+      "code": "GG9ZY2S",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beyt-cafe"
     },
     {
       "code": "GGYFGE0",
@@ -1844,6 +2831,20 @@
       "businessSlug": "bayt-youssef"
     },
     {
+      "code": "GJHBGKC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "escape-the-room"
+    },
+    {
+      "code": "GJSBGZ3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beyt-salma"
+    },
+    {
       "code": "GKB4T25",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1858,6 +2859,13 @@
       "businessSlug": "murray-resto"
     },
     {
+      "code": "GM31S8Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lucylu"
+    },
+    {
       "code": "GNPFG6Z",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1870,6 +2878,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "lebanon-by-nature"
+    },
+    {
+      "code": "GXJHCK5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "tsunami"
+    },
+    {
+      "code": "GYG0GKF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "levant"
     },
     {
       "code": "H0B0TEP",
@@ -1893,6 +2915,13 @@
       "businessSlug": "locanda-a-la-granda"
     },
     {
+      "code": "H4CGEX7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beirut-souks"
+    },
+    {
       "code": "H4D5H8M",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1914,6 +2943,13 @@
       "businessSlug": "alsa-restaurant"
     },
     {
+      "code": "H58CZZN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lancelot-piano-bar-and-restaurant"
+    },
+    {
       "code": "H6GSP56",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1921,11 +2957,39 @@
       "businessSlug": "four-season-halat-halat"
     },
     {
+      "code": "H80NRQK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "esco-bar-pasteur"
+    },
+    {
       "code": "H8EFJD3",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "farsha-bey"
+    },
+    {
+      "code": "H8YTSJ3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "persian-cup"
+    },
+    {
+      "code": "H95MQQM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "pancho-vino-pub-resto-faraya"
+    },
+    {
+      "code": "HA0SRXA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faraya-cafe"
     },
     {
       "code": "HAESJYK",
@@ -1942,11 +3006,25 @@
       "businessSlug": "jiyeh-marina-resort-hotel-chalets"
     },
     {
+      "code": "HBGHTY1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "yardbird"
+    },
+    {
       "code": "HBQPB22",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "el-yamime-restaurant"
+    },
+    {
+      "code": "HEYKTAX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "time-etc"
     },
     {
       "code": "HG8828X",
@@ -1984,6 +3062,20 @@
       "businessSlug": "la-table-hafroun-byblos-district"
     },
     {
+      "code": "HNED3YV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "latte-art-kaslik"
+    },
+    {
+      "code": "HQKF4HG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "metro-mall"
+    },
+    {
       "code": "HRCT4KV",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2005,6 +3097,27 @@
       "businessSlug": "lazy-b-beach-club"
     },
     {
+      "code": "HWSX84G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "athletes-anonymous-beirut"
+    },
+    {
+      "code": "J0J4CHN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-barn"
+    },
+    {
+      "code": "J227DGJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "level-night-club"
+    },
+    {
       "code": "J2M8WFJ",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2017,6 +3130,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "le-raclot"
+    },
+    {
+      "code": "J3HXPRE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "smoky-note"
+    },
+    {
+      "code": "J5C0VCV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "croissant-bar"
     },
     {
       "code": "J6A8EFP",
@@ -2033,11 +3160,25 @@
       "businessSlug": "beit-el-qamar"
     },
     {
+      "code": "J8PTF79",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "seza-bistro"
+    },
+    {
       "code": "J9CGHHR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "karam-horse-club"
+    },
+    {
+      "code": "JCAHXQJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "warwick-palm-beach-rooftop-pool"
     },
     {
       "code": "JCY4M0J",
@@ -2054,6 +3195,13 @@
       "businessSlug": "libre-resto-bar"
     },
     {
+      "code": "JHT5FN1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sira"
+    },
+    {
       "code": "JM1EJSE",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2068,11 +3216,32 @@
       "businessSlug": "starbucks-damour-north"
     },
     {
+      "code": "JN02J8X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "o-monot-rooftop-pool"
+    },
+    {
+      "code": "JPK6CP7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "caffeine-coffee-beirut"
+    },
+    {
       "code": "JWBGPJR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "the-jet-lounge-jet-skis-water-activities"
+    },
+    {
+      "code": "JYTZAJW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "makan"
     },
     {
       "code": "K0KQVW9",
@@ -2138,6 +3307,20 @@
       "businessSlug": "parasailing-lebanon-haret-sakherjounieh-parasailing-over-jounieh-bay"
     },
     {
+      "code": "KBAH5DY",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "raouche-arjaan-by-rotana"
+    },
+    {
+      "code": "KBN54K8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "byblos-fun-planet-waterpark"
+    },
+    {
       "code": "KCYCAWR",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2173,6 +3356,13 @@
       "businessSlug": "official-shouf-biosphere-reserve-guides-4"
     },
     {
+      "code": "KNYS2WQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bel-azur-hotel-resort"
+    },
+    {
       "code": "KPFJWXB",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2185,6 +3375,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "mzaar-summer-festival"
+    },
+    {
+      "code": "KSJ9WPT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kap"
     },
     {
       "code": "KSMSF12",
@@ -2215,6 +3412,27 @@
       "businessSlug": "le-massif-de-laqlouq"
     },
     {
+      "code": "KXSXSDC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "intercontinental-le-vendome-beirut"
+    },
+    {
+      "code": "M0R0EHD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "vim-vigor"
+    },
+    {
+      "code": "M1G0C1X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "arthaus-beirut"
+    },
+    {
       "code": "M1H0HHX",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2243,11 +3461,39 @@
       "businessSlug": "greeco"
     },
     {
+      "code": "M6YMXQW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "you"
+    },
+    {
+      "code": "M70SRJF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "les-tziganes-restaurant"
+    },
+    {
+      "code": "M7ACJRR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "qahwa-blk"
+    },
+    {
       "code": "MB7GHQW",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "crepaway-byblos"
+    },
+    {
+      "code": "MBTXJ9R",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "napoleon-hotel"
     },
     {
       "code": "MBW27W1",
@@ -2264,11 +3510,46 @@
       "businessSlug": "shooterz-club-football-basketball-tennis-sports-activities"
     },
     {
+      "code": "MFSAM9N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hooligans-pub"
+    },
+    {
+      "code": "MGBM8CV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-posta"
+    },
+    {
+      "code": "MH4X4N8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "coffee-point"
+    },
+    {
       "code": "MJ9AE64",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "river-zen"
+    },
+    {
+      "code": "MKEA9RF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "latterace"
+    },
+    {
+      "code": "MXW7C3P",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-wine-haven"
     },
     {
       "code": "MY0DEFM",
@@ -2285,6 +3566,27 @@
       "businessSlug": "harmony-haven-guesthouse"
     },
     {
+      "code": "N0SMEBJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "liza-beirut"
+    },
+    {
+      "code": "N12VHZ3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "faii-cafe"
+    },
+    {
+      "code": "N1FYWXR",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "vee-coffee-shop-jounieh"
+    },
+    {
       "code": "N3ATDN0",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2292,11 +3594,39 @@
       "businessSlug": "marbella-hotel-sahel-alma"
     },
     {
+      "code": "N3TK2X0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "rooms-by-raseef-beirut"
+    },
+    {
       "code": "N4F2P1J",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "rawa2-village"
+    },
+    {
+      "code": "N4YPSSQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "urbanista"
+    },
+    {
+      "code": "N5WZ7FQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "prive-resto-pub"
+    },
+    {
+      "code": "N5ZFH7X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kellys-fish-lounge"
     },
     {
       "code": "N7DF3XP",
@@ -2320,6 +3650,13 @@
       "businessSlug": "hollywood-inn-boutique-hotel"
     },
     {
+      "code": "N8XPP90",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sippycup"
+    },
+    {
       "code": "N9MEB6F",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2332,6 +3669,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "diwan-al-farah-restaurant"
+    },
+    {
+      "code": "ND1Q6EX",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hi-tec-fitness-sodeco"
     },
     {
       "code": "NE42G4W",
@@ -2369,11 +3713,46 @@
       "businessSlug": "serail-el-bek"
     },
     {
+      "code": "NJPHQVW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "third-spot-coffee-shop"
+    },
+    {
+      "code": "NK3DB1V",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "classico-super-night-club"
+    },
+    {
       "code": "NMYNPBX",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "faraya-street-festival"
+    },
+    {
+      "code": "NNW1376",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "narcos-resto-pub"
+    },
+    {
+      "code": "NVB8XF4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "buco"
+    },
+    {
+      "code": "NWSPEYC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sporting-club-beach"
     },
     {
       "code": "NY4PG9R",
@@ -2383,11 +3762,39 @@
       "businessSlug": "caim"
     },
     {
+      "code": "NZH946A",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "powerbox"
+    },
+    {
+      "code": "NZPSMKA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zita-beirut-brei-suites"
+    },
+    {
       "code": "P0H3F15",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "ahwet-zeitouna"
+    },
+    {
+      "code": "P14XZ13",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mayrig"
+    },
+    {
+      "code": "P1CGV8Q",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "retro-67"
     },
     {
       "code": "P2JY763",
@@ -2397,11 +3804,32 @@
       "businessSlug": "tb-caffe"
     },
     {
+      "code": "P2P5NYM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "al-beiruti"
+    },
+    {
       "code": "P5T3WH5",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "le-quai"
+    },
+    {
+      "code": "P9EMWS7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "outstay-guesthouse"
+    },
+    {
+      "code": "P9TPBG8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "esco"
     },
     {
       "code": "P9W2075",
@@ -2416,6 +3844,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "byblos-international-festival"
+    },
+    {
+      "code": "PCMPFG4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-maison-rayes"
     },
     {
       "code": "PD0G0M8",
@@ -2439,11 +3874,32 @@
       "businessSlug": "sanctum-diving-unlimited-aqua-marina-ii-scuba-snorkeling-boat-dives-wreck-dives-night-dives"
     },
     {
+      "code": "PK2WYY8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lttl-bean"
+    },
+    {
       "code": "PNBERPN",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "la-creperie-ghazir"
+    },
+    {
+      "code": "PPKH2JH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "superchief"
+    },
+    {
+      "code": "PPT8RQJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "agora-beirut"
     },
     {
       "code": "PQVRD41",
@@ -2453,11 +3909,25 @@
       "businessSlug": "prox-riding-club-atvs-utvs-buggies-snowmobiles-mountain-excursions"
     },
     {
+      "code": "PRKR8PE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kahwet-60"
+    },
+    {
       "code": "PW63KYS",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "vitamin-sea-diving-club"
+    },
+    {
+      "code": "PXM1AQ5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ny-suites"
     },
     {
       "code": "PZ161GW",
@@ -2467,11 +3937,25 @@
       "businessSlug": "barview-lounge"
     },
     {
+      "code": "Q2K24RW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafe-younes"
+    },
+    {
       "code": "Q3G3HTC",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "go-and-flow"
+    },
+    {
+      "code": "Q64YPKC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "coffee-trail"
     },
     {
       "code": "Q6J9WV8",
@@ -2502,6 +3986,41 @@
       "businessSlug": "beit-loris-guesthouse"
     },
     {
+      "code": "Q9GMC4X",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "base-coffee"
+    },
+    {
+      "code": "Q9HVWTP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-smoking-barrels"
+    },
+    {
+      "code": "QBCBY1E",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "rm-beirut"
+    },
+    {
+      "code": "QCMKHVN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "albergo"
+    },
+    {
+      "code": "QGCBFDQ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bar-lily-cocktails-cafe"
+    },
+    {
       "code": "QME7JBP",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2514,6 +4033,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "barbar"
+    },
+    {
+      "code": "QMR4KSV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "mii-yao"
     },
     {
       "code": "QMYGJGC",
@@ -2535,6 +4061,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "chez-sami-2"
+    },
+    {
+      "code": "QQ3GP44",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sodeco-suites"
     },
     {
       "code": "QTHR4GG",
@@ -2572,6 +4105,13 @@
       "businessSlug": "samket-el-king-bouar"
     },
     {
+      "code": "QYNNEHS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "square-cafe-sodeco"
+    },
+    {
       "code": "R03KY8R",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2600,6 +4140,13 @@
       "businessSlug": "edde-yard"
     },
     {
+      "code": "R56A62Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-smallville-xpress"
+    },
+    {
       "code": "R5JH738",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2612,6 +4159,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "maison-de-la-vallee"
+    },
+    {
+      "code": "R6GN680",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-coin-de-nicolas-la-patisserie"
     },
     {
       "code": "R8AWMN7",
@@ -2635,6 +4189,13 @@
       "businessSlug": "baytna-restaurant"
     },
     {
+      "code": "R9M32FN",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "daraj"
+    },
+    {
       "code": "RB8QC6S",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2647,6 +4208,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "baydar-mechmech"
+    },
+    {
+      "code": "RE2H7GH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cantina-sociale"
+    },
+    {
+      "code": "RFMBQQ2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "nest-1-hotel"
     },
     {
       "code": "RGB2ZCJ",
@@ -2684,11 +4259,39 @@
       "businessSlug": "our-lady-of-lebanon-harissa-shrine-visit-panoramic-viewpoint-harissa-park"
     },
     {
+      "code": "RNZD5AW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "curl-book-coffee-shop"
+    },
+    {
       "code": "RS6X9FK",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "jhotelresorts"
+    },
+    {
+      "code": "RT3B44M",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "bodo"
+    },
+    {
+      "code": "RV9FRMJ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "concierge-neighborhood-coffee"
+    },
+    {
+      "code": "S25Z40T",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "club7-night-club"
     },
     {
       "code": "S3XA4AV",
@@ -2719,6 +4322,13 @@
       "businessSlug": "dream-house-laqlouq"
     },
     {
+      "code": "SAWVTGH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "anise"
+    },
+    {
       "code": "SBH4CCH",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2731,6 +4341,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "best-food-restaurant"
+    },
+    {
+      "code": "SCD36Y4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "wood-hills-hotel-resort"
     },
     {
       "code": "SCJW05C",
@@ -2754,6 +4371,13 @@
       "businessSlug": "dcafe"
     },
     {
+      "code": "SGYGT2G",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-old-pub"
+    },
+    {
       "code": "SJ17G6Q",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2768,11 +4392,25 @@
       "businessSlug": "marcelle-saliba"
     },
     {
+      "code": "SMP45VS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "shade-suites"
+    },
+    {
       "code": "SN9H9N9",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "al-mamlaka-restaurant"
+    },
+    {
+      "code": "SNADWAV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sip"
     },
     {
       "code": "SPW3T8Y",
@@ -2796,6 +4434,20 @@
       "businessSlug": "pop-in-bakery"
     },
     {
+      "code": "SV5NCK4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "d22"
+    },
+    {
+      "code": "SVFK99H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beirut-by-bike-lebanon-by-bike"
+    },
+    {
       "code": "SVP33G7",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2810,6 +4462,13 @@
       "businessSlug": "serab-residencia"
     },
     {
+      "code": "SX7AN8H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beverly-hotel-beirut"
+    },
+    {
       "code": "SXESPPX",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2822,6 +4481,55 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "jounieh-beer-festival"
+    },
+    {
+      "code": "SY9S3XC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "caramel-boutique-hotel"
+    },
+    {
+      "code": "SZHDCBT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "salon-beyrouth"
+    },
+    {
+      "code": "T0968Y8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "parazzi-club"
+    },
+    {
+      "code": "T1CYNFP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "noxon"
+    },
+    {
+      "code": "T20DJ2H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "terrai-bar"
+    },
+    {
+      "code": "T39CC4H",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "creative-space-beirut"
+    },
+    {
+      "code": "T53T709",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "coffee-circle"
     },
     {
       "code": "T8MQ1SA",
@@ -2852,6 +4560,27 @@
       "businessSlug": "le-galet"
     },
     {
+      "code": "TD7C9B1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "raouche-sunset-boat-cruise-beirut"
+    },
+    {
+      "code": "TEC12X0",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chop-suey"
+    },
+    {
+      "code": "TFCPTPH",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sapa"
+    },
+    {
       "code": "TFSFMY3",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2873,6 +4602,13 @@
       "businessSlug": "marianne-mhanna"
     },
     {
+      "code": "TG86GNK",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "7-seas-marine"
+    },
+    {
       "code": "TGKN17F",
       "targetType": "business",
       "placement": "magazine-page",
@@ -2885,6 +4621,27 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "beit-trad"
+    },
+    {
+      "code": "TKHV34T",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "circo-resto-bar"
+    },
+    {
+      "code": "TP2J131",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "la-degusteria"
+    },
+    {
+      "code": "TP3T4S6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "true-north-yachting"
     },
     {
       "code": "TPE9BP4",
@@ -2906,6 +4663,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "deir-el-oumara"
+    },
+    {
+      "code": "TV0ZV08",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "three-elephants"
     },
     {
       "code": "TW5PHDY",
@@ -2984,6 +4748,13 @@
       "businessSlug": "zouk-mikael-international-festival"
     },
     {
+      "code": "V8RGZ3Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "marinella-trattoria"
+    },
+    {
       "code": "V8Z703A",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3005,11 +4776,25 @@
       "businessSlug": "feniqia-restaurant"
     },
     {
+      "code": "VBGKRRG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafeteria-our-lady-of-lebanon"
+    },
+    {
       "code": "VC8JP2Q",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "freedom-35"
+    },
+    {
+      "code": "VC8V7CG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "jai"
     },
     {
       "code": "VCJVAHQ",
@@ -3033,6 +4818,13 @@
       "businessSlug": "almidyaf-restaurant"
     },
     {
+      "code": "VFHTWSC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "riviera-hotel-beirut"
+    },
+    {
       "code": "VGSYCZS",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3052,6 +4844,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "elie-mansour"
+    },
+    {
+      "code": "VMMGQW3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "creatique-studio"
     },
     {
       "code": "VN5Z84P",
@@ -3110,11 +4909,32 @@
       "businessSlug": "samira-matta"
     },
     {
+      "code": "W0VBB15",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "excalibur-show-club"
+    },
+    {
+      "code": "W0Z2SH8",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "cafebrairie-33"
+    },
+    {
       "code": "W320ZAP",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "sama-el-deir"
+    },
+    {
+      "code": "W393Q3K",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kahwet-azmi-sodeco"
     },
     {
       "code": "W5AAHSQ",
@@ -3131,6 +4951,13 @@
       "businessSlug": "casa-dunia-guesthouse-hosting-lebanon"
     },
     {
+      "code": "WBGTYX3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "planet-discovery"
+    },
+    {
       "code": "WDGM0RN",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3138,11 +4965,39 @@
       "businessSlug": "eye-park-amusement-rides-and-recreational-activities"
     },
     {
+      "code": "WEN8903",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "waves-to-raouche"
+    },
+    {
       "code": "WF1NH7D",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "la-creperie"
+    },
+    {
+      "code": "WGFW1J1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "voice-club"
+    },
+    {
+      "code": "WGQFVHD",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "le-view-rooftop-bar-pool-princessa-hotel"
+    },
+    {
+      "code": "WH8R95Z",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-blu-hub-by-the-sea"
     },
     {
       "code": "WJHXDX5",
@@ -3159,6 +5014,20 @@
       "businessSlug": "monte-cassino-hotel"
     },
     {
+      "code": "WMT8W9N",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ybeirut"
+    },
+    {
+      "code": "WS4KYHA",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "third-wheel-bar"
+    },
+    {
       "code": "WT3SPDN",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3171,6 +5040,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "majdel-meouch-fig-festival"
+    },
+    {
+      "code": "WWH8K1W",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "swiss-butter"
     },
     {
       "code": "WXH5W79",
@@ -3208,6 +5084,13 @@
       "businessSlug": "suiteness-deir-el-qamar"
     },
     {
+      "code": "X17QXKS",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lor-bistro-badaro"
+    },
+    {
       "code": "X1DGG0C",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3222,11 +5105,39 @@
       "businessSlug": "el-mar-fish-seafood-okaibe"
     },
     {
+      "code": "X1ZQBZT",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "kissproof-beirut"
+    },
+    {
       "code": "X35ADHZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "ninas-guesthouse-hosting-lebanon-old-souk-next-to-st-john-church"
+    },
+    {
+      "code": "XCKJ97J",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sursock-museum"
+    },
+    {
+      "code": "XCWH7S4",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hilton-beirut-downtown"
+    },
+    {
+      "code": "XERHJTP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "veer-luxury-boutique-hotel-beach-club"
     },
     {
       "code": "XFT3Y8Y",
@@ -3243,11 +5154,46 @@
       "businessSlug": "elsy-nader"
     },
     {
+      "code": "XGZ04FP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "hawa-beirut"
+    },
+    {
+      "code": "XXCJ14B",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "olio"
+    },
+    {
+      "code": "Y0V7FA6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "latte-art-mar-mikhael"
+    },
+    {
       "code": "Y0W775E",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "beit-wadih"
+    },
+    {
+      "code": "Y2QTH02",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-local-beirut"
+    },
+    {
+      "code": "Y478R8E",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "lucas-taqueria"
     },
     {
       "code": "Y62AAP7",
@@ -3257,11 +5203,32 @@
       "businessSlug": "cedars-trail-riding-horse-riding-trek"
     },
     {
+      "code": "Y6YHGCC",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "amar-downtown"
+    },
+    {
       "code": "YBCPVEK",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "elix-form"
+    },
+    {
+      "code": "YCDX1X7",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "abdel-wahab"
+    },
+    {
+      "code": "YCYD6GV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "sailing-jbeil"
     },
     {
       "code": "YEEK34B",
@@ -3276,6 +5243,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "vaia-beach"
+    },
+    {
+      "code": "YGPQNFG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "coffee-pause"
     },
     {
       "code": "YH2245P",
@@ -3297,6 +5271,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "tamerland"
+    },
+    {
+      "code": "YN2ZJJ3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ramada-plaza-by-wyndham-beirut-raouche"
+    },
+    {
+      "code": "YNAS3WF",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "les-ruches-afeer-faraya"
     },
     {
       "code": "YNWWVK6",
@@ -3404,11 +5392,25 @@
       "businessSlug": "scuba-diving-lovers-lebanon-sdll-scuba-diving-courses-dive-trips"
     },
     {
+      "code": "Z7EJ97R",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-terrace-restaurant-bar-lounge"
+    },
+    {
       "code": "Z7H10JK",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "brouhaha-intown"
+    },
+    {
+      "code": "ZA832G6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "asbaya"
     },
     {
       "code": "ZBN8FWF",
@@ -3432,6 +5434,20 @@
       "businessSlug": "beach-45"
     },
     {
+      "code": "ZHQBVHM",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "c-beirut-club"
+    },
+    {
+      "code": "ZKFZ2QB",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beanloft"
+    },
+    {
       "code": "ZN0GGZ2",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3444,6 +5460,20 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "hotel-xperience"
+    },
+    {
+      "code": "ZQSBXEG",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "plan-bey-gallery"
+    },
+    {
+      "code": "ZR307ZP",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "ceramic-kanvas"
     },
     {
       "code": "ZRJAVNY",
@@ -3460,6 +5490,13 @@
       "businessSlug": "overhang-climbing-gym-indoor-rock-climbing"
     },
     {
+      "code": "ZW49XX6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beit-beirut"
+    },
+    {
       "code": "ZWY6BND",
       "targetType": "business",
       "placement": "magazine-page",
@@ -3474,11 +5511,25 @@
       "businessSlug": "byblos-fun-planet-water-park-swimming"
     },
     {
+      "code": "ZY36PP1",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "be-jounieh-coffee-shop"
+    },
+    {
       "code": "ZYEH38Z",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "jiyeh-marina"
+    },
+    {
+      "code": "ZYWQ2S6",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "dusk-the-club"
     }
   ]
 }
