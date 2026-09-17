@@ -116,6 +116,12 @@ const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: strin
   'Keserwan + Byblos / Jbeil Districts': { district: 'keserwan', governorate: 'mount-lebanon' },
   // The Chouf file. One district, no towns split across two.
   'Chouf District': { district: 'chouf', governorate: 'mount-lebanon' },
+  // The Matn, Baabda and Aley files: the rest of Mount Lebanon's cazas. Same
+  // governorate as Keserwan and Chouf, different districts. The town rides in
+  // the Location column and becomes the address, as everywhere else.
+  'Matn District': { district: 'matn', governorate: 'mount-lebanon' },
+  'Baabda District': { district: 'baabda', governorate: 'mount-lebanon' },
+  'Aley District': { district: 'aley', governorate: 'mount-lebanon' },
   // The Beirut file. Beirut is a governorate of one district of the same name;
   // the neighbourhoods are addresses, not districts.
   'Beirut District': { district: 'beirut', governorate: 'beirut' },

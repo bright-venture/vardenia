@@ -27,9 +27,10 @@ Regenerate it whenever the importer's vocabulary changes. A template that
 produces a file the importer cannot read is worse than no template.
 
 **Which regions it knows.** `listing-row.ts` maps a fixed set of district
-headings, each to its district and governorate: Keserwan, Byblos / Jbeil and
-Chouf (Mount Lebanon), and Beirut District (the Beirut governorate, whose one
-district shares its name). A heading outside that set leaves the district blank
+headings, each to its district and governorate: Keserwan, Byblos / Jbeil, Chouf,
+Matn, Baabda and Aley (Mount Lebanon), and Beirut District (the Beirut
+governorate, whose one district shares its name). A heading outside that set
+leaves the district blank
 with a warning and files the row under Mount Lebanon by default, so collecting a
 business in another governorate means adding its heading to the map first.
 

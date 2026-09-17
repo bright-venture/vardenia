@@ -264,6 +264,40 @@ describe('the Beirut file, its own governorate', () => {
   })
 })
 
+/**
+ * The rest of Mount Lebanon. Matn, Baabda and Aley are the cazas the Keserwan
+ * and Chouf files never reached; each has to file under the Mount Lebanon
+ * governorate and its own district, with no unknown-district warning.
+ */
+describe('the other Mount Lebanon districts', () => {
+  const CASES: Record<string, string> = {
+    'Matn District': 'matn',
+    'Baabda District': 'baabda',
+    'Aley District': 'aley',
+  }
+
+  it('files Matn, Baabda and Aley under Mount Lebanon, cleanly', () => {
+    const mountLebanon = GOVERNORATES.find((g) => g.slug === 'mount-lebanon')
+    const known = new Set(mountLebanon?.districts.map((d) => d.slug))
+
+    for (const [heading, slug] of Object.entries(CASES)) {
+      const listing = toListing({
+        ID: 'X',
+        Category: 'Restaurants',
+        'Name / Listing': 'A Mount Lebanon Place',
+        Location: 'Some Town',
+        District: heading,
+      })
+
+      expect(listing, heading).not.toBeNull()
+      expect(listing!.governorate, heading).toBe('mount-lebanon')
+      expect(listing!.district, heading).toBe(slug)
+      expect(known, heading).toContain(slug)
+      expect(listing!.warnings, heading).toHaveLength(0)
+    }
+  })
+})
+
 describe('cleanName', () => {
   it('strips a star rating and the star count in brackets', () => {
     expect(cleanName('Highridge Mountain Lodge ★★★★★ (5-star hotel)')).toBe(
