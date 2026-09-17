@@ -234,6 +234,36 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
   })
 })
 
+/**
+ * The Beirut file is the first outside Mount Lebanon, so the governorate can no
+ * longer be assumed. A "Beirut District" row has to carry the Beirut governorate
+ * and the Beirut district, with its neighbourhood kept as the address, and it
+ * must do so without any of the "district we do not know" warnings that a
+ * Mount Lebanon importer would have raised for it.
+ */
+describe('the Beirut file, its own governorate', () => {
+  it('files a Beirut row under the Beirut governorate and district, cleanly', () => {
+    const listing = toListing({
+      ID: 'HOT001',
+      Category: 'Hotels',
+      'Name / Listing': 'Sofitel Beirut Le Gabriel',
+      Location: 'Ashrafieh',
+      District: 'Beirut District',
+    })
+
+    expect(listing).not.toBeNull()
+    expect(listing!.governorate).toBe('beirut')
+    expect(listing!.district).toBe('beirut')
+    // The neighbourhood is the address, not the district.
+    expect(listing!.address).toBe('Ashrafieh')
+    expect(listing!.warnings).toHaveLength(0)
+
+    // The district really belongs to the governorate it was filed under.
+    const beirut = GOVERNORATES.find((g) => g.slug === 'beirut')
+    expect(beirut?.districts.map((d) => d.slug)).toContain(listing!.district)
+  })
+})
+
 describe('cleanName', () => {
   it('strips a star rating and the star count in brackets', () => {
     expect(cleanName('Highridge Mountain Lodge ★★★★★ (5-star hotel)')).toBe(

@@ -100,18 +100,29 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
   Malls: { category: 'lifestyle', subcategory: 'luxury-shopping' },
 }
 
-/** The districts across both files, all in Mount Lebanon; nothing else appears. */
-const DISTRICT_BY_HEADING: Record<string, string> = {
-  'Keserwan District': 'keserwan',
-  'Byblos / Jbeil District': 'jbeil',
+/**
+ * The district headings the files use, each paired with the governorate it sits
+ * in. Governorate travels with the district rather than being one constant,
+ * because the directory has outgrown a single muhafazah: the Keserwan and Chouf
+ * files are Mount Lebanon, and the Beirut file is its own governorate whose one
+ * district shares its name. The neighbourhood (Ashrafieh, Gemmayzeh, Sodeco)
+ * rides in the Location column and becomes the address, not the district.
+ */
+const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: string }> = {
+  'Keserwan District': { district: 'keserwan', governorate: 'mount-lebanon' },
+  'Byblos / Jbeil District': { district: 'jbeil', governorate: 'mount-lebanon' },
   // Six rows span both. Keserwan wins because the directory is a Keserwan one,
   // and the row is flagged so a person can split it later if it matters.
-  'Keserwan + Byblos / Jbeil Districts': 'keserwan',
+  'Keserwan + Byblos / Jbeil Districts': { district: 'keserwan', governorate: 'mount-lebanon' },
   // The Chouf file. One district, no towns split across two.
-  'Chouf District': 'chouf',
+  'Chouf District': { district: 'chouf', governorate: 'mount-lebanon' },
+  // The Beirut file. Beirut is a governorate of one district of the same name;
+  // the neighbourhoods are addresses, not districts.
+  'Beirut District': { district: 'beirut', governorate: 'beirut' },
 }
 
-const GOVERNORATE = 'mount-lebanon'
+/** Where a row lands when its District heading is not one we know. */
+const DEFAULT_GOVERNORATE = 'mount-lebanon'
 
 /**
  * Strips what the spreadsheet put in the name field that is not a name.
@@ -369,9 +380,13 @@ export function toListing(
   if (disagreement) warnings.push(disagreement)
 
   const districtHeading = value(row, 'District')
-  const district = DISTRICT_BY_HEADING[districtHeading] ?? null
+  const region = DISTRICT_BY_HEADING[districtHeading] ?? null
+  const district = region?.district ?? null
+  // A known heading names its governorate; anything else falls back and is
+  // flagged, so an unrecognised region never silently mislabels the listing.
+  const governorate = region?.governorate ?? DEFAULT_GOVERNORATE
 
-  if (!district) {
+  if (!region) {
     warnings.push(
       districtHeading
         ? `district "${districtHeading}" is not one we know, left blank`
@@ -416,7 +431,7 @@ export function toListing(
     slug,
     category: mapping.category,
     subcategories: [subcategory],
-    governorate: GOVERNORATE,
+    governorate,
     district,
     address: location || null,
     googleRating: parseRating(value(row, 'Rating / 5')),

@@ -26,10 +26,12 @@ import, which is what it exists to stop.
 Regenerate it whenever the importer's vocabulary changes. A template that
 produces a file the importer cannot read is worse than no template.
 
-**Only Mount Lebanon.** `listing-row.ts` hardcodes the governorate and knows
-three district headings. That is a property of the Keserwan import it was
-written for, not a decision about the product, and it has to change before a
-business anywhere else can be collected this way.
+**Which regions it knows.** `listing-row.ts` maps a fixed set of district
+headings, each to its district and governorate: Keserwan, Byblos / Jbeil and
+Chouf (Mount Lebanon), and Beirut District (the Beirut governorate, whose one
+district shares its name). A heading outside that set leaves the district blank
+with a warning and files the row under Mount Lebanon by default, so collecting a
+business in another governorate means adding its heading to the map first.
 
 **The photo folders.** Photographs never go in the spreadsheet. Once the sheet
 comes back, export the Listings tab as CSV and run:
