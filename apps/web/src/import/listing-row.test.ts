@@ -298,6 +298,48 @@ describe('the other Mount Lebanon districts', () => {
   })
 })
 
+/**
+ * The North Lebanon file, which arrives with Akkar mixed into it. Akkar is a
+ * governorate in its own right rather than a caza of the north, so this is the
+ * case that proves governorate really does travel with the district instead of
+ * being inferred from the file a row came in.
+ */
+describe('North Lebanon, and Akkar alongside it', () => {
+  const CASES: Record<string, [string, string]> = {
+    'Batroun District': ['north-lebanon', 'batroun'],
+    'Bsharri District': ['north-lebanon', 'bsharri'],
+    'Koura District': ['north-lebanon', 'koura'],
+    'Miniyeh-Danniyeh District': ['north-lebanon', 'miniyeh-danniyeh'],
+    'Tripoli District': ['north-lebanon', 'tripoli'],
+    'Zgharta District': ['north-lebanon', 'zgharta'],
+    'Akkar District': ['akkar', 'akkar'],
+  }
+
+  it('files each caza under the governorate that actually owns it', () => {
+    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+      const listing = toListing({
+        ID: 'X',
+        Category: 'Restaurants',
+        'Name / Listing': 'A Northern Place',
+        Location: 'Some Town',
+        District: heading,
+      })
+
+      expect(listing, heading).not.toBeNull()
+      expect(listing!.governorate, heading).toBe(governorate)
+      expect(listing!.district, heading).toBe(district)
+
+      // The district belongs to that governorate in the shared taxonomy.
+      const owner = GOVERNORATES.find((g) => g.slug === governorate)
+      expect(
+        owner?.districts.map((d) => d.slug),
+        heading,
+      ).toContain(district)
+      expect(listing!.warnings, heading).toHaveLength(0)
+    }
+  })
+})
+
 describe('cleanName', () => {
   it('strips a star rating and the star count in brackets', () => {
     expect(cleanName('Highridge Mountain Lodge ★★★★★ (5-star hotel)')).toBe(

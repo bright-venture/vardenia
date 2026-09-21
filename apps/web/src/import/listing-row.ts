@@ -125,6 +125,18 @@ const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: strin
   // The Beirut file. Beirut is a governorate of one district of the same name;
   // the neighbourhoods are addresses, not districts.
   'Beirut District': { district: 'beirut', governorate: 'beirut' },
+  // The North Lebanon file: the first collection outside Mount Lebanon and
+  // Beirut. Six cazas, one governorate.
+  'Batroun District': { district: 'batroun', governorate: 'north-lebanon' },
+  'Bsharri District': { district: 'bsharri', governorate: 'north-lebanon' },
+  'Koura District': { district: 'koura', governorate: 'north-lebanon' },
+  'Miniyeh-Danniyeh District': { district: 'miniyeh-danniyeh', governorate: 'north-lebanon' },
+  'Tripoli District': { district: 'tripoli', governorate: 'north-lebanon' },
+  'Zgharta District': { district: 'zgharta', governorate: 'north-lebanon' },
+  // Akkar is its own governorate, not part of North Lebanon, and like Beirut it
+  // holds a single district of the same name. It arrives in the same file as the
+  // northern cazas, which is exactly why governorate travels with the district.
+  'Akkar District': { district: 'akkar', governorate: 'akkar' },
 }
 
 /** Where a row lands when its District heading is not one we know. */
