@@ -96,8 +96,7 @@
     "menu": "菜单",
     "viewMenu": "查看菜单",
     "rooms": "房型",
-    "chooseType": "想找什么类型",
-    "browseAll": "浏览全部"
+    "chooseType": "想找什么类型"
   },
   "booking": {
     "heading": "预订餐位",

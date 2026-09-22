@@ -31,21 +31,30 @@ import { subcategoryLabel } from '../lib/labels'
  * page is a dead end we sent the reader into. So it renders as plain text, out
  * of the tab order and marked up as a disabled item, while the ones with
  * listings behind them stay links.
+ *
+ * # There is no "browse everything" row
+ *
+ * There was one, carrying the section total and linking to `?show=all`. It was
+ * removed: it sat at the end of a row of kinds of place without being one, and
+ * it let a reader past the question the row exists to ask. The page still
+ * honours `?show=all` so anything already pointing at it keeps working, but
+ * nothing here offers it.
+ *
+ * The consequence is deliberate and worth knowing: a section is now entered
+ * through a kind of place or through a filter below the row, and there is no
+ * single click that shows everything in it. /directory is where that lives.
  */
 export async function SubcategoryTiles({
   base,
   subcategories,
   counts,
   locale,
-  total,
 }: {
   /** The section's own path, e.g. `/stay`. */
   base: string
   subcategories: readonly { slug: string; retired?: boolean }[]
   counts: Record<string, number>
   locale: Locale
-  /** Listings in the whole section, for the "everything" tile. */
-  total: number
 }) {
   const t = await getTranslations('directory')
 
@@ -108,39 +117,6 @@ export async function SubcategoryTiles({
             </li>
           )
         })}
-
-        {/*
-          The way past the choice, and it needs a parameter of its own: linking
-          back to the bare section would land on these same tiles, which is a
-          loop rather than an escape. `?show=all` is the reader saying they have
-          seen the choice and want everything anyway.
-        */}
-        <li>
-          {total > 0 ? (
-            <Link
-              href={`${base}?show=all`}
-              className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-            >
-              <span className="text-ink-700 group-hover:text-gold-700 text-sm font-semibold uppercase tracking-wider transition-colors">
-                {t('browseAll')}
-              </span>
-              <span className="text-ink-500 font-mono text-xs tabular-nums">{total}</span>
-            </Link>
-          ) : (
-            /*
-              Nothing in the section at all, which happens on the four that are
-              still being filled. Every row above is a nought, so this one is
-              too, and offering the way out of a choice nobody can make would
-              lead to the same empty page the reader is already looking at.
-            */
-            <div className={ROW} aria-disabled="true">
-              <span className="text-ink-500 text-sm font-semibold uppercase tracking-wider">
-                {t('browseAll')}
-              </span>
-              <span className="text-ink-500 font-mono text-xs tabular-nums">{total}</span>
-            </div>
-          )}
-        </li>
       </ul>
     </nav>
   )

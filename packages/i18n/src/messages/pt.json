@@ -96,8 +96,7 @@
     "menu": "Cardápio",
     "viewMenu": "Ver o cardápio",
     "rooms": "Quartos",
-    "chooseType": "Que tipo de lugar",
-    "browseAll": "Ver tudo"
+    "chooseType": "Que tipo de lugar"
   },
   "booking": {
     "heading": "Reservar mesa",

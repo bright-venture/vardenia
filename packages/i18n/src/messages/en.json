@@ -96,8 +96,7 @@
     "menu": "Menu",
     "viewMenu": "View menu",
     "rooms": "Rooms",
-    "chooseType": "What kind of place",
-    "browseAll": "Browse everything"
+    "chooseType": "What kind of place"
   },
   "booking": {
     "heading": "Book a table",

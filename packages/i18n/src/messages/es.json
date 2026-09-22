@@ -96,8 +96,7 @@
     "menu": "Menú",
     "viewMenu": "Ver el menú",
     "rooms": "Habitaciones",
-    "chooseType": "Qué tipo de lugar",
-    "browseAll": "Ver todo"
+    "chooseType": "Qué tipo de lugar"
   },
   "booking": {
     "heading": "Reservar mesa",

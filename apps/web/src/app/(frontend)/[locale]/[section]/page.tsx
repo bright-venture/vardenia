@@ -187,7 +187,6 @@ async function SectionResults({
       subcategories={children}
       counts={subcategoryCounts}
       locale={locale}
-      total={total}
     />
   ) : null
 

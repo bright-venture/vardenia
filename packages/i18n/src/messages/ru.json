@@ -96,8 +96,7 @@
     "menu": "Меню",
     "viewMenu": "Открыть меню",
     "rooms": "Номера",
-    "chooseType": "Какое место",
-    "browseAll": "Смотреть все"
+    "chooseType": "Какое место"
   },
   "booking": {
     "heading": "Забронировать столик",
