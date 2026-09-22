@@ -119,24 +119,23 @@ export interface ListingForSchema {
 }
 
 /**
- * # Why there is no rating in this markup
+ * # Why there is still no rating in this markup
  *
- * A listing carries `googleRating`, and it is deliberately not emitted here.
+ * There used to be a `googleRating` on every listing, copied in by staff, and
+ * emitting it was the thing this comment existed to refuse: Google's structured
+ * data policy requires an `aggregateRating` to summarise ratings the publisher
+ * itself gathered and shows on the page, and republishing another site's
+ * aggregate as your own costs the whole domain its rich results.
  *
- * That number was copied from Google by a member of staff. It is not a rating
- * Vardenia collected, from a system Vardenia runs, about reviews Vardenia can
- * show. Google's structured data policy is explicit that `aggregateRating` must
- * summarise ratings the publisher itself gathered and displays on the page -
- * republishing another site's aggregate as your own is a violation, and the
- * penalty applies to the whole domain rather than the one page.
+ * That field is gone. The reviews the site now shows are its own - written by
+ * guests who booked, held until a staff member publishes them - which is exactly
+ * the kind of rating an `aggregateRating` is for.
  *
- * Showing it to a reader with the word "Google" beside it is a different act
- * and is fine. Asserting it to a crawler as our own is not, and the difference
- * is invisible until the domain loses rich results.
- *
- * If Vardenia ever collects real ratings from real guests through its own
- * booking flow, that is the thing that belongs in an `aggregateRating`, and
- * this is where it would go.
+ * It is still not emitted, for a duller reason: the schema is built from the
+ * listing alone, and the average lives in the reviews table. Adding it means
+ * passing that average in from the page, which already computes it. Worth doing
+ * once enough listings carry reviews for the markup to say something - a rating
+ * asserted over one review is technically true and useless.
  */
 export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   const image = resolveImage(listing.heroImage, 'hero')

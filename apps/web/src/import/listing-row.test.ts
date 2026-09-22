@@ -5,7 +5,6 @@ import { SAMPLE_CSV, SAMPLE_ROWS } from './sample-listings'
 import {
   cleanName,
   cleanNameWithNote,
-  parseRating,
   priceBand,
   seasonalityFrom,
   tagsFrom,
@@ -102,15 +101,6 @@ describe('the whole file', () => {
     }
   })
 
-  it('keeps every rating within range', () => {
-    for (const listing of listings) {
-      if (listing.googleRating !== null) {
-        expect(listing.googleRating).toBeGreaterThanOrEqual(0)
-        expect(listing.googleRating).toBeLessThanOrEqual(5)
-      }
-    }
-  })
-
   it('only ever uses a season the field offers', () => {
     for (const listing of listings) {
       for (const season of listing.seasonality) {
@@ -134,7 +124,6 @@ describe('the whole file', () => {
       'governorate',
       'district',
       'address',
-      'googleRating',
       'priceRange',
       'tagline',
       'description',
@@ -555,17 +544,5 @@ describe('priceBand', () => {
   it('is null when there is no figure', () => {
     expect(priceBand('')).toBeNull()
     expect(priceBand('varies')).toBeNull()
-  })
-})
-
-describe('parseRating', () => {
-  it('reads the number out of the sheet own phrasing', () => {
-    expect(parseRating('Rating: 4.6/5')).toBe(4.6)
-    expect(parseRating('4.4 / 5')).toBe(4.4)
-  })
-
-  it('is null for anything out of range or absent', () => {
-    expect(parseRating('')).toBeNull()
-    expect(parseRating('9.1')).toBeNull()
   })
 })

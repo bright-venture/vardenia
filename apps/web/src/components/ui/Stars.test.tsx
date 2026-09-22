@@ -36,12 +36,12 @@ describe('Stars', () => {
   })
 
   it('says the rating out loud, not just in pixels', () => {
-    expect(render({ rating: 4.5 })).toContain('aria-label="4.5 out of 5 on Google"')
+    expect(render({ rating: 4.5 })).toContain('aria-label="4.5 out of 5"')
   })
 
   it('includes the number of reviews when there is more than one', () => {
     expect(render({ rating: 4.2, count: 12 })).toContain(
-      'aria-label="4.2 out of 5, from 12 ratings on Google"',
+      'aria-label="4.2 out of 5, from 12 ratings"',
     )
   })
 
@@ -66,33 +66,25 @@ describe('Stars', () => {
   })
 
   it('clamps a rating outside the scale rather than drawing nonsense', () => {
-    expect(render({ rating: 9 })).toContain('aria-label="5.0 out of 5 on Google"')
-    expect(render({ rating: -3 })).toContain('aria-label="0.0 out of 5 on Google"')
+    expect(render({ rating: 9 })).toContain('aria-label="5.0 out of 5"')
+    expect(render({ rating: -3 })).toContain('aria-label="0.0 out of 5"')
   })
+
   /**
-   * The attribution is the point, not decoration.
-   *
-   * This number was copied from Google. It is not a rating Vardenia collected
-   * and not a verdict Vardenia formed. Unattributed on a listing page it reads
-   * as ours, which is a claim we have not earned - so the source is in the
-   * visible text AND in the accessible name, because a listener gets no help
-   * from the small grey word beside the stars.
+   * These stars once carried a Google rating copied in by staff, and said so
+   * beside the number: unattributed, somebody else's rating reads as a verdict
+   * Vardenia formed. The Google rating is gone from the product, so what is
+   * drawn here is ours and the attribution would now be the untrue part.
    */
-  it('says where the rating came from, visibly and out loud', () => {
+  it('claims no outside source for the rating', () => {
     const html = render({ rating: 4.5 })
-    expect(html).toContain('on Google')
-    expect(html).toContain('aria-label="4.5 out of 5 on Google"')
-  })
-
-  it('attributes the source in Arabic too', () => {
-    const html = render({ rating: 4.5, locale: 'ar' as Locale })
-    expect(html).toContain('على غوغل')
-    expect(html).not.toContain('on Google')
-  })
-
-  it('can drop the source only when asked explicitly', () => {
-    const html = render({ rating: 4.5, showSource: false })
-    expect(html).not.toContain('on Google')
+    expect(html).not.toContain('Google')
     expect(html).toContain('aria-label="4.5 out of 5"')
+  })
+
+  it('reads the same in Arabic, with no source either', () => {
+    const html = render({ rating: 4.5, locale: 'ar' as Locale })
+    expect(html).not.toContain('Google')
+    expect(html).not.toContain('غوغل')
   })
 })

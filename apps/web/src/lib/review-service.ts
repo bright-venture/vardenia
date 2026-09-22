@@ -5,7 +5,7 @@ import type { ReviewRequest } from '@vardenia/core'
  * Turning a review request into a pending review.
  *
  * The eligibility rule is the whole point: a customer may review a listing only
- * when they have a booking there that reached `completed`, and only once. Both
+ * when they have a booking there that stood and is over, and only once. Both
  * checks run against the database with the customer's id from the session, never
  * from the request, so a crafted call cannot review a place the caller never
  * went or flood a listing with more than one voice.
@@ -64,21 +64,45 @@ export async function createReview({
     return { ok: false, code: 'not-found' }
   }
 
-  // Eligibility: a completed booking here, by this customer.
-  const completed = await payload.find({
+  /**
+   * Eligibility: a booking here, by this customer, that stood and is over.
+   *
+   * This asked for `completed` alone, and almost nobody could ever have
+   * satisfied it. Nothing moves a booking to `completed` on its own - a venue
+   * marks it by hand in the partner dashboard, and most never will. A guest who
+   * ate at a restaurant last week was told they had not booked there.
+   *
+   * So a confirmed booking whose end time has passed counts too. The two other
+   * past states are deliberately excluded and are the reason this is a status
+   * test rather than a date one: `cancelled` means they did not go, and
+   * `no-show` means they did not turn up. Neither is a visit, and a review from
+   * either is exactly the review this rule exists to refuse. `pending` is out
+   * as well, since the venue never accepted it.
+   */
+  const stood = await payload.find({
     collection: 'bookings',
     where: {
       and: [
         { customer: { equals: customerId } },
         { business: { equals: business.id } },
-        { status: { equals: 'completed' } },
+        {
+          or: [
+            { status: { equals: 'completed' } },
+            {
+              and: [
+                { status: { equals: 'confirmed' } },
+                { end: { less_than: new Date().toISOString() } },
+              ],
+            },
+          ],
+        },
       ],
     },
     limit: 1,
     depth: 0,
     overrideAccess: true,
   })
-  const booking = completed.docs[0]
+  const booking = stood.docs[0]
   if (!booking) return { ok: false, code: 'not-eligible' }
 
   // One review per customer per listing.

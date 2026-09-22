@@ -3,6 +3,14 @@ import { useTranslations } from 'next-intl'
 /**
  * A rating, drawn.
  *
+ * # Whose rating
+ *
+ * Vardenia's own, and only ever that. These stars used to carry a Google
+ * rating copied in by staff, with the word Google beside them so it could not
+ * be mistaken for a verdict we had formed. That number is gone from the product
+ * and the attribution went with it: what this draws now is the average of
+ * moderated guest reviews, which is ours to state plainly.
+ *
  * # Why the number is always there too
  *
  * Five shapes are a picture of a number, and a picture is worse than the number
@@ -38,14 +46,12 @@ const TONES = {
     fill: 'text-gold-500',
     value: 'text-ink-700',
     muted: 'text-ink-500',
-    source: 'text-ink-500',
   },
   inverse: {
     track: 'text-cedar-100/25',
     fill: 'text-gold-300',
     value: 'text-surface-base',
     muted: 'text-cedar-100/70',
-    source: 'text-cedar-100/70',
   },
 } as const
 
@@ -79,7 +85,6 @@ export function Stars({
   rating,
   count,
   className = '',
-  showSource = true,
   inverse = false,
 }: {
   rating: number
@@ -88,37 +93,16 @@ export function Stars({
   className?: string
   /** Set on the cedar ground, where the ink greys are invisible. See TONES. */
   inverse?: boolean
-  /**
-   * Show "Google" beside the stars.
-   *
-   * Defaults to true, and turning it off should be rare. This number was
-   * copied from Google; it is not a rating Vardenia collected and not a verdict
-   * Vardenia formed. Unattributed on a listing page it reads as ours, which is
-   * a claim we have not earned. The only reason to hide it is when the
-   * surrounding text already says where it came from.
-   */
-  showSource?: boolean
 }) {
   const t = useTranslations()
   const clamped = Math.max(0, Math.min(5, rating))
   const shown = clamped.toFixed(1)
   const tone = inverse ? TONES.inverse : TONES.light
 
-  /**
-   * The accessible name says the source too.
-   *
-   * A sighted reader gets the attribution from the word beside the stars. A
-   * listener would otherwise hear "4.5 out of 5" with no idea who said so,
-   * which is the one piece of context that changes what the number means.
-   */
-  const source = t('common.onGoogle')
-
-  const withCount =
+  const label =
     count === undefined
       ? t('stars.rating', { rating: shown })
       : t('stars.ratingCount', { rating: shown, count })
-
-  const label = showSource ? `${withCount} ${source}` : withCount
 
   return (
     /**
@@ -144,11 +128,6 @@ export function Stars({
         {shown}
         {count === undefined ? null : <span className={tone.muted}> ({count})</span>}
       </span>
-      {showSource ? (
-        <span className={`${tone.source} text-[11px]`} aria-hidden>
-          {source}
-        </span>
-      ) : null}
     </span>
   )
 }

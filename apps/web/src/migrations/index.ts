@@ -24,6 +24,7 @@ import * as migration_20260916_055455_menu_field from './20260916_055455_menu_fi
 import * as migration_20260916_060545_room_type_price from './20260916_060545_room_type_price'
 import * as migration_20260916_063628_cancellation_policy from './20260916_063628_cancellation_policy'
 import * as migration_20260916_071817_reviews_collection from './20260916_071817_reviews_collection'
+import * as migration_20260922_081510_drop_google_rating from './20260922_081510_drop_google_rating'
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20260916_071817_reviews_collection.up,
     down: migration_20260916_071817_reviews_collection.down,
     name: '20260916_071817_reviews_collection',
+  },
+  {
+    up: migration_20260922_081510_drop_google_rating.up,
+    down: migration_20260922_081510_drop_google_rating.down,
+    name: '20260922_081510_drop_google_rating',
   },
 ]

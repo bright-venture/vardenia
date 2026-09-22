@@ -148,7 +148,6 @@ export default async function ListingPage({ params }: Params) {
    * on the business and not a collection of reviews. It is deliberately absent
    * from the structured data below - see lib/structured-data.
    */
-  const googleRating = typeof listing.googleRating === 'number' ? listing.googleRating : null
 
   /**
    * Whether there is anything to put beside the description.
@@ -315,20 +314,6 @@ export default async function ListingPage({ params }: Params) {
 
           <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             {price ? <span className="font-mono tabular-nums">{price}</span> : null}
-
-            {/* Labelled as Google by the component itself. This is not our
-                verdict on the place and must never read as one. */}
-            {googleRating !== null ? (
-              <Stars
-                rating={googleRating}
-                count={
-                  typeof listing.googleRatingCount === 'number'
-                    ? listing.googleRatingCount
-                    : undefined
-                }
-                inverse
-              />
-            ) : null}
 
             {/*
               A dot and a word, per the design. `state.success` rather than a

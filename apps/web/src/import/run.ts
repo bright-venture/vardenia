@@ -171,9 +171,6 @@ function documentFor(listing: ImportedListing, heroImage: number | string, batch
     ...(listing.district ? { district: listing.district } : {}),
     ...(listing.address ? { address: listing.address } : {}),
     ...(listing.priceRange ? { priceRange: listing.priceRange } : {}),
-    ...(listing.googleRating !== null
-      ? { googleRating: listing.googleRating, ratingCheckedAt: new Date().toISOString() }
-      : {}),
     ...(listing.description ? { description: richText([listing.description]) } : {}),
     ...(listing.tags.length ? { tags: listing.tags } : {}),
     ...(listing.seasonality.length ? { seasonality: listing.seasonality } : {}),

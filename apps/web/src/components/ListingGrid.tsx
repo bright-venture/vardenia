@@ -123,8 +123,6 @@ export function ListingGrid({
             district={listing.district}
             priceRange={listing.priceRange as string | null}
             verified={listing.verified}
-            googleRating={listing.googleRating}
-            googleRatingCount={listing.googleRatingCount}
             heroImage={listing.heroImage as never}
             openingHours={listing.openingHours}
             priority={eager && index === 0}

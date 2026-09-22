@@ -4,7 +4,7 @@ import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
 import { isOpenNow } from '../lib/hours'
-import { Plate, Stars, Tier } from './ui'
+import { Plate, Tier } from './ui'
 import { SaveButton } from './SaveButton'
 
 interface Props {
@@ -19,15 +19,6 @@ interface Props {
   /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
   signature?: boolean | null
   heroImage?: MediaField
-  /**
-   * The place's Google rating, copied in by staff.
-   *
-   * Named for its source rather than called `rating`, because the name is what
-   * stops it being treated as ours somewhere down the line. It is always drawn
-   * with the word Google beside it - see ui/Stars.
-   */
-  googleRating?: number | null
-  googleRatingCount?: number | null
   /** Reference code, printed under the QR on the page this listing appears on. */
   reference?: string | null
   /** The place's opening hours, for the "Open now" cue. Shape as stored. */
@@ -82,8 +73,6 @@ export function ListingCard({
   verified,
   signature,
   heroImage,
-  googleRating,
-  googleRatingCount,
   reference,
   openingHours,
   priority = false,
@@ -193,9 +182,6 @@ export function ListingCard({
 
         <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {price ? <span className="font-mono tabular-nums">{price}</span> : null}
-          {typeof googleRating === 'number' && googleRating > 0 ? (
-            <Stars rating={googleRating} count={googleRatingCount ?? undefined} />
-          ) : null}
           {/* A status, so it takes the semantic green rather than a brand
               colour - the same call the listing page makes. */}
           {open ? (

@@ -176,7 +176,6 @@ describe('a real run', () => {
       'district',
       'address',
       'priceRange',
-      'googleRating',
       'ratingCheckedAt',
       'description',
       'tags',

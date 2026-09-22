@@ -44,7 +44,6 @@ export interface ImportedListing {
   district: string | null
   /** The Location column, kept verbatim - it is a place name, not a street. */
   address: string | null
-  googleRating: number | null
   priceRange: string | null
   tagline: string | null
   description: string | null
@@ -309,14 +308,6 @@ export function priceBand(raw: string): string | null {
   return '4'
 }
 
-/** `Rating: 4.6/5` and friends, clamped to what the field accepts. */
-export function parseRating(raw: string): number | null {
-  const match = raw.match(/(\d+(?:\.\d+)?)/)
-  const value = match?.[1] ? Number(match[1]) : NaN
-  if (!Number.isFinite(value) || value < 0 || value > 5) return null
-  return value
-}
-
 /**
  * The tagline the site shows under a name.
  *
@@ -452,7 +443,6 @@ export function toListing(
     governorate,
     district,
     address: location || null,
-    googleRating: parseRating(value(row, 'Rating / 5')),
     priceRange: priceBand(value(row, 'Price Range')),
     tagline: taglineFrom(description, activity),
     description: description || null,
