@@ -209,26 +209,17 @@ async function SectionResults({
    * results for either of them to act on. Filtering comes after a choice, so
    * the bar appears on the listings view and not here.
    *
-   * A section with nothing in it anywhere gets the row too, followed by the
-   * ordinary empty results view. It used to fall straight through to "No
-   * places found", which is how Weddings, Lifestyle, Health and Getting Around
-   * came to show no kinds of place at all - the four sections where a reader
-   * most needs to be told what will eventually be there.
+   * A section with nothing in it anywhere gets the row and nothing else, not
+   * even the empty state. It used to fall straight through to "No places
+   * found", which is how Weddings, Lifestyle, Health and Getting Around came
+   * to show no kinds of place at all - the four sections where a reader most
+   * needs to be told what will eventually be there. A row of noughts already
+   * says there is nothing here, and says it about each kind of place rather
+   * than about the section, so a box underneath repeating it in a sentence was
+   * the same fact twice.
    */
   if (offeringChoice) {
-    return (
-      <>
-        {tiles}
-        {total === 0 ? (
-          <ListingGrid
-            listings={[]}
-            locale={locale}
-            empty={t('resultCount', { count: 0 })}
-            emptyBody={t('emptySection')}
-          />
-        ) : null}
-      </>
-    )
+    return tiles
   }
 
   return (
