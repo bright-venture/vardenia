@@ -18,12 +18,19 @@ import { subcategoryLabel } from '../lib/labels'
  * The filters are still there once a choice is made, and location is the second
  * question - which is the order people ask them in.
  *
- * # Why the counts are on the tiles
+ * # Why every subcategory is listed, including the empty ones
  *
- * A tile that leads nowhere is a dead end we sent the reader into, and an empty
- * subcategory is common in a catalogue still being filled. Anything with nothing
- * in it is dropped from the row outright; everything else says how much is
- * behind it before the click rather than after.
+ * The row used to drop anything with nothing behind it, which read as a
+ * complete menu and was not one: "Stay" showed three of its eight kinds of
+ * place and gave a reader no way to tell whether Lebanon has no mountain
+ * resorts or whether Vardenia simply has not added any yet. The section is the
+ * taxonomy, so the row states the taxonomy, and the count says what is there.
+ *
+ * An empty one is shown but not linked. A count of zero has already answered
+ * the question the click would ask, and a tile that leads to an empty results
+ * page is a dead end we sent the reader into. So it renders as plain text, out
+ * of the tab order and marked up as a disabled item, while the ones with
+ * listings behind them stay links.
  */
 export async function SubcategoryTiles({
   base,
@@ -34,7 +41,7 @@ export async function SubcategoryTiles({
 }: {
   /** The section's own path, e.g. `/stay`. */
   base: string
-  subcategories: readonly { slug: string }[]
+  subcategories: readonly { slug: string; retired?: boolean }[]
   counts: Record<string, number>
   locale: Locale
   /** Listings in the whole section, for the "everything" tile. */
@@ -42,12 +49,20 @@ export async function SubcategoryTiles({
 }) {
   const t = await getTranslations('directory')
 
-  // An empty subcategory is a dead end, so it is not offered at all.
-  const offered = subcategories.filter((sub) => (counts[sub.slug] ?? 0) > 0)
+  /**
+   * Retired is the one reason to leave a subcategory out.
+   *
+   * It means the slug has shipped and must keep resolving for printed codes,
+   * not that it is still on offer - so it stays out of a menu of things to
+   * choose. See TAXONOMY, which forbids deleting a slug outright.
+   */
+  const offered = subcategories.filter((sub) => !sub.retired)
 
-  // Nothing to choose between is not a choice. One subcategory, or none with
-  // anything in it, and the page is better off going straight to the listings.
+  // Nothing to choose between is not a choice.
   if (offered.length < 2) return null
+
+  const ROW =
+    'border-ink-100 flex items-baseline justify-between gap-4 border-b px-1 py-5 transition-colors'
 
   return (
     <nav className="mt-10" aria-label={t('chooseType')}>
@@ -56,21 +71,43 @@ export async function SubcategoryTiles({
       </h2>
 
       <ul className="border-ink-100 mt-4 grid gap-px border-t sm:grid-cols-2 lg:grid-cols-3">
-        {offered.map((sub) => (
-          <li key={sub.slug}>
-            <Link
-              href={`${base}?filter=${sub.slug}`}
-              className="border-ink-100 hover:bg-surface-raised focus-visible:outline-gold-500 group flex items-baseline justify-between gap-4 border-b px-1 py-5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              <span className="font-display text-ink-900 group-hover:text-gold-700 text-xl transition-colors">
-                {subcategoryLabel(sub.slug, locale)}
-              </span>
-              <span className="text-ink-500 font-mono text-xs tabular-nums">
-                {counts[sub.slug]}
-              </span>
-            </Link>
-          </li>
-        ))}
+        {offered.map((sub) => {
+          const count = counts[sub.slug] ?? 0
+
+          return (
+            <li key={sub.slug}>
+              {count > 0 ? (
+                <Link
+                  href={`${base}?filter=${sub.slug}`}
+                  className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+                >
+                  <span className="font-display text-ink-900 group-hover:text-gold-700 text-xl transition-colors">
+                    {subcategoryLabel(sub.slug, locale)}
+                  </span>
+                  <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
+                </Link>
+              ) : (
+                /*
+                  Not a link, and said so rather than merely greyed: a sighted
+                  reader has the count, and `aria-disabled` is what gives a
+                  screen reader the same fact.
+
+                  The label drops from ink-900 to ink-500 and nothing else
+                  changes, so the row keeps its place in the menu. Not ink-300,
+                  which is the obvious "disabled" step and measures 2.11 against
+                  this ground - it may tint an icon and never carries a glyph.
+                  See lib/contrast.test, which enforces that.
+                */
+                <div className={ROW} aria-disabled="true">
+                  <span className="font-display text-ink-500 text-xl">
+                    {subcategoryLabel(sub.slug, locale)}
+                  </span>
+                  <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
+                </div>
+              )}
+            </li>
+          )
+        })}
 
         {/*
           The way past the choice, and it needs a parameter of its own: linking
@@ -81,7 +118,7 @@ export async function SubcategoryTiles({
         <li>
           <Link
             href={`${base}?show=all`}
-            className="border-ink-100 hover:bg-surface-raised focus-visible:outline-gold-500 group flex items-baseline justify-between gap-4 border-b px-1 py-5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
           >
             <span className="text-ink-700 group-hover:text-gold-700 text-sm font-semibold uppercase tracking-wider transition-colors">
               {t('browseAll')}

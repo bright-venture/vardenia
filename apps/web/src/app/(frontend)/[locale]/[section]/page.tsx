@@ -2,7 +2,13 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vardenia/core'
+import {
+  SECTION_PATHS,
+  TAXONOMY,
+  sectionForPath,
+  type SiteSection,
+  type SubCategory,
+} from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
@@ -122,7 +128,11 @@ async function SectionResults({
   const { page, show, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
-  const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
+  // Widened from the literal type, because the tiles and the check below both
+  // ask about `retired`, which TAXONOMY's `as const` only declares on the
+  // entries that actually carry it.
+  const children: readonly SubCategory[] =
+    TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
 
   // Validated in one shared place, so this page and the directory reject the
   // same things. See parseFilterState.
@@ -167,9 +177,9 @@ async function SectionResults({
 
   /**
    * The tiles answer for themselves whether there is a choice worth offering -
-   * fewer than two non-empty subcategories and they render nothing. Asking here
-   * as well keeps the page from hiding its listings behind a row that is about
-   * to be empty.
+   * fewer than two subcategories on the section and they render nothing. Asking
+   * here as well keeps the page from hiding its listings behind a row that is
+   * about to be empty.
    */
   const tiles = choosing ? (
     <SubcategoryTiles
@@ -181,8 +191,18 @@ async function SectionResults({
     />
   ) : null
 
-  const offeringChoice =
-    choosing && Object.values(subcategoryCounts).filter((n) => n > 0).length > 1
+  /**
+   * Mirrors what SubcategoryTiles decides, because this branch returns without
+   * the grid and a disagreement between the two would render a page with
+   * neither tiles nor listings on it.
+   *
+   * It no longer counts non-empty subcategories. The row lists every kind of
+   * place in the section and marks the empty ones with a nought, so a section
+   * with one populated subcategory still has a menu worth showing. `total > 0`
+   * is the one case that is not worth showing: a section with nothing in it at
+   * all is a row of noughts, and the listings view says so in a sentence.
+   */
+  const offeringChoice = choosing && total > 0 && children.filter((sub) => !sub.retired).length > 1
 
   if (offeringChoice) {
     return (
