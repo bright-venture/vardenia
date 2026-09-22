@@ -237,6 +237,18 @@ export const isRetrospective = (status: BookingStatus): boolean =>
  * It defaults to true so that a caller which has no clock, or does not care,
  * gets the full set of legal moves. Staff correcting a record are the case that
  * needs it.
+ *
+ * # A customer cannot call off a booking that is already over
+ *
+ * The mirror of the rule above, and it was missing: the account page offered
+ * "Cancel this booking" on a confirmed table from last Thursday. Cancelling is a
+ * statement about a commitment that still stands, so once the end time has
+ * passed there is nothing left to call off - what happened is the venue's to
+ * record, as completed or as a no-show.
+ *
+ * Only the customer loses it. An owner keeps `cancelled` after the fact because
+ * voiding a booking is how a venue writes off a record it should not have taken,
+ * and staff are never limited here at all.
  */
 export function availableActions(
   actor: BookingActor,
@@ -246,6 +258,7 @@ export function availableActions(
   return BOOKING_STATUSES.filter((to) => {
     if (to === from) return false
     if (!ended && isRetrospective(to)) return false
+    if (ended && actor === 'customer' && to === 'cancelled') return false
     return canActorTransition(actor, from, to)
   })
 }

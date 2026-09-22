@@ -259,9 +259,23 @@ describe('availableActions', () => {
     expect(availableActions('owner', 'pending').sort()).toEqual(['cancelled', 'confirmed'])
   })
 
-  it('offers a customer only cancellation', () => {
-    expect(availableActions('customer', 'pending')).toEqual(['cancelled'])
-    expect(availableActions('customer', 'confirmed')).toEqual(['cancelled'])
+  it('offers a customer only cancellation, while the booking still stands', () => {
+    expect(availableActions('customer', 'pending', false)).toEqual(['cancelled'])
+    expect(availableActions('customer', 'confirmed', false)).toEqual(['cancelled'])
+  })
+
+  /**
+   * The account page showed "Cancel this booking" under a confirmed table from
+   * the previous week. There is nothing to call off once the sitting is over,
+   * and the honest record of what happened belongs to the venue.
+   */
+  it('takes cancellation away from a customer once the booking is over', () => {
+    expect(availableActions('customer', 'confirmed', true)).toEqual([])
+    expect(availableActions('customer', 'pending', true)).toEqual([])
+  })
+
+  it('leaves the owner able to void a booking after the fact', () => {
+    expect(availableActions('owner', 'confirmed', true)).toContain('cancelled')
   })
 
   it('offers nothing once a booking is finished', () => {

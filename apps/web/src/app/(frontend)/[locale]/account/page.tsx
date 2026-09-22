@@ -141,7 +141,8 @@ async function BookingList({
   locale,
 }: {
   title: string
-  bookings: BookingDoc[]
+  /** `ended` is attached by partitionBookings, which owns the clock. */
+  bookings: (BookingDoc & { ended: boolean })[]
   locale: Locale
 }) {
   const status = await getTranslations('bookingStatus')
@@ -181,10 +182,14 @@ async function BookingList({
                 {t('reference')} <span className="select-all font-mono">{booking.reference}</span>
               </p>
 
-              {/* Renders nothing for a booking that is already finished. See
-                  CancelBookingButton - the decision is availableActions', not
-                  this page's. */}
-              <CancelBookingButton id={booking.id} status={booking.status as BookingStatus} />
+              {/* Renders nothing for a booking that is already finished, by
+                  status or by clock. See CancelBookingButton - the decision is
+                  availableActions', not this page's. */}
+              <CancelBookingButton
+                id={booking.id}
+                status={booking.status as BookingStatus}
+                ended={booking.ended}
+              />
             </li>
           )
         })}

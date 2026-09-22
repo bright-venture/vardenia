@@ -135,11 +135,21 @@ export async function customerBookings(limit = 50) {
 export function partitionBookings<T extends { end: string; status?: string | null }>(
   bookings: T[],
   now: number = Date.now(),
-): { upcoming: T[]; past: T[] } {
-  const upcoming: T[] = []
-  const past: T[] = []
+): { upcoming: (T & { ended: boolean })[]; past: (T & { ended: boolean })[] } {
+  const upcoming: (T & { ended: boolean })[] = []
+  const past: (T & { ended: boolean })[] = []
 
   for (const booking of bookings) {
+    /**
+     * Whether the sitting itself is over, which is a different question from
+     * which list it belongs in: a booking cancelled weeks ahead is filed under
+     * Past and has not ended. The cancel button reads this one, because there is
+     * nothing left to call off once the table has been sat at. An unreadable
+     * date counts as not ended, leaving the decision to the server.
+     */
+    const ends = new Date(booking.end).getTime()
+    const row = { ...booking, ended: Number.isFinite(ends) && ends < now }
+
     /**
      * Status first, then the clock.
      *
@@ -152,15 +162,15 @@ export function partitionBookings<T extends { end: string; status?: string | nul
      * ahead.
      */
     if (booking.status && isTerminalStatus(booking.status as BookingStatus)) {
-      past.push(booking)
+      past.push(row)
       continue
     }
 
     const end = new Date(booking.end).getTime()
     // An unparseable date is shown rather than dropped. A booking that vanishes
     // from somebody's account is worse than one filed under the wrong heading.
-    if (Number.isNaN(end) || end >= now) upcoming.push(booking)
-    else past.push(booking)
+    if (Number.isNaN(end) || end >= now) upcoming.push(row)
+    else past.push(row)
   }
 
   return { upcoming, past }

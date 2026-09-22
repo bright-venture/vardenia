@@ -150,6 +150,29 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
         )
       }
     }
+
+    /**
+     * And the mirror of it: a customer cannot call off a sitting that is over.
+     *
+     * The account page was offering "Cancel this booking" on a confirmed table
+     * from the week before, because the button asked only what the status was
+     * and never what the time was. Fixing the button alone would leave the same
+     * PATCH available to anyone who sent it by hand, so the rule lives here too.
+     *
+     * Only the customer. An owner voiding a booking after the fact is a venue
+     * correcting its own record, and staff are exempt from the timing rules
+     * above for the same reason.
+     */
+    if (actor === 'customer' && to === 'cancelled' && from !== 'cancelled') {
+      const end = new Date(String((data.end ?? originalDoc.end) as string)).getTime()
+
+      if (Number.isFinite(end) && end <= Date.now()) {
+        throw new APIError(
+          'This booking has already happened, so it can no longer be cancelled.',
+          400,
+        )
+      }
+    }
   }
 
   // -------------------------------------------------------------------------

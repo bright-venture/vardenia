@@ -16,10 +16,15 @@ import { NOTICE_ERROR, SECONDARY_BUTTON } from './formStyles'
  * a restaurant money.
  *
  * Whether the button appears at all comes from `availableActions('customer',
- * status)` rather than a condition written here, so it agrees with what the
- * server will accept. A terminal booking offers nothing, and a customer is never
- * offered "confirmed" - the guard refuses that, and a button that produces a 403
- * is worse than no button.
+ * status, ended)` rather than a condition written here, so it agrees with what
+ * the server will accept. A terminal booking offers nothing, and a customer is
+ * never offered "confirmed" - the guard refuses that, and a button that produces
+ * a 403 is worse than no button.
+ *
+ * `ended` is the part that was missing: the button asked what the status was and
+ * never what the time was, so a confirmed table from last week still offered to
+ * be cancelled. guardBookingWrite refuses that write, so this is the two of them
+ * agreeing rather than the component deciding on its own.
  *
  * # Two presses, because there is no third
  *
@@ -32,9 +37,16 @@ import { NOTICE_ERROR, SECONDARY_BUTTON } from './formStyles'
 export function CancelBookingButton({
   id,
   status,
+  ended,
 }: {
   id: number | string
   status: BookingStatus
+  /**
+   * Whether the sitting is over. Decided in lib/session rather than here: a
+   * clock read during render is impure, and the value belongs to the data layer.
+   * See partitionBookings.
+   */
+  ended: boolean
 }) {
   const t = useTranslations('account')
   const common = useTranslations('common')
@@ -44,7 +56,7 @@ export function CancelBookingButton({
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
 
-  if (!availableActions('customer', status).includes('cancelled')) return null
+  if (!availableActions('customer', status, ended).includes('cancelled')) return null
 
   async function cancel() {
     setProblem(null)
