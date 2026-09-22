@@ -177,13 +177,7 @@ async function DirectoryResults({
         ))}
       </nav>
 
-      <ListingFilters
-        base="/directory"
-        state={state}
-        subcategories={[]}
-        locale={locale}
-        counts={counts}
-      />
+      <ListingFilters base="/directory" state={state} locale={locale} counts={counts} />
 
       <ListingGrid
         listings={result?.docs ?? []}

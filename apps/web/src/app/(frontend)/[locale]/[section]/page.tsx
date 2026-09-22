@@ -201,34 +201,38 @@ async function SectionResults({
   const offeringChoice = choosing && children.filter((sub) => !sub.retired).length > 1
 
   /**
-   * A section with nothing in it anywhere still shows the row, and then says so.
+   * The choice, and nothing else on the page.
    *
-   * It used to fall straight through to "No places found", which is how
-   * Weddings, Lifestyle, Health and Getting Around came to show no kinds of
-   * place at all - the four sections where a reader most needs to be told what
-   * will eventually be there. So the tiles stay at the top and the ordinary
-   * empty results view follows them, rather than replacing them.
+   * The filter bar used to sit under the tiles. It asked the second question
+   * while the first was still open, and it asked it in a different shape - a
+   * row of regions and a Filters button below a row of kinds of place, with no
+   * results for either of them to act on. Filtering comes after a choice, so
+   * the bar appears on the listings view and not here.
+   *
+   * A section with nothing in it anywhere gets the row too, followed by the
+   * ordinary empty results view. It used to fall straight through to "No
+   * places found", which is how Weddings, Lifestyle, Health and Getting Around
+   * came to show no kinds of place at all - the four sections where a reader
+   * most needs to be told what will eventually be there.
    */
-  if (offeringChoice && total > 0) {
+  if (offeringChoice) {
     return (
       <>
         {tiles}
-        <ListingFilters
-          base={base}
-          state={state}
-          subcategories={children}
-          locale={locale}
-          counts={counts}
-        />
+        {total === 0 ? (
+          <ListingGrid
+            listings={[]}
+            locale={locale}
+            empty={t('resultCount', { count: 0 })}
+            emptyBody={t('emptySection')}
+          />
+        ) : null}
       </>
     )
   }
 
   return (
     <>
-      {/* Only reached with nothing in the section - see above. */}
-      {offeringChoice ? tiles : null}
-
       {/*
         The result count. It used to share this row with a List/Map toggle; the
         map was removed before launch because no listing carries coordinates.
@@ -242,13 +246,7 @@ async function SectionResults({
         ) : null}
       </div>
 
-      <ListingFilters
-        base={base}
-        state={state}
-        subcategories={children}
-        locale={locale}
-        counts={counts}
-      />
+      <ListingFilters base={base} state={state} locale={locale} counts={counts} />
 
       <ListingGrid
         listings={result?.docs ?? []}

@@ -5,13 +5,7 @@ import { useTranslations } from 'next-intl'
 import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import {
-  amenityLabel,
-  districtLabel,
-  governorateLabel,
-  priceBandLabel,
-  subcategoryLabel,
-} from '../lib/labels'
+import { amenityLabel, districtLabel, governorateLabel, priceBandLabel } from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -19,14 +13,22 @@ import { displayAmenities, filterHref, type FilterState } from './ListingFilters
  *
  * # Why a sheet and not more rows
  *
- * There are twenty-nine filters: fifty-one possible kinds, eight governorates,
- * twenty-eight districts, four price bands and sixteen amenities. Laid out as
- * rows of chips they were four wrapping lines that pushed the actual listings
- * off the screen, and on a 375px phone the amenities row alone was six lines.
+ * There are eight governorates, twenty-eight districts, four price bands and
+ * sixteen amenities. Laid out as rows of chips they were four wrapping lines
+ * that pushed the actual listings off the screen, and on a 375px phone the
+ * amenities row alone was six lines.
  *
  * So the two facets a reader uses most stay in the bar, and the rest move
  * here. The button carries a count, because the one thing that must be visible
  * from across the page is how many filters are currently narrowing the result.
+ *
+ * # The kind of place is not in here
+ *
+ * It used to be, as a Group of the section's subcategories. That made it the
+ * only facet a reader could reach two ways, and the sheet was the worse of the
+ * two: the section now opens on a row of every kind of place with a count on
+ * each, which is a question asked plainly rather than one buried four taps
+ * deep behind a button. Changing it means going back to that row.
  *
  * # The URL is still the source of truth
  *
@@ -49,7 +51,8 @@ import { displayAmenities, filterHref, type FilterState } from './ListingFilters
  * # Without JavaScript
  *
  * The button does nothing, and the inline chips in the bar are still links, so
- * filtering by kind and governorate keeps working. Price and amenities become
+ * filtering by governorate keeps working - as does choosing a kind of place,
+ * which is a row of links on the section page. Price and amenities become
  * unreachable, which is a degradation rather than a break. Making the full set
  * work without JavaScript means going back to the wrapping rows this replaced.
  */
@@ -106,13 +109,11 @@ function Toggle({
 export function FilterSheet({
   base,
   state,
-  subcategories,
   locale,
   counts,
 }: {
   base: string
   state: FilterState
-  subcategories: readonly { slug: string }[]
   locale: Locale
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
@@ -172,9 +173,14 @@ export function FilterSheet({
   const districts =
     GOVERNORATES.find((g) => g.slug === draft.governorate)?.districts ?? ([] as Labelled[])
 
-  /** How many facets are narrowing the result right now, from the URL. */
+  /**
+   * How many facets are narrowing the result right now, from the URL.
+   *
+   * The subcategory is not one of them any more. It is chosen on the section's
+   * own tile row rather than in here, so counting it would put a badge on a
+   * button that cannot show the reader what it is counting.
+   */
   const count =
-    (state.subcategory ? 1 : 0) +
     (state.governorate ? 1 : 0) +
     (state.district ? 1 : 0) +
     (state.priceRange ? 1 : 0) +
@@ -204,7 +210,15 @@ export function FilterSheet({
     router.push(filterHref(base, draft, {}))
   }
 
-  const clear = () => setDraft({ amenities: [] })
+  /**
+   * Clears what this sheet holds, and only that.
+   *
+   * The subcategory survives. It is no longer one of the sheet's facets, and a
+   * button that cleared something it never showed would drop the reader back
+   * to the tile row without having said so. The bar's own "clear filters" link
+   * is the full reset, and that one is labelled as such.
+   */
+  const clear = () => setDraft({ subcategory: draft.subcategory, amenities: [] })
 
   return (
     <>
@@ -324,24 +338,6 @@ export function FilterSheet({
                 </Toggle>
               ))}
             </Group>
-
-            {subcategories.length > 0 ? (
-              <Group title={t('kind')}>
-                {subcategories.map((child) => (
-                  <Toggle
-                    key={child.slug}
-                    active={draft.subcategory === child.slug}
-                    onClick={() =>
-                      set({
-                        subcategory: draft.subcategory === child.slug ? undefined : child.slug,
-                      })
-                    }
-                  >
-                    {subcategoryLabel(child.slug, locale)}
-                  </Toggle>
-                ))}
-              </Group>
-            ) : null}
 
             {/* Only shown once a governorate is chosen, because a flat list of
                 twenty-eight districts across eight governorates is not a

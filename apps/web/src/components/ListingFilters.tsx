@@ -191,21 +191,11 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 export async function ListingFilters({
   base,
   state,
-  subcategories,
   locale,
   counts,
 }: {
   base: string
   state: FilterState
-  /**
-   * The children of this section's category, or empty on the directory.
-   *
-   * `/directory` is every category at once, so there is no subcategory row that
-   * would mean anything - "boutique hotels" and "florists" are not alternatives
-   * on one list. The row is dropped rather than rendered with a lone "All" chip
-   * standing for nothing.
-   */
-  subcategories: readonly { slug: string }[]
   locale: Locale
   /**
    * Listings per governorate in this section, or undefined if not computed.
@@ -334,14 +324,9 @@ export async function ListingFilters({
           </FilterChip>
         </div>
 
-        {/* Region, kind, district, price and the sixteen amenities live in here. */}
-        <FilterSheet
-          base={base}
-          state={state}
-          subcategories={subcategories}
-          locale={locale}
-          counts={counts}
-        />
+        {/* Region, district, price and the sixteen amenities live in here. The
+            kind of place does not: it is the section page's own tile row. */}
+        <FilterSheet base={base} state={state} locale={locale} counts={counts} />
       </div>
 
       {/*
