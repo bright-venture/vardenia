@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -63,6 +63,12 @@ const files = execFileSync('git', ['ls-files', 'apps/web/src/components', 'apps/
   .split('\n')
   .filter((f) => /\.tsx?$/.test(f) && !/\.test\./.test(f))
   .filter((f) => !EXCLUDED.some((prefix) => f.includes(prefix)))
+  /**
+   * `git ls-files` reads the index, so a file deleted in the working tree is
+   * still listed until that deletion is staged. Reading one would crash this
+   * test in the middle of any refactor that removes a component.
+   */
+  .filter((f) => existsSync(path.resolve(here, '../../../..', f)))
 
 /**
  * Comments are prose, not code, and this file's first run proved why that

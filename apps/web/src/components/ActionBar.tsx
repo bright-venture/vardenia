@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server'
+import { mapsLink } from '../lib/maps-link'
 
 /**
  * What a reader can actually do from a listing page.
@@ -14,6 +15,12 @@ import { getTranslations } from 'next-intl/server'
  * on-site: someone who has just scanned a code in a lobby wants to know how to
  * get there, and no booking flow replaces a map.
  *
+ * The link goes to Google Maps rather than an embedded map. A hosted map costs
+ * a tile subscription and shows nothing without coordinates, while a link needs
+ * neither and lands the reader in the app their phone already navigates with.
+ * See lib/maps-link for how the destination is built when a listing has no
+ * coordinates, which is currently all of them.
+ *
  * The booking button belongs here when Phase 3 lands, which is why this stays a
  * bar rather than collapsing into a single link at the call site.
  *
@@ -24,20 +31,16 @@ import { getTranslations } from 'next-intl/server'
 interface Props {
   coordinates?: [number, number] | null
   name: string
+  /** The listing's address line, used to find it when there are no coordinates. */
+  address?: string | null
+  /** Localized place name, e.g. "Achrafieh, Beirut", to disambiguate a chain. */
+  place?: string | null
 }
 
-export async function ActionBar({ coordinates, name }: Props) {
+export async function ActionBar({ coordinates, name, address, place }: Props) {
   const t = await getTranslations('directory')
 
-  // Payload stores points as [longitude, latitude]; Google Maps wants the
-  // opposite order. Getting this backwards drops the pin in the wrong hemisphere.
-  const directions = coordinates
-    ? `https://www.google.com/maps/dir/?api=1&destination=${coordinates[1]},${coordinates[0]}`
-    : null
-
-  // A listing with no coordinates has nothing to offer here yet. Rendering an
-  // empty bar would leave a gap in the page for no reason.
-  if (!directions) return null
+  const directions = mapsLink({ name, address, place, coordinates })
 
   return (
     <div className="flex flex-wrap gap-3" aria-label={`Actions for ${name}`}>

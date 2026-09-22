@@ -26,6 +26,7 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
+import { mapsLink } from '../../../../../lib/maps-link'
 import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
@@ -388,7 +389,12 @@ export default async function ListingPage({ params }: Params) {
           {/* Directions (only with coordinates) sits beside Save (always). A
               listing with no location still offers the heart. */}
           <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-            <ActionBar name={listing.name ?? ''} coordinates={point} />
+            <ActionBar
+              name={listing.name ?? ''}
+              address={listing.address}
+              place={place}
+              coordinates={point}
+            />
             <SaveButton slug={slug} variant="button" />
           </div>
 
@@ -414,16 +420,19 @@ export default async function ListingPage({ params }: Params) {
                 {listing.address ? (
                   <Row label={t('address')}>
                     <p className="whitespace-pre-line">{listing.address}</p>
-                    {point ? (
-                      <a
-                        className="text-gold-700 hover:text-ink-900 mt-2 inline-block underline underline-offset-4"
-                        href={`https://www.google.com/maps/search/?api=1&query=${point[1]},${point[0]}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {t('viewOnMap')}
-                      </a>
-                    ) : null}
+                    <a
+                      className="text-gold-700 hover:text-ink-900 mt-2 inline-block underline underline-offset-4"
+                      href={mapsLink({
+                        name: listing.name ?? '',
+                        address: listing.address,
+                        place,
+                        coordinates: point,
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t('viewOnMap')}
+                    </a>
                   </Row>
                 ) : null}
 

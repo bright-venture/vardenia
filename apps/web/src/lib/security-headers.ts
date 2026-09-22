@@ -218,7 +218,7 @@ export const BASE_HEADERS = [
     // why the map's geolocation silently failed with the API refused before it
     // could prompt. Camera and microphone stay fully off; nothing here uses them.
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()',
+    value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
   },
   {
     key: 'Strict-Transport-Security',
