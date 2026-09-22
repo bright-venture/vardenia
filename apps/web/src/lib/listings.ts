@@ -445,6 +445,108 @@ export async function countByGovernorate({
 }
 
 /**
+ * The listings a venue has paid to have shown.
+ *
+ * This is the visible half of what `featured` buys - the home page draws a band
+ * of these above everything else. The other half needs no query at all: every
+ * listing grid already sorts on `-tier`, so a paid listing rises to the top of
+ * its section without anything here.
+ *
+ * # Why it is its own query rather than a filter on the homepage grid
+ *
+ * The band has to be able to disappear. A "Featured" heading over an empty row
+ * advertises that nobody has bought anything, and for most of the first year
+ * there will be nothing in it - so the page asks for these separately and drops
+ * the whole section when the answer is empty, the way the magazine band already
+ * does. Folding it into the main grid would mean either showing free listings
+ * under a paid heading, or a heading with nothing beneath it.
+ */
+export async function findFeaturedListings({
+  locale,
+  limit = 6,
+}: {
+  locale: Locale
+  limit?: number
+}): Promise<ListingSummary[]> {
+  const run = async (): Promise<ListingSummary[]> => {
+    const payload = await client()
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where: { tier: { equals: 'featured' } },
+      locale: dataLocale(locale),
+      depth: 1,
+      limit,
+      pagination: false,
+      // Drafts are excluded by the collection's own access rule, not here.
+      overrideAccess: false,
+      sort: ['-tier', 'name'],
+    })
+
+    return result.docs as ListingSummary[]
+  }
+
+  return unstable_cache(run, ['featured-listings', locale, String(limit)], {
+    revalidate: LISTINGS_TTL,
+    tags: ['businesses'],
+  })()
+}
+
+/**
+ * How many listings sit under each subcategory of one section.
+ *
+ * The section page opens on a row of subcategory tiles rather than on listings,
+ * and a tile that leads to nothing is the dead end this number prevents: a
+ * reader who picks "Private Villas" and lands on an empty page has been sent
+ * there by us. With the count on the tile the choice is informed before it is
+ * made, and a subcategory with nothing in it can be dropped from the row
+ * entirely.
+ *
+ * Same shape and the same trade as `countByGovernorate` above: one read of the
+ * section, tallied in memory, rather than fifty-one `count` queries to
+ * Frankfurt. It takes no filter state, deliberately - these are the counts for
+ * the section as a whole, which is the only moment the tiles are shown.
+ */
+export async function countBySubcategory({
+  locale,
+  category,
+}: {
+  locale: Locale
+  category: string
+}): Promise<Record<string, number>> {
+  const run = async () => {
+    const payload = await client()
+
+    const result = await payload.find({
+      collection: 'businesses',
+      where: { category: { equals: category } },
+      locale: dataLocale(locale),
+      limit: 1000,
+      depth: 0,
+      pagination: false,
+      // Drafts are excluded by the collection's own access rule, not here.
+      overrideAccess: false,
+      select: { subcategories: true },
+    })
+
+    const counts: Record<string, number> = {}
+    for (const doc of result.docs) {
+      // A listing may carry several, and each one should count it.
+      const subs = Array.isArray(doc.subcategories) ? doc.subcategories : []
+      for (const sub of subs) {
+        if (typeof sub === 'string') counts[sub] = (counts[sub] ?? 0) + 1
+      }
+    }
+    return counts
+  }
+
+  return unstable_cache(run, ['subcategory-counts', locale, category], {
+    revalidate: LISTINGS_TTL,
+    tags: ['businesses'],
+  })()
+}
+
+/**
  * How many printed codes exist, for the homepage masthead's third figure.
  *
  * The masthead deliberately showed two stats and refused a third, because the

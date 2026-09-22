@@ -7,7 +7,24 @@
  * a component.
  */
 
-export const LISTING_TIERS = ['free', 'listed', 'featured', 'partner'] as const
+/**
+ * Two tiers, in enum order: everything, or nothing.
+ *
+ * There were four - free, listed, featured, partner - and they described a
+ * sales organisation that does not exist. Nothing was ever sold into the middle
+ * two: production held 1,276 free listings and a single `listed` one. Four
+ * price points is a decision a team makes after it has learned what a venue
+ * will pay, not before it has sold anything, and in the meantime each extra
+ * tier was another row in a capability table nobody could explain to a
+ * customer.
+ *
+ * So there is one thing to buy. A free listing is the seeded directory entry
+ * that makes the catalogue complete on day one; a featured one is what a venue
+ * pays for. The order matters beyond readability: the directory sorts on
+ * `-tier`, which is the Postgres enum's own declaration order, so `featured`
+ * must come after `free` for a paid listing to rise.
+ */
+export const LISTING_TIERS = ['free', 'featured'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
 
 export interface TierCapabilities {
@@ -49,28 +66,18 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     printInclusion: false,
     pushCampaigns: false,
   },
-  listed: {
-    rank: 10,
-    galleryLimit: 6,
-    editorialFeature: false,
-    analyticsAccess: true,
-    heroPlacement: false,
-    printInclusion: false,
-    pushCampaigns: false,
-  },
+  /**
+   * The one thing a venue buys, sold annually alongside the printed code.
+   *
+   * It absorbs what `listed` and `partner` used to offer, because splitting
+   * those benefits across three prices was a guess at a market nobody had sold
+   * into yet. `heroPlacement` is the visible half of it - the home page draws a
+   * band of these - and priority in every listing grid is the other half, which
+   * the `-tier` sort has always given for free.
+   */
   featured: {
-    rank: 20,
+    rank: 10,
     galleryLimit: 15,
-    editorialFeature: true,
-    analyticsAccess: true,
-    heroPlacement: true,
-    printInclusion: true,
-    pushCampaigns: false,
-  },
-  // Annual contract: airlines, hotel groups, tourism authorities.
-  partner: {
-    rank: 30,
-    galleryLimit: 40,
     editorialFeature: true,
     analyticsAccess: true,
     heroPlacement: true,

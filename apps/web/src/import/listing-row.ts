@@ -95,8 +95,11 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
   'Tour Guides': { category: 'tourism', subcategory: 'tour-guides' },
   Festivals: { category: 'tourism', subcategory: 'festivals' },
   'Hidden Gems': { category: 'tourism', subcategory: 'eco-tourism' },
-  Gyms: { category: 'healthcare', subcategory: 'wellness' },
-  Malls: { category: 'lifestyle', subcategory: 'luxury-shopping' },
+  // Both had their own subcategory added rather than borrowing a near-enough
+  // one. A gym under healthcare/wellness sat beside hospitals and clinics, and
+  // a shopping centre under luxury-shopping claimed to be a boutique.
+  Gyms: { category: 'lifestyle', subcategory: 'gyms' },
+  Malls: { category: 'lifestyle', subcategory: 'malls' },
 }
 
 /**

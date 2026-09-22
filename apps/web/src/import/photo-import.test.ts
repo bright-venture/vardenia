@@ -149,18 +149,28 @@ describe('how many gallery photographs a tier displays', () => {
   })
 
   /**
-   * The tiers are free, listed, featured and partner. An earlier version of
-   * this test said "premium", which is not one - `tierOf` fell back to free and
-   * the assertion passed a 1 off as a real limit. A test that invents the
-   * vocabulary it is checking proves nothing about the vocabulary.
+   * The tiers are free and featured. An earlier version of this test said
+   * "premium", which is not one - `tierOf` fell back to free and the assertion
+   * passed a 1 off as a real limit. A test that invents the vocabulary it is
+   * checking proves nothing about the vocabulary, which is also why the retired
+   * names are asserted below rather than quietly dropped.
    */
   it('rises with the tier', () => {
-    const limits = (['free', 'listed', 'featured', 'partner'] as const).map((tier) =>
-      can(tierOf(tier), 'galleryLimit'),
-    )
+    const limits = (['free', 'featured'] as const).map((tier) => can(tierOf(tier), 'galleryLimit'))
 
-    expect(limits).toEqual([1, 6, 15, 40])
+    expect(limits).toEqual([1, 15])
     expect(limits).toEqual([...limits].sort((a, b) => a - b))
+  })
+
+  /**
+   * `listed` and `partner` were retired when four tiers became two. Rows still
+   * carry them until the migration runs, and such a listing gets the free
+   * allowance rather than the one it used to have.
+   */
+  it('gives a retired tier the free allowance', () => {
+    for (const retired of ['listed', 'partner']) {
+      expect(can(tierOf(retired), 'galleryLimit')).toBe(1)
+    }
   })
 
   /** An unknown tier must not become an unlimited one. */

@@ -58,7 +58,10 @@
     "printTitle": "A edição 01 está na gráfica",
     "printBody": "Cada lugar na revista traz um código. Aponte o celular e a ficha se abre, com os horários de hoje em vez dos do dia em que foi impressa.",
     "printCta": "Ler a revista",
-    "printImageAlt": "Uma edição impressa da Vardenia aberta sobre uma mesa"
+    "printImageAlt": "Uma edição impressa da Vardenia aberta sobre uma mesa",
+    "featuredEyebrow": "Em destaque",
+    "featuredTitle": "Lugares que valem o desvio",
+    "featuredNote": "Escolhidos pelos espaços que apoiam este guia."
   },
   "directory": {
     "searchPlaceholder": "Buscar hotéis, restaurantes, experiências...",
@@ -92,7 +95,9 @@
     "ctaBanner": "Hotéis, restaurantes e experiências selecionados por todo o Líbano, no impresso e online.",
     "menu": "Cardápio",
     "viewMenu": "Ver o cardápio",
-    "rooms": "Quartos"
+    "rooms": "Quartos",
+    "chooseType": "Que tipo de lugar",
+    "browseAll": "Ver tudo"
   },
   "booking": {
     "heading": "Reservar mesa",

@@ -79,7 +79,7 @@ export const BUSINESSES: BusinessFixture[] = [
       ar: 'شارع عبد الوهاب الإنكليزي، الأشرفية',
     },
     location: [35.5199, 33.8886],
-    tier: 'partner',
+    tier: 'featured',
     verified: true,
     priceRange: '4',
     amenities: [
@@ -161,7 +161,7 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'keserwan',
     address: { en: 'Kfardebian, Keserwan', ar: 'كفردبيان، كسروان' },
     location: [35.8422, 34.0086],
-    tier: 'listed',
+    tier: 'featured',
     verified: false,
     priceRange: '3',
     amenities: ['free-parking', 'family-friendly', 'mountain-view'],

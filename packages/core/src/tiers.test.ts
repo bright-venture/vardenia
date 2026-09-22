@@ -69,19 +69,38 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * The scan report is what makes a renewal conversation possible, so it starts
-   * at the first paid tier rather than being held back for the expensive ones.
+   * The scan report is what makes a renewal conversation possible, so the paid
+   * tier gets it. There is only one, which is the point of the two-tier model:
+   * nothing has to be held back to justify a tier above it.
    */
-  it('includes the scan report from the first paid tier upwards', () => {
-    expect(can(tierOf('listed'), 'analyticsAccess')).toBe(true)
+  it('gives the paid tier everything that is worth paying for', () => {
     expect(can(tierOf('featured'), 'analyticsAccess')).toBe(true)
-    expect(can(tierOf('partner'), 'analyticsAccess')).toBe(true)
+    expect(can(tierOf('featured'), 'printInclusion')).toBe(true)
+    expect(can(tierOf('featured'), 'heroPlacement')).toBe(true)
+    expect(can(tierOf('featured'), 'editorialFeature')).toBe(true)
   })
 
-  /** Print is the reward for the step that matters commercially. */
-  it('puts print inclusion at featured and above, not before', () => {
-    expect(can(tierOf('listed'), 'printInclusion')).toBe(false)
-    expect(can(tierOf('featured'), 'printInclusion')).toBe(true)
+  /**
+   * `featured` has to sort above `free`, because the directory orders on
+   * `-tier` and that is the Postgres enum's declaration order rather than
+   * anything this file computes. Reversing the array would quietly bury every
+   * paying listing underneath the free ones.
+   */
+  it('declares the paid tier after the free one, which is what sorts it first', () => {
+    expect(LISTING_TIERS).toEqual(['free', 'featured'])
+  })
+
+  /**
+   * `listed` and `partner` were retired when four tiers became two, and rows
+   * carrying them exist until the migration rewrites them. An unknown tier
+   * falls to `free`, so during that window such a listing loses its standing
+   * rather than silently keeping a paid one.
+   */
+  it('treats a retired tier as free rather than as something it no longer is', () => {
+    for (const retired of ['listed', 'partner']) {
+      expect(tierOf(retired)).toBe('free')
+      expect(can(tierOf(retired), 'heroPlacement')).toBe(false)
+    }
   })
 })
 

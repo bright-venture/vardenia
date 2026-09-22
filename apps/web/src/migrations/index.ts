@@ -25,6 +25,9 @@ import * as migration_20260916_060545_room_type_price from './20260916_060545_ro
 import * as migration_20260916_063628_cancellation_policy from './20260916_063628_cancellation_policy'
 import * as migration_20260916_071817_reviews_collection from './20260916_071817_reviews_collection'
 import * as migration_20260922_081510_drop_google_rating from './20260922_081510_drop_google_rating'
+import * as migration_20260922_105515_add_gyms_malls_subcategories from './20260922_105515_add_gyms_malls_subcategories'
+import * as migration_20260922_105600_move_gyms_malls from './20260922_105600_move_gyms_malls'
+import * as migration_20260922_110157_two_tiers from './20260922_110157_two_tiers'
 
 export const migrations = [
   {
@@ -161,5 +164,20 @@ export const migrations = [
     up: migration_20260922_081510_drop_google_rating.up,
     down: migration_20260922_081510_drop_google_rating.down,
     name: '20260922_081510_drop_google_rating',
+  },
+  {
+    up: migration_20260922_105515_add_gyms_malls_subcategories.up,
+    down: migration_20260922_105515_add_gyms_malls_subcategories.down,
+    name: '20260922_105515_add_gyms_malls_subcategories',
+  },
+  {
+    up: migration_20260922_105600_move_gyms_malls.up,
+    down: migration_20260922_105600_move_gyms_malls.down,
+    name: '20260922_105600_move_gyms_malls',
+  },
+  {
+    up: migration_20260922_110157_two_tiers.up,
+    down: migration_20260922_110157_two_tiers.down,
+    name: '20260922_110157_two_tiers',
   },
 ]

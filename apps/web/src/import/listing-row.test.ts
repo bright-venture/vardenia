@@ -195,8 +195,11 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
     Pools: ['food-and-beverage', 'beach-clubs'],
     'Boat Rentals': ['tourism', 'adventure'],
     'Hidden Gems': ['tourism', 'eco-tourism'],
-    Gyms: ['healthcare', 'wellness'],
-    Malls: ['lifestyle', 'luxury-shopping'],
+    // Both had their own subcategory added rather than borrowing a neighbour:
+    // a gym under healthcare sat beside hospitals, and a mall under
+    // luxury-shopping claimed to be a boutique.
+    Gyms: ['lifestyle', 'gyms'],
+    Malls: ['lifestyle', 'malls'],
   }
 
   it('sends each heading to its intended category, subcategory and the Chouf district', () => {

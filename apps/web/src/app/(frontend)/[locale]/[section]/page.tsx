@@ -6,9 +6,10 @@ import { SECTION_PATHS, TAXONOMY, sectionForPath, type SiteSection } from '@vard
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, findListings } from '../../../../lib/listings'
+import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
 import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
+import { SubcategoryTiles } from '../../../../components/SubcategoryTiles'
 import { LINK } from '../../../../components/formStyles'
 import {
   ListingFilters,
@@ -50,7 +51,7 @@ export const revalidate = 3600
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
-  searchParams: Promise<RawFilterParams & { page?: string }>
+  searchParams: Promise<RawFilterParams & { page?: string; show?: string }>
 }
 
 /** Seven sections in two languages, all prerendered at build time. */
@@ -118,7 +119,7 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { page, ...raw } = await searchParams
+  const { page, show, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
   const children = TAXONOMY.find((entry) => entry.slug === section.category)?.children ?? []
@@ -128,12 +129,26 @@ async function SectionResults({
   const state = parseFilterState(raw, children)
 
   /**
-   * Counts feed the filter chips, and the grid needs its page. In parallel, so a
-   * second Frankfurt round trip does not sit in front of the render.
+   * The section opens on a choice of subcategory rather than on listings.
+   *
+   * Only when nothing has been narrowed yet: once a reader has picked a kind of
+   * place, or a region, or anything else, they have answered the question the
+   * tiles exist to ask and the listings are what they want. `?show=all` is the
+   * explicit way past them - see SubcategoryTiles.
    */
-  const [counts, result] = await Promise.all([
+  const choosing = show !== 'all' && !anyFilterApplied(state)
+
+  /**
+   * Counts feed the filter chips, and the grid needs its page. In parallel, so a
+   * second Frankfurt round trip does not sit in front of the render. The tile
+   * counts are only fetched when the tiles are actually being drawn.
+   */
+  const [counts, result, subcategoryCounts] = await Promise.all([
     countByGovernorate({ locale, category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
+    choosing
+      ? countBySubcategory({ locale, category: section.category })
+      : Promise.resolve<Record<string, number>>({}),
   ])
 
   const base = `/${section.path}`
@@ -149,6 +164,40 @@ async function SectionResults({
   }
 
   const total = result?.totalDocs ?? 0
+
+  /**
+   * The tiles answer for themselves whether there is a choice worth offering -
+   * fewer than two non-empty subcategories and they render nothing. Asking here
+   * as well keeps the page from hiding its listings behind a row that is about
+   * to be empty.
+   */
+  const tiles = choosing ? (
+    <SubcategoryTiles
+      base={base}
+      subcategories={children}
+      counts={subcategoryCounts}
+      locale={locale}
+      total={total}
+    />
+  ) : null
+
+  const offeringChoice =
+    choosing && Object.values(subcategoryCounts).filter((n) => n > 0).length > 1
+
+  if (offeringChoice) {
+    return (
+      <>
+        {tiles}
+        <ListingFilters
+          base={base}
+          state={state}
+          subcategories={children}
+          locale={locale}
+          counts={counts}
+        />
+      </>
+    )
+  }
 
   return (
     <>

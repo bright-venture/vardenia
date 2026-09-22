@@ -58,7 +58,10 @@
     "printTitle": "第 01 期已在印刷中",
     "printBody": "杂志中的每个地方都带有一个代码。用手机对准它，记录便会打开，显示的是今天的营业时间，而非付印当天的。",
     "printCta": "阅读杂志",
-    "printImageAlt": "一本翻开摊在桌上的 Vardenia 印刷刊"
+    "printImageAlt": "一本翻开摊在桌上的 Vardenia 印刷刊",
+    "featuredEyebrow": "精选",
+    "featuredTitle": "值得专程前往",
+    "featuredNote": "由支持本指南的场所甄选。"
   },
   "directory": {
     "searchPlaceholder": "搜索酒店、餐厅、体验……",
@@ -92,7 +95,9 @@
     "ctaBanner": "精选自黎巴嫩各地的酒店、餐厅与体验，见于印刷版与线上。",
     "menu": "菜单",
     "viewMenu": "查看菜单",
-    "rooms": "房型"
+    "rooms": "房型",
+    "chooseType": "想找什么类型",
+    "browseAll": "浏览全部"
   },
   "booking": {
     "heading": "预订餐位",

@@ -11,7 +11,12 @@ import { RegionIndex } from '../../../components/home/RegionIndex'
 import { ArticleCard } from '../../../components/ArticleCard'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
-import { findListings, countCodes, type ListingSummary } from '../../../lib/listings'
+import {
+  countCodes,
+  findFeaturedListings,
+  findListings,
+  type ListingSummary,
+} from '../../../lib/listings'
 import { findArticles } from '../../../lib/articles'
 
 /**
@@ -109,8 +114,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
    * `findListings` with no filter is the cacheable path, so this is usually a
    * cache read rather than a round trip to Frankfurt.
    */
-  const [listings, articles, codes] = await Promise.all([
+  const [listings, featured, articles, codes] = await Promise.all([
     findListings({ locale, perPage: 6 }),
+    // The paid band above the directory taste. Empty for most of the first
+    // year, and the section removes itself when it is - see below.
+    findFeaturedListings({ locale, limit: 6 }),
     findArticles({ locale, perPage: 3 }),
     // The masthead's third figure. Cached on the same hour as the rest of the
     // page, so it is not a per-view round trip. See lib/listings countCodes.
@@ -122,6 +130,24 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {/* The place count is already in hand from the query above; the code count
           is its own cached figure. The masthead states real numbers either way. */}
       <Hero places={listings.totalDocs} codes={codes} />
+
+      {/*
+        What a venue buys, and the reason it sits directly under the masthead:
+        this is the placement being sold. Removed entirely when nothing is
+        featured rather than shown empty - a "Featured" heading over an empty row
+        advertises that nobody has bought anything, which is the one thing a
+        sales page must not do. The magazine band below takes the same approach.
+      */}
+      {featured.length > 0 ? (
+        <Band eyebrow={t('featuredEyebrow')} title={t('featuredTitle')} note={t('featuredNote')}>
+          <ListingGrid
+            listings={featured}
+            locale={locale}
+            kind="editorial"
+            empty={t('listingsEmpty')}
+          />
+        </Band>
+      ) : null}
 
       <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
         <SectionIndex locale={locale} />

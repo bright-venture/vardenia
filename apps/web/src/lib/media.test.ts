@@ -83,14 +83,13 @@ describe('resolveGallery', () => {
       expect(resolveGallery(gallery(20), can('free', 'galleryLimit'))).toHaveLength(1)
     })
 
-    it('gives each paid tier progressively more', () => {
-      expect(resolveGallery(gallery(50), can('listed', 'galleryLimit'))).toHaveLength(6)
+    it('gives the paid tier more than the free one', () => {
+      expect(resolveGallery(gallery(50), can('free', 'galleryLimit'))).toHaveLength(1)
       expect(resolveGallery(gallery(50), can('featured', 'galleryLimit'))).toHaveLength(15)
-      expect(resolveGallery(gallery(50), can('partner', 'galleryLimit'))).toHaveLength(40)
     })
 
     it('does not pad when a listing has fewer images than its allowance', () => {
-      expect(resolveGallery(gallery(3), can('partner', 'galleryLimit'))).toHaveLength(3)
+      expect(resolveGallery(gallery(3), can('featured', 'galleryLimit'))).toHaveLength(3)
     })
 
     it('keeps the first images, so ordering in the admin decides what shows', () => {
@@ -106,9 +105,14 @@ describe('resolveGallery', () => {
 
 describe('tierOf', () => {
   it('passes through the real tiers', () => {
-    for (const t of ['free', 'listed', 'featured', 'partner'] as const) {
+    for (const t of ['free', 'featured'] as const) {
       expect(tierOf(t)).toBe(t)
     }
+  })
+
+  /** Retired when four tiers became two, and no longer a tier. */
+  it('does not pass through a retired tier', () => {
+    for (const t of ['listed', 'partner']) expect(tierOf(t)).toBe('free')
   })
 
   /** Fails closed: a corrupt tier must not hand out partner privileges. */

@@ -58,7 +58,10 @@
     "printTitle": "Issue 01 is at the printer",
     "printBody": "Every place in the magazine carries a code. Point a phone at it and the listing opens, with the hours as they are today rather than as they were the day it printed.",
     "printCta": "Read the magazine",
-    "printImageAlt": "A printed Vardenia issue open on a table"
+    "printImageAlt": "A printed Vardenia issue open on a table",
+    "featuredEyebrow": "Featured",
+    "featuredTitle": "Places worth the detour",
+    "featuredNote": "Chosen by the venues who back this guide."
   },
   "directory": {
     "searchPlaceholder": "Search hotels, restaurants, experiences...",
@@ -92,7 +95,9 @@
     "ctaBanner": "Curated hotels, restaurants and experiences across Lebanon, in print and online.",
     "menu": "Menu",
     "viewMenu": "View menu",
-    "rooms": "Rooms"
+    "rooms": "Rooms",
+    "chooseType": "What kind of place",
+    "browseAll": "Browse everything"
   },
   "booking": {
     "heading": "Book a table",

@@ -106,6 +106,18 @@ export const TAXONOMY = [
     icon: 'sparkles',
     children: [
       { slug: 'luxury-shopping', en: 'Luxury Shopping', ar: 'تسوق فاخر' },
+      /**
+       * Malls and gyms are their own subcategories rather than borrowed ones.
+       *
+       * Both arrived through the importer with nowhere of their own to go: a
+       * shopping centre was filed under `luxury-shopping`, which is a claim
+       * about a boutique rather than about a mall, and a gym under
+       * `healthcare/wellness`, which put fifty fitness clubs in the section
+       * that holds hospitals and clinics. Neither was wrong enough to notice
+       * and both were wrong enough to mislead a filter.
+       */
+      { slug: 'malls', en: 'Malls', ar: 'مراكز تسوق' },
+      { slug: 'gyms', en: 'Gyms & Fitness', ar: 'نوادي رياضية' },
       { slug: 'jewelry', en: 'Jewelry', ar: 'مجوهرات' },
       { slug: 'fashion', en: 'Fashion', ar: 'أزياء' },
       { slug: 'beauty', en: 'Beauty', ar: 'تجميل' },
