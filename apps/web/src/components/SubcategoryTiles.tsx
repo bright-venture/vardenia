@@ -116,15 +116,30 @@ export async function SubcategoryTiles({
           seen the choice and want everything anyway.
         */}
         <li>
-          <Link
-            href={`${base}?show=all`}
-            className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-          >
-            <span className="text-ink-700 group-hover:text-gold-700 text-sm font-semibold uppercase tracking-wider transition-colors">
-              {t('browseAll')}
-            </span>
-            <span className="text-ink-500 font-mono text-xs tabular-nums">{total}</span>
-          </Link>
+          {total > 0 ? (
+            <Link
+              href={`${base}?show=all`}
+              className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+            >
+              <span className="text-ink-700 group-hover:text-gold-700 text-sm font-semibold uppercase tracking-wider transition-colors">
+                {t('browseAll')}
+              </span>
+              <span className="text-ink-500 font-mono text-xs tabular-nums">{total}</span>
+            </Link>
+          ) : (
+            /*
+              Nothing in the section at all, which happens on the four that are
+              still being filled. Every row above is a nought, so this one is
+              too, and offering the way out of a choice nobody can make would
+              lead to the same empty page the reader is already looking at.
+            */
+            <div className={ROW} aria-disabled="true">
+              <span className="text-ink-500 text-sm font-semibold uppercase tracking-wider">
+                {t('browseAll')}
+              </span>
+              <span className="text-ink-500 font-mono text-xs tabular-nums">{total}</span>
+            </div>
+          )}
         </li>
       </ul>
     </nav>

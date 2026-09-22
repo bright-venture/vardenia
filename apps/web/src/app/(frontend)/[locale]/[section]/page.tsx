@@ -192,19 +192,25 @@ async function SectionResults({
   ) : null
 
   /**
-   * Mirrors what SubcategoryTiles decides, because this branch returns without
-   * the grid and a disagreement between the two would render a page with
-   * neither tiles nor listings on it.
+   * Mirrors what SubcategoryTiles decides, because a disagreement between the
+   * two would render a page with neither tiles nor listings on it.
    *
-   * It no longer counts non-empty subcategories. The row lists every kind of
-   * place in the section and marks the empty ones with a nought, so a section
-   * with one populated subcategory still has a menu worth showing. `total > 0`
-   * is the one case that is not worth showing: a section with nothing in it at
-   * all is a row of noughts, and the listings view says so in a sentence.
+   * It does not count non-empty subcategories. The row lists every kind of
+   * place in the section and marks the empty ones with a nought, so the
+   * question is only whether the section has a taxonomy worth showing at all.
    */
-  const offeringChoice = choosing && total > 0 && children.filter((sub) => !sub.retired).length > 1
+  const offeringChoice = choosing && children.filter((sub) => !sub.retired).length > 1
 
-  if (offeringChoice) {
+  /**
+   * A section with nothing in it anywhere still shows the row, and then says so.
+   *
+   * It used to fall straight through to "No places found", which is how
+   * Weddings, Lifestyle, Health and Getting Around came to show no kinds of
+   * place at all - the four sections where a reader most needs to be told what
+   * will eventually be there. So the tiles stay at the top and the ordinary
+   * empty results view follows them, rather than replacing them.
+   */
+  if (offeringChoice && total > 0) {
     return (
       <>
         {tiles}
@@ -221,6 +227,9 @@ async function SectionResults({
 
   return (
     <>
+      {/* Only reached with nothing in the section - see above. */}
+      {offeringChoice ? tiles : null}
+
       {/*
         The result count. It used to share this row with a List/Map toggle; the
         map was removed before launch because no listing carries coordinates.
