@@ -332,6 +332,47 @@ describe('North Lebanon, and Akkar alongside it', () => {
   })
 })
 
+/**
+ * The South Lebanon file. Without these headings every row fell to the Mount
+ * Lebanon default, so the whole south would have been filed in the wrong
+ * governorate. Nabatieh is its own governorate that the south reaches into,
+ * Jbaa on the Jezzine road being the first case.
+ */
+describe('South Lebanon, and Nabatieh beside it', () => {
+  const CASES: Record<string, [string, string]> = {
+    'Sidon District': ['south-lebanon', 'sidon'],
+    'Tyre District': ['south-lebanon', 'tyre'],
+    'Jezzine District': ['south-lebanon', 'jezzine'],
+    'Nabatieh District': ['nabatieh', 'nabatieh'],
+    'Marjeyoun District': ['nabatieh', 'marjeyoun'],
+    'Hasbaya District': ['nabatieh', 'hasbaya'],
+    'Bint Jbeil District': ['nabatieh', 'bint-jbeil'],
+  }
+
+  it('files each caza under the governorate that actually owns it', () => {
+    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+      const listing = toListing({
+        ID: 'X',
+        Category: 'Getaways',
+        'Name / Listing': 'A Southern Place',
+        Location: 'Some Town',
+        District: heading,
+      })
+
+      expect(listing, heading).not.toBeNull()
+      expect(listing!.governorate, heading).toBe(governorate)
+      expect(listing!.district, heading).toBe(district)
+
+      const owner = GOVERNORATES.find((g) => g.slug === governorate)
+      expect(
+        owner?.districts.map((d) => d.slug),
+        heading,
+      ).toContain(district)
+      expect(listing!.warnings, heading).toHaveLength(0)
+    }
+  })
+})
+
 describe('cleanName', () => {
   it('strips a star rating and the star count in brackets', () => {
     expect(cleanName('Highridge Mountain Lodge ★★★★★ (5-star hotel)')).toBe(

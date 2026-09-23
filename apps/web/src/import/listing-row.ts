@@ -139,6 +139,21 @@ const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: strin
   // holds a single district of the same name. It arrives in the same file as the
   // northern cazas, which is exactly why governorate travels with the district.
   'Akkar District': { district: 'akkar', governorate: 'akkar' },
+  // The South Lebanon file: Sidon, Tyre and Jezzine, one governorate. Before
+  // these existed every row in it would have fallen to DEFAULT_GOVERNORATE and
+  // been filed under Mount Lebanon - the fallback warns, but a hundred and fifty
+  // warnings read as noise and the listings would have gone live in the wrong
+  // region.
+  'Sidon District': { district: 'sidon', governorate: 'south-lebanon' },
+  'Tyre District': { district: 'tyre', governorate: 'south-lebanon' },
+  'Jezzine District': { district: 'jezzine', governorate: 'south-lebanon' },
+  // Nabatieh is its own governorate, and the South file reaches into it: towns
+  // like Jbaa sit on the Jezzine road but in Nabatieh District. All four of its
+  // cazas, so the next file from the south finds them already here.
+  'Nabatieh District': { district: 'nabatieh', governorate: 'nabatieh' },
+  'Marjeyoun District': { district: 'marjeyoun', governorate: 'nabatieh' },
+  'Hasbaya District': { district: 'hasbaya', governorate: 'nabatieh' },
+  'Bint Jbeil District': { district: 'bint-jbeil', governorate: 'nabatieh' },
 }
 
 /** Where a row lands when its District heading is not one we know. */
