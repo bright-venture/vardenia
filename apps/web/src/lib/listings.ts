@@ -3,7 +3,10 @@ import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
+import type { Business } from '../payload-types'
+import { FIND_EVERY_CEILING, findByIdsInOrder, findEvery } from './find-every'
 import { isOpenNow, type OpeningHour } from './hours'
+import { reportError } from './report'
 
 /**
  * Read side for the public directory.
@@ -267,25 +270,54 @@ export async function findListings({
     if (openNow) {
       /**
        * Open-now is evaluated against the live minute in Beirut, so it is never
-       * cached (see `cacheable` below) and the whole matching set is fetched and
-       * filtered here rather than page by page - filtering one page would leave
-       * short pages and a wrong total. Then the open set is paginated in memory,
-       * so the count and the page controls stay honest. The catalogue is small
-       * enough that this is cheap; when it is not, this is where a scheduled
-       * "open now" materialisation would go.
+       * cached (see `cacheable` below) and the whole matching set is filtered
+       * here rather than page by page - filtering one page would leave short
+       * pages and a wrong total. Then the open set is paginated in memory, so
+       * the count and the page controls stay honest.
+       *
+       * # Every candidate, and only its hours
+       *
+       * This read `limit: 1000, pagination: false`, which Payload truncates
+       * without saying so (see lib/find-every). Production passed 1,000
+       * published listings, so `/directory?open=1` was quietly testing the
+       * first thousand and never the rest.
+       *
+       * It also fetched each of those thousand at `depth: 1`, images joined,
+       * to read one field and discard nearly all of them. So the whole set is
+       * now read through `findEvery` with only the opening hours selected, and
+       * full documents are loaded for the one page that is shown.
+       *
+       * When this stops being cheap, the scheduled "open now" materialisation
+       * is still where it goes.
        */
-      const all = await payload.find({
+      const candidates = await findEvery<Pick<Business, 'id' | 'openingHours'>>(payload, {
         collection: 'businesses',
         where,
         locale: dataLocale(locale),
-        depth: 1,
-        limit: 1000,
-        pagination: false,
+        depth: 0,
         sort: ['-tier', 'name'],
         overrideAccess: false,
+        select: { openingHours: true },
       })
 
-      const open = all.docs.filter(
+      /**
+       * A reader is looking at this list, so it is not worth a 500. It is still
+       * wrong, and the one thing it must not do is be wrong silently - so staff
+       * hear about it, and the fix on that day is the materialisation above
+       * rather than a bigger ceiling.
+       */
+      if (!candidates.complete) {
+        await reportError(
+          new Error(`open-now stopped after ${FIND_EVERY_CEILING} candidate listings`),
+          {
+            source: 'listings.open-now-incomplete',
+            level: 'warning',
+            extra: { category, subcategory, governorate },
+          },
+        )
+      }
+
+      const open = candidates.docs.filter(
         (doc) => isOpenNow(doc.openingHours as OpeningHour[] | null | undefined) === true,
       )
       const totalDocs = open.length
@@ -293,9 +325,19 @@ export async function findListings({
       const current = Math.min(Math.max(1, page), totalPages)
       const start = (current - 1) * perPage
 
+      const docs = await findByIdsInOrder<Business>(
+        payload,
+        open.slice(start, start + perPage).map((doc) => doc.id),
+        {
+          collection: 'businesses',
+          locale: dataLocale(locale),
+          depth: 1,
+          overrideAccess: false,
+        },
+      )
+
       return {
-        ...all,
-        docs: open.slice(start, start + perPage),
+        docs,
         totalDocs,
         totalPages,
         page: current,
@@ -389,10 +431,12 @@ export async function findListings({
  * governorate of every published listing in the section once and counts them in
  * memory, which is a single trip.
  *
- * The ceiling is the same one `findAllListingSlugs` has: at some thousands of
+ * It reads through `findEvery`, because the `limit: 1000` it used to have was
+ * already too small: production passed a thousand published listings, and the
+ * directory-wide counts were silently tallying the first thousand. Paging makes
+ * it complete; it does not make it the right shape. At some thousands of
  * listings, fetching every row to count them stops being sensible and this
- * becomes a `GROUP BY`. Nowhere near that, and the fix is a query rather than a
- * redesign.
+ * becomes a `GROUP BY` - a query rather than a redesign.
  */
 export async function countByGovernorate({
   locale,
@@ -402,8 +446,8 @@ export async function countByGovernorate({
   locale: Locale
   category?: string
   subcategory?: string
-}): Promise<Record<string, number>> {
-  const run = async () => {
+}): Promise<Record<string, number> | undefined> {
+  const run = async (): Promise<Record<string, number> | null> => {
     const payload = await client()
 
     const where: Where = {}
@@ -411,17 +455,34 @@ export async function countByGovernorate({
     // Plural and `in`, for the reason spelled out in findListings.
     if (subcategory) where.subcategories = { in: [subcategory] }
 
-    const result = await payload.find({
+    const result = await findEvery<Pick<Business, 'id' | 'governorate'>>(payload, {
       collection: 'businesses',
       where,
       locale: dataLocale(locale),
-      limit: 1000,
       depth: 0,
-      pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
       select: { governorate: true },
     })
+
+    /**
+     * A partial tally is a set of numbers that are each too low, above a grid
+     * that disagrees with them. None is better: ListingFilters already renders
+     * absent counts as no number at all, which reads as "not counted" rather
+     * than as a fact. `null` rather than `undefined` because this result goes
+     * through the data cache, which serialises it.
+     */
+    if (!result.complete) {
+      await reportError(
+        new Error(`governorate counts stopped after ${FIND_EVERY_CEILING} listings`),
+        {
+          source: 'listings.governorate-counts-incomplete',
+          level: 'warning',
+          extra: { category, subcategory },
+        },
+      )
+      return null
+    }
 
     const counts: Record<string, number> = {}
     for (const doc of result.docs) {
@@ -433,15 +494,18 @@ export async function countByGovernorate({
 
   /**
    * Always cacheable, unlike findListings, because the key space is bounded:
-   * seven categories times fifty-one subcategories times two locales. Tagged
+   * seven categories times fifty-one subcategories times ten locales. Tagged
    * with `businesses` so publishing a listing updates the numbers on the same
    * revalidation the grid already uses - a count that disagrees with the grid
    * below it is worse than no count.
    */
-  return unstable_cache(run, ['governorate-counts', locale, category ?? '', subcategory ?? ''], {
-    revalidate: LISTINGS_TTL,
-    tags: ['businesses'],
-  })()
+  const counts = await unstable_cache(
+    run,
+    ['governorate-counts', locale, category ?? '', subcategory ?? ''],
+    { revalidate: LISTINGS_TTL, tags: ['businesses'] },
+  )()
+
+  return counts ?? undefined
 }
 
 /**
@@ -513,21 +577,39 @@ export async function countBySubcategory({
 }: {
   locale: Locale
   category: string
-}): Promise<Record<string, number>> {
-  const run = async () => {
+}): Promise<Record<string, number> | null> {
+  const run = async (): Promise<Record<string, number> | null> => {
     const payload = await client()
 
-    const result = await payload.find({
+    /**
+     * Through `findEvery` rather than `limit: 1000`. No section had reached a
+     * thousand when this changed - Eat & Drink was the largest at 749 - but the
+     * directory-wide counts beside it had, and this one would have started
+     * lying the same way the next time an import landed in Eat & Drink.
+     */
+    const result = await findEvery<Pick<Business, 'id' | 'subcategories'>>(payload, {
       collection: 'businesses',
       where: { category: { equals: category } },
       locale: dataLocale(locale),
-      limit: 1000,
       depth: 0,
-      pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
       select: { subcategories: true },
     })
+
+    /**
+     * Here a partial count is worse than a wrong number on a chip: the tiles
+     * decide from these counts which kinds of place are links at all, so a
+     * subcategory undercounted to nought would become unreachable. `null`
+     * tells SubcategoryTiles it does not know, and it links every tile.
+     */
+    if (!result.complete) {
+      await reportError(
+        new Error(`subcategory counts stopped after ${FIND_EVERY_CEILING} listings`),
+        { source: 'listings.subcategory-counts-incomplete', level: 'warning', extra: { category } },
+      )
+      return null
+    }
 
     const counts: Record<string, number> = {}
     for (const doc of result.docs) {
@@ -692,15 +774,46 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
   })()
 }
 
-/** Slugs for static generation. Published only, because that is all this returns. */
+/**
+ * Every published slug, for the sitemap and for static generation.
+ *
+ * # This was missing 277 listings
+ *
+ * It read `limit: 1000, pagination: false`, which Payload truncates without
+ * saying so - see lib/find-every. Production passed a thousand published
+ * listings, so from then on the sitemap and `generateStaticParams` both carried
+ * the first thousand and nothing after. Every listing past that point had a
+ * printed code sending readers to it and no sitemap entry telling a search
+ * engine it existed.
+ *
+ * Only `slug` is selected. It was reading whole documents to keep one field.
+ *
+ * # It throws rather than returning what it has
+ *
+ * Unlike the counts, there is no honest partial answer here: a sitemap missing
+ * listings is precisely the bug this replaced, and nothing downstream could
+ * tell. Both callers run at build time, so the throw fails a deploy and the
+ * previous one stays live - loud, and harmless to readers.
+ *
+ * The ceiling also lines up with a real limit rather than an arbitrary one. A
+ * sitemap file holds at most 50,000 URLs, so the day this throws is the day the
+ * sitemap has to become an index of several files anyway.
+ */
 export async function findAllListingSlugs() {
   const payload = await client()
-  const result = await payload.find({
+  const result = await findEvery<Pick<Business, 'id' | 'slug'>>(payload, {
     collection: 'businesses',
-    limit: 1000,
     depth: 0,
-    pagination: false,
     overrideAccess: false,
+    select: { slug: true },
   })
+
+  if (!result.complete) {
+    throw new Error(
+      `findAllListingSlugs: stopped after ${FIND_EVERY_CEILING} listings. ` +
+        'Split the sitemap into an index rather than raising the ceiling.',
+    )
+  }
+
   return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }

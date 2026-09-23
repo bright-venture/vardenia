@@ -158,7 +158,7 @@ async function SectionResults({
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
     choosing
       ? countBySubcategory({ locale, category: section.category })
-      : Promise.resolve<Record<string, number>>({}),
+      : Promise.resolve<Record<string, number> | null>({}),
   ])
 
   const base = `/${section.path}`

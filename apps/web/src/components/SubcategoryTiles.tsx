@@ -53,7 +53,15 @@ export async function SubcategoryTiles({
   /** The section's own path, e.g. `/stay`. */
   base: string
   subcategories: readonly { slug: string; retired?: boolean }[]
-  counts: Record<string, number>
+  /**
+   * Listings per subcategory, or `null` when they could not all be counted.
+   *
+   * Unknown is not zero. Every tile is then a link without a number, because
+   * treating an uncounted subcategory as empty would unlink it - and a kind of
+   * place with listings behind it would be unreachable from its own section.
+   * See lib/listings countBySubcategory.
+   */
+  counts: Record<string, number> | null
   locale: Locale
 }) {
   const t = await getTranslations('directory')
@@ -81,11 +89,11 @@ export async function SubcategoryTiles({
 
       <ul className="border-ink-100 mt-4 grid gap-px border-t sm:grid-cols-2 lg:grid-cols-3">
         {offered.map((sub) => {
-          const count = counts[sub.slug] ?? 0
+          const count = counts ? (counts[sub.slug] ?? 0) : null
 
           return (
             <li key={sub.slug}>
-              {count > 0 ? (
+              {count === null || count > 0 ? (
                 <Link
                   href={`${base}?filter=${sub.slug}`}
                   className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
@@ -93,7 +101,9 @@ export async function SubcategoryTiles({
                   <span className="font-display text-ink-900 group-hover:text-gold-700 text-xl transition-colors">
                     {subcategoryLabel(sub.slug, locale)}
                   </span>
-                  <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
+                  {count === null ? null : (
+                    <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
+                  )}
                 </Link>
               ) : (
                 /*

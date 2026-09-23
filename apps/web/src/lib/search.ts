@@ -1,6 +1,9 @@
 import { getPayload } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
+import type { Article, Business } from '../payload-types'
+import { FIND_EVERY_CEILING, findByIdsInOrder, findEvery } from './find-every'
+import { reportError } from './report'
 import { SIMILARITY_THRESHOLD, bestFieldScore } from './search-text'
 
 /**
@@ -14,9 +17,10 @@ import { SIMILARITY_THRESHOLD, bestFieldScore } from './search-text'
  * restaurants and Arabic matches whatever the diacritics.
  *
  * The ranking is done in memory over the published set rather than in the
- * database. At this catalogue - a few dozen rows - that is honest and cheap, and
- * it keeps the one rule that matters most exactly where it already is: the draft
- * filter. Every fetch runs `overrideAccess: false`, so Payload returns only
+ * database. That was written at a few dozen rows; production has since passed a
+ * thousand, and it is still cheap because only the scored fields are fetched
+ * (see "Light rows" below). It keeps the one rule that matters most exactly
+ * where it already is: the draft filter. Every fetch runs `overrideAccess: false`, so Payload returns only
  * published documents and strips staff-only fields, and search cannot surface a
  * draft by construction because it is never handed one. A raw SQL ranking would
  * have to re-implement that filter and could get it wrong.
@@ -40,13 +44,35 @@ const MAX_QUERY = 80
 const MIN_QUERY = 2
 
 /**
- * How many published rows we pull in to rank. Comfortably above the catalogue,
- * so in practice this fetches everything published; it is a ceiling that keeps
- * the in-memory pass bounded rather than a page size a reader ever notices. It is
- * also the line that says when to move to `pg_trgm`: once the published set
- * approaches this, ranking in memory is the wrong tool.
+ * # Light rows, then full ones
+ *
+ * There was a `CANDIDATE_CAP` of 1,000 here, described as "comfortably above
+ * the catalogue". Production passed it, and because it was a plain `limit`,
+ * search simply stopped seeing every listing after the thousandth - no error,
+ * no sign, just places that could not be found by name.
+ *
+ * Each of those thousand was also fetched at `depth: 1`, images joined, to
+ * score two text fields and discard all but twelve.
+ *
+ * So the candidates are now read through `findEvery` with only the scored
+ * fields selected and no depth, which is complete and a fraction of the data,
+ * and full documents are loaded for the handful that are actually shown.
+ *
+ * The in-memory pass is still bounded, by findEvery's own ceiling. Reaching it
+ * is reported rather than thrown, because a reader is waiting on this page - and
+ * it is the same signal the old cap was meant to be: time for `pg_trgm`.
+ *
+ * The reader's query is deliberately not in the report. It is what somebody
+ * typed, it is not needed to diagnose a ceiling, and it would sit in the error
+ * table for as long as the row does.
  */
-const CANDIDATE_CAP = 1000
+async function reportIncomplete(collection: string) {
+  await reportError(new Error(`search stopped after ${FIND_EVERY_CEILING} ${collection}`), {
+    source: 'search.candidates-incomplete',
+    level: 'warning',
+    extra: { collection },
+  })
+}
 
 export interface SearchQuery {
   locale: Locale
@@ -96,18 +122,28 @@ function rankByScore<T>(
 /** Listings ranked by how well the query matches the name or tagline. */
 async function searchListings(locale: Locale, q: string, limit: number) {
   const payload = await client()
-  const result = await payload.find({
+  const candidates = await findEvery<Pick<Business, 'id' | 'name' | 'tagline'>>(payload, {
     collection: 'businesses',
     locale: dataLocale(locale),
-    depth: 1,
-    limit: CANDIDATE_CAP,
+    depth: 0,
     // Paying listings first, then alphabetical - the same order the directory
     // uses, so equally-relevant results do not change rank by how you arrived.
     sort: ['-tier', 'name'],
     overrideAccess: false,
+    select: { name: true, tagline: true },
   })
 
-  return rankByScore(result.docs, q, (doc) => [doc.name, doc.tagline], limit)
+  if (!candidates.complete) await reportIncomplete('listings')
+
+  const ranked = rankByScore(candidates.docs, q, (doc) => [doc.name, doc.tagline], limit)
+
+  const docs = await findByIdsInOrder<Business>(
+    payload,
+    ranked.docs.map((doc) => doc.id),
+    { collection: 'businesses', locale: dataLocale(locale), depth: 1, overrideAccess: false },
+  )
+
+  return { docs, totalDocs: ranked.totalDocs }
 }
 
 /**
@@ -120,16 +156,26 @@ async function searchListings(locale: Locale, q: string, limit: number) {
  */
 async function searchArticles(locale: Locale, q: string, limit: number) {
   const payload = await client()
-  const result = await payload.find({
+  const candidates = await findEvery<Pick<Article, 'id' | 'title' | 'excerpt'>>(payload, {
     collection: 'articles',
     locale: dataLocale(locale),
-    depth: 1,
-    limit: CANDIDATE_CAP,
+    depth: 0,
     sort: ['-publishedAt', '-createdAt'],
     overrideAccess: false,
+    select: { title: true, excerpt: true },
   })
 
-  return rankByScore(result.docs, q, (doc) => [doc.title, doc.excerpt], limit)
+  if (!candidates.complete) await reportIncomplete('articles')
+
+  const ranked = rankByScore(candidates.docs, q, (doc) => [doc.title, doc.excerpt], limit)
+
+  const docs = await findByIdsInOrder<Article>(
+    payload,
+    ranked.docs.map((doc) => doc.id),
+    { collection: 'articles', locale: dataLocale(locale), depth: 1, overrideAccess: false },
+  )
+
+  return { docs, totalDocs: ranked.totalDocs }
 }
 
 export interface SearchResults {
