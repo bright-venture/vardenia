@@ -194,6 +194,24 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
 }
 
 /**
+ * `publishedStaffOrOwned` for an anonymous reader, restated as SQL.
+ *
+ * lib/listings counts listings per governorate and per subcategory with a
+ * `GROUP BY`, because Payload has no grouping and counting through it meant
+ * fetching every row. Going to the database directly skips Payload's access
+ * control, so the rule has to be written out again - and this is where, next
+ * to the rule itself, so the two are read together.
+ *
+ * For somebody with no user the rule above is exactly `_status = 'published'`.
+ * The test "is restated exactly for the SQL counts" in index.test pins that: if
+ * the public clause ever gains a condition, it fails and says to change this.
+ *
+ * Only counts come out of those queries, so getting this wrong would miscount
+ * rather than leak. `b` is the alias the count queries give the listings table.
+ */
+export const PUBLISHED_SQL = `b._status = 'published'`
+
+/**
  * Read your own account, or any if you are staff.
  *
  * Used by both new collections. Without the `id` clause a logged-in customer

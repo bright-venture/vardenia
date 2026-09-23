@@ -19,11 +19,19 @@
  *
  * # Why in JavaScript rather than the database
  *
- * Postgres could do this with the `pg_trgm` extension and a GIN index, and at a
- * larger catalogue it should - lib/search says so. At this size the published set
- * is a few dozen rows; ranking them in memory is honest, needs no migration, and
- * keeps the draft filter where it belongs, in Payload's access control. The swap
- * to `pg_trgm` is a change to lib/search alone when the time comes.
+ * Postgres has the `pg_trgm` extension and a GIN index for this, and it was long
+ * assumed to be a drop-in replacement. It is not. Tried against the cases pinned
+ * in search-text.test (September 2026, 1,277 published listings), pg_trgm's
+ * operators missed "beruit" for Beirut and "byblso" for Byblos - trigrams alone
+ * underrate a transposition, which is why `editSimilarity` exists - and missed
+ * two of the three Arabic folding cases, a hamza on the alef and full harakat,
+ * because it compares the code points as written.
+ *
+ * So in memory is still the right place, over a candidate set lib/search caches
+ * per locale. Ranking in memory also keeps the draft filter where it belongs, in
+ * Payload's access control. When the catalogue outgrows that, the way to use
+ * pg_trgm without losing these is as a coarse filter over a column already folded
+ * by `normalizeForSearch`, with this file still doing the ranking.
  */
 
 /**

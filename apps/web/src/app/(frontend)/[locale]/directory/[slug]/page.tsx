@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { can, tierOf } from '@vardenia/core'
-import { LOCALES, isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import {
   findListingBySlug,
   findAllListingSlugs,
@@ -73,7 +73,7 @@ interface Params {
 }
 
 /**
- * Prerender every known slug, at both locales.
+ * Prerender every known slug, in English only.
  *
  * Without this the route has no static params, so Next serves it fully dynamic:
  * the response carried "Cache-Control: no-store" and every single request paid
@@ -83,10 +83,27 @@ interface Params {
  * `dynamicParams` stays at its default of true, so a slug created after the
  * build still renders on demand rather than 404ing - it just misses the cache
  * the first time.
+ *
+ * # Why English only
+ *
+ * This said "at both locales" when there were two. There are ten now, and it
+ * built every listing in all of them: 12,770 pages for 1,277 listings in
+ * September 2026, each with its own database reads, on every deploy - growing
+ * by ten pages for every listing imported.
+ *
+ * English is the one worth building ahead. It is where every printed code
+ * lands - lib/qr-destination sends `/directory/<slug>`, unprefixed - and
+ * nothing redirects a reader to another language, because `localeDetection`
+ * is off in i18n/routing. The other nine are reached only by somebody choosing
+ * a language, and they render on that first request and are then cached on
+ * the same hourly window as the English build. The first reader of a listing in
+ * Bengali waits for one render; nobody scanning a code ever does.
+ *
+ * `DEFAULT_LOCALE` rather than 'en', so this follows if the default changes.
  */
 export async function generateStaticParams() {
   const slugs = await findAllListingSlugs()
-  return LOCALES.flatMap((locale) => slugs.map((slug) => ({ locale, slug })))
+  return slugs.map((slug) => ({ locale: DEFAULT_LOCALE, slug }))
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

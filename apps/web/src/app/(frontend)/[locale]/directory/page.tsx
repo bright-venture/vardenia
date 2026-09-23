@@ -125,7 +125,7 @@ async function DirectoryResults({
   const [counts, result] = await Promise.all([
     // No category here - /directory is every section at once, so the counts are
     // "listings in this governorate" across the whole directory.
-    countByGovernorate({ locale }),
+    countByGovernorate({}),
     findListings({ locale, ...state, page: Number(page) || 1 }),
   ])
 

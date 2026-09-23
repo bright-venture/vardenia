@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
@@ -25,9 +26,11 @@ import { SIMILARITY_THRESHOLD, bestFieldScore } from './search-text'
  * draft by construction because it is never handed one. A raw SQL ranking would
  * have to re-implement that filter and could get it wrong.
  *
- * When a search starts returning more than a screen, the move is Postgres
- * `pg_trgm` with a GIN index, which is a change to this file alone - the scoring
- * shape and the tests around it do not change.
+ * This used to say the move to Postgres `pg_trgm` would be a change to this file
+ * alone, with the scoring and its tests unchanged. Measured, it would not: see
+ * `listingCandidates` below. pg_trgm scores differently enough to lose typo and
+ * Arabic matches the tests pin, so adopting it is a decision about search
+ * quality, not a drop-in.
  *
  * # Both collections, one query each
  *
@@ -120,22 +123,71 @@ function rankByScore<T>(
 }
 
 /** Listings ranked by how well the query matches the name or tagline. */
+type ListingCandidate = Pick<Business, 'id' | 'name' | 'tagline'>
+
+/**
+ * Every published listing's name and tagline in one locale, cached for an hour.
+ *
+ * # Why the candidates are cached, and not the results
+ *
+ * A search result is keyed on whatever somebody typed, which is an unbounded
+ * set: caching per query would fill the store with entries nobody asks for
+ * twice, the problem findListings already declines to cause. The candidates are
+ * the opposite - ten locales, one entry each - and they are the expensive half.
+ * With them warm, a search is a pass over memory and one read for the dozen
+ * cards it shows, instead of three paged reads of the catalogue first.
+ *
+ * Tagged `businesses`, which hooks/revalidateListings clears on every publish,
+ * edit and delete - so a listing is findable the moment it goes live, as it was
+ * when this was uncached.
+ *
+ * # Why this is not pg_trgm yet
+ *
+ * lib/search-text ranks with folding and edit distance that Postgres's trigram
+ * operators do not reproduce. Measured against the cases its tests pin, pg_trgm
+ * missed four of ten: two transposition typos ("beruit", "byblso") and two
+ * Arabic spellings (hamza on the alef, harakat). Moving the ranking into SQL
+ * would trade those away for an index this catalogue does not need yet.
+ *
+ * # The ceiling
+ *
+ * Next will not cache an entry over 2MB, and says so on the console rather than
+ * failing - search then reads the catalogue on every query, as it did before.
+ * At 146KB for 1,277 listings in September 2026 that is roughly seventeen
+ * thousand listings away, and it is the point at which ranking in memory should
+ * give way to something in the database regardless.
+ */
+const listingCandidates = (locale: Locale) =>
+  unstable_cache(
+    async (): Promise<ListingCandidate[]> => {
+      const payload = await client()
+      const candidates = await findEvery<ListingCandidate>(payload, {
+        collection: 'businesses',
+        locale: dataLocale(locale),
+        depth: 0,
+        // Paying listings first, then alphabetical - the same order the
+        // directory uses, so equally-relevant results do not change rank by how
+        // you arrived.
+        sort: ['-tier', 'name'],
+        overrideAccess: false,
+        select: { name: true, tagline: true },
+      })
+
+      // Inside the cache, so it is said once per rebuild rather than on every
+      // search for the hour the short answer is held.
+      if (!candidates.complete) await reportIncomplete('listings')
+
+      return candidates.docs
+    },
+    ['search-candidates', 'businesses', locale],
+    { revalidate: 60 * 60, tags: ['businesses'] },
+  )()
+
 async function searchListings(locale: Locale, q: string, limit: number) {
   const payload = await client()
-  const candidates = await findEvery<Pick<Business, 'id' | 'name' | 'tagline'>>(payload, {
-    collection: 'businesses',
-    locale: dataLocale(locale),
-    depth: 0,
-    // Paying listings first, then alphabetical - the same order the directory
-    // uses, so equally-relevant results do not change rank by how you arrived.
-    sort: ['-tier', 'name'],
-    overrideAccess: false,
-    select: { name: true, tagline: true },
-  })
+  const candidates = await listingCandidates(locale)
 
-  if (!candidates.complete) await reportIncomplete('listings')
-
-  const ranked = rankByScore(candidates.docs, q, (doc) => [doc.name, doc.tagline], limit)
+  const ranked = rankByScore(candidates, q, (doc) => [doc.name, doc.tagline], limit)
 
   const docs = await findByIdsInOrder<Business>(
     payload,
@@ -153,6 +205,12 @@ async function searchListings(locale: Locale, q: string, limit: number) {
  * matching over it matches the markup as readily as the prose - a search for
  * "text" would rank every article ever written. The title and excerpt are the
  * human summary and are what a reader is searching for.
+ *
+ * Not cached, unlike listings, and deliberately. Nothing invalidates an
+ * `articles` tag - there is no revalidate hook on the Articles collection - so
+ * a cached candidate set would keep a newly published article out of search for
+ * up to an hour. It is also the cheap half: production had no articles when the
+ * listings side was cached. Add the hook first if this ever needs caching.
  */
 async function searchArticles(locale: Locale, q: string, limit: number) {
   const payload = await client()

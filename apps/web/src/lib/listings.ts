@@ -4,6 +4,8 @@ import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import type { Business } from '../payload-types'
+import { PUBLISHED_SQL } from '../access'
+import { rawDb } from './db'
 import { FIND_EVERY_CEILING, findByIdsInOrder, findEvery } from './find-every'
 import { isOpenNow, type OpeningHour } from './hours'
 import { reportError } from './report'
@@ -403,6 +405,60 @@ export async function findListings({
 }
 
 /**
+ * Run a grouped count over published listings and return it as a map.
+ *
+ * `build` receives the quoted table names and returns the query. Every value in
+ * it is a bound parameter; the only interpolated text is the table names, which
+ * come from lib/db rather than from a caller, and `PUBLISHED_SQL`.
+ *
+ * Everything else in this file reads through Payload with `overrideAccess:
+ * false`, so Payload applies the access rule. These cannot - Payload has no
+ * grouping - so they restate it, as `PUBLISHED_SQL` from access/index, where it
+ * sits beside the rule and is pinned to it by a test.
+ *
+ * # What the GROUP BY costs
+ *
+ * These were the largest reads in the app: every published listing in a
+ * section, fetched to be counted in Node. Now the database returns eight rows.
+ * The price is reaching past Payload, into table and column names that are not
+ * its public API, and lib/db is where that trade is argued and guarded.
+ *
+ * # It returns null rather than throwing
+ *
+ * A count decorates a page; it must not take one down. If the schema moved
+ * under this - a renamed column, a Payload upgrade that changed the adapter -
+ * the error is reported and the caller gets `null`, which both ListingFilters
+ * and SubcategoryTiles render as "not counted". Reported as an error rather
+ * than a warning, because unlike a ceiling it means something is broken.
+ */
+async function countPublished(
+  source: string,
+  build: (tables: { businesses: string; subcategories: string }) => {
+    sql: string
+    values: unknown[]
+  },
+  extra: Record<string, unknown>,
+): Promise<Record<string, number> | null> {
+  try {
+    const db = rawDb(await client())
+    const { sql, values } = build({
+      businesses: `"${db.schema}"."${db.table('businesses')}"`,
+      subcategories: `"${db.schema}"."${db.table('businesses_subcategories')}"`,
+    })
+    const { rows } = await db.pool.query(sql, values)
+
+    const counts: Record<string, number> = {}
+    for (const row of rows) {
+      if (typeof row.key === 'string') counts[row.key] = Number(row.n)
+    }
+    return counts
+  } catch (error) {
+    await reportError(error, { source, extra })
+    return null
+  }
+}
+
+/**
  * How many listings each governorate holds, for the chips above the grid.
  *
  * # The problem this solves
@@ -425,86 +481,70 @@ export async function findListings({
  * the amenity intersection that already costs one query per amenity. That would
  * make the cheap common case pay for the rare one.
  *
- * # One query, tallied here
+ * # Counted by the database
  *
- * Eight `count` queries would be eight round trips to Frankfurt. This reads the
- * governorate of every published listing in the section once and counts them in
- * memory, which is a single trip.
+ * This fetched the governorate of every published listing in the section and
+ * tallied them in Node - 749 rows over the wire for Eat & Drink, 1,277 for the
+ * directory, to produce eight numbers. It is now a `GROUP BY` that returns the
+ * eight numbers. See `countPublished` for what that costs in exchange.
  *
- * It reads through `findEvery`, because the `limit: 1000` it used to have was
- * already too small: production passed a thousand published listings, and the
- * directory-wide counts were silently tallying the first thousand. Paging makes
- * it complete; it does not make it the right shape. At some thousands of
- * listings, fetching every row to count them stops being sensible and this
- * becomes a `GROUP BY` - a query rather than a redesign.
+ * # Not per locale
+ *
+ * Governorate, category, subcategories and `_status` are none of them
+ * localised, so the numbers are the same in every language. The cache used to
+ * be keyed on locale anyway, holding ten identical copies of each count; the
+ * `locale` argument went with it.
  */
 export async function countByGovernorate({
-  locale,
   category,
   subcategory,
 }: {
-  locale: Locale
   category?: string
   subcategory?: string
 }): Promise<Record<string, number> | undefined> {
-  const run = async (): Promise<Record<string, number> | null> => {
-    const payload = await client()
+  const run = () =>
+    countPublished(
+      'listings.governorate-counts',
+      ({ businesses, subcategories }) => {
+        const values: unknown[] = []
+        const where = [PUBLISHED_SQL, 'b.governorate is not null']
 
-    const where: Where = {}
-    if (category) where.category = { equals: category }
-    // Plural and `in`, for the reason spelled out in findListings.
-    if (subcategory) where.subcategories = { in: [subcategory] }
+        if (category) {
+          values.push(category)
+          where.push(`b.category::text = $${values.length}`)
+        }
+        // A listing may carry several subcategories, so this is a membership
+        // test rather than a join - a join would count it once per match.
+        if (subcategory) {
+          values.push(subcategory)
+          where.push(
+            `exists (select 1 from ${subcategories} s where s.parent_id = b.id and s.value::text = $${values.length})`,
+          )
+        }
 
-    const result = await findEvery<Pick<Business, 'id' | 'governorate'>>(payload, {
-      collection: 'businesses',
-      where,
-      locale: dataLocale(locale),
-      depth: 0,
-      // Drafts are excluded by the collection's own access rule, not here.
-      overrideAccess: false,
-      select: { governorate: true },
-    })
-
-    /**
-     * A partial tally is a set of numbers that are each too low, above a grid
-     * that disagrees with them. None is better: ListingFilters already renders
-     * absent counts as no number at all, which reads as "not counted" rather
-     * than as a fact. `null` rather than `undefined` because this result goes
-     * through the data cache, which serialises it.
-     */
-    if (!result.complete) {
-      await reportError(
-        new Error(`governorate counts stopped after ${FIND_EVERY_CEILING} listings`),
-        {
-          source: 'listings.governorate-counts-incomplete',
-          level: 'warning',
-          extra: { category, subcategory },
-        },
-      )
-      return null
-    }
-
-    const counts: Record<string, number> = {}
-    for (const doc of result.docs) {
-      const key = typeof doc.governorate === 'string' ? doc.governorate : null
-      if (key) counts[key] = (counts[key] ?? 0) + 1
-    }
-    return counts
-  }
+        return {
+          sql: `select b.governorate::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
+          values,
+        }
+      },
+      { category, subcategory },
+    )
 
   /**
    * Always cacheable, unlike findListings, because the key space is bounded:
-   * seven categories times fifty-one subcategories times ten locales. Tagged
-   * with `businesses` so publishing a listing updates the numbers on the same
-   * revalidation the grid already uses - a count that disagrees with the grid
-   * below it is worse than no count.
+   * seven categories times fifty-one subcategories. Tagged with `businesses` so
+   * publishing a listing updates the numbers on the same revalidation the grid
+   * already uses - a count that disagrees with the grid below it is worse than
+   * no count.
    */
   const counts = await unstable_cache(
     run,
-    ['governorate-counts', locale, category ?? '', subcategory ?? ''],
+    ['governorate-counts', category ?? '', subcategory ?? ''],
     { revalidate: LISTINGS_TTL, tags: ['businesses'] },
   )()
 
+  // `null` in the cache, because it serialises; `undefined` out, because that
+  // is what ListingFilters reads as "not counted" and renders as no number.
   return counts ?? undefined
 }
 
@@ -563,66 +603,40 @@ export async function findFeaturedListings({
  * and a tile that leads to nothing is the dead end this number prevents: a
  * reader who picks "Private Villas" and lands on an empty page has been sent
  * there by us. With the count on the tile the choice is informed before it is
- * made, and a subcategory with nothing in it can be dropped from the row
- * entirely.
+ * made, and an empty subcategory is shown with a nought rather than as a link.
  *
- * Same shape and the same trade as `countByGovernorate` above: one read of the
- * section, tallied in memory, rather than fifty-one `count` queries to
- * Frankfurt. It takes no filter state, deliberately - these are the counts for
- * the section as a whole, which is the only moment the tiles are shown.
+ * A `GROUP BY` over the subcategory table, like `countByGovernorate` above. It
+ * takes no filter state, deliberately - these are the counts for the section as
+ * a whole, which is the only moment the tiles are shown - and no locale, for
+ * the same reason as above.
+ *
+ * `null` when the count fails, and it matters more here than on a chip: the
+ * tiles decide from these counts which kinds of place are links at all, so a
+ * subcategory wrongly counted as nought would become unreachable. `null` tells
+ * SubcategoryTiles it does not know, and it links every tile.
  */
 export async function countBySubcategory({
-  locale,
   category,
 }: {
-  locale: Locale
   category: string
 }): Promise<Record<string, number> | null> {
-  const run = async (): Promise<Record<string, number> | null> => {
-    const payload = await client()
+  const run = () =>
+    countPublished(
+      'listings.subcategory-counts',
+      ({ businesses, subcategories }) => ({
+        /**
+         * `count(distinct b.id)`, not `count(*)`: a listing is one listing, and
+         * should not count twice under a kind of place it somehow carries
+         * twice. The in-memory tally it replaced did count it twice. No row in
+         * either database carries a duplicate, so no number changes today.
+         */
+        sql: `select s.value::text as key, count(distinct b.id)::int as n from ${businesses} b join ${subcategories} s on s.parent_id = b.id where ${PUBLISHED_SQL} and b.category::text = $1 group by 1`,
+        values: [category],
+      }),
+      { category },
+    )
 
-    /**
-     * Through `findEvery` rather than `limit: 1000`. No section had reached a
-     * thousand when this changed - Eat & Drink was the largest at 749 - but the
-     * directory-wide counts beside it had, and this one would have started
-     * lying the same way the next time an import landed in Eat & Drink.
-     */
-    const result = await findEvery<Pick<Business, 'id' | 'subcategories'>>(payload, {
-      collection: 'businesses',
-      where: { category: { equals: category } },
-      locale: dataLocale(locale),
-      depth: 0,
-      // Drafts are excluded by the collection's own access rule, not here.
-      overrideAccess: false,
-      select: { subcategories: true },
-    })
-
-    /**
-     * Here a partial count is worse than a wrong number on a chip: the tiles
-     * decide from these counts which kinds of place are links at all, so a
-     * subcategory undercounted to nought would become unreachable. `null`
-     * tells SubcategoryTiles it does not know, and it links every tile.
-     */
-    if (!result.complete) {
-      await reportError(
-        new Error(`subcategory counts stopped after ${FIND_EVERY_CEILING} listings`),
-        { source: 'listings.subcategory-counts-incomplete', level: 'warning', extra: { category } },
-      )
-      return null
-    }
-
-    const counts: Record<string, number> = {}
-    for (const doc of result.docs) {
-      // A listing may carry several, and each one should count it.
-      const subs = Array.isArray(doc.subcategories) ? doc.subcategories : []
-      for (const sub of subs) {
-        if (typeof sub === 'string') counts[sub] = (counts[sub] ?? 0) + 1
-      }
-    }
-    return counts
-  }
-
-  return unstable_cache(run, ['subcategory-counts', locale, category], {
+  return unstable_cache(run, ['subcategory-counts', category], {
     revalidate: LISTINGS_TTL,
     tags: ['businesses'],
   })()

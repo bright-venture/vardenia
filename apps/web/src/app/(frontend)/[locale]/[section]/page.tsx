@@ -154,10 +154,10 @@ async function SectionResults({
    * counts are only fetched when the tiles are actually being drawn.
    */
   const [counts, result, subcategoryCounts] = await Promise.all([
-    countByGovernorate({ locale, category: section.category, subcategory: state.subcategory }),
+    countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
     choosing
-      ? countBySubcategory({ locale, category: section.category })
+      ? countBySubcategory({ category: section.category })
       : Promise.resolve<Record<string, number> | null>({}),
   ])
 

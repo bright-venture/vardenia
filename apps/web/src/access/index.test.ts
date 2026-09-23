@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Access, FieldAccess } from 'payload'
 import {
+  PUBLISHED_SQL,
   anyone,
   isAdmin,
   isAdminFieldLevel,
@@ -286,6 +287,25 @@ describe('publishedStaffOrOwned', () => {
   it('does not let a customer with a forged businesses array see drafts', () => {
     const forged = { id: 5, collection: 'customers', businesses: [7] }
     expect(publishedStaffOrOwned(ctx(forged))).toEqual({ _status: { equals: 'published' } })
+  })
+
+  /**
+   * lib/listings counts listings with raw SQL, which bypasses this rule, so the
+   * rule is restated there as PUBLISHED_SQL. This derives the SQL from the rule
+   * rather than comparing two literals: it only knows how to translate a single
+   * `equals`, so if the public clause ever gains a second condition - a hidden
+   * flag, an expiry - this fails, and PUBLISHED_SQL has to learn it too.
+   */
+  it('is restated exactly for the SQL counts', () => {
+    const where = publishedStaffOrOwned(ctx(null)) as Record<string, unknown>
+    const fields = Object.keys(where)
+
+    expect(fields, 'the public rule is no longer one condition').toHaveLength(1)
+    const field = fields[0] as string
+    const condition = where[field] as Record<string, unknown>
+    expect(Object.keys(condition), 'the public rule is no longer an equals').toEqual(['equals'])
+
+    expect(PUBLISHED_SQL).toBe(`b.${field} = '${String(condition.equals)}'`)
   })
 })
 
