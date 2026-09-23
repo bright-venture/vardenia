@@ -58,6 +58,27 @@ declare global {
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 const SCRIPT_ID = 'cf-turnstile-script'
 
+/**
+ * The widget's language for each of ours, from Cloudflare's supported list.
+ *
+ * It was `'ar'` or `'en'`, so the challenge on the French sign-up form spoke
+ * English. Cloudflare supports seven of our ten (checked against
+ * developers.cloudflare.com/turnstile/reference/supported-languages, September
+ * 2026). Bengali and Urdu are not on it, and what the widget does with a code it
+ * does not know is undocumented - so those two stay on English, which is what
+ * they had, rather than risk a broken widget on the form that opens accounts.
+ */
+const TURNSTILE_LANGUAGE: Record<string, string> = {
+  en: 'en',
+  ar: 'ar',
+  fr: 'fr',
+  es: 'es',
+  pt: 'pt-br',
+  ru: 'ru',
+  zh: 'zh-cn',
+  hi: 'hi',
+}
+
 export interface TurnstileHandle {
   reset: () => void
 }
@@ -124,7 +145,7 @@ export function Turnstile({
           'expired-callback': () => onToken(null),
           'error-callback': () => onToken(null),
           theme: 'auto',
-          language: locale === 'ar' ? 'ar' : 'en',
+          language: TURNSTILE_LANGUAGE[locale ?? 'en'] ?? 'en',
         }) ?? null
     }
 

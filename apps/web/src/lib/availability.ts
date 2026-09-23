@@ -8,6 +8,7 @@ import {
 } from '@vardenia/core'
 import { isOpenNow, type OpeningHour } from './hours'
 import { beirutDate } from './beirut'
+import type { Locale } from '@vardenia/i18n'
 
 /**
  * Can this booking be made?
@@ -286,30 +287,78 @@ export function checkAvailability({
  * Kept beside the reasons so adding one to `UNAVAILABLE_REASONS` without a
  * message fails to compile rather than rendering a blank.
  */
-const MESSAGES: Record<UnavailableReason, { en: string; ar: string }> = {
+const MESSAGES: Record<UnavailableReason, Record<Locale, string>> = {
   'invalid-interval': {
     en: 'Those dates do not make sense. Please check them and try again.',
     ar: 'التواريخ غير صحيحة. يرجى التحقق منها والمحاولة مرة أخرى.',
+    fr: 'Ces dates ne sont pas cohérentes. Vérifiez-les et réessayez.',
+    es: 'Esas fechas no tienen sentido. Revísalas e inténtalo de nuevo.',
+    pt: 'Essas datas não fazem sentido. Confira e tente de novo.',
+    ru: 'Эти даты не имеют смысла. Проверьте их и попробуйте ещё раз.',
+    zh: '这些日期不合理，请检查后重试。',
+    hi: 'ये तारीख़ें सही नहीं लगतीं। कृपया जाँचकर फिर कोशिश करें।',
+    bn: 'তারিখগুলো ঠিক মিলছে না। দয়া করে যাচাই করে আবার চেষ্টা করুন।',
+    ur: 'یہ تاریخیں درست نہیں لگتیں۔ براہِ کرم جانچ کر دوبارہ کوشش کریں۔',
   },
   'bookings-disabled': {
     en: 'This place does not take bookings through Vardenia yet.',
     ar: 'هذا المكان لا يستقبل الحجوزات عبر فاردينيا بعد.',
+    fr: 'Ce lieu ne prend pas encore de réservations via Vardenia.',
+    es: 'Este lugar todavía no acepta reservas a través de Vardenia.',
+    pt: 'Este lugar ainda não aceita reservas pela Vardenia.',
+    ru: 'Это место пока не принимает бронирования через Vardenia.',
+    zh: '该地点目前尚未通过 Vardenia 接受预订。',
+    hi: 'यह जगह अभी Vardenia के ज़रिए बुकिंग नहीं लेती।',
+    bn: 'এই জায়গাটি এখনো Vardenia-র মাধ্যমে বুকিং নেয় না।',
+    ur: 'یہ مقام ابھی Vardenia کے ذریعے بکنگ نہیں لیتا۔',
   },
   'in-the-past': {
     en: 'That time has already passed.',
     ar: 'لقد مضى هذا الوقت.',
+    fr: 'Cet horaire est déjà passé.',
+    es: 'Esa hora ya ha pasado.',
+    pt: 'Esse horário já passou.',
+    ru: 'Это время уже прошло.',
+    zh: '该时间已经过去了。',
+    hi: 'यह समय बीत चुका है।',
+    bn: 'এই সময়টি পেরিয়ে গেছে।',
+    ur: 'یہ وقت گزر چکا ہے۔',
   },
   'too-soon': {
     en: 'This place needs more notice than that.',
     ar: 'يحتاج هذا المكان إلى مهلة أطول.',
+    fr: 'Ce lieu demande à être prévenu plus tôt.',
+    es: 'Este lugar necesita más antelación.',
+    pt: 'Este lugar precisa de mais antecedência.',
+    ru: 'Здесь нужно бронировать заранее, а это слишком скоро.',
+    zh: '该地点需要更早预订。',
+    hi: 'इस जगह को इससे पहले बताना ज़रूरी है।',
+    bn: 'এই জায়গাটির জন্য আরও আগে জানাতে হবে।',
+    ur: 'اس مقام کو اس سے پہلے اطلاع درکار ہے۔',
   },
   'too-far-ahead': {
     en: 'Bookings are not open that far ahead yet.',
     ar: 'الحجوزات غير متاحة لهذه الفترة بعد.',
+    fr: "Les réservations ne sont pas encore ouvertes aussi loin à l'avance.",
+    es: 'Todavía no se aceptan reservas con tanta antelación.',
+    pt: 'Ainda não há reservas abertas com tanta antecedência.',
+    ru: 'Бронирование на такой срок вперёд пока не открыто.',
+    zh: '暂不开放这么远的预订。',
+    hi: 'इतनी आगे की बुकिंग अभी शुरू नहीं हुई है।',
+    bn: 'এত আগের বুকিং এখনো খোলা হয়নি।',
+    ur: 'اتنی آگے کی بکنگ ابھی شروع نہیں ہوئی۔',
   },
   'too-short': {
     en: 'That booking is too short.',
     ar: 'مدة الحجز قصيرة جدًا.',
+    fr: 'Cette réservation est trop courte.',
+    es: 'Esa reserva es demasiado corta.',
+    pt: 'Essa reserva é curta demais.',
+    ru: 'Это бронирование слишком короткое.',
+    zh: '预订时长太短。',
+    hi: 'यह बुकिंग बहुत छोटी है।',
+    bn: 'বুকিংটি খুব ছোট।',
+    ur: 'یہ بکنگ بہت مختصر ہے۔',
   },
   /**
    * Deliberately different from `closed`, which is the weekly timetable talking.
@@ -319,29 +368,77 @@ const MESSAGES: Record<UnavailableReason, { en: string; ar: string }> = {
   'closed-period': {
     en: 'This place is closed on that date. Please try another day.',
     ar: 'هذا المكان مغلق في ذلك التاريخ. يرجى اختيار يوم آخر.',
+    fr: 'Ce lieu est fermé à cette date. Essayez un autre jour.',
+    es: 'Este lugar está cerrado ese día. Prueba otro día.',
+    pt: 'Este lugar está fechado nessa data. Tente outro dia.',
+    ru: 'В этот день место закрыто. Попробуйте другой день.',
+    zh: '该地点在那天不营业，请换一天试试。',
+    hi: 'यह जगह उस तारीख़ को बंद है। कृपया कोई और दिन चुनें।',
+    bn: 'এই জায়গাটি সেই তারিখে বন্ধ। অন্য কোনো দিন চেষ্টা করুন।',
+    ur: 'یہ مقام اس تاریخ کو بند ہے۔ براہِ کرم کوئی اور دن آزمائیں۔',
   },
   'too-long': {
     en: 'That booking is too long.',
     ar: 'مدة الحجز طويلة جدًا.',
+    fr: 'Cette réservation est trop longue.',
+    es: 'Esa reserva es demasiado larga.',
+    pt: 'Essa reserva é longa demais.',
+    ru: 'Это бронирование слишком длинное.',
+    zh: '预订时长太长。',
+    hi: 'यह बुकिंग बहुत लंबी है।',
+    bn: 'বুকিংটি খুব দীর্ঘ।',
+    ur: 'یہ بکنگ بہت طویل ہے۔',
   },
   'party-too-small': {
     en: 'Please enter how many people are coming.',
     ar: 'يرجى إدخال عدد الأشخاص.',
+    fr: 'Indiquez combien de personnes viendront.',
+    es: 'Indica cuántas personas vendrán.',
+    pt: 'Informe quantas pessoas vão.',
+    ru: 'Укажите, сколько будет гостей.',
+    zh: '请填写到场人数。',
+    hi: 'कृपया बताएँ कि कितने लोग आ रहे हैं।',
+    bn: 'কতজন আসছেন তা লিখুন।',
+    ur: 'براہِ کرم بتائیں کہ کتنے لوگ آ رہے ہیں۔',
   },
   'party-too-large': {
     en: 'That is more people than this place can take at once.',
     ar: 'هذا العدد أكبر مما يمكن لهذا المكان استقباله في وقت واحد.',
+    fr: "C'est plus de personnes que ce lieu ne peut en accueillir à la fois.",
+    es: 'Son más personas de las que este lugar puede recibir a la vez.',
+    pt: 'São mais pessoas do que este lugar consegue receber de uma vez.',
+    ru: 'Это больше гостей, чем место может принять одновременно.',
+    zh: '人数超过了该地点一次能接待的上限。',
+    hi: 'यह जगह एक साथ इतने लोगों को नहीं ले सकती।',
+    bn: 'এই জায়গাটি একসঙ্গে এতজনকে জায়গা দিতে পারে না।',
+    ur: 'یہ مقام ایک ساتھ اتنے لوگوں کو نہیں لے سکتا۔',
   },
   closed: {
     en: 'This place is closed at that time.',
     ar: 'هذا المكان مغلق في ذلك الوقت.',
+    fr: 'Ce lieu est fermé à cette heure-là.',
+    es: 'Este lugar está cerrado a esa hora.',
+    pt: 'Este lugar está fechado nesse horário.',
+    ru: 'В это время место закрыто.',
+    zh: '该地点在这个时间不营业。',
+    hi: 'यह जगह उस समय बंद रहती है।',
+    bn: 'এই জায়গাটি সেই সময় বন্ধ থাকে।',
+    ur: 'یہ مقام اس وقت بند ہوتا ہے۔',
   },
   'at-capacity': {
     en: 'This place is fully booked at that time.',
     ar: 'هذا المكان محجوز بالكامل في ذلك الوقت.',
+    fr: 'Ce lieu est complet à cette heure-là.',
+    es: 'Este lugar está completo a esa hora.',
+    pt: 'Este lugar está lotado nesse horário.',
+    ru: 'На это время всё уже забронировано.',
+    zh: '该地点在这个时间已订满。',
+    hi: 'इस समय यह जगह पूरी तरह बुक है।',
+    bn: 'এই সময়ে জায়গাটি পুরোপুরি বুক করা।',
+    ur: 'اس وقت یہ مقام مکمل طور پر بک ہے۔',
   },
 }
 
-export function unavailableMessage(reason: UnavailableReason, locale: 'en' | 'ar' = 'en'): string {
-  return MESSAGES[reason][locale === 'ar' ? 'ar' : 'en']
+export function unavailableMessage(reason: UnavailableReason, locale: Locale = 'en'): string {
+  return MESSAGES[reason][locale] ?? MESSAGES[reason].en
 }

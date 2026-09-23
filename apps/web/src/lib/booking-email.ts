@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
+import { dirFor, type Locale } from '@vardenia/i18n'
+import { dateLocale } from './beirut'
 import { reportError } from './report'
 import { siteOrigin } from './auth-email'
 import { emailPalette } from './email-palette'
@@ -18,7 +20,7 @@ import { emailPalette } from './email-palette'
  *    yet - no booking management page exists - and a message whose only content
  *    is a URL is the shape of phishing. The reference is the payload here.
  *
- * Written in the customer's language, right-to-left when that is Arabic.
+ * Written in the customer's language, right-to-left when that is Arabic or Urdu.
  */
 
 export interface BookingConfirmationArgs {
@@ -30,7 +32,7 @@ export interface BookingConfirmationArgs {
   start: Date
   end: Date
   partySize: number
-  locale: 'en' | 'ar'
+  locale: Locale
 }
 
 const BEIRUT = 'Asia/Beirut'
@@ -42,8 +44,10 @@ const BEIRUT = 'Asia/Beirut'
  * confirmation that says 17:00 for a 20:00 table is worse than no confirmation:
  * it is wrong in a way the reader has no way to detect.
  */
-function formatWhen(date: Date, locale: 'en' | 'ar'): string {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB' : 'en-GB', {
+function formatWhen(date: Date, locale: Locale): string {
+  // The language's own tag, from lib/beirut. Native digits, as the Arabic
+  // email always had - this is the customer's own confirmation.
+  return new Intl.DateTimeFormat(dateLocale(locale), {
     timeZone: BEIRUT,
     weekday: 'long',
     day: 'numeric',
@@ -54,8 +58,8 @@ function formatWhen(date: Date, locale: 'en' | 'ar'): string {
   }).format(date)
 }
 
-function formatTime(date: Date, locale: 'en' | 'ar'): string {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB' : 'en-GB', {
+function formatTime(date: Date, locale: Locale): string {
+  return new Intl.DateTimeFormat(dateLocale(locale), {
     timeZone: BEIRUT,
     hour: '2-digit',
     minute: '2-digit',
@@ -74,7 +78,15 @@ interface Copy {
   closing: string
 }
 
-const COPY: Record<'en' | 'ar', Record<'confirmed' | 'pending', Copy>> = {
+/*
+ * Every UI language. These were English and Arabic only, and every caller
+ * narrowed the booking's language to one of the two, so a customer who booked
+ * in French was written to in English about their French booking. The record
+ * types now refuse a language missing from any table here. The eight newer
+ * languages follow each one's own interface wording and have not yet had a
+ * native review - see lib/pages for the same note.
+ */
+const COPY: Record<Locale, Record<'confirmed' | 'pending', Copy>> = {
   en: {
     confirmed: {
       subject: 'Your booking is confirmed',
@@ -120,10 +132,194 @@ const COPY: Record<'en' | 'ar', Record<'confirmed' | 'pending', Copy>> = {
       closing: 'سنتواصل معك قريبًا.',
     },
   },
+  fr: {
+    confirmed: {
+      subject: 'Votre réservation est confirmée',
+      heading: 'Réservation confirmée',
+      intro:
+        'Votre table est réservée. Indiquez cette référence si vous devez modifier quoi que ce soit.',
+      whenLabel: 'Quand',
+      untilLabel: "Jusqu'à",
+      partyLabel: 'Personnes',
+      referenceLabel: 'Référence',
+      closing: 'Nous avons hâte de vous accueillir.',
+    },
+    pending: {
+      subject: 'Nous avons reçu votre demande de réservation',
+      heading: 'Réservation demandée',
+      intro:
+        "Nous avons transmis votre demande à l'établissement et vous écrirons dès qu'il aura confirmé. Rien n'est encore réservé.",
+      whenLabel: 'Demandée pour',
+      untilLabel: "Jusqu'à",
+      partyLabel: 'Personnes',
+      referenceLabel: 'Référence',
+      closing: 'Nous revenons vers vous très vite.',
+    },
+  },
+  es: {
+    confirmed: {
+      subject: 'Tu reserva está confirmada',
+      heading: 'Reserva confirmada',
+      intro: 'Tu mesa está reservada. Indica esta referencia si necesitas cambiar algo.',
+      whenLabel: 'Cuándo',
+      untilLabel: 'Hasta',
+      partyLabel: 'Personas',
+      referenceLabel: 'Referencia',
+      closing: 'Te esperamos con ganas.',
+    },
+    pending: {
+      subject: 'Hemos recibido tu solicitud de reserva',
+      heading: 'Reserva solicitada',
+      intro:
+        'Hemos enviado tu solicitud al local y te escribiremos en cuanto la confirmen. Todavía no hay nada reservado.',
+      whenLabel: 'Solicitada para',
+      untilLabel: 'Hasta',
+      partyLabel: 'Personas',
+      referenceLabel: 'Referencia',
+      closing: 'Te escribiremos en breve.',
+    },
+  },
+  pt: {
+    confirmed: {
+      subject: 'Sua reserva está confirmada',
+      heading: 'Reserva confirmada',
+      intro: 'Sua mesa está reservada. Informe esta referência se precisar mudar alguma coisa.',
+      whenLabel: 'Quando',
+      untilLabel: 'Até',
+      partyLabel: 'Pessoas',
+      referenceLabel: 'Referência',
+      closing: 'Esperamos por você.',
+    },
+    pending: {
+      subject: 'Recebemos seu pedido de reserva',
+      heading: 'Reserva solicitada',
+      intro:
+        'Enviamos seu pedido ao estabelecimento e voltaremos a escrever assim que ele confirmar. Nada está reservado ainda.',
+      whenLabel: 'Solicitada para',
+      untilLabel: 'Até',
+      partyLabel: 'Pessoas',
+      referenceLabel: 'Referência',
+      closing: 'Entraremos em contato em breve.',
+    },
+  },
+  ru: {
+    confirmed: {
+      subject: 'Ваше бронирование подтверждено',
+      heading: 'Бронирование подтверждено',
+      intro: 'Ваш столик забронирован. Если нужно что-то изменить, укажите этот номер.',
+      whenLabel: 'Когда',
+      untilLabel: 'До',
+      partyLabel: 'Гостей',
+      referenceLabel: 'Номер брони',
+      closing: 'Будем рады вас видеть.',
+    },
+    pending: {
+      subject: 'Мы получили ваш запрос на бронирование',
+      heading: 'Запрос отправлен',
+      intro:
+        'Мы передали ваш запрос заведению и напишем снова, как только оно подтвердит. Пока ничего не забронировано.',
+      whenLabel: 'Запрошено на',
+      untilLabel: 'До',
+      partyLabel: 'Гостей',
+      referenceLabel: 'Номер брони',
+      closing: 'Скоро свяжемся с вами.',
+    },
+  },
+  zh: {
+    confirmed: {
+      subject: '您的预订已确认',
+      heading: '预订已确认',
+      intro: '您的餐位已订好。如需更改，请提供此预订编号。',
+      whenLabel: '时间',
+      untilLabel: '结束',
+      partyLabel: '人数',
+      referenceLabel: '预订编号',
+      closing: '期待您的光临。',
+    },
+    pending: {
+      subject: '我们已收到您的预订请求',
+      heading: '已提交预订请求',
+      intro: '我们已将您的请求转给商户，商户确认后会再次写信给您。目前尚未为您预留任何餐位。',
+      whenLabel: '请求时间',
+      untilLabel: '结束',
+      partyLabel: '人数',
+      referenceLabel: '预订编号',
+      closing: '我们会尽快与您联系。',
+    },
+  },
+  hi: {
+    confirmed: {
+      subject: 'आपकी बुकिंग पक्की हो गई है',
+      heading: 'बुकिंग पक्की',
+      intro: 'आपकी मेज़ बुक हो गई है। कुछ भी बदलना हो तो यह रेफ़रेंस नंबर बताएँ।',
+      whenLabel: 'कब',
+      untilLabel: 'समाप्ति',
+      partyLabel: 'मेहमान',
+      referenceLabel: 'रेफ़रेंस',
+      closing: 'आपका इंतज़ार रहेगा।',
+    },
+    pending: {
+      subject: 'हमें आपका बुकिंग अनुरोध मिल गया है',
+      heading: 'बुकिंग का अनुरोध भेजा गया',
+      intro:
+        'हमने आपका अनुरोध उस जगह तक पहुँचा दिया है और उनकी पुष्टि होते ही फिर लिखेंगे। अभी कुछ भी बुक नहीं हुआ है।',
+      whenLabel: 'अनुरोधित समय',
+      untilLabel: 'समाप्ति',
+      partyLabel: 'मेहमान',
+      referenceLabel: 'रेफ़रेंस',
+      closing: 'हम जल्द ही संपर्क करेंगे।',
+    },
+  },
+  bn: {
+    confirmed: {
+      subject: 'আপনার বুকিং নিশ্চিত হয়েছে',
+      heading: 'বুকিং নিশ্চিত',
+      intro: 'আপনার টেবিল বুক করা হয়েছে। কিছু পরিবর্তন করতে চাইলে এই রেফারেন্সটি উল্লেখ করুন।',
+      whenLabel: 'কখন',
+      untilLabel: 'শেষ',
+      partyLabel: 'অতিথি',
+      referenceLabel: 'রেফারেন্স',
+      closing: 'আপনার অপেক্ষায় রইলাম।',
+    },
+    pending: {
+      subject: 'আপনার বুকিংয়ের অনুরোধ আমরা পেয়েছি',
+      heading: 'বুকিংয়ের অনুরোধ পাঠানো হয়েছে',
+      intro:
+        'আপনার অনুরোধ আমরা জায়গাটির কাছে পৌঁছে দিয়েছি, তারা নিশ্চিত করলেই আবার লিখব। এখনো কিছুই বুক করা হয়নি।',
+      whenLabel: 'অনুরোধের সময়',
+      untilLabel: 'শেষ',
+      partyLabel: 'অতিথি',
+      referenceLabel: 'রেফারেন্স',
+      closing: 'শিগগিরই যোগাযোগ করব।',
+    },
+  },
+  ur: {
+    confirmed: {
+      subject: 'آپ کی بکنگ کنفرم ہو گئی ہے',
+      heading: 'بکنگ کنفرم',
+      intro: 'آپ کی میز بک ہو گئی ہے۔ کچھ بھی تبدیل کرنا ہو تو یہ ریفرنس بتائیں۔',
+      whenLabel: 'کب',
+      untilLabel: 'اختتام',
+      partyLabel: 'افراد',
+      referenceLabel: 'ریفرنس',
+      closing: 'ہم آپ کے منتظر ہیں۔',
+    },
+    pending: {
+      subject: 'ہمیں آپ کی بکنگ کی درخواست مل گئی ہے',
+      heading: 'بکنگ کی درخواست بھیج دی گئی',
+      intro:
+        'ہم نے آپ کی درخواست مقام تک پہنچا دی ہے اور ان کی تصدیق ہوتے ہی دوبارہ لکھیں گے۔ ابھی کچھ بھی بک نہیں ہوا۔',
+      whenLabel: 'درخواست کردہ وقت',
+      untilLabel: 'اختتام',
+      partyLabel: 'افراد',
+      referenceLabel: 'ریفرنس',
+      closing: 'ہم جلد رابطہ کریں گے۔',
+    },
+  },
 }
 
 /** Anything that is not a live booking is not something we write about. */
-const copyFor = (status: BookingStatus, locale: 'en' | 'ar'): Copy | null => {
+const copyFor = (status: BookingStatus, locale: Locale): Copy | null => {
   if (status === 'confirmed') return COPY[locale].confirmed
   if (status === 'pending') return COPY[locale].pending
   return null
@@ -138,9 +334,17 @@ const copyFor = (status: BookingStatus, locale: 'en' | 'ar'): Copy | null => {
  * ours. Kept beside the copy rather than in the messages file because this is
  * email, which has no `next-intl` around it.
  */
-const REASON_LABEL: Record<'en' | 'ar', string> = {
+const REASON_LABEL: Record<Locale, string> = {
   en: 'The business said:',
   ar: 'قال المكان:',
+  fr: "L'établissement a précisé :",
+  es: 'El local dijo:',
+  pt: 'O estabelecimento disse:',
+  ru: 'Заведение сообщило:',
+  zh: '商户留言：',
+  hi: 'उस जगह ने कहा:',
+  bn: 'জায়গাটি জানিয়েছে:',
+  ur: 'مقام نے کہا:',
 }
 
 const escapeHtml = (value: string) =>
@@ -196,11 +400,13 @@ function renderBookingEmail({
   start: Date
   end: Date
   partySize: number
-  locale: 'en' | 'ar'
+  locale: Locale
   /** What the venue said, when they said anything. See `REASON_LABEL`. */
   reason?: string
 }): BookingEmailContent {
-  const rtl = locale === 'ar'
+  // From the language, not `=== 'ar'`: Urdu is right-to-left too, and an
+  // Urdu email laid out left-to-right puts every label on the wrong side.
+  const rtl = dirFor(locale) === 'rtl'
   const when = formatWhen(start, locale)
   const until = formatTime(end, locale)
   const said = (reason ?? '').trim()
@@ -314,7 +520,7 @@ export async function sendBookingConfirmation({
  */
 export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled'
 
-const OUTCOME_COPY: Record<'en' | 'ar', Record<BookingOutcomeKind, Copy>> = {
+const OUTCOME_COPY: Record<Locale, Record<BookingOutcomeKind, Copy>> = {
   en: {
     confirmed: {
       subject: 'Your booking is confirmed',
@@ -384,6 +590,285 @@ const OUTCOME_COPY: Record<'en' | 'ar', Record<BookingOutcomeKind, Copy>> = {
       closing: 'نأسف لهذا التغيير.',
     },
   },
+  fr: {
+    confirmed: {
+      subject: 'Votre réservation est confirmée',
+      heading: 'Réservation confirmée',
+      intro:
+        "Bonne nouvelle : l'établissement a confirmé votre réservation. Indiquez cette référence si vous devez modifier quoi que ce soit.",
+      whenLabel: 'Quand',
+      untilLabel: "Jusqu'à",
+      partyLabel: 'Personnes',
+      referenceLabel: 'Référence',
+      closing: 'Nous avons hâte de vous accueillir.',
+    },
+    declined: {
+      subject: "Votre demande de réservation n'a pas pu être acceptée",
+      heading: 'Réservation indisponible',
+      intro:
+        "L'établissement n'a pas pu accepter cette réservation, donc rien n'a été réservé. Un autre créneau est peut-être libre, et d'autres lieux à proximité sont sur Vardenia.",
+      whenLabel: 'Vous aviez demandé',
+      untilLabel: "Jusqu'à",
+      partyLabel: 'Personnes',
+      referenceLabel: 'Référence',
+      closing: 'Désolés pour cette mauvaise nouvelle.',
+    },
+    cancelled: {
+      subject: 'Votre réservation a été annulée',
+      heading: 'Réservation annulée',
+      intro:
+        "Cette réservation a été annulée et n'est plus tenue. Si c'est inattendu, indiquez la référence ci-dessous et nous regarderons.",
+      whenLabel: 'Était réservée pour',
+      untilLabel: "Jusqu'à",
+      partyLabel: 'Personnes',
+      referenceLabel: 'Référence',
+      closing: 'Désolés pour ce changement.',
+    },
+  },
+  es: {
+    confirmed: {
+      subject: 'Tu reserva está confirmada',
+      heading: 'Reserva confirmada',
+      intro:
+        '¡Buenas noticias! El local ha confirmado tu reserva. Indica esta referencia si necesitas cambiar algo.',
+      whenLabel: 'Cuándo',
+      untilLabel: 'Hasta',
+      partyLabel: 'Personas',
+      referenceLabel: 'Referencia',
+      closing: 'Te esperamos con ganas.',
+    },
+    declined: {
+      subject: 'No se pudo aceptar tu solicitud de reserva',
+      heading: 'Reserva no disponible',
+      intro:
+        'El local no ha podido aceptar esta reserva, así que no se ha reservado nada. Puede que otro horario esté libre, y hay otros lugares cerca en Vardenia.',
+      whenLabel: 'Habías pedido',
+      untilLabel: 'Hasta',
+      partyLabel: 'Personas',
+      referenceLabel: 'Referencia',
+      closing: 'Lamentamos darte una mala noticia.',
+    },
+    cancelled: {
+      subject: 'Tu reserva ha sido cancelada',
+      heading: 'Reserva cancelada',
+      intro:
+        'Esta reserva se ha cancelado y ya no está guardada. Si no te lo esperabas, indica la referencia de abajo y lo revisaremos.',
+      whenLabel: 'Estaba reservada para',
+      untilLabel: 'Hasta',
+      partyLabel: 'Personas',
+      referenceLabel: 'Referencia',
+      closing: 'Lamentamos el cambio.',
+    },
+  },
+  pt: {
+    confirmed: {
+      subject: 'Sua reserva está confirmada',
+      heading: 'Reserva confirmada',
+      intro:
+        'Boa notícia: o estabelecimento confirmou sua reserva. Informe esta referência se precisar mudar alguma coisa.',
+      whenLabel: 'Quando',
+      untilLabel: 'Até',
+      partyLabel: 'Pessoas',
+      referenceLabel: 'Referência',
+      closing: 'Esperamos por você.',
+    },
+    declined: {
+      subject: 'Não foi possível aceitar seu pedido de reserva',
+      heading: 'Reserva indisponível',
+      intro:
+        'O estabelecimento não pôde aceitar esta reserva, então nada foi reservado. Outro horário pode estar livre, e há outros lugares por perto na Vardenia.',
+      whenLabel: 'Você pediu',
+      untilLabel: 'Até',
+      partyLabel: 'Pessoas',
+      referenceLabel: 'Referência',
+      closing: 'Sentimos pela má notícia.',
+    },
+    cancelled: {
+      subject: 'Sua reserva foi cancelada',
+      heading: 'Reserva cancelada',
+      intro:
+        'Esta reserva foi cancelada e não está mais garantida. Se isso foi inesperado, informe a referência abaixo e vamos verificar.',
+      whenLabel: 'Estava reservada para',
+      untilLabel: 'Até',
+      partyLabel: 'Pessoas',
+      referenceLabel: 'Referência',
+      closing: 'Sentimos pela mudança.',
+    },
+  },
+  ru: {
+    confirmed: {
+      subject: 'Ваше бронирование подтверждено',
+      heading: 'Бронирование подтверждено',
+      intro:
+        'Хорошие новости: заведение подтвердило ваше бронирование. Если нужно что-то изменить, укажите этот номер.',
+      whenLabel: 'Когда',
+      untilLabel: 'До',
+      partyLabel: 'Гостей',
+      referenceLabel: 'Номер брони',
+      closing: 'Будем рады вас видеть.',
+    },
+    declined: {
+      subject: 'Ваш запрос на бронирование не принят',
+      heading: 'Бронирование недоступно',
+      intro:
+        'Заведение не смогло принять это бронирование, поэтому ничего не забронировано. Возможно, свободно другое время, а другие места поблизости есть на Vardenia.',
+      whenLabel: 'Вы просили',
+      untilLabel: 'До',
+      partyLabel: 'Гостей',
+      referenceLabel: 'Номер брони',
+      closing: 'Жаль, что пишем с плохими новостями.',
+    },
+    cancelled: {
+      subject: 'Ваше бронирование отменено',
+      heading: 'Бронирование отменено',
+      intro:
+        'Это бронирование отменено и больше не действует. Если это неожиданно, укажите номер ниже, и мы разберёмся.',
+      whenLabel: 'Было забронировано на',
+      untilLabel: 'До',
+      partyLabel: 'Гостей',
+      referenceLabel: 'Номер брони',
+      closing: 'Сожалеем об изменении.',
+    },
+  },
+  zh: {
+    confirmed: {
+      subject: '您的预订已确认',
+      heading: '预订已确认',
+      intro: '好消息：商户已确认您的预订。如需更改，请提供此预订编号。',
+      whenLabel: '时间',
+      untilLabel: '结束',
+      partyLabel: '人数',
+      referenceLabel: '预订编号',
+      closing: '期待您的光临。',
+    },
+    declined: {
+      subject: '您的预订请求未能被接受',
+      heading: '无法预订',
+      intro:
+        '商户未能接受此次预订，因此没有为您预留任何餐位。其他时段可能还有空位，Vardenia 上也有附近的其他地点。',
+      whenLabel: '您请求的时间',
+      untilLabel: '结束',
+      partyLabel: '人数',
+      referenceLabel: '预订编号',
+      closing: '很抱歉带来这个消息。',
+    },
+    cancelled: {
+      subject: '您的预订已取消',
+      heading: '预订已取消',
+      intro:
+        '此预订已被取消，不再为您保留。如果这出乎您的意料，请提供下方的预订编号，我们会查明情况。',
+      whenLabel: '原预订时间',
+      untilLabel: '结束',
+      partyLabel: '人数',
+      referenceLabel: '预订编号',
+      closing: '很抱歉有此变动。',
+    },
+  },
+  hi: {
+    confirmed: {
+      subject: 'आपकी बुकिंग पक्की हो गई है',
+      heading: 'बुकिंग पक्की',
+      intro:
+        'अच्छी ख़बर: उस जगह ने आपकी बुकिंग पक्की कर दी है। कुछ भी बदलना हो तो यह रेफ़रेंस नंबर बताएँ।',
+      whenLabel: 'कब',
+      untilLabel: 'समाप्ति',
+      partyLabel: 'मेहमान',
+      referenceLabel: 'रेफ़रेंस',
+      closing: 'आपका इंतज़ार रहेगा।',
+    },
+    declined: {
+      subject: 'आपका बुकिंग अनुरोध स्वीकार नहीं हो सका',
+      heading: 'बुकिंग उपलब्ध नहीं',
+      intro:
+        'वह जगह यह बुकिंग नहीं ले सकी, इसलिए कुछ भी बुक नहीं हुआ है। हो सकता है कोई दूसरा समय ख़ाली हो, और आसपास की दूसरी जगहें Vardenia पर हैं।',
+      whenLabel: 'आपने माँगा था',
+      untilLabel: 'समाप्ति',
+      partyLabel: 'मेहमान',
+      referenceLabel: 'रेफ़रेंस',
+      closing: 'निराशाजनक ख़बर के लिए माफ़ी चाहते हैं।',
+    },
+    cancelled: {
+      subject: 'आपकी बुकिंग रद्द कर दी गई है',
+      heading: 'बुकिंग रद्द',
+      intro:
+        'यह बुकिंग रद्द कर दी गई है और अब आपके लिए रखी नहीं गई है। अगर यह अप्रत्याशित है, तो नीचे दिया रेफ़रेंस बताएँ और हम इसकी जाँच करेंगे।',
+      whenLabel: 'बुकिंग का समय था',
+      untilLabel: 'समाप्ति',
+      partyLabel: 'मेहमान',
+      referenceLabel: 'रेफ़रेंस',
+      closing: 'इस बदलाव के लिए माफ़ी चाहते हैं।',
+    },
+  },
+  bn: {
+    confirmed: {
+      subject: 'আপনার বুকিং নিশ্চিত হয়েছে',
+      heading: 'বুকিং নিশ্চিত',
+      intro:
+        'সুখবর: জায়গাটি আপনার বুকিং নিশ্চিত করেছে। কিছু পরিবর্তন করতে চাইলে এই রেফারেন্সটি উল্লেখ করুন।',
+      whenLabel: 'কখন',
+      untilLabel: 'শেষ',
+      partyLabel: 'অতিথি',
+      referenceLabel: 'রেফারেন্স',
+      closing: 'আপনার অপেক্ষায় রইলাম।',
+    },
+    declined: {
+      subject: 'আপনার বুকিংয়ের অনুরোধ গ্রহণ করা যায়নি',
+      heading: 'বুকিং পাওয়া যায়নি',
+      intro:
+        'জায়গাটি এই বুকিং নিতে পারেনি, তাই কিছুই বুক করা হয়নি। অন্য কোনো সময় হয়তো খালি আছে, আর কাছাকাছি অন্য জায়গাগুলো Vardenia-তে আছে।',
+      whenLabel: 'আপনি চেয়েছিলেন',
+      untilLabel: 'শেষ',
+      partyLabel: 'অতিথি',
+      referenceLabel: 'রেফারেন্স',
+      closing: 'হতাশাজনক খবরের জন্য দুঃখিত।',
+    },
+    cancelled: {
+      subject: 'আপনার বুকিং বাতিল করা হয়েছে',
+      heading: 'বুকিং বাতিল',
+      intro:
+        'এই বুকিংটি বাতিল করা হয়েছে এবং আর রাখা নেই। এটি অপ্রত্যাশিত হলে নিচের রেফারেন্সটি উল্লেখ করুন, আমরা খতিয়ে দেখব।',
+      whenLabel: 'বুক করা ছিল',
+      untilLabel: 'শেষ',
+      partyLabel: 'অতিথি',
+      referenceLabel: 'রেফারেন্স',
+      closing: 'এই পরিবর্তনের জন্য দুঃখিত।',
+    },
+  },
+  ur: {
+    confirmed: {
+      subject: 'آپ کی بکنگ کنفرم ہو گئی ہے',
+      heading: 'بکنگ کنفرم',
+      intro:
+        'خوش خبری: مقام نے آپ کی بکنگ کنفرم کر دی ہے۔ کچھ بھی تبدیل کرنا ہو تو یہ ریفرنس بتائیں۔',
+      whenLabel: 'کب',
+      untilLabel: 'اختتام',
+      partyLabel: 'افراد',
+      referenceLabel: 'ریفرنس',
+      closing: 'ہم آپ کے منتظر ہیں۔',
+    },
+    declined: {
+      subject: 'آپ کی بکنگ کی درخواست قبول نہیں ہو سکی',
+      heading: 'بکنگ دستیاب نہیں',
+      intro:
+        'مقام یہ بکنگ قبول نہیں کر سکا، اس لیے کچھ بھی بک نہیں ہوا۔ ممکن ہے کوئی اور وقت خالی ہو، اور آس پاس کے دوسرے مقامات Vardenia پر موجود ہیں۔',
+      whenLabel: 'آپ نے مانگا تھا',
+      untilLabel: 'اختتام',
+      partyLabel: 'افراد',
+      referenceLabel: 'ریفرنس',
+      closing: 'مایوس کن خبر کے لیے معذرت۔',
+    },
+    cancelled: {
+      subject: 'آپ کی بکنگ منسوخ کر دی گئی ہے',
+      heading: 'بکنگ منسوخ',
+      intro:
+        'یہ بکنگ منسوخ کر دی گئی ہے اور اب آپ کے لیے محفوظ نہیں۔ اگر یہ غیر متوقع ہے تو نیچے دیا گیا ریفرنس بتائیں، ہم اس کی جانچ کریں گے۔',
+      whenLabel: 'بکنگ کا وقت تھا',
+      untilLabel: 'اختتام',
+      partyLabel: 'افراد',
+      referenceLabel: 'ریفرنس',
+      closing: 'اس تبدیلی کے لیے معذرت۔',
+    },
+  },
 }
 
 /**
@@ -411,7 +896,7 @@ export interface BookingOutcomeArgs {
   start: Date
   end: Date
   partySize: number
-  locale: 'en' | 'ar'
+  locale: Locale
   /**
    * What the venue said, when they wrote anything. Optional and usually absent:
    * a restaurant answering thirty requests at the end of a shift is not going to

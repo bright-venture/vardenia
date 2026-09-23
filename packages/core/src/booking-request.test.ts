@@ -6,6 +6,7 @@ import {
   resetPasswordSchema,
   signupSchema,
 } from './booking-request'
+import { LOCALE_CODES } from './locales'
 
 /**
  * The shape of a booking request.
@@ -128,9 +129,30 @@ describe('bookingRequestSchema', () => {
     expect(bookingRequestSchema.safeParse({ ...VALID, notes: 'Window table' }).success).toBe(true)
   })
 
-  it('accepts only the two locales we write in', () => {
-    expect(bookingRequestSchema.safeParse({ ...VALID, locale: 'ar' }).success).toBe(true)
-    expect(bookingRequestSchema.safeParse({ ...VALID, locale: 'fr' }).success).toBe(false)
+  /**
+   * This used to assert that `fr` was refused, when the site had two languages.
+   * It then had ten, the booking form sent the page's own, and every booking
+   * from eight of them was a 400. The assertion was pinning the outage.
+   */
+  it.each(LOCALE_CODES)('accepts a booking made in %s', (locale) => {
+    expect(bookingRequestSchema.safeParse({ ...VALID, locale }).success).toBe(true)
+  })
+
+  it('refuses a language the site does not have', () => {
+    expect(bookingRequestSchema.safeParse({ ...VALID, locale: 'de' }).success).toBe(false)
+    expect(bookingRequestSchema.safeParse({ ...VALID, locale: 'FR' }).success).toBe(false)
+  })
+
+  /** Sign-up had the same two-language enum, and refused the same eight. */
+  it.each(LOCALE_CODES)('accepts a sign-up made in %s', (locale) => {
+    expect(
+      signupSchema.safeParse({
+        name: 'Sami Khoury',
+        email: 'sami@example.com',
+        password: 'correct horse battery',
+        locale,
+      }).success,
+    ).toBe(true)
   })
 
   /** Extra keys are dropped, so a caller cannot smuggle a status or a reference. */

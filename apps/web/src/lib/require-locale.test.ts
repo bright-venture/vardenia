@@ -28,7 +28,9 @@ describe('requireLocale', () => {
     ['favicon.ico', 'the one that broke production'],
     ['config.php', 'a WordPress scanner'],
     ['xmlrpc.php', 'the same'],
-    ['fr', 'a locale we do not have'],
+    // Was 'fr', until French became one of the ten. The case this tests is a
+    // language the site does not have, and German still is one.
+    ['de', 'a locale we do not have'],
     ['EN', 'the right locale, wrong case'],
     ['en-GB', 'a region tag'],
     ['', 'nothing at all'],

@@ -157,8 +157,15 @@ export function alternatesFor(path: string, locale: Locale): NonNullable<Metadat
   }
 }
 
-/** English is unprefixed; everything else carries its locale. */
-function localizedPath(path: string, locale: Locale): string {
+/**
+ * English is unprefixed; everything else carries its locale.
+ *
+ * Exported for lib/structured-data, whose listing and article URLs have to be
+ * the canonical ones declared here. It used to prefix `/ar` and nothing else, so
+ * the structured data on /fr/directory/x named /directory/x as the page's URL -
+ * disagreeing with the canonical tag on the same page.
+ */
+export function localizedPath(path: string, locale: Locale): string {
   if (locale === DEFAULT_LOCALE) return path
   return path === '/' ? `/${locale}` : `/${locale}${path}`
 }

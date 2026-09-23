@@ -1,3 +1,4 @@
+import type { Locale } from '@vardenia/i18n'
 import { CONTACT } from './contact'
 
 /**
@@ -44,24 +45,56 @@ export const TBD = (what: string) => `${PLACEHOLDER} ${what}`
  * clauses by matching on it, and two spellings of a marker is how a count
  * silently starts missing half of them.
  */
-type Lang = 'en' | 'ar'
+/**
+ * Every UI language, not just the two that existed when this was written.
+ *
+ * It took `'en' | 'ar'` and every other language fell to English, so the
+ * French contact page ended in "Write to ...". Records rather than a switch, so
+ * the compiler refuses a language left out. Each line ends in its language's
+ * own full stop: the danda in Hindi and Bengali, the Urdu full stop, and the
+ * full-width stop in Chinese.
+ */
 
 /** How to reach us by email, or a marked note that there is no address yet. */
-export const contactEmail = (lang: Lang = 'en'): string => {
-  if (CONTACT.email) {
-    return lang === 'ar' ? `راسلنا على **${CONTACT.email}**.` : `Write to **${CONTACT.email}**.`
+export const contactEmail = (lang: Locale = 'en'): string => {
+  const email = CONTACT.email
+  if (!email) {
+    return TBD('an email address to publish here, so that a reader has a way to reach us')
   }
-  return TBD('an email address to publish here, so that a reader has a way to reach us')
+
+  const line: Record<Locale, string> = {
+    en: `Write to **${email}**.`,
+    ar: `راسلنا على **${email}**.`,
+    fr: `Écrivez-nous à **${email}**.`,
+    es: `Escríbenos a **${email}**.`,
+    pt: `Escreva para **${email}**.`,
+    ru: `Пишите нам на **${email}**.`,
+    zh: `请发邮件至 **${email}**。`,
+    hi: `हमें **${email}** पर लिखें।`,
+    bn: `আমাদের **${email}** ঠিকানায় লিখুন।`,
+    ur: `ہمیں **${email}** پر لکھیں۔`,
+  }
+  return line[lang]
 }
 
 /** The postal address. The privacy policy needs one whether or not it is shown. */
-export const contactPostal = (lang: Lang = 'en'): string => {
-  if (CONTACT.postalAddress) {
-    return lang === 'ar'
-      ? `بالبريد: ${CONTACT.postalAddress}.`
-      : `By post: ${CONTACT.postalAddress}.`
+export const contactPostal = (lang: Locale = 'en'): string => {
+  const address = CONTACT.postalAddress
+  if (!address) return TBD('a postal address, which the privacy policy also has to name')
+
+  const line: Record<Locale, string> = {
+    en: `By post: ${address}.`,
+    ar: `بالبريد: ${address}.`,
+    fr: `Par courrier : ${address}.`,
+    es: `Por correo postal: ${address}.`,
+    pt: `Por correio: ${address}.`,
+    ru: `Почтой: ${address}.`,
+    zh: `邮寄地址：${address}。`,
+    hi: `डाक से: ${address}।`,
+    bn: `ডাকযোগে: ${address}।`,
+    ur: `بذریعہ ڈاک: ${address}۔`,
   }
-  return TBD('a postal address, which the privacy policy also has to name')
+  return line[lang]
 }
 
 /** The phone number, when there is one worth committing to answer. */

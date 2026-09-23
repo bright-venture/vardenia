@@ -1,5 +1,6 @@
 import type { Access, CollectionConfig, Where } from 'payload'
 import { BOOKING_STATUSES, generateBookingReference } from '@vardenia/core'
+import { LOCALES, LOCALE_META } from '@vardenia/i18n'
 import {
   isAdmin,
   isStaff,
@@ -209,14 +210,20 @@ export const Bookings: CollectionConfig = {
      * a member who books in English. The most recent booking is the better guess
      * either way.
      */
+    /*
+     * Every UI language, built from the list rather than written out. It was
+     * English and Arabic only, so a booking made in French could not be stored
+     * - the request was refused before it got here, and the column's enum would
+     * have refused it if it had not been. Adding a value to this list is a
+     * migration (the enum), which is also why it is derived: a language added to
+     * @vardenia/i18n arrives here in the same change. See the migration
+     * 20260923_booking_locales.
+     */
     {
       name: 'locale',
       type: 'select',
       defaultValue: 'en',
-      options: [
-        { label: 'English', value: 'en' },
-        { label: 'Arabic', value: 'ar' },
-      ],
+      options: LOCALES.map((code) => ({ label: LOCALE_META[code].label, value: code })),
       admin: {
         description: 'The language this customer is written to in.',
         position: 'sidebar',

@@ -132,13 +132,52 @@ export function addDays(date: string, days: number): string {
 }
 
 /**
+ * The tag each UI language formats dates and times with.
+ *
+ * Every formatter here used to choose between `ar-LB` and `en-GB`, so the eight
+ * languages added since were all shown English weekdays and months: a French
+ * booking confirmation read "Thursday 3 September, 20:00". One table, so a
+ * language cannot be missed again - the record type refuses it.
+ *
+ * English stays British (day before month, 24-hour clock), which is how the
+ * site has always written dates. Portuguese is Brazilian and Chinese is
+ * Simplified, matching the interface catalogues in packages/i18n.
+ */
+const DATE_LOCALE: Record<Locale, string> = {
+  en: 'en-GB',
+  ar: 'ar-LB',
+  fr: 'fr',
+  es: 'es',
+  pt: 'pt-BR',
+  ru: 'ru',
+  zh: 'zh-CN',
+  hi: 'hi-IN',
+  bn: 'bn',
+  ur: 'ur',
+}
+
+/**
+ * The Intl tag for a language, optionally forcing Latin digits.
+ *
+ * `latinDigits` carries the Arabic decision explained on `beirutTime` below to
+ * every language whose default digits are not Latin - Bengali is the other one.
+ * Where a time sits beside counts that next-intl writes in Latin digits, it
+ * matches them; the customer's own confirmation (`formatBeirut`) keeps the
+ * language's native digits, as it always has in Arabic.
+ */
+export function dateLocale(locale: Locale, latinDigits = false): string {
+  const tag = DATE_LOCALE[locale] ?? DATE_LOCALE.en
+  return latinDigits ? `${tag}-u-nu-latn` : tag
+}
+
+/**
  * A date and time as a reader in Beirut would read it.
  *
  * Used on the confirmation panel, so what the customer is shown back is the same
  * clock the restaurant works to, whatever their phone is set to.
  */
 export function formatBeirut(instant: Date, locale: Locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB' : 'en-GB', {
+  return new Intl.DateTimeFormat(dateLocale(locale), {
     timeZone: BEIRUT,
     weekday: 'long',
     day: 'numeric',
@@ -169,7 +208,7 @@ export function formatBeirut(instant: Date, locale: Locale = 'en'): string {
  * Lebanon writes both.
  */
 export function beirutTime(instant: Date, locale: Locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+  return new Intl.DateTimeFormat(dateLocale(locale, true), {
     timeZone: BEIRUT,
     hour: '2-digit',
     minute: '2-digit',
@@ -195,7 +234,7 @@ export function beirutCalendarDayLabel(day: string, locale: Locale = 'en'): stri
   const instant = new Date(`${day}T12:00:00Z`)
   if (Number.isNaN(instant.getTime())) return day
 
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+  return new Intl.DateTimeFormat(dateLocale(locale, true), {
     timeZone: BEIRUT,
     day: 'numeric',
     month: 'long',
@@ -212,7 +251,7 @@ export function beirutCalendarDayLabel(day: string, locale: Locale = 'en'): stri
  * Latin digits for the day number, matching `beirutTime` above.
  */
 export function beirutDayLabel(instant: Date, locale: Locale = 'en'): string {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-LB-u-nu-latn' : 'en-GB', {
+  return new Intl.DateTimeFormat(dateLocale(locale, true), {
     timeZone: BEIRUT,
     weekday: 'long',
     day: 'numeric',

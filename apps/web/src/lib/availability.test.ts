@@ -9,6 +9,7 @@ import {
   type ExistingBooking,
 } from './availability'
 import type { OpeningHour } from './hours'
+import { LOCALES, type Locale } from '@vardenia/i18n'
 
 /**
  * The availability engine, which is where a booking system is won or lost.
@@ -456,8 +457,37 @@ describe('messages', () => {
   it('never leaks a machine-readable code to a customer', () => {
     for (const reason of UNAVAILABLE_REASONS) {
       if (!reason.includes('-')) continue
-      expect(unavailableMessage(reason, 'en')).not.toContain(reason)
-      expect(unavailableMessage(reason, 'ar')).not.toContain(reason)
+      for (const locale of LOCALES) {
+        expect(unavailableMessage(reason, locale), `${reason} in ${locale}`).not.toContain(reason)
+      }
     }
   })
+
+  /**
+   * The eight newer languages were given English for every refusal - including
+   * "fully booked", which is the one a customer is most likely to see. Checked by
+   * script where there is one, and against the English sentence everywhere.
+   */
+  const SCRIPT: Partial<Record<Locale, RegExp>> = {
+    ar: /[؀-ۿ]/,
+    ur: /[؀-ۿ]/,
+    ru: /[Ѐ-ӿ]/,
+    zh: /[一-鿿]/,
+    hi: /[ऀ-ॿ]/,
+    bn: /[ঀ-৿]/,
+  }
+
+  it.each(LOCALES.filter((locale) => locale !== 'en'))(
+    'refuses in the reader’s own language: %s',
+    (locale) => {
+      for (const reason of UNAVAILABLE_REASONS) {
+        const message = unavailableMessage(reason, locale)
+        expect(message, `${reason} is the English sentence`).not.toBe(
+          unavailableMessage(reason, 'en'),
+        )
+        const script = SCRIPT[locale]
+        if (script) expect(message, reason).toMatch(script)
+      }
+    },
+  )
 })

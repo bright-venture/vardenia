@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { faqPage } from './pages'
 import { SECTION_PATHS } from '@vardenia/core'
+import { LOCALES, type Locale } from '@vardenia/i18n'
 import { CONTENT_PAGES, CONTENT_PAGE_SLUGS, contentPage } from './pages'
 import { PLACEHOLDER } from './legal'
 
@@ -220,5 +221,120 @@ describe('the standing pages in Arabic', () => {
       .filter((line) => line.includes(PLACEHOLDER))
 
     expect(unsettled.length).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * Every other language, pinned the same way Arabic is.
+ *
+ * The site gained eight languages and these pages did not: /fr/about rendered a
+ * French header over an English page, which looks finished to anybody who does
+ * not read French. The compiler now refuses a page with a language missing, but
+ * it cannot tell a translation from English pasted into the French slot. These
+ * can.
+ */
+describe('the standing pages in every language', () => {
+  const OTHER_LOCALES = LOCALES.filter((locale) => locale !== 'en')
+
+  /**
+   * The script each non-Latin language is written in. French, Spanish and
+   * Portuguese share English's alphabet, so for those the line-by-line
+   * comparison below is what catches an untranslated sentence.
+   */
+  const SCRIPT: Partial<Record<Locale, RegExp>> = {
+    ar: /[؀-ۿ]/,
+    ur: /[؀-ۿ]/,
+    ru: /[Ѐ-ӿ]/,
+    zh: /[一-鿿]/,
+    hi: /[ऀ-ॿ]/,
+    bn: /[ঀ-৿]/,
+  }
+
+  /** Every translatable line of a page, in order. */
+  const lines = (slug: string, locale: Locale) => {
+    const page = contentPage(slug, locale)!
+    return [
+      page.title,
+      page.intro,
+      ...page.sections.flatMap((section) => [section.heading, ...section.body]),
+    ]
+  }
+
+  const cases = CONTENT_PAGE_SLUGS.flatMap((slug) =>
+    OTHER_LOCALES.map((locale) => [slug, locale] as const),
+  )
+
+  /**
+   * Words that are genuinely the same in both languages, listed one by one so
+   * that nothing else can be. "Contact" and "Questions" are French words too,
+   * and the French menu uses exactly them.
+   */
+  const SAME_WORD: Partial<Record<Locale, string[]>> = {
+    fr: ['Contact', 'Questions'],
+  }
+
+  it.each(cases)('%s is not English in %s', (slug, locale) => {
+    const en = lines(slug, 'en')
+    const other = lines(slug, locale)
+
+    other.forEach((line, i) => {
+      // The marker is English in every language on purpose; see below.
+      if (line.includes(PLACEHOLDER)) return
+      if (SAME_WORD[locale]?.includes(line)) return
+      expect(line, `line ${i} is the English sentence`).not.toBe(en[i])
+    })
+  })
+
+  it.each(cases)('%s is written in the script of %s', (slug, locale) => {
+    const script = SCRIPT[locale]
+    if (!script) return
+
+    const page = contentPage(slug, locale)!
+    expect(page.title, 'title').toMatch(script)
+    expect(page.intro, 'intro').toMatch(script)
+    for (const section of page.sections) {
+      expect(section.heading, section.heading).toMatch(script)
+    }
+  })
+
+  /**
+   * A language that drops or invents a paragraph is how two readers start being
+   * promised different things - on the pages that describe what a listing
+   * includes and what it costs.
+   */
+  it.each(cases)('%s has the same shape in %s as in English', (slug, locale) => {
+    const en = contentPage(slug, 'en')!
+    const other = contentPage(slug, locale)!
+
+    expect(other.sections).toHaveLength(en.sections.length)
+    other.sections.forEach((section, i) => {
+      expect(section.body.length, `section ${i}`).toBe(en.sections[i]!.body.length)
+    })
+  })
+
+  /**
+   * The FAQ's last question is about the reader's own language. Asked about
+   * Arabic on the French page, it answered a question nobody reading it had.
+   */
+  it.each(
+    Object.entries({
+      fr: 'français',
+      es: 'español',
+      pt: 'português',
+      ru: 'русском',
+      zh: '中文',
+      hi: 'हिंदी',
+      bn: 'বাংলা',
+      ur: 'اردو',
+    }),
+  )('asks the %s reader about %s', (locale, language) => {
+    const last = faqPage(locale as Locale).sections.at(-1)!
+    expect(last.heading).toContain(language)
+  })
+
+  /** Still true in every language, and worth still saying in every language. */
+  it.each(OTHER_LOCALES)('still admits in %s that the legal documents are English', (locale) => {
+    const last = faqPage(locale).sections.at(-1)!
+    expect(last.body).toHaveLength(3)
   })
 })

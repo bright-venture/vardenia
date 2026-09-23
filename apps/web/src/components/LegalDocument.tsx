@@ -1,6 +1,26 @@
-import type { Locale } from '@vardenia/i18n'
+import { dirFor, type Locale } from '@vardenia/i18n'
 import { PLACEHOLDER, LEGAL_LAST_UPDATED, type LegalDocument } from '../lib/legal'
 import { withEmphasis } from './emphasis'
+
+/**
+ * The draft warning, in the reader's own language even though the document is
+ * English: it is the one sentence on the page they most need to understand.
+ *
+ * Arabic had it; the eight languages added later showed the English sentence.
+ * Like the Arabic, these leave out the count the English gives, which would need
+ * a plural rule per language for a number that reaches nought and disappears.
+ */
+const DRAFT_NOTICE: Record<Exclude<Locale, 'en'>, string> = {
+  ar: 'هذه مسودة قيد المراجعة القانونية. الفقرات المعلّمة أدناه لم تُحسم بعد.',
+  fr: 'Ce document est un projet en attente de relecture juridique. Les points signalés ci-dessous ne sont pas encore arrêtés.',
+  es: 'Este documento es un borrador pendiente de revisión legal. Los puntos marcados más abajo aún no están cerrados.',
+  pt: 'Este documento é um rascunho aguardando revisão jurídica. Os pontos marcados abaixo ainda não foram definidos.',
+  ru: 'Это черновик, ожидающий юридической проверки. Отмеченные ниже пункты ещё не согласованы.',
+  zh: '本文件为待法律审核的草稿。下方标注的条款尚未最终确定。',
+  hi: 'यह क़ानूनी समीक्षा की प्रतीक्षा में एक मसौदा है। नीचे चिह्नित बिंदु अभी तय नहीं हुए हैं।',
+  bn: 'এটি আইনি পর্যালোচনার অপেক্ষায় থাকা একটি খসড়া। নিচে চিহ্নিত বিষয়গুলো এখনো চূড়ান্ত হয়নি।',
+  ur: 'یہ قانونی جائزے کا منتظر ایک مسودہ ہے۔ نیچے نشان زد نکات ابھی طے نہیں ہوئے۔',
+}
 
 /**
  * Renders a legal document, and refuses to let an unfinished one look finished.
@@ -85,22 +105,29 @@ export function LegalDocumentView({
   /** How many clauses are still marked TO CONFIRM. */
   unresolved: number
 }) {
-  const ar = locale === 'ar'
+  /*
+   * Every language but English, not just Arabic. The document is English in all
+   * of them, so on each it is marked as English and laid out left to right. It
+   * was keyed on `=== 'ar'`, which left Urdu - also right to left - rendering the
+   * terms with every full stop on the wrong edge, and told a French screen reader
+   * to read English in a French voice.
+   */
+  const foreign = locale !== 'en'
 
   return (
     /**
-     * Laid out left to right on the Arabic page, because the document itself is
-     * English. See ContentPage for the full reasoning: an English sentence in an
-     * RTL paragraph has its full stop moved to the left edge, which reads as a
-     * rendering fault rather than as an untranslated page.
+     * Laid out left to right on every page but the English one, because the
+     * document itself is English. See ContentPage for the full reasoning: an
+     * English sentence in an RTL paragraph has its full stop moved to the left
+     * edge, which reads as a rendering fault rather than as an untranslated page.
      *
      * It matters more here than on the standing pages. These are the terms
      * somebody accepts, and a clause that looks garbled is a clause they cannot
      * be said to have read.
      */
     <main
-      dir={ar ? 'ltr' : undefined}
-      lang={ar ? 'en' : undefined}
+      dir={foreign ? 'ltr' : undefined}
+      lang={foreign ? 'en' : undefined}
       className="mx-auto max-w-2xl px-6 py-16"
     >
       <h1 className="font-display text-ink-900 text-4xl">{document.title}</h1>
@@ -112,12 +139,12 @@ export function LegalDocumentView({
           trust the site with an address deserves to know this is a draft. */}
       {unresolved > 0 ? (
         <p
-          dir={ar ? 'rtl' : undefined}
-          lang={ar ? 'ar' : undefined}
+          dir={foreign ? dirFor(locale) : undefined}
+          lang={foreign ? locale : undefined}
           className="border-state-warning bg-gold-100 text-ink-900 mt-8 border px-4 py-3 text-sm"
         >
-          {ar
-            ? 'هذه مسودة قيد المراجعة القانونية. الفقرات المعلّمة أدناه لم تُحسم بعد.'
+          {locale !== 'en'
+            ? DRAFT_NOTICE[locale]
             : `This is a draft awaiting legal review. ${unresolved} point${unresolved === 1 ? '' : 's'} below ${unresolved === 1 ? 'is' : 'are'} not settled yet, and are marked where they appear.`}
         </p>
       ) : null}

@@ -1,6 +1,7 @@
 import type { Locale } from '@vardenia/i18n'
 import { districtLabel, governorateLabel, priceLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
+import { localizedPath } from './seo'
 
 /** The publisher, named once, so markup and the organisation block agree. */
 const SITE_NAME = 'Vardenia'
@@ -70,9 +71,16 @@ function compact(obj: Json): Json {
   )
 }
 
+/**
+ * The page's canonical URL, from the same rule the canonical tag uses.
+ *
+ * This prefixed `/ar` and nothing else, so on the eight newer languages the
+ * structured data told search engines the page lived at the English URL while
+ * its own canonical tag said otherwise. Two signals on one page that disagree
+ * are two signals ignored.
+ */
 function absolute(path: string, locale: Locale): string {
-  const prefix = locale === 'ar' ? '/ar' : ''
-  return `${SITE}${prefix}${path}`
+  return `${SITE}${localizedPath(path, locale)}`
 }
 
 interface OpeningHour {

@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
 import type { BookingRequest } from '@vardenia/core'
+import type { Locale } from '@vardenia/i18n'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from './availability'
 import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
 
@@ -128,6 +129,20 @@ export async function overlappingBookings(
   })
 }
 
+/** The honest failure: we do not know what went wrong, so we do not guess. */
+const COULD_NOT_BOOK: Record<Locale, string> = {
+  en: 'We could not complete that booking. Please try again.',
+  ar: 'تعذّر علينا إتمام هذا الحجز. يرجى المحاولة مرة أخرى.',
+  fr: "Nous n'avons pas pu finaliser cette réservation. Veuillez réessayer.",
+  es: 'No hemos podido completar esa reserva. Inténtalo de nuevo.',
+  pt: 'Não conseguimos concluir essa reserva. Tente de novo.',
+  ru: 'Не удалось завершить бронирование. Попробуйте ещё раз.',
+  zh: '我们未能完成这次预订，请重试。',
+  hi: 'हम यह बुकिंग पूरी नहीं कर सके। कृपया फिर से कोशिश करें।',
+  bn: 'আমরা বুকিংটি সম্পন্ন করতে পারিনি। দয়া করে আবার চেষ্টা করুন।',
+  ur: 'ہم یہ بکنگ مکمل نہیں کر سکے۔ براہِ کرم دوبارہ کوشش کریں۔',
+}
+
 /**
  * Turn a failed insert back into something a customer can read.
  *
@@ -136,18 +151,19 @@ export async function overlappingBookings(
  * honest one - it tells the customer to try a different time when the real
  * problem might be that the database is down.
  */
-export function translateInsertError(error: unknown): BookingOutcome {
+export function translateInsertError(error: unknown, locale: Locale = 'en'): BookingOutcome {
   const message = isRecord(error) && typeof error.message === 'string' ? error.message : ''
 
+  /*
+   * In the customer's language. This took no language at all, so the customer
+   * who lost the race for the last table was told "fully booked" in English -
+   * on the Arabic site too, not only on the eight newer languages.
+   */
   if (message.toLowerCase().includes(CAPACITY_MESSAGE)) {
-    return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity') }
+    return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity', locale) }
   }
 
-  return {
-    ok: false,
-    code: 'error',
-    message: 'We could not complete that booking. Please try again.',
-  }
+  return { ok: false, code: 'error', message: COULD_NOT_BOOK[locale] ?? COULD_NOT_BOOK.en }
 }
 
 export interface CreateBookingArgs {
@@ -283,6 +299,6 @@ export async function createBooking({
       status: (booking as { status: BookingStatus }).status,
     }
   } catch (error) {
-    return translateInsertError(error)
+    return translateInsertError(error, request.locale ?? 'en')
   }
 }

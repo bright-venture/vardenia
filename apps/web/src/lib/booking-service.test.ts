@@ -32,6 +32,22 @@ describe('translateInsertError', () => {
     expect(outcome.message).toBe(unavailableMessage('at-capacity'))
   })
 
+  /**
+   * This took no language, so the customer who lost the race for the last table
+   * was told "fully booked" in English - on the Arabic site as well.
+   */
+  it('refuses in the language the customer booked in', () => {
+    for (const locale of ['ar', 'fr', 'zh'] as const) {
+      const outcome = translateInsertError(
+        pgError('This place is fully booked at that time.'),
+        locale,
+      )
+      if (outcome.ok) throw new Error('expected a refusal')
+      expect(outcome.message, locale).toBe(unavailableMessage('at-capacity', locale))
+      expect(outcome.message, locale).not.toBe(unavailableMessage('at-capacity', 'en'))
+    }
+  })
+
   it('matches the trigger message however Postgres wraps it', () => {
     for (const message of [
       'This place is fully booked at that time.',

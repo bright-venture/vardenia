@@ -106,6 +106,46 @@ describe('Arabic', () => {
   })
 })
 
+/**
+ * The eight languages added after these emails were written. Every caller
+ * narrowed the booking's language to English or Arabic, so a customer who
+ * booked in French was written to in English - and an Urdu email, had one been
+ * sent, would have been laid out left-to-right.
+ */
+describe('the other eight languages', () => {
+  it('writes a French confirmation in French, with a French date', () => {
+    const content = bookingConfirmationContent({ ...BASE, status: 'confirmed', locale: 'fr' })!
+    expect(content.subject).toBe('Votre réservation est confirmée')
+    // 1 March 2027 is a Monday; 21:00 in Beirut.
+    expect(content.text).toContain('lundi 1 mars')
+    expect(content.text).toContain('21:00')
+    expect(content.html).toContain('lang="fr"')
+    expect(content.html).toContain('dir="ltr"')
+  })
+
+  it('lays an Urdu email out right-to-left, as it does Arabic', () => {
+    const content = bookingConfirmationContent({ ...BASE, status: 'confirmed', locale: 'ur' })!
+    expect(content.html).toContain('dir="rtl"')
+    expect(content.subject).toMatch(/[؀-ۿ]/)
+  })
+
+  it.each(['fr', 'es', 'pt', 'ru', 'zh', 'hi', 'bn', 'ur'] as const)(
+    'writes every message in %s rather than in English',
+    (locale) => {
+      const english = bookingConfirmationContent({ ...BASE, status: 'pending' })!
+      const pending = bookingConfirmationContent({ ...BASE, status: 'pending', locale })!
+      expect(pending.subject).not.toBe(english.subject)
+
+      for (const outcome of ['confirmed', 'declined', 'cancelled'] as const) {
+        const en = bookingOutcomeContent({ ...BASE, outcome })
+        const other = bookingOutcomeContent({ ...BASE, outcome, locale, reason: 'Full tonight' })
+        expect(other.subject, outcome).not.toBe(en.subject)
+        expect(other.text, `${outcome} keeps the reference`).toContain('7VTXR24B')
+      }
+    },
+  )
+})
+
 describe('statuses that are not written about', () => {
   /**
    * Nothing is sent for a cancelled, completed or no-show booking. Those need

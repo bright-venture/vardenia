@@ -1,6 +1,6 @@
 import type { Locale } from '@vardenia/i18n'
 import { resolveRules, type BookingRules } from './availability'
-import { addDays, beirutDate, beirutInstant } from './beirut'
+import { addDays, beirutDate, beirutInstant, dateLocale } from './beirut'
 
 /**
  * What the booking form should look like for a given listing.
@@ -241,7 +241,27 @@ export function durationLabel(minutes: number, locale: Locale = 'en'): string {
     return [h, m].filter(Boolean).join(' و') || `${minutes} دقيقة`
   }
 
-  const h = hours === 0 ? '' : hours === 1 ? '1 hour' : `${hours} hours`
-  const m = rest === 0 ? '' : `${rest} minutes`
-  return [h, m].filter(Boolean).join(' ') || `${minutes} minutes`
+  if (locale === 'en') {
+    const h = hours === 0 ? '' : hours === 1 ? '1 hour' : `${hours} hours`
+    const m = rest === 0 ? '' : `${rest} minutes`
+    return [h, m].filter(Boolean).join(' ') || `${minutes} minutes`
+  }
+
+  /*
+   * The other eight languages, which were given the English above. Intl rather
+   * than more hand-written branches, because the plurals are where hand-written
+   * forms go wrong: Russian has three (час, часа, часов), and Hindi and Urdu
+   * change the noun itself. English and Arabic keep their own wording above,
+   * which the tests pin.
+   */
+  const tag = dateLocale(locale)
+  const unit = (value: number, name: 'hour' | 'minute') =>
+    new Intl.NumberFormat(tag, { style: 'unit', unit: name, unitDisplay: 'long' }).format(value)
+  const parts = [hours && unit(hours, 'hour'), rest && unit(rest, 'minute')].filter(
+    (part): part is string => Boolean(part),
+  )
+
+  return parts.length > 0
+    ? new Intl.ListFormat(tag, { style: 'long', type: 'unit' }).format(parts)
+    : unit(minutes, 'minute')
 }

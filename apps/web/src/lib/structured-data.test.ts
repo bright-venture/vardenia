@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { LOCALES } from '@vardenia/i18n'
 import { articleSchema, listingSchema, organizationSchema } from './structured-data'
 
 const LISTING = {
@@ -76,6 +77,24 @@ describe('listingSchema', () => {
   it('prefixes the URL for Arabic', () => {
     expect(listingSchema(LISTING, 'ar').url).toContain('/ar/directory/le-royal-hotel')
     expect(listingSchema(LISTING, 'en').url).not.toContain('/ar/')
+  })
+
+  /**
+   * Only Arabic was prefixed, so every other language's structured data named
+   * the English page as its URL, contradicting the canonical tag beside it.
+   */
+  it.each(LOCALES.filter((locale) => locale !== 'en'))(
+    'prefixes the URL for %s, as the canonical tag does',
+    (locale) => {
+      expect(listingSchema(LISTING, locale).url).toMatch(
+        new RegExp(`/${locale}/directory/le-royal-hotel$`),
+      )
+    },
+  )
+
+  it('leaves English unprefixed', () => {
+    expect(listingSchema(LISTING, 'en').url).toMatch(/[^/]\/directory\/le-royal-hotel$/)
+    expect(listingSchema(LISTING, 'en').url).not.toMatch(/\/en\//)
   })
 
   /** Markup that claims more than the page shows is worse than no markup. */

@@ -1,5 +1,6 @@
 import type { CollectionAfterChangeHook } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
+import { isLocale, type Locale } from '@vardenia/i18n'
 import type { PayloadRequest } from 'payload'
 import { outcomeFor, sendBookingOutcome, sendVenueCancellation } from '../lib/booking-email'
 import { reportError } from '../lib/report'
@@ -145,7 +146,10 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
       end,
       partySize: Number(current.partySize ?? 1),
       // Captured when they booked. See the field on the Bookings collection.
-      locale: current.locale === 'ar' ? 'ar' : 'en',
+      // Any language the site has, not just Arabic: this read `=== 'ar' ? 'ar'
+      // : 'en'`, so the answer to a French booking would have come in English.
+      // Anything unrecognised - a row from before a language existed - is English.
+      locale: isLocale(String(current.locale ?? '')) ? (current.locale as Locale) : 'en',
       /**
        * Read off the saved document, not off the request, so it reaches the
        * customer however the booking was answered - the dashboard, the admin

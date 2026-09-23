@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { LOCALE_CODES } from './locales'
 
 /**
  * What a customer sends to ask for a booking.
@@ -94,7 +95,7 @@ export const bookingRequestSchema = z.object({
   notes: z.string().trim().max(1000, 'too long').optional(),
 
   /** Which language to write the confirmation in. */
-  locale: z.enum(['en', 'ar']).optional(),
+  locale: z.enum(LOCALE_CODES).optional(),
 })
 
 export type BookingRequest = z.infer<typeof bookingRequestSchema>
@@ -139,7 +140,7 @@ export const signupSchema = z.object({
   email: emailAddress,
   password: accountPassword,
   phone: z.string().trim().max(40).optional(),
-  locale: z.enum(['en', 'ar']).optional(),
+  locale: z.enum(LOCALE_CODES).optional(),
 })
 
 export type Signup = z.infer<typeof signupSchema>
