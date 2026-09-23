@@ -22,6 +22,10 @@ import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
  * document being written, and every collection here already refuses them
  * without a staff session, but a login endpoint that answers forever is how
  * passwords get guessed.
+ *
+ * POST is wrapped in the page cap as well, because not every POST is a write:
+ * with a method-override header Payload treats it as a GET, and that was an
+ * uncapped read. withApiLimits touches only those and lets real writes by.
  */
 const guardRead = <T>(handler: T) => withRateLimit(withApiLimits(handler as never)) as T
 
@@ -81,7 +85,10 @@ const guardWrite = <T>(handler: T) => {
 }
 
 export const GET = guardRead(REST_GET(config))
-export const POST = guardWrite(REST_POST(config))
+// POST gets the page cap too: a POST carrying a method-override header is a read,
+// and was the way round the cap. Genuine writes pass through it untouched. See
+// withApiLimits.
+export const POST = guardWrite(withApiLimits(REST_POST(config) as never))
 export const DELETE = guardWrite(REST_DELETE(config))
 export const PATCH = guardWrite(REST_PATCH(config))
 export const PUT = guardWrite(REST_PUT(config))

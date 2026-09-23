@@ -200,7 +200,7 @@ async function buildListingWhere(
    * filter does, and for the accessibility one in particular a list that
    * grows as you narrow it is actively misleading.
    *
-   * # Why this is several queries and not one clause
+   * # Why Payload cannot express it
    *
    * There is no operator for it. Checked against the running database rather
    * than assumed: `all` throws ("adapter.operators[queryOperator] is not a
@@ -209,41 +209,209 @@ async function buildListingWhere(
    * both conditions land on one join of the amenities table and no single
    * row can be two values at once.
    *
-   * So the intersection is done here: the ids matching each amenity, folded
-   * together. Correct, and it keeps pagination and the total count honest,
-   * which filtering the fetched page afterwards would not.
-   *
-   * The ceiling: this reads every matching id per amenity, so at tens of
-   * thousands of listings it stops being cheap. The fix then is a
-   * denormalised text[] column with a GIN index and a `@>` containment
-   * query - a migration, not a rewrite. Nowhere near that yet.
+   * So the matching ids are found first - see `idsWithEveryAmenity` - and the
+   * listing query is then constrained to them, which keeps pagination and the
+   * total count honest where filtering the fetched page afterwards would not.
    */
   if (amenities?.length) {
-    let intersection: (number | string)[] | null = null
-
-    for (const slug of amenities) {
-      const matching = await payload.find({
-        collection: 'businesses',
-        where: { amenities: { in: [slug] } },
-        depth: 0,
-        pagination: false,
-        overrideAccess: false,
-      })
-
-      const ids: (number | string)[] = matching.docs.map((doc) => doc.id)
-      intersection = intersection === null ? ids : intersection.filter((id) => ids.includes(id))
-
-      if (intersection.length === 0) break
-    }
+    const ids = await idsWithEveryAmenity(payload, amenities)
 
     // An id that cannot exist, rather than an empty `in` - Payload treats
     // that as no constraint at all and would return the whole catalogue for
     // a filter that matched nothing.
-    where.id = intersection?.length ? { in: intersection } : { equals: -1 }
+    where.id = ids.length ? { in: ids } : { equals: -1 }
   }
 
   return where
 }
+
+/**
+ * Ids of the published listings that carry every one of `amenities`.
+ *
+ * # One query instead of one per amenity
+ *
+ * This used to run a Payload query per amenity, in sequence, each returning
+ * every listing with that amenity as a whole document, and then fold the id
+ * lists together in Node. Three ticks was three round trips to Frankfurt
+ * carrying the full rows of every listing with a pool, then every one with a
+ * sea view, to keep the few that had both.
+ *
+ * Now the database does the intersection: group the amenity rows by listing
+ * and keep the listings with as many distinct matches as amenities asked for.
+ * One round trip, ids only.
+ *
+ * # Access is still Payload's
+ *
+ * Raw SQL skips access control, so it restates the public rule as
+ * `PUBLISHED_SQL` - pinned to `publishedStaffOrOwned` by a test in
+ * access/index.test. That is an economy here, not the boundary: these ids only
+ * narrow a `payload.find` that still runs with `overrideAccess: false`, so a
+ * draft id that slipped through would still not be returned.
+ *
+ * # If the query fails
+ *
+ * The listings are the page, so a failure here should not empty it. The error
+ * is reported and the intersection falls back to the per-amenity reads it
+ * replaced, which are slow and correct.
+ */
+async function idsWithEveryAmenity(
+  payload: Awaited<ReturnType<typeof client>>,
+  amenities: string[],
+): Promise<(number | string)[]> {
+  // Distinct, because the query counts distinct matches: `has=pool,pool`
+  // would otherwise need two matches from a listing that can only have one.
+  const wanted = [...new Set(amenities)]
+
+  try {
+    const db = rawDb(payload)
+    const businesses = `"${db.schema}"."${db.table('businesses')}"`
+    const amenityRows = `"${db.schema}"."${db.table('businesses_amenities')}"`
+
+    const { rows } = await db.pool.query(
+      `select a.parent_id as id from ${amenityRows} a join ${businesses} b on b.id = a.parent_id where ${PUBLISHED_SQL} and a.value::text = any($1::text[]) group by a.parent_id having count(distinct a.value) = $2`,
+      [wanted, wanted.length],
+    )
+    return rows.map((row) => row.id as number)
+  } catch (error) {
+    await reportError(error, { source: 'listings.amenity-filter', extra: { amenities: wanted } })
+    return idsWithEveryAmenityThroughPayload(payload, wanted)
+  }
+}
+
+/** The per-amenity reads the query above replaced, kept as its fallback. */
+async function idsWithEveryAmenityThroughPayload(
+  payload: Awaited<ReturnType<typeof client>>,
+  amenities: string[],
+): Promise<(number | string)[]> {
+  // Asserted rather than annotated, or TypeScript narrows it to `null` for good
+  // at the initialiser and types the fold below as operating on `never`.
+  let intersection = null as Set<string> | null
+  const byKey = new Map<string, number | string>()
+
+  for (const slug of amenities) {
+    // `slug` is selected only because `id` cannot be - it always comes back -
+    // and selecting nothing would return whole documents.
+    const matching = await findEvery<{ id: number | string }>(payload, {
+      collection: 'businesses',
+      where: { amenities: { in: [slug] } },
+      depth: 0,
+      overrideAccess: false,
+      select: { slug: true },
+    })
+
+    const ids = new Set<string>()
+    for (const doc of matching.docs) {
+      ids.add(String(doc.id))
+      byKey.set(String(doc.id), doc.id)
+    }
+    intersection =
+      intersection === null ? ids : new Set([...intersection].filter((id) => ids.has(id)))
+
+    if (intersection.size === 0) break
+  }
+
+  return [...(intersection ?? [])].map((key) => byKey.get(key) as number | string)
+}
+
+type OpenNowCandidate = Pick<Business, 'id' | 'openingHours'>
+type OpenNowFilters = { category?: string; subcategory?: string; governorate?: string }
+
+/**
+ * Every listing matching `where`, with only its opening hours, in page order.
+ *
+ * # Every candidate, and only its hours
+ *
+ * This read `limit: 1000, pagination: false`, which Payload truncates without
+ * saying so (see lib/find-every). Production passed 1,000 published listings,
+ * so `/directory?open=1` was quietly testing the first thousand and never the
+ * rest. It also fetched each of them at `depth: 1`, images joined, to read one
+ * field. So the whole set is read through `findEvery` with only the hours
+ * selected, and findListings loads full documents for the one page it shows.
+ *
+ * When this stops being cheap, a scheduled "open now" materialisation is
+ * where it goes.
+ */
+async function readOpenNowCandidates(
+  payload: Awaited<ReturnType<typeof client>>,
+  where: Where,
+  locale: Locale,
+  filters: OpenNowFilters,
+): Promise<OpenNowCandidate[]> {
+  const candidates = await findEvery<OpenNowCandidate>(payload, {
+    collection: 'businesses',
+    where,
+    locale: dataLocale(locale),
+    depth: 0,
+    sort: ['-tier', 'name'],
+    overrideAccess: false,
+    select: { openingHours: true },
+  })
+
+  /**
+   * A reader is looking at this list, so it is not worth a 500. It is still
+   * wrong, and the one thing it must not do is be wrong silently - so staff
+   * hear about it, and the fix on that day is the materialisation above rather
+   * than a bigger ceiling.
+   */
+  if (!candidates.complete) {
+    await reportError(
+      new Error(`open-now stopped after ${FIND_EVERY_CEILING} candidate listings`),
+      { source: 'listings.open-now-incomplete', level: 'warning', extra: { ...filters } },
+    )
+  }
+
+  return candidates.docs
+}
+
+/**
+ * The open-now candidates for a section, region or kind of place, cached.
+ *
+ * Every `?open=1` view used to read every matching listing's hours from
+ * Frankfurt on every request - three paged reads for the whole directory -
+ * because the answer depends on the minute and so could not be cached. But
+ * only the answer does. Which listings match and when they open changes when
+ * somebody edits a listing, and that already clears the `businesses` tag.
+ *
+ * So the set is cached for the hour like the grid it sits in, and the clock is
+ * applied to it per request by findListings. A cached set cannot show a closed
+ * place as open; the worst a stale one could do is miss an edit to someone's
+ * hours, and the tag means it does not.
+ *
+ * # The same key space as the grid
+ *
+ * Category, kind and region only - the filters findListings already caches -
+ * because those are bounded. District, price and amenities multiply the keys
+ * past usefulness, and those views read directly, as the grid does.
+ *
+ * Keyed on locale, though no hours are translated: the set is in page order,
+ * and page order sorts on `name`, which is.
+ *
+ * # Size
+ *
+ * Measured in September 2026: 37KB for the whole directory, because only 2 of
+ * 1,277 published listings had any hours. A day's row is about 100 bytes, so a
+ * full week on every listing would make the directory-wide entry about 0.9MB -
+ * inside Next's 2MB limit, with less room than the search candidates have.
+ * Split shifts are what would push it over. If an entry does exceed the limit,
+ * Next declines to cache it and says so on the console, and that view reads
+ * directly, as every open-now view did before this.
+ */
+const openNowCandidates = ({ locale, ...filters }: OpenNowFilters & { locale: Locale }) =>
+  unstable_cache(
+    async () => {
+      const payload = await client()
+      const where = await buildListingWhere(payload, filters)
+      return readOpenNowCandidates(payload, where, locale, filters)
+    },
+    [
+      'open-now-candidates',
+      locale,
+      filters.category ?? '',
+      filters.subcategory ?? '',
+      filters.governorate ?? '',
+    ],
+    { revalidate: LISTINGS_TTL, tags: ['businesses'] },
+  )()
 
 export async function findListings({
   locale,
@@ -271,55 +439,23 @@ export async function findListings({
 
     if (openNow) {
       /**
-       * Open-now is evaluated against the live minute in Beirut, so it is never
-       * cached (see `cacheable` below) and the whole matching set is filtered
-       * here rather than page by page - filtering one page would leave short
-       * pages and a wrong total. Then the open set is paginated in memory, so
-       * the count and the page controls stay honest.
+       * Open-now is evaluated against the live minute in Beirut, so the answer
+       * is never cached (see `cacheable` below) and the whole matching set is
+       * filtered here rather than page by page - filtering one page would leave
+       * short pages and a wrong total. Then the open set is paginated in
+       * memory, so the count and the page controls stay honest.
        *
-       * # Every candidate, and only its hours
-       *
-       * This read `limit: 1000, pagination: false`, which Payload truncates
-       * without saying so (see lib/find-every). Production passed 1,000
-       * published listings, so `/directory?open=1` was quietly testing the
-       * first thousand and never the rest.
-       *
-       * It also fetched each of those thousand at `depth: 1`, images joined,
-       * to read one field and discard nearly all of them. So the whole set is
-       * now read through `findEvery` with only the opening hours selected, and
-       * full documents are loaded for the one page that is shown.
-       *
-       * When this stops being cheap, the scheduled "open now" materialisation
-       * is still where it goes.
+       * What is cached is the question: which listings match, and what their
+       * hours are. See `openNowCandidates`. The clock is read here, per request,
+       * so a cached set can never show a closed place as open.
        */
-      const candidates = await findEvery<Pick<Business, 'id' | 'openingHours'>>(payload, {
-        collection: 'businesses',
-        where,
-        locale: dataLocale(locale),
-        depth: 0,
-        sort: ['-tier', 'name'],
-        overrideAccess: false,
-        select: { openingHours: true },
-      })
+      const filters = { category, subcategory, governorate }
+      const candidates =
+        !district && !priceRange && !amenities?.length
+          ? await openNowCandidates({ locale, ...filters })
+          : await readOpenNowCandidates(payload, where, locale, filters)
 
-      /**
-       * A reader is looking at this list, so it is not worth a 500. It is still
-       * wrong, and the one thing it must not do is be wrong silently - so staff
-       * hear about it, and the fix on that day is the materialisation above
-       * rather than a bigger ceiling.
-       */
-      if (!candidates.complete) {
-        await reportError(
-          new Error(`open-now stopped after ${FIND_EVERY_CEILING} candidate listings`),
-          {
-            source: 'listings.open-now-incomplete',
-            level: 'warning',
-            extra: { category, subcategory, governorate },
-          },
-        )
-      }
-
-      const open = candidates.docs.filter(
+      const open = candidates.filter(
         (doc) => isOpenNow(doc.openingHours as OpeningHour[] | null | undefined) === true,
       )
       const totalDocs = open.length
@@ -806,8 +942,9 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
  *
  * Unlike the counts, there is no honest partial answer here: a sitemap missing
  * listings is precisely the bug this replaced, and nothing downstream could
- * tell. Both callers run at build time, so the throw fails a deploy and the
- * previous one stays live - loud, and harmless to readers.
+ * tell. At build time the throw fails a deploy and the previous one stays live
+ * - loud, and harmless to readers. The sitemap also rebuilds hourly at runtime,
+ * where a throw leaves the last good sitemap in place; see app/sitemap.
  *
  * The ceiling also lines up with a real limit rather than an arbitrary one. A
  * sitemap file holds at most 50,000 URLs, so the day this throws is the day the

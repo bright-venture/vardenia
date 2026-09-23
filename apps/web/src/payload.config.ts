@@ -414,20 +414,25 @@ export default buildConfig({
    */
   maxDepth: 3,
 
+  /**
+   * Off. Nothing used it, and it was an unguarded way to read everything.
+   *
+   * It was kept "for internal tooling", with `maxComplexity: 1000` to bound how
+   * deeply a query could nest. Complexity counts fields, not rows, so it never
+   * bounded how many came back - and the page cap in lib/api-limits wraps the
+   * REST route only. Measured on dev in September 2026, an anonymous
+   *
+   *     { allMedia(limit: 100000) { docs { id } } }
+   *
+   * returned every row, and so did `pagination: false`. Nothing in the web app,
+   * the mobile app or the shared packages calls /api/graphql, and the admin
+   * panel talks REST, so there was nothing to protect in exchange.
+   *
+   * With `disable`, Payload's handler answers 404 before building a schema.
+   * Turning it back on means putting the same page cap in front of it first.
+   */
   graphQL: {
-    // The public surface is REST; GraphQL stays available for internal tooling.
-    disablePlaygroundInProduction: true,
-
-    /**
-     * GraphQL is the other way to ask for too much at once, and `maxDepth`
-     * does not bound it - a query can nest fields far beyond what any screen
-     * needs and cost the database dearly for one small-looking request.
-     *
-     * 1000 is generous for the queries this project actually issues, which are
-     * a listing and its immediate relations. It exists to stop a query that
-     * nobody would write by hand.
-     */
-    maxComplexity: 1000,
+    disable: true,
   },
   // Payload pins its own copy of sharp's types; the runtime object is the same.
   sharp: sharp as unknown as Config['sharp'],

@@ -25,6 +25,23 @@ import { findAllIssueSlugs } from '../lib/issues'
  * an invitation.
  */
 
+/**
+ * Rebuilt at most once an hour, in the background.
+ *
+ * Without this the sitemap was built once per deploy and never again - the
+ * build output recorded it as `initialRevalidateSeconds: false` - so a listing
+ * published today was absent from it until somebody next deployed, however
+ * many printed codes already pointed at it. An hour matches the listing pages
+ * themselves, and costs one pass over the slugs per hour, not per crawl.
+ *
+ * If a rebuild fails, Next serves the last sitemap that built and retries on a
+ * later request - its documented behaviour for revalidation errors, relied on
+ * here rather than tested. That covers findAllListingSlugs refusing at its
+ * ceiling: at build time that fails the deploy, and at runtime the previous
+ * sitemap stays up while the error is logged.
+ */
+export const revalidate = 3600
+
 const CHANGE_FREQUENCY = {
   /** The directory grows and listings get edited. */
   listing: 'weekly',
