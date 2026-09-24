@@ -8,24 +8,40 @@
  */
 
 /**
- * Two tiers, in enum order: everything, or nothing.
+ * Three tiers, in enum order, each one the tier below plus one thing.
  *
- * There were four - free, listed, featured, partner - and they described a
- * sales organisation that does not exist. Nothing was ever sold into the middle
- * two: production held 1,276 free listings and a single `listed` one. Four
- * price points is a decision a team makes after it has learned what a venue
- * will pay, not before it has sold anything, and in the meantime each extra
- * tier was another row in a capability table nobody could explain to a
- * customer.
+ * - `online`: the listing on the website, and nothing in print. For a venue
+ *   that wants to be found online but does not buy a magazine page.
+ * - `free`: a page in the printed magazine. The website listing comes with it
+ *   at no extra cost, which is where the name comes from: the venue pays for
+ *   print, and online is free. Every listing imported from the magazine lands
+ *   here, so it is also the default.
+ * - `featured`: everything `free` has, plus a place in the band at the top of
+ *   the home page. The band has room for {@link FEATURED_PLACES} listings, so
+ *   the admin refuses a featured listing beyond that number.
  *
- * So there is one thing to buy. A free listing is the seeded directory entry
- * that makes the catalogue complete on day one; a featured one is what a venue
- * pays for. The order matters beyond readability: the directory sorts on
- * `-tier`, which is the Postgres enum's own declaration order, so `featured`
- * must come after `free` for a paid listing to rise.
+ * Before this there were two tiers, free and featured, and free meant unpaid
+ * inventory. That changed when the team decided the website listing is what a
+ * magazine page includes, and that the website on its own is something a venue
+ * can buy. Every tier is now a paid one.
+ *
+ * The order matters beyond readability: the directory sorts on `-tier`, which
+ * is the Postgres enum's own declaration order, so a magazine listing rises above
+ * an online-only one and a featured listing above both. The migration that adds
+ * `online` puts it BEFORE `free` in the enum for that reason.
  */
-export const LISTING_TIERS = ['free', 'featured'] as const
+export const LISTING_TIERS = ['online', 'free', 'featured'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
+
+/**
+ * How many featured listings the home page shows, and so how many can be sold.
+ *
+ * A featured listing that never appears in the band has been sold something it
+ * does not get: the band is sorted by name and cut at this number, so the
+ * seventh would silently lose out to whichever six come first in the alphabet.
+ * The admin refuses the seventh instead. Raise this and the band grows with it.
+ */
+export const FEATURED_PLACES = 6
 
 export interface TierCapabilities {
   /** Sort weight in directory results. Higher floats to the top within a category. */
@@ -55,25 +71,37 @@ export interface TierCapabilities {
 }
 
 export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
-  // Claimed-but-unpaid listing. Exists so the directory is complete on day one -
-  // a thin directory sells nothing, so we seed it and upsell later.
-  free: {
+  /**
+   * The website listing on its own. It is a paid tier, so the listing page is
+   * the full one - gallery and the scan report included - and what it lacks is
+   * print, which is what the tier above sells.
+   */
+  online: {
     rank: 0,
-    galleryLimit: 1,
+    galleryLimit: 15,
     editorialFeature: false,
-    analyticsAccess: false,
+    analyticsAccess: true,
     heroPlacement: false,
     printInclusion: false,
     pushCampaigns: false,
   },
   /**
-   * The one thing a venue buys, sold annually alongside the printed code.
-   *
-   * It absorbs what `listed` and `partner` used to offer, because splitting
-   * those benefits across three prices was a guess at a market nobody had sold
-   * into yet. `heroPlacement` is the visible half of it - the home page draws a
-   * band of these - and priority in every listing grid is the other half, which
-   * the `-tier` sort has always given for free.
+   * A page in the magazine, with the website listing included. The magazine
+   * page is the editorial feature, so both flags go together.
+   */
+  free: {
+    rank: 5,
+    galleryLimit: 15,
+    editorialFeature: true,
+    analyticsAccess: true,
+    heroPlacement: false,
+    printInclusion: true,
+    pushCampaigns: false,
+  },
+  /**
+   * The magazine tier plus the home page. `heroPlacement` is the band at the top
+   * of the home page, limited to FEATURED_PLACES listings; priority in every
+   * listing grid comes with it through the `-tier` sort.
    */
   featured: {
     rank: 10,
@@ -90,12 +118,13 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
 /**
  * Coerce whatever the database hands back into a tier.
  *
- * Unknown or missing values fall to `free` rather than throwing. Failing closed
- * matters: the alternative is a listing with a corrupt tier quietly receiving
- * everything a partner pays for.
+ * Unknown or missing values fall to the lowest tier, `online`, rather than
+ * throwing. Failing closed matters: the alternative is a listing with a corrupt
+ * tier quietly receiving print and the home page, which are what the tiers
+ * above are paid for.
  */
 export function tierOf(value: unknown): ListingTier {
-  return LISTING_TIERS.includes(value as ListingTier) ? (value as ListingTier) : 'free'
+  return LISTING_TIERS.includes(value as ListingTier) ? (value as ListingTier) : LISTING_TIERS[0]
 }
 
 export function can<K extends keyof TierCapabilities>(

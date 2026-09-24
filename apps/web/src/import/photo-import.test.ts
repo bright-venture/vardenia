@@ -144,37 +144,31 @@ describe('how many gallery photographs a tier displays', () => {
    * uploading an image nobody will ever see costs an encode into six sizes and
    * a place in the bucket.
    */
-  it('is one for free, which is every listing today', () => {
-    expect(can(tierOf('free'), 'galleryLimit')).toBe(1)
-  })
-
   /**
-   * The tiers are free and featured. An earlier version of this test said
-   * "premium", which is not one - `tierOf` fell back to free and the assertion
-   * passed a 1 off as a real limit. A test that invents the vocabulary it is
-   * checking proves nothing about the vocabulary, which is also why the retired
-   * names are asserted below rather than quietly dropped.
+   * Every tier is paid since the website-only tier was added, and the website
+   * listing is the same on all three, so the allowance is too. What separates
+   * the tiers is print and the home page, not the number of photographs.
    */
-  it('rises with the tier', () => {
-    const limits = (['free', 'featured'] as const).map((tier) => can(tierOf(tier), 'galleryLimit'))
+  it('is the same fifteen on every tier', () => {
+    const limits = (['online', 'free', 'featured'] as const).map((tier) =>
+      can(tierOf(tier), 'galleryLimit'),
+    )
 
-    expect(limits).toEqual([1, 15])
-    expect(limits).toEqual([...limits].sort((a, b) => a - b))
+    expect(limits).toEqual([15, 15, 15])
   })
 
   /**
    * `listed` and `partner` were retired when four tiers became two. Rows still
-   * carry them until the migration runs, and such a listing gets the free
-   * allowance rather than the one it used to have.
+   * carrying them read as the lowest tier.
    */
-  it('gives a retired tier the free allowance', () => {
+  it('gives a retired tier the allowance of the lowest tier', () => {
     for (const retired of ['listed', 'partner']) {
-      expect(can(tierOf(retired), 'galleryLimit')).toBe(1)
+      expect(can(tierOf(retired), 'galleryLimit')).toBe(can('online', 'galleryLimit'))
     }
   })
 
   /** An unknown tier must not become an unlimited one. */
-  it('treats an unrecognised tier as the smallest', () => {
-    expect(can(tierOf('nonsense-tier'), 'galleryLimit')).toBe(1)
+  it('treats an unrecognised tier as the lowest', () => {
+    expect(can(tierOf('nonsense-tier'), 'galleryLimit')).toBe(can('online', 'galleryLimit'))
   })
 })

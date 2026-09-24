@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { FEATURED_PLACES } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
@@ -118,7 +119,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     findListings({ locale, perPage: 6 }),
     // The paid band above the directory taste. Empty for most of the first
     // year, and the section removes itself when it is - see below.
-    findFeaturedListings({ locale, limit: 6 }),
+    findFeaturedListings({ locale, limit: FEATURED_PLACES }),
     findArticles({ locale, perPage: 3 }),
     // The masthead's third figure. Cached on the same hour as the rest of the
     // page, so it is not a per-view round trip. See lib/listings countCodes.

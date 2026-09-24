@@ -75,17 +75,13 @@ describe('resolveGallery', () => {
 
   describe('tier limits', () => {
     /**
-     * Gallery size is one of the concrete things a listing tier buys. Before
-     * this, TIER_CAPABILITIES described the limits and nothing enforced them,
-     * so a free listing displayed all 40 images a partner pays for.
+     * Gallery size comes from TIER_CAPABILITIES. Before that was enforced, a
+     * listing displayed every image uploaded to it, 40 in one case.
      */
-    it('caps a free listing to one image', () => {
-      expect(resolveGallery(gallery(20), can('free', 'galleryLimit'))).toHaveLength(1)
-    })
-
-    it('gives the paid tier more than the free one', () => {
-      expect(resolveGallery(gallery(50), can('free', 'galleryLimit'))).toHaveLength(1)
-      expect(resolveGallery(gallery(50), can('featured', 'galleryLimit'))).toHaveLength(15)
+    it('caps every tier at its allowance', () => {
+      for (const t of ['online', 'free', 'featured'] as const) {
+        expect(resolveGallery(gallery(50), can(t, 'galleryLimit')), t).toHaveLength(15)
+      }
     })
 
     it('does not pad when a listing has fewer images than its allowance', () => {
@@ -105,20 +101,20 @@ describe('resolveGallery', () => {
 
 describe('tierOf', () => {
   it('passes through the real tiers', () => {
-    for (const t of ['free', 'featured'] as const) {
+    for (const t of ['online', 'free', 'featured'] as const) {
       expect(tierOf(t)).toBe(t)
     }
   })
 
   /** Retired when four tiers became two, and no longer a tier. */
   it('does not pass through a retired tier', () => {
-    for (const t of ['listed', 'partner']) expect(tierOf(t)).toBe('free')
+    for (const t of ['listed', 'partner']) expect(tierOf(t)).toBe('online')
   })
 
   /** Fails closed: a corrupt tier must not hand out partner privileges. */
-  it('falls back to free for anything unrecognised', () => {
+  it('falls back to the lowest tier for anything unrecognised', () => {
     for (const v of [null, undefined, '', 'gold', 42, {}]) {
-      expect(tierOf(v)).toBe('free')
+      expect(tierOf(v)).toBe('online')
     }
   })
 })

@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
+import { FEATURED_PLACES } from '@vardenia/core'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import type { Business } from '../payload-types'
@@ -703,7 +704,7 @@ export async function countByGovernorate({
  */
 export async function findFeaturedListings({
   locale,
-  limit = 6,
+  limit = FEATURED_PLACES,
 }: {
   locale: Locale
   limit?: number

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { LISTING_TIERS, amenityOptions, isWithinLebanon, priceRangeOptions } from '@vardenia/core'
+import { amenityOptions, isWithinLebanon, priceRangeOptions } from '@vardenia/core'
 import {
   isAdminFieldLevel,
   isStaff,
@@ -8,6 +8,7 @@ import {
 } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
+import { tierField } from '../fields/tier'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
@@ -249,18 +250,7 @@ export const Businesses: CollectionConfig = {
           // Staff-only. Nothing in this tab is ever exposed by the public API.
           admin: { condition: (_, __, { user }) => hasStaffRole(user) },
           fields: [
-            {
-              name: 'tier',
-              type: 'select',
-              required: true,
-              defaultValue: 'free',
-              index: true,
-              access: { update: isAdminFieldLevel },
-              options: LISTING_TIERS.map((tier) => ({
-                label: tier.charAt(0).toUpperCase() + tier.slice(1),
-                value: tier,
-              })),
-            },
+            tierField,
             {
               name: 'verified',
               type: 'checkbox',

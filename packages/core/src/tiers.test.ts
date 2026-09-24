@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LISTING_TIERS, TIER_CAPABILITIES, can, tierOf } from './tiers'
+import { FEATURED_PLACES, LISTING_TIERS, TIER_CAPABILITIES, can, tierOf } from './tiers'
 
 /**
  * The commercial model, asserted rather than assumed.
@@ -57,48 +57,63 @@ describe('the ladder holds its shape', () => {
     }
   })
 
-  /** Free is the one that has to stay empty, because it is inventory. */
-  it('gives the free tier nothing that costs the team anything', () => {
-    const free = TIER_CAPABILITIES.free
+  /**
+   * Each rung is the one below plus one thing, which is how the tiers are sold:
+   * the website, then the magazine page with the website included, then the
+   * home page on top. A difference the sales sheet cannot name in one line is
+   * one a customer cannot be asked to pay for.
+   */
+  it('adds print for the magazine tier and the home page for featured', () => {
+    const [online, free, featured] = [
+      TIER_CAPABILITIES.online,
+      TIER_CAPABILITIES.free,
+      TIER_CAPABILITIES.featured,
+    ]
 
-    expect(free.editorialFeature).toBe(false)
-    expect(free.printInclusion).toBe(false)
+    expect(online.printInclusion).toBe(false)
+    expect(free.printInclusion).toBe(true)
+
     expect(free.heroPlacement).toBe(false)
-    expect(free.analyticsAccess).toBe(false)
-    expect(free.galleryLimit).toBe(1)
+    expect(featured.heroPlacement).toBe(true)
+
+    // The website listing itself is the same on every tier.
+    expect(online.galleryLimit).toBe(free.galleryLimit)
+    expect(free.galleryLimit).toBe(featured.galleryLimit)
+    expect(online.analyticsAccess).toBe(true)
   })
 
   /**
-   * The scan report is what makes a renewal conversation possible, so the paid
-   * tier gets it. There is only one, which is the point of the two-tier model:
-   * nothing has to be held back to justify a tier above it.
+   * `online` is paid, so it gets the scan report like the others: the report is
+   * what makes a renewal conversation possible, and every tier renews.
    */
-  it('gives the paid tier everything that is worth paying for', () => {
-    expect(can(tierOf('featured'), 'analyticsAccess')).toBe(true)
-    expect(can(tierOf('featured'), 'printInclusion')).toBe(true)
-    expect(can(tierOf('featured'), 'heroPlacement')).toBe(true)
-    expect(can(tierOf('featured'), 'editorialFeature')).toBe(true)
+  it('gives every tier the scan report', () => {
+    for (const tier of LISTING_TIERS) {
+      expect(can(tier, 'analyticsAccess'), tier).toBe(true)
+    }
   })
 
   /**
-   * `featured` has to sort above `free`, because the directory orders on
-   * `-tier` and that is the Postgres enum's declaration order rather than
-   * anything this file computes. Reversing the array would quietly bury every
-   * paying listing underneath the free ones.
+   * The directory orders on `-tier`, which is the Postgres enum's declaration
+   * order rather than anything this file computes. Reordering the array would
+   * bury the featured listings underneath the online-only ones.
    */
-  it('declares the paid tier after the free one, which is what sorts it first', () => {
-    expect(LISTING_TIERS).toEqual(['free', 'featured'])
+  it('declares the tiers cheapest first, which is what sorts the dearest first', () => {
+    expect(LISTING_TIERS).toEqual(['online', 'free', 'featured'])
+  })
+
+  it('has room on the home page for as many featured listings as it shows', () => {
+    expect(FEATURED_PLACES).toBeGreaterThan(0)
+    expect(Number.isInteger(FEATURED_PLACES)).toBe(true)
   })
 
   /**
-   * `listed` and `partner` were retired when four tiers became two, and rows
-   * carrying them exist until the migration rewrites them. An unknown tier
-   * falls to `free`, so during that window such a listing loses its standing
-   * rather than silently keeping a paid one.
+   * `listed` and `partner` were retired when four tiers became two. An unknown
+   * tier falls to the lowest, so such a listing loses its standing rather than
+   * silently keeping a paid one.
    */
-  it('treats a retired tier as free rather than as something it no longer is', () => {
+  it('treats a retired tier as the lowest rather than as something it no longer is', () => {
     for (const retired of ['listed', 'partner']) {
-      expect(tierOf(retired)).toBe('free')
+      expect(tierOf(retired)).toBe('online')
       expect(can(tierOf(retired), 'heroPlacement')).toBe(false)
     }
   })
@@ -110,12 +125,12 @@ describe('an unrecognised tier', () => {
    * one: the alternative is a listing with a corrupt tier quietly receiving
    * everything a partner pays for.
    */
-  it('falls to free rather than throwing or granting anything', () => {
+  it('falls to the lowest tier rather than throwing or granting print', () => {
     for (const value of [undefined, null, '', 'premium', 'PARTNER', 42, {}]) {
-      expect(tierOf(value), String(value)).toBe('free')
+      expect(tierOf(value), String(value)).toBe('online')
     }
 
-    expect(can(tierOf('premium'), 'galleryLimit')).toBe(1)
     expect(can(tierOf('premium'), 'printInclusion')).toBe(false)
+    expect(can(tierOf('premium'), 'heroPlacement')).toBe(false)
   })
 })

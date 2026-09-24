@@ -1,5 +1,6 @@
 import type { Payload, TypedUser } from 'payload'
 import { tierOf } from '@vardenia/core'
+import { TIER_LABELS } from '../../fields/tier'
 import { dashboardCounts } from '../../lib/dashboard-stats'
 import { emailWarning } from '../../lib/email'
 import { indexingWarning } from '../../lib/indexing'
@@ -69,7 +70,7 @@ export async function DashboardOverview({ payload, user }: Props) {
   const [counts, expired, expiring, codeless] = await Promise.all([
     dashboardCounts(payload, windowStart),
 
-    // Lapsed, but still carrying a paid tier. Nothing expires on its own (see
+    // Lapsed, and still on its tier. Nothing expires on its own (see
     // packages/core/src/tiers.ts), so this is the only thing that notices.
     payload.find({
       ...opts,
@@ -140,11 +141,13 @@ export async function DashboardOverview({ payload, user }: Props) {
 
   for (const doc of expired.docs) {
     const record = doc as { id: number | string; name?: string | null; contractEndsAt?: string }
-    if (tierOf((doc as { tier?: unknown }).tier) === 'free') continue
+    // Every tier is paid, the magazine one included, so every lapsed contract
+    // is worth a look rather than only the ones above free.
+    const tier = TIER_LABELS[tierOf((doc as { tier?: unknown }).tier)]
     attention.push({
       label: record.name ?? `Listing ${record.id}`,
       href: `/admin/collections/businesses/${record.id}`,
-      detail: `Contract ended ${formatDate(record.contractEndsAt)} and the tier has not changed`,
+      detail: `Contract ended ${formatDate(record.contractEndsAt)} and the listing is still on ${tier}`,
       tone: 'error',
     })
   }

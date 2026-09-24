@@ -205,7 +205,8 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'batroun',
     address: { en: 'Douma, Batroun', ar: 'دوما، البترون' },
     location: [35.8339, 34.2172],
-    tier: 'free',
+    // Website only, no magazine page: the third tier needs an example too.
+    tier: 'online',
     verified: false,
     priceRange: '2',
     amenities: ['mountain-view', 'free-parking', 'pet-friendly'],
