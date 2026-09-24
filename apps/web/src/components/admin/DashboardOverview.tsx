@@ -182,6 +182,50 @@ export async function DashboardOverview({ payload, user }: Props) {
     })
   }
 
+  /**
+   * Booking-fee statements that need a person: a line a venue questioned, and a
+   * statement past its due date. Nothing happens to an overdue venue on its own
+   * - switching its booking button off is a decision, made here, not a rule that
+   * fires at midnight - so this list is how anyone finds out.
+   */
+  const [disputed, overdue] = await Promise.all([
+    payload.find({
+      ...opts,
+      limit: 5,
+      collection: 'statements',
+      where: {
+        and: [{ status: { equals: 'sent' } }, { 'lines.disputeOutcome': { equals: 'open' } }],
+      },
+    }),
+    payload.find({
+      ...opts,
+      limit: 5,
+      collection: 'statements',
+      where: { and: [{ status: { equals: 'sent' } }, { dueAt: { less_than: now.toISOString() } }] },
+      sort: 'dueAt',
+    }),
+  ])
+
+  for (const doc of disputed.docs) {
+    const record = doc as { id: number | string; number?: string | null }
+    attention.push({
+      label: record.number ?? `Statement ${record.id}`,
+      href: `/admin/collections/statements/${record.id}`,
+      detail: 'A venue questioned a line. Check with the guest, then mark it upheld or rejected',
+      tone: 'warn',
+    })
+  }
+
+  for (const doc of overdue.docs) {
+    const record = doc as { id: number | string; number?: string | null; dueAt?: string }
+    attention.push({
+      label: record.number ?? `Statement ${record.id}`,
+      href: `/admin/collections/statements/${record.id}`,
+      detail: `Unpaid since ${formatDate(record.dueAt)}. After 15 days more, the venue's booking button can be switched off`,
+      tone: 'error',
+    })
+  }
+
   return (
     <section style={styles.wrap}>
       <div style={styles.stats}>

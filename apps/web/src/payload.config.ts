@@ -13,6 +13,7 @@ import { Users } from './collections/Users'
 import { BusinessUsers } from './collections/BusinessUsers'
 import { Customers } from './collections/Customers'
 import { Bookings } from './collections/Bookings'
+import { Statements } from './collections/Statements'
 import { SavedListings } from './collections/SavedListings'
 import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
@@ -163,6 +164,7 @@ export default buildConfig({
     BusinessUsers,
     Customers,
     Bookings,
+    Statements,
     SavedListings,
     Reviews,
     Closures,

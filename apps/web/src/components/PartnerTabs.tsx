@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { Link } from '../i18n/routing'
 
 /**
- * The two halves of the dashboard.
+ * The sections of the dashboard.
  *
  * # Why this is a client component when almost nothing here is
  *
@@ -24,10 +24,12 @@ export function PartnerTabs({
   bookings,
   listing,
   scans,
+  statements,
 }: {
   bookings: string
   listing: string
   scans: string
+  statements: string
 }) {
   const pathname = usePathname()
 
@@ -39,10 +41,12 @@ export function PartnerTabs({
    */
   const onListing = pathname.endsWith('/partner/listing')
   const onScans = pathname.endsWith('/partner/scans')
+  // Includes a single statement, /partner/statements/12, so the tab stays lit there.
+  const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
 
   return (
     <nav className="border-ink-100 mt-8 flex gap-6 border-b" aria-label={bookings}>
-      <Tab href="/partner" active={!onListing && !onScans}>
+      <Tab href="/partner" active={!onListing && !onScans && !onStatements}>
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
@@ -50,6 +54,9 @@ export function PartnerTabs({
       </Tab>
       <Tab href="/partner/scans" active={onScans}>
         {scans}
+      </Tab>
+      <Tab href="/partner/statements" active={onStatements}>
+        {statements}
       </Tab>
     </nav>
   )

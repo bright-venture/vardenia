@@ -9,6 +9,7 @@ import {
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { featuredField, tierField } from '../fields/tier'
+import { bookingFeeField } from '../fields/bookingFee'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
@@ -253,6 +254,7 @@ export const Businesses: CollectionConfig = {
           fields: [
             tierField,
             featuredField,
+            bookingFeeField,
             {
               name: 'verified',
               type: 'checkbox',

@@ -79,6 +79,10 @@ export const UNMATCHED_PREFIXES = [
   'g',
   'qr',
   'reports',
+  // Booking-fee statements: the staff page, its two form actions and the
+  // venue's dispute endpoint, then the printable invoice. None of them a page.
+  'billing',
+  'invoice',
   'media',
 ] as const
 

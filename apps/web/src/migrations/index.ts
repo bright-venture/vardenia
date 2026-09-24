@@ -30,6 +30,7 @@ import * as migration_20260922_105600_move_gyms_malls from './20260922_105600_mo
 import * as migration_20260922_110157_two_tiers from './20260922_110157_two_tiers'
 import * as migration_20260923_070208_booking_locales from './20260923_070208_booking_locales'
 import * as migration_20260924_090000_tiers_and_featured from './20260924_090000_tiers_and_featured'
+import * as migration_20260924_100629_booking_fee_statements from './20260924_100629_booking_fee_statements'
 
 export const migrations = [
   {
@@ -191,5 +192,10 @@ export const migrations = [
     up: migration_20260924_090000_tiers_and_featured.up,
     down: migration_20260924_090000_tiers_and_featured.down,
     name: '20260924_090000_tiers_and_featured',
+  },
+  {
+    up: migration_20260924_100629_booking_fee_statements.up,
+    down: migration_20260924_100629_booking_fee_statements.down,
+    name: '20260924_100629_booking_fee_statements',
   },
 ]

@@ -277,6 +277,9 @@ export default function middleware(request: NextRequest): NextResponse {
  * tool. `/reports` serves CSV and fails the same way, opening in Excel as a
  * single column of markup.
  *
+ * `/billing` and `/invoice` are staff and partner tools that answer with forms,
+ * redirects and a printable invoice, never a localised page.
+ *
  * `/booking` and `/auth` are the public JSON endpoints and were missing, which
  * meant every one of them was unreachable from the moment it was written. A POST
  * to /booking/request was rewritten to /en/booking/request, matched no route,
@@ -314,7 +317,7 @@ export default function middleware(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|reviews|save|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],
