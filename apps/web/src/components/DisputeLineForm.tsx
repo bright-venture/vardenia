@@ -29,7 +29,7 @@ export function DisputeLineForm({ statement, line }: { statement: number; line: 
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-gold-700 hover:text-ink-900 text-xs underline underline-offset-4"
+        className="text-gold-700 hover:text-ink-900 mt-1 block text-xs underline underline-offset-4"
       >
         {t('disputeAction')}
       </button>

@@ -105,6 +105,14 @@ export default async function PartnerStatementPage({ params }: Props) {
                   {line.disputeOutcome === 'open' ? (
                     <span className="text-ink-500 block text-xs">{t('disputeOpen')}</span>
                   ) : null}
+                  {/* What the venue wrote, shown back to it under the line it
+                      questioned, whatever the outcome. Set off with a rule rather
+                      than a label, so it needs no words in ten languages. */}
+                  {line.disputeOutcome !== 'none' && line.disputeReason ? (
+                    <span className="border-ink-100 text-ink-700 mt-1 block border-s-2 ps-2 text-xs">
+                      {line.disputeReason}
+                    </span>
+                  ) : null}
                   {line.disputeOutcome === 'upheld' ? (
                     <span className="text-ink-500 block text-xs">{t('disputeUpheld')}</span>
                   ) : null}

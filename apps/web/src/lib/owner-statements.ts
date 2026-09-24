@@ -29,6 +29,8 @@ export interface OwnerStatementLine {
   rate: number
   amount: number
   disputeOutcome: DisputeOutcome
+  /** What the venue wrote when it questioned the line, shown back to it. */
+  disputeReason: string
   canDispute: boolean
 }
 
@@ -69,6 +71,7 @@ interface Doc {
         rate?: number | null
         amount?: number | null
         disputeOutcome?: DisputeOutcome | null
+        disputeReason?: string | null
       }[]
     | null
 }
@@ -95,6 +98,7 @@ function shape(doc: Doc, now: Date): OwnerStatement {
       rate: Number(line.rate ?? 0),
       amount: Number(line.amount ?? 0),
       disputeOutcome: line.disputeOutcome ?? 'none',
+      disputeReason: line.disputeReason ?? '',
       canDispute: canDispute(doc, line, now),
     })),
   }
