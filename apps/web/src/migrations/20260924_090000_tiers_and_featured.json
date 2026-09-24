@@ -698,6 +698,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'draft'"
+        },
+        "featured": {
+          "name": "featured",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -961,6 +968,21 @@
           "columns": [
             {
               "expression": "_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "businesses_featured_idx": {
+          "name": "businesses_featured_idx",
+          "columns": [
+            {
+              "expression": "featured",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2154,6 +2176,13 @@
           "type": "boolean",
           "primaryKey": false,
           "notNull": false
+        },
+        "version_featured": {
+          "name": "version_featured",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -2507,6 +2536,21 @@
           "columns": [
             {
               "expression": "latest",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "_businesses_v_version_version_featured_idx": {
+          "name": "_businesses_v_version_version_featured_idx",
+          "columns": [
+            {
+              "expression": "version_featured",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -8792,8 +8836,7 @@
       "schema": "payload",
       "values": [
         "online",
-        "free",
-        "featured"
+        "free"
       ]
     },
     "payload.enum_businesses_status": {
@@ -8983,8 +9026,7 @@
       "schema": "payload",
       "values": [
         "online",
-        "free",
-        "featured"
+        "free"
       ]
     },
     "payload.enum__businesses_v_version_status": {
@@ -9244,6 +9286,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "6c6bf3a5-1a1c-47e3-af24-5cf0e1669376",
+  "id": "8a709328-d85b-4bfe-982a-ca74a26070f5",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

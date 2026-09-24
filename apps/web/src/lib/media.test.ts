@@ -79,13 +79,13 @@ describe('resolveGallery', () => {
      * listing displayed every image uploaded to it, 40 in one case.
      */
     it('caps every tier at its allowance', () => {
-      for (const t of ['online', 'free', 'featured'] as const) {
+      for (const t of ['online', 'free'] as const) {
         expect(resolveGallery(gallery(50), can(t, 'galleryLimit')), t).toHaveLength(15)
       }
     })
 
     it('does not pad when a listing has fewer images than its allowance', () => {
-      expect(resolveGallery(gallery(3), can('featured', 'galleryLimit'))).toHaveLength(3)
+      expect(resolveGallery(gallery(3), can('free', 'galleryLimit'))).toHaveLength(3)
     })
 
     it('keeps the first images, so ordering in the admin decides what shows', () => {
@@ -101,7 +101,7 @@ describe('resolveGallery', () => {
 
 describe('tierOf', () => {
   it('passes through the real tiers', () => {
-    for (const t of ['online', 'free', 'featured'] as const) {
+    for (const t of ['online', 'free'] as const) {
       expect(tierOf(t)).toBe(t)
     }
   })

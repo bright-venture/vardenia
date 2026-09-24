@@ -8,7 +8,7 @@ import {
 } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
-import { tierField } from '../fields/tier'
+import { featuredField, tierField } from '../fields/tier'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
@@ -251,6 +251,7 @@ export const Businesses: CollectionConfig = {
           admin: { condition: (_, __, { user }) => hasStaffRole(user) },
           fields: [
             tierField,
+            featuredField,
             {
               name: 'verified',
               type: 'checkbox',

@@ -23,6 +23,10 @@ describe('featured places', () => {
     expect(featuredPlaceCheck(FEATURED_PLACES + 3)).not.toBe(true)
   })
 
+  it('names the way out in its refusal', () => {
+    expect(featuredPlaceCheck(FEATURED_PLACES)).toContain('Untick featured')
+  })
+
   it('follows a different number of places', () => {
     expect(featuredPlaceCheck(2, 3)).toBe(true)
     expect(featuredPlaceCheck(3, 3)).not.toBe(true)
@@ -40,6 +44,5 @@ describe('tier labels', () => {
     }
     expect(TIER_LABELS.free).toContain('magazine')
     expect(TIER_LABELS.online).toContain('no magazine')
-    expect(TIER_LABELS.featured).toContain('home page')
   })
 })

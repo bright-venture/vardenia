@@ -29,7 +29,7 @@ import * as migration_20260922_105515_add_gyms_malls_subcategories from './20260
 import * as migration_20260922_105600_move_gyms_malls from './20260922_105600_move_gyms_malls'
 import * as migration_20260922_110157_two_tiers from './20260922_110157_two_tiers'
 import * as migration_20260923_070208_booking_locales from './20260923_070208_booking_locales'
-import * as migration_20260924_090000_online_tier from './20260924_090000_online_tier'
+import * as migration_20260924_090000_tiers_and_featured from './20260924_090000_tiers_and_featured'
 
 export const migrations = [
   {
@@ -188,8 +188,8 @@ export const migrations = [
     name: '20260923_070208_booking_locales',
   },
   {
-    up: migration_20260924_090000_online_tier.up,
-    down: migration_20260924_090000_online_tier.down,
-    name: '20260924_090000_online_tier',
+    up: migration_20260924_090000_tiers_and_featured.up,
+    down: migration_20260924_090000_tiers_and_featured.down,
+    name: '20260924_090000_tiers_and_featured',
   },
 ]

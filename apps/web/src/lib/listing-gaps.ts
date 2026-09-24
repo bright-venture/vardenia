@@ -50,6 +50,8 @@ export interface ListingGap {
   category: string
   governorate: string
   tier: string
+  /** The home page add-on, which either tier can carry. */
+  featured: boolean
   /** How many of the flags below are false. Sort on it, descending. */
   missing: number
   hasPhotograph: boolean
@@ -204,6 +206,7 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
       category: text(doc.category),
       governorate: text(doc.governorate),
       tier: text(doc.tier),
+      featured: doc.featured === true,
       missing: 0,
       // A photograph of this place, so the shared stand-in does not count. Only
       // the placeholder case looks finished on the page, which is why it is the

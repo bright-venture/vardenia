@@ -117,12 +117,12 @@ points at.
 
 ### How many photos to ask for
 
-`galleryLimit` is what a tier buys: free shows **1** gallery image, listed 6,
-featured 15, partner 40. Every listing is free today, so a folder of twenty
-photographs displays two of them - the cover and one - while all twenty are
-uploaded, re-encoded into six sizes each and stored where nobody sees them.
+`galleryLimit` comes from the tier, and both tiers show **15** gallery images. A folder
+of twenty photographs displays the cover and fifteen more; the importer uploads only
+those, because the rest would be re-encoded into six sizes each and stored where nobody
+sees them.
 
-Ask for a cover and one or two more until listings are actually sold.
+Ask for a cover and up to fifteen more.
 
 ## Doing it in the admin panel
 

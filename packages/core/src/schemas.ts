@@ -53,6 +53,9 @@ export const businessSummarySchema = z.object({
   coordinates: coordinatesSchema.nullable(),
   heroImage: z.string().url().nullable(),
   tier: z.enum(LISTING_TIERS),
+  // The home page add-on, which either tier can carry. Defaulted, so a response
+  // from before the flag existed still parses.
+  featured: z.boolean().default(false),
   verified: z.boolean(),
   priceRange: z.number().int().min(1).max(4).nullable(),
   qrCode: z.string().nullable(),
@@ -83,7 +86,7 @@ export type BusinessDetail = z.infer<typeof businessDetailSchema>
 
 /**
  * Directory search. `near` + `radiusKm` drive the PostGIS query behind
- * "attractions near me"; without `near`, results fall back to tier rank.
+ * "attractions near me"; without `near`, results fall back to featured, then tier rank.
  */
 export const businessQuerySchema = z.object({
   q: z.string().trim().min(1).max(120).optional(),

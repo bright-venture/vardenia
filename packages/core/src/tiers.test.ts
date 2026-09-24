@@ -46,7 +46,6 @@ describe('the ladder holds its shape', () => {
       for (const flag of [
         'editorialFeature',
         'analyticsAccess',
-        'heroPlacement',
         'printInclusion',
         'pushCampaigns',
       ] as const) {
@@ -58,28 +57,32 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * Each rung is the one below plus one thing, which is how the tiers are sold:
-   * the website, then the magazine page with the website included, then the
-   * home page on top. A difference the sales sheet cannot name in one line is
-   * one a customer cannot be asked to pay for.
+   * The two tiers differ in one thing, print, which is how they are sold: the
+   * website, or a magazine page with the website included. A difference the
+   * sales sheet cannot name in one line is one a customer cannot be asked to pay
+   * for.
    */
-  it('adds print for the magazine tier and the home page for featured', () => {
-    const [online, free, featured] = [
-      TIER_CAPABILITIES.online,
-      TIER_CAPABILITIES.free,
-      TIER_CAPABILITIES.featured,
-    ]
+  it('adds print for the magazine tier and nothing else', () => {
+    const { online, free } = TIER_CAPABILITIES
 
     expect(online.printInclusion).toBe(false)
     expect(free.printInclusion).toBe(true)
 
-    expect(free.heroPlacement).toBe(false)
-    expect(featured.heroPlacement).toBe(true)
-
-    // The website listing itself is the same on every tier.
+    // The website listing itself is the same on both.
     expect(online.galleryLimit).toBe(free.galleryLimit)
-    expect(free.galleryLimit).toBe(featured.galleryLimit)
-    expect(online.analyticsAccess).toBe(true)
+    expect(online.analyticsAccess).toBe(free.analyticsAccess)
+  })
+
+  /**
+   * Featured is a flag either tier can carry, not a tier. If it ever comes back
+   * as one, "online only, but featured" stops being something the admin can
+   * record - which is the reason it was taken out.
+   */
+  it('keeps featured out of the tiers', () => {
+    expect(LISTING_TIERS).not.toContain('featured')
+    for (const tier of LISTING_TIERS) {
+      expect(Object.keys(TIER_CAPABILITIES[tier]), tier).not.toContain('heroPlacement')
+    }
   })
 
   /**
@@ -95,10 +98,10 @@ describe('the ladder holds its shape', () => {
   /**
    * The directory orders on `-tier`, which is the Postgres enum's declaration
    * order rather than anything this file computes. Reordering the array would
-   * bury the featured listings underneath the online-only ones.
+   * bury the magazine listings underneath the online-only ones.
    */
   it('declares the tiers cheapest first, which is what sorts the dearest first', () => {
-    expect(LISTING_TIERS).toEqual(['online', 'free', 'featured'])
+    expect(LISTING_TIERS).toEqual(['online', 'free'])
   })
 
   it('has room on the home page for as many featured listings as it shows', () => {
@@ -107,14 +110,14 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * `listed` and `partner` were retired when four tiers became two. An unknown
-   * tier falls to the lowest, so such a listing loses its standing rather than
+   * `listed` and `partner` were retired when four tiers became two, and
+   * `featured` when it became a flag instead of a tier. An unknown tier falls to the lowest, so such a listing loses its standing rather than
    * silently keeping a paid one.
    */
   it('treats a retired tier as the lowest rather than as something it no longer is', () => {
-    for (const retired of ['listed', 'partner']) {
+    for (const retired of ['listed', 'partner', 'featured']) {
       expect(tierOf(retired)).toBe('online')
-      expect(can(tierOf(retired), 'heroPlacement')).toBe(false)
+      expect(can(tierOf(retired), 'printInclusion')).toBe(false)
     }
   })
 })
@@ -126,11 +129,10 @@ describe('an unrecognised tier', () => {
    * everything a partner pays for.
    */
   it('falls to the lowest tier rather than throwing or granting print', () => {
-    for (const value of [undefined, null, '', 'premium', 'PARTNER', 42, {}]) {
+    for (const value of [undefined, null, '', 'premium', 'featured', 'PARTNER', 42, {}]) {
       expect(tierOf(value), String(value)).toBe('online')
     }
 
     expect(can(tierOf('premium'), 'printInclusion')).toBe(false)
-    expect(can(tierOf('premium'), 'heroPlacement')).toBe(false)
   })
 })

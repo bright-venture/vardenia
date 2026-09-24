@@ -1,14 +1,19 @@
 /**
- * The listing tier, and the rule that keeps featured to the places there are.
+ * The listing tier, the featured add-on, and the rule that keeps featured to
+ * the places there are.
  *
- * The three tiers and what each buys are declared in packages/core/src/tiers.
- * This file is the admin's side of them: the labels staff choose from, and the
- * check that stops a seventh featured listing being sold into a home page band
- * that shows six.
+ * The tiers and what each buys are declared in packages/core/src/tiers. This
+ * file is the admin's side of them: the labels staff choose from, and the check
+ * that stops a seventh featured listing being sold into a home page band that
+ * shows six.
+ *
+ * Tier and featured are two fields because they are two questions. The tier
+ * says whether the venue is in print; featured says whether it is on the home
+ * page. Either tier can be featured.
  */
 
-import type { SelectField, SelectFieldSingleValidation } from 'payload'
-import { select } from 'payload/shared'
+import type { CheckboxField, CheckboxFieldValidation, SelectField } from 'payload'
+import { checkbox } from 'payload/shared'
 import { FEATURED_PLACES, LISTING_TIERS, type ListingTier } from '@vardenia/core'
 import { isAdminFieldLevel } from '../access/index'
 
@@ -20,7 +25,6 @@ import { isAdminFieldLevel } from '../access/index'
 export const TIER_LABELS: Record<ListingTier, string> = {
   online: 'Online only (website, no magazine page)',
   free: 'Free (magazine page, website included)',
-  featured: 'Featured (magazine page, website and home page)',
 }
 
 /**
@@ -34,30 +38,30 @@ export function featuredPlaceCheck(
   places: number = FEATURED_PLACES,
 ): string | true {
   if (othersFeatured < places) return true
-  return `The home page shows ${places} featured listings and all ${places} places are taken. Move one of them to another tier first.`
+  return `The home page shows ${places} featured listings and all ${places} places are taken. Untick featured on one of them first.`
 }
 
 /**
- * Payload's own select validation first, then the place count.
+ * Payload's own checkbox validation first, then the place count.
  *
- * Only a move *to* featured takes a place. A listing that is already featured
- * keeps its place on every later save, even if the count has somehow gone over
- * - refusing an unrelated edit to a paying listing would be the wrong way to
+ * Only ticking the box takes a place. A listing that is already featured keeps
+ * its place on every later save, even if the count has somehow gone over -
+ * refusing an unrelated edit to a paying listing would be the wrong way to
  * surface that.
  *
  * Drafts count. A featured listing saved as a draft has been sold the place,
  * and publishing it must not be the moment the band turns out to be full.
  */
-export const validateTier: SelectFieldSingleValidation = async (value, options) => {
-  const valid = await select(value, options)
+export const validateFeatured: CheckboxFieldValidation = async (value, options) => {
+  const valid = await checkbox(value, options)
   if (valid !== true) return valid
-  if (value !== 'featured' || options.previousValue === 'featured') return true
+  if (value !== true || options.previousValue === true) return true
 
   const { req, id } = options
   const { totalDocs } = await req.payload.count({
     collection: 'businesses',
     where: {
-      and: [{ tier: { equals: 'featured' } }, ...(id == null ? [] : [{ id: { not_equals: id } }])],
+      and: [{ featured: { equals: true } }, ...(id == null ? [] : [{ id: { not_equals: id } }])],
     },
     overrideAccess: true,
     req,
@@ -75,8 +79,20 @@ export const tierField: SelectField = {
   index: true,
   access: { update: isAdminFieldLevel },
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
-  validate: validateTier,
   admin: {
-    description: `Online only: the website. Free: a magazine page, with the website included. Featured: the magazine tier plus the home page, which has ${FEATURED_PLACES} places.`,
+    description:
+      'Online only: the website. Free: a magazine page, with the website included. Home page placement is the Featured box below, which either tier can have.',
+  },
+}
+
+export const featuredField: CheckboxField = {
+  name: 'featured',
+  type: 'checkbox',
+  defaultValue: false,
+  index: true,
+  access: { update: isAdminFieldLevel },
+  validate: validateFeatured,
+  admin: {
+    description: `An add-on to either tier: a place at the top of the home page, and first place in every listing grid. The home page has ${FEATURED_PLACES} places, and the box cannot be ticked on a seventh listing.`,
   },
 }

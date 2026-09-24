@@ -60,14 +60,16 @@ function fieldNamed(fields: Field[], name: string): Field {
 /**
  * The one that matters most.
  *
- * Anything in this tab is commercial. Two fields are deliberately public - the
- * site renders a tier badge and a verified tick - and everything else must carry
+ * Anything in this tab is commercial. Three fields are deliberately public - the
+ * site renders a tier badge and a verified tick, and `featured` is what the home
+ * page band queries and every listing grid sorts on, as an anonymous visitor -
+ * and everything else must carry
  * field-level read access. Adding a field here without one is the exact mistake
  * this exists to catch, so the allowlist is explicit: a new field fails this
  * test until someone decides, in writing, which side it belongs on.
  */
 describe('Businesses: the Commercial tab', () => {
-  const PUBLICLY_READABLE = new Set(['tier', 'verified'])
+  const PUBLICLY_READABLE = new Set(['tier', 'featured', 'verified'])
 
   const fields = tabFields(Businesses, 'Commercial')
 
@@ -103,8 +105,8 @@ describe('Businesses: the Commercial tab', () => {
     expect(read!(fieldCtx(null))).toBe(false)
   })
 
-  it('lets only an admin change tier and verified', () => {
-    for (const name of ['tier', 'verified']) {
+  it('lets only an admin change tier, featured and verified', () => {
+    for (const name of ['tier', 'featured', 'verified']) {
       const field = fieldNamed(fields, name)
       const update = 'access' in field ? field.access?.update : undefined
 

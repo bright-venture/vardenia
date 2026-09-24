@@ -105,7 +105,7 @@ const client = async () => getPayload({ config })
 /**
  * Rank a fetched set by how well each doc's chosen fields match the query, keep
  * what clears the threshold, best first. The fetch is already ordered by the
- * page's own tiebreak (tier then name, or date), and the sort here is stable, so
+ * page's own tiebreak (featured, tier, then name, or date), and the sort here is stable, so
  * two equally-relevant results keep that order rather than jump around.
  */
 function rankByScore<T>(
@@ -168,7 +168,7 @@ const listingCandidates = (locale: Locale) =>
         // Paying listings first, then alphabetical - the same order the
         // directory uses, so equally-relevant results do not change rank by how
         // you arrived.
-        sort: ['-tier', 'name'],
+        sort: ['-featured', '-tier', 'name'],
         overrideAccess: false,
         select: { name: true, tagline: true },
       })

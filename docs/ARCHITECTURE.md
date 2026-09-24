@@ -147,7 +147,7 @@ panel.
 
 - **staff** (`users`) - creates and edits all content: listings, articles, issues, media.
 - **admin** (`users`) - all of that, plus identity (accounts), the permanence layer (QR
-  codes, scan events) and commercial flags (`tier`, `verified`).
+  codes, scan events) and commercial flags (`tier`, `featured`, `verified`).
 - **customers** - the public who signed up. They book and keep a shortlist, and see their
   own bookings and saves, nothing else.
 - **partners** (`business-users`) - a venue signing in to a light dashboard to see the
@@ -181,8 +181,8 @@ are the substance of the file, and `SavedListings.ts` and `Customers.ts` for the
 On the `Commercial` tab, contract dates, sales owner and internal notes carry field-level
 `read: isStaffFieldLevel` and are stripped from every unauthenticated response.
 
-`tier` and `verified` are deliberately public: tier drives result ranking and what the page
-renders, and `verified` is a trust badge shown to readers. Both appear in
+`tier`, `featured` and `verified` are deliberately public: tier and featured drive result
+ranking and the home page band, and `verified` is a trust badge shown to readers. All three appear in
 `packages/core/src/schemas.ts`, which defines what may leave the building separately from
 what the database holds.
 
@@ -204,8 +204,14 @@ what the database holds.
 `if (tier === 'premium')` scattered through components. When sales invents a package, it is
 added there and the UI follows automatically.
 
-Expired contracts fall back to `free` rather than unpublishing - a lapsed advertiser keeps
-a basic presence, and a reason to renew.
+There are two tiers, and every one is paid: `online` is the website listing alone, and
+`free` is a page in the printed magazine with the website listing included (free with the
+page, hence the name). Home page placement is not a tier but a separate `featured` flag,
+because either tier can buy it; the admin refuses it beyond `FEATURED_PLACES`, the number
+the home page band shows. Listing grids sort featured first, then magazine above online.
+
+Nothing expires automatically. A lapsed contract keeps its tier until someone changes it,
+and the admin dashboard lists every lapsed contract so that someone notices.
 
 ## Data flow
 

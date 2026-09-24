@@ -147,14 +147,12 @@ describe('how many gallery photographs a tier displays', () => {
   /**
    * Every tier is paid since the website-only tier was added, and the website
    * listing is the same on all three, so the allowance is too. What separates
-   * the tiers is print and the home page, not the number of photographs.
+   * the tiers is print, not the number of photographs.
    */
-  it('is the same fifteen on every tier', () => {
-    const limits = (['online', 'free', 'featured'] as const).map((tier) =>
-      can(tierOf(tier), 'galleryLimit'),
-    )
+  it('is the same fifteen on both tiers', () => {
+    const limits = (['online', 'free'] as const).map((tier) => can(tierOf(tier), 'galleryLimit'))
 
-    expect(limits).toEqual([15, 15, 15])
+    expect(limits).toEqual([15, 15])
   })
 
   /**

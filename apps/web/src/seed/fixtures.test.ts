@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { GOVERNORATES, LISTING_TIERS, TAXONOMY, isWithinLebanon } from '@vardenia/core'
+import {
+  FEATURED_PLACES,
+  GOVERNORATES,
+  LISTING_TIERS,
+  TAXONOMY,
+  isWithinLebanon,
+} from '@vardenia/core'
 import { ARTICLES, BUSINESSES, ISSUES, SCAN_CITIES, SEEDED_SLUGS } from './fixtures'
 import { richText } from './rich-text'
 
@@ -93,12 +99,15 @@ describe('business fixtures', () => {
     }
   })
 
-  it('keeps commercial fields on contracted listings only', () => {
-    for (const b of BUSINESSES) {
-      if (b.tier === 'free') {
-        expect(b.contractEndsAt, `${b.slug} is free but has a contract`).toBeUndefined()
-      }
-    }
+  /**
+   * Featured is a flag either tier can carry, so the fixtures show it on both.
+   * And no more of them than the home page shows, or the seed would build a
+   * state the admin refuses.
+   */
+  it('features listings on both tiers, within the home page places', () => {
+    const featured = BUSINESSES.filter((b) => b.featured)
+    expect(new Set(featured.map((b) => b.tier))).toEqual(new Set(LISTING_TIERS))
+    expect(featured.length).toBeLessThanOrEqual(FEATURED_PLACES)
   })
 })
 

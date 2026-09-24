@@ -8,7 +8,7 @@
  */
 
 /**
- * Three tiers, in enum order, each one the tier below plus one thing.
+ * Two tiers, in enum order, answering one question: is the venue in print?
  *
  * - `online`: the listing on the website, and nothing in print. For a venue
  *   that wants to be found online but does not buy a magazine page.
@@ -16,30 +16,37 @@
  *   at no extra cost, which is where the name comes from: the venue pays for
  *   print, and online is free. Every listing imported from the magazine lands
  *   here, so it is also the default.
- * - `featured`: everything `free` has, plus a place in the band at the top of
- *   the home page. The band has room for {@link FEATURED_PLACES} listings, so
- *   the admin refuses a featured listing beyond that number.
  *
- * Before this there were two tiers, free and featured, and free meant unpaid
- * inventory. That changed when the team decided the website listing is what a
- * magazine page includes, and that the website on its own is something a venue
- * can buy. Every tier is now a paid one.
+ * # Featured is not a tier
  *
- * The order matters beyond readability: the directory sorts on `-tier`, which
- * is the Postgres enum's own declaration order, so a magazine listing rises above
- * an online-only one and a featured listing above both. The migration that adds
- * `online` puts it BEFORE `free` in the enum for that reason.
+ * It is a separate `featured` flag on the listing, because it answers a
+ * different question - is the venue on the home page? - and a website-only venue
+ * can buy it as well as a magazine one. As a third tier it could only sit above
+ * `free`, which would have made "online only, but featured" impossible to
+ * record without a fourth value, and every further add-on would have doubled
+ * the list again. See {@link FEATURED_PLACES}.
+ *
+ * Every tier is paid. Before this there were two, free and featured, and free
+ * meant unpaid inventory; that changed when the website listing became what a
+ * magazine page includes, and the website on its own something a venue can buy.
+ *
+ * The order matters beyond readability: the directory sorts on `-featured`,
+ * then `-tier`, and `-tier` is the Postgres enum's own declaration order, so a
+ * magazine listing rises above an online-only one. `online` is declared first
+ * in the enum for that reason.
  */
-export const LISTING_TIERS = ['online', 'free', 'featured'] as const
+export const LISTING_TIERS = ['online', 'free'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
- * How many featured listings the home page shows, and so how many can be sold.
+ * How many listings can be featured, which is how many the home page shows.
  *
- * A featured listing that never appears in the band has been sold something it
- * does not get: the band is sorted by name and cut at this number, so the
- * seventh would silently lose out to whichever six come first in the alphabet.
- * The admin refuses the seventh instead. Raise this and the band grows with it.
+ * Featured is an add-on either tier can buy: a place in the band at the top of
+ * the home page, and first place in every listing grid. A featured listing that
+ * never appears in the band has been sold something it does not get - the band
+ * is sorted and cut at this number, so the seventh would silently lose out to
+ * whichever six come first. The admin refuses the seventh instead. Raise this
+ * and the band grows with it.
  */
 export const FEATURED_PLACES = 6
 
@@ -52,8 +59,6 @@ export interface TierCapabilities {
   editorialFeature: boolean
   /** Scan performance is included in the report the team sends at renewal. */
   analyticsAccess: boolean
-  /** Eligible for homepage and category-hero placement. */
-  heroPlacement: boolean
   /** Eligible to appear in the printed magazine. */
   printInclusion: boolean
   /**
@@ -65,11 +70,15 @@ export interface TierCapabilities {
    * 2026, which meant the data model asserted something the product could not
    * do - and a sales sheet generated from it would have promised it.
    *
-   * Turn it on for `partner` when the app ships and has an audience, not before.
+   * Turn it on when the app ships and has an audience, not before.
    */
   pushCampaigns: boolean
 }
 
+/**
+ * Home page placement is not in here: it belongs to the `featured` flag, which
+ * either tier can carry, rather than to a tier.
+ */
 export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   /**
    * The website listing on its own. It is a paid tier, so the listing page is
@@ -81,7 +90,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     galleryLimit: 15,
     editorialFeature: false,
     analyticsAccess: true,
-    heroPlacement: false,
     printInclusion: false,
     pushCampaigns: false,
   },
@@ -94,21 +102,6 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     galleryLimit: 15,
     editorialFeature: true,
     analyticsAccess: true,
-    heroPlacement: false,
-    printInclusion: true,
-    pushCampaigns: false,
-  },
-  /**
-   * The magazine tier plus the home page. `heroPlacement` is the band at the top
-   * of the home page, limited to FEATURED_PLACES listings; priority in every
-   * listing grid comes with it through the `-tier` sort.
-   */
-  featured: {
-    rank: 10,
-    galleryLimit: 15,
-    editorialFeature: true,
-    analyticsAccess: true,
-    heroPlacement: true,
     printInclusion: true,
     // Not until the app has users. See the note on the field.
     pushCampaigns: false,
@@ -120,8 +113,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
  *
  * Unknown or missing values fall to the lowest tier, `online`, rather than
  * throwing. Failing closed matters: the alternative is a listing with a corrupt
- * tier quietly receiving print and the home page, which are what the tiers
- * above are paid for.
+ * tier quietly receiving print, which is what the tier above is paid for.
  */
 export function tierOf(value: unknown): ListingTier {
   return LISTING_TIERS.includes(value as ListingTier) ? (value as ListingTier) : LISTING_TIERS[0]

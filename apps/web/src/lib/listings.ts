@@ -343,7 +343,7 @@ async function readOpenNowCandidates(
     where,
     locale: dataLocale(locale),
     depth: 0,
-    sort: ['-tier', 'name'],
+    sort: ['-featured', '-tier', 'name'],
     overrideAccess: false,
     select: { openingHours: true },
   })
@@ -496,10 +496,10 @@ export async function findListings({
       depth: 1,
       page,
       limit: perPage,
-      // Paying listings first, then alphabetical. Tier ranking lives in
-      // packages/core; this is the crude version until the list page grows
-      // real relevance sorting.
-      sort: ['-tier', 'name'],
+      // Featured first, then magazine listings above online-only ones, then
+      // alphabetical. Tier ranking lives in packages/core; this is the crude
+      // version until the list page grows real relevance sorting.
+      sort: ['-featured', '-tier', 'name'],
       overrideAccess: false,
     })
   }
@@ -688,10 +688,11 @@ export async function countByGovernorate({
 /**
  * The listings a venue has paid to have shown.
  *
- * This is the visible half of what `featured` buys - the home page draws a band
- * of these above everything else. The other half needs no query at all: every
- * listing grid already sorts on `-tier`, so a paid listing rises to the top of
- * its section without anything here.
+ * This is the visible half of what the `featured` add-on buys - the home page
+ * draws a band of these above everything else. The other half needs no query
+ * at all: every listing grid sorts on `-featured` first, so a featured listing
+ * rises to the top of its section without anything here. Either tier can be
+ * featured, so the band can hold online-only listings as well as magazine ones.
  *
  * # Why it is its own query rather than a filter on the homepage grid
  *
@@ -714,14 +715,15 @@ export async function findFeaturedListings({
 
     const result = await payload.find({
       collection: 'businesses',
-      where: { tier: { equals: 'featured' } },
+      where: { featured: { equals: true } },
       locale: dataLocale(locale),
       depth: 1,
       limit,
       pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
-      sort: ['-tier', 'name'],
+      // All featured, so this orders the band by tier and then name.
+      sort: ['-featured', '-tier', 'name'],
     })
 
     return result.docs as ListingSummary[]
@@ -912,7 +914,7 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
       locale: dataLocale(locale),
       depth: 1,
       limit: POOL_SIZE,
-      sort: ['-tier', 'name'],
+      sort: ['-featured', '-tier', 'name'],
       overrideAccess: false,
     })
 

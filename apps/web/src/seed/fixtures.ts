@@ -38,6 +38,8 @@ export interface BusinessFixture {
   address: { en: string; ar: string }
   location: [number, number]
   tier: ListingTier
+  /** The home page add-on. Either tier can carry it. */
+  featured?: boolean
   verified: boolean
   priceRange: '1' | '2' | '3' | '4'
   amenities: string[]
@@ -79,7 +81,8 @@ export const BUSINESSES: BusinessFixture[] = [
       ar: 'شارع عبد الوهاب الإنكليزي، الأشرفية',
     },
     location: [35.5199, 33.8886],
-    tier: 'featured',
+    tier: 'free',
+    featured: true,
     verified: true,
     priceRange: '4',
     amenities: [
@@ -111,7 +114,8 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'beirut',
     address: { en: 'Monot Street, Achrafieh', ar: 'شارع مونو، الأشرفية' },
     location: [35.5145, 33.8894],
-    tier: 'featured',
+    tier: 'free',
+    featured: true,
     verified: true,
     priceRange: '4',
     amenities: ['valet-parking', 'alcohol', 'outdoor-seating', 'air-conditioning'],
@@ -135,7 +139,8 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'zahle',
     address: { en: 'Ksara, Zahle', ar: 'كسارة، زحلة' },
     location: [35.8903, 33.8225],
-    tier: 'featured',
+    tier: 'free',
+    featured: true,
     verified: true,
     priceRange: '2',
     amenities: ['free-parking', 'alcohol', 'family-friendly', 'outdoor-seating'],
@@ -161,7 +166,9 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'keserwan',
     address: { en: 'Kfardebian, Keserwan', ar: 'كفردبيان، كسروان' },
     location: [35.8422, 34.0086],
-    tier: 'featured',
+    // Website only, and featured: the add-on works on either tier.
+    tier: 'online',
+    featured: true,
     verified: false,
     priceRange: '3',
     amenities: ['free-parking', 'family-friendly', 'mountain-view'],
