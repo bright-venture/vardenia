@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { statementEmailContent } from './statement-email'
-import { sameOrigin } from './billing-page'
+import { sameOrigin } from './billing-auth'
 
 const content = statementEmailContent({
   number: 'VRD-2026-0007',

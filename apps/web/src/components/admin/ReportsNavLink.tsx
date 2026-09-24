@@ -70,6 +70,14 @@ export function ReportsNavLink() {
       >
         Import listings (CSV)
       </Link>
+
+      <Link
+        href="/admin/billing"
+        style={linkStyle}
+        title="Draw up and send the monthly booking-fee statements"
+      >
+        Booking fees
+      </Link>
     </div>
   )
 }

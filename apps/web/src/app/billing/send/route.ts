@@ -1,11 +1,11 @@
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
-import { isStaffRequest, sameOrigin } from '../../../lib/billing-page'
+import { isStaffRequest, sameOrigin } from '../../../lib/billing-auth'
 import { sendDrafts } from '../../../lib/statements'
 import { reportError } from '../../../lib/report'
 
 /**
- * Sends every draft of one month. Staff only, from the form on /billing.
+ * Sends every draft of one month. Staff only, from Booking fees in the admin.
  *
  * Sending is what starts a venue's clock: the seven days to question a line and
  * the fifteen to pay are stamped by the collection the moment each statement
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     message = 'Sending failed part way. The error has been reported; check the list below.'
   }
 
-  const back = new URL('/billing', request.url)
+  const back = new URL('/admin/billing', request.url)
   back.searchParams.set('period', period)
   back.searchParams.set('message', message)
   return Response.redirect(back, 303)

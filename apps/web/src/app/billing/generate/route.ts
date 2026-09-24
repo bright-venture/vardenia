@@ -1,11 +1,11 @@
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
-import { isStaffRequest, sameOrigin } from '../../../lib/billing-page'
+import { isStaffRequest, sameOrigin } from '../../../lib/billing-auth'
 import { NotReadyError, drawUpStatements } from '../../../lib/statements'
 import { reportError } from '../../../lib/report'
 
 /**
- * Draws up the drafts for one month. Staff only, from the form on /billing.
+ * Draws up the drafts for one month. Staff only, from Booking fees in the admin.
  *
  * Answers with a redirect back to the page carrying a one-line summary, so a
  * reload of the result does not post the form again.
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const back = new URL('/billing', request.url)
+  const back = new URL('/admin/billing', request.url)
   back.searchParams.set('period', period)
   back.searchParams.set('message', message)
   return Response.redirect(back, 303)

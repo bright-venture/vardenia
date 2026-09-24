@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 import { lineCounts, statementState, type StatementStatus } from '@vardenia/core'
 import config from '../../../payload.config'
 import { BUSINESS_USER_COLLECTION, ownedBusinessIds } from '../../../access/index'
-import { isStaffRequest } from '../../../lib/billing-page'
+import { isStaffRequest } from '../../../lib/billing-auth'
 import { beirutCalendarDayLabel, beirutDate } from '../../../lib/beirut'
 
 const day = (iso: string) => beirutCalendarDayLabel(beirutDate(new Date(iso)), 'en')

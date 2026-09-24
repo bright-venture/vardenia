@@ -138,6 +138,11 @@ export default buildConfig({
        * browser drives the loop.
        */
       views: {
+        // Booking-fee statements: a month at a time, drawn up and sent from here.
+        billing: {
+          path: '/billing',
+          Component: '/components/admin/BillingView#BillingView',
+        },
         importListings: {
           path: '/import-listings',
           Component: '/components/admin/ImportListings#ImportListings',

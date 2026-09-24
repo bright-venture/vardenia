@@ -16,7 +16,8 @@ import { findEvery } from './find-every'
 /**
  * Drawing up a month of statements, and sending them.
  *
- * Staff run this from /billing on or after the 8th of the next month. It does
+ * Staff run this from Booking fees in the admin (/admin/billing) on or after the
+ * 8th of the next month. It does
  * three things, in order:
  *
  * 1. Marks as completed every confirmed booking of the month that ended at least

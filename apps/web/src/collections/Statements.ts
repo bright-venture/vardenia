@@ -23,10 +23,10 @@ import { reportError } from '../lib/report'
 /**
  * A venue's monthly booking-fee statement, which is also its invoice.
  *
- * One per venue per month, drawn up by staff from the /billing page on the 8th,
+ * One per venue per month, drawn up by staff from Booking fees in the admin on the 8th,
  * once every booking of the month has had its seven days to be marked. It
  * starts as a draft nobody outside the team can see. Sending it - setting the
- * status to `sent`, from the admin or from /billing - stamps the two deadlines
+ * status to `sent`, on the statement or from Booking fees - stamps the two deadlines
  * and emails the venue. See packages/core/src/booking-fees for the rules.
  *
  * # Who sees what
@@ -172,7 +172,7 @@ export const Statements: CollectionConfig = {
     group: 'Bookings',
     listSearchableFields: ['number', 'period'],
     description:
-      'Monthly booking-fee statements. Draw them up and send them from /billing; settle disputes and record payments here.',
+      'Monthly booking-fee statements. Draw them up and send them from Booking fees in the menu; settle disputes and record payments here.',
   },
 
   access: {
