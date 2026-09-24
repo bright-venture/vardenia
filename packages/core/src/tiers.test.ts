@@ -63,19 +63,19 @@ describe('the ladder holds its shape', () => {
    * for.
    */
   it('adds print for the magazine tier and nothing else', () => {
-    const { online, free } = TIER_CAPABILITIES
+    const { basic, silver } = TIER_CAPABILITIES
 
-    expect(online.printInclusion).toBe(false)
-    expect(free.printInclusion).toBe(true)
+    expect(basic.printInclusion).toBe(false)
+    expect(silver.printInclusion).toBe(true)
 
     // The website listing itself is the same on both.
-    expect(online.galleryLimit).toBe(free.galleryLimit)
-    expect(online.analyticsAccess).toBe(free.analyticsAccess)
+    expect(basic.galleryLimit).toBe(silver.galleryLimit)
+    expect(basic.analyticsAccess).toBe(silver.analyticsAccess)
   })
 
   /**
    * Featured is a flag either tier can carry, not a tier. If it ever comes back
-   * as one, "online only, but featured" stops being something the admin can
+   * as one, "basic, but featured" stops being something the admin can
    * record - which is the reason it was taken out.
    */
   it('keeps featured out of the tiers', () => {
@@ -86,7 +86,7 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * `online` is paid, so it gets the scan report like the others: the report is
+   * `basic` is paid, so it gets the scan report like the others: the report is
    * what makes a renewal conversation possible, and every tier renews.
    */
   it('gives every tier the scan report', () => {
@@ -98,10 +98,10 @@ describe('the ladder holds its shape', () => {
   /**
    * The directory orders on `-tier`, which is the Postgres enum's declaration
    * order rather than anything this file computes. Reordering the array would
-   * bury the magazine listings underneath the online-only ones.
+   * bury the magazine listings underneath the website-only ones.
    */
   it('declares the tiers cheapest first, which is what sorts the dearest first', () => {
-    expect(LISTING_TIERS).toEqual(['online', 'free'])
+    expect(LISTING_TIERS).toEqual(['basic', 'silver'])
   })
 
   it('has room on the home page for as many featured listings as it shows', () => {
@@ -115,8 +115,8 @@ describe('the ladder holds its shape', () => {
    * silently keeping a paid one.
    */
   it('treats a retired tier as the lowest rather than as something it no longer is', () => {
-    for (const retired of ['listed', 'partner', 'featured']) {
-      expect(tierOf(retired)).toBe('online')
+    for (const retired of ['listed', 'partner', 'featured', 'online', 'free']) {
+      expect(tierOf(retired)).toBe('basic')
       expect(can(tierOf(retired), 'printInclusion')).toBe(false)
     }
   })
@@ -130,7 +130,7 @@ describe('an unrecognised tier', () => {
    */
   it('falls to the lowest tier rather than throwing or granting print', () => {
     for (const value of [undefined, null, '', 'premium', 'featured', 'PARTNER', 42, {}]) {
-      expect(tierOf(value), String(value)).toBe('online')
+      expect(tierOf(value), String(value)).toBe('basic')
     }
 
     expect(can(tierOf('premium'), 'printInclusion')).toBe(false)

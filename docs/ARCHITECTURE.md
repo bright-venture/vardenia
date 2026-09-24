@@ -204,11 +204,10 @@ what the database holds.
 `if (tier === 'premium')` scattered through components. When sales invents a package, it is
 added there and the UI follows automatically.
 
-There are two tiers, and every one is paid: `online` is the website listing alone, and
-`free` is a page in the printed magazine with the website listing included (free with the
-page, hence the name). Home page placement is not a tier but a separate `featured` flag,
+There are two tiers, and every one is paid: `basic` is the website listing alone, and
+`silver` is a page in the printed magazine with the website listing included. Home page placement is not a tier but a separate `featured` flag,
 because either tier can buy it; the admin refuses it beyond `FEATURED_PLACES`, the number
-the home page band shows. Listing grids sort featured first, then magazine above online.
+the home page band shows. Listing grids sort featured first, then silver above basic.
 
 Nothing expires automatically. A lapsed contract keeps its tier until someone changes it,
 and the admin dashboard lists every lapsed contract so that someone notices.

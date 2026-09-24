@@ -150,7 +150,7 @@ describe('how many gallery photographs a tier displays', () => {
    * the tiers is print, not the number of photographs.
    */
   it('is the same fifteen on both tiers', () => {
-    const limits = (['online', 'free'] as const).map((tier) => can(tierOf(tier), 'galleryLimit'))
+    const limits = (['basic', 'silver'] as const).map((tier) => can(tierOf(tier), 'galleryLimit'))
 
     expect(limits).toEqual([15, 15])
   })
@@ -161,12 +161,12 @@ describe('how many gallery photographs a tier displays', () => {
    */
   it('gives a retired tier the allowance of the lowest tier', () => {
     for (const retired of ['listed', 'partner']) {
-      expect(can(tierOf(retired), 'galleryLimit')).toBe(can('online', 'galleryLimit'))
+      expect(can(tierOf(retired), 'galleryLimit')).toBe(can('basic', 'galleryLimit'))
     }
   })
 
   /** An unknown tier must not become an unlimited one. */
   it('treats an unrecognised tier as the lowest', () => {
-    expect(can(tierOf('nonsense-tier'), 'galleryLimit')).toBe(can('online', 'galleryLimit'))
+    expect(can(tierOf('nonsense-tier'), 'galleryLimit')).toBe(can('basic', 'galleryLimit'))
   })
 })

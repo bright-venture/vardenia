@@ -619,7 +619,7 @@
           "typeSchema": "payload",
           "primaryKey": false,
           "notNull": false,
-          "default": "'free'"
+          "default": "'silver'"
         },
         "verified": {
           "name": "verified",
@@ -2066,7 +2066,7 @@
           "typeSchema": "payload",
           "primaryKey": false,
           "notNull": false,
-          "default": "'free'"
+          "default": "'silver'"
         },
         "version_verified": {
           "name": "version_verified",
@@ -8835,8 +8835,8 @@
       "name": "enum_businesses_tier",
       "schema": "payload",
       "values": [
-        "online",
-        "free"
+        "basic",
+        "silver"
       ]
     },
     "payload.enum_businesses_status": {
@@ -9025,8 +9025,8 @@
       "name": "enum__businesses_v_version_tier",
       "schema": "payload",
       "values": [
-        "online",
-        "free"
+        "basic",
+        "silver"
       ]
     },
     "payload.enum__businesses_v_version_status": {

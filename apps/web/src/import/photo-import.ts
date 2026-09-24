@@ -266,7 +266,7 @@ export async function runPhotoImport(
      * not uploaded at all: each one costs an encode into six sizes and a place
      * in the bucket, to be hidden at render time by resolveGallery.
      */
-    const limit = can(tierOf((business as { tier?: string }).tier ?? 'free'), 'galleryLimit')
+    const limit = can(tierOf((business as { tier?: string }).tier ?? 'silver'), 'galleryLimit')
     const gallery = contents.gallery.slice(0, limit)
 
     if (contents.gallery.length > gallery.length) {

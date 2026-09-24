@@ -174,7 +174,7 @@ function documentFor(listing: ImportedListing, heroImage: number | string, batch
     ...(listing.description ? { description: richText([listing.description]) } : {}),
     ...(listing.tags.length ? { tags: listing.tags } : {}),
     ...(listing.seasonality.length ? { seasonality: listing.seasonality } : {}),
-    tier: 'free',
+    tier: 'silver',
     importBatch: batch,
     // Explicit rather than relying on the collection's default, because this is
     // the single most consequential field in the whole import.

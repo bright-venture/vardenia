@@ -35,14 +35,14 @@ describe('featured places', () => {
 
 describe('tier labels', () => {
   /**
-   * `free` is a paid tier, named for the website listing that comes with a
-   * magazine page. A bare "Free" in the admin invites somebody to give it away.
+   * A ladder name says where a tier sits, not what it contains, so the label
+   * carries both.
    */
   it('says what each tier includes, not only its name', () => {
     for (const tier of LISTING_TIERS) {
       expect(TIER_LABELS[tier], tier).toMatch(/\(.+\)/)
     }
-    expect(TIER_LABELS.free).toContain('magazine')
-    expect(TIER_LABELS.online).toContain('no magazine')
+    expect(TIER_LABELS.silver).toContain('magazine')
+    expect(TIER_LABELS.basic).toContain('no magazine')
   })
 })

@@ -10,19 +10,24 @@
 /**
  * Two tiers, in enum order, answering one question: is the venue in print?
  *
- * - `online`: the listing on the website, and nothing in print. For a venue
+ * - `basic`: the listing on the website, and nothing in print. For a venue
  *   that wants to be found online but does not buy a magazine page.
- * - `free`: a page in the printed magazine. The website listing comes with it
- *   at no extra cost, which is where the name comes from: the venue pays for
- *   print, and online is free. Every listing imported from the magazine lands
- *   here, so it is also the default.
+ * - `silver`: a page in the printed magazine, with the website listing
+ *   included. Every listing imported from the magazine lands here, so it is
+ *   also the default.
+ *
+ * Named as a ladder (basic, silver) rather than for what they contain, because
+ * those are the names sales uses with a venue, and a third rung - gold - has
+ * somewhere obvious to go. The names were `online` and `free` for a day;
+ * `free` meant "the website comes free with the magazine page", which read to
+ * everyone as "costs nothing".
  *
  * # Featured is not a tier
  *
  * It is a separate `featured` flag on the listing, because it answers a
  * different question - is the venue on the home page? - and a website-only venue
  * can buy it as well as a magazine one. As a third tier it could only sit above
- * `free`, which would have made "online only, but featured" impossible to
+ * `silver`, which would have made "basic, but featured" impossible to
  * record without a fourth value, and every further add-on would have doubled
  * the list again. See {@link FEATURED_PLACES}.
  *
@@ -32,10 +37,10 @@
  *
  * The order matters beyond readability: the directory sorts on `-featured`,
  * then `-tier`, and `-tier` is the Postgres enum's own declaration order, so a
- * magazine listing rises above an online-only one. `online` is declared first
+ * magazine listing rises above a website-only one. `basic` is declared first
  * in the enum for that reason.
  */
-export const LISTING_TIERS = ['online', 'free'] as const
+export const LISTING_TIERS = ['basic', 'silver'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
@@ -85,7 +90,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
    * the full one - gallery and the scan report included - and what it lacks is
    * print, which is what the tier above sells.
    */
-  online: {
+  basic: {
     rank: 0,
     galleryLimit: 15,
     editorialFeature: false,
@@ -97,7 +102,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
    * A page in the magazine, with the website listing included. The magazine
    * page is the editorial feature, so both flags go together.
    */
-  free: {
+  silver: {
     rank: 5,
     galleryLimit: 15,
     editorialFeature: true,
@@ -111,7 +116,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
 /**
  * Coerce whatever the database hands back into a tier.
  *
- * Unknown or missing values fall to the lowest tier, `online`, rather than
+ * Unknown or missing values fall to the lowest tier, `basic`, rather than
  * throwing. Failing closed matters: the alternative is a listing with a corrupt
  * tier quietly receiving print, which is what the tier above is paid for.
  */

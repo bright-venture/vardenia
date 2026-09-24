@@ -18,13 +18,13 @@ import { FEATURED_PLACES, LISTING_TIERS, type ListingTier } from '@vardenia/core
 import { isAdminFieldLevel } from '../access/index'
 
 /**
- * Spelled out, because the stored names are not self-explanatory: `free` is a
- * paid tier, named for the website listing that comes free with a magazine
- * page. A label that says only "Free" invites somebody to give it away.
+ * Spelled out, because a ladder name says where a tier sits but not what it
+ * contains. Staff choosing a tier should not have to remember which rung has
+ * the magazine page.
  */
 export const TIER_LABELS: Record<ListingTier, string> = {
-  online: 'Online only (website, no magazine page)',
-  free: 'Free (magazine page, website included)',
+  basic: 'Basic (website only, no magazine page)',
+  silver: 'Silver (magazine page, website included)',
 }
 
 /**
@@ -75,13 +75,13 @@ export const tierField: SelectField = {
   type: 'select',
   required: true,
   // Every listing imported from the magazine is on this tier.
-  defaultValue: 'free',
+  defaultValue: 'silver',
   index: true,
   access: { update: isAdminFieldLevel },
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
   admin: {
     description:
-      'Online only: the website. Free: a magazine page, with the website included. Home page placement is the Featured box below, which either tier can have.',
+      'Basic: the website only. Silver: a magazine page, with the website included. Home page placement is the Featured box below, which either tier can have.',
   },
 }
 

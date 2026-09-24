@@ -79,13 +79,13 @@ describe('resolveGallery', () => {
      * listing displayed every image uploaded to it, 40 in one case.
      */
     it('caps every tier at its allowance', () => {
-      for (const t of ['online', 'free'] as const) {
+      for (const t of ['basic', 'silver'] as const) {
         expect(resolveGallery(gallery(50), can(t, 'galleryLimit')), t).toHaveLength(15)
       }
     })
 
     it('does not pad when a listing has fewer images than its allowance', () => {
-      expect(resolveGallery(gallery(3), can('free', 'galleryLimit'))).toHaveLength(3)
+      expect(resolveGallery(gallery(3), can('silver', 'galleryLimit'))).toHaveLength(3)
     })
 
     it('keeps the first images, so ordering in the admin decides what shows', () => {
@@ -101,20 +101,20 @@ describe('resolveGallery', () => {
 
 describe('tierOf', () => {
   it('passes through the real tiers', () => {
-    for (const t of ['online', 'free'] as const) {
+    for (const t of ['basic', 'silver'] as const) {
       expect(tierOf(t)).toBe(t)
     }
   })
 
   /** Retired when four tiers became two, and no longer a tier. */
   it('does not pass through a retired tier', () => {
-    for (const t of ['listed', 'partner']) expect(tierOf(t)).toBe('online')
+    for (const t of ['listed', 'partner']) expect(tierOf(t)).toBe('basic')
   })
 
   /** Fails closed: a corrupt tier must not hand out partner privileges. */
   it('falls back to the lowest tier for anything unrecognised', () => {
     for (const v of [null, undefined, '', 'gold', 42, {}]) {
-      expect(tierOf(v)).toBe('online')
+      expect(tierOf(v)).toBe('basic')
     }
   })
 })
