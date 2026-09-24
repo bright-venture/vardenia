@@ -1,14 +1,26 @@
 import type { CollectionAfterChangeHook } from 'payload'
-import { DEFAULT_PLACEMENT } from '@vardenia/core'
+import { DEFAULT_PLACEMENT, can, tierOf } from '@vardenia/core'
 import { allocateCode } from '../lib/allocate-code'
 import { reportError } from '../lib/report'
 
 /**
- * Guarantees every listing owns a QR code from the moment it exists.
+ * Guarantees every magazine listing owns a QR code from the moment it exists.
  *
  * Sales works to print deadlines; nobody should discover at the layout stage
  * that half the listings have no code. Codes are cheap, so we mint one eagerly
  * and never revoke it.
+ *
+ * # Only for a tier that is printed
+ *
+ * The code is printed beside the listing's magazine page, so a `basic` listing
+ * - website only - gets none: there is nowhere for it to appear, and a code
+ * that exists is a code somebody can put on a print sheet. The tier decides,
+ * through `qrCode` in packages/core/src/tiers.
+ *
+ * A listing that moves down to basic keeps the code it already has, and an
+ * orphaned code is still re-linked below. Either may be on paper already, and
+ * paper cannot be corrected; a printed code has to keep working. Moving back
+ * up mints one on that save, because this hook runs on every change.
  */
 export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, context }) => {
   // The link-back update below re-triggers this hook; this flag stops the loop.
@@ -64,6 +76,10 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
 
     return { ...doc, qrCode: existing.id }
   }
+
+  // Past the re-link on purpose: a code already made for this listing is kept
+  // whatever the tier. Only a new one depends on it.
+  if (!can(tierOf(doc.tier), 'qrCode')) return doc
 
   // Shared with the Code field's own minting, so the two cannot drift apart.
   // See lib/allocate-code.

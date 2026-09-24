@@ -62,7 +62,17 @@ export interface TierCapabilities {
   galleryLimit: number
   /** Gets a long-form editorial feature written by the Vardenia team. */
   editorialFeature: boolean
-  /** Scan performance is included in the report the team sends at renewal. */
+  /**
+   * Gets a QR code. The code is printed beside the listing's magazine page, so
+   * it comes with print: a website-only listing has nowhere for one to appear.
+   * `ensureQrCode` mints one only for a tier that has this, and the print sheet
+   * leaves out codes whose listing has moved to a tier without it.
+   */
+  qrCode: boolean
+  /**
+   * Scan performance is included in the report the team sends at renewal. Only
+   * where there is a code to scan, so it follows `qrCode`.
+   */
   analyticsAccess: boolean
   /** Eligible to appear in the printed magazine. */
   printInclusion: boolean
@@ -87,14 +97,15 @@ export interface TierCapabilities {
 export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   /**
    * The website listing on its own. It is a paid tier, so the listing page is
-   * the full one - gallery and the scan report included - and what it lacks is
-   * print, which is what the tier above sells.
+   * the full one, gallery included. What it lacks is print, which is what the
+   * tier above sells, and with print the QR code and its scan report.
    */
   basic: {
     rank: 0,
     galleryLimit: 15,
     editorialFeature: false,
-    analyticsAccess: true,
+    qrCode: false,
+    analyticsAccess: false,
     printInclusion: false,
     pushCampaigns: false,
   },
@@ -106,6 +117,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     rank: 5,
     galleryLimit: 15,
     editorialFeature: true,
+    qrCode: true,
     analyticsAccess: true,
     printInclusion: true,
     // Not until the app has users. See the note on the field.

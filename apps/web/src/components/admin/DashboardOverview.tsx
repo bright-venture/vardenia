@@ -1,9 +1,12 @@
 import type { Payload, TypedUser } from 'payload'
-import { tierOf } from '@vardenia/core'
+import { LISTING_TIERS, can, tierOf } from '@vardenia/core'
 import { TIER_LABELS } from '../../fields/tier'
 import { dashboardCounts } from '../../lib/dashboard-stats'
 import { emailWarning } from '../../lib/email'
 import { indexingWarning } from '../../lib/indexing'
+
+/** The tiers that get a QR code, so a missing one is a fault rather than the design. */
+const TIERS_WITH_CODES = LISTING_TIERS.filter((tier) => can(tier, 'qrCode'))
 
 /**
  * The panel above Payload's collection cards on the admin dashboard.
@@ -93,12 +96,19 @@ export async function DashboardOverview({ payload, user }: Props) {
     }),
 
     // A published listing with no code cannot go in the magazine. The hook
-    // mints one automatically, so anything here means the hook failed.
+    // mints one automatically, so anything here means the hook failed. Only on
+    // a tier that gets a code: a basic listing has none by design.
     payload.find({
       ...opts,
       collection: 'businesses',
       limit: 5,
-      where: { and: [{ qrCode: { exists: false } }, { _status: { equals: 'published' } }] },
+      where: {
+        and: [
+          { qrCode: { exists: false } },
+          { _status: { equals: 'published' } },
+          { tier: { in: TIERS_WITH_CODES } },
+        ],
+      },
     }),
   ])
 

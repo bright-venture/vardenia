@@ -23,7 +23,7 @@ import { isAdminFieldLevel } from '../access/index'
  * the magazine page.
  */
 export const TIER_LABELS: Record<ListingTier, string> = {
-  basic: 'Basic (website only, no magazine page)',
+  basic: 'Basic (website only, no magazine page, no QR code)',
   silver: 'Silver (magazine page, website included)',
 }
 
@@ -81,7 +81,7 @@ export const tierField: SelectField = {
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
   admin: {
     description:
-      'Basic: the website only. Silver: a magazine page, with the website included. Home page placement is the Featured box below, which either tier can have.',
+      'Basic: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Home page placement is the Featured box below, which either tier can have.',
   },
 }
 

@@ -59,7 +59,7 @@ function harness({ codesForBusiness = [] as Doc[] }: { codesForBusiness?: Doc[] 
 describe('ensureQrCode', () => {
   it('mints a code for a listing that has none', async () => {
     const h = harness()
-    await h.run({ id: 1 })
+    await h.run({ id: 1, tier: 'silver' })
 
     expect(h.created).toHaveLength(1)
     expect(h.created[0]).toMatchObject({ targetType: 'business', business: 1, active: true })
@@ -67,7 +67,7 @@ describe('ensureQrCode', () => {
 
   it('links the new code back to the listing', async () => {
     const h = harness()
-    await h.run({ id: 1 })
+    await h.run({ id: 1, tier: 'silver' })
 
     expect(h.updated).toHaveLength(1)
     expect(h.updated[0]).toMatchObject({ collection: 'businesses', id: 1 })
@@ -75,7 +75,7 @@ describe('ensureQrCode', () => {
 
   it('does nothing when the listing already points at a code', async () => {
     const h = harness()
-    await h.run({ id: 1, qrCode: 42 })
+    await h.run({ id: 1, tier: 'silver', qrCode: 42 })
 
     expect(h.created).toHaveLength(0)
     expect(h.updated).toHaveLength(0)
@@ -83,7 +83,7 @@ describe('ensureQrCode', () => {
 
   it('does not re-enter when its own link-back update fires the hook', async () => {
     const h = harness()
-    await h.run({ id: 1 }, { skipQrGeneration: true })
+    await h.run({ id: 1, tier: 'silver' }, { skipQrGeneration: true })
 
     expect(h.created).toHaveLength(0)
   })
@@ -94,7 +94,7 @@ describe('ensureQrCode', () => {
    */
   it('adopts an orphaned code instead of minting a second', async () => {
     const h = harness({ codesForBusiness: [{ id: 77, code: 'AASBVQR' }] })
-    await h.run({ id: 1 })
+    await h.run({ id: 1, tier: 'silver' })
 
     expect(h.created, 'minted a duplicate code').toHaveLength(0)
     expect(h.updated).toHaveLength(1)
@@ -103,7 +103,7 @@ describe('ensureQrCode', () => {
 
   it('returns the adopted code on the document', async () => {
     const h = harness({ codesForBusiness: [{ id: 77, code: 'AASBVQR' }] })
-    const result = (await h.run({ id: 1 })) as { qrCode?: number }
+    const result = (await h.run({ id: 1, tier: 'silver' })) as { qrCode?: number }
 
     expect(result.qrCode).toBe(77)
   })
@@ -120,19 +120,57 @@ describe('ensureQrCode', () => {
         { id: 88, code: 'AXGRDH2', createdAt: '2026-06-01' },
       ],
     })
-    await h.run({ id: 1 })
+    await h.run({ id: 1, tier: 'silver' })
 
     expect(h.updated[0]).toMatchObject({ data: { qrCode: 77 } })
   })
 
   it('asks the database for the oldest, rather than sorting in memory', async () => {
     const h = harness({ codesForBusiness: [{ id: 77, code: 'AASBVQR' }] })
-    await h.run({ id: 1 })
+    await h.run({ id: 1, tier: 'silver' })
 
     const lookup = h.payload.find.mock.calls
       .map(([args]) => args as { where?: Record<string, unknown>; sort?: string })
       .find((args) => args.where?.business)
 
     expect(lookup?.sort).toBe('createdAt')
+  })
+
+  /**
+   * Basic is the website-only tier. The code is printed beside the magazine
+   * page, so a basic listing has nowhere for one to appear, and a minted code
+   * is permanent.
+   */
+  describe('on the basic tier', () => {
+    it('mints no code', async () => {
+      const h = harness()
+      await h.run({ id: 1, tier: 'basic' })
+
+      expect(h.created).toHaveLength(0)
+      expect(h.updated).toHaveLength(0)
+    })
+
+    it('still re-links a code already made for the listing, which may be printed', async () => {
+      const h = harness({ codesForBusiness: [{ id: 7, code: 'AASBVQR' }] })
+      const result = (await h.run({ id: 1, tier: 'basic' })) as { qrCode?: number }
+
+      expect(h.created).toHaveLength(0)
+      expect(result.qrCode).toBe(7)
+    })
+
+    it('keeps a code the listing already has', async () => {
+      const h = harness()
+      const result = (await h.run({ id: 1, tier: 'basic', qrCode: 42 })) as { qrCode?: number }
+
+      expect(h.created).toHaveLength(0)
+      expect(result.qrCode).toBe(42)
+    })
+
+    it('treats an unknown tier as basic rather than minting', async () => {
+      const h = harness()
+      await h.run({ id: 1 })
+
+      expect(h.created).toHaveLength(0)
+    })
   })
 })

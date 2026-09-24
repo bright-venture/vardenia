@@ -56,8 +56,9 @@ export const Businesses: CollectionConfig = {
      * field whose values are correctly hidden. See hooks/guardSort.
      */
     beforeOperation: [guardSort],
-    // Every published listing gets a QR code automatically. Sales should never
-    // have to remember to press a button before a print deadline.
+    // Every listing on a printed tier gets a QR code automatically; basic, the
+    // website-only tier, gets none. Sales should never have to remember to press
+    // a button before a print deadline.
     // The cached directory is keyed per filter, so publishing has to clear all
     // of them or the unfiltered view keeps serving an answer from before the
     // listing existed. See hooks/revalidateListings.
@@ -335,7 +336,8 @@ export const Businesses: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
-        description: 'Generated automatically on first publish. Immutable once printed.',
+        description:
+          'Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.',
       },
     },
     seoField,

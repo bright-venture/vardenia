@@ -45,6 +45,7 @@ describe('the ladder holds its shape', () => {
 
       for (const flag of [
         'editorialFeature',
+        'qrCode',
         'analyticsAccess',
         'printInclusion',
         'pushCampaigns',
@@ -58,19 +59,21 @@ describe('the ladder holds its shape', () => {
 
   /**
    * The two tiers differ in one thing, print, which is how they are sold: the
-   * website, or a magazine page with the website included. A difference the
-   * sales sheet cannot name in one line is one a customer cannot be asked to pay
-   * for.
+   * website, or a magazine page with the website included. The QR code and its
+   * scan report come with print, because the code is printed beside the page.
+   * A difference the sales sheet cannot name in one line is one a customer
+   * cannot be asked to pay for.
    */
-  it('adds print for the magazine tier and nothing else', () => {
+  it('adds print, and the QR code that goes with it, for the magazine tier', () => {
     const { basic, silver } = TIER_CAPABILITIES
 
     expect(basic.printInclusion).toBe(false)
     expect(silver.printInclusion).toBe(true)
+    expect(basic.qrCode).toBe(false)
+    expect(silver.qrCode).toBe(true)
 
     // The website listing itself is the same on both.
     expect(basic.galleryLimit).toBe(silver.galleryLimit)
-    expect(basic.analyticsAccess).toBe(silver.analyticsAccess)
   })
 
   /**
@@ -86,13 +89,22 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * `basic` is paid, so it gets the scan report like the others: the report is
-   * what makes a renewal conversation possible, and every tier renews.
+   * The scan report counts scans of the listing's QR code, so a tier without a
+   * code has nothing to report. Promising it to a basic listing would be
+   * selling an empty page.
    */
-  it('gives every tier the scan report', () => {
+  it('gives the scan report exactly where there is a code to scan', () => {
     for (const tier of LISTING_TIERS) {
-      expect(can(tier, 'analyticsAccess'), tier).toBe(true)
+      expect(can(tier, 'analyticsAccess'), tier).toBe(can(tier, 'qrCode'))
     }
+  })
+
+  /**
+   * An unrecognised tier falls to basic, so it must not be handed a code: a
+   * minted code is permanent, and one minted by mistake could end up on paper.
+   */
+  it('mints no code for an unrecognised tier', () => {
+    expect(can(tierOf('nonsense'), 'qrCode')).toBe(false)
   })
 
   /**

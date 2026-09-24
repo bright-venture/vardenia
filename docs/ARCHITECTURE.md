@@ -205,7 +205,9 @@ what the database holds.
 added there and the UI follows automatically.
 
 There are two tiers, and every one is paid: `basic` is the website listing alone, and
-`silver` is a page in the printed magazine with the website listing included. Home page placement is not a tier but a separate `featured` flag,
+`silver` is a page in the printed magazine with the website listing included. Only `silver`
+gets a QR code, because the code is printed beside the magazine page; a listing that moves
+down to `basic` keeps the code it has, which stays live but leaves the print sheet. Home page placement is not a tier but a separate `featured` flag,
 because either tier can buy it; the admin refuses it beyond `FEATURED_PLACES`, the number
 the home page band shows. Listing grids sort featured first, then silver above basic.
 

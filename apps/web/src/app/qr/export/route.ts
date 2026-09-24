@@ -7,7 +7,7 @@ import {
   qrSvg,
   type QrFormat,
 } from '../../../lib/qr-image'
-import { populated, type QrDoc } from '../../../lib/qr-doc'
+import { goesToPrint, populated, type QrDoc } from '../../../lib/qr-doc'
 import { createZip, safeFileName, type ZipEntry } from '../../../lib/zip'
 
 /**
@@ -187,18 +187,21 @@ export async function GET(request: NextRequest) {
     user,
   })
 
-  if (result.docs.length === 0) {
+  // Codes for basic listings stay active but are not printed again. See goesToPrint.
+  const docs = result.docs.filter((doc) => goesToPrint(doc as unknown as QrDoc))
+
+  if (docs.length === 0) {
     return new Response('No active codes match, so there is nothing to export.', { status: 404 })
   }
 
-  const cost = format === 'png' ? result.docs.length * sizeMm * sizeMm : 0
+  const cost = format === 'png' ? docs.length * sizeMm * sizeMm : 0
 
   if (cost > PNG_BUDGET) {
-    const affordable = Math.floor(Math.sqrt(PNG_BUDGET / result.docs.length))
+    const affordable = Math.floor(Math.sqrt(PNG_BUDGET / docs.length))
 
     return new Response(
       [
-        `${result.docs.length} codes at ${sizeMm}mm is too much PNG to render in one request.`,
+        `${docs.length} codes at ${sizeMm}mm is too much PNG to render in one request.`,
         '',
         'Any of these works:',
         `  - use SVG, which has no such limit and is better for print: ?format=svg`,
@@ -221,7 +224,7 @@ export async function GET(request: NextRequest) {
   const entries: ZipEntry[] = []
   const usedNames = new Set<string>()
 
-  for (const doc of result.docs) {
+  for (const doc of docs) {
     const qr = doc as unknown as QrDoc
     const label = safeFileName(labelFor(qr), qr.code)
 

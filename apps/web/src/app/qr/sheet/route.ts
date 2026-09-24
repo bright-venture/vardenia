@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import { DEFAULT_PRINT_MM, isPrintSafeBaseUrl, qrSvg, scanUrl } from '../../../lib/qr-image'
-import { populated, type QrDoc } from '../../../lib/qr-doc'
+import { goesToPrint, populated, type QrDoc } from '../../../lib/qr-doc'
 
 /**
  * A contact sheet of every code, ready to print or hand to the layout team.
@@ -134,8 +134,12 @@ export async function GET(request: NextRequest) {
     issueLabel = `Issue ${issue.issueNumber} - ${issue.title}`
   }
 
+  // Codes for basic listings stay active but are not printed again. See goesToPrint.
+  const printable = result.docs.filter((doc) => goesToPrint(doc as unknown as QrDoc))
+  const leftOut = result.docs.length - printable.length
+
   const cards = await Promise.all(
-    result.docs.map(async (doc) => {
+    printable.map(async (doc) => {
       const qr = doc as unknown as QrDoc
       return renderCard({
         code: qr.code,
@@ -149,8 +153,8 @@ export async function GET(request: NextRequest) {
   return new Response(
     page(
       issueLabel,
-      result.docs.length,
-      result.totalDocs,
+      printable.length,
+      result.totalDocs - leftOut,
       cards.join('\n'),
       issueId,
       batch,

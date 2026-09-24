@@ -12,7 +12,7 @@
  * redirect, the print sheet, and the delete guards actually read.
  */
 
-import type { QrPlacement } from '@vardenia/core'
+import { can, tierOf, type QrPlacement } from '@vardenia/core'
 
 /**
  * A relationship as Payload serialises it: the id alone at depth 0, the whole
@@ -33,6 +33,8 @@ export interface RelatedDoc {
    * therefore always public.
    */
   _status?: 'draft' | 'published' | null
+  /** The listing tier, on businesses. Decides whether its code is printed. */
+  tier?: string | null
 }
 
 export interface QrDoc {
@@ -47,6 +49,24 @@ export interface QrDoc {
   placement?: QrPlacement | null
   active?: boolean | null
   scanCount?: number | null
+}
+
+/**
+ * Whether a code belongs on a print sheet.
+ *
+ * A code whose listing is on a tier without one - basic, the website-only tier
+ * - is left off. It stays active, because it may be on paper from an earlier
+ * issue and a printed code has to keep working; it is just not printed again.
+ *
+ * Anything this cannot judge is kept: a code for an article or an issue, a
+ * listing that was not populated, a listing whose tier was not read. Leaving a
+ * code off a proof by mistake is the worse error, since nobody notices a
+ * missing card.
+ */
+export function goesToPrint(qr: QrDoc): boolean {
+  const business = populated(qr.business)
+  if (!business || business.tier == null) return true
+  return can(tierOf(business.tier), 'qrCode')
 }
 
 /** Narrows a relationship to the populated document, or null when it is just an id. */

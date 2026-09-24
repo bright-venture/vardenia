@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { isPubliclyVisible, populated, relatedId, type RelatedDoc } from './qr-doc'
+import {
+  goesToPrint,
+  isPubliclyVisible,
+  populated,
+  relatedId,
+  type QrDoc,
+  type RelatedDoc,
+} from './qr-doc'
 
 /**
  * The draft check exists because of a bug that only shows up on paper.
@@ -66,5 +73,27 @@ describe('relatedId', () => {
     expect(relatedId(null)).toBeNull()
     expect(relatedId(undefined)).toBeNull()
     expect(relatedId({ slug: 'no-id' })).toBeNull()
+  })
+})
+
+/**
+ * Basic is the website-only tier and gets no QR code. A code it already has -
+ * from before it moved down - stays active, but is not printed again.
+ */
+describe('goesToPrint', () => {
+  const code = (business: unknown) => ({ id: 1, code: 'AASBVQR', business }) as QrDoc
+
+  it('prints the code of a listing on a tier that gets one', () => {
+    expect(goesToPrint(code({ id: 2, tier: 'silver' }))).toBe(true)
+  })
+
+  it('leaves out the code of a basic listing', () => {
+    expect(goesToPrint(code({ id: 2, tier: 'basic' }))).toBe(false)
+  })
+
+  it('keeps what it cannot judge rather than dropping a card from the proof', () => {
+    expect(goesToPrint(code(2))).toBe(true)
+    expect(goesToPrint(code({ id: 2 }))).toBe(true)
+    expect(goesToPrint(code(null))).toBe(true)
   })
 })
