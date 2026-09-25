@@ -71,10 +71,14 @@ const AREAS: { title: string; items: Destination[] }[] = [
       },
       {
         label: 'QR codes',
-        href: '/admin/collections/qr-codes',
+        href: '/admin/collections/qr-codes?groupBy=business',
         hint: 'Printed codes and where they point',
       },
-      { label: 'Reviews', href: '/admin/collections/reviews', hint: 'Approve what guests wrote' },
+      {
+        label: 'Reviews',
+        href: '/admin/collections/reviews?groupBy=business',
+        hint: 'Approve what guests wrote',
+      },
     ],
   },
   {
@@ -82,15 +86,19 @@ const AREAS: { title: string; items: Destination[] }[] = [
     items: [
       {
         label: 'Bookings',
-        href: '/admin/collections/bookings',
+        href: '/admin/collections/bookings?groupBy=business',
         hint: 'Every request and its status',
       },
       {
         label: 'Fee statements',
-        href: '/admin/collections/statements',
+        href: '/admin/collections/statements?groupBy=business',
         hint: 'Monthly invoices to venues',
       },
-      { label: 'Closed dates', href: '/admin/collections/closures', hint: 'When venues are shut' },
+      {
+        label: 'Closed dates',
+        href: '/admin/collections/closures?groupBy=business',
+        hint: 'When venues are shut',
+      },
     ],
   },
   {

@@ -33,6 +33,9 @@ const readReviews: Access = ({ req }) => {
 export const Reviews: CollectionConfig = {
   slug: 'reviews',
   admin: {
+    // Can be grouped by listing in the list view (Group by, then Business), so
+    // each listing's entries sit together. See the links on the admin home.
+    groupBy: true,
     useAsTitle: 'authorName',
     defaultColumns: ['business', 'rating', 'status', 'authorName', 'createdAt'],
     group: 'Directory',

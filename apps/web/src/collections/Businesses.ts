@@ -329,6 +329,25 @@ export const Businesses: CollectionConfig = {
             },
           ],
         },
+        {
+          /**
+           * Everything attached to this listing - bookings, reviews, fee
+           * statements, closed dates, QR codes - counted, with a link to each
+           * list showing only this listing's. Nothing stored; see
+           * components/admin/ListingActivity.
+           */
+          label: 'Activity',
+          admin: { condition: (_, __, { user }) => hasStaffRole(user) },
+          fields: [
+            {
+              name: 'activity',
+              type: 'ui',
+              admin: {
+                components: { Field: '/components/admin/ListingActivity#ListingActivity' },
+              },
+            },
+          ],
+        },
       ],
     },
 

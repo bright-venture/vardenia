@@ -168,6 +168,9 @@ export const Statements: CollectionConfig = {
   labels: { singular: 'Fee statement', plural: 'Fee statements' },
 
   admin: {
+    // Can be grouped by listing in the list view (Group by, then Business), so
+    // each listing's entries sit together. See the links on the admin home.
+    groupBy: true,
     useAsTitle: 'number',
     defaultColumns: ['number', 'business', 'period', 'total', 'status', 'dueAt'],
     group: 'Bookings',

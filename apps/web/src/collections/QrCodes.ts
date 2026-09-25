@@ -22,6 +22,9 @@ export const QrCodes: CollectionConfig = {
   // Payload titles a collection from its slug, which gives "Qr Codes".
   labels: { singular: 'QR Code', plural: 'QR Codes' },
   admin: {
+    // Can be grouped by listing in the list view (Group by, then Business), so
+    // each listing's entries sit together. See the links on the admin home.
+    groupBy: true,
     useAsTitle: 'code',
     defaultColumns: ['code', 'targetType', 'placement', 'scanCount', 'active'],
     group: 'Directory',

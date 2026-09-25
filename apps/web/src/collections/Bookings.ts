@@ -83,6 +83,9 @@ export const Bookings: CollectionConfig = {
   slug: 'bookings',
 
   admin: {
+    // Can be grouped by listing in the list view (Group by, then Business), so
+    // each listing's entries sit together. See the links on the admin home.
+    groupBy: true,
     useAsTitle: 'reference',
     defaultColumns: ['reference', 'business', 'start', 'partySize', 'status'],
     group: 'Bookings',

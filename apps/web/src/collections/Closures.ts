@@ -91,6 +91,9 @@ export const Closures: CollectionConfig = {
   labels: { singular: 'Closed dates', plural: 'Closed dates' },
 
   admin: {
+    // Can be grouped by listing in the list view (Group by, then Business), so
+    // each listing's entries sit together. See the links on the admin home.
+    groupBy: true,
     useAsTitle: 'startsOn',
     defaultColumns: ['business', 'startsOn', 'endsOn', 'note'],
     group: 'Bookings',
