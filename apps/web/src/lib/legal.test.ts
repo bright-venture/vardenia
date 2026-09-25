@@ -75,9 +75,12 @@ describe('what the policy claims about the code', () => {
     expect(lines).toContain('we do not store your ip address')
   })
 
-  /** The only cookie is `payload-token`, and it is strictly necessary. */
-  it('explains the single cookie and why there is no consent banner', () => {
-    expect(lines).toContain('one cookie')
+  /**
+   * Signing in sets `payload-token` and the `vd_session` hint (lib/session-hint),
+   * both strictly necessary. Nothing else is set; the locale cookie is off.
+   */
+  it('explains the two sign-in cookies and why there is no consent banner', () => {
+    expect(lines).toContain('two small cookies')
     expect(lines).toContain('no consent banner')
   })
 

@@ -171,9 +171,9 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Cookies',
         body: [
-          'One cookie, and only once you sign in. It keeps you signed in and nothing else. It is not used to track you, it is not shared, and there is no advertising or analytics cookie on this site.',
+          'Two small cookies, and only once you sign in. One keeps you signed in; the other only tells the page to show your account link instead of Sign in. Neither is used to track you, neither is shared, and there is no advertising or analytics cookie on this site.',
           'That last part is deliberate. We do count page visits, and we chose a provider that needs no cookie to do it, so measuring how the site is read costs you nothing and asks you nothing.',
-          'Because that cookie is strictly necessary to provide something you asked for, there is no consent banner. If we ever add anything that is not strictly necessary, there will be.',
+          'Because both are strictly necessary to provide something you asked for, there is no consent banner. If we ever add anything that is not strictly necessary, there will be.',
         ],
       },
 
