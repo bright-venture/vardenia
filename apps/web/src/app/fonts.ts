@@ -6,7 +6,6 @@ import {
   Noto_Sans_Arabic,
   Noto_Sans_Bengali,
   Noto_Sans_Devanagari,
-  Noto_Sans_SC,
   Noto_Serif,
 } from 'next/font/google'
 
@@ -105,7 +104,7 @@ export const notoArabic = Noto_Sans_Arabic({
  * The UI is translated into ten languages (see @vardenia/i18n). Four carry
  * scripts nothing loaded above can draw: Russian (Cyrillic, body handled by
  * Manrope above, so only a display serif is needed here), Chinese, Hindi
- * (Devanagari) and Bengali. Each gets a Noto face, wired per language in
+ * (Devanagari) and Bengali. Each but Chinese gets a Noto face, wired per language in
  * globals.css with a `:lang()` block exactly as Arabic is. A face is only
  * fetched by a reader whose page is in that language, so a French visitor never
  * downloads the Chinese one.
@@ -115,7 +114,8 @@ export const notoArabic = Noto_Sans_Arabic({
  * for these, which most visitors never see. They load when a page in their
  * language is served instead. Noto Sans SC in particular is large (Google slices
  * it into many unicode-range files), so preloading it site-wide would be a real
- * cost paid by everyone for a few.
+ * cost paid by everyone for a few. It turned out to be one even without the
+ * preload, and was removed; see below.
  */
 export const notoSerif = Noto_Serif({
   // A Cyrillic serif for Russian headings, so the masthead stays a serif the way
@@ -128,13 +128,15 @@ export const notoSerif = Noto_Serif({
   preload: false,
 })
 
-export const notoSC = Noto_Sans_SC({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-noto-sc',
-  weight: ['400', '500', '700'],
-  preload: false,
-})
+/*
+ * Chinese has no face here, on purpose: it uses the reader's system font (see
+ * globals.css). Noto Sans SC was one, and `preload: false` did not make it
+ * cheap. Google slices a CJK face into hundreds of unicode ranges, and every
+ * one is an @font-face rule: 272 KB of CSS in a stylesheet that blocks the
+ * first paint of every page in every language. Lighthouse found it as 85 KB of
+ * unused CSS on the English home page. Every device that reads Chinese ships a
+ * good Chinese face, which is why CJK sites rarely serve their own.
+ */
 
 export const notoDevanagari = Noto_Sans_Devanagari({
   subsets: ['devanagari', 'latin'],
@@ -160,7 +162,6 @@ export const FONT_VARIABLES = [
   amiri.variable,
   notoArabic.variable,
   notoSerif.variable,
-  notoSC.variable,
   notoDevanagari.variable,
   notoBengali.variable,
 ].join(' ')

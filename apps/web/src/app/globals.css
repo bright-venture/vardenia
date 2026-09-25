@@ -38,8 +38,13 @@
   }
 
   :root:lang(zh) {
-    --font-display: var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    --font-body: var(--font-noto-sc), 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    /* System faces: Apple, Windows, then Android and Linux. See fonts.ts. */
+    --font-display:
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+      'Source Han Sans SC', sans-serif;
+    --font-body:
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+      'Source Han Sans SC', sans-serif;
   }
 
   :root:lang(hi) {
@@ -202,4 +207,3 @@
     @apply border-gold-300 text-ink-500 border-s-2 ps-5 italic;
   }
 }
-

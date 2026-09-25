@@ -59,7 +59,13 @@ const PREFERRED = {
 interface Props {
   image?: MediaField
   ratio?: PlateRatio
-  /** Rendered width hints for the browser. Defaults suit a three-column grid. */
+  /**
+   * Rendered width hints for the browser. Defaults suit a three-column grid.
+   *
+   * On a phone the grid is one column inside the page's 24px gutters, so a card
+   * is the screen less 48px, not the whole screen. Saying 100vw made a 412px
+   * phone fetch the 750px file for a 364px card: 70 KB too much per card.
+   */
   sizes?: string
   priority?: boolean
   /** Zoom on hover. Only for slots inside a link; static headers should not move. */
@@ -79,7 +85,7 @@ interface Props {
 export function Plate({
   image,
   ratio = 'card',
-  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+  sizes = '(max-width: 640px) calc(100vw - 48px), (max-width: 1024px) 50vw, 33vw',
   priority = false,
   interactive = false,
   className = '',
