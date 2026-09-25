@@ -170,6 +170,11 @@ describe('the admin policy', () => {
     expect(directive(adminCsp(), 'script-src')).toContain("'unsafe-eval'")
   })
 
+  /** Cloudflare injects it on /admin too; refusing it only logged an error. */
+  it("allows Cloudflare's beacon, as the public policy does", () => {
+    expect(directive(adminCsp(), 'script-src')).toContain('https://static.cloudflareinsights.com')
+  })
+
   it('keeps every clause that does not depend on how the panel is built', () => {
     const csp = adminCsp()
     expect(directive(csp, 'frame-ancestors')).toEqual(["'none'"])

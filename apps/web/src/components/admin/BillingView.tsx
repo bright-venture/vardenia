@@ -76,10 +76,12 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
   if (!isStaff(req.user)) {
     return (
       <DefaultTemplate {...template}>
-        <Gutter>
-          <h1>Booking fees</h1>
-          <p>Staff only.</p>
-        </Gutter>
+        <main>
+          <Gutter>
+            <h1>Booking fees</h1>
+            <p>Staff only.</p>
+          </Gutter>
+        </main>
       </DefaultTemplate>
     )
   }
@@ -118,92 +120,94 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
 
   return (
     <DefaultTemplate {...template}>
-      <Gutter>
-        <div style={styles.wrap}>
-          <h1 style={{ margin: 0 }}>Booking fees, {period}</h1>
+      <main>
+        <Gutter>
+          <div style={styles.wrap}>
+            <h1 style={{ margin: 0 }}>Booking fees, {period}</h1>
 
-          <form method="get" action="/admin/billing" style={styles.row}>
-            <input
-              name="period"
-              defaultValue={period}
-              pattern="\d{4}-\d{2}"
-              aria-label="Month, like 2026-10"
-              style={styles.input}
-            />
-            <button type="submit" style={styles.secondary}>
-              Show month
-            </button>
-          </form>
-
-          {message ? <p style={styles.note}>{message}</p> : null}
-
-          <div style={styles.stats}>
-            <Stat label="Statements" value={String(rows.length)} />
-            <Stat label="Drafts" value={String(drafts)} />
-            <Stat label="Awaiting payment" value={dollars(owed)} />
-            <Stat label="Paid" value={dollars(paid)} />
-          </div>
-
-          <div style={styles.row}>
-            <form method="post" action="/billing/generate">
-              <input type="hidden" name="period" value={period} />
-              <button type="submit" disabled={!ready} style={styles.primary}>
-                Draw up drafts
+            <form method="get" action="/admin/billing" style={styles.row}>
+              <input
+                name="period"
+                defaultValue={period}
+                pattern="\d{4}-\d{2}"
+                aria-label="Month, like 2026-10"
+                style={styles.input}
+              />
+              <button type="submit" style={styles.secondary}>
+                Show month
               </button>
             </form>
-            <form method="post" action="/billing/send">
-              <input type="hidden" name="period" value={period} />
-              <button type="submit" disabled={drafts === 0} style={styles.secondary}>
-                Send {drafts} draft{drafts === 1 ? '' : 's'}
-              </button>
-            </form>
-          </div>
 
-          <p style={styles.muted}>
-            {ready
-              ? 'Drawing up marks unmarked bookings older than seven days as completed, then creates one draft per venue with a booking fee. Read the drafts before sending: sending emails each venue and starts its deadlines.'
-              : `This month can be drawn up from ${readyOn}, once every booking in it has had seven days to be marked.`}
-          </p>
+            {message ? <p style={styles.note}>{message}</p> : null}
 
-          {rows.length === 0 ? (
-            <p style={styles.muted}>No statements for this month yet.</p>
-          ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Number</th>
-                  <th style={styles.th}>Venue</th>
-                  <th style={{ ...styles.th, textAlign: 'right' }}>Total</th>
-                  <th style={styles.th}>State</th>
-                  <th style={styles.th}>Disputes</th>
-                  <th style={styles.th}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id}>
-                    <td style={styles.td}>{row.number}</td>
-                    <td style={styles.td}>{row.venue}</td>
-                    <td style={{ ...styles.td, textAlign: 'right' }}>{dollars(row.total)}</td>
-                    <td style={styles.td}>{STATE_LABEL[row.state]}</td>
-                    <td style={styles.td}>
-                      {row.openDisputes > 0 ? <strong>{row.openDisputes} open</strong> : null}
-                    </td>
-                    <td style={styles.td}>
-                      <Link href={`/admin/collections/statements/${row.id}`}>Open</Link>
-                      {' · '}
-                      {/* A new tab: the invoice is a printable page outside the admin. */}
-                      <a href={`/invoice/${row.id}`} target="_blank" rel="noopener noreferrer">
-                        Invoice
-                      </a>
-                    </td>
+            <div style={styles.stats}>
+              <Stat label="Statements" value={String(rows.length)} />
+              <Stat label="Drafts" value={String(drafts)} />
+              <Stat label="Awaiting payment" value={dollars(owed)} />
+              <Stat label="Paid" value={dollars(paid)} />
+            </div>
+
+            <div style={styles.row}>
+              <form method="post" action="/billing/generate">
+                <input type="hidden" name="period" value={period} />
+                <button type="submit" disabled={!ready} style={styles.primary}>
+                  Draw up drafts
+                </button>
+              </form>
+              <form method="post" action="/billing/send">
+                <input type="hidden" name="period" value={period} />
+                <button type="submit" disabled={drafts === 0} style={styles.secondary}>
+                  Send {drafts} draft{drafts === 1 ? '' : 's'}
+                </button>
+              </form>
+            </div>
+
+            <p style={styles.muted}>
+              {ready
+                ? 'Drawing up marks unmarked bookings older than seven days as completed, then creates one draft per venue with a booking fee. Read the drafts before sending: sending emails each venue and starts its deadlines.'
+                : `This month can be drawn up from ${readyOn}, once every booking in it has had seven days to be marked.`}
+            </p>
+
+            {rows.length === 0 ? (
+              <p style={styles.muted}>No statements for this month yet.</p>
+            ) : (
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={styles.th}>Number</th>
+                    <th style={styles.th}>Venue</th>
+                    <th style={{ ...styles.th, textAlign: 'right' }}>Total</th>
+                    <th style={styles.th}>State</th>
+                    <th style={styles.th}>Disputes</th>
+                    <th style={styles.th}></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </Gutter>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id}>
+                      <td style={styles.td}>{row.number}</td>
+                      <td style={styles.td}>{row.venue}</td>
+                      <td style={{ ...styles.td, textAlign: 'right' }}>{dollars(row.total)}</td>
+                      <td style={styles.td}>{STATE_LABEL[row.state]}</td>
+                      <td style={styles.td}>
+                        {row.openDisputes > 0 ? <strong>{row.openDisputes} open</strong> : null}
+                      </td>
+                      <td style={styles.td}>
+                        <Link href={`/admin/collections/statements/${row.id}`}>Open</Link>
+                        {' · '}
+                        {/* A new tab: the invoice is a printable page outside the admin. */}
+                        <a href={`/invoice/${row.id}`} target="_blank" rel="noopener noreferrer">
+                          Invoice
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </Gutter>
+      </main>
     </DefaultTemplate>
   )
 }

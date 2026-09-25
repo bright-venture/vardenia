@@ -4,6 +4,8 @@ import config from '@payload-config'
 import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
 import { importMap } from './admin/importMap'
 import '@payloadcms/next/css'
+// After Payload's, for its components that miss the contrast minimum.
+import './custom.css'
 import React from 'react'
 
 const serverFunction: ServerFunctionClient = async function (args) {

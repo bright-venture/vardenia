@@ -189,7 +189,9 @@ export function publicCsp(
 export function adminCsp(): string {
   return policy({
     'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+    // The beacon Cloudflare injects on every page of the zone, admin included;
+    // see CLOUDFLARE_BEACON. Refused here, it was a console error on each load.
+    'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", CLOUDFLARE_BEACON],
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:', 'https:'],
     'font-src': ["'self'", 'data:'],

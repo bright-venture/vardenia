@@ -1,0 +1,19 @@
+/*
+ * Payload's own admin components, where its greys fall under the 4.5:1
+ * contrast small text needs. Found by Lighthouse on the live admin.
+ *
+ * Unlayered on purpose: Payload's styles sit in a cascade layer, so a plain
+ * rule here wins without !important. The theme variables flip in dark mode,
+ * so these stay readable there too.
+ */
+
+/* The "Locale" label on the language switcher: #808080 on #ebebeb, 3.3:1. */
+.localizer-button__label {
+  color: var(--theme-elevation-800);
+}
+
+/* List column headings: #9a9a9a on white, 2.8:1. */
+.sort-column__label .field-label,
+.table th .field-label {
+  color: var(--theme-elevation-800);
+}

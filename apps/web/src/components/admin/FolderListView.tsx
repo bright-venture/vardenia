@@ -121,7 +121,7 @@ export async function FolderListView(props: ListViewServerProps) {
         : null
 
     return (
-      <>
+      <main>
         <Gutter>
           <nav style={styles.crumbs} aria-label="Folders">
             <Link href={base} style={styles.crumbLink}>
@@ -136,7 +136,7 @@ export async function FolderListView(props: ListViewServerProps) {
           </nav>
         </Gutter>
         <DefaultListView {...clientProps} />
-      </>
+      </main>
     )
   }
 
@@ -188,70 +188,72 @@ export async function FolderListView(props: ListViewServerProps) {
   const total = rows.docs.length
 
   return (
-    <Gutter>
-      <div style={styles.page}>
-        <header style={styles.header}>
-          <div>
-            <h1 style={styles.title}>{noun.title}</h1>
-            <p style={styles.muted}>
-              {total} {total === 1 ? noun.one : noun.many} in {byListing.size}{' '}
-              {byListing.size === 1 ? 'folder' : 'folders'}, one per listing. Most recent first.
-            </p>
-          </div>
-          <div style={styles.actions}>
-            <form method="get" action={base} style={styles.search}>
-              <input
-                name="q"
-                defaultValue={query}
-                placeholder="Find a listing"
-                aria-label="Find a listing"
-                style={styles.input}
-              />
-            </form>
-            <Link href={`${base}?view=all`} style={styles.button}>
-              Show all as one list
-            </Link>
-            <Link href={`${base}/create`} style={styles.buttonPrimary}>
-              Create new
-            </Link>
-          </div>
-        </header>
-
-        {rows.complete ? null : (
-          <p style={styles.note}>
-            There are more than the folders can count at once. Use Show all as one list to see
-            everything.
-          </p>
-        )}
-
-        {folders.length === 0 ? (
-          <p style={styles.muted}>
-            {query ? `No listing matches "${query}".` : `No ${noun.many} yet.`}
-          </p>
-        ) : (
-          <div style={styles.grid}>
-            {folders.map((folder) => (
-              <Link
-                key={String(folder.id)}
-                href={
-                  folder.id === null
-                    ? `${base}?where[business][exists]=false`
-                    : `${base}?where[business][equals]=${folder.id}`
-                }
-                style={styles.folder}
-              >
-                <FolderIcon />
-                <span style={styles.folderName}>{folder.name}</span>
-                <span style={styles.muted}>
-                  {folder.count} {folder.count === 1 ? noun.one : noun.many}
-                  {folder.latest ? ` · latest ${day(folder.latest)}` : ''}
-                </span>
+    <main>
+      <Gutter>
+        <div style={styles.page}>
+          <header style={styles.header}>
+            <div>
+              <h1 style={styles.title}>{noun.title}</h1>
+              <p style={styles.muted}>
+                {total} {total === 1 ? noun.one : noun.many} in {byListing.size}{' '}
+                {byListing.size === 1 ? 'folder' : 'folders'}, one per listing. Most recent first.
+              </p>
+            </div>
+            <div style={styles.actions}>
+              <form method="get" action={base} style={styles.search}>
+                <input
+                  name="q"
+                  defaultValue={query}
+                  placeholder="Find a listing"
+                  aria-label="Find a listing"
+                  style={styles.input}
+                />
+              </form>
+              <Link href={`${base}?view=all`} style={styles.button}>
+                Show all as one list
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </Gutter>
+              <Link href={`${base}/create`} style={styles.buttonPrimary}>
+                Create new
+              </Link>
+            </div>
+          </header>
+
+          {rows.complete ? null : (
+            <p style={styles.note}>
+              There are more than the folders can count at once. Use Show all as one list to see
+              everything.
+            </p>
+          )}
+
+          {folders.length === 0 ? (
+            <p style={styles.muted}>
+              {query ? `No listing matches "${query}".` : `No ${noun.many} yet.`}
+            </p>
+          ) : (
+            <div style={styles.grid}>
+              {folders.map((folder) => (
+                <Link
+                  key={String(folder.id)}
+                  href={
+                    folder.id === null
+                      ? `${base}?where[business][exists]=false`
+                      : `${base}?where[business][equals]=${folder.id}`
+                  }
+                  style={styles.folder}
+                >
+                  <FolderIcon />
+                  <span style={styles.folderName}>{folder.name}</span>
+                  <span style={styles.muted}>
+                    {folder.count} {folder.count === 1 ? noun.one : noun.many}
+                    {folder.latest ? ` · latest ${day(folder.latest)}` : ''}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </Gutter>
+    </main>
   )
 }
 

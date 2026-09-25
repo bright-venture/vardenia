@@ -170,89 +170,95 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
   // Notes (tone `info`) are listed but not counted: they ask nothing of anyone.
   const tasks = (home?.attention ?? []).filter((item) => item.tone !== 'info').length
 
+  // <main>, because Payload's shell has none and a screen reader has no way to
+  // jump past the menu to the page itself.
   return (
-    <Gutter>
-      <div style={styles.page}>
-        <header>
-          <p style={styles.eyebrow}>{today}</p>
-          <h1 style={styles.title}>{name ? `Hello, ${name}` : 'Vardenia'}</h1>
-        </header>
+    <main>
+      <Gutter>
+        <div style={styles.page}>
+          <header>
+            <p style={styles.eyebrow}>{today}</p>
+            <h1 style={styles.title}>{name ? `Hello, ${name}` : 'Vardenia'}</h1>
+          </header>
 
-        {home ? (
-          <section style={styles.numbers} aria-label="Numbers">
-            <NumberCard
-              value={home.numbers.listingsLive.toLocaleString('en')}
-              label="Listings live"
-              note={
-                home.numbers.listingDrafts > 0 ? `${home.numbers.listingDrafts} drafts` : undefined
-              }
-            />
-            <NumberCard
-              value={home.numbers.bookingsThisMonth.toLocaleString('en')}
-              label="Bookings this month"
-            />
-            <NumberCard
-              value={home.numbers.scans.toLocaleString('en')}
-              label={`QR scans, ${SCAN_WINDOW_DAYS} days`}
-            />
-            <NumberCard
-              value={dollars(home.numbers.feesOwed)}
-              label="Booking fees awaiting payment"
-            />
-          </section>
-        ) : null}
+          {home ? (
+            <section style={styles.numbers} aria-label="Numbers">
+              <NumberCard
+                value={home.numbers.listingsLive.toLocaleString('en')}
+                label="Listings live"
+                note={
+                  home.numbers.listingDrafts > 0
+                    ? `${home.numbers.listingDrafts} drafts`
+                    : undefined
+                }
+              />
+              <NumberCard
+                value={home.numbers.bookingsThisMonth.toLocaleString('en')}
+                label="Bookings this month"
+              />
+              <NumberCard
+                value={home.numbers.scans.toLocaleString('en')}
+                label={`QR scans, ${SCAN_WINDOW_DAYS} days`}
+              />
+              <NumberCard
+                value={dollars(home.numbers.feesOwed)}
+                label="Booking fees awaiting payment"
+              />
+            </section>
+          ) : null}
 
-        <section style={styles.card}>
-          <h2 style={styles.heading}>
-            To do {tasks > 0 ? <span style={styles.count}>{tasks}</span> : null}
-          </h2>
-          {tasks === 0 ? <p style={styles.allClear}>Nothing needs you right now.</p> : null}
-          {byArea.map((group) => (
-            <div key={group.area} style={styles.group}>
-              <h3 style={styles.groupTitle}>{group.area}</h3>
-              <ul style={styles.list}>
-                {group.items.map((item) => (
-                  <Task key={`${item.title}-${item.detail}`} item={item} />
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
-
-        <section>
-          <h2 style={styles.heading}>Shortcuts</h2>
-          <div style={styles.shortcuts}>
-            {SHORTCUTS.map((shortcut) => (
-              <Go key={shortcut.href} destination={shortcut} style={styles.shortcut}>
-                <span style={styles.shortcutLabel}>{shortcut.label}</span>
-                <span style={styles.hint}>{shortcut.hint}</span>
-              </Go>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 style={styles.heading}>Everything else</h2>
-          <div style={styles.areas}>
-            {AREAS.map((area) => (
-              <div key={area.title} style={styles.card}>
-                <h3 style={styles.areaTitle}>{area.title}</h3>
-                <ul style={styles.areaList}>
-                  {area.items.map((item) => (
-                    <li key={item.href}>
-                      <Go destination={item} style={styles.areaLink}>
-                        {item.label}
-                      </Go>
-                      <span style={styles.hint}>{item.hint}</span>
-                    </li>
+          <section style={styles.card}>
+            <h2 style={styles.heading}>
+              To do {tasks > 0 ? <span style={styles.count}>{tasks}</span> : null}
+            </h2>
+            {tasks === 0 ? <p style={styles.allClear}>Nothing needs you right now.</p> : null}
+            {byArea.map((group) => (
+              <div key={group.area} style={styles.group}>
+                <h3 style={styles.groupTitle}>{group.area}</h3>
+                <ul style={styles.list}>
+                  {group.items.map((item) => (
+                    <Task key={`${item.title}-${item.detail}`} item={item} />
                   ))}
                 </ul>
               </div>
             ))}
-          </div>
-        </section>
-      </div>
-    </Gutter>
+          </section>
+
+          <section>
+            <h2 style={styles.heading}>Shortcuts</h2>
+            <div style={styles.shortcuts}>
+              {SHORTCUTS.map((shortcut) => (
+                <Go key={shortcut.href} destination={shortcut} style={styles.shortcut}>
+                  <span style={styles.shortcutLabel}>{shortcut.label}</span>
+                  <span style={styles.hint}>{shortcut.hint}</span>
+                </Go>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h2 style={styles.heading}>Everything else</h2>
+            <div style={styles.areas}>
+              {AREAS.map((area) => (
+                <div key={area.title} style={styles.card}>
+                  <h3 style={styles.areaTitle}>{area.title}</h3>
+                  <ul style={styles.areaList}>
+                    {area.items.map((item) => (
+                      <li key={item.href}>
+                        <Go destination={item} style={styles.areaLink}>
+                          {item.label}
+                        </Go>
+                        <span style={styles.hint}>{item.hint}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </Gutter>
+    </main>
   )
 }
 
@@ -325,7 +331,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.75rem',
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
-    color: 'var(--theme-elevation-500)',
+    // 500 read at 3.9:1 on white, under the 4.5 small text needs.
+    color: 'var(--theme-elevation-700)',
   },
   title: { margin: '0.25rem 0 0', fontSize: '2rem', fontWeight: 600 },
   numbers: {
