@@ -36,6 +36,11 @@ export const Reviews: CollectionConfig = {
     // Can be grouped by listing in the list view (Group by, then Business), so
     // each listing's entries sit together. See the links on the admin home.
     groupBy: true,
+    // Opens on one folder per listing; a folder is the normal list, filtered
+    // to that listing. See components/admin/FolderListView.
+    components: {
+      views: { list: { Component: '/components/admin/FolderListView#FolderListView' } },
+    },
     useAsTitle: 'authorName',
     defaultColumns: ['business', 'rating', 'status', 'authorName', 'createdAt'],
     group: 'Directory',
