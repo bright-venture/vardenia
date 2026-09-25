@@ -17,10 +17,11 @@ import { isAdmin, isStaff } from '../access/index'
  */
 export const ScanEvents: CollectionConfig = {
   slug: 'scan-events',
+  labels: { singular: 'QR scan', plural: 'QR scans' },
   admin: {
     useAsTitle: 'code',
     defaultColumns: ['code', 'scannedAt', 'placement', 'city', 'platform'],
-    group: 'Analytics',
+    group: 'Reports',
     description: 'Read-only. Written by the QR redirect endpoint.',
   },
   access: {

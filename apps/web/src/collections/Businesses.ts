@@ -33,6 +33,7 @@ import {
  */
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
+  labels: { singular: 'Listing', plural: 'Listings' },
   admin: {
     useAsTitle: 'name',
     // `contractEndsAt` is here because expiry is handled by a person, not by

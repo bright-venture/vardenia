@@ -88,6 +88,7 @@ const createClosures: Access = ({ req }) => {
 
 export const Closures: CollectionConfig = {
   slug: 'closures',
+  labels: { singular: 'Closed dates', plural: 'Closed dates' },
 
   admin: {
     useAsTitle: 'startsOn',

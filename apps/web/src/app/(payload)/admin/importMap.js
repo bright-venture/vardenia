@@ -22,9 +22,10 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { QrPreview as QrPreview_63c83128da94d6b39963c25535130a97 } from '../../../components/admin/QrPreview'
+import { StatementLineLabel as StatementLineLabel_bd8257613d3d553a2d83b3d2abfc9f11 } from '../../../components/admin/StatementLineLabel'
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
-import { DashboardOverview as DashboardOverview_6eebd759fa9848ad75ed4bee6bb4023d } from '../../../components/admin/DashboardOverview'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
+import { AdminHome as AdminHome_c8ff13fb3ed15fa560b19524fa05fa91 } from '../../../components/admin/AdminHome'
 import { BillingView as BillingView_1a2cdf321de290072bb9304599d32102 } from '../../../components/admin/BillingView'
 import { ImportListings as ImportListings_63ae5156d5323ea00059048055533c2c } from '../../../components/admin/ImportListings'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -55,9 +56,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/QrPreview#QrPreview": QrPreview_63c83128da94d6b39963c25535130a97,
+  "/components/admin/StatementLineLabel#StatementLineLabel": StatementLineLabel_bd8257613d3d553a2d83b3d2abfc9f11,
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,
-  "/components/admin/DashboardOverview#DashboardOverview": DashboardOverview_6eebd759fa9848ad75ed4bee6bb4023d,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
+  "/components/admin/AdminHome#AdminHome": AdminHome_c8ff13fb3ed15fa560b19524fa05fa91,
   "/components/admin/BillingView#BillingView": BillingView_1a2cdf321de290072bb9304599d32102,
   "/components/admin/ImportListings#ImportListings": ImportListings_63ae5156d5323ea00059048055533c2c,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1

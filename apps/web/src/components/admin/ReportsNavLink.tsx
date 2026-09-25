@@ -3,15 +3,56 @@
 import Link from 'next/link'
 
 /**
- * A link to the scan report, in the admin sidebar.
+ * The "Tools" block at the bottom of the admin menu.
  *
- * The report is a CSV route rather than a collection, so Payload has nothing to
- * generate a nav entry from. Without this it exists at a URL nobody would guess
- * - which is how a feature ends up built and never used.
+ * These are pages and files that are not collections, so Payload has nothing to
+ * generate a menu entry from. Without this they exist at URLs nobody would
+ * guess - which is how a feature ends up built and never used.
  *
- * Opens in a new tab because it is a file download, not a page: navigating the
- * admin away from an edit screen to trigger a download would lose unsaved work.
+ * Most used first. The admin pages open in place; the printable sheet and the
+ * two spreadsheets open in a new tab, because they are files rather than pages
+ * and navigating away from an edit screen to download one would lose unsaved
+ * work.
  */
+
+interface Tool {
+  label: string
+  href: string
+  title: string
+  external?: boolean
+}
+
+const TOOLS: Tool[] = [
+  {
+    label: 'Booking fees',
+    href: '/admin/billing',
+    title: 'Draw up and send the monthly booking-fee statements',
+  },
+  {
+    label: 'Import listings',
+    href: '/admin/import-listings',
+    title: 'Create listings in bulk from a spreadsheet',
+  },
+  {
+    label: 'QR code sheet',
+    href: '/qr/sheet',
+    title: 'Every active QR code on one printable page',
+    external: true,
+  },
+  {
+    label: 'Listing gaps (CSV)',
+    href: '/reports/listings',
+    title: 'What every listing is still missing. Sort by Missing to find the emptiest.',
+    external: true,
+  },
+  {
+    label: 'Scan report (CSV)',
+    href: '/reports/scans',
+    title: 'A spreadsheet of QR scans from the last 90 days',
+    external: true,
+  },
+]
+
 export function ReportsNavLink() {
   return (
     <div style={{ marginTop: '1.5rem' }}>
@@ -24,60 +65,27 @@ export function ReportsNavLink() {
           padding: '0 0 0.5rem',
         }}
       >
-        Reports
+        Tools
       </div>
 
-      <a
-        href="/reports/scans"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={linkStyle}
-        title="Downloads a spreadsheet of scans from the last 90 days"
-      >
-        Scan report (CSV)
-      </a>
-
-      <a
-        href="/reports/listings"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={linkStyle}
-        title="What every listing is still missing. Sort by Missing to find the emptiest."
-      >
-        Listing gaps (CSV)
-      </a>
-
-      <a
-        href="/qr/sheet"
-        target="_blank"
-        rel="noopener noreferrer"
-        style={linkStyle}
-        title="Every active QR code on one printable page"
-      >
-        QR code sheet
-      </a>
-
-      {/*
-       * A Link and not a new tab, unlike the two above. Those are file
-       * downloads on routes Next does not own; this is a page in the admin
-       * panel, and it holds a job that runs for minutes - a tab somebody opened
-       * and forgot is a tab they will close mid-import.
-       */}
-      <Link
-        href="/admin/import-listings"
-        style={linkStyle}
-        title="Create listings in bulk from a spreadsheet"
-      >
-        Import listings (CSV)
-      </Link>
-
-      <Link
-        href="/admin/billing"
-        style={linkStyle}
-        title="Draw up and send the monthly booking-fee statements"
-      >
-        Booking fees
-      </Link>
+      {TOOLS.map((tool) =>
+        tool.external ? (
+          <a
+            key={tool.href}
+            href={tool.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={linkStyle}
+            title={tool.title}
+          >
+            {tool.label}
+          </a>
+        ) : (
+          <Link key={tool.href} href={tool.href} style={linkStyle} title={tool.title}>
+            {tool.label}
+          </Link>
+        ),
+      )}
     </div>
   )
 }

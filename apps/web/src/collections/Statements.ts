@@ -165,6 +165,7 @@ const emailWhenSent: CollectionAfterChangeHook = async ({ doc, previousDoc, req,
 
 export const Statements: CollectionConfig = {
   slug: 'statements',
+  labels: { singular: 'Fee statement', plural: 'Fee statements' },
 
   admin: {
     useAsTitle: 'number',
@@ -231,6 +232,10 @@ export const Statements: CollectionConfig = {
       name: 'lines',
       type: 'array',
       labels: { singular: 'Line', plural: 'Lines' },
+      admin: {
+        // The date, reference, fee and dispute state as each line's title.
+        components: { RowLabel: '/components/admin/StatementLineLabel#StatementLineLabel' },
+      },
       fields: [
         {
           type: 'row',
@@ -247,7 +252,7 @@ export const Statements: CollectionConfig = {
               name: 'unit',
               type: 'select',
               options: FEE_UNITS.map((unit) => ({ label: unit, value: unit })),
-              admin: { width: '30%' },
+              admin: { width: '30%', isClearable: false },
             },
           ],
         },
@@ -268,6 +273,8 @@ export const Statements: CollectionConfig = {
               defaultValue: 'none',
               options: DISPUTE_OUTCOMES.map((outcome) => ({ label: outcome, value: outcome })),
               admin: {
+                // Cleared, a line reads as never questioned. Pick an outcome instead.
+                isClearable: false,
                 width: '30%',
                 description: 'Upheld takes the line off the total. Rejected keeps it.',
               },

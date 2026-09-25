@@ -31,11 +31,12 @@ import { notifyNewError } from '../hooks/notifyNewError'
  */
 export const ErrorEvents: CollectionConfig = {
   slug: 'error-events',
+  labels: { singular: 'Error', plural: 'Errors' },
 
   admin: {
     useAsTitle: 'message',
     defaultColumns: ['message', 'source', 'count', 'lastSeen', 'resolved'],
-    group: 'Analytics',
+    group: 'Reports',
     description: 'Written by the server when something fails. Read-only.',
     // Newest problem first, which is the order somebody triaging wants.
     listSearchableFields: ['message', 'source', 'path'],

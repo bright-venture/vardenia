@@ -31,6 +31,7 @@ import { SESSION_COOKIES } from '../lib/auth-cookies'
  */
 export const Customers: CollectionConfig = {
   slug: 'customers',
+  labels: { singular: 'Guest account', plural: 'Guest accounts' },
 
   auth: {
     // Secure in production, Lax always. See lib/auth-cookies.
@@ -86,7 +87,7 @@ export const Customers: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['name', 'email', 'createdAt'],
-    group: 'Accounts',
+    group: 'People',
   },
 
   access: {

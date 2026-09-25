@@ -8,7 +8,7 @@ export const Issues: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'issueNumber', 'publishedAt'],
-    group: 'Content',
+    group: 'Magazine',
   },
   access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
   fields: [

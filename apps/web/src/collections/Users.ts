@@ -4,6 +4,7 @@ import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  labels: { singular: 'Team member', plural: 'Team' },
   auth: {
     // Secure in production, Lax always. See lib/auth-cookies.
     cookies: SESSION_COOKIES,
@@ -14,7 +15,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['name', 'email', 'roles'],
-    group: 'Administration',
+    group: 'People',
   },
   access: {
     read: isStaff,

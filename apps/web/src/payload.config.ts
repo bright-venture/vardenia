@@ -126,11 +126,6 @@ export default buildConfig({
     components: {
       afterNavLinks: ['/components/admin/ReportsNavLink#ReportsNavLink'],
 
-      // Payload's own dashboard lists the collections and nothing else. This
-      // sits above it with the numbers and the work queue - see the component
-      // for what earns a place there.
-      beforeDashboard: ['/components/admin/DashboardOverview#DashboardOverview'],
-
       /**
        * A whole screen rather than a field, because importing a directory is
        * not editing a document: it needs a file, a rehearsal, and a progress
@@ -138,6 +133,11 @@ export default buildConfig({
        * browser drives the loop.
        */
       views: {
+        // The home page: what needs doing, four numbers, and where to go. Replaces
+        // Payload's grid of every collection. See the component.
+        dashboard: {
+          Component: '/components/admin/AdminHome#AdminHome',
+        },
         // Booking-fee statements: a month at a time, drawn up and sent from here.
         billing: {
           path: '/billing',
@@ -159,22 +159,24 @@ export default buildConfig({
    */
   endpoints: [importListingsEndpoint],
 
+  // The admin menu follows this order, group by group: Directory, Bookings,
+  // Magazine, People, Reports. The last two are hidden from the menu.
   collections: [
     Businesses,
     QrCodes,
+    Reviews,
+    Bookings,
+    Statements,
+    Closures,
     Articles,
     Issues,
     Media,
-    Users,
     BusinessUsers,
     Customers,
-    Bookings,
-    Statements,
-    SavedListings,
-    Reviews,
-    Closures,
+    Users,
     ScanEvents,
     ErrorEvents,
+    SavedListings,
     RateLimits,
   ],
 

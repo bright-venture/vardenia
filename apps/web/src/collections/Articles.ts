@@ -15,7 +15,7 @@ export const Articles: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'kind', 'publishedAt', '_status'],
-    group: 'Content',
+    group: 'Magazine',
   },
   versions: { drafts: true, maxPerDoc: 50 },
   access: {

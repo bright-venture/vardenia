@@ -27,6 +27,7 @@ import { SESSION_COOKIES } from '../lib/auth-cookies'
  */
 export const BusinessUsers: CollectionConfig = {
   slug: 'business-users',
+  labels: { singular: 'Partner account', plural: 'Partner accounts' },
 
   auth: {
     // Secure in production, Lax always. See lib/auth-cookies.
@@ -71,7 +72,7 @@ export const BusinessUsers: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['name', 'email', 'businesses'],
-    group: 'Accounts',
+    group: 'People',
   },
 
   access: {

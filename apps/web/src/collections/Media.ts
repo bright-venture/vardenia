@@ -12,7 +12,7 @@ const WEBP = { format: 'webp', options: { quality: 82 } } as const
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  admin: { group: 'Content' },
+  admin: { group: 'Magazine' },
   access: {
     read: anyone,
     create: isStaff,
