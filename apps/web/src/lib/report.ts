@@ -230,6 +230,16 @@ const asError = (value: unknown): { name: string; message: string; stack?: strin
   return { name: 'Error', message: safeStringify(value) }
 }
 
+/**
+ * The same readable message, for showing to a person rather than storing.
+ *
+ * The listing import put the raw form on screen: "Failed query: insert into
+ * qr_codes ..." with the parameters, and the reason Postgres gave nowhere.
+ */
+export function readableMessage(value: unknown): string {
+  return asError(value).message
+}
+
 function safeStringify(value: unknown): string {
   try {
     return JSON.stringify(value) ?? String(value)

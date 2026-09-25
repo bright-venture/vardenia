@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildRecord, fingerprint, normaliseMessage, redact, topFrame } from './report'
+import {
+  buildRecord,
+  fingerprint,
+  normaliseMessage,
+  readableMessage,
+  redact,
+  topFrame,
+} from './report'
 
 /**
  * The two things that have to be right about error reporting.
@@ -265,6 +272,14 @@ describe('a failed database query', () => {
     )
     expect(record.message).toBe('invalid input syntax for type integer: "NaN"')
     expect(record.message).not.toContain('select')
+  })
+
+  /** The listing import showed the whole INSERT on screen and no reason. */
+  it('gives the same reason to a person reading it on screen', () => {
+    const insert = `insert into "payload"."qr_codes" (${'"column", '.repeat(40)}) values (default)`
+    expect(readableMessage(failedQuery(insert, 'timeout exceeded when trying to connect'))).toBe(
+      'timeout exceeded when trying to connect',
+    )
   })
 
   /**

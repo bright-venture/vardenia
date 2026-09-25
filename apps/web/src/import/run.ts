@@ -5,6 +5,7 @@ import { richText } from '../seed/rich-text'
 import { parseCsvTable } from '../lib/csv-parse'
 import { PLACEHOLDER_STEM } from '../lib/media'
 import { allocateCode } from '../lib/allocate-code'
+import { readableMessage } from '../lib/report'
 import { toListings, type ImportedListing } from './listing-row'
 
 /**
@@ -352,7 +353,7 @@ export async function runImport(payload: Payload, options: ImportOptions): Promi
 
       result.failures.push({
         name: listing.name,
-        error: error instanceof Error ? error.message : String(error),
+        error: readableMessage(error),
       })
     }
   }

@@ -1,4 +1,5 @@
 import type { Endpoint, PayloadRequest } from 'payload'
+import { readableMessage } from '../lib/report'
 import { runImport } from './run'
 
 /**
@@ -139,7 +140,7 @@ export const importListingsEndpoint: Endpoint = {
        */
       req.payload.logger.error({ err: error, batch, offset }, 'Listing import window failed')
 
-      return json({ error: error instanceof Error ? error.message : 'The import failed.' }, 500)
+      return json({ error: readableMessage(error) || 'The import failed.' }, 500)
     }
   },
 }
