@@ -100,6 +100,11 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
   // a shopping centre under luxury-shopping claimed to be a boutique.
   Gyms: { category: 'lifestyle', subcategory: 'gyms' },
   Malls: { category: 'lifestyle', subcategory: 'malls' },
+  // The Bekaa file. The valley's wineries and its ruins are what people go
+  // there for, and both already had a subcategory; filing Ksara under
+  // adventure and Baalbek's temples under an activity would hide them.
+  Wineries: { category: 'food-and-beverage', subcategory: 'wine-experiences' },
+  'Historical Sites': { category: 'tourism', subcategory: 'historical-sites' },
 }
 
 /**
@@ -154,6 +159,15 @@ const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: strin
   'Marjeyoun District': { district: 'marjeyoun', governorate: 'nabatieh' },
   'Hasbaya District': { district: 'hasbaya', governorate: 'nabatieh' },
   'Bint Jbeil District': { district: 'bint-jbeil', governorate: 'nabatieh' },
+  // The Bekaa file. What people call the Bekaa is two governorates: Beqaa
+  // (Zahle, West Bekaa, Rachaya) and Baalbek-Hermel to the north. Both spellings
+  // of West Bekaa are accepted, because the sheets use one and the map the other.
+  'Zahle District': { district: 'zahle', governorate: 'beqaa' },
+  'West Bekaa District': { district: 'western-beqaa', governorate: 'beqaa' },
+  'Western Beqaa District': { district: 'western-beqaa', governorate: 'beqaa' },
+  'Rachaya District': { district: 'rachaya', governorate: 'beqaa' },
+  'Baalbek District': { district: 'baalbek', governorate: 'baalbek-hermel' },
+  'Hermel District': { district: 'hermel', governorate: 'baalbek-hermel' },
 }
 
 /** Where a row lands when its District heading is not one we know. */

@@ -373,6 +373,59 @@ describe('South Lebanon, and Nabatieh beside it', () => {
   })
 })
 
+/**
+ * The Bekaa file: two governorates, Beqaa and Baalbek-Hermel, and two headings
+ * that send wineries and ruins to the subcategories that already existed.
+ */
+describe('the Bekaa, across its two governorates', () => {
+  const CASES: Record<string, [string, string]> = {
+    'Zahle District': ['beqaa', 'zahle'],
+    'West Bekaa District': ['beqaa', 'western-beqaa'],
+    'Western Beqaa District': ['beqaa', 'western-beqaa'],
+    'Rachaya District': ['beqaa', 'rachaya'],
+    'Baalbek District': ['baalbek-hermel', 'baalbek'],
+    'Hermel District': ['baalbek-hermel', 'hermel'],
+  }
+
+  it('files each caza under the governorate that actually owns it', () => {
+    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+      const listing = toListing({
+        ID: 'X',
+        Category: 'Restaurants',
+        'Name / Listing': 'A Valley Place',
+        Location: 'Some Town',
+        District: heading,
+      })
+
+      expect(listing, heading).not.toBeNull()
+      expect(listing!.governorate, heading).toBe(governorate)
+      expect(listing!.district, heading).toBe(district)
+
+      const owner = GOVERNORATES.find((g) => g.slug === governorate)
+      expect(
+        owner?.districts.map((d) => d.slug),
+        heading,
+      ).toContain(district)
+      expect(listing!.warnings, heading).toHaveLength(0)
+    }
+  })
+
+  it('sends wineries and historical sites to their own subcategories', () => {
+    const winery = toListing({ ID: 'X', Category: 'Wineries', 'Name / Listing': 'Château Ksara' })
+    const ruins = toListing({
+      ID: 'Y',
+      Category: 'Historical Sites',
+      'Name / Listing': 'Baalbek Temple',
+    })
+
+    expect(winery).toMatchObject({
+      category: 'food-and-beverage',
+      subcategories: ['wine-experiences'],
+    })
+    expect(ruins).toMatchObject({ category: 'tourism', subcategories: ['historical-sites'] })
+  })
+})
+
 describe('cleanName', () => {
   it('strips a star rating and the star count in brackets', () => {
     expect(cleanName('Highridge Mountain Lodge ★★★★★ (5-star hotel)')).toBe(
