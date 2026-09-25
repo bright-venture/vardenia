@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { indexingWarning, isIndexingAllowed } from './indexing'
+import { indexingNotice, indexingWarning, isIndexingAllowed } from './indexing'
 
 /**
  * The switch that keeps Google away until the directory has content.
@@ -69,5 +69,27 @@ describe('indexingWarning', () => {
   it('warns for every value that is not an enabling one', () => {
     for (const value of [undefined, '', 'false', '1', 'yes'])
       expect(indexingWarning(value)).not.toBeNull()
+  })
+})
+
+/**
+ * Before launch, indexing off is correct: every address shows the coming-soon
+ * page, which is noindex anyway. The admin should say so quietly rather than
+ * raise an alarm, and only warn once the site is public.
+ */
+describe('indexingNotice', () => {
+  it('is a quiet note while the coming-soon page is on', () => {
+    const notice = indexingNotice(undefined, true)
+    expect(notice?.tone).toBe('info')
+    expect(notice?.detail).toContain('same deploy')
+  })
+
+  it('is a warning once the site is public and still hidden', () => {
+    expect(indexingNotice(undefined, false)?.tone).toBe('warn')
+  })
+
+  it('says nothing when indexing is on, launched or not', () => {
+    expect(indexingNotice('true', true)).toBeNull()
+    expect(indexingNotice('true', false)).toBeNull()
   })
 })

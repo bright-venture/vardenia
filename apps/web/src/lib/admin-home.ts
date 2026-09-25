@@ -4,7 +4,8 @@ import { TIER_LABELS } from '../fields/tier'
 import { beirutDate, beirutInstant } from './beirut'
 import { dashboardCounts } from './dashboard-stats'
 import { emailWarning } from './email'
-import { indexingWarning } from './indexing'
+import { comingSoonConfig } from './coming-soon'
+import { indexingNotice } from './indexing'
 
 /**
  * What the admin home page shows: a handful of numbers, and a to-do list
@@ -46,7 +47,8 @@ export interface AttentionItem {
    * destination would be worse than not linking.
    */
   href?: string
-  tone: 'warn' | 'error'
+  /** `info` is a note, not a task: grey, and not counted in the to-do total. */
+  tone: 'info' | 'warn' | 'error'
 }
 
 export interface AdminHome {
@@ -184,15 +186,8 @@ export async function adminHome(
 
   // Site setup first: each affects the whole site rather than one listing, and
   // each fails silently everywhere else.
-  const indexing = indexingWarning()
-  if (indexing) {
-    attention.push({
-      area: 'Site setup',
-      title: 'Not indexed by search engines',
-      detail: indexing,
-      tone: 'warn',
-    })
-  }
+  const indexing = indexingNotice(undefined, comingSoonConfig().enabled)
+  if (indexing) attention.push({ area: 'Site setup', ...indexing })
   const email = emailWarning()
   if (email) {
     attention.push({

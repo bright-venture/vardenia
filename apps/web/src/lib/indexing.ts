@@ -44,3 +44,36 @@ export function indexingWarning(
   if (isIndexingAllowed(value)) return null
   return 'This site is hidden from search engines. Set NEXT_PUBLIC_ALLOW_INDEX to true and redeploy once the directory has content.'
 }
+
+/**
+ * The same state, for the admin home page, knowing whether the site has
+ * launched.
+ *
+ * While the coming-soon page is up, indexing off is the right answer, not a
+ * problem: every address shows the splash, which carries its own noindex, and a
+ * sitemap published now would send Google to about fourteen hundred listings
+ * that are due to be removed before launch. So before launch it is a quiet note
+ * with the one instruction that matters - switch both in the same deploy - and
+ * only once the site is public does it become a warning.
+ *
+ * Null when indexing is on: there is nothing to say, before launch or after.
+ */
+export function indexingNotice(
+  allowIndex: string | undefined = process.env.NEXT_PUBLIC_ALLOW_INDEX,
+  comingSoon: boolean,
+): { tone: 'info' | 'warn'; title: string; detail: string } | null {
+  if (isIndexingAllowed(allowIndex)) return null
+  if (comingSoon) {
+    return {
+      tone: 'info',
+      title: 'Hidden from search engines until launch',
+      detail:
+        'As it should be while the coming-soon page is on. At launch, set NEXT_PUBLIC_ALLOW_INDEX to true in the same deploy that removes COMING_SOON.',
+    }
+  }
+  return {
+    tone: 'warn',
+    title: 'Not indexed by search engines',
+    detail: indexingWarning(allowIndex) ?? '',
+  }
+}

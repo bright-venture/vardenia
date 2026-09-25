@@ -1,6 +1,5 @@
 import type { AdminViewServerProps } from 'payload'
 import Link from 'next/link'
-import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import {
   SCAN_WINDOW_DAYS,
@@ -139,18 +138,12 @@ const AREAS: { title: string; items: Destination[] }[] = [
   },
 ]
 
-export async function AdminHome({ initPageResult, params, searchParams }: AdminViewServerProps) {
+/**
+ * No DefaultTemplate here, unlike the Booking fees view. Payload already wraps
+ * the dashboard in the admin menu and header; wrapping it again drew both twice.
+ */
+export async function AdminHome({ initPageResult }: AdminViewServerProps) {
   const { req } = initPageResult
-  const template = {
-    i18n: req.i18n,
-    locale: initPageResult.locale,
-    params,
-    payload: req.payload,
-    permissions: initPageResult.permissions,
-    searchParams,
-    user: req.user ?? undefined,
-    visibleEntities: initPageResult.visibleEntities,
-  }
 
   const home = req.user ? await adminHome(req.payload, req.user) : null
   const name = String((req.user as { name?: unknown } | null)?.name ?? '').split(' ')[0]
@@ -166,99 +159,92 @@ export async function AdminHome({ initPageResult, params, searchParams }: AdminV
     items: (home?.attention ?? []).filter((item) => item.area === area),
   })).filter((group) => group.items.length > 0)
 
+  // Notes (tone `info`) are listed but not counted: they ask nothing of anyone.
+  const tasks = (home?.attention ?? []).filter((item) => item.tone !== 'info').length
+
   return (
-    <DefaultTemplate {...template}>
-      <Gutter>
-        <div style={styles.page}>
-          <header>
-            <p style={styles.eyebrow}>{today}</p>
-            <h1 style={styles.title}>{name ? `Hello, ${name}` : 'Vardenia'}</h1>
-          </header>
+    <Gutter>
+      <div style={styles.page}>
+        <header>
+          <p style={styles.eyebrow}>{today}</p>
+          <h1 style={styles.title}>{name ? `Hello, ${name}` : 'Vardenia'}</h1>
+        </header>
 
-          {home ? (
-            <section style={styles.numbers} aria-label="Numbers">
-              <NumberCard
-                value={home.numbers.listingsLive.toLocaleString('en')}
-                label="Listings live"
-                note={
-                  home.numbers.listingDrafts > 0
-                    ? `${home.numbers.listingDrafts} drafts`
-                    : undefined
-                }
-              />
-              <NumberCard
-                value={home.numbers.bookingsThisMonth.toLocaleString('en')}
-                label="Bookings this month"
-              />
-              <NumberCard
-                value={home.numbers.scans.toLocaleString('en')}
-                label={`QR scans, ${SCAN_WINDOW_DAYS} days`}
-              />
-              <NumberCard
-                value={dollars(home.numbers.feesOwed)}
-                label="Booking fees awaiting payment"
-              />
-            </section>
-          ) : null}
-
-          <section style={styles.card}>
-            <h2 style={styles.heading}>
-              To do{' '}
-              {home && home.attention.length > 0 ? (
-                <span style={styles.count}>{home.attention.length}</span>
-              ) : null}
-            </h2>
-            {byArea.length === 0 ? (
-              <p style={styles.allClear}>Nothing needs you right now.</p>
-            ) : (
-              byArea.map((group) => (
-                <div key={group.area} style={styles.group}>
-                  <h3 style={styles.groupTitle}>{group.area}</h3>
-                  <ul style={styles.list}>
-                    {group.items.map((item) => (
-                      <Task key={`${item.title}-${item.detail}`} item={item} />
-                    ))}
-                  </ul>
-                </div>
-              ))
-            )}
+        {home ? (
+          <section style={styles.numbers} aria-label="Numbers">
+            <NumberCard
+              value={home.numbers.listingsLive.toLocaleString('en')}
+              label="Listings live"
+              note={
+                home.numbers.listingDrafts > 0 ? `${home.numbers.listingDrafts} drafts` : undefined
+              }
+            />
+            <NumberCard
+              value={home.numbers.bookingsThisMonth.toLocaleString('en')}
+              label="Bookings this month"
+            />
+            <NumberCard
+              value={home.numbers.scans.toLocaleString('en')}
+              label={`QR scans, ${SCAN_WINDOW_DAYS} days`}
+            />
+            <NumberCard
+              value={dollars(home.numbers.feesOwed)}
+              label="Booking fees awaiting payment"
+            />
           </section>
+        ) : null}
 
-          <section>
-            <h2 style={styles.heading}>Shortcuts</h2>
-            <div style={styles.shortcuts}>
-              {SHORTCUTS.map((shortcut) => (
-                <Go key={shortcut.href} destination={shortcut} style={styles.shortcut}>
-                  <span style={styles.shortcutLabel}>{shortcut.label}</span>
-                  <span style={styles.hint}>{shortcut.hint}</span>
-                </Go>
-              ))}
+        <section style={styles.card}>
+          <h2 style={styles.heading}>
+            To do {tasks > 0 ? <span style={styles.count}>{tasks}</span> : null}
+          </h2>
+          {tasks === 0 ? <p style={styles.allClear}>Nothing needs you right now.</p> : null}
+          {byArea.map((group) => (
+            <div key={group.area} style={styles.group}>
+              <h3 style={styles.groupTitle}>{group.area}</h3>
+              <ul style={styles.list}>
+                {group.items.map((item) => (
+                  <Task key={`${item.title}-${item.detail}`} item={item} />
+                ))}
+              </ul>
             </div>
-          </section>
+          ))}
+        </section>
 
-          <section>
-            <h2 style={styles.heading}>Everything else</h2>
-            <div style={styles.areas}>
-              {AREAS.map((area) => (
-                <div key={area.title} style={styles.card}>
-                  <h3 style={styles.areaTitle}>{area.title}</h3>
-                  <ul style={styles.areaList}>
-                    {area.items.map((item) => (
-                      <li key={item.href}>
-                        <Go destination={item} style={styles.areaLink}>
-                          {item.label}
-                        </Go>
-                        <span style={styles.hint}>{item.hint}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </Gutter>
-    </DefaultTemplate>
+        <section>
+          <h2 style={styles.heading}>Shortcuts</h2>
+          <div style={styles.shortcuts}>
+            {SHORTCUTS.map((shortcut) => (
+              <Go key={shortcut.href} destination={shortcut} style={styles.shortcut}>
+                <span style={styles.shortcutLabel}>{shortcut.label}</span>
+                <span style={styles.hint}>{shortcut.hint}</span>
+              </Go>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 style={styles.heading}>Everything else</h2>
+          <div style={styles.areas}>
+            {AREAS.map((area) => (
+              <div key={area.title} style={styles.card}>
+                <h3 style={styles.areaTitle}>{area.title}</h3>
+                <ul style={styles.areaList}>
+                  {area.items.map((item) => (
+                    <li key={item.href}>
+                      <Go destination={item} style={styles.areaLink}>
+                        {item.label}
+                      </Go>
+                      <span style={styles.hint}>{item.hint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </Gutter>
   )
 }
 
@@ -273,7 +259,12 @@ function NumberCard({ value, label, note }: { value: string; label: string; note
 }
 
 function Task({ item }: { item: AttentionItem }) {
-  const color = item.tone === 'error' ? 'var(--theme-error-500)' : 'var(--theme-warning-500)'
+  const color =
+    item.tone === 'error'
+      ? 'var(--theme-error-500)'
+      : item.tone === 'warn'
+        ? 'var(--theme-warning-500)'
+        : 'var(--theme-elevation-300)'
   return (
     <li style={styles.task}>
       <span style={{ ...styles.dot, background: color }} aria-hidden />
@@ -357,8 +348,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
+    lineHeight: 1.4,
   },
   count: {
+    display: 'inline-block',
+    lineHeight: 1.5,
     fontSize: '0.75rem',
     padding: '0.05rem 0.5rem',
     borderRadius: '999px',
