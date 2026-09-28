@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
-import { protectPrintedCodes } from '../hooks/protectPrintedCodes'
+import { committedReason, protectPrintedCodes } from '../hooks/protectPrintedCodes'
 import {
   revalidateQrCodesAfterChange,
   revalidateQrCodesAfterDelete,
@@ -17,6 +17,35 @@ import { allocateCode } from '../lib/allocate-code'
  * rebrands keeps its code, and the 20,000 magazines already in circulation keep
  * working.
  */
+/**
+ * Where a code leads is fixed once it is printed.
+ *
+ * "Printed" is what the delete guard already means by it: assigned to an issue,
+ * or scanned at least once. Before this, a printed code could be pointed at
+ * another listing from the form, and every copy of the magazine in circulation
+ * would send its readers to the wrong place with nothing on the page to say so.
+ * A printed code is retired by unticking Active, never re-aimed.
+ *
+ * Field update access, so the admin shows the fields read-only and an API
+ * write leaves them as they were. One exception: a printed code whose listing
+ * is empty may be given one, which is how an orphaned code finds its listing
+ * again. The importer and the relink pass overrideAccess and are unaffected.
+ */
+const destinationOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
+  !doc || committedReason(doc as never) === null
+
+const listingOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
+  destinationOpen({ doc }) || !doc?.business
+
+const TARGET_LABELS: Record<string, string> = {
+  business: 'A listing',
+  article: 'A magazine article',
+  issue: 'A magazine issue',
+  category: 'A category page',
+  external: 'Another website',
+  home: 'The Vardenia home page',
+}
+
 export const QrCodes: CollectionConfig = {
   slug: 'qr-codes',
   // Payload titles a collection from its slug, which gives "Qr Codes".
@@ -105,28 +134,33 @@ export const QrCodes: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'business',
-      options: QR_TARGET_TYPES.map((value) => ({ label: value, value })),
+      options: QR_TARGET_TYPES.map((value) => ({ label: TARGET_LABELS[value] ?? value, value })),
+      access: { update: destinationOpen },
       admin: {
         description:
-          'What the code opens. Pick "home" for a generic code that opens vardenia.com itself - a cover, a card, a window sticker - and leave the target fields below empty. Everything else needs the matching field filled in.',
+          'What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, untick Active.',
       },
     },
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       index: true,
+      access: { update: listingOpen },
       admin: { condition: (data) => data?.targetType === 'business' },
     },
     {
       name: 'article',
       type: 'relationship',
       relationTo: 'articles',
+      access: { update: destinationOpen },
       admin: { condition: (data) => data?.targetType === 'article' },
     },
     {
       name: 'category',
       type: 'select',
+      access: { update: destinationOpen },
       options: TAXONOMY.map((entry) => ({ label: entry.en, value: entry.slug })),
       admin: {
         condition: (data) => data?.targetType === 'category',
@@ -139,7 +173,9 @@ export const QrCodes: CollectionConfig = {
     },
     {
       name: 'externalUrl',
+      label: 'Web address',
       type: 'text',
+      access: { update: destinationOpen },
       admin: {
         condition: (data) => data?.targetType === 'external',
         description: 'Full web address. A bare domain like leroyal.com.lb is fine.',
@@ -174,7 +210,10 @@ export const QrCodes: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: DEFAULT_PLACEMENT,
-      options: QR_PLACEMENTS.map((value) => ({ label: value, value })),
+      options: QR_PLACEMENTS.map((value) => ({
+        label: value === 'magazine-page' ? 'Magazine page' : value,
+        value,
+      })),
       admin: {
         description:
           'Codes are printed in the magazine and nowhere else, so leave this on magazine-page. The other values are surfaces we have not shipped; picking one now records something that is not true.',
@@ -210,7 +249,7 @@ export const QrCodes: CollectionConfig = {
       admin: {
         readOnly: true,
         position: 'sidebar',
-        description: 'Denormalised running total. Detailed breakdown lives in Scan Events.',
+        description: 'Scans so far. Each one is listed under Reports, QR scans.',
       },
     },
   ],

@@ -28,13 +28,71 @@ const EXPIRING_SOON_DAYS = 30
 /** How far back the scan figure looks. */
 export const SCAN_WINDOW_DAYS = 30
 
+/** A booking request unanswered this long is a guest left waiting. */
+export const UNANSWERED_HOURS = 24
+
+/** How many waiting requests are listed one by one before "and N more". */
+const WAITING_SHOWN = 5
+
+const HOUR = 3_600_000
+
+/** "20 Aug 2026, 20:00" in Beirut, which is where every booking happens. */
+function beirutMoment(value: string | undefined): string {
+  if (!value) return 'an unknown date'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 'an unknown date'
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Beirut',
+  })
+}
+
+/**
+ * What an unanswered request asks of the team, and how urgently.
+ *
+ * Urgent when the booking is within two days or already past: a guest who
+ * booked for tonight needs an answer now, and one whose evening has gone needs
+ * the request closed rather than left open for ever.
+ */
+export function waitingRequest(
+  createdAt: string | undefined,
+  start: string | undefined,
+  now: Date,
+): { detail: string; tone: 'warn' | 'error' } {
+  const asked = createdAt ? new Date(createdAt).getTime() : NaN
+  const hours = Number.isFinite(asked) ? Math.floor((now.getTime() - asked) / HOUR) : null
+  const waited =
+    hours === null
+      ? 'Waiting'
+      : hours < 48
+        ? `Waiting ${hours} hours`
+        : `Waiting ${Math.floor(hours / 24)} days`
+  const begins = start ? new Date(start).getTime() : NaN
+
+  if (Number.isFinite(begins) && begins <= now.getTime()) {
+    return {
+      detail: `${waited}, for ${beirutMoment(start)}, which has passed. Decline it, or confirm it only if the venue took the guest.`,
+      tone: 'error',
+    }
+  }
+  const soon = Number.isFinite(begins) && begins - now.getTime() < 48 * HOUR
+  return {
+    detail: `${waited}, for ${beirutMoment(start)}. Phone the venue, then confirm or decline it from the booking.`,
+    tone: soon ? 'error' : 'warn',
+  }
+}
+
 /** A statement unpaid this long after it was sent: the booking button may go off. */
 const SWITCH_OFF_DAYS = 30
 
 /** The tiers that get a QR code, so a missing one is a fault rather than the design. */
 const TIERS_WITH_CODES = LISTING_TIERS.filter((tier) => can(tier, 'qrCode'))
 
-export type AttentionArea = 'Site setup' | 'Booking fees' | 'Listings' | 'Reviews'
+export type AttentionArea = 'Site setup' | 'Bookings' | 'Booking fees' | 'Listings' | 'Reviews'
 
 export interface AttentionItem {
   area: AttentionArea
@@ -96,91 +154,124 @@ export async function adminHome(
 
   const opts = { depth: 0, limit: 5, overrideAccess: false, user } as const
 
-  const [counts, bookings, owed, expired, expiring, codeless, disputed, overdue, drafts, reviews] =
-    await Promise.all([
-      dashboardCounts(payload, windowStart),
-      payload.count({
-        collection: 'bookings',
-        where: {
-          and: [
-            { start: { greater_than_equal: monthStart.toISOString() } },
-            { status: { in: ['pending', 'confirmed', 'completed'] } },
-          ],
-        },
-        overrideAccess: false,
-        user,
-      }),
-      payload.find({
-        ...opts,
-        limit: 500,
-        collection: 'statements',
-        where: { status: { equals: 'sent' } },
-        select: { total: true },
-      }),
+  const [
+    counts,
+    bookings,
+    owed,
+    expired,
+    expiring,
+    codeless,
+    disputed,
+    overdue,
+    drafts,
+    reviews,
+    waiting,
+  ] = await Promise.all([
+    dashboardCounts(payload, windowStart),
+    payload.count({
+      collection: 'bookings',
+      where: {
+        and: [
+          { start: { greater_than_equal: monthStart.toISOString() } },
+          { status: { in: ['pending', 'confirmed', 'completed'] } },
+        ],
+      },
+      overrideAccess: false,
+      user,
+    }),
+    payload.find({
+      ...opts,
+      limit: 500,
+      collection: 'statements',
+      where: { status: { equals: 'sent' } },
+      select: { total: true },
+    }),
 
-      // Lapsed, and still on its tier. Nothing expires on its own (see
-      // packages/core/src/tiers.ts), so this is the only thing that notices.
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        where: { contractEndsAt: { less_than: now.toISOString() } },
-        sort: 'contractEndsAt',
-      }),
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        where: {
-          and: [
-            { contractEndsAt: { greater_than_equal: now.toISOString() } },
-            { contractEndsAt: { less_than: soon.toISOString() } },
-          ],
-        },
-        sort: 'contractEndsAt',
-      }),
+    // Lapsed, and still on its tier. Nothing expires on its own (see
+    // packages/core/src/tiers.ts), so this is the only thing that notices.
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      where: { contractEndsAt: { less_than: now.toISOString() } },
+      sort: 'contractEndsAt',
+    }),
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      where: {
+        and: [
+          { contractEndsAt: { greater_than_equal: now.toISOString() } },
+          { contractEndsAt: { less_than: soon.toISOString() } },
+        ],
+      },
+      sort: 'contractEndsAt',
+    }),
 
-      // A published listing with no code cannot go in the magazine. The hook
-      // mints one, so anything here means it failed. Only on a tier that gets a
-      // code: a basic listing has none by design.
-      payload.find({
-        ...opts,
-        collection: 'businesses',
-        where: {
-          and: [
-            { qrCode: { exists: false } },
-            { _status: { equals: 'published' } },
-            { tier: { in: TIERS_WITH_CODES } },
-          ],
-        },
-      }),
+    // A published listing with no code cannot go in the magazine. The hook
+    // mints one, so anything here means it failed. Only on a tier that gets a
+    // code: a basic listing has none by design.
+    payload.find({
+      ...opts,
+      collection: 'businesses',
+      where: {
+        and: [
+          { qrCode: { exists: false } },
+          { _status: { equals: 'published' } },
+          { tier: { in: TIERS_WITH_CODES } },
+        ],
+      },
+    }),
 
-      payload.find({
-        ...opts,
-        collection: 'statements',
-        where: {
-          and: [{ status: { equals: 'sent' } }, { 'lines.disputeOutcome': { equals: 'open' } }],
-        },
-      }),
-      payload.find({
-        ...opts,
-        collection: 'statements',
-        where: {
-          and: [{ status: { equals: 'sent' } }, { dueAt: { less_than: now.toISOString() } }],
-        },
-        sort: 'dueAt',
-      }),
-      payload.count({
-        collection: 'statements',
-        where: { status: { equals: 'draft' } },
-        overrideAccess: false,
-        user,
-      }),
-      payload.count({
-        collection: 'reviews',
-        where: { status: { equals: 'pending' } },
-        overrideAccess: false,
-        user,
-      }),
-    ])
+    payload.find({
+      ...opts,
+      collection: 'statements',
+      where: {
+        and: [{ status: { equals: 'sent' } }, { 'lines.disputeOutcome': { equals: 'open' } }],
+      },
+    }),
+    payload.find({
+      ...opts,
+      collection: 'statements',
+      where: {
+        and: [{ status: { equals: 'sent' } }, { dueAt: { less_than: now.toISOString() } }],
+      },
+      sort: 'dueAt',
+    }),
+    payload.count({
+      collection: 'statements',
+      where: { status: { equals: 'draft' } },
+      overrideAccess: false,
+      user,
+    }),
+    payload.count({
+      collection: 'reviews',
+      where: { status: { equals: 'pending' } },
+      overrideAccess: false,
+      user,
+    }),
+
+    // Requests still pending a day after they were made, oldest first. The
+    // venue's name comes with them, because the answer is a phone call to it.
+    payload.find({
+      ...opts,
+      limit: WAITING_SHOWN,
+      depth: 1,
+      collection: 'bookings',
+      where: {
+        and: [
+          { status: { equals: 'pending' } },
+          {
+            createdAt: {
+              less_than: new Date(now.getTime() - UNANSWERED_HOURS * HOUR).toISOString(),
+            },
+          },
+        ],
+      },
+      sort: 'createdAt',
+      select: { reference: true, createdAt: true, start: true, business: true },
+      populate: { businesses: { name: true } },
+    }),
+  ])
 
   const attention: AttentionItem[] = []
 
@@ -195,6 +286,34 @@ export async function adminHome(
       title: 'Email is not delivering',
       detail: email,
       tone: email.includes('redirected') ? 'error' : 'warn',
+    })
+  }
+
+  // Guests waiting for an answer come before money: they are people, now.
+  for (const doc of waiting.docs as {
+    id: number
+    reference?: string | null
+    createdAt?: string
+    start?: string
+    business?: { name?: string | null } | number | null
+  }[]) {
+    const venue =
+      typeof doc.business === 'object' && doc.business?.name ? doc.business.name : 'The venue'
+    attention.push({
+      area: 'Bookings',
+      title: `${doc.reference ?? `Booking ${doc.id}`}: ${venue} has not answered`,
+      ...waitingRequest(doc.createdAt, doc.start, now),
+      href: `/admin/collections/bookings/${doc.id}`,
+    })
+  }
+  if (waiting.totalDocs > waiting.docs.length) {
+    const more = waiting.totalDocs - waiting.docs.length
+    attention.push({
+      area: 'Bookings',
+      title: `${more} more request${more === 1 ? '' : 's'} waiting over ${UNANSWERED_HOURS} hours`,
+      detail: 'The oldest are listed above. The full list is under Bookings.',
+      href: '/admin/collections/bookings?where[status][equals]=pending',
+      tone: 'warn',
     })
   }
 

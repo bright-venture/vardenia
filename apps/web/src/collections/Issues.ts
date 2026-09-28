@@ -18,10 +18,12 @@ export const Issues: CollectionConfig = {
     { name: 'season', type: 'text', localized: true, admin: { placeholder: 'Summer 2026' } },
     { name: 'cover', type: 'upload', relationTo: 'media', required: true },
     { name: 'publishedAt', type: 'date', required: true },
-    { name: 'pageCount', type: 'number', defaultValue: 100 },
+    { name: 'pageCount', label: 'Pages', type: 'number', defaultValue: 100, min: 1 },
     {
       name: 'printRun',
+      label: 'Copies printed',
       type: 'number',
+      min: 0,
       // Staff-only. Actual circulation is commercial intelligence: it is the
       // denominator in every scan-rate figure, and not a number an advertiser
       // or a competitor should be able to scrape while rates are being agreed.
@@ -30,6 +32,7 @@ export const Issues: CollectionConfig = {
     },
     {
       name: 'digitalEdition',
+      label: 'Digital edition (PDF)',
       type: 'upload',
       relationTo: 'media',
       admin: { description: 'PDF flipbook of the full issue.' },

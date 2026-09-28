@@ -36,7 +36,7 @@ import type { QrDoc } from '../lib/qr-doc'
  * through leaves a dead code in a layout that nobody notices until the proofs
  * come back.
  */
-function committedReason(qr: QrDoc): string | null {
+export function committedReason(qr: QrDoc): string | null {
   if (typeof qr.scanCount === 'number' && qr.scanCount > 0) {
     return `it has been scanned ${qr.scanCount} time${qr.scanCount === 1 ? '' : 's'}`
   }

@@ -124,6 +124,15 @@ export const Customers: CollectionConfig = {
   },
 
   fields: [
+    {
+      /**
+       * Reset links, the confirmation email, and when to use each. Nothing
+       * stored. See components/admin/AccountHelp.
+       */
+      name: 'accountHelp',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/AccountHelp#AccountHelp' } },
+    },
     { name: 'name', type: 'text', required: true },
     { name: 'phone', type: 'text' },
 

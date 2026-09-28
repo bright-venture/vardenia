@@ -507,3 +507,35 @@ describe('fields fixed once a record exists', () => {
     },
   )
 })
+
+/**
+ * A printed code keeps its destination. Printed means given an issue or
+ * scanned, which is what the delete guard already means by it.
+ */
+describe('QR codes: a printed code keeps its destination', () => {
+  const updateOf = (name: string) =>
+    (QrCodes.fields.find((f) => nameOf(f) === name) as { access?: { update?: FieldAccess } })
+      .access!.update!
+  const on = (doc?: Record<string, unknown>) =>
+    ({ req: { user: admin }, doc }) as unknown as Parameters<FieldAccess>[0]
+
+  it.each(['targetType', 'business', 'article', 'category', 'externalUrl'])(
+    '%s can be set while the code is unprinted',
+    (name) => {
+      expect(updateOf(name)(on({ scanCount: 0, issue: null, business: 7 }))).toBe(true)
+      expect(updateOf(name)(on(undefined))).toBe(true)
+    },
+  )
+
+  it.each(['targetType', 'business', 'article', 'category', 'externalUrl'])(
+    '%s is fixed once the code is in an issue or has been scanned',
+    (name) => {
+      expect(updateOf(name)(on({ scanCount: 0, issue: 2, business: 7 }))).toBe(false)
+      expect(updateOf(name)(on({ scanCount: 5, issue: null, business: 7 }))).toBe(false)
+    },
+  )
+
+  it('still lets a printed code with no listing be given one, which is how an orphan is relinked', () => {
+    expect(updateOf('business')(on({ scanCount: 5, issue: 2, business: null }))).toBe(true)
+  })
+})

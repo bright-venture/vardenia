@@ -262,11 +262,18 @@ export const Businesses: CollectionConfig = {
             },
             { name: 'address', type: 'textarea', localized: true },
             {
+              // Fills the point below from a pasted link. See components/admin/MapsLinkField.
+              name: 'locationFromLink',
+              type: 'ui',
+              admin: { components: { Field: '/components/admin/MapsLinkField#MapsLinkField' } },
+            },
+            {
               name: 'location',
               type: 'point',
               index: true,
               admin: {
-                description: 'Drives "near me" search and Google Maps directions.',
+                description:
+                  'Filled by the link above. Drives "near me" search and Google Maps directions.',
               },
               validate: (value: unknown) => {
                 if (!Array.isArray(value)) return true

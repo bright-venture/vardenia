@@ -25,7 +25,13 @@ import {
  * mode.
  */
 
-const AREA_ORDER: AttentionArea[] = ['Site setup', 'Booking fees', 'Listings', 'Reviews']
+const AREA_ORDER: AttentionArea[] = [
+  'Site setup',
+  'Bookings',
+  'Booking fees',
+  'Listings',
+  'Reviews',
+]
 
 const dollars = (amount: number) =>
   `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

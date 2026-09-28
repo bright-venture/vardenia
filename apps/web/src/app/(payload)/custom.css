@@ -352,3 +352,42 @@
   font-size: 0.85rem;
   color: var(--theme-elevation-700);
 }
+
+/* Help on the account screens. See components/admin/AccountHelp. */
+.vd-help__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.vd-help {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--theme-elevation-800);
+}
+
+/* "Paste a Google Maps link" above a listing's location. */
+.vd-maps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: var(--base);
+}
+
+.vd-maps__row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.vd-maps__row input {
+  flex: 1 1 18rem;
+}
+
+.vd-maps a {
+  color: var(--theme-elevation-900);
+  text-decoration: underline;
+}
