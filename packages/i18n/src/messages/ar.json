@@ -335,7 +335,15 @@
     "disputeUpheld": "حُذف بعد التحقق.",
     "disputeRejected": "أُبقي بعد التحقق.",
     "disputeError": "لم يتم ذلك. يرجى المحاولة بعد قليل.",
-    "disputeClosedError": "انتهت مهلة الاعتراض على هذا الكشف."
+    "disputeClosedError": "انتهت مهلة الاعتراض على هذا الكشف.",
+    "stayUntil": "حتى {date} · {nights, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+    "requestedAgo": "وصل الطلب {ago}",
+    "staleRequest": "مرّ الموعد ولم يُردّ على الطلب. ارفضه ليصل الإشعار إلى الضيف، أو اقبله فقط إذا كان الضيف قد حضر فعلاً.",
+    "noShowConfirm": "هل تريد تسجيل أن هذا الضيف لم يحضر؟ لا يمكن التراجع عن ذلك، وسيظهر لك في طلبه التالي.",
+    "noShowConfirmAction": "نعم، لم يحضر",
+    "pagePrev": "السابق",
+    "pageNext": "التالي",
+    "pageOf": "الصفحة {page} من {pages}"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

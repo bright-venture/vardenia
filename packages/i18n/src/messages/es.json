@@ -335,7 +335,15 @@
     "disputeUpheld": "Eliminada tras la revisión.",
     "disputeRejected": "Mantenida tras la revisión.",
     "disputeError": "No se ha podido enviar. Inténtalo de nuevo en un momento.",
-    "disputeClosedError": "El plazo para reclamar este extracto ha terminado."
+    "disputeClosedError": "El plazo para reclamar este extracto ha terminado.",
+    "stayUntil": "Hasta el {date} · {nights, plural, one {1 noche} other {# noches}}",
+    "requestedAgo": "Solicitud recibida {ago}",
+    "staleRequest": "La fecha ya pasó y nadie respondió. Recházala para que el cliente reciba aviso, o acéptala solo si realmente vino.",
+    "noShowConfirm": "¿Marcar que este cliente no vino? No se puede deshacer y lo verás en su próxima solicitud.",
+    "noShowConfirmAction": "Sí, no vino",
+    "pagePrev": "Anterior",
+    "pageNext": "Siguiente",
+    "pageOf": "Página {page} de {pages}"
   },
   "bookingStatus": {
     "pending": "A la espera de confirmación",

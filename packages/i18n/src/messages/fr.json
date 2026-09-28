@@ -335,7 +335,15 @@
     "disputeUpheld": "Retirée après vérification.",
     "disputeRejected": "Maintenue après vérification.",
     "disputeError": "Cela n'a pas fonctionné. Réessayez dans un instant.",
-    "disputeClosedError": "Le délai pour contester ce relevé est passé."
+    "disputeClosedError": "Le délai pour contester ce relevé est passé.",
+    "stayUntil": "Jusqu'au {date} · {nights, plural, one {1 nuit} other {# nuits}}",
+    "requestedAgo": "Demande reçue {ago}",
+    "staleRequest": "La date est passée et personne n'a répondu. Refusez-la pour que le client soit prévenu, ou acceptez-la seulement s'il est bien venu.",
+    "noShowConfirm": "Indiquer que ce client n'est pas venu ? C'est définitif, et cela apparaîtra lors de sa prochaine demande chez vous.",
+    "noShowConfirmAction": "Oui, il n'est pas venu",
+    "pagePrev": "Précédente",
+    "pageNext": "Suivante",
+    "pageOf": "Page {page} sur {pages}"
   },
   "bookingStatus": {
     "pending": "En attente de confirmation",

@@ -54,7 +54,7 @@ export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ status?: string; window?: string; q?: string }>
+  searchParams: Promise<{ status?: string; window?: string; q?: string; page?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -84,9 +84,10 @@ export default async function PartnerPage({ params, searchParams }: Props) {
     )
   }
 
-  const filter = parseBookingFilter(await searchParams)
-  const [{ docs, totalDocs, awaiting }, listings] = await Promise.all([
-    ownerBookings(filter),
+  const query = await searchParams
+  const filter = parseBookingFilter(query)
+  const [{ docs, totalDocs, awaiting, page, totalPages }, listings] = await Promise.all([
+    ownerBookings(filter, 100, Number(query.page) || 1),
     ownerListings(),
   ])
 
@@ -140,7 +141,8 @@ export default async function PartnerPage({ params, searchParams }: Props) {
       {awaiting > 0 && filter.status !== 'pending' ? (
         <p className={`${NOTICE_INFO} mt-8 flex flex-wrap items-center gap-3`}>
           <span>{t('requestsWaiting', { count: awaiting })}</span>
-          <Link href="/partner?status=pending" className={LINK}>
+          {/* Every window: a request left unanswered past its date is still one. */}
+          <Link href="/partner?status=pending&window=all" className={LINK}>
             {t('reviewRequests')}
           </Link>
         </p>
@@ -157,8 +159,52 @@ export default async function PartnerPage({ params, searchParams }: Props) {
       ) : (
         <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />
       )}
+
+      {totalPages > 1 ? (
+        <nav
+          className="border-ink-100 mt-10 flex items-center justify-between gap-4 border-t pt-6 text-sm"
+          aria-label={t('pageOf', { page, pages: totalPages })}
+        >
+          {page > 1 ? (
+            <Link href={pageHref(filter, page - 1)} className={LINK}>
+              {t('pagePrev')}
+            </Link>
+          ) : (
+            <span />
+          )}
+          <span className="text-ink-500">{t('pageOf', { page, pages: totalPages })}</span>
+          {page < totalPages ? (
+            <Link href={pageHref(filter, page + 1)} className={LINK}>
+              {t('pageNext')}
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      ) : null}
     </>
   )
+}
+
+/** The same view, on another page. */
+function pageHref(filter: BookingFilter, page: number): string {
+  const base = `/partner${bookingFilterQuery(filter)}`
+  if (page <= 1) return base
+  return `${base}${base.includes('?') ? '&' : '?'}page=${page}`
+}
+
+/**
+ * "2 days ago", in the reader's language, from the platform rather than a
+ * sentence per unit in ten message files.
+ */
+function ago(iso: string | undefined, locale: Locale): string | null {
+  const then = iso ? new Date(iso).getTime() : NaN
+  if (!Number.isFinite(then)) return null
+  const minutes = Math.round((Date.now() - then) / 60_000)
+  const format = new Intl.RelativeTimeFormat(dataLocale(locale), { numeric: 'auto' })
+  if (minutes < 60) return format.format(-Math.max(1, minutes), 'minute')
+  if (minutes < 48 * 60) return format.format(-Math.round(minutes / 60), 'hour')
+  return format.format(-Math.round(minutes / 1440), 'day')
 }
 
 /**
@@ -419,6 +465,18 @@ async function BookingList({
                */
               const guestName = row.guest?.name || t('guestUnknown')
 
+              /** Nights, when the booking ends on a later Beirut day than it starts. */
+              const firstDay = beirutDate(new Date(row.start))
+              const lastDay = beirutDate(new Date(row.end))
+              const stay =
+                lastDay > firstDay
+                  ? Math.round(
+                      (Date.parse(`${lastDay}T00:00:00Z`) - Date.parse(`${firstDay}T00:00:00Z`)) /
+                        86_400_000,
+                    )
+                  : 0
+              const requested = row.status === 'pending' ? ago(row.createdAt, locale) : null
+
               return (
                 <li
                   key={row.id}
@@ -505,6 +563,36 @@ async function BookingList({
                             {t('guestMissed', { count: row.guest.missed })}
                           </span>
                         ) : null}
+                      </p>
+                    ) : null}
+
+                    {/*
+                      A stay is not a time. A guesthouse booking read "14:00"
+                      and nothing else, when what the venue plans by is the
+                      check-out day, how many nights, and which room.
+                    */}
+                    {stay || row.roomType ? (
+                      <p className="text-ink-700 mt-1 text-sm">
+                        {stay
+                          ? t('stayUntil', {
+                              date: beirutDayLabel(new Date(row.end), dataLocale(locale)),
+                              nights: stay,
+                            })
+                          : ''}
+                        {stay && row.roomType ? ' · ' : ''}
+                        {row.roomType ?? ''}
+                      </p>
+                    ) : null}
+
+                    {row.status === 'pending' && requested ? (
+                      <p className="text-gold-700 mt-1 text-xs">
+                        {t('requestedAgo', { ago: requested })}
+                      </p>
+                    ) : null}
+
+                    {row.status === 'pending' && row.ended ? (
+                      <p className="border-gold-700 text-ink-700 mt-3 border-s-2 ps-3 text-sm">
+                        {t('staleRequest')}
                       </p>
                     ) : null}
 

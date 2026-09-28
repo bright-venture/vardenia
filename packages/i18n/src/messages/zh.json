@@ -335,7 +335,15 @@
     "disputeUpheld": "核实后已删除。",
     "disputeRejected": "核实后保留。",
     "disputeError": "未能发送，请稍后再试。",
-    "disputeClosedError": "对本账单提出异议的期限已过。"
+    "disputeClosedError": "对本账单提出异议的期限已过。",
+    "stayUntil": "至 {date} · {nights, plural, other {# 晚}}",
+    "requestedAgo": "请求于{ago}收到",
+    "staleRequest": "日期已过，但无人回复。请拒绝此请求以便通知客人；只有在客人确实到店时才接受。",
+    "noShowConfirm": "将此客人标记为未到店？此操作无法撤销，客人下次向您预订时会显示此记录。",
+    "noShowConfirmAction": "是的，客人未到店",
+    "pagePrev": "上一页",
+    "pageNext": "下一页",
+    "pageOf": "第 {page} 页，共 {pages} 页"
   },
   "bookingStatus": {
     "pending": "等待确认",

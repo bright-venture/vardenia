@@ -516,13 +516,17 @@ export interface OwnerBookingsResult {
   totalDocs: number
   /** Requests still waiting on an answer, across every filter. */
   awaiting: number
+  /** Which page of the result this is, from 1, and how many there are. */
+  page: number
+  totalPages: number
 }
 
 export async function ownerBookings(
   filter: BookingFilter = DEFAULT_FILTER,
   limit = 100,
+  page = 1,
 ): Promise<OwnerBookingsResult> {
-  const empty = { docs: [], totalDocs: 0, awaiting: 0 }
+  const empty = { docs: [], totalDocs: 0, awaiting: 0, page: 1, totalPages: 1 }
   const payload = await getPayload({ config })
 
   const auth = await payload
@@ -539,6 +543,9 @@ export async function ownerBookings(
     where: bookingFilterWhere(filter, { customerIds }),
     depth: 1,
     limit,
+    // A venue with more than a page of bookings could not reach the rest: the
+    // count said 240 and the list stopped at 100 with no way on.
+    page: Math.max(1, Math.floor(page) || 1),
     /**
      * Soonest first when looking ahead, most recent first when looking back.
      * A venue reading its history wants last night at the top, not the oldest
@@ -559,7 +566,13 @@ export async function ownerBookings(
    */
   const waiting = await payload.find({
     collection: 'bookings',
-    where: bookingFilterWhere({ status: 'pending', window: 'upcoming', search: '' }),
+    /*
+     * Every unanswered request, whatever its date. It counted upcoming ones
+     * only, so a request left unanswered past its evening dropped out of the
+     * count and the banner and sat in "Past" for ever, the guest never told.
+     * The page lists those separately so they can be closed.
+     */
+    where: bookingFilterWhere({ status: 'pending', window: 'all', search: '' }),
     limit: 0,
     depth: 0,
     overrideAccess: false,
@@ -581,6 +594,8 @@ export async function ownerBookings(
     docs: withEnded,
     totalDocs: result.totalDocs,
     awaiting: waiting.totalDocs,
+    page: result.page ?? 1,
+    totalPages: result.totalPages ?? 1,
   }
 }
 

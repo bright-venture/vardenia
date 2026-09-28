@@ -335,7 +335,15 @@
     "disputeUpheld": "Removed after checking.",
     "disputeRejected": "Kept after checking.",
     "disputeError": "That did not go through. Please try again in a moment.",
-    "disputeClosedError": "The time to question this statement has passed."
+    "disputeClosedError": "The time to question this statement has passed.",
+    "stayUntil": "Until {date} · {nights, plural, one {1 night} other {# nights}}",
+    "requestedAgo": "Requested {ago}",
+    "staleRequest": "Its date has passed and nobody answered. Decline it so the guest is told, or accept it only if they did come.",
+    "noShowConfirm": "Mark this guest as not arriving? It cannot be undone, and it shows on their next request to you.",
+    "noShowConfirmAction": "Yes, they did not arrive",
+    "pagePrev": "Previous",
+    "pageNext": "Next",
+    "pageOf": "Page {page} of {pages}"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",

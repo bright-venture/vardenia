@@ -335,7 +335,15 @@
     "disputeUpheld": "Removida após verificação.",
     "disputeRejected": "Mantida após verificação.",
     "disputeError": "Não foi possível enviar. Tente novamente em instantes.",
-    "disputeClosedError": "O prazo para contestar este extrato terminou."
+    "disputeClosedError": "O prazo para contestar este extrato terminou.",
+    "stayUntil": "Até {date} · {nights, plural, one {1 noite} other {# noites}}",
+    "requestedAgo": "Pedido recebido {ago}",
+    "staleRequest": "A data já passou e ninguém respondeu. Recuse para que o cliente seja avisado, ou aceite apenas se ele realmente veio.",
+    "noShowConfirm": "Marcar que este cliente não compareceu? Não pode ser desfeito e aparecerá no próximo pedido dele.",
+    "noShowConfirmAction": "Sim, não compareceu",
+    "pagePrev": "Anterior",
+    "pageNext": "Seguinte",
+    "pageOf": "Página {page} de {pages}"
   },
   "bookingStatus": {
     "pending": "Aguardando confirmação",

@@ -77,6 +77,12 @@ export function BookingActions({
    */
   const [asking, setAsking] = useState<BookingStatus | null>(null)
   const [reason, setReason] = useState('')
+  /**
+   * "Did not arrive" is final and follows the guest: the count shows on their
+   * next request to this venue. It was one click, next to "Completed", on the
+   * row a venue is marking up at the end of a busy night. Now it asks once.
+   */
+  const [confirmingNoShow, setConfirmingNoShow] = useState(false)
 
   const actions = availableActions('owner', status, ended)
   if (actions.length === 0) return null
@@ -129,7 +135,29 @@ export function BookingActions({
         </p>
       ) : null}
 
-      {asking ? (
+      {confirmingNoShow ? (
+        <div className="border-state-danger mt-1 border-s-2 ps-3" role="group">
+          <p className="text-ink-700 text-sm">{t('noShowConfirm')}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => void change('no-show').then(() => setConfirmingNoShow(false))}
+              className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {busy === 'no-show' ? t('working') : t('noShowConfirmAction')}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => setConfirmingNoShow(false)}
+              className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {common('close')}
+            </button>
+          </div>
+        </div>
+      ) : asking ? (
         /*
           A form, so Enter sends it and Escape is the browser's own affair. The
           field is optional and says so: a venue that just wants the request gone
@@ -191,7 +219,13 @@ export function BookingActions({
               disabled={busy !== null}
               // Cancelling is the only action that writes to the guest in the
               // venue's name, so it asks first. Everything else fires.
-              onClick={() => (to === 'cancelled' ? setAsking(to) : change(to))}
+              onClick={() =>
+                to === 'cancelled'
+                  ? setAsking(to)
+                  : to === 'no-show'
+                    ? setConfirmingNoShow(true)
+                    : change(to)
+              }
               // Accepting is the common action on a pending booking, so it gets
               // the weight. Everything else is deliberately quieter - declining
               // somebody's evening should take a moment's thought.
