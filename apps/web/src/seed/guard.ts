@@ -195,3 +195,36 @@ export function assertSeedTarget(
 
   throw new Error(lines.join('\n'))
 }
+
+/** Hosts where a database can only be a throwaway one on this machine or in CI. */
+const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
+
+/**
+ * Whether Payload may push its schema to this database.
+ *
+ * Push makes the tables match the collections on every start, which is what
+ * development wants and exactly what production must never get: it also turns
+ * row level security off on every table, because RLS is not part of the
+ * collection definitions. It used to be gated on NODE_ENV alone, and a local
+ * run leaves NODE_ENV unset whatever DATABASE_URL points at. On 9 September
+ * 2026 that was production, and RLS went from on to off on every table there.
+ *
+ * So the target decides, not the environment: a database on this machine (CI's
+ * throwaway one), or the one development database named in SEED_ALLOWED_DB.
+ * Anything else, production included, is left alone. A development run pointed
+ * at production then simply uses the schema that is there, and a query that
+ * needs a newer column fails loudly instead of the schema being rewritten.
+ */
+export function mayPushSchema({ connectionString, allowed, nodeEnv }: SeedTargetInput): boolean {
+  if (nodeEnv === 'production' || !connectionString) return false
+
+  let host = ''
+  try {
+    host = new URL(connectionString).hostname.toLowerCase()
+  } catch {
+    return false
+  }
+  if (LOCAL_HOSTS.has(host)) return true
+
+  return checkSeedTarget({ connectionString, allowed, nodeEnv }).ok
+}

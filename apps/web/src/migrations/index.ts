@@ -31,6 +31,7 @@ import * as migration_20260922_110157_two_tiers from './20260922_110157_two_tier
 import * as migration_20260923_070208_booking_locales from './20260923_070208_booking_locales'
 import * as migration_20260924_090000_tiers_and_featured from './20260924_090000_tiers_and_featured'
 import * as migration_20260924_100629_booking_fee_statements from './20260924_100629_booking_fee_statements'
+import * as migration_20260928_090000_restore_row_level_security from './20260928_090000_restore_row_level_security'
 
 export const migrations = [
   {
@@ -197,5 +198,10 @@ export const migrations = [
     up: migration_20260924_100629_booking_fee_statements.up,
     down: migration_20260924_100629_booking_fee_statements.down,
     name: '20260924_100629_booking_fee_statements',
+  },
+  {
+    up: migration_20260928_090000_restore_row_level_security.up,
+    down: migration_20260928_090000_restore_row_level_security.down,
+    name: '20260928_090000_restore_row_level_security',
   },
 ]

@@ -9,6 +9,7 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { LOCALES, LOCALE_META, DEFAULT_LOCALE } from '@vardenia/i18n'
 
 import { DB_SCHEMA, assertDatabaseInternals } from './lib/db'
+import { mayPushSchema } from './seed/guard'
 import { Users } from './collections/Users'
 import { BusinessUsers } from './collections/BusinessUsers'
 import { Customers } from './collections/Customers'
@@ -350,11 +351,16 @@ export default buildConfig({
       keepAlive: true,
       keepAliveInitialDelayMillis: 10_000,
     },
-    // Migrations are explicit in production. Auto-push everywhere else - note
-    // this is `!== 'production'`, not `=== 'development'`: scripts run through
-    // tsx (seeds, one-off tasks) leave NODE_ENV unset and still need a schema.
-    // Schema drift against a live advertiser database is not a risk worth taking.
-    push: process.env.NODE_ENV !== 'production',
+    // Migrations are explicit in production. Push only ever reaches a local
+    // database or the development one named in SEED_ALLOWED_DB, whatever
+    // NODE_ENV says: scripts run through tsx leave it unset, and on 9 September
+    // 2026 that let a local run push to production and switch row level
+    // security off on every table. See mayPushSchema in seed/guard.
+    push: mayPushSchema({
+      connectionString: process.env.DATABASE_URL,
+      allowed: process.env.SEED_ALLOWED_DB,
+      nodeEnv: process.env.NODE_ENV,
+    }),
 
     // Keep every Payload table out of `public`.
     //

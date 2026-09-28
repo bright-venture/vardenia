@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertSeedTarget, checkSeedTarget, databaseIdentity } from './guard'
+import { assertSeedTarget, checkSeedTarget, databaseIdentity, mayPushSchema } from './guard'
 
 /**
  * The guard exists for one specific accident: DATABASE_URL is pointed at
@@ -208,5 +208,39 @@ describe('assertSeedTarget', () => {
     }
 
     expect(message).not.toContain(`SEED_ALLOWED_DB=${PROD_ID}`)
+  })
+})
+
+/**
+ * Push rewrote production's schema on 9 September 2026 and switched row level
+ * security off everywhere, because it was gated on NODE_ENV alone.
+ */
+describe('mayPushSchema', () => {
+  const DEV = 'postgresql://postgres.devref:pw@aws-0-eu.pooler.supabase.com:6543/postgres'
+  const PROD = 'postgresql://postgres.prodref:pw@aws-0-eu.pooler.supabase.com:6543/postgres'
+  const allowed = 'postgres.devref@aws-0-eu.pooler.supabase.com/postgres'
+
+  it('pushes to the development database named in SEED_ALLOWED_DB', () => {
+    expect(mayPushSchema({ connectionString: DEV, allowed, nodeEnv: undefined })).toBe(true)
+  })
+
+  it('never pushes to any other remote database, production included', () => {
+    expect(mayPushSchema({ connectionString: PROD, allowed, nodeEnv: undefined })).toBe(false)
+    expect(
+      mayPushSchema({ connectionString: PROD, allowed: undefined, nodeEnv: 'development' }),
+    ).toBe(false)
+  })
+
+  it("pushes to a local database, which is CI's throwaway one", () => {
+    const ci = 'postgresql://vardenia:vardenia@localhost:5432/vardenia_test'
+    expect(mayPushSchema({ connectionString: ci, allowed: undefined, nodeEnv: 'test' })).toBe(true)
+  })
+
+  it('never pushes in production, or with no database at all', () => {
+    expect(mayPushSchema({ connectionString: DEV, allowed, nodeEnv: 'production' })).toBe(false)
+    expect(mayPushSchema({ connectionString: undefined, allowed, nodeEnv: undefined })).toBe(false)
+    expect(mayPushSchema({ connectionString: 'not a url', allowed, nodeEnv: undefined })).toBe(
+      false,
+    )
   })
 })
