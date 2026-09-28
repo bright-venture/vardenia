@@ -343,7 +343,8 @@
     "noShowConfirmAction": "Да, гость не пришёл",
     "pagePrev": "Назад",
     "pageNext": "Далее",
-    "pageOf": "Страница {page} из {pages}"
+    "pageOf": "Страница {page} из {pages}",
+    "noUpcoming": "Ничего не запланировано. Прошлые бронирования в разделе"
   },
   "bookingStatus": {
     "pending": "Ожидает подтверждения",

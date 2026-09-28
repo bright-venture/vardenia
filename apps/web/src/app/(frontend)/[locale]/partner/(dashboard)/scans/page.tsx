@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { isLocale } from '@vardenia/i18n'
+import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../../i18n/routing'
 import { currentOwner } from '../../../../../../lib/session'
 import { ownerScanReport, type ScanReport } from '../../../../../../lib/scan-report'
@@ -21,6 +21,18 @@ import { PRIMARY_BUTTON } from '../../../../../../components/formStyles'
  */
 
 export const dynamic = 'force-dynamic'
+
+/** A two-letter country code as the country's name, or null if it is not one. */
+function countryName(code: string | null | undefined, locale: Locale): string | null {
+  if (!code || !/^[A-Za-z]{2}$/.test(code)) return null
+  try {
+    return (
+      new Intl.DisplayNames([dataLocale(locale)], { type: 'region' }).of(code.toUpperCase()) ?? code
+    )
+  } catch {
+    return code
+  }
+}
 
 interface Props {
   params: Promise<{ locale: string }>
@@ -96,7 +108,9 @@ export default async function PartnerScansPage({ params }: Props) {
         <Breakdown
           title={t('scansByCountry')}
           rows={report.countries.map((c) => ({
-            label: c.country || t('countryUnknown'),
+            // "Lebanon", not "LB": the platform names every country in every
+            // language the site speaks, so no message file has to.
+            label: countryName(c.country, locale as Locale) || t('countryUnknown'),
             count: c.count,
           }))}
           num={num}

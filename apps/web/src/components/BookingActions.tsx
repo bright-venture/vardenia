@@ -87,6 +87,13 @@ export function BookingActions({
   const actions = availableActions('owner', status, ended)
   if (actions.length === 0) return null
 
+  /**
+   * The button that looks like the answer. Accept, usually; but a request whose
+   * date has passed unanswered is almost always closed by declining it, and the
+   * row's note says so, so the dark button follows the note.
+   */
+  const primary: BookingStatus = status === 'pending' && ended ? 'cancelled' : 'confirmed'
+
   async function change(to: BookingStatus, withReason = '') {
     setProblem(null)
     setBusy(to)
@@ -229,7 +236,7 @@ export function BookingActions({
               // Accepting is the common action on a pending booking, so it gets
               // the weight. Everything else is deliberately quieter - declining
               // somebody's evening should take a moment's thought.
-              className={`${to === 'confirmed' ? PRIMARY_BUTTON : SECONDARY_BUTTON} px-4 py-2 text-xs`}
+              className={`${to === primary ? PRIMARY_BUTTON : SECONDARY_BUTTON} px-4 py-2 text-xs`}
             >
               {busy === to ? t('working') : t(labelFor(status, to))}
             </button>

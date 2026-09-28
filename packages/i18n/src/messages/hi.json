@@ -343,7 +343,8 @@
     "noShowConfirmAction": "हाँ, मेहमान नहीं आया",
     "pagePrev": "पिछला",
     "pageNext": "अगला",
-    "pageOf": "पृष्ठ {page} / {pages}"
+    "pageOf": "पृष्ठ {page} / {pages}",
+    "noUpcoming": "आगे कोई बुकिंग नहीं। पिछली बुकिंग यहाँ हैं:"
   },
   "bookingStatus": {
     "pending": "पुष्टि की प्रतीक्षा में",

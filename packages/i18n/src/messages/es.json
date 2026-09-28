@@ -343,7 +343,8 @@
     "noShowConfirmAction": "Sí, no vino",
     "pagePrev": "Anterior",
     "pageNext": "Siguiente",
-    "pageOf": "Página {page} de {pages}"
+    "pageOf": "Página {page} de {pages}",
+    "noUpcoming": "Nada próximamente. Las reservas anteriores están en"
   },
   "bookingStatus": {
     "pending": "A la espera de confirmación",

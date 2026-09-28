@@ -343,7 +343,8 @@
     "noShowConfirmAction": "ہاں، مہمان نہیں آیا",
     "pagePrev": "پچھلا",
     "pageNext": "اگلا",
-    "pageOf": "صفحہ {page} از {pages}"
+    "pageOf": "صفحہ {page} از {pages}",
+    "noUpcoming": "آگے کوئی بکنگ نہیں۔ پچھلی بکنگز یہاں ہیں:"
   },
   "bookingStatus": {
     "pending": "تصدیق کے منتظر",

@@ -343,7 +343,8 @@
     "noShowConfirmAction": "نعم، لم يحضر",
     "pagePrev": "السابق",
     "pageNext": "التالي",
-    "pageOf": "الصفحة {page} من {pages}"
+    "pageOf": "الصفحة {page} من {pages}",
+    "noUpcoming": "لا حجوزات قادمة. الحجوزات السابقة في"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",

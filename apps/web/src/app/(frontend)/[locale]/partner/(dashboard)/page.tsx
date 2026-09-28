@@ -113,7 +113,8 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   const summary = [
     tonight.length > 0 ? t('summaryTonight', { covers, bookings: tonight.length }) : '',
-    awaiting > 0 ? t('summaryAwaiting', { count: awaiting }) : '',
+    // The banner below already says this, except on the pending view itself.
+    awaiting > 0 && filter.status === 'pending' ? t('summaryAwaiting', { count: awaiting }) : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -150,11 +151,26 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
       <FilterBar filter={filter} locale={locale as Locale} />
 
-      <p className="text-ink-500 mt-6 text-sm">{t('resultCount', { count: totalDocs })}</p>
+      {totalDocs > 0 ? (
+        <p className="text-ink-500 mt-6 text-sm">{t('resultCount', { count: totalDocs })}</p>
+      ) : null}
 
       {docs.length === 0 ? (
         <p className="text-ink-500 mt-12 text-center">
-          {isFiltered(filter) ? t('noMatches') : t('noBookings')}
+          {/* Nothing ahead is not the same as nothing ever: a venue with a
+              quiet week was told "No bookings yet" over months of history. */}
+          {filter.window === 'upcoming' && filter.status === 'all' && !filter.search ? (
+            <>
+              {t('noUpcoming')}{' '}
+              <Link href="/partner?window=past" className={LINK}>
+                {t('windowPast')}
+              </Link>
+            </>
+          ) : isFiltered(filter) ? (
+            t('noMatches')
+          ) : (
+            t('noBookings')
+          )}
         </p>
       ) : (
         <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />

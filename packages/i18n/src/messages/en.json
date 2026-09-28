@@ -343,7 +343,8 @@
     "noShowConfirmAction": "Yes, they did not arrive",
     "pagePrev": "Previous",
     "pageNext": "Next",
-    "pageOf": "Page {page} of {pages}"
+    "pageOf": "Page {page} of {pages}",
+    "noUpcoming": "Nothing coming up. Earlier bookings are under"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",
