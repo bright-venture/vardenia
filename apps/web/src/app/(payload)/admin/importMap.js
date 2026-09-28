@@ -24,6 +24,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { ListingActivity as ListingActivity_a4adc9ff8ad04da0058736214f4b2411 } from '../../../components/admin/ListingActivity'
 import { QrPreview as QrPreview_63c83128da94d6b39963c25535130a97 } from '../../../components/admin/QrPreview'
 import { FolderListView as FolderListView_cd05df67b980cd74ed008187e07c7615 } from '../../../components/admin/FolderListView'
+import { StatementDisputes as StatementDisputes_5adc2dd7b59f3080352673dc54f49823 } from '../../../components/admin/StatementDisputes'
 import { StatementLineLabel as StatementLineLabel_bd8257613d3d553a2d83b3d2abfc9f11 } from '../../../components/admin/StatementLineLabel'
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
@@ -60,6 +61,7 @@ export const importMap = {
   "/components/admin/ListingActivity#ListingActivity": ListingActivity_a4adc9ff8ad04da0058736214f4b2411,
   "/components/admin/QrPreview#QrPreview": QrPreview_63c83128da94d6b39963c25535130a97,
   "/components/admin/FolderListView#FolderListView": FolderListView_cd05df67b980cd74ed008187e07c7615,
+  "/components/admin/StatementDisputes#StatementDisputes": StatementDisputes_5adc2dd7b59f3080352673dc54f49823,
   "/components/admin/StatementLineLabel#StatementLineLabel": StatementLineLabel_bd8257613d3d553a2d83b3d2abfc9f11,
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,

@@ -83,6 +83,18 @@ async function nextNumber(req: Parameters<CollectionBeforeChangeHook>[0]['req'])
   return statementNumber(year, sequence + 1)
 }
 
+/** What each outcome means for the money, in the words staff choose by. */
+const OUTCOME_LABELS: Record<(typeof DISPUTE_OUTCOMES)[number], string> = {
+  none: 'Not questioned',
+  open: 'Questioned: waiting for a decision',
+  upheld: 'Removed from the bill',
+  rejected: 'Kept on the bill',
+}
+
+/** Dispute fields only on a line the venue questioned; elsewhere they are noise. */
+const wasQuestioned = (_: unknown, siblingData: { disputeOutcome?: string | null } | undefined) =>
+  Boolean(siblingData?.disputeOutcome && siblingData.disputeOutcome !== 'none')
+
 const idOf = (value: unknown): string | number | null => {
   if (typeof value === 'string' || typeof value === 'number') return value
   const id = (value as { id?: unknown } | null)?.id
@@ -237,12 +249,29 @@ export const Statements: CollectionConfig = {
       },
     },
     {
+      /**
+       * The lines a venue questioned, each with its reason and a keep or remove
+       * choice, above the lines themselves. See components/admin/StatementDisputes.
+       * Nothing stored: the buttons set each line's disputeOutcome below.
+       */
+      name: 'disputes',
+      type: 'ui',
+      admin: {
+        components: { Field: '/components/admin/StatementDisputes#StatementDisputes' },
+      },
+    },
+    {
       name: 'lines',
       type: 'array',
       labels: { singular: 'Line', plural: 'Lines' },
       admin: {
         // The date, reference, fee and dispute state as each line's title.
         components: { RowLabel: '/components/admin/StatementLineLabel#StatementLineLabel' },
+        // Closed, the lines read as a list of bookings. They are filled in from
+        // the bookings, and are opened only to correct a draft.
+        initCollapsed: true,
+        description:
+          'One line per completed booking, filled in automatically. Open a line only to correct a draft. Answer questioned lines in the box above.',
       },
       fields: [
         {
@@ -277,18 +306,34 @@ export const Statements: CollectionConfig = {
           fields: [
             {
               name: 'disputeOutcome',
+              label: 'Decision',
               type: 'select',
               defaultValue: 'none',
-              options: DISPUTE_OUTCOMES.map((outcome) => ({ label: outcome, value: outcome })),
+              options: DISPUTE_OUTCOMES.map((outcome) => ({
+                label: OUTCOME_LABELS[outcome],
+                value: outcome,
+              })),
               admin: {
                 // Cleared, a line reads as never questioned. Pick an outcome instead.
                 isClearable: false,
                 width: '30%',
-                description: 'Upheld takes the line off the total. Rejected keeps it.',
+                condition: wasQuestioned,
               },
             },
-            { name: 'disputeReason', type: 'text', maxLength: 300, admin: { width: '50%' } },
-            { name: 'disputedAt', type: 'date', admin: { width: '20%', readOnly: true } },
+            {
+              name: 'disputeReason',
+              label: "Venue's reason",
+              type: 'text',
+              maxLength: 300,
+              // The venue's own words, written through /billing/dispute.
+              admin: { width: '50%', readOnly: true, condition: wasQuestioned },
+            },
+            {
+              name: 'disputedAt',
+              label: 'Questioned on',
+              type: 'date',
+              admin: { width: '20%', readOnly: true, condition: wasQuestioned },
+            },
           ],
         },
       ],
