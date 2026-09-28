@@ -265,13 +265,12 @@ export const Statements: CollectionConfig = {
       type: 'array',
       labels: { singular: 'Line', plural: 'Lines' },
       admin: {
-        // The date, reference, fee and dispute state as each line's title.
-        components: { RowLabel: '/components/admin/StatementLineLabel#StatementLineLabel' },
-        // Closed, the lines read as a list of bookings. They are filled in from
-        // the bookings, and are opened only to correct a draft.
-        initCollapsed: true,
-        description:
-          'One line per completed booking, filled in automatically. Open a line only to correct a draft. Answer questioned lines in the box above.',
+        // A read-only table instead of Payload's cards of inputs. Every line is
+        // copied from a booking when the statement is drawn up; editing one by
+        // hand could point it at another booking while its reference still
+        // named the first. Disputes are answered in the box above. See
+        // components/admin/StatementLines.
+        components: { Field: '/components/admin/StatementLines#StatementLines' },
       },
       fields: [
         {

@@ -17,3 +17,155 @@
 .table th .field-label {
   color: var(--theme-elevation-800);
 }
+
+/*
+ * Fee statements: the lines table and the questioned-lines box.
+ * See components/admin/StatementLines and StatementDisputes.
+ */
+.vd-lines {
+  margin-bottom: calc(var(--base) * 1.5);
+}
+
+.vd-lines__head h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.vd-lines__head p,
+.vd-lines__empty,
+.vd-muted {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--theme-elevation-700);
+}
+
+.vd-lines__scroll {
+  margin-top: 0.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+}
+
+.vd-lines__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.vd-lines__table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--theme-elevation-700);
+  background: var(--theme-elevation-50);
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--theme-elevation-150);
+}
+
+.vd-lines__table td {
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  white-space: nowrap;
+}
+
+.vd-lines__table tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.vd-lines__table tbody tr:hover {
+  background: var(--theme-elevation-50);
+}
+
+.vd-lines__table tbody tr.is-removed td {
+  /* 600, not 500: 500 is under the 4.5:1 small text needs. */
+  color: var(--theme-elevation-600);
+}
+
+.vd-lines__table tbody tr.is-removed .vd-fee {
+  text-decoration: line-through;
+}
+
+.vd-lines__table tfoot td {
+  border-bottom: 0;
+  font-weight: 600;
+  background: var(--theme-elevation-50);
+}
+
+.vd-lines__table a {
+  color: var(--theme-elevation-900);
+  text-decoration: underline;
+  text-decoration-color: var(--theme-elevation-300);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+.vd-lines__table a:hover {
+  text-decoration-color: currentColor;
+}
+
+.vd-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.vd-pill {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--theme-elevation-100);
+  color: var(--theme-elevation-800);
+}
+
+.vd-pill--warn {
+  background: var(--theme-warning-100);
+  color: var(--theme-warning-800);
+}
+
+.vd-pill--off {
+  background: var(--theme-elevation-100);
+  color: var(--theme-elevation-700);
+}
+
+/* The two choices on a questioned line. */
+.vd-choice {
+  padding: 0.55rem 1rem;
+  min-height: 2.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--theme-elevation-300);
+  background: var(--theme-elevation-0);
+  color: var(--theme-elevation-900);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 100ms ease;
+}
+
+.vd-choice:hover {
+  border-color: var(--theme-elevation-800);
+  background: var(--theme-elevation-50);
+}
+
+.vd-choice:active {
+  transform: translateY(1px);
+}
+
+.vd-choice:focus-visible {
+  outline: 2px solid var(--theme-elevation-900);
+  outline-offset: 2px;
+}
+
+.vd-choice--remove:hover {
+  border-color: var(--theme-error-500);
+  background: var(--theme-error-50);
+}
+
+.vd-choice--keep:hover {
+  border-color: var(--theme-success-500);
+  background: var(--theme-success-50);
+}

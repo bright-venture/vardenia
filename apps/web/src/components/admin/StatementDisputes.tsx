@@ -169,10 +169,18 @@ function Dispute({ line }: { line: Line }) {
         </div>
       ) : (
         <div style={styles.actions}>
-          <button type="button" style={styles.button} onClick={() => setValue('upheld')}>
+          <button
+            type="button"
+            className="vd-choice vd-choice--remove"
+            onClick={() => setValue('upheld')}
+          >
             Remove from the bill
           </button>
-          <button type="button" style={styles.button} onClick={() => setValue('rejected')}>
+          <button
+            type="button"
+            className="vd-choice vd-choice--keep"
+            onClick={() => setValue('rejected')}
+          >
             Keep on the bill
           </button>
           <span style={styles.muted}>
@@ -245,16 +253,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'var(--theme-elevation-700)',
   },
   actions: { display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' },
-  button: {
-    padding: '0.5rem 0.9rem',
-    border: '1px solid var(--theme-elevation-800)',
-    borderRadius: '4px',
-    background: 'var(--theme-elevation-0)',
-    color: 'var(--theme-elevation-900)',
-    cursor: 'pointer',
-    fontWeight: 600,
-    minHeight: '2.25rem',
-  },
   decision: { display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' },
   link: {
     background: 'none',
