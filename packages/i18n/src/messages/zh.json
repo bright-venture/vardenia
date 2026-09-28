@@ -133,7 +133,10 @@
     "verifyFirst": "预订前请先确认您的邮箱。注册时我们已向您发送了链接。",
     "verifyResend": "重新发送链接",
     "roomType": "房型",
-    "cancellationPolicy": "取消政策"
+    "cancellationPolicy": "取消政策",
+    "stayDates": "{from} 至 {to} · {nights, plural, other {# 晚}}",
+    "venueSaid": "商家说明：“{reason}”",
+    "writeReview": "体验如何？写一条评价"
   },
   "account": {
     "title": "您的账户",

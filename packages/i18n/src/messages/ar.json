@@ -133,7 +133,10 @@
     "verifyFirst": "أكِّد بريدك الإلكتروني قبل الحجز. أرسلنا لك رابطاً عند إنشاء الحساب.",
     "verifyResend": "أعد إرسال الرابط",
     "roomType": "نوع الغرفة",
-    "cancellationPolicy": "سياسة الإلغاء"
+    "cancellationPolicy": "سياسة الإلغاء",
+    "stayDates": "من {from} إلى {to} · {nights, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
+    "venueSaid": "قالت المنشأة: «{reason}»",
+    "writeReview": "كيف كانت تجربتك؟ اكتب تقييماً"
   },
   "account": {
     "title": "حسابك",

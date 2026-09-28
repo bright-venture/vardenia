@@ -133,7 +133,10 @@
     "verifyFirst": "Confirme seu e-mail antes de reservar. Enviamos um link quando você se cadastrou.",
     "verifyResend": "Enviar o link novamente",
     "roomType": "Tipo de quarto",
-    "cancellationPolicy": "Política de cancelamento"
+    "cancellationPolicy": "Política de cancelamento",
+    "stayDates": "De {from} a {to} · {nights, plural, one {1 noite} other {# noites}}",
+    "venueSaid": "O estabelecimento disse: \"{reason}\"",
+    "writeReview": "Como foi? Escreva uma avaliação"
   },
   "account": {
     "title": "Sua conta",

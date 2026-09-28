@@ -596,7 +596,9 @@ export default async function ListingPage({ params }: Params) {
             this is Vardenia's own guests, and only from people who completed a
             booking here. Written reviews arrive pending and show once approved.
           */}
-          <section className="mt-16">
+          {/* `id` so a guest's account page can link a finished booking straight
+              to the form, rather than to the top of a long page. */}
+          <section id="reviews" className="mt-16 scroll-mt-24">
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
               {reviews.average !== null ? (

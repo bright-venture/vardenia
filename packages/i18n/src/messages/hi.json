@@ -133,7 +133,10 @@
     "verifyFirst": "बुक करने से पहले अपना ईमेल पता पुष्ट करें। साइन अप करते समय हमने आपको एक लिंक भेजा था।",
     "verifyResend": "लिंक फिर से भेजें",
     "roomType": "कमरे का प्रकार",
-    "cancellationPolicy": "रद्दीकरण नीति"
+    "cancellationPolicy": "रद्दीकरण नीति",
+    "stayDates": "{from} से {to} तक · {nights, plural, one {1 रात} other {# रातें}}",
+    "venueSaid": "जगह की ओर से: \"{reason}\"",
+    "writeReview": "कैसा रहा? समीक्षा लिखें"
   },
   "account": {
     "title": "आपका खाता",

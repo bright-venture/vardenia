@@ -133,7 +133,10 @@
     "verifyFirst": "بک کرنے سے پہلے اپنے ای میل پتے کی تصدیق کریں۔ سائن اپ کے وقت ہم نے آپ کو ایک لنک بھیجا تھا۔",
     "verifyResend": "لنک دوبارہ بھیجیں",
     "roomType": "کمرے کی قسم",
-    "cancellationPolicy": "منسوخی کی پالیسی"
+    "cancellationPolicy": "منسوخی کی پالیسی",
+    "stayDates": "{from} سے {to} تک · {nights, plural, one {1 رات} other {# راتیں}}",
+    "venueSaid": "جگہ کی طرف سے: \"{reason}\"",
+    "writeReview": "تجربہ کیسا رہا؟ جائزہ لکھیں"
   },
   "account": {
     "title": "آپ کا اکاؤنٹ",

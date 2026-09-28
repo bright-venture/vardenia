@@ -133,7 +133,10 @@
     "verifyFirst": "Confirm your email address before booking. We sent you a link when you signed up.",
     "verifyResend": "Send the link again",
     "roomType": "Room type",
-    "cancellationPolicy": "Cancellation policy"
+    "cancellationPolicy": "Cancellation policy",
+    "stayDates": "{from} to {to} · {nights, plural, one {1 night} other {# nights}}",
+    "venueSaid": "The venue said: \"{reason}\"",
+    "writeReview": "How was it? Write a review"
   },
   "account": {
     "title": "Your account",

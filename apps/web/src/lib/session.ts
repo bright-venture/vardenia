@@ -119,6 +119,46 @@ export async function customerBookings(limit = 50) {
 }
 
 /**
+ * The listings the signed-in customer has already reviewed, as id strings.
+ *
+ * So the account page can invite a review only where one is still possible:
+ * createReview allows one per customer per listing and refuses the second
+ * with "already reviewed", which is a poor answer to a link we offered.
+ *
+ * Read with access overridden because a customer cannot read the Reviews
+ * collection's customer field; the query is pinned to their own id, from their
+ * own session, and returns listing ids only.
+ */
+export async function customerReviewedListings(): Promise<Set<string>> {
+  const payload = await getPayload({ config })
+
+  const auth = await payload
+    .auth({ headers: await nextHeaders() })
+    .catch(() => ({ user: null }) as { user: null })
+
+  const user = auth.user
+  if (!user || user.collection !== CUSTOMER_COLLECTION) return new Set()
+
+  const result = await payload.find({
+    collection: 'reviews',
+    where: { customer: { equals: user.id } },
+    select: { business: true },
+    depth: 0,
+    limit: 200,
+    overrideAccess: true,
+  })
+
+  return new Set(
+    result.docs.map((doc) => {
+      const business = (doc as { business?: unknown }).business
+      return String(
+        typeof business === 'object' && business ? (business as { id: unknown }).id : business,
+      )
+    }),
+  )
+}
+
+/**
  * Bookings split into what is still ahead and what is behind.
  *
  * Split on the *end* rather than the start, so a dinner that began an hour ago

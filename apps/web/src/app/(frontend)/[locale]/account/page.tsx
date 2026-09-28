@@ -4,8 +4,13 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import type { BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
-import { currentCustomer, customerBookings, partitionBookings } from '../../../../lib/session'
-import { formatBeirut } from '../../../../lib/beirut'
+import {
+  currentCustomer,
+  customerBookings,
+  customerReviewedListings,
+  partitionBookings,
+} from '../../../../lib/session'
+import { beirutDate, beirutDayLabel, formatBeirut } from '../../../../lib/beirut'
 import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
@@ -64,9 +69,29 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     )
   }
 
-  const bookings = await customerBookings()
+  const [bookings, reviewed] = await Promise.all([customerBookings(), customerReviewedListings()])
   // The clock lives in lib/session, not here. See partitionBookings.
   const { upcoming, past } = partitionBookings(bookings)
+
+  /*
+   * One invitation per place, on its most recent finished booking. A guest can
+   * review a place once, and four past dinners at Em Sherif offered the link
+   * four times. The rule is createReview's: completed, or confirmed and over,
+   * at a published listing not yet reviewed.
+   */
+  const invite = new Set<string>()
+  const offered = new Set<string>()
+  for (const booking of [...upcoming, ...past]) {
+    const business = booking.business
+    if (typeof business !== 'object' || !business?.slug) continue
+    const place = String(business.id)
+    const published = (business as { _status?: string })._status !== 'draft'
+    const finished =
+      booking.status === 'completed' || (booking.status === 'confirmed' && booking.ended)
+    if (!published || !finished || reviewed.has(place) || offered.has(place)) continue
+    offered.add(place)
+    invite.add(String(booking.id))
+  }
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -111,10 +136,20 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       ) : (
         <>
           {upcoming.length > 0 ? (
-            <BookingList title={t('upcoming')} bookings={upcoming} locale={locale as Locale} />
+            <BookingList
+              title={t('upcoming')}
+              bookings={upcoming}
+              locale={locale as Locale}
+              invite={invite}
+            />
           ) : null}
           {past.length > 0 ? (
-            <BookingList title={t('past')} bookings={past} locale={locale as Locale} />
+            <BookingList
+              title={t('past')}
+              bookings={past}
+              locale={locale as Locale}
+              invite={invite}
+            />
           ) : null}
         </>
       )}
@@ -139,14 +174,18 @@ async function BookingList({
   title,
   bookings,
   locale,
+  invite,
 }: {
   title: string
   /** `ended` is attached by partitionBookings, which owns the clock. */
   bookings: (BookingDoc & { ended: boolean })[]
   locale: Locale
+  /** Bookings that carry the review invitation, as id strings. See AccountPage. */
+  invite: Set<string>
 }) {
   const status = await getTranslations('bookingStatus')
   const t = await getTranslations('booking')
+  const partner = await getTranslations('partner')
 
   return (
     <section className="mt-6">
@@ -158,6 +197,21 @@ async function BookingList({
           const business = booking.business
           const name = typeof business === 'object' && business ? (business.name ?? '') : ''
           const slug = typeof business === 'object' && business ? (business.slug ?? '') : ''
+          /*
+           * A stay by its nights, a table by its time. A three-night stay read
+           * "Sat 15 Aug, 14:00" and nothing about when it ended.
+           */
+          const firstDay = beirutDate(new Date(booking.start))
+          const lastDay = beirutDate(new Date(booking.end))
+          const nights =
+            lastDay > firstDay
+              ? Math.round(
+                  (Date.parse(`${lastDay}T00:00:00Z`) - Date.parse(`${firstDay}T00:00:00Z`)) /
+                    86_400_000,
+                )
+              : 0
+
+          const canReview = invite.has(String(booking.id))
 
           return (
             <li key={booking.id} className="border-ink-100 bg-surface-raised border p-4">
@@ -175,8 +229,27 @@ async function BookingList({
               </div>
 
               <p className="text-ink-700 mt-2 text-sm">
-                {formatBeirut(new Date(booking.start), dataLocale(locale))}
+                {nights > 0
+                  ? t('stayDates', {
+                      from: beirutDayLabel(new Date(booking.start), dataLocale(locale)),
+                      to: beirutDayLabel(new Date(booking.end), dataLocale(locale)),
+                      nights,
+                    })
+                  : formatBeirut(new Date(booking.start), dataLocale(locale))}
               </p>
+              <p className="text-ink-500 mt-1 text-sm">
+                {partner('people', { count: booking.partySize })}
+                {booking.roomType ? ` · ${booking.roomType}` : ''}
+              </p>
+
+              {/* The venue's own words, when it turned the booking down. They
+                  were emailed and nowhere else, so the page said "Cancelled"
+                  and the reason was lost with the email. */}
+              {booking.status === 'cancelled' && booking.declineReason ? (
+                <p dir="auto" className="text-ink-700 border-ink-100 mt-3 border-s-2 ps-3 text-sm">
+                  {t('venueSaid', { reason: booking.declineReason })}
+                </p>
+              ) : null}
 
               <p className="text-ink-500 mt-1 text-xs">
                 {t('reference')} <span className="select-all font-mono">{booking.reference}</span>
@@ -190,6 +263,15 @@ async function BookingList({
                 status={booking.status as BookingStatus}
                 ended={booking.ended}
               />
+
+              {canReview ? (
+                <Link
+                  href={`/directory/${slug}#reviews`}
+                  className={`${LINK} mt-3 inline-block text-sm`}
+                >
+                  {t('writeReview')}
+                </Link>
+              ) : null}
             </li>
           )
         })}

@@ -133,7 +133,10 @@
     "verifyFirst": "Подтвердите адрес почты перед бронированием. Мы отправили вам ссылку при регистрации.",
     "verifyResend": "Отправить ссылку ещё раз",
     "roomType": "Тип номера",
-    "cancellationPolicy": "Политика отмены"
+    "cancellationPolicy": "Политика отмены",
+    "stayDates": "С {from} по {to} · {nights, plural, one {# ночь} few {# ночи} many {# ночей} other {# ночи}}",
+    "venueSaid": "Заведение сообщило: «{reason}»",
+    "writeReview": "Как всё прошло? Оставьте отзыв"
   },
   "account": {
     "title": "Ваш аккаунт",
