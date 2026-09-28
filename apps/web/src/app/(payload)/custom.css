@@ -402,16 +402,15 @@
  * `selected--<value>` class, which is what the pills key off: no list needed
  * a component for this.
  */
-.table {
-  border: 1px solid var(--theme-elevation-150);
-  border-radius: 10px;
-  background: var(--theme-elevation-0);
-}
-
+/* The frame is on the table: Payload's .table wrapper runs full width by design. */
 .table table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--theme-elevation-0);
 }
 
 .table thead th {
@@ -514,4 +513,227 @@
 /* Numbers line up. */
 .table :is(.cell-scanCount, .cell-total, .cell-count, .cell-partySize) {
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The top of every list: title, Create New, search, and the bar that appears
+ * when rows are ticked.
+ */
+.list-header__title {
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+}
+
+/* Create New: the page's one main action, so it looks like one. */
+.list-create-new-doc__create-new-button.btn,
+.list-create-new-doc__create-new-button.btn:visited {
+  background: var(--theme-elevation-900);
+  color: var(--theme-elevation-0);
+  border-radius: 6px;
+  padding: 0.35rem 0.85rem;
+  transition:
+    background-color 150ms ease,
+    transform 100ms ease;
+}
+
+.list-create-new-doc__create-new-button.btn:hover {
+  background: var(--theme-elevation-800);
+}
+
+.list-create-new-doc__create-new-button.btn:active {
+  transform: translateY(1px);
+}
+
+/* Search: a field, not a grey band. */
+.list-controls .search-bar {
+  background: var(--theme-elevation-0);
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 10px;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.list-controls .search-bar:focus-within {
+  border-color: var(--theme-elevation-800);
+  box-shadow: 0 0 0 3px var(--theme-elevation-100);
+}
+
+.list-controls .search-filter__input {
+  font-size: 0.95rem;
+}
+
+/* Columns, Filters, Group by: quiet outlined buttons, dark when open. */
+.search-bar__actions .pill {
+  background: var(--theme-elevation-0);
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 6px;
+  color: var(--theme-elevation-800);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.search-bar__actions .pill:hover {
+  background: var(--theme-elevation-50);
+  border-color: var(--theme-elevation-400);
+}
+
+.search-bar__actions .pill[aria-expanded='true'] {
+  background: var(--theme-elevation-900);
+  border-color: var(--theme-elevation-900);
+  color: var(--theme-elevation-0);
+}
+
+/* Ticked rows: a dark toolbar instead of "2 selected — Edit Delete" in text. */
+.list-selection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.9rem;
+  border-radius: 999px;
+  background: var(--theme-elevation-900);
+  color: var(--theme-elevation-0);
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: vd-rise 160ms ease-out;
+}
+
+/* The "—" separators Payload puts between the parts. */
+.list-selection > span:not(:first-child) {
+  display: none;
+}
+
+.list-selection .list-selection__button.btn {
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  color: var(--theme-elevation-0);
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.list-selection .list-selection__button.btn:hover {
+  background: rgb(255 255 255 / 0.15);
+}
+
+.list-selection .list-selection__button[title='Delete'] {
+  color: var(--theme-error-300);
+}
+
+@keyframes vd-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-selection {
+    animation: none;
+  }
+}
+
+/* Inside one listing's folder. See components/admin/FolderListView. */
+.vd-folder__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: calc(var(--base) * 1.25);
+}
+
+.vd-folder__back {
+  align-self: flex-start;
+  margin-bottom: 0.6rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.55rem;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--theme-elevation-800);
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.vd-folder__back:hover {
+  background: var(--theme-elevation-50);
+  border-color: var(--theme-elevation-400);
+}
+
+.vd-folder__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--theme-elevation-700);
+}
+
+.vd-folder__title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.vd-folder__count {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--theme-elevation-700);
+}
+
+.vd-folder__count a {
+  color: var(--theme-elevation-900);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The folder's name is the title; Payload's "Bookings" would repeat it. */
+.vd-folder--named .list-header__title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.vd-folder--named .list-header {
+  margin-top: 0.5rem;
+}
+
+/* Every row in a listing's folder is that listing: the column says nothing. */
+.vd-folder--named :is(#heading-business, .cell-business) {
+  display: none;
+}
+
+/* Payload widens the list's wrapper by a gutter each side and pads only the
+   left, so the table ran to the window edge. Pad the right to match. */
+.collection-list__tables .table {
+  padding-right: var(--gutter-h);
+}
+
+/* Folder cards lift a little under the pointer. See FolderListView. */
+.vd-folder-card {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.vd-folder-card:hover,
+.vd-folder-card:focus-visible {
+  border-color: var(--theme-elevation-400) !important;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.06);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-folder-card {
+    transition: none;
+  }
+  .vd-folder-card:hover {
+    transform: none;
+  }
 }

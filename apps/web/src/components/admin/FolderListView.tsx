@@ -77,6 +77,7 @@ function wantsList(params: Params): boolean {
 interface Row {
   business?: number | { id: number } | null
   createdAt?: string
+  status?: string | null
 }
 
 interface Folder {
@@ -84,6 +85,22 @@ interface Folder {
   name: string
   count: number
   latest: string | null
+  /** How many in it are waiting on the team. */
+  waiting: number
+}
+
+/**
+ * What in each collection is waiting on somebody, and what to call it.
+ *
+ * A wall of identical folders says where things are, not where to look. With
+ * the count of requests nobody has answered, reviews nobody has read, or
+ * statements nobody has sent on each folder, and those folders first, the page
+ * answers "what needs me" before it answers "where is it".
+ */
+const WAITING: Record<string, { status: string; label: string }> = {
+  bookings: { status: 'pending', label: 'waiting' },
+  reviews: { status: 'pending', label: 'to approve' },
+  statements: { status: 'draft', label: 'not sent' },
 }
 
 const day = (iso: string | null) =>
@@ -120,20 +137,43 @@ export async function FolderListView(props: ListViewServerProps) {
             .catch(() => null)) as { name?: string | null } | null)
         : null
 
+    // Inside one listing's folder the page is about that listing, so it leads
+    // with its name and how many it holds, and Payload's own "Bookings" title
+    // is hidden (custom.css, .vd-folder--named) rather than repeated beneath.
+    const count =
+      id !== null && listing?.name
+        ? await payload
+            .count({
+              collection: collectionSlug as 'reviews',
+              where: { business: { equals: Number(id) } },
+              overrideAccess: false,
+              user,
+            })
+            .then((result) => result.totalDocs)
+            .catch(() => null)
+        : null
+
     return (
-      <main>
+      <main className={listing?.name ? 'vd-folder vd-folder--named' : 'vd-folder'}>
         <Gutter>
-          <nav style={styles.crumbs} aria-label="Folders">
-            <Link href={base} style={styles.crumbLink}>
-              All {noun.title.toLowerCase()} folders
+          <div className="vd-folder__head">
+            <Link href={base} className="vd-folder__back">
+              <span aria-hidden>←</span> All {noun.title.toLowerCase()} folders
             </Link>
             {listing?.name ? (
               <>
-                <span aria-hidden>/</span>
-                <span style={styles.crumbHere}>{listing.name}</span>
+                <p className="vd-folder__eyebrow">{noun.title}</p>
+                <h1 className="vd-folder__title">{listing.name}</h1>
+                {count !== null ? (
+                  <p className="vd-folder__count">
+                    {count} {count === 1 ? noun.one : noun.many}
+                    {' · '}
+                    <Link href={`/admin/collections/businesses/${id}`}>Open the listing</Link>
+                  </p>
+                ) : null}
               </>
             ) : null}
-          </nav>
+          </div>
         </Gutter>
         <DefaultListView {...clientProps} />
       </main>
@@ -146,15 +186,22 @@ export async function FolderListView(props: ListViewServerProps) {
     depth: 0,
     overrideAccess: false,
     user,
-    select: { business: true, createdAt: true } as never,
+    select: (WAITING[collectionSlug]
+      ? { business: true, createdAt: true, status: true }
+      : { business: true, createdAt: true }) as never,
   })
 
-  const byListing = new Map<number | null, { count: number; latest: string | null }>()
+  const waitingRule = WAITING[collectionSlug]
+  const byListing = new Map<
+    number | null,
+    { count: number; latest: string | null; waiting: number }
+  >()
   for (const row of rows.docs) {
     const id =
       typeof row.business === 'object' && row.business ? row.business.id : (row.business ?? null)
-    const entry = byListing.get(id) ?? { count: 0, latest: null }
+    const entry = byListing.get(id) ?? { count: 0, latest: null, waiting: 0 }
     entry.count += 1
+    if (waitingRule && row.status === waitingRule.status) entry.waiting += 1
     if (row.createdAt && (!entry.latest || row.createdAt > entry.latest))
       entry.latest = row.createdAt
     byListing.set(id, entry)
@@ -183,9 +230,15 @@ export async function FolderListView(props: ListViewServerProps) {
       ...entry,
     }))
     .filter((folder) => !query || folder.name.toLowerCase().includes(query))
-    .sort((a, b) => (b.latest ?? '').localeCompare(a.latest ?? ''))
+    // Folders with something waiting first, then the most recent.
+    .sort(
+      (a, b) =>
+        Number(b.waiting > 0) - Number(a.waiting > 0) ||
+        (b.latest ?? '').localeCompare(a.latest ?? ''),
+    )
 
   const total = rows.docs.length
+  const needing = folders.filter((folder) => folder.waiting > 0).length
 
   return (
     <main>
@@ -196,7 +249,10 @@ export async function FolderListView(props: ListViewServerProps) {
               <h1 style={styles.title}>{noun.title}</h1>
               <p style={styles.muted}>
                 {total} {total === 1 ? noun.one : noun.many} in {byListing.size}{' '}
-                {byListing.size === 1 ? 'folder' : 'folders'}, one per listing. Most recent first.
+                {byListing.size === 1 ? 'folder' : 'folders'}, one per listing.{' '}
+                {needing > 0
+                  ? `${needing} need${needing === 1 ? 's' : ''} attention, shown first.`
+                  : 'Most recent first.'}
               </p>
             </div>
             <div style={styles.actions}>
@@ -240,8 +296,16 @@ export async function FolderListView(props: ListViewServerProps) {
                       : `${base}?where[business][equals]=${folder.id}`
                   }
                   style={styles.folder}
+                  className="vd-folder-card"
                 >
-                  <FolderIcon />
+                  <span style={styles.cardTop}>
+                    <FolderIcon />
+                    {folder.waiting > 0 && waitingRule ? (
+                      <span className="vd-pill vd-pill--warn">
+                        {folder.waiting} {waitingRule.label}
+                      </span>
+                    ) : null}
+                  </span>
                   <span style={styles.folderName}>{folder.name}</span>
                   <span style={styles.muted}>
                     {folder.count} {folder.count === 1 ? noun.one : noun.many}
@@ -334,16 +398,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'var(--theme-elevation-0)',
   },
   folderName: { fontWeight: 600, color: 'var(--theme-elevation-900)' },
-  crumbs: {
-    display: 'flex',
-    gap: '0.5rem',
-    alignItems: 'center',
-    paddingTop: 'var(--base)',
-    fontSize: '0.875rem',
-    color: 'var(--theme-elevation-600)',
-  },
-  crumbLink: { color: 'var(--theme-elevation-800)', textDecoration: 'underline' },
-  crumbHere: { color: 'var(--theme-elevation-900)', fontWeight: 600 },
+  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
 }
 
 export default FolderListView
