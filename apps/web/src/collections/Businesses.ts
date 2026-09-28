@@ -1,5 +1,11 @@
 import type { CollectionConfig } from 'payload'
-import { amenityOptions, isWithinLebanon, priceRangeOptions } from '@vardenia/core'
+import {
+  GOVERNORATES,
+  SUBCATEGORY_PARENT,
+  amenityOptions,
+  isWithinLebanon,
+  priceRangeOptions,
+} from '@vardenia/core'
 import {
   isAdminFieldLevel,
   isStaff,
@@ -31,6 +37,23 @@ import {
  * public sees, and the "Commercial" tab, whose contract fields carry field-level
  * read rules so they never reach an API response.
  */
+/** An option's value, whichever of Payload's two option shapes it is. */
+const valueOf = (option: string | { value: string }) =>
+  typeof option === 'string' ? option : option.value
+
+/** Which governorate each district belongs to. */
+const DISTRICT_PARENT: Record<string, string> = Object.fromEntries(
+  GOVERNORATES.flatMap((governorate) =>
+    governorate.districts.map((district) => [district.slug, governorate.slug]),
+  ),
+)
+
+/** "09:00" or "23:30", 24-hour; "24:00" allowed as a closing time. Empty is fine. */
+export const validTime = (value: unknown) =>
+  !value || /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/.test(String(value))
+    ? true
+    : 'Use 24-hour time with a colon, like 09:00 or 23:30.'
+
 export const Businesses: CollectionConfig = {
   slug: 'businesses',
   labels: { singular: 'Listing', plural: 'Listings' },
@@ -167,7 +190,24 @@ export const Businesses: CollectionConfig = {
               // scan - free at two listings, not at ten thousand.
               index: true,
               options: subcategoryOptions,
-              admin: { description: 'Must belong to the selected category.' },
+              // Only the chosen category's subcategories are offered, and a
+              // mismatch is refused. The list used to offer all of them with a
+              // note asking staff to pick the right ones, and a listing filed
+              // under the wrong parent is missing from its own section's filters.
+              filterOptions: ({ options, data }) =>
+                data?.category
+                  ? options.filter(
+                      (option) => SUBCATEGORY_PARENT[valueOf(option)] === data.category,
+                    )
+                  : options,
+              validate: (value: unknown, { data }: { data: Partial<{ category: string }> }) => {
+                const chosen = Array.isArray(value) ? (value as string[]) : []
+                const stray = chosen.filter((sub) => SUBCATEGORY_PARENT[sub] !== data?.category)
+                return stray.length === 0
+                  ? true
+                  : `Not part of the chosen category: ${stray.join(', ')}. Remove them or change the category.`
+              },
+              admin: { description: 'Only the subcategories of the category above are offered.' },
             },
             {
               name: 'tags',
@@ -191,7 +231,24 @@ export const Businesses: CollectionConfig = {
               index: true,
               options: governorateOptions,
             },
-            { name: 'district', type: 'select', index: true, options: districtOptions },
+            {
+              name: 'district',
+              type: 'select',
+              index: true,
+              options: districtOptions,
+              // Only the chosen governorate's districts, for the same reason.
+              filterOptions: ({ options, data }) =>
+                data?.governorate
+                  ? options.filter(
+                      (option) => DISTRICT_PARENT[valueOf(option)] === data.governorate,
+                    )
+                  : options,
+              validate: (value: unknown, { data }: { data: Partial<{ governorate: string }> }) =>
+                !value || DISTRICT_PARENT[String(value)] === data?.governorate
+                  ? true
+                  : 'That district is not in the chosen governorate.',
+              admin: { description: 'Only the districts of the governorate above are offered.' },
+            },
             { name: 'address', type: 'textarea', localized: true },
             {
               name: 'location',
@@ -224,9 +281,31 @@ export const Businesses: CollectionConfig = {
                     value: d,
                   })),
                 },
-                { name: 'opens', type: 'text', admin: { placeholder: '09:00' } },
-                { name: 'closes', type: 'text', admin: { placeholder: '23:00' } },
-                { name: 'closed', type: 'checkbox', defaultValue: false },
+                // 24-hour times, checked: "9am" or "9.00" saved fine and then
+                // silently broke the "Open now" filter. Closing earlier than
+                // opening is allowed, because a bar closes after midnight.
+                {
+                  name: 'opens',
+                  type: 'text',
+                  validate: validTime,
+                  admin: { placeholder: '09:00', condition: (_, row) => !row?.closed },
+                },
+                {
+                  name: 'closes',
+                  type: 'text',
+                  validate: validTime,
+                  admin: {
+                    placeholder: '23:00',
+                    description: 'Can be after midnight, like 02:00.',
+                    condition: (_, row) => !row?.closed,
+                  },
+                },
+                {
+                  name: 'closed',
+                  type: 'checkbox',
+                  defaultValue: false,
+                  label: 'Closed all day',
+                },
               ],
             },
             {
@@ -278,7 +357,7 @@ export const Businesses: CollectionConfig = {
               access: { read: isStaffFieldLevel },
               admin: {
                 description:
-                  'Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Businesses list by this column to find lapsed accounts.',
+                  'Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.',
               },
             },
             {

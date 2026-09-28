@@ -142,7 +142,10 @@ export const slugField = (sourceField = 'name'): Field => ({
   index: true,
   admin: {
     position: 'sidebar',
-    description: 'Permanent URL segment. Changing it breaks existing links and printed QR codes.',
+    // Printed QR codes point at the record, not the address, so they follow a
+    // change. What breaks is every link already shared and every search result.
+    description:
+      'The web address. Printed QR codes keep working if it changes, but links people have shared and search results break, so change it only before launch or when it is wrong.',
   },
   hooks: {
     beforeValidate: [

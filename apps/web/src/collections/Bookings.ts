@@ -121,6 +121,16 @@ export const Bookings: CollectionConfig = {
 
   fields: [
     {
+      /**
+       * The booking as staff read it, with only the moves allowed from its
+       * saved status. Nothing stored: the buttons set status (and the decline
+       * reason). See components/admin/BookingCard.
+       */
+      name: 'bookingCard',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/BookingCard#BookingCard' } },
+    },
+    {
       name: 'reference',
       type: 'text',
       unique: true,
@@ -220,6 +230,10 @@ export const Bookings: CollectionConfig = {
         label: status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' '),
         value: status,
       })),
+      admin: {
+        position: 'sidebar',
+        description: 'Change it with the buttons on the booking, then Save.',
+      },
     },
 
     {
