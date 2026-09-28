@@ -16,7 +16,13 @@ import {
   statementTotals,
   type StatementLineAmount,
 } from '@vardenia/core'
-import { isAdmin, isStaff, isStaffFieldLevel, ownedBusinessIds } from '../access/index'
+import {
+  fixedOnceCreated,
+  isAdmin,
+  isStaff,
+  isStaffFieldLevel,
+  ownedBusinessIds,
+} from '../access/index'
 import { sendStatementEmail } from '../lib/statement-email'
 import { reportError } from '../lib/report'
 
@@ -83,6 +89,21 @@ async function nextNumber(req: Parameters<CollectionBeforeChangeHook>[0]['req'])
   return statementNumber(year, sequence + 1)
 }
 
+/**
+ * Where a statement may go from each status.
+ *
+ * Forward only, with one way back: a payment recorded by mistake can be undone
+ * (paid to sent). Sent never returns to draft, because the venue already has
+ * the email; a wrong sent statement is voided and drawn up again. Void is final
+ * for the same reason, and voiding is what frees the month for a new one.
+ */
+export const STATEMENT_MOVES: Record<string, readonly string[]> = {
+  draft: ['sent', 'void'],
+  sent: ['paid', 'void'],
+  paid: ['sent'],
+  void: [],
+}
+
 /** What each outcome means for the money, in the words staff choose by. */
 const OUTCOME_LABELS: Record<(typeof DISPUTE_OUTCOMES)[number], string> = {
   none: 'Not questioned',
@@ -140,6 +161,17 @@ const deriveFields: CollectionBeforeChangeHook = async ({ data, originalDoc, ope
     }
 
     if (!next.number) next.number = await nextNumber(req)
+  }
+
+  if (operation === 'update' && before.status && next.status && next.status !== before.status) {
+    if (!(STATEMENT_MOVES[before.status] ?? []).includes(next.status)) {
+      throw new APIError(
+        before.status === 'void'
+          ? 'A void statement stays void. Draw the month up again from Booking fees.'
+          : `A ${before.status} statement cannot go back to ${next.status}. Set it to Void and draw the month up again instead.`,
+        400,
+      )
+    }
   }
 
   const lines = next.lines ?? before.lines ?? []
@@ -224,12 +256,16 @@ export const Statements: CollectionConfig = {
       relationTo: 'businesses',
       required: true,
       index: true,
+      // Its lines are that venue's bookings for that month. Moving either would
+      // bill someone for somebody else's guests.
+      access: { update: fixedOnceCreated },
     },
     {
       name: 'period',
       type: 'text',
       required: true,
       index: true,
+      access: { update: fixedOnceCreated },
       admin: { description: 'The month billed, like 2026-10.' },
     },
     {
@@ -245,7 +281,7 @@ export const Statements: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Draft: only the team sees it. Sent: emailed to the venue, deadlines start. Paid: settled. Void: cancelled.',
+          'Draft: only the team sees it. Sent: emailed to the venue, deadlines start. Paid: settled. Void: cancelled for good. It only moves forward: a sent statement cannot go back to draft; void it and draw the month up again.',
       },
     },
     {
@@ -345,6 +381,8 @@ export const Statements: CollectionConfig = {
           type: 'number',
           min: 0,
           defaultValue: 0,
+          // Only while a draft. Once sent, the venue has been told the total.
+          access: { update: ({ doc }) => !doc || doc.status === 'draft' },
           admin: { width: '25%', description: 'Percent. 0 until VAT registration.' },
         },
         { name: 'subtotal', type: 'number', admin: { width: '25%', readOnly: true } },

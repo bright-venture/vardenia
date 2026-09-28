@@ -1,5 +1,5 @@
 import type { Access, CollectionConfig, Where } from 'payload'
-import { isAdmin, isStaff, isStaffFieldLevel, isStaffUser } from '../access/index'
+import { fixedOnceCreated, isAdmin, isStaff, isStaffFieldLevel, isStaffUser } from '../access/index'
 
 /**
  * A customer's review of a listing they actually booked.
@@ -54,15 +54,57 @@ export const Reviews: CollectionConfig = {
   },
   fields: [
     {
+      /**
+       * The review as the reader will see it, with Publish and Reject. Nothing
+       * stored; the buttons set status. See components/admin/ReviewCard.
+       */
+      name: 'reviewCard',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/ReviewCard#ReviewCard' } },
+    },
+    {
       name: 'business',
       type: 'relationship',
       relationTo: 'businesses',
       required: true,
       index: true,
+      // A review is about the place the guest booked. Moving it would put their
+      // words on another listing.
+      access: { update: fixedOnceCreated },
+      admin: { position: 'sidebar' },
     },
-    { name: 'rating', type: 'number', required: true, min: 1, max: 5 },
-    { name: 'title', type: 'text' },
-    { name: 'body', type: 'textarea', required: true },
+    // The guest's score. Staff approve or reject a review; they never re-score it.
+    {
+      name: 'rating',
+      type: 'number',
+      required: true,
+      min: 1,
+      max: 5,
+      access: { update: fixedOnceCreated },
+    },
+    /*
+     * Still editable, for one reason only: taking out a phone number or a name
+     * the guest should not have written. Anything else is a reason to reject.
+     * Closed by default, because the card above is where the words are read.
+     */
+    {
+      type: 'collapsible',
+      label: 'Edit the wording (only to remove personal details)',
+      admin: { initCollapsed: true },
+      fields: [
+        { name: 'title', type: 'text' },
+        {
+          name: 'body',
+          label: 'Message',
+          type: 'textarea',
+          required: true,
+          admin: {
+            description:
+              'Change only to remove personal details, like a phone number. If the review is not acceptable, reject it instead.',
+          },
+        },
+      ],
+    },
     {
       /**
        * The name shown on the review: a first name and an initial, snapshotted
@@ -72,6 +114,7 @@ export const Reviews: CollectionConfig = {
       name: 'authorName',
       type: 'text',
       required: true,
+      access: { update: fixedOnceCreated },
     },
     {
       name: 'status',
@@ -84,6 +127,10 @@ export const Reviews: CollectionConfig = {
         { label: 'Published', value: 'published' },
         { label: 'Rejected', value: 'rejected' },
       ],
+      admin: {
+        position: 'sidebar',
+        description: 'Set with Publish or Reject on the review, then Save.',
+      },
     },
     {
       // The audit trail: staff-only, so a public read cannot map a review back to
@@ -91,13 +138,13 @@ export const Reviews: CollectionConfig = {
       name: 'customer',
       type: 'relationship',
       relationTo: 'customers',
-      access: { read: isStaffFieldLevel },
+      access: { read: isStaffFieldLevel, update: fixedOnceCreated },
     },
     {
       name: 'booking',
       type: 'relationship',
       relationTo: 'bookings',
-      access: { read: isStaffFieldLevel },
+      access: { read: isStaffFieldLevel, update: fixedOnceCreated },
     },
   ],
 }

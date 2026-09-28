@@ -113,6 +113,19 @@ export const isStaffOrOwnerFieldLevel: FieldAccess = ({ req }) =>
   isStaffUser(req.user) || collectionOf(req.user) === BUSINESS_USER_COLLECTION
 
 /**
+ * For a field set when a record is created and never again: whose booking it
+ * is, which listing a review is about, a guest's star rating.
+ *
+ * As update access, it makes the field read-only in the admin once the record
+ * exists, and an update from the API leaves it as it was. The admin offered a
+ * booking's business and customer as editable pickers, and the server then
+ * refused the save, so the form asked a question it would not accept an
+ * answer to. Creation is untouched, and code that has to correct one passes
+ * overrideAccess.
+ */
+export const fixedOnceCreated: FieldAccess = () => false
+
+/**
  * Public reads are limited to published documents; staff also see drafts.
  *
  * Returns a query constraint rather than false, so Payload filters in the

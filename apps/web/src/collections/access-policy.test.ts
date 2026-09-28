@@ -10,6 +10,8 @@ import { ScanEvents } from './ScanEvents'
 import { BusinessUsers } from './BusinessUsers'
 import { Customers } from './Customers'
 import { Bookings } from './Bookings'
+import { Reviews } from './Reviews'
+import { Closures } from './Closures'
 
 /**
  * The access *policy*, as opposed to the access *helpers*.
@@ -462,4 +464,46 @@ describe('Businesses: the booking rules group', () => {
       expect(rule!(fieldCtx(staff))).toBe(true)
     }
   })
+})
+
+/**
+ * Fields set when a record is made and never after. The admin offered a
+ * booking's business and customer as pickers and the server then refused the
+ * save; a review's listing and rating could be changed outright.
+ */
+describe('fields fixed once a record exists', () => {
+  const updateOf = (config: CollectionConfig, name: string) => {
+    const walk = (fields: Field[]): Field[] =>
+      fields.flatMap((f) => ('fields' in f ? [f, ...walk(f.fields as Field[])] : [f]))
+    const field = walk(config.fields).find((f) => nameOf(f) === name) as
+      { access?: { update?: FieldAccess } } | undefined
+    if (!field) throw new Error(`No field named "${name}" in ${config.slug}`)
+    return field.access?.update
+  }
+
+  it.each([
+    [Bookings, 'business'],
+    [Bookings, 'customer'],
+    [Bookings, 'notes'],
+    [Reviews, 'business'],
+    [Reviews, 'rating'],
+    [Reviews, 'authorName'],
+    [Reviews, 'customer'],
+    [Reviews, 'booking'],
+    [Closures, 'business'],
+  ])('%s.%s cannot be changed, even by an admin', (config, name) => {
+    expect(updateOf(config as CollectionConfig, name as string)?.(fieldCtx(admin))).toBe(false)
+  })
+
+  it.each(['start', 'end', 'partySize', 'roomType', 'locale'])(
+    'a booking %s is changed by staff only, never by the guest or the venue',
+    (name) => {
+      const update = updateOf(Bookings, name)!
+      expect(update(fieldCtx(staff))).toBe(true)
+      expect(update(fieldCtx({ id: 5, collection: 'customers' }))).toBe(false)
+      expect(update(fieldCtx({ id: 7, collection: 'business-users', businesses: [10] }))).toBe(
+        false,
+      )
+    },
+  )
 })

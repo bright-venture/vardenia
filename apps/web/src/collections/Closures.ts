@@ -1,5 +1,5 @@
 import type { Access, CollectionConfig, Where } from 'payload'
-import { isStaff, isStaffUser, ownedBusinessIds } from '../access/index'
+import { fixedOnceCreated, isStaff, isStaffUser, ownedBusinessIds } from '../access/index'
 import { guardClosureWrite } from '../hooks/guardClosureWrite'
 
 /**
@@ -130,6 +130,8 @@ export const Closures: CollectionConfig = {
       relationTo: 'businesses',
       required: true,
       index: true,
+      // guardClosureWrite refuses a move too; this is what the admin shows.
+      access: { update: fixedOnceCreated },
     },
 
     /**

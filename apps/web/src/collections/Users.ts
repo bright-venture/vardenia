@@ -45,7 +45,7 @@ export const Users: CollectionConfig = {
       ],
       admin: {
         description:
-          'Staff create and edit all content. Admin additionally manages accounts, QR codes and commercial flags. Businesses never get logins.',
+          'Staff create and edit all content. Admin additionally manages accounts, QR codes and commercial flags. Venue owners sign in with a partner account, not here.',
       },
     },
     { name: 'phone', type: 'text' },

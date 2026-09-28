@@ -6,6 +6,7 @@ import {
   isStaff,
   isStaffFieldLevel,
   isStaffOrOwnerFieldLevel,
+  fixedOnceCreated,
   ownedBusinessIds,
 } from '../access/index'
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
@@ -144,6 +145,8 @@ export const Bookings: CollectionConfig = {
       relationTo: 'businesses',
       required: true,
       index: true,
+      // guardBookingWrite refuses a move too; this is what the admin shows.
+      access: { update: fixedOnceCreated },
     },
 
     {
@@ -152,13 +155,33 @@ export const Bookings: CollectionConfig = {
       relationTo: 'customers',
       required: true,
       index: true,
+      access: { update: fixedOnceCreated },
     },
 
     {
       type: 'row',
       fields: [
-        { name: 'start', type: 'date', required: true, index: true, admin: { width: '50%' } },
-        { name: 'end', type: 'date', required: true, admin: { width: '50%' } },
+        /*
+         * Staff only once the booking exists. A guest or venue may update the
+         * booking, to cancel or answer it, and without this the same request
+         * could move it to another night. Staff moving one is re-checked for
+         * availability in guardBookingWrite.
+         */
+        {
+          name: 'start',
+          type: 'date',
+          required: true,
+          index: true,
+          access: { update: isStaffFieldLevel },
+          admin: { width: '50%' },
+        },
+        {
+          name: 'end',
+          type: 'date',
+          required: true,
+          access: { update: isStaffFieldLevel },
+          admin: { width: '50%' },
+        },
       ],
     },
 
@@ -168,6 +191,8 @@ export const Bookings: CollectionConfig = {
       required: true,
       min: 1,
       defaultValue: 2,
+      // The fee is charged per guest for some venues. Staff only, re-checked.
+      access: { update: isStaffFieldLevel },
     },
 
     {
@@ -179,6 +204,7 @@ export const Bookings: CollectionConfig = {
        */
       name: 'roomType',
       type: 'text',
+      access: { update: isStaffFieldLevel },
       admin: {
         description: 'The room or unit type requested, for a stay. Empty for a table booking.',
       },
@@ -199,6 +225,9 @@ export const Bookings: CollectionConfig = {
     {
       name: 'notes',
       type: 'textarea',
+      // The guest's own words at booking time. Account deletion clears it with
+      // overrideAccess; nobody edits it afterwards.
+      access: { update: fixedOnceCreated },
       admin: {
         description: 'What the customer told us - a dietary requirement, an anniversary.',
       },
@@ -231,6 +260,7 @@ export const Bookings: CollectionConfig = {
       name: 'locale',
       type: 'select',
       defaultValue: 'en',
+      access: { update: isStaffFieldLevel },
       options: LOCALES.map((code) => ({ label: LOCALE_META[code].label, value: code })),
       admin: {
         description: 'The language this customer is written to in.',

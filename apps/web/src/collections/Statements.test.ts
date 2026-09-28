@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Access, FieldAccess } from 'payload'
-import { Statements, readStatements } from './Statements'
+import { STATEMENT_MOVES, Statements, readStatements } from './Statements'
 
 /**
  * Who can see a venue's statements.
@@ -51,5 +51,34 @@ describe('writing statements', () => {
     const fieldCtx = (user: unknown) => ({ req: { user } }) as Parameters<FieldAccess>[0]
     expect(notes.access?.read?.(fieldCtx(owner))).toBe(false)
     expect(notes.access?.read?.(fieldCtx(staff))).toBe(true)
+  })
+})
+
+describe('what cannot change once a statement exists', () => {
+  type Loose = { name?: string; fields?: Loose[]; access?: { update?: FieldAccess } }
+  const all = (fields: Loose[]): Loose[] =>
+    fields.flatMap((f) => (f.fields ? [f, ...all(f.fields)] : [f]))
+  const field = (name: string) =>
+    all(Statements.fields as unknown as Loose[]).find((f) => f.name === name)!
+  const ctx = (doc?: unknown) => ({ req: { user: staff }, doc }) as Parameters<FieldAccess>[0]
+
+  it('keeps the venue and the month, whoever asks', () => {
+    for (const name of ['business', 'period']) {
+      expect(field(name).access!.update!(ctx({ status: 'draft' }))).toBe(false)
+    }
+  })
+
+  it('lets VAT change only while the statement is a draft', () => {
+    const vat = field('vatRate').access!.update!
+    expect(vat(ctx({ status: 'draft' }))).toBe(true)
+    expect(vat(ctx({ status: 'sent' }))).toBe(false)
+    expect(vat(ctx({ status: 'paid' }))).toBe(false)
+  })
+
+  it('only moves forward, with a mistaken payment the one way back', () => {
+    expect(STATEMENT_MOVES.draft).toEqual(['sent', 'void'])
+    expect(STATEMENT_MOVES.sent).toEqual(['paid', 'void'])
+    expect(STATEMENT_MOVES.paid).toEqual(['sent'])
+    expect(STATEMENT_MOVES.void).toEqual([])
   })
 })

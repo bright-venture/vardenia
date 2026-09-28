@@ -70,6 +70,14 @@ const asDate = (value: unknown): Date | null => {
   return null
 }
 
+/** Whether an update changes when the booking is, or how many it seats. */
+function movesSlot(data: Record<string, unknown>, before: Record<string, unknown>): boolean {
+  const time = (value: unknown) => asDate(value)?.getTime() ?? null
+  if (data.start !== undefined && time(data.start) !== time(before.start)) return true
+  if (data.end !== undefined && time(data.end) !== time(before.end)) return true
+  return data.partySize !== undefined && Number(data.partySize) !== Number(before.partySize)
+}
+
 export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   data,
   req,
@@ -184,16 +192,42 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
     data.customer = user.id
   }
 
-  if (operation !== 'create') return data
+  // -------------------------------------------------------------------------
+  // Availability: on create, and when staff move an existing booking
+  // -------------------------------------------------------------------------
+  /**
+   * A booking moved to another night, or grown to a bigger party, has to fit
+   * as much as a new one does. It used to be checked on create only, so staff
+   * editing the dates of a confirmed booking could put two parties on one
+   * table without a word. Only staff reach this: for a guest or a venue the
+   * dates and party size are not writable at all (see the Bookings fields).
+   *
+   * A booking that has already happened, or was called off, keeps its dates:
+   * they are what a fee statement and a no-show dispute are argued from.
+   */
+  let self: string | number | null = null
 
-  // -------------------------------------------------------------------------
-  // Availability, on create
-  // -------------------------------------------------------------------------
-  const businessId = idOf(data.business)
+  if (operation === 'update') {
+    if (!originalDoc || actorFor(user?.collection) !== 'staff' || !movesSlot(data, originalDoc)) {
+      return data
+    }
+    const status = (data.status ?? originalDoc.status) as BookingStatus
+    if (!(OCCUPYING_STATUSES as readonly string[]).includes(status)) {
+      throw new APIError(
+        `This booking is ${status.replace('-', ' ')}, so its date and party size can no longer change.`,
+        400,
+      )
+    }
+    self = (originalDoc as { id: string | number }).id
+  } else if (operation !== 'create') {
+    return data
+  }
+
+  const businessId = idOf(data.business ?? originalDoc?.business)
   if (businessId === null) return data
 
-  const start = asDate(data.start)
-  const end = asDate(data.end)
+  const start = asDate(data.start ?? originalDoc?.start)
+  const end = asDate(data.end ?? originalDoc?.end)
   if (!start || !end) return data
 
   /** The Beirut day this booking falls on. See the Closures collection. */
@@ -262,6 +296,8 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   })
 
   const occupied: ExistingBooking[] = existing.docs.flatMap((doc) => {
+    // A moved booking does not compete with where it used to be.
+    if (self !== null && String((doc as { id: unknown }).id) === String(self)) return []
     const docStart = asDate((doc as { start?: unknown }).start)
     const docEnd = asDate((doc as { end?: unknown }).end)
     if (!docStart || !docEnd) return []
@@ -285,7 +321,7 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
     existing: occupied,
     request: {
       interval: { start, end },
-      partySize: Number(data.partySize),
+      partySize: Number(data.partySize ?? originalDoc?.partySize),
     },
   })
 
@@ -301,7 +337,7 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
    * Staff may still set a status explicitly - they are often entering a booking
    * that was agreed on the phone.
    */
-  if (user?.collection !== 'users' || !data.status) {
+  if (operation === 'create' && (user?.collection !== 'users' || !data.status)) {
     const autoConfirm = (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm === true
     data.status = autoConfirm ? 'confirmed' : 'pending'
   }
