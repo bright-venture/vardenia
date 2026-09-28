@@ -708,10 +708,16 @@
   display: none;
 }
 
-/* Payload widens the list's wrapper by a gutter each side and pads only the
-   left, so the table ran to the window edge. Pad the right to match. */
+/* Payload stretches the list's table wrapper a gutter past each side and
+   pads only the left, so the table never matched the search bar above it:
+   it ran to the window edge, and padding the right instead left it short on
+   wider screens. The wrapper now simply fills the column like the search bar
+   does, and still scrolls sideways when a table is wider than it. */
 .collection-list__tables .table {
-  padding-right: var(--gutter-h);
+  width: 100%;
+  left: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* Folder cards lift a little under the pointer. See FolderListView. */
