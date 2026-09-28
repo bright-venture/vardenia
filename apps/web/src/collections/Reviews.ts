@@ -139,12 +139,20 @@ export const Reviews: CollectionConfig = {
       type: 'relationship',
       relationTo: 'customers',
       access: { read: isStaffFieldLevel, update: fixedOnceCreated },
+      admin: {
+        description:
+          'The guest who wrote it, filled in automatically. Empty only for a review added by hand, such as test data.',
+      },
     },
     {
       name: 'booking',
       type: 'relationship',
       relationTo: 'bookings',
       access: { read: isStaffFieldLevel, update: fixedOnceCreated },
+      admin: {
+        description:
+          'The completed booking that allowed the review, filled in automatically. Empty only for a review added by hand.',
+      },
     },
   ],
 }
