@@ -49,6 +49,17 @@ const DISTRICT_PARENT: Record<string, string> = Object.fromEntries(
 )
 
 /** "09:00" or "23:30", 24-hour; "24:00" allowed as a closing time. Empty is fine. */
+/** The days, in the order a week is read, with their names. */
+export const DAYS = [
+  ['mon', 'Monday'],
+  ['tue', 'Tuesday'],
+  ['wed', 'Wednesday'],
+  ['thu', 'Thursday'],
+  ['fri', 'Friday'],
+  ['sat', 'Saturday'],
+  ['sun', 'Sunday'],
+] as const
+
 export const validTime = (value: unknown) =>
   !value || /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/.test(String(value))
     ? true
@@ -270,35 +281,48 @@ export const Businesses: CollectionConfig = {
             {
               name: 'openingHours',
               type: 'array',
-              admin: { description: 'Leave empty if hours vary. Powers the "Open now" filter.' },
+              labels: { singular: 'Day', plural: 'Days' },
+              admin: {
+                description: 'Leave empty if hours vary. Powers the "Open now" filter.',
+                // "Monday · 09:00 to 23:00" instead of "Opening Hour 01".
+                components: { RowLabel: '/components/admin/OpeningHourLabel#OpeningHourLabel' },
+              },
               fields: [
                 {
-                  name: 'day',
-                  type: 'select',
-                  required: true,
-                  options: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((d) => ({
-                    label: d.toUpperCase(),
-                    value: d,
-                  })),
-                },
-                // 24-hour times, checked: "9am" or "9.00" saved fine and then
-                // silently broke the "Open now" filter. Closing earlier than
-                // opening is allowed, because a bar closes after midnight.
-                {
-                  name: 'opens',
-                  type: 'text',
-                  validate: validTime,
-                  admin: { placeholder: '09:00', condition: (_, row) => !row?.closed },
-                },
-                {
-                  name: 'closes',
-                  type: 'text',
-                  validate: validTime,
-                  admin: {
-                    placeholder: '23:00',
-                    description: 'Can be after midnight, like 02:00.',
-                    condition: (_, row) => !row?.closed,
-                  },
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'day',
+                      type: 'select',
+                      required: true,
+                      options: DAYS.map(([value, label]) => ({ label, value })),
+                      admin: { width: '34%', isClearable: false },
+                    },
+                    // 24-hour times, checked: "9am" or "9.00" saved fine and then
+                    // silently broke the "Open now" filter. Closing earlier than
+                    // opening is allowed, because a bar closes after midnight.
+                    {
+                      name: 'opens',
+                      type: 'text',
+                      validate: validTime,
+                      admin: {
+                        placeholder: '09:00',
+                        width: '33%',
+                        condition: (_, row) => !row?.closed,
+                      },
+                    },
+                    {
+                      name: 'closes',
+                      type: 'text',
+                      validate: validTime,
+                      admin: {
+                        placeholder: '23:00',
+                        width: '33%',
+                        description: 'Can be after midnight, like 02:00.',
+                        condition: (_, row) => !row?.closed,
+                      },
+                    },
+                  ],
                 },
                 {
                   name: 'closed',
@@ -432,6 +456,7 @@ export const Businesses: CollectionConfig = {
 
     {
       name: 'qrCode',
+      label: 'QR code',
       type: 'relationship',
       relationTo: 'qr-codes',
       admin: {

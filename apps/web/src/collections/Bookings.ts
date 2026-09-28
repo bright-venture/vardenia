@@ -183,14 +183,30 @@ export const Bookings: CollectionConfig = {
           required: true,
           index: true,
           access: { update: isStaffFieldLevel },
-          admin: { width: '50%' },
+          // Day and time: a day-only picker showed 08/18/2026 for a 17:00
+          // table, and changing the day could lose the time.
+          admin: {
+            width: '50%',
+            date: {
+              pickerAppearance: 'dayAndTime',
+              timeFormat: 'HH:mm',
+              displayFormat: 'd MMM yyyy, HH:mm',
+            },
+          },
         },
         {
           name: 'end',
           type: 'date',
           required: true,
           access: { update: isStaffFieldLevel },
-          admin: { width: '50%' },
+          admin: {
+            width: '50%',
+            date: {
+              pickerAppearance: 'dayAndTime',
+              timeFormat: 'HH:mm',
+              displayFormat: 'd MMM yyyy, HH:mm',
+            },
+          },
         },
       ],
     },

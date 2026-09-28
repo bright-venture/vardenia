@@ -25,6 +25,10 @@ import {
 } from '../access/index'
 import { sendStatementEmail } from '../lib/statement-email'
 import { reportError } from '../lib/report'
+import { STATEMENT_MOVES } from '../lib/statement-moves'
+
+// Re-exported for the tests and anything that imported it from here.
+export { STATEMENT_MOVES }
 
 /**
  * A venue's monthly booking-fee statement, which is also its invoice.
@@ -89,21 +93,6 @@ async function nextNumber(req: Parameters<CollectionBeforeChangeHook>[0]['req'])
   return statementNumber(year, sequence + 1)
 }
 
-/**
- * Where a statement may go from each status.
- *
- * Forward only, with one way back: a payment recorded by mistake can be undone
- * (paid to sent). Sent never returns to draft, because the venue already has
- * the email; a wrong sent statement is voided and drawn up again. Void is final
- * for the same reason, and voiding is what frees the month for a new one.
- */
-export const STATEMENT_MOVES: Record<string, readonly string[]> = {
-  draft: ['sent', 'void'],
-  sent: ['paid', 'void'],
-  paid: ['sent'],
-  void: [],
-}
-
 /** What each outcome means for the money, in the words staff choose by. */
 const OUTCOME_LABELS: Record<(typeof DISPUTE_OUTCOMES)[number], string> = {
   none: 'Not questioned',
@@ -111,6 +100,9 @@ const OUTCOME_LABELS: Record<(typeof DISPUTE_OUTCOMES)[number], string> = {
   upheld: 'Removed from the bill',
   rejected: 'Kept on the bill',
 }
+
+/** The payment fields, once a payment is recorded (or being recorded). */
+const isPaid = (data: { status?: string } | undefined) => data?.status === 'paid'
 
 /** Dispute fields only on a line the venue questioned; elsewhere they are noise. */
 const wasQuestioned = (_: unknown, siblingData: { disputeOutcome?: string | null } | undefined) =>
@@ -248,7 +240,7 @@ export const Statements: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
-      admin: { readOnly: true, description: 'Given automatically. Never edited.' },
+      admin: { readOnly: true, position: 'sidebar', description: 'Given automatically.' },
     },
     {
       name: 'business',
@@ -259,6 +251,7 @@ export const Statements: CollectionConfig = {
       // Its lines are that venue's bookings for that month. Moving either would
       // bill someone for somebody else's guests.
       access: { update: fixedOnceCreated },
+      admin: { position: 'sidebar' },
     },
     {
       name: 'period',
@@ -266,7 +259,7 @@ export const Statements: CollectionConfig = {
       required: true,
       index: true,
       access: { update: fixedOnceCreated },
-      admin: { description: 'The month billed, like 2026-10.' },
+      admin: { position: 'sidebar', description: 'The month billed.' },
     },
     {
       name: 'status',
@@ -280,9 +273,52 @@ export const Statements: CollectionConfig = {
       })),
       admin: {
         position: 'sidebar',
-        description:
-          'Draft: only the team sees it. Sent: emailed to the venue, deadlines start. Paid: settled. Void: cancelled for good. It only moves forward: a sent statement cannot go back to draft; void it and draw the month up again.',
+        isClearable: false,
+        description: 'Change it with the buttons at the top, then Save.',
       },
+    },
+    {
+      /**
+       * Status, total and dates in words, with only the next moves allowed.
+       * Nothing stored. See components/admin/StatementSummary.
+       */
+      name: 'summary',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/StatementSummary#StatementSummary' } },
+    },
+    {
+      type: 'row',
+      fields: [
+        // Under the summary, where Record payment points. Only once it is paid: before then they are three empty boxes asking
+        // about a payment that has not happened.
+        {
+          name: 'paidAt',
+          label: 'Paid on',
+          type: 'date',
+          admin: { width: '33%', condition: isPaid, description: 'Today if left empty.' },
+        },
+        {
+          name: 'paymentMethod',
+          label: 'Paid by',
+          type: 'select',
+          options: [
+            { label: 'Whish', value: 'whish' },
+            { label: 'Bank transfer', value: 'bank' },
+            { label: 'Card (Areeba)', value: 'card' },
+            { label: 'Cash', value: 'cash' },
+          ],
+          admin: { width: '33%', condition: isPaid },
+        },
+        {
+          name: 'paymentReference',
+          type: 'text',
+          admin: {
+            width: '34%',
+            condition: isPaid,
+            description: 'The transfer or receipt number.',
+          },
+        },
+      ],
     },
     {
       /**
@@ -383,41 +419,25 @@ export const Statements: CollectionConfig = {
           defaultValue: 0,
           // Only while a draft. Once sent, the venue has been told the total.
           access: { update: ({ doc }) => !doc || doc.status === 'draft' },
-          admin: { width: '25%', description: 'Percent. 0 until VAT registration.' },
+          label: 'VAT rate (%)',
+          admin: {
+            width: '50%',
+            description: '0 until VAT registration. Can change only while a draft.',
+          },
         },
-        { name: 'subtotal', type: 'number', admin: { width: '25%', readOnly: true } },
-        { name: 'vat', type: 'number', admin: { width: '25%', readOnly: true } },
-        { name: 'total', type: 'number', admin: { width: '25%', readOnly: true } },
+        // Worked out on save and shown in the summary at the top, in dollars.
+        { name: 'subtotal', type: 'number', admin: { readOnly: true, hidden: true } },
+        { name: 'vat', type: 'number', admin: { readOnly: true, hidden: true } },
+        { name: 'total', type: 'number', admin: { readOnly: true, hidden: true } },
       ],
     },
     {
       type: 'row',
       fields: [
-        { name: 'sentAt', type: 'date', admin: { width: '33%', readOnly: true } },
-        {
-          name: 'disputeUntil',
-          type: 'date',
-          admin: { width: '33%', readOnly: true, description: 'Last moment to question a line.' },
-        },
-        { name: 'dueAt', type: 'date', index: true, admin: { width: '34%', readOnly: true } },
-      ],
-    },
-    {
-      type: 'row',
-      fields: [
-        { name: 'paidAt', type: 'date', admin: { width: '33%' } },
-        {
-          name: 'paymentMethod',
-          type: 'select',
-          options: [
-            { label: 'Whish', value: 'whish' },
-            { label: 'Bank transfer', value: 'bank' },
-            { label: 'Card (Areeba)', value: 'card' },
-            { label: 'Cash', value: 'cash' },
-          ],
-          admin: { width: '33%' },
-        },
-        { name: 'paymentReference', type: 'text', admin: { width: '34%' } },
+        // Set when it is sent, and shown in the summary as dates.
+        { name: 'sentAt', type: 'date', admin: { readOnly: true, hidden: true } },
+        { name: 'disputeUntil', type: 'date', admin: { readOnly: true, hidden: true } },
+        { name: 'dueAt', type: 'date', index: true, admin: { readOnly: true, hidden: true } },
       ],
     },
     {

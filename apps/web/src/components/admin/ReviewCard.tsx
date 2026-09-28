@@ -43,7 +43,11 @@ export function ReviewCard() {
     : ''
 
   return (
-    <section className={`vd-review${status === 'pending' ? 'vd-review--pending' : ''}`}>
+    <section
+      className={['vd-review', status === 'pending' && 'vd-review--pending']
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="vd-review__top">
         <span className="vd-review__stars" aria-label={`${stars} out of 5 stars`}>
           {'★'.repeat(stars)}

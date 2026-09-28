@@ -81,6 +81,7 @@ export const Reviews: CollectionConfig = {
       min: 1,
       max: 5,
       access: { update: fixedOnceCreated },
+      admin: { position: 'sidebar' },
     },
     /*
      * Still editable, for one reason only: taking out a phone number or a name
@@ -115,6 +116,7 @@ export const Reviews: CollectionConfig = {
       type: 'text',
       required: true,
       access: { update: fixedOnceCreated },
+      admin: { position: 'sidebar' },
     },
     {
       name: 'status',

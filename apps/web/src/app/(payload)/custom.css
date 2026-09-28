@@ -314,3 +314,41 @@
   outline: none;
   border-color: var(--theme-elevation-800);
 }
+
+/* A note that something needs attention, inside a card. */
+.vd-warn {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--theme-warning-500);
+  background: var(--theme-warning-50);
+  color: var(--theme-elevation-900);
+  font-size: 0.9rem;
+}
+
+.vd-pill--bad {
+  background: var(--theme-error-100);
+  color: var(--theme-error-800);
+}
+
+/* The money line at the top of a statement. See components/admin/StatementSummary. */
+.vd-summary__money {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.vd-summary__total {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Guest contact details, one per line, never broken inside a number. */
+.vd-booking__contact {
+  display: block;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--theme-elevation-700);
+}

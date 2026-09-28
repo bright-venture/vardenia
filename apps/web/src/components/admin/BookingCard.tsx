@@ -63,6 +63,12 @@ const idOf = (value: unknown): string | number | null => {
   return typeof id === 'string' || typeof id === 'number' ? id : null
 }
 
+/**
+ * Class names joined with spaces. Not a template literal: the Tailwind
+ * formatter trims the space inside one and glued two classes into one.
+ */
+const classes = (...names: (string | false)[]) => names.filter(Boolean).join(' ')
+
 const TZ = 'Asia/Beirut'
 const dayOf = (date: Date) => date.toLocaleDateString('en-CA', { timeZone: TZ })
 
@@ -149,7 +155,7 @@ export function BookingCard() {
   const pendingAction = changed ? ACTION[`${saved}>${chosen}`] : undefined
 
   return (
-    <section className={`vd-review${saved === 'pending' ? 'vd-review--pending' : ''}`}>
+    <section className={classes('vd-review', saved === 'pending' && 'vd-review--pending')}>
       <div className="vd-review__top">
         <span className="vd-booking__ref">{f.reference}</span>
         <span className={state.className}>{state.text}</span>
@@ -174,8 +180,8 @@ export function BookingCard() {
           <dt>Guest</dt>
           <dd>
             {guest?.name ?? 'Guest'}
-            {guest?.email ? <span className="vd-muted"> · {guest.email}</span> : null}
-            {guest?.phone ? <span className="vd-muted"> · {guest.phone}</span> : null}
+            {guest?.email ? <span className="vd-booking__contact">{guest.email}</span> : null}
+            {guest?.phone ? <span className="vd-booking__contact">{guest.phone}</span> : null}
           </dd>
         </div>
         <div>
@@ -206,13 +212,22 @@ export function BookingCard() {
           </>
         ) : moves.length > 0 ? (
           <>
+            {saved === 'pending' && ended ? (
+              <p className="vd-warn">
+                Its date has passed and nobody answered. Decline it, or confirm it only if the venue
+                did take the guest.
+              </p>
+            ) : null}
             {moves.map((to) => {
               const action = ACTION[`${saved}>${to}`]!
               return (
                 <button
                   key={to}
                   type="button"
-                  className={`vd-choice${action.tone === 'plain' ? '' : ` vd-choice--${action.tone}`}`}
+                  className={classes(
+                    'vd-choice',
+                    action.tone !== 'plain' && `vd-choice--${action.tone}`,
+                  )}
                   onClick={() => status.setValue(to)}
                 >
                   {action.label}
