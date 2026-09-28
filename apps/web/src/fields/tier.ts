@@ -80,6 +80,7 @@ export const tierField: SelectField = {
   access: { update: isAdminFieldLevel },
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
   admin: {
+    components: { Cell: '/components/admin/ListCells#TierCell' },
     description:
       'Basic: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Home page placement is the Featured box below, which either tier can have.',
   },

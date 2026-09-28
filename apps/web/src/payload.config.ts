@@ -114,6 +114,10 @@ export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL,
   admin: {
     user: Users.slug,
+    // Every date in the admin as "1 Sep 2026, 03:00" rather than Payload's
+    // "September 1st 2026, 3:00 AM". Fields that are days, not moments, set
+    // their own d MMM yyyy.
+    dateFormat: 'd MMM yyyy, HH:mm',
     meta: {
       titleSuffix: ' - Vardenia',
     },

@@ -60,7 +60,8 @@ export const QrCodes: CollectionConfig = {
       views: { list: { Component: '/components/admin/FolderListView#FolderListView' } },
     },
     useAsTitle: 'code',
-    defaultColumns: ['code', 'targetType', 'placement', 'scanCount', 'active'],
+    // Where it goes, how much it is used, whether it is printed and still on.
+    defaultColumns: ['code', 'business', 'scanCount', 'issue', 'active'],
     group: 'Directory',
   },
   access: {
@@ -237,12 +238,14 @@ export const QrCodes: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
+        components: { Cell: '/components/admin/ListCells#ActiveCell' },
         description:
           'Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code.',
       },
     },
     {
       name: 'scanCount',
+      label: 'Scans',
       type: 'number',
       defaultValue: 0,
       index: true,

@@ -391,3 +391,127 @@
   color: var(--theme-elevation-900);
   text-decoration: underline;
 }
+
+/*
+ * Every list in the admin.
+ *
+ * Payload's lists are dense 12px text on alternating grey bands, with every
+ * value the same weight. These give the rows room and one quiet line between
+ * them, make the first column (the thing you click) stand out, and turn the
+ * status columns into coloured pills. Payload marks each dropdown value with a
+ * `selected--<value>` class, which is what the pills key off: no list needed
+ * a component for this.
+ */
+.table {
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 10px;
+  background: var(--theme-elevation-0);
+}
+
+.table table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.7rem 1rem;
+  background: var(--theme-elevation-50);
+  border-bottom: 1px solid var(--theme-elevation-150);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--theme-elevation-700);
+  white-space: nowrap;
+}
+
+.table tbody tr,
+.table tbody tr:nth-child(odd),
+.table tbody tr:nth-child(even) {
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.table tbody tr:hover {
+  background: var(--theme-elevation-50);
+}
+
+.table tbody td {
+  padding: 0.85rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  color: var(--theme-elevation-900);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* The first real column is the record's name: the thing you open. */
+.table tbody td:nth-child(2) a {
+  font-weight: 600;
+  color: var(--theme-elevation-900);
+  text-decoration: none;
+}
+
+.table tbody td:nth-child(2) a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Status columns as pills. */
+.table :is(.cell-_status, .cell-status, .cell-kind, .cell-targetType) > span {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--theme-elevation-100);
+  color: var(--theme-elevation-800);
+}
+
+.table :is(.selected--published, .selected--confirmed, .selected--paid, .selected--completed) {
+  background: var(--theme-success-100) !important;
+  color: var(--theme-success-800) !important;
+}
+
+.table :is(.cell-_status, .cell-status) :is(.selected--draft, .selected--pending) {
+  background: var(--theme-warning-100);
+  color: var(--theme-warning-800);
+}
+
+.table
+  :is(.cell-_status, .cell-status)
+  :is(.selected--cancelled, .selected--no-show, .selected--void, .selected--rejected) {
+  background: var(--theme-elevation-100);
+  color: var(--theme-elevation-600);
+}
+
+.table .cell-_status .selected--changed {
+  background: var(--theme-warning-100);
+  color: var(--theme-warning-800);
+}
+
+/* A cell holding more than one pill. See components/admin/ListCells. */
+.vd-cell-pills {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.vd-cell-stars {
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+/* Numbers line up. */
+.table :is(.cell-scanCount, .cell-total, .cell-count, .cell-partySize) {
+  font-variant-numeric: tabular-nums;
+}

@@ -64,6 +64,7 @@ export const Reviews: CollectionConfig = {
     },
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       required: true,
@@ -81,7 +82,7 @@ export const Reviews: CollectionConfig = {
       min: 1,
       max: 5,
       access: { update: fixedOnceCreated },
-      admin: { position: 'sidebar' },
+      admin: { components: { Cell: '/components/admin/ListCells#StarsCell' }, position: 'sidebar' },
     },
     /*
      * Still editable, for one reason only: taking out a phone number or a name

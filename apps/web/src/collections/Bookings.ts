@@ -151,6 +151,7 @@ export const Bookings: CollectionConfig = {
 
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       required: true,
@@ -213,6 +214,7 @@ export const Bookings: CollectionConfig = {
 
     {
       name: 'partySize',
+      label: 'Party',
       type: 'number',
       required: true,
       min: 1,

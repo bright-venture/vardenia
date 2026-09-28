@@ -244,6 +244,7 @@ export const Statements: CollectionConfig = {
     },
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       required: true,
@@ -428,7 +429,15 @@ export const Statements: CollectionConfig = {
         // Worked out on save and shown in the summary at the top, in dollars.
         { name: 'subtotal', type: 'number', admin: { readOnly: true, hidden: true } },
         { name: 'vat', type: 'number', admin: { readOnly: true, hidden: true } },
-        { name: 'total', type: 'number', admin: { readOnly: true, hidden: true } },
+        {
+          name: 'total',
+          type: 'number',
+          admin: {
+            readOnly: true,
+            hidden: true,
+            components: { Cell: '/components/admin/ListCells#MoneyCell' },
+          },
+        },
       ],
     },
     {
@@ -437,7 +446,13 @@ export const Statements: CollectionConfig = {
         // Set when it is sent, and shown in the summary as dates.
         { name: 'sentAt', type: 'date', admin: { readOnly: true, hidden: true } },
         { name: 'disputeUntil', type: 'date', admin: { readOnly: true, hidden: true } },
-        { name: 'dueAt', type: 'date', index: true, admin: { readOnly: true, hidden: true } },
+        {
+          name: 'dueAt',
+          label: 'Due',
+          type: 'date',
+          index: true,
+          admin: { readOnly: true, hidden: true, date: { displayFormat: 'd MMM yyyy' } },
+        },
       ],
     },
     {

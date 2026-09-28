@@ -42,6 +42,7 @@ export const ScanEvents: CollectionConfig = {
     },
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       index: true,

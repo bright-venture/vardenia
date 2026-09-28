@@ -103,7 +103,11 @@ export const Articles: CollectionConfig = {
       label: 'Published on',
       type: 'date',
       index: true,
-      admin: { position: 'sidebar', description: 'Set when it is first published, if left empty.' },
+      admin: {
+        date: { displayFormat: 'd MMM yyyy' },
+        position: 'sidebar',
+        description: 'Set when it is first published, if left empty.',
+      },
     },
     {
       name: 'print',

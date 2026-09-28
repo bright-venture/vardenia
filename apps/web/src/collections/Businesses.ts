@@ -378,15 +378,19 @@ export const Businesses: CollectionConfig = {
             // every unauthenticated /api/businesses response.
             {
               name: 'contractStartsAt',
+              admin: { date: { displayFormat: 'd MMM yyyy' } },
+              label: 'Contract starts',
               type: 'date',
               access: { read: isStaffFieldLevel },
             },
             {
               name: 'contractEndsAt',
+              label: 'Contract ends',
               type: 'date',
               index: true,
               access: { read: isStaffFieldLevel },
               admin: {
+                date: { displayFormat: 'd MMM yyyy' },
                 description:
                   'Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.',
               },

@@ -126,6 +126,7 @@ export const Closures: CollectionConfig = {
   fields: [
     {
       name: 'business',
+      label: 'Listing',
       type: 'relationship',
       relationTo: 'businesses',
       required: true,
@@ -145,6 +146,7 @@ export const Closures: CollectionConfig = {
      */
     {
       name: 'startsOn',
+      label: 'First day closed',
       type: 'text',
       required: true,
       index: true,
@@ -152,6 +154,7 @@ export const Closures: CollectionConfig = {
     },
     {
       name: 'endsOn',
+      label: 'Last day closed',
       type: 'text',
       required: true,
       index: true,

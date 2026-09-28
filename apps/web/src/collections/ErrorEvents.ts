@@ -133,6 +133,7 @@ export const ErrorEvents: CollectionConfig = {
       defaultValue: false,
       index: true,
       admin: {
+        components: { Cell: '/components/admin/ListCells#ResolvedCell' },
         description:
           'Tick when it is fixed. A later occurrence unticks it automatically, so a bug that comes back does not stay hidden.',
       },

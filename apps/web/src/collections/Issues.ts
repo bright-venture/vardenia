@@ -14,10 +14,16 @@ export const Issues: CollectionConfig = {
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },
     slugField('title'),
-    { name: 'issueNumber', type: 'number', required: true, unique: true },
+    { name: 'issueNumber', label: 'Issue no.', type: 'number', required: true, unique: true },
     { name: 'season', type: 'text', localized: true, admin: { placeholder: 'Summer 2026' } },
     { name: 'cover', type: 'upload', relationTo: 'media', required: true },
-    { name: 'publishedAt', type: 'date', required: true },
+    {
+      name: 'publishedAt',
+      label: 'Published on',
+      type: 'date',
+      required: true,
+      admin: { date: { displayFormat: 'd MMM yyyy' } },
+    },
     { name: 'pageCount', label: 'Pages', type: 'number', defaultValue: 100, min: 1 },
     {
       name: 'printRun',
