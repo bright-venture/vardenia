@@ -10,7 +10,14 @@ import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { MenuLink } from './header/MenuLink'
-import { BUSINESS_ICON, CONTACT_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS } from './navIcons'
+import {
+  BUSINESS_ICON,
+  CONTACT_ICON,
+  HELP_ICON,
+  MAGAZINE_ICON,
+  SEARCH_ICON,
+  SECTION_ICONS,
+} from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 
 /**
@@ -83,8 +90,20 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         description={t('nav.addBusinessNote')}
         icon={BUSINESS_ICON}
       />
-      <MenuLink href="/faq" title={t('nav.questions')} icon={CONTACT_ICON} />
-      <MenuLink href="/contact" title={t('nav.contact')} icon={CONTACT_ICON} />
+      {/* Each with its line, like the two above, and its own icon: both were
+          envelopes with no description, so the menu read as two copies of Contact. */}
+      <MenuLink
+        href="/faq"
+        title={t('nav.questions')}
+        description={t('nav.questionsNote')}
+        icon={HELP_ICON}
+      />
+      <MenuLink
+        href="/contact"
+        title={t('nav.contact')}
+        description={t('nav.contactNote')}
+        icon={CONTACT_ICON}
+      />
     </div>
   )
 
