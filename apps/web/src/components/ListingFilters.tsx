@@ -3,6 +3,8 @@ import { AMENITIES, AMENITY_SLUGS, GOVERNORATES, PRICE_RANGES, PRICE_SLUGS } fro
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'
+import { beirutDate } from '../lib/beirut'
+import { parseTrip, tripParams, type Trip } from '../lib/trip'
 import { FilterChip } from './FilterChip'
 import { FilterSheet } from './FilterSheet'
 
@@ -60,6 +62,13 @@ export interface FilterState {
   amenities: string[]
   /** Show only places open right now, in Beirut time. Evaluated live, not cached. */
   openNow?: boolean
+  /** Only places that take bookings through Vardenia. */
+  bookable?: boolean
+  /**
+   * The guest's plans, carried rather than filtering: they decide what each
+   * card says, not which cards appear. See lib/trip.
+   */
+  trip?: Trip | null
 }
 
 /**
@@ -76,7 +85,8 @@ export function anyFilterApplied(state: FilterState): boolean {
     Boolean(state.district) ||
     Boolean(state.priceRange) ||
     state.amenities.length > 0 ||
-    Boolean(state.openNow)
+    Boolean(state.openNow) ||
+    Boolean(state.bookable)
   )
 }
 
@@ -103,6 +113,9 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
   if (next.priceRange) params.set('price', next.priceRange)
   if (next.amenities.length > 0) params.set('has', [...next.amenities].sort().join(','))
   if (next.openNow) params.set('open', '1')
+  if (next.bookable) params.set('book', '1')
+  // Last, so the filters read first in an address somebody is looking at.
+  for (const [key, value] of tripParams(next.trip)) params.set(key, value)
 
   /**
    * `toString` escapes the comma to `%2C`. It is correct and it is ugly, and
@@ -110,7 +123,9 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
    * QR code. A comma is a legal sub-delimiter in a query string, so it is put
    * back - the escaping buys nothing here and costs legibility.
    */
-  const query = params.toString().replace(/%2C/g, ',')
+  // The colon in a time ("20:00") likewise: legal in a query, and a plan
+  // should read like one.
+  const query = params.toString().replace(/%2C/g, ',').replace(/%3A/g, ':')
   return query ? `${base}?${query}` : base
 }
 
@@ -122,6 +137,11 @@ export interface RawFilterParams {
   price?: string
   has?: string
   open?: string
+  book?: string
+  date?: string
+  time?: string
+  nights?: string
+  party?: string
 }
 
 /**
@@ -158,6 +178,10 @@ export function parseFilterState(
     // Only the exact value the toggle sets, so a crafted query cannot invent a
     // new cache key or an ambiguous "on".
     openNow: raw.open === '1',
+    bookable: raw.book === '1',
+    // Against today in Beirut, so a stale shared link with last week's date
+    // shows the plain directory rather than every place "not bookable then".
+    trip: parseTrip(raw, beirutDate(new Date())),
   }
 }
 
@@ -242,7 +266,11 @@ export async function ListingFilters({
     Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)
 
   const anyFilter =
-    Boolean(state.subcategory) || Boolean(state.governorate) || narrowed || Boolean(state.openNow)
+    Boolean(state.subcategory) ||
+    Boolean(state.governorate) ||
+    narrowed ||
+    Boolean(state.openNow) ||
+    Boolean(state.bookable)
 
   /*
    * `mb-8` matching the `mt-8` above it, so the bar is a band with air on both
@@ -385,7 +413,7 @@ export async function ListingFilters({
               onto the English page, which is the one link on the row where
               that is least excusable. */}
           <Link
-            href={base}
+            href={filterHref(base, { amenities: [], trip: state.trip }, {})}
             className="text-gold-700 hover:text-ink-900 text-sm underline underline-offset-4"
           >
             {t('filters.clearFilters')}

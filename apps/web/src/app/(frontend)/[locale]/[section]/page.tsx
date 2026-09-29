@@ -25,6 +25,8 @@ import {
   type RawFilterParams,
 } from '../../../../components/ListingFilters'
 import { pageWindow } from '../directory/page'
+import { TripBar } from '../../../../components/TripBar'
+import { tripVerdicts } from '../../../../lib/trip-availability'
 
 /**
  * One of the seven sections: /stay, /eat-and-drink, /weddings and so on.
@@ -146,7 +148,8 @@ async function SectionResults({
    * tiles exist to ask and the listings are what they want. `?show=all` is the
    * explicit way past them - see SubcategoryTiles.
    */
-  const choosing = show !== 'all' && !anyFilterApplied(state)
+  // Plans count as an answer too: a guest who has set a date wants places.
+  const choosing = show !== 'all' && !anyFilterApplied(state) && !state.trip
 
   /**
    * Counts feed the filter chips, and the grid needs its page. In parallel, so a
@@ -174,6 +177,9 @@ async function SectionResults({
   }
 
   const total = result?.totalDocs ?? 0
+
+  // See the directory: only with plans set, and only for bookable places.
+  const verdicts = await tripVerdicts(result?.docs ?? [], state.trip ?? null)
 
   /**
    * The tiles answer for themselves whether there is a choice worth offering -
@@ -237,6 +243,13 @@ async function SectionResults({
         ) : null}
       </div>
 
+      <TripBar
+        base={base}
+        state={state}
+        locale={locale}
+        mode={section.path === 'stay' ? 'nights' : 'sitting'}
+      />
+
       <ListingFilters base={base} state={state} locale={locale} counts={counts} />
 
       <ListingGrid
@@ -244,13 +257,15 @@ async function SectionResults({
         locale={locale}
         // A section page is a results page: the grid starts near the top.
         eager
+        trip={state.trip}
+        verdicts={verdicts}
         empty={t('resultCount', { count: 0 })}
         // Says which way out exists, rather than restating the problem. See
         // ui/EmptyState: the title is what happened, the body is what to do.
         emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
         emptyAction={
           anyFilterApplied(state) ? (
-            <Link href={base} className={LINK}>
+            <Link href={filterHref(base, { amenities: [], trip: state.trip }, {})} className={LINK}>
               {t('clearFilters')}
             </Link>
           ) : null

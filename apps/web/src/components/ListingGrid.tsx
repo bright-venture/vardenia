@@ -1,6 +1,10 @@
 import type { Locale } from '@vardenia/i18n'
 import type { ListingSummary } from '../lib/listings'
 import { ListingCard } from './ListingCard'
+import { bookingFormModel } from '../lib/booking-form'
+import type { BookingRules } from '../lib/availability'
+import type { Trip } from '../lib/trip'
+import type { TripVerdict } from '../lib/trip-availability'
 import { EmptyState } from './ui'
 
 /**
@@ -87,6 +91,8 @@ export function ListingGrid({
   emptyAction,
   kind = 'directory',
   eager = false,
+  trip,
+  verdicts,
 }: {
   listings: ListingSummary[]
   locale: Locale
@@ -103,6 +109,9 @@ export function ListingGrid({
    * decide for itself and was wrong on two of its five pages.
    */
   eager?: boolean
+  /** The guest's plans and, per bookable listing, whether it could take them. */
+  trip?: Trip | null
+  verdicts?: Map<number, TripVerdict>
 }) {
   if (listings.length === 0) {
     return <EmptyState title={empty} body={emptyBody} action={emptyAction} />
@@ -126,6 +135,13 @@ export function ListingGrid({
             heroImage={listing.heroImage as never}
             openingHours={listing.openingHours}
             priority={eager && index === 0}
+            trip={trip}
+            verdict={verdicts?.get(listing.id)}
+            stay={
+              verdicts?.has(listing.id)
+                ? bookingFormModel(listing.booking as BookingRules | null).mode === 'nights'
+                : false
+            }
             locale={locale}
           />
         </div>

@@ -147,6 +147,22 @@ describe('time', () => {
       check({ rules, start: '2026-09-01T12:00:00Z', end: '2026-09-01T20:00:00Z' }),
     ).toMatchObject({ ok: false, reason: 'too-long' })
   })
+
+  it('counts a stay in nights, so check-in to check-out is one night', () => {
+    const rules = { ...ENABLED, minDurationMinutes: 1440, maxDurationMinutes: 1440 * 3 }
+    // 15:00 to 11:00 the next day in Beirut: twenty hours, and one night.
+    expect(check({ rules, start: '2026-10-03T12:00:00Z', end: '2026-10-04T08:00:00Z' })).toEqual({
+      ok: true,
+    })
+    // Same day in and out is no night at all.
+    expect(
+      check({ rules, start: '2026-10-03T06:00:00Z', end: '2026-10-03T12:00:00Z' }),
+    ).toMatchObject({ ok: false, reason: 'too-short' })
+    // Four nights against a three-night maximum.
+    expect(
+      check({ rules, start: '2026-10-03T12:00:00Z', end: '2026-10-07T08:00:00Z' }),
+    ).toMatchObject({ ok: false, reason: 'too-long' })
+  })
 })
 
 describe('party size', () => {

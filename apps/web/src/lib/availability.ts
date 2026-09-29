@@ -144,6 +144,14 @@ const positive = (value: number | null | undefined, fallback: number): number =>
 const nonNegative = (value: number | null | undefined, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback
 
+const MINUTES_PER_DAY = 1440
+
+/** Nights between two instants: how many Beirut midnights the stay crosses. */
+function nightsBetween(start: Date, end: Date): number {
+  const days = (Date.parse(beirutDate(end)) - Date.parse(beirutDate(start))) / 86_400_000
+  return Math.max(0, Math.round(days))
+}
+
 export function resolveRules(rules: BookingRules | null | undefined) {
   const r = rules ?? {}
   return {
@@ -202,10 +210,25 @@ export function checkAvailability({
     return { ok: false, reason: 'too-far-ahead', detail: { maxDays: config.maxAdvanceDays } }
   }
 
-  if (minutes < config.minDurationMinutes) {
+  /**
+   * A stay is measured in nights, not hours.
+   *
+   * A place whose shortest booking is a day or more sells nights (the same
+   * threshold the Book form uses to ask for them), and one night runs from
+   * check-in at 15:00 to check-out at 11:00: twenty hours. Measured by the
+   * clock, every one-night stay was refused as shorter than the 24-hour
+   * minimum, while the form kept offering "1 night". So a stay counts as the
+   * number of Beirut nights it spans, each worth a full day.
+   */
+  const counted =
+    config.minDurationMinutes >= MINUTES_PER_DAY
+      ? nightsBetween(start, request.interval.end) * MINUTES_PER_DAY
+      : minutes
+
+  if (counted < config.minDurationMinutes) {
     return { ok: false, reason: 'too-short', detail: { minMinutes: config.minDurationMinutes } }
   }
-  if (minutes > config.maxDurationMinutes) {
+  if (counted > config.maxDurationMinutes) {
     return { ok: false, reason: 'too-long', detail: { maxMinutes: config.maxDurationMinutes } }
   }
 

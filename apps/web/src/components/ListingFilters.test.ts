@@ -143,6 +143,8 @@ describe('parseFilterState', () => {
       priceRange: '3',
       amenities: ['pool', 'wifi'],
       openNow: false,
+      bookable: false,
+      trip: null,
     })
   })
 
@@ -186,6 +188,8 @@ describe('parseFilterState', () => {
       priceRange: undefined,
       amenities: [],
       openNow: false,
+      bookable: false,
+      trip: null,
     })
   })
 

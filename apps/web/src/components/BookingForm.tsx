@@ -7,6 +7,7 @@ import { Link, usePathname } from '../i18n/routing'
 import { trackEvent } from '../lib/analytics'
 import { sessionAudience } from '../lib/session-hint'
 import { durationLabel, toInterval, type BookingFormModel } from '../lib/booking-form'
+import { parseTrip, prefillFromTrip } from '../lib/trip'
 import {
   ERROR_TEXT,
   HINT,
@@ -102,17 +103,48 @@ const subscribeToSession = (onChange: () => void) => {
   }
 }
 
-export function BookingForm({ businessId, model, locale }: BookingFormProps) {
+/** The query string never changes under a mounted form without a navigation. */
+const subscribeToNothing = () => () => {}
+const readSearch = () => window.location.search
+const noSearch = () => ''
+
+/**
+ * The form, filled in from the guest's plans when they arrived with some.
+ *
+ * A card in the directory links here with `?date=...&time=...&party=...` (see
+ * lib/trip). The listing page is prerendered, so the server cannot read that
+ * query string without making every listing dynamic; the browser reads it.
+ *
+ * Read through `useSyncExternalStore` with an empty server snapshot: the page
+ * hydrates with the defaults it was rendered with, then the real query string
+ * arrives and, because it is the `key`, the fields mount again with the plans
+ * in them. No effect setting state, and no hydration mismatch.
+ */
+export function BookingForm(props: BookingFormProps) {
+  const search = useSyncExternalStore(subscribeToNothing, readSearch, noSearch)
+  const params = Object.fromEntries(new URLSearchParams(search))
+  // Bounded by the form's own dates rather than by a clock: prefillFromTrip
+  // drops a day this listing cannot take.
+  const initial = prefillFromTrip(props.model, parseTrip(params))
+  return <BookingFormFields key={search} {...props} initial={initial} />
+}
+
+function BookingFormFields({
+  businessId,
+  model,
+  locale,
+  initial,
+}: BookingFormProps & { initial: ReturnType<typeof prefillFromTrip> }) {
   const t = useTranslations('booking')
   const common = useTranslations('common')
   const ids = useId()
 
-  const [date, setDate] = useState(model.earliestDate)
-  const [time, setTime] = useState('20:00')
+  const [date, setDate] = useState(initial.date)
+  const [time, setTime] = useState(initial.time)
   const [duration, setDuration] = useState(model.durationOptions[0] ?? 60)
-  const [nights, setNights] = useState(model.nightOptions[0] ?? 1)
+  const [nights, setNights] = useState(initial.nights)
   const [roomType, setRoomType] = useState(model.roomTypes[0]?.label ?? '')
-  const [partySize, setPartySize] = useState(model.defaultPartySize)
+  const [partySize, setPartySize] = useState(initial.partySize)
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
 

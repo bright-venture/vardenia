@@ -11,6 +11,9 @@ import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
+import { TripBar } from '../../../../components/TripBar'
+import { tripVerdicts } from '../../../../lib/trip-availability'
+import { tripParams } from '../../../../lib/trip'
 import {
   ListingFilters,
   anyFilterApplied,
@@ -129,6 +132,14 @@ async function DirectoryResults({
     findListings({ locale, ...state, page: Number(page) || 1 }),
   ])
 
+  // Only with plans set, and only for the places on this page that take
+  // bookings: two reads, never cached. See lib/trip-availability.
+  const verdicts = await tripVerdicts(result?.docs ?? [], state.trip ?? null)
+
+  // The plans ride along to the section pages too, so choosing Stay after
+  // setting a date does not lose it.
+  const tripSuffix = state.trip ? `?${new URLSearchParams(tripParams(state.trip))}` : ''
+
   const pageHref = (n: number) => {
     const href = filterHref('/directory', state, {})
     return href.includes('?') ? `${href}&page=${n}` : `${href}?page=${n}`
@@ -171,11 +182,13 @@ async function DirectoryResults({
           {t('all')}
         </FilterChip>
         {SECTIONS.map((section) => (
-          <FilterChip key={section.path} href={`/${section.path}`} active={false}>
+          <FilterChip key={section.path} href={`/${section.path}${tripSuffix}`} active={false}>
             {sectionName(section, locale)}
           </FilterChip>
         ))}
       </nav>
+
+      <TripBar base="/directory" state={state} locale={locale} mode="sitting" />
 
       <ListingFilters base="/directory" state={state} locale={locale} counts={counts} />
 
@@ -185,11 +198,16 @@ async function DirectoryResults({
         // The results are the page. The first card is the largest thing above
         // the fold, so its image is worth preloading. See ListingGrid.
         eager
+        trip={state.trip}
+        verdicts={verdicts}
         empty={t('resultCount', { count: 0 })}
         emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
         emptyAction={
           anyFilterApplied(state) ? (
-            <Link href="/directory" className={LINK}>
+            <Link
+              href={filterHref('/directory', { amenities: [], trip: state.trip }, {})}
+              className={LINK}
+            >
               {t('clearFilters')}
             </Link>
           ) : null

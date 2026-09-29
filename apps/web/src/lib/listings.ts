@@ -74,6 +74,8 @@ export interface ListingQuery {
    * isOpenNow and the query is never cached (see findListings).
    */
   openNow?: boolean
+  /** Only places that take bookings through Vardenia (`booking.enabled`). */
+  bookable?: boolean
   page?: number
   perPage?: number
 }
@@ -171,9 +173,16 @@ async function buildListingWhere(
     district,
     priceRange,
     amenities,
+    bookable,
   }: Pick<
     ListingQuery,
-    'category' | 'subcategory' | 'governorate' | 'district' | 'priceRange' | 'amenities'
+    | 'category'
+    | 'subcategory'
+    | 'governorate'
+    | 'district'
+    | 'priceRange'
+    | 'amenities'
+    | 'bookable'
   >,
 ): Promise<Where> {
   const where: Where = {}
@@ -192,6 +201,8 @@ async function buildListingWhere(
   if (governorate) where.governorate = { equals: governorate }
   if (district) where.district = { equals: district }
   if (priceRange) where.priceRange = { equals: priceRange }
+  // The same switch the Book panel reads; public, like the rest of the rules.
+  if (bookable) where['booking.enabled'] = { equals: true }
 
   /**
    * Every amenity, not any of them.
@@ -423,6 +434,7 @@ export async function findListings({
   priceRange,
   amenities,
   openNow,
+  bookable,
   page = 1,
   perPage = 24,
 }: ListingQuery) {
@@ -436,6 +448,7 @@ export async function findListings({
       district,
       priceRange,
       amenities,
+      bookable,
     })
 
     if (openNow) {
@@ -452,7 +465,7 @@ export async function findListings({
        */
       const filters = { category, subcategory, governorate }
       const candidates =
-        !district && !priceRange && !amenities?.length
+        !district && !priceRange && !amenities?.length && !bookable
           ? await openNowCandidates({ locale, ...filters })
           : await readOpenNowCandidates(payload, where, locale, filters)
 
@@ -534,6 +547,8 @@ export async function findListings({
       category ?? '',
       subcategory ?? '',
       governorate ?? '',
+      // A switch, so it doubles the keys rather than multiplying them.
+      bookable ? 'bookable' : '',
       String(page),
       String(perPage),
     ],

@@ -4,6 +4,8 @@ import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
 import { isOpenNow } from '../lib/hours'
+import { tripDayLabel, tripQuery, TRIP_DEFAULT_TIME, type Trip } from '../lib/trip'
+import type { TripVerdict } from '../lib/trip-availability'
 import { Plate, Tier } from './ui'
 import { SaveButton } from './SaveButton'
 
@@ -25,6 +27,12 @@ interface Props {
   openingHours?: unknown
   /** Set on the first card above the fold so its image preloads. */
   priority?: boolean
+  /** The guest's plans, carried onto the listing's link. See lib/trip. */
+  trip?: Trip | null
+  /** Whether this place could take those plans; only set for bookable places. */
+  verdict?: TripVerdict | null
+  /** Stay or table, for how the verdict is worded. */
+  stay?: boolean
   locale: Locale
 }
 
@@ -76,9 +84,13 @@ export function ListingCard({
   reference,
   openingHours,
   priority = false,
+  trip,
+  verdict,
+  stay = false,
   locale,
 }: Props) {
   const t = useTranslations('directory')
+  const booking = useTranslations('booking')
   const price = priceLabel(priceRange)
   const place = placeLabel(governorate, district, locale)
   // Only ever shown when confidently open. `null` (no hours) and `false`
@@ -173,7 +185,11 @@ export function ListingCard({
               anchor holds only text, so the heart can be a sibling rather than a
               button nested in a link. */}
           <Link
-            href={`/directory/${slug}`}
+            href={
+              trip
+                ? { pathname: `/directory/${slug}`, query: tripQuery(trip) }
+                : `/directory/${slug}`
+            }
             className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
           >
             {name}
@@ -191,6 +207,45 @@ export function ListingCard({
             </span>
           ) : null}
         </div>
+
+        {/*
+          Whether this place could take the guest's plans. Green and with a dot
+          only when it could, like Open now; the other answers are grey, because
+          a card is a reason to visit, not a warning off. Worded as a fact about
+          the day, never as a count of what is left.
+        */}
+        {trip && verdict ? (
+          <p
+            className={
+              verdict.kind === 'free'
+                ? 'text-state-success mt-2 flex items-center gap-1.5 text-xs font-medium'
+                : 'text-ink-500 mt-2 text-xs'
+            }
+          >
+            {verdict.kind === 'free' ? (
+              <span aria-hidden className="bg-state-success size-1.5 shrink-0 rounded-full" />
+            ) : null}
+            {verdict.kind === 'free'
+              ? stay
+                ? t('tripFreeStay', {
+                    date: tripDayLabel(trip.date, locale),
+                    nights: booking('nightCount', { count: trip.nights }),
+                  })
+                : t('tripFreeAt', {
+                    date: tripDayLabel(trip.date, locale),
+                    time: trip.time ?? TRIP_DEFAULT_TIME,
+                  })
+              : verdict.kind === 'full'
+                ? t('tripFull')
+                : verdict.kind === 'closed'
+                  ? t('tripClosed')
+                  : verdict.kind === 'party'
+                    ? t('tripParty', { party: trip.party })
+                    : verdict.kind === 'notice'
+                      ? t('tripNotice')
+                      : t('tripOther')}
+          </p>
+        ) : null}
 
         {/*
           The design has no tagline and this keeps one, deliberately.
