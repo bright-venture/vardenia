@@ -145,7 +145,8 @@
     "payCard": "Visa/Mastercard",
     "promiseConfirm": "{venue} confirme votre demande, et nous vous envoyons la réponse par e-mail.",
     "promiseInstant": "Confirmée immédiatement, par e-mail.",
-    "promiseReviews": "Les avis ici viennent uniquement de clients ayant réservé."
+    "promiseReviews": "Les avis ici viennent uniquement de clients ayant réservé.",
+    "promiseConfirmWithin": "{venue} répond généralement en moins de {hours, plural, one {une heure} other {# heures}}, et nous vous envoyons la réponse par e-mail."
   },
   "account": {
     "title": "Votre compte",
@@ -503,6 +504,8 @@
     "signIn": "Se connecter",
     "notEligible": "Seuls les clients ayant terminé une réservation ici peuvent laisser un avis.",
     "alreadyReviewed": "Vous avez déjà évalué ce lieu.",
-    "unverified": "Confirmez votre adresse e-mail avant de pouvoir laisser un avis."
+    "unverified": "Confirmez votre adresse e-mail avant de pouvoir laisser un avis.",
+    "guestsSay": "Ce qu'en disent les clients",
+    "readAll": "{count, plural, one {Lire l'avis} other {Lire les # avis}}"
   }
 }

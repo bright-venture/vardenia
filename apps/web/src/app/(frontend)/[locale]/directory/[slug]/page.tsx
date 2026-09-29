@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { can, tierOf } from '@vardenia/core'
-import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import {
   findListingBySlug,
   findAllListingSlugs,
@@ -35,7 +35,8 @@ import { ScanArrival } from '../../../../../components/ScanArrival'
 import { ReviewForm } from '../../../../../components/ReviewForm'
 import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
-import { listingReviews } from '../../../../../lib/reviews'
+import { listingReviews, reviewHighlights, SCORE_MIN_REVIEWS } from '../../../../../lib/reviews'
+import { listingAnswerHours } from '../../../../../lib/answer-time'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -225,6 +226,14 @@ export default async function ListingPage({ params }: Params) {
   })
 
   const reviews = await listingReviews(listing.id)
+  const highlights = reviewHighlights(reviews.reviews)
+
+  // Only worth asking for a listing that takes requests and answers them by
+  // hand; an automatic confirmation has no wait to describe.
+  const answerHours =
+    bookable && (listing.booking as { autoConfirm?: boolean } | null)?.autoConfirm !== true
+      ? await listingAnswerHours(listing.id)
+      : null
 
   const related = await findRelatedListings({
     locale,
@@ -367,6 +376,33 @@ export default async function ListingPage({ params }: Params) {
             {listing.verified ? (
               <span className="text-gold-300 font-medium">{t('verified')}</span>
             ) : null}
+
+            {/*
+              The reviews, as a link down to them. The average only once there
+              are enough reviews to mean something; before that, the count.
+            */}
+            {reviews.count > 0 ? (
+              <a
+                href="#reviews"
+                className="hover:text-surface-base inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:underline"
+              >
+                {reviews.average !== null && reviews.count >= SCORE_MIN_REVIEWS ? (
+                  <>
+                    <span aria-hidden className="text-gold-300">
+                      ★
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      {reviews.average.toLocaleString(dataLocale(locale as Locale), {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })}
+                    </span>
+                    <span aria-hidden>·</span>
+                  </>
+                ) : null}
+                {tReview('count', { count: reviews.count })}
+              </a>
+            ) : null}
           </div>
         </div>
       </header>
@@ -400,6 +436,42 @@ export default async function ListingPage({ params }: Params) {
             />
             <SaveButton slug={slug} variant="button" />
           </div>
+
+          {/*
+            What guests say, where the reader is deciding rather than at the
+            foot of the page. Two lines from the best recent reviews, each a
+            <q> so the quote marks follow the page's language; the full list,
+            good and bad, is below and one link away.
+          */}
+          {highlights.length > 0 ? (
+            <section className="mt-10" aria-labelledby="guests-say">
+              <h2
+                id="guests-say"
+                className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]"
+              >
+                {tReview('guestsSay')}
+              </h2>
+              <ul className="mt-4 grid gap-5 sm:grid-cols-2">
+                {highlights.map((highlight) => (
+                  <li key={highlight.id} className="border-gold-700/40 border-s-2 ps-4">
+                    <q dir="auto" className="text-ink-900 leading-relaxed">
+                      {highlight.quote}
+                    </q>
+                    <p className="text-ink-500 mt-2 flex items-center gap-2 text-xs">
+                      <span>{highlight.authorName}</span>
+                      <Stars rating={highlight.rating} />
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="#reviews"
+                className="text-gold-700 hover:text-ink-900 mt-4 inline-block text-sm underline underline-offset-4"
+              >
+                {tReview('readAll', { count: reviews.count })}
+              </a>
+            </section>
+          ) : null}
 
           {/*
             The facts, as a ruled table rather than a sidebar.
@@ -664,6 +736,7 @@ export default async function ListingPage({ params }: Params) {
                 locale={locale as Locale}
                 venue={listing.name}
                 payments={(listing as { payments?: PaymentsAccepted | null }).payments}
+                answerHours={answerHours}
               />
             </div>
           </aside>

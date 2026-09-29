@@ -33,6 +33,7 @@ import * as migration_20260924_090000_tiers_and_featured from './20260924_090000
 import * as migration_20260924_100629_booking_fee_statements from './20260924_100629_booking_fee_statements'
 import * as migration_20260928_090000_restore_row_level_security from './20260928_090000_restore_row_level_security'
 import * as migration_20260929_074613_payment_methods from './20260929_074613_payment_methods'
+import * as migration_20260929_082335_booking_answered_at from './20260929_082335_booking_answered_at'
 
 export const migrations = [
   {
@@ -209,5 +210,10 @@ export const migrations = [
     up: migration_20260929_074613_payment_methods.up,
     down: migration_20260929_074613_payment_methods.down,
     name: '20260929_074613_payment_methods',
+  },
+  {
+    up: migration_20260929_082335_booking_answered_at.up,
+    down: migration_20260929_082335_booking_answered_at.down,
+    name: '20260929_082335_booking_answered_at',
   },
 ]

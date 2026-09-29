@@ -175,6 +175,18 @@ export const colors = {
     danger: '#a83228',
     info: '#2f5f7f',
   },
+
+  /**
+   * Other companies' colours, used only where their own mark appears.
+   *
+   * WhatsApp's green on the contact button: people recognise the button by it,
+   * and a Vardenia-coloured WhatsApp button reads as something else. Kept here
+   * so the palette stays the one list of every colour the site uses, rather
+   * than a hex hidden in a component.
+   */
+  external: {
+    whatsapp: '#25d366',
+  },
 } as const
 
 /**

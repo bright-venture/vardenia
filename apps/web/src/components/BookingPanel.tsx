@@ -31,6 +31,7 @@ export async function BookingPanel({
   locale,
   venue,
   payments,
+  answerHours,
 }: {
   businessId: number
   rules: BookingRules | null | undefined
@@ -38,6 +39,8 @@ export async function BookingPanel({
   /** The listing's name, for the promises under the form. */
   venue: string
   payments?: PaymentsAccepted | null
+  /** The typical wait for an answer, in hours; null when not known well enough. */
+  answerHours?: number | null
 }) {
   /**
    * `enabled` is read through `resolveRules` rather than off the raw group,
@@ -128,7 +131,13 @@ export async function BookingPanel({
           <span aria-hidden className="text-gold-700">
             ✓
           </span>
-          <span>{instant ? t('promiseInstant') : t('promiseConfirm', { venue })}</span>
+          <span>
+            {instant
+              ? t('promiseInstant')
+              : answerHours
+                ? t('promiseConfirmWithin', { venue, hours: answerHours })
+                : t('promiseConfirm', { venue })}
+          </span>
         </li>
         <li className="flex gap-2">
           <span aria-hidden className="text-gold-700">

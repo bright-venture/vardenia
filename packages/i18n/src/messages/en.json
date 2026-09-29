@@ -145,7 +145,8 @@
     "payCard": "Visa/Mastercard",
     "promiseConfirm": "{venue} confirms your request, and we email you the answer.",
     "promiseInstant": "Confirmed straight away, by email.",
-    "promiseReviews": "Reviews here come only from guests who booked."
+    "promiseReviews": "Reviews here come only from guests who booked.",
+    "promiseConfirmWithin": "{venue} usually answers within {hours, plural, one {an hour} other {# hours}}, and we email you the answer."
   },
   "account": {
     "title": "Your account",
@@ -503,6 +504,8 @@
     "signIn": "Sign in",
     "notEligible": "Only guests who completed a booking here can review it.",
     "alreadyReviewed": "You have already reviewed this place.",
-    "unverified": "Confirm your email address before you can review."
+    "unverified": "Confirm your email address before you can review.",
+    "guestsSay": "What guests say",
+    "readAll": "{count, plural, one {Read the review} other {Read all # reviews}}"
   }
 }

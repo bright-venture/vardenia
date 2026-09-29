@@ -70,3 +70,48 @@ export async function listingReviews(
 
   return { average, count: result.totalDocs, reviews }
 }
+
+/**
+ * Reviews needed before a listing's heading shows an average.
+ *
+ * One five-star review makes a "5.0" that reads as a verdict and is an
+ * anecdote. Below this the heading links to the count alone; the score is still
+ * shown beside the reviews themselves, where the count sits next to it.
+ */
+export const SCORE_MIN_REVIEWS = 3
+
+export interface ReviewHighlight {
+  id: number
+  authorName: string
+  rating: number
+  quote: string
+}
+
+/** Longest a highlighted quote runs before it is cut at a word. */
+const QUOTE_MAX = 140
+
+/**
+ * A line or two from the best recent reviews, for the top of a listing.
+ *
+ * Only four and five stars: this is the "guests who stayed here loved" line,
+ * placed where a reader decides, and the full list below keeps every review,
+ * good or bad, so nothing is hidden. The first sentence of each, cut at a word
+ * if it runs long, because a quote that needs scrolling is not a highlight.
+ */
+export function reviewHighlights(reviews: PublicReview[], count = 2): ReviewHighlight[] {
+  return reviews
+    .filter((review) => review.rating >= 4 && review.body.trim())
+    .slice(0, count)
+    .map((review) => {
+      const text = review.body.replace(/\s+/g, ' ').trim()
+      const sentence = text.match(/^(.{20,}?[.!?؟。])(\s|$)/u)?.[1] ?? text
+      const quote =
+        sentence.length <= QUOTE_MAX
+          ? sentence
+          : `${sentence
+              .slice(0, QUOTE_MAX)
+              .replace(/\s+\S*$/u, '')
+              .replace(/[\s,;:]+$/u, '')}…`
+      return { id: review.id, authorName: review.authorName, rating: review.rating, quote }
+    })
+}

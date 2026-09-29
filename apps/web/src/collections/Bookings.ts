@@ -11,6 +11,7 @@ import {
 } from '../access/index'
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
 import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
+import { stampAnsweredAt } from '../hooks/stampAnsweredAt'
 
 /**
  * A reservation: one customer, one business, one interval.
@@ -110,6 +111,8 @@ export const Bookings: CollectionConfig = {
 
   hooks: {
     beforeValidate: [guardBookingWrite],
+    // When the venue first answered; see hooks/stampAnsweredAt.
+    beforeChange: [stampAnsweredAt],
     /**
      * Tells the customer when the business accepts or declines. On the
      * collection rather than in the partner dashboard, because a booking is
@@ -324,6 +327,23 @@ export const Bookings: CollectionConfig = {
      * Capped rather than a textarea. It goes into an email as one line, and a
      * limit is what keeps it that.
      */
+    {
+      /**
+       * When the venue first confirmed or declined this request. Set by the
+       * server only (hooks/stampAnsweredAt), and what "usually answers within
+       * X hours" on the listing is worked out from.
+       */
+      name: 'answeredAt',
+      label: 'Answered at',
+      type: 'date',
+      index: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+        description: 'When the venue first confirmed or declined it. Set automatically.',
+      },
+    },
     {
       name: 'declineReason',
       type: 'text',
