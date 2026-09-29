@@ -10,6 +10,7 @@ import { rawDb } from './db'
 import { FIND_EVERY_CEILING, findByIdsInOrder, findEvery } from './find-every'
 import { isOpenNow, type OpeningHour } from './hours'
 import { reportError } from './report'
+import { rankNearby, type NearbyPick, type Placed } from './nearby'
 
 /**
  * Read side for the public directory.
@@ -822,6 +823,9 @@ export async function countCodes(): Promise<number> {
 /** How many places the foot of a listing page offers. Three fills one row. */
 const RELATED_COUNT = 3
 
+/** A suggestion at the foot of a listing, with how far away it is when known. */
+export type RelatedListing = ListingSummary & { nearby: NearbyPick }
+
 /**
  * A few more places to look at, for the foot of a listing page.
  *
@@ -832,17 +836,18 @@ const RELATED_COUNT = 3
  * visit is one page: they read it, and they leave. This is the only place the
  * directory gets offered to somebody who did not go looking for it.
  *
- * # Same section, then nearest
+ * # Same kind of place, nearest first
  *
- * Same category is the strong signal - somebody reading about a hotel is
- * choosing a hotel. Governorate breaks the tie, because a restaurant two hours
- * away is a worse suggestion than one down the road.
+ * Same category is the strong signal: somebody reading about a hotel is
+ * choosing a hotel. Among those, the order is by distance from the listing's
+ * coordinates, then its district, then its governorate. See lib/nearby.
  *
- * It is a preference, not a filter: a pool of the category's best-ranked places
- * is fetched and the nearby ones sorted to the front. So it suggests the
- * best-ranked places, nearest first, rather than searching the whole category
- * for the three closest. With the catalogue in two districts today the
- * distinction is theoretical anyway.
+ * It used to prefer the governorate only among the category's 24 best-ranked
+ * places across the whole country. Once the catalogue spread past two
+ * districts, that meant a Bekaa listing could be offered three places in
+ * Beirut under the word "Nearby", because no Bekaa place made the top 24. The
+ * whole category is ranked now, from a small cached index of where each place
+ * is, and only the three chosen are loaded.
  *
  * Returns an empty list for a listing with no category rather than falling back
  * to anything at all. Three unrelated places under "More like this" is worse
@@ -850,26 +855,75 @@ const RELATED_COUNT = 3
  */
 export async function findRelatedListings({
   locale,
-  slug,
-  category,
-  governorate,
+  listing,
 }: {
   locale: Locale
-  slug: string
-  category?: string | null
-  governorate?: string | null
-}): Promise<ListingSummary[]> {
-  if (!category) return []
+  listing: Placed & { category?: string | null }
+}): Promise<RelatedListing[]> {
+  if (!listing.category) return []
 
-  // The query is shared by every listing in the category; only the sorting
-  // below is per-listing, and that is arithmetic rather than a round trip.
-  const pool = (await categoryPool(category, locale)).filter((doc) => doc.slug !== slug)
+  const picks = rankNearby(listing, await categoryPlaces(listing.category), RELATED_COUNT)
+  if (picks.length === 0) return []
 
-  if (!governorate) return pool.slice(0, RELATED_COUNT)
+  /*
+   * The three documents. Most often they are among the category's best-ranked,
+   * which are cached already, so a page usually costs no query here; a pick
+   * outside that pool is read on its own.
+   */
+  const pool = await categoryPool(listing.category, locale)
+  const pooled = new Map(pool.map((doc) => [doc.id, doc]))
+  const missing = picks.filter((pick) => !pooled.has(pick.id)).map((pick) => pick.id)
 
-  const near = pool.filter((doc) => doc.governorate === governorate)
-  const far = pool.filter((doc) => doc.governorate !== governorate)
-  return [...near, ...far].slice(0, RELATED_COUNT)
+  if (missing.length > 0) {
+    const payload = await client()
+    const docs = await findByIdsInOrder<ListingSummary>(payload, missing, {
+      collection: 'businesses',
+      locale: dataLocale(locale),
+      depth: 1,
+      overrideAccess: false,
+    })
+    for (const doc of docs) pooled.set(doc.id, doc)
+  }
+
+  return picks.flatMap((pick) => {
+    const doc = pooled.get(pick.id)
+    return doc ? [{ ...doc, nearby: pick }] : []
+  })
+}
+
+/**
+ * Where every published place in a category is, in directory order.
+ *
+ * Only the id, the point, the district and the governorate: about 80 bytes a
+ * listing, so the largest category (Mount Lebanon's hospitality and food run
+ * to a few hundred) is tens of kilobytes. One key per category, the same for
+ * every language, so a build fills seven entries however many listings it
+ * renders. Tagged `businesses`, so a pasted map link reaches its neighbours'
+ * suggestions on the next revalidation.
+ */
+async function categoryPlaces(category: string): Promise<Placed[]> {
+  const run = async () => {
+    const payload = await client()
+    const result = await findEvery<Placed>(payload, {
+      collection: 'businesses',
+      where: { category: { equals: category } },
+      depth: 0,
+      sort: ['-featured', '-tier', 'name'],
+      overrideAccess: false,
+      select: { location: true, district: true, governorate: true },
+    })
+    return result.docs.map((doc) => ({
+      id: doc.id,
+      location: doc.location ?? null,
+      district: doc.district ?? null,
+      governorate: doc.governorate ?? null,
+    }))
+  }
+
+  return unstable_cache(run, ['category-places', category], {
+    revalidate: LISTINGS_TTL,
+    tags: ['businesses'],
+  })()
 }
 
 /**

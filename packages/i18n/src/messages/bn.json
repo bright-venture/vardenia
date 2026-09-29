@@ -115,7 +115,8 @@
     "tripClosed": "সেই সময় বন্ধ",
     "tripParty": "{party} জনের দলের জন্য নয়",
     "tripNotice": "আরও আগে জানাতে হবে",
-    "tripOther": "সেই সময় বুক করা যাবে না"
+    "tripOther": "সেই সময় বুক করা যাবে না",
+    "distanceKm": "{km} কিমি দূরে"
   },
   "booking": {
     "heading": "টেবিল বুক করুন",

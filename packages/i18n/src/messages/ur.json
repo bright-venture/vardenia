@@ -115,7 +115,8 @@
     "tripClosed": "اس وقت بند",
     "tripParty": "{party} افراد کے گروپ کے لیے نہیں",
     "tripNotice": "پہلے سے زیادہ اطلاع درکار",
-    "tripOther": "اس وقت بکنگ نہیں ہو سکتی"
+    "tripOther": "اس وقت بکنگ نہیں ہو سکتی",
+    "distanceKm": "{km} کلومیٹر دور"
   },
   "booking": {
     "heading": "میز بک کریں",

@@ -237,10 +237,17 @@ export default async function ListingPage({ params }: Params) {
 
   const related = await findRelatedListings({
     locale,
-    slug,
-    category: listing.category,
-    governorate: listing.governorate,
+    listing: {
+      id: listing.id,
+      category: listing.category,
+      location: listing.location,
+      district: listing.district,
+      governorate: listing.governorate,
+    },
   })
+  // "Nearby" only when it is true of at least one of them: a listing alone in
+  // its region still gets three suggestions, but not the word.
+  const anyNear = related.some((entry) => entry.nearby.near)
 
   return (
     <article>
@@ -754,13 +761,22 @@ export default async function ListingPage({ params }: Params) {
       {related.length > 0 ? (
         <section className="bg-surface-raised border-ink-100 border-t">
           <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-            <Eyebrow>{t('nearby')}</Eyebrow>
-            <h2 className="text-ink-900 mt-3 text-3xl sm:text-4xl">{t('moreLikeThis')}</h2>
+            {anyNear ? <Eyebrow>{t('nearby')}</Eyebrow> : null}
+            <h2
+              className={
+                anyNear
+                  ? 'text-ink-900 mt-3 text-3xl sm:text-4xl'
+                  : 'text-ink-900 text-3xl sm:text-4xl'
+              }
+            >
+              {t('moreLikeThis')}
+            </h2>
             <div className="mt-10">
               <ListingGrid
                 listings={related}
                 locale={locale}
                 kind="related"
+                distances={new Map(related.map((entry) => [entry.id, entry.nearby.km]))}
                 empty={t('resultCount', { count: 0 })}
               />
             </div>

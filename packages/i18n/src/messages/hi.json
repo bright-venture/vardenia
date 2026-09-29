@@ -115,7 +115,8 @@
     "tripClosed": "उस समय बंद",
     "tripParty": "{party} लोगों के समूह के लिए नहीं",
     "tripNotice": "पहले से ज़्यादा सूचना चाहिए",
-    "tripOther": "उस समय बुक नहीं हो सकता"
+    "tripOther": "उस समय बुक नहीं हो सकता",
+    "distanceKm": "{km} किमी दूर"
   },
   "booking": {
     "heading": "मेज़ बुक करें",

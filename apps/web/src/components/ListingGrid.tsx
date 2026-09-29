@@ -93,6 +93,7 @@ export function ListingGrid({
   eager = false,
   trip,
   verdicts,
+  distances,
 }: {
   listings: ListingSummary[]
   locale: Locale
@@ -112,6 +113,8 @@ export function ListingGrid({
   /** The guest's plans and, per bookable listing, whether it could take them. */
   trip?: Trip | null
   verdicts?: Map<number, TripVerdict>
+  /** Kilometres from the listing being read, for the suggestions at its foot. */
+  distances?: Map<number, number | null>
 }) {
   if (listings.length === 0) {
     return <EmptyState title={empty} body={emptyBody} action={emptyAction} />
@@ -136,6 +139,7 @@ export function ListingGrid({
             openingHours={listing.openingHours}
             priority={eager && index === 0}
             trip={trip}
+            distanceKm={distances?.get(listing.id) ?? null}
             verdict={verdicts?.get(listing.id)}
             stay={
               verdicts?.has(listing.id)

@@ -115,7 +115,8 @@
     "tripClosed": "Cerrado ese día",
     "tripParty": "No para un grupo de {party}",
     "tripNotice": "Necesita más antelación",
-    "tripOther": "No se puede reservar ese día"
+    "tripOther": "No se puede reservar ese día",
+    "distanceKm": "a {km} km"
   },
   "booking": {
     "heading": "Reservar mesa",

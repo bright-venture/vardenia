@@ -115,7 +115,8 @@
     "tripClosed": "مغلق حينها",
     "tripParty": "لا يناسب مجموعة من {party}",
     "tripNotice": "يحتاج إلى إشعار مسبق أطول",
-    "tripOther": "لا يمكن الحجز حينها"
+    "tripOther": "لا يمكن الحجز حينها",
+    "distanceKm": "على بُعد {km} كم"
   },
   "booking": {
     "heading": "احجز طاولة",

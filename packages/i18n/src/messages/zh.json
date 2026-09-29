@@ -115,7 +115,8 @@
     "tripClosed": "当时不营业",
     "tripParty": "不接待 {party} 人的团体",
     "tripNotice": "需要更早预订",
-    "tripOther": "当时无法预订"
+    "tripOther": "当时无法预订",
+    "distanceKm": "距离 {km} 公里"
   },
   "booking": {
     "heading": "预订餐位",

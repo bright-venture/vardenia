@@ -115,7 +115,8 @@
     "tripClosed": "Closed then",
     "tripParty": "Not for a party of {party}",
     "tripNotice": "Needs more notice",
-    "tripOther": "Cannot be booked then"
+    "tripOther": "Cannot be booked then",
+    "distanceKm": "{km} km away"
   },
   "booking": {
     "heading": "Book a table",

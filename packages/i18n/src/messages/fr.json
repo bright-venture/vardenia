@@ -115,7 +115,8 @@
     "tripClosed": "Fermé à ce moment-là",
     "tripParty": "Pas pour un groupe de {party}",
     "tripNotice": "Demande plus de préavis",
-    "tripOther": "Pas réservable à ce moment-là"
+    "tripOther": "Pas réservable à ce moment-là",
+    "distanceKm": "à {km} km"
   },
   "booking": {
     "heading": "Réserver une table",

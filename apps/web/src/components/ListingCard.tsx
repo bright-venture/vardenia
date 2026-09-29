@@ -9,6 +9,17 @@ import type { TripVerdict } from '../lib/trip-availability'
 import { Plate, Tier } from './ui'
 import { SaveButton } from './SaveButton'
 
+/**
+ * "0.4", "2.4", "18": a decimal only while it tells somebody something.
+ * Latin digits, like every other number the site prints.
+ */
+export function formatKm(km: number): string {
+  return new Intl.NumberFormat('en', {
+    maximumFractionDigits: km < 10 ? 1 : 0,
+    minimumFractionDigits: 0,
+  }).format(Math.max(km, 0.1))
+}
+
 interface Props {
   slug: string
   name: string
@@ -33,6 +44,8 @@ interface Props {
   verdict?: TripVerdict | null
   /** Stay or table, for how the verdict is worded. */
   stay?: boolean
+  /** How far this place is from the listing it is suggested on, when both have coordinates. */
+  distanceKm?: number | null
   locale: Locale
 }
 
@@ -87,6 +100,7 @@ export function ListingCard({
   trip,
   verdict,
   stay = false,
+  distanceKm = null,
   locale,
 }: Props) {
   const t = useTranslations('directory')
@@ -167,8 +181,15 @@ export function ListingCard({
         in print.
       */}
       <div className="mt-4">
-        {place ? (
-          <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">{place}</p>
+        {place || distanceKm !== null ? (
+          <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
+            {/* The distance first: on a suggestion it is the reason it is here. */}
+            {distanceKm !== null ? (
+              <span className="text-gold-700">{t('distanceKm', { km: formatKm(distanceKm) })}</span>
+            ) : null}
+            {distanceKm !== null && place ? ' · ' : null}
+            {place}
+          </p>
         ) : null}
 
         {/* `dir="auto"` on the two fields a person typed. The rest of this
