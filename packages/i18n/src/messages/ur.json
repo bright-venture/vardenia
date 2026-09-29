@@ -374,7 +374,9 @@
     "saved": "محفوظ ہو گیا",
     "brand": "Vardenia",
     "homepage": "ہوم پیج پر جائیں",
-    "perNight": "رات"
+    "perNight": "رات",
+    "whatsappLabel": "WhatsApp پر Vardenia ٹیم سے بات کریں",
+    "whatsappMessage": "السلام علیکم Vardenia، "
   },
   "footer": {
     "discover": "دریافت",

@@ -374,7 +374,9 @@
     "saved": "محفوظ",
     "brand": "فاردينيا",
     "homepage": "الصفحة الرئيسية",
-    "perNight": "ليلة"
+    "perNight": "ليلة",
+    "whatsappLabel": "تواصل مع فريق فاردينيا عبر واتساب",
+    "whatsappMessage": "مرحباً فاردينيا، "
   },
   "footer": {
     "discover": "اكتشف",

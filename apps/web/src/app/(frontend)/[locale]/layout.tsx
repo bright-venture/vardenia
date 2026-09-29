@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
+import { WhatsAppButton } from '../../../components/WhatsAppButton'
 import { SavedProvider } from '../../../components/SavedProvider'
 import { getPathname } from '../../../i18n/routing'
 import { Analytics } from '../../../components/Analytics'
@@ -147,6 +148,8 @@ export default async function FrontendLayout({
             <SiteHeader locale={locale as Locale} />
             <div className="flex-1">{children}</div>
             <SiteFooter locale={locale as Locale} />
+            {/* Renders nothing until NEXT_PUBLIC_WHATSAPP_NUMBER is set. */}
+            <WhatsAppButton />
           </SavedProvider>
         </NextIntlClientProvider>
       </body>

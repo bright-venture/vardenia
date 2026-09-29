@@ -374,7 +374,9 @@
     "saved": "সংরক্ষিত",
     "brand": "Vardenia",
     "homepage": "হোম পেজে যান",
-    "perNight": "রাত"
+    "perNight": "রাত",
+    "whatsappLabel": "WhatsApp-এ Vardenia টিমের সঙ্গে কথা বলুন",
+    "whatsappMessage": "নমস্কার Vardenia, "
   },
   "footer": {
     "discover": "আবিষ্কার",

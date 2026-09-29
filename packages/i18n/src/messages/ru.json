@@ -374,7 +374,9 @@
     "saved": "Сохранено",
     "brand": "Vardenia",
     "homepage": "На главную",
-    "perNight": "ночь"
+    "perNight": "ночь",
+    "whatsappLabel": "Написать команде Vardenia в WhatsApp",
+    "whatsappMessage": "Здравствуйте, Vardenia! "
   },
   "footer": {
     "discover": "Обзор",

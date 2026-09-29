@@ -374,7 +374,9 @@
     "saved": "Salvo",
     "brand": "Vardenia",
     "homepage": "Ir para o início",
-    "perNight": "noite"
+    "perNight": "noite",
+    "whatsappLabel": "Converse com a equipe Vardenia pelo WhatsApp",
+    "whatsappMessage": "Olá Vardenia, "
   },
   "footer": {
     "discover": "Descobrir",

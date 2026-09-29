@@ -374,7 +374,9 @@
     "saved": "已保存",
     "brand": "Vardenia",
     "homepage": "前往首页",
-    "perNight": "晚"
+    "perNight": "晚",
+    "whatsappLabel": "通过 WhatsApp 联系 Vardenia 团队",
+    "whatsappMessage": "您好，Vardenia："
   },
   "footer": {
     "discover": "探索",
