@@ -138,7 +138,14 @@
     "cancellationPolicy": "Cancellation policy",
     "stayDates": "{from} to {to} · {nights, plural, one {1 night} other {# nights}}",
     "venueSaid": "The venue said: \"{reason}\"",
-    "writeReview": "How was it? Write a review"
+    "writeReview": "How was it? Write a review",
+    "promisePay": "Free to book: you pay {venue} directly.",
+    "promisePayWith": "They accept {methods}.",
+    "payCash": "cash",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue} confirms your request, and we email you the answer.",
+    "promiseInstant": "Confirmed straight away, by email.",
+    "promiseReviews": "Reviews here come only from guests who booked."
   },
   "account": {
     "title": "Your account",

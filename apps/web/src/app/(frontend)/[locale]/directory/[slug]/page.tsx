@@ -33,6 +33,7 @@ import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
 import { ReviewForm } from '../../../../../components/ReviewForm'
+import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
 import { listingReviews } from '../../../../../lib/reviews'
 
@@ -661,6 +662,8 @@ export default async function ListingPage({ params }: Params) {
                 businessId={listing.id}
                 rules={listing.booking as never}
                 locale={locale as Locale}
+                venue={listing.name}
+                payments={(listing as { payments?: PaymentsAccepted | null }).payments}
               />
             </div>
           </aside>

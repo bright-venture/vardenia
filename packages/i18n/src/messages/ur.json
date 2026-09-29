@@ -138,7 +138,14 @@
     "cancellationPolicy": "منسوخی کی پالیسی",
     "stayDates": "{from} سے {to} تک · {nights, plural, one {1 رات} other {# راتیں}}",
     "venueSaid": "جگہ کی طرف سے: \"{reason}\"",
-    "writeReview": "تجربہ کیسا رہا؟ جائزہ لکھیں"
+    "writeReview": "تجربہ کیسا رہا؟ جائزہ لکھیں",
+    "promisePay": "بکنگ مفت ہے: آپ ادائیگی براہ راست {venue} کو کرتے ہیں۔",
+    "promisePayWith": "قبول شدہ طریقے: {methods}۔",
+    "payCash": "نقد",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue} آپ کی درخواست کی تصدیق کرتا ہے، اور ہم جواب ای میل کرتے ہیں۔",
+    "promiseInstant": "فوراً تصدیق، ای میل کے ذریعے۔",
+    "promiseReviews": "یہاں جائزے صرف ان مہمانوں کے ہیں جنہوں نے بکنگ کی۔"
   },
   "account": {
     "title": "آپ کا اکاؤنٹ",

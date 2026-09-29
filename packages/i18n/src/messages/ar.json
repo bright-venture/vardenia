@@ -138,7 +138,14 @@
     "cancellationPolicy": "سياسة الإلغاء",
     "stayDates": "من {from} إلى {to} · {nights, plural, one {ليلة واحدة} two {ليلتان} few {# ليالٍ} many {# ليلة} other {# ليلة}}",
     "venueSaid": "قالت المنشأة: «{reason}»",
-    "writeReview": "كيف كانت تجربتك؟ اكتب تقييماً"
+    "writeReview": "كيف كانت تجربتك؟ اكتب تقييماً",
+    "promisePay": "الحجز مجاني: تدفع لـ{venue} مباشرةً.",
+    "promisePayWith": "طرق الدفع المقبولة: {methods}.",
+    "payCash": "نقداً",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "يؤكّد {venue} طلبك، ونرسل لك الرد بالبريد الإلكتروني.",
+    "promiseInstant": "يُؤكَّد الحجز فوراً، بالبريد الإلكتروني.",
+    "promiseReviews": "التقييمات هنا من ضيوف حجزوا فعلاً فقط."
   },
   "account": {
     "title": "حسابك",

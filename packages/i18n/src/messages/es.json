@@ -138,7 +138,14 @@
     "cancellationPolicy": "Política de cancelación",
     "stayDates": "Del {from} al {to} · {nights, plural, one {1 noche} other {# noches}}",
     "venueSaid": "El establecimiento dijo: «{reason}»",
-    "writeReview": "¿Qué tal fue? Escribe una reseña"
+    "writeReview": "¿Qué tal fue? Escribe una reseña",
+    "promisePay": "Reservar es gratis: pagas directamente a {venue}.",
+    "promisePayWith": "Aceptan {methods}.",
+    "payCash": "efectivo",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue} confirma tu solicitud y te enviamos la respuesta por correo.",
+    "promiseInstant": "Confirmada al instante, por correo.",
+    "promiseReviews": "Las reseñas aquí son solo de clientes que reservaron."
   },
   "account": {
     "title": "Tu cuenta",

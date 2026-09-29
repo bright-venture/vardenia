@@ -138,7 +138,14 @@
     "cancellationPolicy": "取消政策",
     "stayDates": "{from} 至 {to} · {nights, plural, other {# 晚}}",
     "venueSaid": "商家说明：“{reason}”",
-    "writeReview": "体验如何？写一条评价"
+    "writeReview": "体验如何？写一条评价",
+    "promisePay": "预订免费：您直接向{venue}付款。",
+    "promisePayWith": "可用付款方式：{methods}。",
+    "payCash": "现金",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue}会确认您的请求，我们会通过邮件告知结果。",
+    "promiseInstant": "即时确认，并以邮件通知。",
+    "promiseReviews": "这里的评价只来自实际预订过的客人。"
   },
   "account": {
     "title": "您的账户",

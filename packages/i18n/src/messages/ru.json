@@ -138,7 +138,14 @@
     "cancellationPolicy": "Политика отмены",
     "stayDates": "С {from} по {to} · {nights, plural, one {# ночь} few {# ночи} many {# ночей} other {# ночи}}",
     "venueSaid": "Заведение сообщило: «{reason}»",
-    "writeReview": "Как всё прошло? Оставьте отзыв"
+    "writeReview": "Как всё прошло? Оставьте отзыв",
+    "promisePay": "Бронирование бесплатно: вы платите {venue} напрямую.",
+    "promisePayWith": "Принимают: {methods}.",
+    "payCash": "наличные",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue} подтверждает запрос, а мы присылаем ответ по почте.",
+    "promiseInstant": "Подтверждается сразу, по почте.",
+    "promiseReviews": "Отзывы здесь оставляют только гости, которые бронировали."
   },
   "account": {
     "title": "Ваш аккаунт",

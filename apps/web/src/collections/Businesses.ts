@@ -179,6 +179,41 @@ export const Businesses: CollectionConfig = {
               index: true,
               options: priceRangeOptions,
             },
+            {
+              /**
+               * How a guest can pay the venue, each a plain yes or no.
+               *
+               * Vardenia never takes the money, so "you pay the venue" is true of
+               * every booking; how is not. Cards are far from universal in
+               * Lebanon, and a guest who arrives with only a card at a cash-only
+               * place has a bad evening. Shown under the Book button only when
+               * at least one is ticked, so an unknown listing says nothing
+               * rather than something wrong. See components/BookingPanel.
+               */
+              name: 'payments',
+              label: 'Payment accepted',
+              type: 'group',
+              admin: {
+                description:
+                  'Tick what the venue accepts. Shown to guests next to the Book button; leave all empty if unknown.',
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'cash', label: 'Cash', type: 'checkbox', defaultValue: false },
+                    {
+                      name: 'card',
+                      label: 'Visa / Mastercard',
+                      type: 'checkbox',
+                      defaultValue: false,
+                    },
+                    { name: 'whish', label: 'Whish', type: 'checkbox', defaultValue: false },
+                    { name: 'omt', label: 'OMT', type: 'checkbox', defaultValue: false },
+                  ],
+                },
+              ],
+            },
           ],
         },
 

@@ -138,7 +138,14 @@
     "cancellationPolicy": "বাতিলকরণ নীতি",
     "stayDates": "{from} থেকে {to} · {nights, plural, one {1 রাত} other {# রাত}}",
     "venueSaid": "প্রতিষ্ঠানটি জানিয়েছে: \"{reason}\"",
-    "writeReview": "কেমন লাগল? একটি রিভিউ লিখুন"
+    "writeReview": "কেমন লাগল? একটি রিভিউ লিখুন",
+    "promisePay": "বুকিং বিনামূল্যে: আপনি সরাসরি {venue}-কে অর্থ দেন।",
+    "promisePayWith": "গ্রহণযোগ্য পেমেন্ট: {methods}।",
+    "payCash": "নগদ",
+    "payCard": "Visa/Mastercard",
+    "promiseConfirm": "{venue} আপনার অনুরোধ নিশ্চিত করে, আর আমরা উত্তর ইমেলে পাঠাই।",
+    "promiseInstant": "সঙ্গে সঙ্গে নিশ্চিত, ইমেলে।",
+    "promiseReviews": "এখানের রিভিউ শুধু সেই অতিথিদের, যাঁরা বুকিং করেছেন।"
   },
   "account": {
     "title": "আপনার অ্যাকাউন্ট",

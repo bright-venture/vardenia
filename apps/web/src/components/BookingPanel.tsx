@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server'
-import type { Locale } from '@vardenia/i18n'
+import { dataLocale, type Locale } from '@vardenia/i18n'
 import { resolveRules, type BookingRules } from '../lib/availability'
 import { bookingFormModel } from '../lib/booking-form'
 import { BookingForm } from './BookingForm'
@@ -17,14 +17,27 @@ import { BookingForm } from './BookingForm'
  * permanently greyed-out form on all of them advertises an absence. The reader
  * of a listing with no booking simply sees a listing.
  */
+/** How a guest can pay the venue, as ticked in the admin. See Businesses `payments`. */
+export interface PaymentsAccepted {
+  cash?: boolean | null
+  card?: boolean | null
+  whish?: boolean | null
+  omt?: boolean | null
+}
+
 export async function BookingPanel({
   businessId,
   rules,
   locale,
+  venue,
+  payments,
 }: {
   businessId: number
   rules: BookingRules | null | undefined
   locale: Locale
+  /** The listing's name, for the promises under the form. */
+  venue: string
+  payments?: PaymentsAccepted | null
 }) {
   /**
    * `enabled` is read through `resolveRules` rather than off the raw group,
@@ -58,6 +71,31 @@ export async function BookingPanel({
     typeof rules?.cancellationPolicy === 'string' ? rules.cancellationPolicy.trim() : ''
 
   /*
+   * What a guest can count on, said where they decide.
+   *
+   * Every one is true by construction, not by hope: Vardenia never takes
+   * payment, so booking is free and the venue is paid directly; whether the
+   * venue confirms or the booking is instant is the listing's own autoConfirm
+   * setting; and reviews can only be written after a booking that happened
+   * (see review-service). The payment line appears only when the venue's
+   * methods are known, because "cards accepted" guessed wrong is worse than
+   * saying nothing.
+   */
+  const instant = (rules as { autoConfirm?: boolean } | null | undefined)?.autoConfirm === true
+  const methods = [
+    payments?.cash ? t('payCash') : null,
+    payments?.card ? t('payCard') : null,
+    payments?.whish ? 'Whish' : null,
+    payments?.omt ? 'OMT' : null,
+  ].filter((method): method is string => Boolean(method))
+  const methodList =
+    methods.length > 0
+      ? new Intl.ListFormat(dataLocale(locale), { style: 'long', type: 'conjunction' }).format(
+          methods,
+        )
+      : null
+
+  /*
    * Square, and it sets no margin of its own.
    *
    * The rounded corners went with the old palette - the design draws every
@@ -75,6 +113,30 @@ export async function BookingPanel({
       <div className="mt-6">
         <BookingForm businessId={businessId} model={model} locale={locale} />
       </div>
+
+      <ul className="border-ink-100 text-ink-700 mt-6 space-y-2 border-t pt-4 text-sm">
+        <li className="flex gap-2">
+          <span aria-hidden className="text-gold-700">
+            ✓
+          </span>
+          <span>
+            {t('promisePay', { venue })}
+            {methodList ? ` ${t('promisePayWith', { methods: methodList })}` : ''}
+          </span>
+        </li>
+        <li className="flex gap-2">
+          <span aria-hidden className="text-gold-700">
+            ✓
+          </span>
+          <span>{instant ? t('promiseInstant') : t('promiseConfirm', { venue })}</span>
+        </li>
+        <li className="flex gap-2">
+          <span aria-hidden className="text-gold-700">
+            ✓
+          </span>
+          <span>{t('promiseReviews')}</span>
+        </li>
+      </ul>
 
       {cancellationPolicy ? (
         <div className="border-ink-100 mt-6 border-t pt-4">
