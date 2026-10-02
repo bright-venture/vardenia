@@ -136,6 +136,97 @@
   }
 }
 
+/* The October 2026 redesign's motion. Each is finished instantly for a reader
+   who asked for less motion, by the blanket rule below: the keyframes end at
+   the resting state, and `forwards` holds it. */
+
+/* The home page cover: navy lifts away like a magazine being opened. */
+@keyframes curtain-lift {
+  to {
+    transform: translateY(-101%);
+  }
+}
+.hero-curtain {
+  animation: curtain-lift 1.2s cubic-bezier(0.7, 0, 0.2, 1) 0.35s forwards;
+}
+
+/* The hero photographs drift slowly while each one holds, alternating
+   direction, and cross-fade between one another. */
+@keyframes hero-drift-a {
+  from {
+    transform: scale(1.02) translate(0, 0);
+  }
+  to {
+    transform: scale(1.11) translate(-1.1%, -0.9%);
+  }
+}
+@keyframes hero-drift-b {
+  from {
+    transform: scale(1.11) translate(1.1%, 0.7%);
+  }
+  to {
+    transform: scale(1.02) translate(0, 0);
+  }
+}
+.hero-drift-a {
+  animation: hero-drift-a 8.5s cubic-bezier(0.3, 0.1, 0.4, 1) forwards;
+}
+.hero-drift-b {
+  animation: hero-drift-b 8.5s cubic-bezier(0.3, 0.1, 0.4, 1) forwards;
+}
+.hero-fade {
+  transition: opacity 1.6s ease-out;
+}
+
+/* Gold figures that catch a sweep of light once, when they come into view. */
+.shimmer-text {
+  background-image: linear-gradient(
+    105deg,
+    theme('colors.gold.500') 38%,
+    theme('colors.gold.300') 50%,
+    theme('colors.gold.500') 62%
+  );
+  background-size: 300% 100%;
+  background-position: 120% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.shimmer-text.is-shining {
+  animation: shimmer-sweep 1.8s cubic-bezier(0.4, 0, 0.3, 1) forwards;
+}
+@keyframes shimmer-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+/* The QR arrival screen's progress hairline. */
+@keyframes qr-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* One word of an Arabic heading set in gold, the flourish other scripts get
+   from italics. Unstyled in every other language. See components/Accent. */
+.em-ar {
+  font-style: normal;
+}
+html[lang='ar'] .em-ar {
+  color: theme('colors.gold.500');
+  font-weight: 600;
+}
+html[lang='ar'] .em-ar.on-dark {
+  color: theme('colors.gold.300');
+}
+
 /* Anyone who has asked their system for less movement gets the finished state
    immediately rather than a faster version of the same motion. `animation:
    none` on an element whose opacity starts at 0 would leave it invisible, which

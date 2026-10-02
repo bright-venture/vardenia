@@ -1,144 +1,170 @@
 'use client'
 
 /**
- * The masthead's film: five Lebanon clips, cross-faded on a timer.
+ * The masthead's moving picture: the film once, then a tour of Lebanon.
  *
- * # Why a timer, and not scroll
+ * The approved film plays a single time. When it ends (or cannot play at all,
+ * because autoplay is blocked or the codec is missing) it fades into a slow
+ * sequence of photographs, coast to Beqaa, each held for six seconds with a
+ * gentle drift and captioned with where it is and who took it. That is the
+ * designer's arrangement from the October 2026 redesign.
  *
- * The commissioned prototype drove the clips from scroll position. That is the
- * behaviour the designer asked us to drop: scrubbing a video with the scrollbar
- * makes it jump and restart as the page moves. So the sequence advances on its
- * own clock here and reads nothing from scroll at all - it plays straight
- * through whether the reader is moving or still, and can never restart under
- * them.
+ * # What loads, and when
  *
- * # Why it is the one client island in the masthead
+ * The server renders the film's poster underneath as a priority image, so the
+ * first paint never waits for any of this. The photographs are not mounted
+ * until the film is a few seconds from its end: six full-width pictures on a
+ * phone connection would otherwise compete with the film they are waiting for.
+ * Phones get the smaller encode of the film through the `media` attribute on
+ * its first source.
  *
- * Everything else in the hero is server-rendered; only the crossfade needs
- * state and a timer, so only this is a client component. It renders the video
- * layers over the server-rendered poster (which is the LCP) and the gradients
- * sit over the top of it - see components/home/Hero for the stack.
+ * # Less motion
  *
- * # Only two clips ever decode at once
- *
- * The current clip and the one after it are played; everything else is paused
- * once the crossfade finishes. Priming the next clip a whole hold-length before
- * it is shown means the switch is a fade between two already-playing videos
- * rather than a fade into a black frame that is still buffering. Pausing never
- * resets a video, so a clip resumes where it left off when the loop comes back
- * around.
- *
- * # Reduced motion
- *
- * A reader who asked their system for less movement gets no timer, no autoplay
- * and no video: the `.hero-video` rule in globals.css removes the elements, and
- * the poster underneath is what stays. The effects below bail out for the same
- * reason, so no clip is ever told to play.
+ * A reader who asked their system for less movement gets the first photograph,
+ * still, and no film. The preference is read through `useSyncExternalStore`, so
+ * the server and the first client render agree (motion on) and the switch
+ * happens as an ordinary update rather than a hydration mismatch.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
-/**
- * The sequence, ordered light-first for load weight.
- *
- * The sea clip is the designer's opener and its still is the poster, but it is
- * also 10MB against 0.4-1.2MB for the others. Leading with it meant the first
- * thing the page streamed was that 10MB, on the masthead of the busiest page.
- * So the light clips lead and sea plays last: by the time the cycle reaches it -
- * four holds, near half a minute in - a reader either left long ago or is
- * plainly staying, and its weight is theirs to spend rather than everyone's on
- * arrival. The poster (see components/home/Hero) is a still of this first clip,
- * so the first frame painted and the first frame played are the same.
- */
-const CLIPS = [
-  '/videos/hero-mountain.mp4',
-  '/videos/hero-waterfall.mp4',
-  '/videos/hero-coast.mp4',
-  '/videos/hero-cross.mp4',
-  '/videos/hero-sea.mp4',
-]
-
-/** How long each clip holds before the crossfade to the next begins. */
-const HOLD_MS = 7000
-/** Must match the `duration-1000` on the layers below. */
-const FADE_MS = 1000
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-/**
- * How eagerly the browser may fetch each clip before it is played.
- *
- * The first clip is `auto`: it plays the moment the page settles, and its still
- * is the poster, so it is worth having ready. The rest carry `metadata` and
- * buffer during the seven seconds the clip before them holds - all except the
- * sea clip, which is `none`.
- *
- * Sea is ~10MB against 0.4-1.2MB for the others, and `metadata` is not the small
- * fetch it sounds like: a reader has to reach an MP4's moov atom to read the
- * metadata, and if the file was not written front-loaded the browser pulls a
- * large slice of those ten megabytes to find it - on page load, for a clip that
- * does not show for nearly half a minute. `none` fetches nothing until the
- * sequence primes it a hold before its turn, which is when it was going to
- * buffer anyway.
- */
-const preloadFor = (src: string, index: number): 'auto' | 'metadata' | 'none' => {
-  if (index === 0) return 'auto'
-  if (src.includes('hero-sea')) return 'none'
-  return 'metadata'
+export interface HeroSlide {
+  /** File stem in /public/hero, for example `beirut`. */
+  base: string
+  place: string
+  note: string
+  credit: string
 }
 
-export function HeroFilm() {
-  const [active, setActive] = useState(0)
-  const videos = useRef<(HTMLVideoElement | null)[]>([])
+const FILM = {
+  desktop: '/hero/hero-film.mp4',
+  mobile: '/hero/hero-film-m.mp4',
+  poster: '/hero/film-poster.webp',
+}
 
-  // The clock. One interval, advancing the active clip and wrapping around.
+/** How long each photograph holds before the next fades in. */
+const SLIDE_MS = 6000
+/** Mount the photographs this long before the film ends, so the first is ready. */
+const PRELOAD_BEFORE_END_S = 5
+
+const MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+const subscribeMotion = (onChange: () => void) => {
+  const query = window.matchMedia(MOTION_QUERY)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+const readReduced = () => window.matchMedia(MOTION_QUERY).matches
+const serverReduced = () => false
+
+export function HeroFilm({ slides, photoBy }: { slides: HeroSlide[]; photoBy: string }) {
+  const reduced = useSyncExternalStore(subscribeMotion, readReduced, serverReduced)
+  const film = useRef<HTMLVideoElement | null>(null)
+
+  const [filmEnded, setFilmEnded] = useState(false)
+  const [stillsMounted, setStillsMounted] = useState(false)
+  const [shown, setShown] = useState(0)
+
+  const filmDone = reduced || filmEnded
+  const showStills = reduced || stillsMounted || filmEnded
+
   useEffect(() => {
-    if (prefersReducedMotion()) return
-    const id = setInterval(() => setActive((prev) => (prev + 1) % CLIPS.length), HOLD_MS)
-    return () => clearInterval(id)
-  }, [])
+    if (reduced) return
+    const video = film.current
+    if (!video) return
 
-  // Play the current clip and prime the next; pause the rest once the fade ends.
-  useEffect(() => {
-    if (prefersReducedMotion()) return
-    const next = (active + 1) % CLIPS.length
-
-    for (const i of [active, next]) {
-      const v = videos.current[i]
-      if (v?.paused) v.play().catch(() => {})
+    const finish = () => setFilmEnded(true)
+    const nearEnd = () => {
+      if (
+        Number.isFinite(video.duration) &&
+        video.currentTime > video.duration - PRELOAD_BEFORE_END_S
+      ) {
+        setStillsMounted(true)
+      }
     }
 
-    const timeout = setTimeout(() => {
-      videos.current.forEach((v, i) => {
-        if (i !== active && i !== next && v && !v.paused) v.pause()
-      })
-    }, FADE_MS + 200)
+    video.addEventListener('ended', finish)
+    video.addEventListener('error', finish)
+    video.addEventListener('timeupdate', nearEnd)
+    // Autoplay refused (a data-saver mode, a strict browser): go straight to
+    // the photographs rather than leaving a frozen first frame.
+    video.play().catch(finish)
 
-    return () => clearTimeout(timeout)
-  }, [active])
+    return () => {
+      video.removeEventListener('ended', finish)
+      video.removeEventListener('error', finish)
+      video.removeEventListener('timeupdate', nearEnd)
+    }
+  }, [reduced])
+
+  useEffect(() => {
+    if (reduced || !filmEnded) return
+    const id = window.setInterval(() => setShown((s) => (s + 1) % slides.length), SLIDE_MS)
+    return () => window.clearInterval(id)
+  }, [reduced, filmEnded, slides.length])
+
+  const current = reduced ? 0 : shown
+  const caption = slides[current]
 
   return (
     <>
-      {CLIPS.map((src, i) => (
+      {showStills
+        ? slides.map((slide, i) => {
+            const visible = filmDone && i === current
+            return (
+              <Image
+                key={slide.base}
+                src={`/hero/${slide.base}.webp`}
+                alt={i === 0 ? `${slide.place}, ${slide.note}` : ''}
+                aria-hidden={i === 0 ? undefined : true}
+                fill
+                sizes="100vw"
+                quality={70}
+                className={[
+                  'hero-fade -z-10 object-cover',
+                  visible && !reduced ? (i % 2 === 0 ? 'hero-drift-a' : 'hero-drift-b') : '',
+                ].join(' ')}
+                style={{ opacity: visible ? 1 : 0 }}
+              />
+            )
+          })
+        : null}
+
+      {reduced ? null : (
         <video
-          key={src}
-          ref={(el) => {
-            videos.current[i] = el
-          }}
-          className="hero-video absolute inset-0 -z-10 h-full w-full object-cover transition-opacity duration-1000"
-          style={{ opacity: i === active ? 1 : 0 }}
+          ref={film}
+          className="hero-video hero-fade pointer-events-none absolute inset-0 -z-10 h-full w-full object-cover"
+          style={{ opacity: filmEnded ? 0 : 1 }}
           muted
-          loop
           playsInline
-          // See preloadFor: first clip eager, sea fetched only when primed, the
-          // rest metadata until their turn comes round.
-          preload={preloadFor(src, i)}
+          preload="auto"
+          poster={FILM.poster}
           aria-hidden
         >
-          <source src={src} type="video/mp4" />
+          <source src={FILM.mobile} type="video/mp4" media="(max-width: 767px)" />
+          <source src={FILM.desktop} type="video/mp4" />
         </video>
-      ))}
+      )}
+
+      {/*
+        Where this photograph is, once the film has handed over. Keyed on the
+        slide so each caption rises in with its picture; polite, so a screen
+        reader hears the place without being interrupted.
+      */}
+      {filmDone && caption ? (
+        <div
+          key={current}
+          aria-live="polite"
+          className="absolute bottom-6 end-24 max-w-[60vw] animate-[rise_1.4s_cubic-bezier(0,0,0,1)_0.15s_both] text-end lg:end-28"
+        >
+          <p className="text-surface-base/85 font-mono text-[10px] uppercase tracking-[0.2em]">
+            {caption.place}
+          </p>
+          <p className="text-surface-base/55 mt-1 text-[11px] leading-snug">
+            {caption.note} · {photoBy} {caption.credit} / Pexels
+          </p>
+        </div>
+      ) : null}
     </>
   )
 }

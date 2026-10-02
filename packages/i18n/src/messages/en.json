@@ -23,11 +23,11 @@
     "contactNote": "Write to the Vardenia team"
   },
   "home": {
-    "eyebrow": "Issue 01, Beirut and Mount Lebanon",
-    "headlineA": "The places",
-    "headlineB": "worth the",
-    "headlineEmphasis": "drive",
-    "intro": "Lebanon's tourism and lifestyle guide. Every place here is visited before it is printed, and every printed page carries a code that brings you back to this.",
+    "eyebrow": "Discover Lebanon",
+    "headlineA": "One Lebanon.",
+    "headlineB": "Endless",
+    "headlineEmphasis": "discoveries.",
+    "intro": "Places to stay, flavours to discover and experiences to remember, from the coast to the mountains and across the Beqaa.",
     "browse": "Browse the directory",
     "read": "Read the magazine",
     "sectionsEyebrow": "Where to start",
@@ -46,7 +46,7 @@
     "businessTitle": "Do you run somewhere in Lebanon?",
     "businessBody": "Getting listed starts with a visit. We handle the writing, the photography and the QR code that goes on your table cards.",
     "addBusiness": "Add your business",
-    "searchPlaceholder": "Search hotels, restaurants, experiences...",
+    "searchPlaceholder": "Search a place, region or experience...",
     "searchAction": "Search",
     "statsPlaces": "places",
     "statsSections": "sections",
@@ -63,7 +63,73 @@
     "printImageAlt": "A printed Vardenia issue open on a table",
     "featuredEyebrow": "Featured",
     "featuredTitle": "Places worth the detour",
-    "featuredNote": "Chosen by the venues who back this guide."
+    "featuredNote": "Chosen by the venues who back this guide.",
+    "heroPhotoBy": "Photo",
+    "heroSlides": [
+      {
+        "place": "Beirut",
+        "note": "The waterfront at dusk"
+      },
+      {
+        "place": "Byblos",
+        "note": "The crusader castle above the old town"
+      },
+      {
+        "place": "Bsharri",
+        "note": "A hilltop church over the Qadisha valley"
+      },
+      {
+        "place": "Baalbek",
+        "note": "The columns of Jupiter, Beqaa Valley"
+      },
+      {
+        "place": "Sidon",
+        "note": "The Sea Castle at sunset"
+      },
+      {
+        "place": "Harissa",
+        "note": "Jounieh bay from the mountain"
+      }
+    ],
+    "manifestoAccent": "trust",
+    "statsIssue": "issue, at the printer",
+    "codeEyebrow": "The code, shown",
+    "codeTitle": "Paper to place in three seconds",
+    "codeSteps": [
+      {
+        "title": "The printed code",
+        "sub": "Every place in the magazine carries a code on its page, and on the table cards venues set out."
+      },
+      {
+        "title": "The scan",
+        "sub": "Point a phone at it. No app and no typing: the camera is enough."
+      },
+      {
+        "title": "The listing, live",
+        "sub": "The place opens with its hours as they are today, not as they were the day it was printed."
+      }
+    ],
+    "codeEnd": "Every code resolves. Permanently.",
+    "codeOpen": "Open this place",
+    "codeBook": "Get directions",
+    "issueCodeLabel": "A live printed code",
+    "verifiedEyebrow": "The mark, explained",
+    "verifiedTitle": "What “Verified” means",
+    "verifiedNote": "Some listings carry a small mark: Verified by Vardenia. This is what it takes to earn it.",
+    "verifiedSteps": [
+      {
+        "title": "Someone goes there",
+        "sub": "A member of the Vardenia team visits the place in person before the mark is added."
+      },
+      {
+        "title": "The page is checked",
+        "sub": "What the listing says, from the address to the opening hours, is compared with what is there."
+      },
+      {
+        "title": "Only then, the mark",
+        "sub": "An admin adds it after the visit. No tier and no payment can buy it."
+      }
+    ]
   },
   "directory": {
     "searchPlaceholder": "Search hotels, restaurants, experiences...",

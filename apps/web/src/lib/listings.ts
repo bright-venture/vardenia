@@ -810,6 +810,39 @@ export async function countBySubcategory({
  * would otherwise return zero. Cached on the same hour the rest of the homepage
  * is, so it is one extra round trip to Frankfurt per hour, not per view.
  */
+/**
+ * The active printed code of each listing given, for the home page's "In print"
+ * block and scan sequence, which show one real code that resolves.
+ *
+ * `overrideAccess` because the QR collection is staff-only to read (it holds
+ * redirect targets and scan counts). Only the code string leaves here, and that
+ * string is printed in the magazine for anyone to read.
+ */
+export async function printedCodes(businessIds: number[]): Promise<Map<number, string>> {
+  const codes = new Map<number, string>()
+  if (businessIds.length === 0) return codes
+
+  const payload = await client()
+  const result = await payload
+    .find({
+      collection: 'qr-codes',
+      where: { and: [{ business: { in: businessIds } }, { active: { equals: true } }] },
+      depth: 0,
+      limit: businessIds.length * 2,
+      pagination: false,
+      overrideAccess: true,
+      select: { code: true, business: true },
+    })
+    .catch(() => null)
+
+  for (const doc of result?.docs ?? []) {
+    const business = doc.business
+    const id = typeof business === 'object' && business !== null ? business.id : business
+    if (typeof id === 'number' && doc.code && !codes.has(id)) codes.set(id, doc.code)
+  }
+  return codes
+}
+
 export async function countCodes(): Promise<number> {
   const run = async () => {
     const payload = await client()

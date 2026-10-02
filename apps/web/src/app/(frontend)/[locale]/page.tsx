@@ -1,21 +1,28 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { FEATURED_PLACES } from '@vardenia/core'
-import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
+import { FEATURED_PLACES, SECTIONS } from '@vardenia/core'
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { Hero } from '../../../components/home/Hero'
 import { SectionIndex } from '../../../components/home/SectionIndex'
 import { Manifesto } from '../../../components/home/Manifesto'
-import { PrintInterlude } from '../../../components/home/PrintInterlude'
+import { ScanSequence, type ScanListing } from '../../../components/home/ScanSequence'
+import { InPrint } from '../../../components/home/InPrint'
+import { Verified } from '../../../components/home/Verified'
+import { NumbersBand } from '../../../components/home/NumbersBand'
+import { resolvePhotograph } from '../../../lib/media'
+import { placeLabel } from '../../../lib/labels'
 import { RegionIndex } from '../../../components/home/RegionIndex'
 import { ArticleCard } from '../../../components/ArticleCard'
+import { Accent } from '../../../components/Accent'
 import { ListingGrid } from '../../../components/ListingGrid'
 import { Band, ButtonLink } from '../../../components/ui'
 import {
   countCodes,
   findFeaturedListings,
   findListings,
+  printedCodes,
   type ListingSummary,
 } from '../../../lib/listings'
 import { findArticles } from '../../../lib/articles'
@@ -126,6 +133,28 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     countCodes(),
   ])
 
+  /**
+   * The listing the scan sequence opens, and whose printed code "In print"
+   * shows: the first on the page that has both a photograph and a code, so the
+   * phone shows a real place and the code really resolves to it.
+   */
+  const pictured = [...featured, ...(listings.docs as ListingSummary[])].filter((doc) =>
+    resolvePhotograph(doc.heroImage as never),
+  )
+  const codesById = await printedCodes(pictured.map((doc) => doc.id))
+  const scanDoc = pictured.find((doc) => codesById.has(doc.id))
+  const scanCode = scanDoc ? (codesById.get(scanDoc.id) ?? null) : null
+  const scanListing: ScanListing | null = scanDoc
+    ? {
+        name: scanDoc.name ?? '',
+        slug: scanDoc.slug ?? '',
+        place: placeLabel(scanDoc.governorate, scanDoc.district, locale as Locale) || null,
+        tagline: scanDoc.tagline ?? null,
+        image: resolvePhotograph(scanDoc.heroImage as never)?.src ?? null,
+      }
+    : null
+  const codeSteps = t.raw('codeSteps') as { title: string; sub: string }[]
+
   return (
     <main>
       {/* The place count is already in hand from the query above; the code count
@@ -180,6 +209,35 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         />
       </Band>
 
+      {/* The redesign's middle run: the dark pause, the scan, the issue with a
+          live code, what the Verified mark means, and the figures in gold. */}
+      <Manifesto />
+
+      {scanListing ? (
+        <ScanSequence
+          label={t('codeEyebrow')}
+          title={t('codeTitle')}
+          steps={codeSteps}
+          end={t('codeEnd')}
+          openLabel={t('codeOpen')}
+          bookLabel={t('codeBook')}
+          listing={scanListing}
+        />
+      ) : null}
+
+      <InPrint code={scanCode} />
+
+      <Verified />
+
+      <NumbersBand
+        figures={[
+          [listings.totalDocs.toLocaleString('en-US'), t('statsPlaces')],
+          [String(SECTIONS.length).padStart(2, '0'), t('statsSections')],
+          [codes.toLocaleString('en-US'), t('statsCodes')],
+          ['01', t('statsIssue')],
+        ]}
+      />
+
       {/* Removed entirely rather than shown empty. A "From the magazine"
           heading with nothing under it advertises an absence. */}
       {articles.docs.length > 0 ? (
@@ -216,14 +274,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Band>
       ) : null}
 
-      {/* The dark pause, then the print interlude - the redesign's order. Two
-          navy bands in a row is deliberate here: the manifesto is a bare
-          sentence and the interlude an argument with a picture, so they read as
-          a claim and its evidence rather than as one long dark tail. */}
-      <Manifesto />
-
-      <PrintInterlude />
-
       {/* The region index closes the dark run and hands the reader somewhere to
           go, on its own photographic ground rather than a third flat band. */}
       <RegionIndex locale={locale} eyebrow={t('regionsEyebrow')} title={t('regionsTitle')} />
@@ -235,7 +285,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <section className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <div className="border-ink-100 grid items-center gap-8 border p-10 lg:grid-cols-[1fr_auto] lg:p-14">
           <div>
-            <h2 className="text-ink-900 text-2xl sm:text-3xl lg:text-4xl">{t('businessTitle')}</h2>
+            <h2 className="text-ink-900 text-2xl sm:text-3xl lg:text-4xl">
+              <Accent text={t('businessTitle')} accent="مكاناً" />
+            </h2>
             <p className="text-ink-500 mt-4 max-w-xl leading-relaxed">{t('businessBody')}</p>
           </div>
           <ButtonLink href="/add-your-business" variant="gold" size="lg" className="shrink-0">

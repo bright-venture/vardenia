@@ -23,11 +23,11 @@
     "contactNote": "联系 Vardenia 团队"
   },
   "home": {
-    "eyebrow": "第 01 期，贝鲁特与黎巴嫩山",
-    "headlineA": "值得",
-    "headlineB": "专程前往的",
-    "headlineEmphasis": "地方",
-    "intro": "黎巴嫩旅游与生活方式指南。这里的每个地方在付印前都经过实地探访，每一张印刷页面都带有一个把您带回此处的代码。",
+    "eyebrow": "发现黎巴嫩",
+    "headlineA": "一个黎巴嫩，",
+    "headlineB": "无尽的",
+    "headlineEmphasis": "发现。",
+    "intro": "住宿之处、待尝的风味与难忘的体验，从海岸到群山，再到贝卡谷地。",
     "browse": "浏览名录",
     "read": "阅读杂志",
     "sectionsEyebrow": "从何处开始",
@@ -46,7 +46,7 @@
     "businessTitle": "您在黎巴嫩经营场所吗？",
     "businessBody": "收录始于一次探访。文字、摄影以及印在您餐桌卡片上的二维码，都由我们负责。",
     "addBusiness": "添加您的商户",
-    "searchPlaceholder": "搜索酒店、餐厅、体验……",
+    "searchPlaceholder": "搜索地点、地区或体验...",
     "searchAction": "搜索",
     "statsPlaces": "个地点",
     "statsSections": "个板块",
@@ -63,7 +63,73 @@
     "printImageAlt": "一本翻开摊在桌上的 Vardenia 印刷刊",
     "featuredEyebrow": "精选",
     "featuredTitle": "值得专程前往",
-    "featuredNote": "由支持本指南的场所甄选。"
+    "featuredNote": "由支持本指南的场所甄选。",
+    "heroPhotoBy": "摄影",
+    "heroSlides": [
+      {
+        "place": "贝鲁特",
+        "note": "黄昏时的海滨"
+      },
+      {
+        "place": "比布鲁斯",
+        "note": "老城之上的十字军城堡"
+      },
+      {
+        "place": "卜舍里",
+        "note": "俯瞰卡迪沙谷地的山顶教堂"
+      },
+      {
+        "place": "巴勒贝克",
+        "note": "朱庇特神庙的石柱，贝卡谷地"
+      },
+      {
+        "place": "赛达",
+        "note": "日落时的海上城堡"
+      },
+      {
+        "place": "哈里萨",
+        "note": "从山上眺望朱尼耶海湾"
+      }
+    ],
+    "manifestoAccent": "信赖",
+    "statsIssue": "期，正在付印",
+    "codeEyebrow": "代码如何运作",
+    "codeTitle": "三秒，从纸页到现场",
+    "codeSteps": [
+      {
+        "title": "印刷的代码",
+        "sub": "杂志中的每个地点都在其页面上印有代码，场所摆放的桌卡上也有。"
+      },
+      {
+        "title": "扫描",
+        "sub": "用手机对准即可。无需应用，无需输入：相机就够了。"
+      },
+      {
+        "title": "实时页面",
+        "sub": "打开的是今天的营业时间，而不是印刷那天的。"
+      }
+    ],
+    "codeEnd": "每个代码都有效，永久如此。",
+    "codeOpen": "打开这个地点",
+    "codeBook": "获取路线",
+    "issueCodeLabel": "一个有效的印刷代码",
+    "verifiedEyebrow": "标记说明",
+    "verifiedTitle": "“已核实”是什么意思",
+    "verifiedNote": "部分地点带有一个小标记：经 Vardenia 核实。以下是获得它的条件。",
+    "verifiedSteps": [
+      {
+        "title": "我们亲自到访",
+        "sub": "在添加标记之前，Vardenia 团队成员会亲自到访该地点。"
+      },
+      {
+        "title": "核对页面",
+        "sub": "页面上的信息，从地址到营业时间，都会与实际情况核对。"
+      },
+      {
+        "title": "之后才有标记",
+        "sub": "由管理员在到访后添加。任何套餐或付费都无法买到它。"
+      }
+    ]
   },
   "directory": {
     "searchPlaceholder": "搜索酒店、餐厅、体验……",

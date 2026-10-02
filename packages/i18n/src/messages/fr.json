@@ -23,11 +23,11 @@
     "contactNote": "Écrivez à l'équipe Vardenia"
   },
   "home": {
-    "eyebrow": "Numéro 01, Beyrouth et le Mont-Liban",
-    "headlineA": "Les lieux",
-    "headlineB": "qui valent",
-    "headlineEmphasis": "le détour",
-    "intro": "Le guide du tourisme et de l'art de vivre au Liban. Chaque lieu est visité avant d'être imprimé, et chaque page imprimée porte un code qui vous ramène ici.",
+    "eyebrow": "Découvrir le Liban",
+    "headlineA": "Un seul Liban.",
+    "headlineB": "Des découvertes",
+    "headlineEmphasis": "sans fin.",
+    "intro": "Des lieux où séjourner, des saveurs à découvrir et des expériences à retenir, de la côte aux montagnes et jusqu'à la Békaa.",
     "browse": "Parcourir l'annuaire",
     "read": "Lire le magazine",
     "sectionsEyebrow": "Par où commencer",
@@ -46,7 +46,7 @@
     "businessTitle": "Vous tenez un établissement au Liban ?",
     "businessBody": "Une inscription commence par une visite. Nous nous occupons de la rédaction, de la photographie et du code QR qui figure sur vos chevalets de table.",
     "addBusiness": "Ajouter votre établissement",
-    "searchPlaceholder": "Rechercher hôtels, restaurants, expériences...",
+    "searchPlaceholder": "Rechercher un lieu, une région, une expérience...",
     "searchAction": "Rechercher",
     "statsPlaces": "lieux",
     "statsSections": "sections",
@@ -63,7 +63,73 @@
     "printImageAlt": "Un numéro imprimé de Vardenia ouvert sur une table",
     "featuredEyebrow": "À la une",
     "featuredTitle": "Des adresses qui valent le détour",
-    "featuredNote": "Choisies par les établissements qui soutiennent ce guide."
+    "featuredNote": "Choisies par les établissements qui soutiennent ce guide.",
+    "heroPhotoBy": "Photo",
+    "heroSlides": [
+      {
+        "place": "Beyrouth",
+        "note": "Le front de mer au crépuscule"
+      },
+      {
+        "place": "Byblos",
+        "note": "Le château des croisés au-dessus de la vieille ville"
+      },
+      {
+        "place": "Bcharré",
+        "note": "Une église perchée au-dessus de la vallée de la Qadisha"
+      },
+      {
+        "place": "Baalbek",
+        "note": "Les colonnes de Jupiter, plaine de la Békaa"
+      },
+      {
+        "place": "Saïda",
+        "note": "Le château de la Mer au coucher du soleil"
+      },
+      {
+        "place": "Harissa",
+        "note": "La baie de Jounieh vue de la montagne"
+      }
+    ],
+    "manifestoAccent": "fier",
+    "statsIssue": "numéro, à l'impression",
+    "codeEyebrow": "Le code, en pratique",
+    "codeTitle": "Du papier au lieu en trois secondes",
+    "codeSteps": [
+      {
+        "title": "Le code imprimé",
+        "sub": "Chaque lieu du magazine porte un code sur sa page, et sur les chevalets de table que les établissements installent."
+      },
+      {
+        "title": "Le scan",
+        "sub": "Pointez votre téléphone. Pas d'application, rien à taper : l'appareil photo suffit."
+      },
+      {
+        "title": "La fiche, à jour",
+        "sub": "Le lieu s'ouvre avec ses horaires d'aujourd'hui, pas ceux du jour de l'impression."
+      }
+    ],
+    "codeEnd": "Chaque code fonctionne. Pour toujours.",
+    "codeOpen": "Ouvrir ce lieu",
+    "codeBook": "Itinéraire",
+    "issueCodeLabel": "Un code imprimé, actif",
+    "verifiedEyebrow": "La mention, expliquée",
+    "verifiedTitle": "Ce que veut dire « Vérifié »",
+    "verifiedNote": "Certaines fiches portent une petite mention : Vérifié par Vardenia. Voici ce qu'il faut pour l'obtenir.",
+    "verifiedSteps": [
+      {
+        "title": "Quelqu'un s'y rend",
+        "sub": "Un membre de l'équipe Vardenia visite le lieu en personne avant d'ajouter la mention."
+      },
+      {
+        "title": "La fiche est contrôlée",
+        "sub": "Ce que dit la fiche, de l'adresse aux horaires, est comparé à ce qui existe sur place."
+      },
+      {
+        "title": "Alors seulement, la mention",
+        "sub": "Un administrateur l'ajoute après la visite. Aucune formule ni aucun paiement ne permet de l'acheter."
+      }
+    ]
   },
   "directory": {
     "searchPlaceholder": "Rechercher hôtels, restaurants, expériences...",

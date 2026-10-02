@@ -23,11 +23,11 @@
     "contactNote": "Escribe al equipo de Vardenia"
   },
   "home": {
-    "eyebrow": "Número 01, Beirut y el Monte Líbano",
-    "headlineA": "Los lugares",
-    "headlineB": "que valen",
-    "headlineEmphasis": "el viaje",
-    "intro": "La guía de turismo y estilo de vida del Líbano. Cada lugar se visita antes de imprimirse, y cada página impresa lleva un código que te trae de vuelta aquí.",
+    "eyebrow": "Descubre el Líbano",
+    "headlineA": "Un Líbano.",
+    "headlineB": "Descubrimientos",
+    "headlineEmphasis": "sin fin.",
+    "intro": "Lugares donde alojarse, sabores por descubrir y experiencias para recordar, de la costa a las montañas y por toda la Bekaa.",
     "browse": "Explorar el directorio",
     "read": "Leer la revista",
     "sectionsEyebrow": "Por dónde empezar",
@@ -46,7 +46,7 @@
     "businessTitle": "¿Tienes un establecimiento en el Líbano?",
     "businessBody": "Aparecer empieza con una visita. Nosotros nos encargamos del texto, la fotografía y el código QR que va en tus tarjetas de mesa.",
     "addBusiness": "Añade tu negocio",
-    "searchPlaceholder": "Buscar hoteles, restaurantes, experiencias...",
+    "searchPlaceholder": "Busca un lugar, una región o una experiencia...",
     "searchAction": "Buscar",
     "statsPlaces": "lugares",
     "statsSections": "secciones",
@@ -63,7 +63,73 @@
     "printImageAlt": "Un número impreso de Vardenia abierto sobre una mesa",
     "featuredEyebrow": "Destacados",
     "featuredTitle": "Lugares que merecen el desvío",
-    "featuredNote": "Elegidos por los locales que apoyan esta guía."
+    "featuredNote": "Elegidos por los locales que apoyan esta guía.",
+    "heroPhotoBy": "Foto",
+    "heroSlides": [
+      {
+        "place": "Beirut",
+        "note": "El paseo marítimo al anochecer"
+      },
+      {
+        "place": "Biblos",
+        "note": "El castillo de los cruzados sobre el casco antiguo"
+      },
+      {
+        "place": "Bsharri",
+        "note": "Una iglesia en lo alto sobre el valle de Qadisha"
+      },
+      {
+        "place": "Baalbek",
+        "note": "Las columnas de Júpiter, valle de la Bekaa"
+      },
+      {
+        "place": "Sidón",
+        "note": "El Castillo del Mar al atardecer"
+      },
+      {
+        "place": "Harissa",
+        "note": "La bahía de Yunieh desde la montaña"
+      }
+    ],
+    "manifestoAccent": "confiar",
+    "statsIssue": "número, en imprenta",
+    "codeEyebrow": "El código, en acción",
+    "codeTitle": "Del papel al lugar en tres segundos",
+    "codeSteps": [
+      {
+        "title": "El código impreso",
+        "sub": "Cada lugar de la revista lleva un código en su página y en las tarjetas de mesa que ponen los locales."
+      },
+      {
+        "title": "El escaneo",
+        "sub": "Apunta con el móvil. Sin app y sin escribir: basta con la cámara."
+      },
+      {
+        "title": "La ficha, al día",
+        "sub": "El lugar se abre con su horario de hoy, no con el del día en que se imprimió."
+      }
+    ],
+    "codeEnd": "Cada código funciona. Para siempre.",
+    "codeOpen": "Abrir este lugar",
+    "codeBook": "Cómo llegar",
+    "issueCodeLabel": "Un código impreso, activo",
+    "verifiedEyebrow": "La marca, explicada",
+    "verifiedTitle": "Qué significa «Verificado»",
+    "verifiedNote": "Algunas fichas llevan una pequeña marca: Verificado por Vardenia. Esto es lo que hace falta para obtenerla.",
+    "verifiedSteps": [
+      {
+        "title": "Alguien va",
+        "sub": "Un miembro del equipo de Vardenia visita el lugar en persona antes de añadir la marca."
+      },
+      {
+        "title": "Se revisa la ficha",
+        "sub": "Lo que dice la ficha, de la dirección al horario, se compara con lo que hay."
+      },
+      {
+        "title": "Solo entonces, la marca",
+        "sub": "La añade un administrador después de la visita. Ningún plan ni pago puede comprarla."
+      }
+    ]
   },
   "directory": {
     "searchPlaceholder": "Buscar hoteles, restaurantes, experiencias...",
