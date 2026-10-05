@@ -1,5 +1,11 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
+import {
+  CUSTOMER_COLLECTION,
+  isAdmin,
+  isStaff,
+  isStaffFieldLevel,
+  selfOrStaff,
+} from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 import { closeRatherThanDelete } from '../hooks/closeRatherThanDelete'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
@@ -99,9 +105,9 @@ export const Customers: CollectionConfig = {
      * their own row and no way to page past it - not a full list they were
      * merely not shown.
      */
-    read: selfOrStaff,
+    read: selfOrStaff(CUSTOMER_COLLECTION),
     create: isStaff,
-    update: selfOrStaff,
+    update: selfOrStaff(CUSTOMER_COLLECTION),
 
     /**
      * Admin only, and it does not do what the word says. See the beforeDelete

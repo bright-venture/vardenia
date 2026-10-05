@@ -310,8 +310,12 @@ describe('publishedStaffOrOwned', () => {
 })
 
 describe('selfOrStaff', () => {
+  const onCustomers = selfOrStaff('customers')
+  const onOwners = selfOrStaff('business-users')
+
   it('gives staff every account', () => {
-    expect(selfOrStaff(ctx(staff))).toBe(true)
+    expect(onCustomers(ctx(staff))).toBe(true)
+    expect(onOwners(ctx(staff))).toBe(true)
   })
 
   /**
@@ -319,17 +323,27 @@ describe('selfOrStaff', () => {
    * list every other customer - a data breach wearing the shape of a feature.
    */
   it('constrains a customer to their own row', () => {
-    expect(selfOrStaff(ctx({ id: 42, collection: 'customers' }))).toEqual({
+    expect(onCustomers(ctx({ id: 42, collection: 'customers' }))).toEqual({
       id: { equals: 42 },
     })
   })
 
   it('constrains an owner to their own row', () => {
-    expect(selfOrStaff(ctx(owner(8, [7])))).toEqual({ id: { equals: 8 } })
+    expect(onOwners(ctx(owner(8, [7])))).toEqual({ id: { equals: 8 } })
+  })
+
+  /**
+   * The hole this was rewritten for. Customers and partners are numbered
+   * separately from 1, so an id alone is not "you": customer #8 was given
+   * partner #8's account, and partner #8 customer #8's, to read and to update.
+   */
+  it('never gives an account in another collection that happens to share the id', () => {
+    expect(onOwners(ctx({ id: 8, collection: 'customers' }))).toBe(false)
+    expect(onCustomers(ctx(owner(8, [7])))).toBe(false)
   })
 
   it('refuses anonymous callers outright', () => {
-    expect(selfOrStaff(ctx(null))).toBe(false)
+    expect(onCustomers(ctx(null))).toBe(false)
   })
 })
 

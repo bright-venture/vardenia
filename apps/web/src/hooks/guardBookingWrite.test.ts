@@ -181,3 +181,41 @@ describe('moving an existing booking', () => {
     expect(calls).toEqual([])
   })
 })
+
+/**
+ * Pools, cafes, nightlife, festivals, historic sites, gyms and malls are listed,
+ * never booked. The admin form refuses to switch booking on for them; this is
+ * the check that holds when the form is not the way in.
+ */
+describe('a new booking at a place that is listed only', () => {
+  const create = (business: Record<string, unknown>) =>
+    guardBookingWrite({
+      data: { business: 10, customer: 5, start: future, end: future, partySize: 2 },
+      req: {
+        user: customer,
+        payload: {
+          findByID: async () => business,
+          find: async () => ({ docs: [] }),
+        },
+      },
+      operation: 'create',
+    } as unknown as Args)
+
+  it('is refused, even with booking switched on', async () => {
+    await expect(
+      create({ id: 10, subcategories: ['cafes'], booking: { enabled: true } }),
+    ).rejects.toThrow(/listed only/i)
+  })
+
+  it('goes on to the availability check at a bookable place', async () => {
+    // Booking is off here, so the availability check refuses it - with its own
+    // message, which proves the listed-only check let it through.
+    const error = await create({
+      id: 10,
+      subcategories: ['restaurants'],
+      booking: { enabled: false },
+    }).catch((e: Error) => e)
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).not.toMatch(/listed only/i)
+  })
+})

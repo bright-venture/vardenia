@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
+import { STAFF_COLLECTION, isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 export const Users: CollectionConfig = {
@@ -21,10 +21,12 @@ export const Users: CollectionConfig = {
     read: isStaff,
     create: isAdmin,
     update: ({ req, id }) => {
-      const roles = (req.user as { roles?: string[] } | null)?.roles ?? []
-      if (roles.includes('admin')) return true
-      // Everyone else may edit only their own profile.
-      return req.user ? req.user.id === id : false
+      if (isAdmin({ req } as Parameters<typeof isAdmin>[0])) return true
+      // Everyone else on the team may edit only their own profile. The
+      // collection check is the point: a customer or a partner has an id too,
+      // numbered separately from 1, and matching on id alone let customer #1
+      // edit team member #1 - email and password included. See selfOrStaff.
+      return req.user?.collection === STAFF_COLLECTION && req.user.id === id
     },
     delete: isAdmin,
   },

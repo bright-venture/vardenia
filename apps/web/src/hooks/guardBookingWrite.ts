@@ -2,6 +2,7 @@ import type { CollectionBeforeValidateHook } from 'payload'
 import { APIError } from 'payload'
 import {
   canActorTransition,
+  canTakeBookings,
   canTransition,
   isRetrospective,
   OCCUPYING_STATUSES,
@@ -239,6 +240,20 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
 
   if (!business) {
     throw new APIError('That business does not exist.', 400)
+  }
+
+  /**
+   * Pools, cafes, nightlife, festivals, historic sites, gyms and malls are
+   * listed, never booked. The admin refuses to switch booking on for them, but
+   * that is one form; a listing moved to Cafes after booking was switched on, or
+   * any path that skips the form, would otherwise still take a table. New
+   * bookings only: one already made stays where it is. See core/taxonomy.
+   */
+  if (
+    operation === 'create' &&
+    !canTakeBookings((business as { subcategories?: string[] | null }).subcategories ?? [])
+  ) {
+    throw new APIError('This place is listed only and does not take bookings.', 400)
   }
 
   const rules = (business as { booking?: unknown }).booking as

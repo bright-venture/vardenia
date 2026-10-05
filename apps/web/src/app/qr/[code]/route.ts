@@ -1,6 +1,6 @@
-import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
+import { withRateLimit } from '../../../lib/rate-limit'
 import {
   DEFAULT_PRINT_MM,
   formatFromParam,
@@ -28,74 +28,80 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
-  const { code: rawCode } = await params
-  const code = parseCodeParam(rawCode)
-  if (!code) {
-    return new Response('Not a valid code', { status: 400 })
-  }
+/**
+ * Rate-limited per address: a PNG at the 4096-pixel cap is real work, and the
+ * response is private, so no shared cache absorbs a burst. See lib/rate-limit.
+ */
+export const GET = withRateLimit(
+  async (request: Request, { params }: { params: Promise<{ code: string }> }) => {
+    const { code: rawCode } = await params
+    const code = parseCodeParam(rawCode)
+    if (!code) {
+      return new Response('Not a valid code', { status: 400 })
+    }
 
-  const payload = await getPayload({ config })
-  const result = await payload.find({
-    collection: 'qr-codes',
-    where: { code: { equals: code } },
-    limit: 1,
-    depth: 0,
-    // Reads existence only. Nothing from the document reaches the response, and
-    // the image encodes a URL that is printed in a magazine, so there is nothing
-    // here to protect - but the staff-only read rule would block it otherwise.
-    overrideAccess: true,
-  })
+    const payload = await getPayload({ config })
+    const result = await payload.find({
+      collection: 'qr-codes',
+      where: { code: { equals: code } },
+      limit: 1,
+      depth: 0,
+      // Reads existence only. Nothing from the document reaches the response, and
+      // the image encodes a URL that is printed in a magazine, so there is nothing
+      // here to protect - but the staff-only read rule would block it otherwise.
+      overrideAccess: true,
+    })
 
-  if (result.docs.length === 0) {
-    return new Response('No such code', { status: 404 })
-  }
+    if (result.docs.length === 0) {
+      return new Response('No such code', { status: 404 })
+    }
 
-  const url = new URL(request.url)
-  const download = url.searchParams.get('download') === '1'
-  // `?transparent=1` drops the white background, leaving the dark modules on
-  // nothing - for dropping a code onto a coloured layout. Not for print; see
-  // lib/qr-image. The filename carries the word so the two do not get confused
-  // in a downloads folder.
-  const transparent = url.searchParams.get('transparent') === '1'
-  const suffix = transparent ? '-transparent' : ''
+    const url = new URL(request.url)
+    const download = url.searchParams.get('download') === '1'
+    // `?transparent=1` drops the white background, leaving the dark modules on
+    // nothing - for dropping a code onto a coloured layout. Not for print; see
+    // lib/qr-image. The filename carries the word so the two do not get confused
+    // in a downloads folder.
+    const transparent = url.searchParams.get('transparent') === '1'
+    const suffix = transparent ? '-transparent' : ''
 
-  /**
-   * `?format=` wins, then the file extension, then SVG.
-   *
-   * The extension used to be stripped and ignored, so `/qr/CODE.png` served an
-   * SVG. Explicit query parameter first, because a URL that says both should
-   * honour the thing the caller wrote deliberately.
-   */
-  const requested = url.searchParams.get('format')
-  const format =
-    requested === 'png' || requested === 'svg' ? requested : (formatFromParam(rawCode) ?? 'svg')
+    /**
+     * `?format=` wins, then the file extension, then SVG.
+     *
+     * The extension used to be stripped and ignored, so `/qr/CODE.png` served an
+     * SVG. Explicit query parameter first, because a URL that says both should
+     * honour the thing the caller wrote deliberately.
+     */
+    const requested = url.searchParams.get('format')
+    const format =
+      requested === 'png' || requested === 'svg' ? requested : (formatFromParam(rawCode) ?? 'svg')
 
-  if (format === 'png') {
-    const pixels = Number(url.searchParams.get('size')) || 1024
-    const png = await qrPng(code, { pixels, transparent })
-    return new Response(new Uint8Array(png), {
+    if (format === 'png') {
+      const pixels = Number(url.searchParams.get('size')) || 1024
+      const png = await qrPng(code, { pixels, transparent })
+      return new Response(new Uint8Array(png), {
+        headers: {
+          'content-type': 'image/png',
+          ...disposition(download, `${code}${suffix}.png`),
+          // A code is immutable, so its image never changes. Private, because the
+          // sheet route behind it is staff-only and a shared CDN cache is a
+          // needless place to leave anything.
+          'cache-control': 'private, max-age=31536000, immutable',
+        },
+      })
+    }
+
+    const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
+    const svg = await qrSvg(code, { sizeMm, transparent })
+    return new Response(svg, {
       headers: {
-        'content-type': 'image/png',
-        ...disposition(download, `${code}${suffix}.png`),
-        // A code is immutable, so its image never changes. Private, because the
-        // sheet route behind it is staff-only and a shared CDN cache is a
-        // needless place to leave anything.
+        'content-type': 'image/svg+xml; charset=utf-8',
+        ...disposition(download, `${code}${suffix}.svg`),
         'cache-control': 'private, max-age=31536000, immutable',
       },
     })
-  }
-
-  const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
-  const svg = await qrSvg(code, { sizeMm, transparent })
-  return new Response(svg, {
-    headers: {
-      'content-type': 'image/svg+xml; charset=utf-8',
-      ...disposition(download, `${code}${suffix}.svg`),
-      'cache-control': 'private, max-age=31536000, immutable',
-    },
-  })
-}
+  },
+)
 
 function disposition(download: boolean, filename: string): Record<string, string> {
   return download ? { 'content-disposition': `attachment; filename="${filename}"` } : {}

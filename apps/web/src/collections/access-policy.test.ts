@@ -228,6 +228,17 @@ describe('Users', () => {
     expect(update(ctx(null, { id: 999 }))).toBe(false)
   })
 
+  it('never lets a customer or a partner edit the team member who shares their id', () => {
+    const update = Users.access!.update!
+
+    expect(update(ctx({ id: staff.id, collection: 'customers' }, { id: staff.id }))).toBe(false)
+    expect(
+      update(
+        ctx({ id: admin.id, collection: 'business-users', businesses: [7] }, { id: admin.id }),
+      ),
+    ).toBe(false)
+  })
+
   it('has no default role, so an account cannot be created with implicit powers', () => {
     expect('defaultValue' in roles ? roles.defaultValue : undefined).toBeUndefined()
   })
@@ -274,6 +285,22 @@ describe('account collections', () => {
   ])('%s constrains a signed-in account to its own row', (_slug, config, user) => {
     expect(config.access?.read!(ctx(user))).toEqual({ id: { equals: user.id } })
   })
+
+  /**
+   * Customers and partners are numbered separately from 1. A customer whose id
+   * matches a partner's must get nothing from the partner collection, and the
+   * other way round, on read and on update.
+   */
+  it.each([
+    ['business-users', BusinessUsers, { id: 20, collection: 'customers' }],
+    ['customers', Customers, { id: 21, collection: 'business-users', businesses: [7] }],
+  ])(
+    '%s gives nothing to an account from the other collection with the same id',
+    (_slug, config, user) => {
+      expect(config.access?.read!(ctx(user))).toBe(false)
+      expect(config.access?.update!(ctx(user))).toBe(false)
+    },
+  )
 
   /**
    * Neither account type may create its own login. Owners are made by staff

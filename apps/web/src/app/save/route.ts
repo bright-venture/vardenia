@@ -4,6 +4,7 @@ import { z } from 'zod'
 import config from '../../payload.config'
 import { CUSTOMER_COLLECTION } from '../../access/index'
 import { savedSlugs } from '../../lib/saved'
+import { RATE_LIMIT, withRateLimit } from '../../lib/rate-limit'
 
 /**
  * Save and unsave, for the shortlist.
@@ -52,84 +53,92 @@ export async function GET(): Promise<Response> {
 
 const bodySchema = z.object({ slug: z.string().min(1).max(200) })
 
-export async function POST(request: Request): Promise<Response> {
-  const payload = await getPayload({ config })
-  const auth = await payload
-    .auth({ headers: await nextHeaders() })
-    .catch(() => ({ user: null }) as { user: null })
-  const user = auth.user
-  if (!user || user.collection !== CUSTOMER_COLLECTION) {
-    return json({ ok: false, code: 'signed-out' }, 401)
-  }
+/**
+ * Rate-limited like every other write: each call is a database read and a
+ * write, and without a ceiling a signed-in script could toggle a save forever.
+ */
+export const POST = withRateLimit(
+  async (request: Request): Promise<Response> => {
+    const payload = await getPayload({ config })
+    const auth = await payload
+      .auth({ headers: await nextHeaders() })
+      .catch(() => ({ user: null }) as { user: null })
+    const user = auth.user
+    if (!user || user.collection !== CUSTOMER_COLLECTION) {
+      return json({ ok: false, code: 'signed-out' }, 401)
+    }
 
-  let parsed: z.infer<typeof bodySchema>
-  try {
-    parsed = bodySchema.parse(await request.json())
-  } catch {
-    return json({ ok: false, code: 'bad-request' }, 400)
-  }
+    let parsed: z.infer<typeof bodySchema>
+    try {
+      parsed = bodySchema.parse(await request.json())
+    } catch {
+      return json({ ok: false, code: 'bad-request' }, 400)
+    }
 
-  // The listing, published only: overrideAccess:false with the customer's user
-  // means a draft or withdrawn slug simply is not found.
-  const found = await payload.find({
-    collection: 'businesses',
-    where: { slug: { equals: parsed.slug } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: false,
-    user,
-    select: { slug: true },
-  })
-  const listing = found.docs[0]
-  if (!listing) return json({ ok: false, code: 'not-found' }, 404)
+    // The listing, published only: overrideAccess:false with the customer's user
+    // means a draft or withdrawn slug simply is not found.
+    const found = await payload.find({
+      collection: 'businesses',
+      where: { slug: { equals: parsed.slug } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: false,
+      user,
+      select: { slug: true },
+    })
+    const listing = found.docs[0]
+    if (!listing) return json({ ok: false, code: 'not-found' }, 404)
 
-  // The collection's read access adds `{ customer: equals user.id }`, so this
-  // only ever finds the caller's own save for this listing.
-  const existing = await payload.find({
-    collection: 'saved-listings',
-    where: { listing: { equals: listing.id } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: false,
-    user,
-  })
-
-  let saved: boolean
-  if (existing.docs[0]) {
-    await payload.delete({
+    // The collection's read access adds `{ customer: equals user.id }`, so this
+    // only ever finds the caller's own save for this listing.
+    const existing = await payload.find({
       collection: 'saved-listings',
-      id: existing.docs[0].id,
+      where: { listing: { equals: listing.id } },
+      limit: 1,
+      depth: 0,
       overrideAccess: false,
       user,
     })
-    saved = false
-  } else {
-    // `customer` is forced to the caller by the collection's beforeValidate hook
-    // regardless; it is named here only because it is a required field and the
-    // create type insists on it. The hook is what actually guarantees it.
-    try {
-      await payload.create({
-        collection: 'saved-listings',
-        data: { listing: Number(listing.id), customer: Number(user.id) },
-        overrideAccess: false,
-        user,
-      })
-    } catch (err) {
-      // A near-simultaneous save can win the unique (customer, listing) index and
-      // make this insert fail. If the row now exists, that is the outcome the
-      // caller wanted, not an error; anything else is a real failure.
-      const again = await payload.find({
-        collection: 'saved-listings',
-        where: { listing: { equals: listing.id } },
-        limit: 1,
-        depth: 0,
-        overrideAccess: false,
-        user,
-      })
-      if (!again.docs[0]) throw err
-    }
-    saved = true
-  }
 
-  return json({ ok: true, saved })
-}
+    let saved: boolean
+    if (existing.docs[0]) {
+      await payload.delete({
+        collection: 'saved-listings',
+        id: existing.docs[0].id,
+        overrideAccess: false,
+        user,
+      })
+      saved = false
+    } else {
+      // `customer` is forced to the caller by the collection's beforeValidate hook
+      // regardless; it is named here only because it is a required field and the
+      // create type insists on it. The hook is what actually guarantees it.
+      try {
+        await payload.create({
+          collection: 'saved-listings',
+          data: { listing: Number(listing.id), customer: Number(user.id) },
+          overrideAccess: false,
+          user,
+        })
+      } catch (err) {
+        // A near-simultaneous save can win the unique (customer, listing) index and
+        // make this insert fail. If the row now exists, that is the outcome the
+        // caller wanted, not an error; anything else is a real failure.
+        const again = await payload.find({
+          collection: 'saved-listings',
+          where: { listing: { equals: listing.id } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: false,
+          user,
+        })
+        if (!again.docs[0]) throw err
+      }
+      saved = true
+    }
+
+    return json({ ok: true, saved })
+  },
+  RATE_LIMIT.WRITE_PER_WINDOW,
+  { shared: true },
+)

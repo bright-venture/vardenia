@@ -1,5 +1,11 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isStaff, isStaffFieldLevel, selfOrStaff } from '../access/index'
+import {
+  BUSINESS_USER_COLLECTION,
+  isAdmin,
+  isStaff,
+  isStaffFieldLevel,
+  selfOrStaff,
+} from '../access/index'
 import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
@@ -76,10 +82,10 @@ export const BusinessUsers: CollectionConfig = {
   },
 
   access: {
-    read: selfOrStaff,
+    read: selfOrStaff(BUSINESS_USER_COLLECTION),
     // Staff-created only. See the note above about verification.
     create: isStaff,
-    update: selfOrStaff,
+    update: selfOrStaff(BUSINESS_USER_COLLECTION),
     delete: isAdmin,
   },
 

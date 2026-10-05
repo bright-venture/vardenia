@@ -225,14 +225,25 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
 export const PUBLISHED_SQL = `b._status = 'published'`
 
 /**
- * Read your own account, or any if you are staff.
+ * Your own account in this collection, or any if you are staff.
  *
- * Used by both new collections. Without the `id` clause a logged-in customer
- * could list every other customer, which is a data breach dressed up as a
- * feature.
+ * Without the `id` clause a logged-in customer could list every other customer,
+ * which is a data breach dressed up as a feature.
+ *
+ * # The collection is part of "your own"
+ *
+ * This used to be one rule shared by Customers and Business users, returning
+ * `{ id: req.user.id }` for whoever was signed in. But the two collections
+ * number their rows separately, both from 1, so customer #8 and partner #8 are
+ * different people with the same id - and the rule handed each the other's
+ * account, to read and to update, email and password included. The same held
+ * for the staff collection's update rule. Ids only mean "you" inside the
+ * collection that issued them, so the rule now asks which one that was.
  */
-export const selfOrStaff: Access = ({ req }) => {
-  if (isStaffUser(req.user)) return true
-  if (!req.user) return false
-  return { id: { equals: req.user.id } }
-}
+export const selfOrStaff =
+  (collection: string): Access =>
+  ({ req }) => {
+    if (isStaffUser(req.user)) return true
+    if (!req.user || collectionOf(req.user) !== collection) return false
+    return { id: { equals: req.user.id } }
+  }

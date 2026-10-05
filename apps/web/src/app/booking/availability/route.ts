@@ -3,6 +3,7 @@ import { availabilityQuerySchema, fieldErrors } from '@vardenia/core'
 import config from '../../../payload.config'
 import { checkAvailability, unavailableMessage } from '../../../lib/availability'
 import { overlappingBookings } from '../../../lib/booking-service'
+import { beirutDate } from '../../../lib/beirut'
 import { withRateLimit } from '../../../lib/rate-limit'
 
 /**
@@ -64,11 +65,38 @@ export const GET = withRateLimit(async (request: Request) => {
     return json({ ok: false, reason: 'not-found', message: 'That listing is not available.' }, 404)
   }
 
-  const existing = await overlappingBookings(payload, business.id, start, end)
+  /*
+   * The days the venue has said it is shut, read the way the booking guard reads
+   * them (hooks/guardBookingWrite). Without them this answered "free" for a
+   * closed day, and the guest only learned otherwise when the booking itself was
+   * refused. Access overridden: a guest cannot read the Closures collection, and
+   * only the verdict leaves this route.
+   */
+  const [existing, closed] = await Promise.all([
+    overlappingBookings(payload, business.id, start, end),
+    payload.find({
+      collection: 'closures',
+      depth: 0,
+      limit: 50,
+      pagination: false,
+      overrideAccess: true,
+      where: {
+        and: [
+          { business: { equals: business.id } },
+          { endsOn: { greater_than_equal: beirutDate(start) } },
+        ],
+      },
+      select: { startsOn: true, endsOn: true },
+    }),
+  ])
 
   const verdict = checkAvailability({
     rules: (business as { booking?: never }).booking,
     hours: (business as { openingHours?: never }).openingHours,
+    closures: closed.docs.map((doc) => ({
+      startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
+      endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
+    })),
     existing,
     request: { interval: { start, end }, partySize },
   })
