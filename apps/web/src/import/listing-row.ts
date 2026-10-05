@@ -60,7 +60,7 @@ export interface ImportedListing {
  *
  * # The Keserwan file
  *
- * `tour-guides` and `festivals` were added to the taxonomy for it. Squashing 29
+ * `guided-tours` (then `tour-guides`) and `festivals` were added to the taxonomy for it. Squashing 29
  * listings into `adventure` would have made the section filters describe
  * something they do not contain, and a filter that lies is worse than a category
  * that is new.
@@ -87,12 +87,12 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
   'Guest Houses': { category: 'hospitality', subcategory: 'getaways' },
   Getaways: { category: 'hospitality', subcategory: 'getaways' },
   Restaurants: { category: 'food-and-beverage', subcategory: 'restaurants' },
-  'Coffee Shops': { category: 'food-and-beverage', subcategory: 'coffee-shops' },
+  'Coffee Shops': { category: 'food-and-beverage', subcategory: 'cafes' },
   Nightlife: { category: 'food-and-beverage', subcategory: 'nightlife' },
   Pools: { category: 'food-and-beverage', subcategory: 'pools' },
   Activities: { category: 'tourism', subcategory: 'activities' },
   'Boat Rentals': { category: 'tourism', subcategory: 'activities' },
-  'Tour Guides': { category: 'tourism', subcategory: 'tour-guides' },
+  'Tour Guides': { category: 'tourism', subcategory: 'guided-tours' },
   Festivals: { category: 'tourism', subcategory: 'festivals' },
   'Hidden Gems': { category: 'tourism', subcategory: 'activities' },
   // Both had their own subcategory added rather than borrowing a near-enough
@@ -103,7 +103,7 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
   // The Bekaa file. Wineries are visited for a tasting, which is an activity
   // in the October 2026 list; Baalbek's temples keep Historic Sites.
   Wineries: { category: 'tourism', subcategory: 'activities' },
-  'Historical Sites': { category: 'tourism', subcategory: 'historical-sites' },
+  'Historical Sites': { category: 'tourism', subcategory: 'historic-sites' },
 }
 
 /**

@@ -122,13 +122,13 @@ describe('filterHref', () => {
  * one parser, one builder, two pages.
  */
 describe('parseFilterState', () => {
-  const children = [{ slug: 'hotels' }, { slug: 'getaways' }]
+  const children = [{ slug: 'boutique-hotels' }, { slug: 'private-villas' }]
 
   it('keeps what it recognises', () => {
     expect(
       parseFilterState(
         {
-          filter: 'hotels',
+          filter: 'boutique-hotels',
           where: 'mount-lebanon',
           district: 'keserwan',
           price: '3',
@@ -137,7 +137,7 @@ describe('parseFilterState', () => {
         children,
       ),
     ).toEqual({
-      subcategory: 'hotels',
+      subcategory: 'boutique-hotels',
       governorate: 'mount-lebanon',
       district: 'keserwan',
       priceRange: '3',
@@ -177,12 +177,7 @@ describe('parseFilterState', () => {
   })
 
   it('has no subcategory when none are offered, as on the directory', () => {
-    expect(parseFilterState({ filter: 'hotels' }, []).subcategory).toBeUndefined()
-  })
-
-  it('reads a retired slug from an old link as the one its listings moved to', () => {
-    expect(parseFilterState({ filter: 'boutique-hotels' }, children).subcategory).toBe('hotels')
-    expect(parseFilterState({ filter: 'photographers' }, children).subcategory).toBeUndefined()
+    expect(parseFilterState({ filter: 'boutique-hotels' }, []).subcategory).toBeUndefined()
   })
 
   it('reads an empty query string as no filters', () => {

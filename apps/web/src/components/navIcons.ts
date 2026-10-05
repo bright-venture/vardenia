@@ -16,7 +16,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
   Store,
   Utensils,
   type LucideIcon,
@@ -30,8 +29,8 @@ import type { CategorySlug } from '@vardenia/core'
  * written - `bed-double`, `utensils`, `mountain-snow` - with nothing installed
  * to render them. This finishes that thought rather than inventing a second set.
  *
- * A `Record<CategorySlug, ...>` for the same reason the section map is one: an
- * eighth category fails the build here instead of rendering a hole in the menu.
+ * A `Record<CategorySlug, ...>` for the same reason the section map is one: a
+ * seventh category fails the build here instead of rendering a hole in the menu.
  *
  * Only the icons actually used are imported. lucide-react has well over a
  * thousand, and a namespace import pulls the lot into the bundle.
@@ -42,7 +41,6 @@ export const SECTION_ICONS: Record<CategorySlug, LucideIcon> = {
   tourism: Mountain,
   weddings: Heart,
   lifestyle: Sparkles,
-  healthcare: Stethoscope,
   transportation: CarFront,
 }
 

@@ -3,36 +3,42 @@ import {
   CATEGORIES,
   canTakeBookings,
   categoryTakesBookings,
-  currentSubcategory,
-  isActiveSubcategory,
   isBookableSubcategory,
-  SUBCATEGORY_MOVES,
   SUBCATEGORY_PARENT,
 } from './taxonomy'
 
-const live = (category: string) =>
-  CATEGORIES.find((c) => c.slug === category)!
-    .children.filter((child) => !child.retired)
-    .map((child) => child.slug)
+const kinds = (category: string) =>
+  CATEGORIES.find((c) => c.slug === category)!.children.map((child) => child.slug)
 
 describe('the October 2026 list', () => {
-  it('offers exactly the kinds of place the team chose, in their order', () => {
-    expect(live('hospitality')).toEqual(['hotels', 'getaways'])
-    expect(live('food-and-beverage')).toEqual(['restaurants', 'coffee-shops', 'pools', 'nightlife'])
-    expect(live('tourism')).toEqual(['historical-sites', 'tour-guides', 'festivals', 'activities'])
-    expect(live('lifestyle')).toEqual(['malls', 'gyms'])
-    expect(live('weddings')).toEqual(['wedding-planners'])
-    expect(live('transportation')).toEqual([
-      'car-rental',
-      'airport-transfers',
-      'private-chauffeurs',
+  it('has the six categories, and no healthcare', () => {
+    expect(CATEGORIES.map((c) => c.slug)).toEqual([
+      'hospitality',
+      'food-and-beverage',
+      'tourism',
+      'weddings',
+      'lifestyle',
+      'transportation',
     ])
   })
 
-  it('retires healthcare and everything in it', () => {
-    const healthcare = CATEGORIES.find((c) => c.slug === 'healthcare')!
-    expect(healthcare.retired).toBe(true)
-    expect(healthcare.children.every((child) => child.retired)).toBe(true)
+  it('offers exactly the kinds of place the team chose, in their order', () => {
+    expect(kinds('hospitality')).toEqual(['hotels', 'getaways'])
+    expect(kinds('food-and-beverage')).toEqual(['restaurants', 'cafes', 'pools', 'nightlife'])
+    expect(kinds('tourism')).toEqual(['historic-sites', 'guided-tours', 'festivals', 'activities'])
+    expect(kinds('weddings')).toEqual(['event-planners'])
+    expect(kinds('lifestyle')).toEqual(['malls', 'gyms'])
+    expect(kinds('transportation')).toEqual(['car-rental', 'airport-transfers', 'private-drivers'])
+  })
+
+  it('has sixteen kinds of place, each under one category', () => {
+    expect(Object.keys(SUBCATEGORY_PARENT)).toHaveLength(16)
+  })
+
+  it('carries nothing retired: the old slugs were deleted before launch', () => {
+    expect(CATEGORIES.some((c) => c.retired || c.children.some((child) => child.retired))).toBe(
+      false,
+    )
   })
 })
 
@@ -42,12 +48,12 @@ describe('which kinds of place take bookings', () => {
       'hotels',
       'getaways',
       'restaurants',
-      'tour-guides',
+      'guided-tours',
       'activities',
-      'wedding-planners',
+      'event-planners',
       'car-rental',
       'airport-transfers',
-      'private-chauffeurs',
+      'private-drivers',
     ]) {
       expect(isBookableSubcategory(slug), slug).toBe(true)
     }
@@ -56,10 +62,10 @@ describe('which kinds of place take bookings', () => {
   it('only advertises pools, cafes, nightlife, festivals, historic sites, gyms and malls', () => {
     for (const slug of [
       'pools',
-      'coffee-shops',
+      'cafes',
       'nightlife',
       'festivals',
-      'historical-sites',
+      'historic-sites',
       'gyms',
       'malls',
     ]) {
@@ -67,8 +73,9 @@ describe('which kinds of place take bookings', () => {
     }
   })
 
-  it('never books a retired kind of place', () => {
+  it('never books a slug it does not know', () => {
     expect(isBookableSubcategory('luxury-hotels')).toBe(false)
+    expect(isBookableSubcategory(null)).toBe(false)
   })
 
   it('lets a listing book when any of its kinds of place can', () => {
@@ -82,29 +89,5 @@ describe('which kinds of place take bookings', () => {
     expect(categoryTakesBookings('food-and-beverage')).toBe(true)
     expect(categoryTakesBookings('lifestyle')).toBe(false)
     expect(categoryTakesBookings(null)).toBe(false)
-  })
-})
-
-describe('retired slugs', () => {
-  it('moves every one that had listings to a live one', () => {
-    for (const [from, to] of Object.entries(SUBCATEGORY_MOVES)) {
-      expect(isActiveSubcategory(from), from).toBe(false)
-      expect(isActiveSubcategory(to), to).toBe(true)
-    }
-  })
-
-  it('keeps a move inside its section, except where the section changed on purpose', () => {
-    const crossing = Object.entries(SUBCATEGORY_MOVES)
-      .filter(([from, to]) => SUBCATEGORY_PARENT[from] !== SUBCATEGORY_PARENT[to])
-      .map(([from]) => from)
-    // Wineries became activities, and the gyms left healthcare earlier.
-    expect(crossing.sort()).toEqual(['wellness', 'wine-experiences'])
-  })
-
-  it('translates an old link to the live slug', () => {
-    expect(currentSubcategory('boutique-hotels')).toBe('hotels')
-    expect(currentSubcategory('hotels')).toBe('hotels')
-    expect(currentSubcategory('photographers')).toBeNull()
-    expect(currentSubcategory(null)).toBeNull()
   })
 })

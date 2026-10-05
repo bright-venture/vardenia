@@ -2,8 +2,6 @@ import type { CollectionConfig } from 'payload'
 import {
   GOVERNORATES,
   SUBCATEGORY_PARENT,
-  isActiveCategory,
-  isActiveSubcategory,
   amenityOptions,
   isWithinLebanon,
   priceRangeOptions,
@@ -227,15 +225,7 @@ export const Businesses: CollectionConfig = {
               type: 'select',
               required: true,
               index: true,
-              // Retired categories stay in the enum (see collections/options) and
-              // are neither offered nor accepted.
               options: categoryOptions,
-              filterOptions: ({ options }) =>
-                options.filter((option) => isActiveCategory(valueOf(option))),
-              validate: (value: unknown) =>
-                typeof value !== 'string' || isActiveCategory(value)
-                  ? true
-                  : 'This category has been retired. Choose one of the six sections.',
             },
             {
               name: 'subcategories',
@@ -250,19 +240,14 @@ export const Businesses: CollectionConfig = {
               // mismatch is refused. The list used to offer all of them with a
               // note asking staff to pick the right ones, and a listing filed
               // under the wrong parent is missing from its own section's filters.
-              // Retired ones are never offered either; see collections/options.
               filterOptions: ({ options, data }) =>
-                options.filter(
-                  (option) =>
-                    isActiveSubcategory(valueOf(option)) &&
-                    (!data?.category || SUBCATEGORY_PARENT[valueOf(option)] === data.category),
-                ),
+                data?.category
+                  ? options.filter(
+                      (option) => SUBCATEGORY_PARENT[valueOf(option)] === data.category,
+                    )
+                  : options,
               validate: (value: unknown, { data }: { data: Partial<{ category: string }> }) => {
                 const chosen = Array.isArray(value) ? (value as string[]) : []
-                const retired = chosen.filter((sub) => !isActiveSubcategory(sub))
-                if (retired.length > 0) {
-                  return `No longer in use: ${retired.join(', ')}. Choose from the current kinds of place.`
-                }
                 const stray = chosen.filter((sub) => SUBCATEGORY_PARENT[sub] !== data?.category)
                 return stray.length === 0
                   ? true

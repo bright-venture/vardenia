@@ -25,8 +25,8 @@ describe('listingSchema', () => {
     expect(listingSchema({ ...LISTING, category: 'food-and-beverage' }, 'en')['@type']).toBe(
       'FoodEstablishment',
     )
-    expect(listingSchema({ ...LISTING, category: 'healthcare' }, 'en')['@type']).toBe(
-      'MedicalBusiness',
+    expect(listingSchema({ ...LISTING, category: 'tourism' }, 'en')['@type']).toBe(
+      'TouristAttraction',
     )
   })
 

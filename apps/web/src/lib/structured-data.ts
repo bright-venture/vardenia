@@ -44,7 +44,6 @@ const SCHEMA_TYPE: Record<string, string> = {
   tourism: 'TouristAttraction',
   weddings: 'LocalBusiness',
   lifestyle: 'LocalBusiness',
-  healthcare: 'MedicalBusiness',
   transportation: 'LocalBusiness',
 }
 

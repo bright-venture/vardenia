@@ -34,8 +34,7 @@ import * as migration_20260924_100629_booking_fee_statements from './20260924_10
 import * as migration_20260928_090000_restore_row_level_security from './20260928_090000_restore_row_level_security'
 import * as migration_20260929_074613_payment_methods from './20260929_074613_payment_methods'
 import * as migration_20260929_082335_booking_answered_at from './20260929_082335_booking_answered_at'
-import * as migration_20261005_090000_october_taxonomy_values from './20261005_090000_october_taxonomy_values'
-import * as migration_20261005_090100_october_taxonomy_moves from './20261005_090100_october_taxonomy_moves'
+import * as migration_20261005_090000_october_taxonomy from './20261005_090000_october_taxonomy'
 
 export const migrations = [
   {
@@ -219,13 +218,8 @@ export const migrations = [
     name: '20260929_082335_booking_answered_at',
   },
   {
-    up: migration_20261005_090000_october_taxonomy_values.up,
-    down: migration_20261005_090000_october_taxonomy_values.down,
-    name: '20261005_090000_october_taxonomy_values',
-  },
-  {
-    up: migration_20261005_090100_october_taxonomy_moves.up,
-    down: migration_20261005_090100_october_taxonomy_moves.down,
-    name: '20261005_090100_october_taxonomy_moves',
+    up: migration_20261005_090000_october_taxonomy.up,
+    down: migration_20261005_090000_october_taxonomy.down,
+    name: '20261005_090000_october_taxonomy',
   },
 ]

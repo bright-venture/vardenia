@@ -190,7 +190,7 @@ describe('the rows that need a person', () => {
 describe('the Chouf headings, mapped to existing subcategories', () => {
   const EXPECTED: Record<string, [string, string]> = {
     Getaways: ['hospitality', 'getaways'],
-    'Coffee Shops': ['food-and-beverage', 'coffee-shops'],
+    'Coffee Shops': ['food-and-beverage', 'cafes'],
     Nightlife: ['food-and-beverage', 'nightlife'],
     Pools: ['food-and-beverage', 'pools'],
     'Boat Rentals': ['tourism', 'activities'],
@@ -422,7 +422,7 @@ describe('the Bekaa, across its two governorates', () => {
       category: 'tourism',
       subcategories: ['activities'],
     })
-    expect(ruins).toMatchObject({ category: 'tourism', subcategories: ['historical-sites'] })
+    expect(ruins).toMatchObject({ category: 'tourism', subcategories: ['historic-sites'] })
   })
 })
 

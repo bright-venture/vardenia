@@ -94,13 +94,6 @@ const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
     descriptionEn: 'Malls and gyms',
     descriptionAr: 'مراكز تسوق ونوادي رياضية',
   },
-  healthcare: {
-    path: 'health',
-    en: 'Health',
-    ar: 'الرعاية الصحية',
-    descriptionEn: 'Hospitals, clinics, spas and medical travel',
-    descriptionAr: 'مستشفيات وعيادات ومراكز سبا وسياحة علاجية',
-  },
   transportation: {
     path: 'getting-around',
     en: 'Getting Around',
@@ -117,12 +110,6 @@ const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
  * arrives looking for and where the listings are today. Getting Around is
  * something you need once you are here rather than something you browse, so
  * it sits at the end.
- *
- * Healthcare is not here: it was retired in October 2026, with every kind of
- * place in it, and its section went with it. Its entry stays in the record
- * above because the type demands one for every category slug, and the slug
- * stays in the taxonomy because old listing versions still carry it. Leaving
- * it out of this list is what takes /health off the site.
  */
 const ORDER: readonly CategorySlug[] = [
   'hospitality',

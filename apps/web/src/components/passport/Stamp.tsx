@@ -21,7 +21,6 @@ const INK: Record<string, string> = {
   tourism: 'text-cedar-700 border-cedar-700',
   weddings: 'text-gold-700 border-gold-700',
   lifestyle: 'text-ink-700 border-ink-700',
-  healthcare: 'text-cedar-900 border-cedar-900',
   transportation: 'text-ink-500 border-ink-500',
 }
 

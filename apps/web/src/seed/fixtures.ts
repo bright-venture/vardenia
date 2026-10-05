@@ -186,7 +186,7 @@ export const BUSINESSES: BusinessFixture[] = [
       ar: 'أزقة حجرية مرممة تمتد بين القلعة الصليبية ومرفأ الصيد، تصطف على جانبيها متاجر الحرف والمقاهي.',
     },
     category: 'tourism',
-    subcategories: ['historical-sites'],
+    subcategories: ['historic-sites'],
     governorate: 'mount-lebanon',
     district: 'jbeil',
     address: { en: 'Old Souk, Byblos', ar: 'السوق القديم، جبيل' },
