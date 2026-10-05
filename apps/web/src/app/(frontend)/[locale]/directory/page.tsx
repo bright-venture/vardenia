@@ -188,7 +188,7 @@ async function DirectoryResults({
         ))}
       </nav>
 
-      <TripBar base="/directory" state={state} locale={locale} mode="sitting" />
+      <TripBar base="/directory" state={state} locale={locale} section={null} />
 
       <ListingFilters base="/directory" state={state} locale={locale} counts={counts} />
 

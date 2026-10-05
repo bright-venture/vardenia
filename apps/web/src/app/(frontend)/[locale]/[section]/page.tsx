@@ -243,12 +243,7 @@ async function SectionResults({
         ) : null}
       </div>
 
-      <TripBar
-        base={base}
-        state={state}
-        locale={locale}
-        mode={section.path === 'stay' ? 'nights' : 'sitting'}
-      />
+      <TripBar base={base} state={state} locale={locale} section={section.path} />
 
       <ListingFilters base={base} state={state} locale={locale} counts={counts} />
 
