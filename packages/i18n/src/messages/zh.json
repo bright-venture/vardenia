@@ -311,7 +311,8 @@
     "rule_number": "一个数字",
     "rule_symbol": "一个特殊字符",
     "rule_case": "大小写字母",
-    "details": "您的资料"
+    "details": "您的资料",
+    "passportLink": "我的护照"
   },
   "partner": {
     "eyebrow": "面向合作伙伴",
@@ -591,5 +592,32 @@
     "unverified": "请先验证您的邮箱后再评价。",
     "guestsSay": "客人怎么说",
     "readAll": "{count, plural, other {查看全部 # 条评价}}"
+  },
+  "passport": {
+    "title": "我的 Vardenia 护照",
+    "signInToSee": "登录后查看您的护照。",
+    "coverLabel": "Vardenia 护照",
+    "points": "积分",
+    "stamps": "印章",
+    "how": "每通过 Vardenia 预订并到访一家合作场所，即可获得一枚印章。新场所 {newPoints} 分，每次回访 {returnPoints} 分。",
+    "howLand": "场所确认您的到访后即会盖章；如未确认，则在到访一周后自动盖章。",
+    "stampsHeading": "印章",
+    "empty": "还没有印章。通过 Vardenia 在合作场所预订餐桌或房间，到访后即可获得第一枚印章。",
+    "visits": "{count, plural, other {# 次到访}}",
+    "pendingLabel": "即将盖章",
+    "pendingBy": "最迟 {date} 盖章",
+    "nextStamp": "下一枚印章",
+    "milestonesHeading": "里程碑",
+    "reached": "已达成",
+    "progress": "{count} / {target}",
+    "milestone": {
+      "first": "第一枚印章",
+      "five": "五个场所",
+      "ten": "十个场所",
+      "threeSections": "三个版块",
+      "allSections": "全部版块",
+      "threeRegions": "三个省份",
+      "allRegions": "黎巴嫩全部省份"
+    }
   }
 }

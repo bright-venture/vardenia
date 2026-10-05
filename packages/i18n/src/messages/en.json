@@ -311,7 +311,8 @@
     "rule_number": "A number",
     "rule_symbol": "A special character",
     "rule_case": "Upper and lower case",
-    "details": "Your details"
+    "details": "Your details",
+    "passportLink": "Your passport"
   },
   "partner": {
     "eyebrow": "For partners",
@@ -591,5 +592,32 @@
     "unverified": "Confirm your email address before you can review.",
     "guestsSay": "What guests say",
     "readAll": "{count, plural, one {Read the review} other {Read all # reviews}}"
+  },
+  "passport": {
+    "title": "Your Vardenia passport",
+    "signInToSee": "Sign in to see your passport.",
+    "coverLabel": "Vardenia passport",
+    "points": "Points",
+    "stamps": "Stamps",
+    "how": "A stamp for every partner place you book through Vardenia and visit. {newPoints} points for a new place, {returnPoints} for each return visit.",
+    "howLand": "A stamp lands when the venue marks your visit, or a week after it if they have not.",
+    "stampsHeading": "Stamps",
+    "empty": "No stamps yet. Book a table or a room at a partner place through Vardenia, and your first stamp lands after your visit.",
+    "visits": "{count, plural, one {# visit} other {# visits}}",
+    "pendingLabel": "On its way",
+    "pendingBy": "Lands by {date}",
+    "nextStamp": "Your next stamp",
+    "milestonesHeading": "Milestones",
+    "reached": "Reached",
+    "progress": "{count} of {target}",
+    "milestone": {
+      "first": "First stamp",
+      "five": "Five places",
+      "ten": "Ten places",
+      "threeSections": "Three sections",
+      "allSections": "Every section",
+      "threeRegions": "Three regions",
+      "allRegions": "Every region of Lebanon"
+    }
   }
 }

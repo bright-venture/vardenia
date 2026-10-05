@@ -311,7 +311,8 @@
     "rule_number": "Un número",
     "rule_symbol": "Un carácter especial",
     "rule_case": "Mayúsculas y minúsculas",
-    "details": "Tus datos"
+    "details": "Tus datos",
+    "passportLink": "Tu pasaporte"
   },
   "partner": {
     "eyebrow": "Para socios",
@@ -591,5 +592,32 @@
     "unverified": "Confirma tu correo electrónico antes de poder opinar.",
     "guestsSay": "Lo que dicen los clientes",
     "readAll": "{count, plural, one {Leer la reseña} other {Leer las # reseñas}}"
+  },
+  "passport": {
+    "title": "Tu pasaporte Vardenia",
+    "signInToSee": "Inicia sesión para ver tu pasaporte.",
+    "coverLabel": "Pasaporte Vardenia",
+    "points": "Puntos",
+    "stamps": "Sellos",
+    "how": "Un sello por cada lugar asociado que reservas a través de Vardenia y visitas. {newPoints} puntos por un lugar nuevo, {returnPoints} por cada visita repetida.",
+    "howLand": "El sello llega cuando el local registra tu visita, o una semana después si no lo ha hecho.",
+    "stampsHeading": "Sellos",
+    "empty": "Aún no tienes sellos. Reserva una mesa o una habitación en un lugar asociado a través de Vardenia y tu primer sello llegará después de tu visita.",
+    "visits": "{count, plural, one {# visita} other {# visitas}}",
+    "pendingLabel": "En camino",
+    "pendingBy": "Llega a más tardar el {date}",
+    "nextStamp": "Tu próximo sello",
+    "milestonesHeading": "Logros",
+    "reached": "Conseguido",
+    "progress": "{count} de {target}",
+    "milestone": {
+      "first": "Primer sello",
+      "five": "Cinco lugares",
+      "ten": "Diez lugares",
+      "threeSections": "Tres secciones",
+      "allSections": "Todas las secciones",
+      "threeRegions": "Tres regiones",
+      "allRegions": "Todas las regiones del Líbano"
+    }
   }
 }

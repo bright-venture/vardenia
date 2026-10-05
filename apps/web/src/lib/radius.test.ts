@@ -67,6 +67,17 @@ const files = execFileSync('git', ['ls-files', 'apps/web/src'], {
  */
 const RADIUS = /\brounded(?:-[a-z0-9]+)*\b/g
 
+/**
+ * Deliberate exceptions, by file. Each is a drawing of a real object whose
+ * corners are part of what it is, not a corner of the interface.
+ *
+ * - The phone in the home page's scan sequence: square, it stops reading as a
+ *   phone. `rounded-[2rem]` matches here as bare `rounded`.
+ */
+const ALLOWED: Record<string, readonly string[]> = {
+  'apps/web/src/components/home/ScanSequence.tsx': ['rounded'],
+}
+
 /** `rounded`, `rounded-md`, `rounded-t-xl` - but never `rounded-full`. */
 const isSized = (token: string) => !token.endsWith('-full')
 
@@ -103,7 +114,10 @@ describe('corner radii', () => {
 
     for (const file of files) {
       const source = withoutComments(readFileSync(path.resolve(ROOT, file), 'utf8'))
-      for (const token of sizedIn(source)) strays.push(`${file}: ${token}`)
+      for (const token of sizedIn(source)) {
+        if (ALLOWED[file]?.includes(token)) continue
+        strays.push(`${file}: ${token}`)
+      }
     }
 
     expect(strays, `the design has no rounded corners:\n  ${strays.join('\n  ')}`).toEqual([])

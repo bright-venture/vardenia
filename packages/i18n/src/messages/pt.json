@@ -311,7 +311,8 @@
     "rule_number": "Um número",
     "rule_symbol": "Um caractere especial",
     "rule_case": "Maiúsculas e minúsculas",
-    "details": "Seus dados"
+    "details": "Seus dados",
+    "passportLink": "O seu passaporte"
   },
   "partner": {
     "eyebrow": "Para parceiros",
@@ -591,5 +592,32 @@
     "unverified": "Confirme o seu e-mail antes de poder avaliar.",
     "guestsSay": "O que dizem os clientes",
     "readAll": "{count, plural, one {Ler a avaliação} other {Ler as # avaliações}}"
+  },
+  "passport": {
+    "title": "O seu passaporte Vardenia",
+    "signInToSee": "Inicie sessão para ver o seu passaporte.",
+    "coverLabel": "Passaporte Vardenia",
+    "points": "Pontos",
+    "stamps": "Carimbos",
+    "how": "Um carimbo por cada local parceiro que reserva através da Vardenia e visita. {newPoints} pontos por um local novo, {returnPoints} por cada visita repetida.",
+    "howLand": "O carimbo chega quando o local regista a sua visita, ou uma semana depois se não o fizer.",
+    "stampsHeading": "Carimbos",
+    "empty": "Ainda não tem carimbos. Reserve uma mesa ou um quarto num local parceiro através da Vardenia e o seu primeiro carimbo chega depois da visita.",
+    "visits": "{count, plural, one {# visita} other {# visitas}}",
+    "pendingLabel": "A caminho",
+    "pendingBy": "Chega até {date}",
+    "nextStamp": "O seu próximo carimbo",
+    "milestonesHeading": "Conquistas",
+    "reached": "Alcançado",
+    "progress": "{count} de {target}",
+    "milestone": {
+      "first": "Primeiro carimbo",
+      "five": "Cinco locais",
+      "ten": "Dez locais",
+      "threeSections": "Três secções",
+      "allSections": "Todas as secções",
+      "threeRegions": "Três regiões",
+      "allRegions": "Todas as regiões do Líbano"
+    }
   }
 }

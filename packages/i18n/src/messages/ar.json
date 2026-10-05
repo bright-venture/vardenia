@@ -311,7 +311,8 @@
     "rule_number": "رقم",
     "rule_symbol": "رمز خاص",
     "rule_case": "حرف كبير وآخر صغير",
-    "details": "تفاصيلك"
+    "details": "تفاصيلك",
+    "passportLink": "جوازك"
   },
   "partner": {
     "eyebrow": "للشركاء",
@@ -591,5 +592,32 @@
     "unverified": "أكّد بريدك الإلكتروني قبل أن تتمكن من التقييم.",
     "guestsSay": "ماذا يقول الضيوف",
     "readAll": "{count, plural, one {اقرأ التقييم} other {اقرأ كل التقييمات (#)}}"
+  },
+  "passport": {
+    "title": "جواز فاردينيا الخاص بك",
+    "signInToSee": "سجّل الدخول لترى جوازك.",
+    "coverLabel": "جواز فاردينيا",
+    "points": "النقاط",
+    "stamps": "الأختام",
+    "how": "ختم لكل مكان شريك تحجز فيه عبر فاردينيا وتزوره. {newPoints} نقاط لكل مكان جديد، و{returnPoints} لكل زيارة متكررة.",
+    "howLand": "يُضاف الختم عندما يسجّل المكان زيارتك، أو بعد أسبوع منها إن لم يفعل.",
+    "stampsHeading": "الأختام",
+    "empty": "لا أختام بعد. احجز طاولة أو غرفة في مكان شريك عبر فاردينيا، وسيُضاف ختمك الأول بعد زيارتك.",
+    "visits": "{count, plural, one {زيارة واحدة} two {زيارتان} few {# زيارات} other {# زيارة}}",
+    "pendingLabel": "في الطريق",
+    "pendingBy": "يُضاف بحلول {date}",
+    "nextStamp": "ختمك التالي",
+    "milestonesHeading": "المحطات",
+    "reached": "تحقّق",
+    "progress": "{count} من {target}",
+    "milestone": {
+      "first": "الختم الأول",
+      "five": "خمسة أماكن",
+      "ten": "عشرة أماكن",
+      "threeSections": "ثلاثة أقسام",
+      "allSections": "كل الأقسام",
+      "threeRegions": "ثلاث محافظات",
+      "allRegions": "كل محافظات لبنان"
+    }
   }
 }

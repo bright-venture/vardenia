@@ -311,7 +311,8 @@
     "rule_number": "Un chiffre",
     "rule_symbol": "Un caractère spécial",
     "rule_case": "Majuscules et minuscules",
-    "details": "Vos informations"
+    "details": "Vos informations",
+    "passportLink": "Votre passeport"
   },
   "partner": {
     "eyebrow": "Pour les partenaires",
@@ -591,5 +592,32 @@
     "unverified": "Confirmez votre adresse e-mail avant de pouvoir laisser un avis.",
     "guestsSay": "Ce qu'en disent les clients",
     "readAll": "{count, plural, one {Lire l'avis} other {Lire les # avis}}"
+  },
+  "passport": {
+    "title": "Votre passeport Vardenia",
+    "signInToSee": "Connectez-vous pour voir votre passeport.",
+    "coverLabel": "Passeport Vardenia",
+    "points": "Points",
+    "stamps": "Tampons",
+    "how": "Un tampon pour chaque lieu partenaire réservé via Vardenia et visité. {newPoints} points pour un nouveau lieu, {returnPoints} pour chaque nouvelle visite.",
+    "howLand": "Le tampon arrive quand l'établissement confirme votre visite, ou une semaine après s'il ne l'a pas fait.",
+    "stampsHeading": "Tampons",
+    "empty": "Aucun tampon pour l'instant. Réservez une table ou une chambre dans un lieu partenaire via Vardenia, et votre premier tampon arrive après votre visite.",
+    "visits": "{count, plural, one {# visite} other {# visites}}",
+    "pendingLabel": "En route",
+    "pendingBy": "Arrive le {date} au plus tard",
+    "nextStamp": "Votre prochain tampon",
+    "milestonesHeading": "Étapes",
+    "reached": "Atteint",
+    "progress": "{count} sur {target}",
+    "milestone": {
+      "first": "Premier tampon",
+      "five": "Cinq lieux",
+      "ten": "Dix lieux",
+      "threeSections": "Trois rubriques",
+      "allSections": "Toutes les rubriques",
+      "threeRegions": "Trois régions",
+      "allRegions": "Toutes les régions du Liban"
+    }
   }
 }

@@ -311,7 +311,8 @@
     "rule_number": "एक अंक",
     "rule_symbol": "एक विशेष चिह्न",
     "rule_case": "बड़े और छोटे अक्षर",
-    "details": "आपका विवरण"
+    "details": "आपका विवरण",
+    "passportLink": "आपका पासपोर्ट"
   },
   "partner": {
     "eyebrow": "साझेदारों के लिए",
@@ -591,5 +592,32 @@
     "unverified": "समीक्षा करने से पहले अपना ईमेल पुष्टि करें।",
     "guestsSay": "मेहमान क्या कहते हैं",
     "readAll": "{count, plural, one {समीक्षा पढ़ें} other {सभी # समीक्षाएँ पढ़ें}}"
+  },
+  "passport": {
+    "title": "आपका Vardenia पासपोर्ट",
+    "signInToSee": "अपना पासपोर्ट देखने के लिए साइन इन करें।",
+    "coverLabel": "Vardenia पासपोर्ट",
+    "points": "अंक",
+    "stamps": "मुहरें",
+    "how": "Vardenia से बुक की गई हर साझेदार जगह पर जाने के लिए एक मुहर। नई जगह के लिए {newPoints} अंक, हर बार दोबारा जाने पर {returnPoints} अंक।",
+    "howLand": "मुहर तब लगती है जब जगह आपकी यात्रा दर्ज करती है, या ऐसा न होने पर एक हफ़्ते बाद।",
+    "stampsHeading": "मुहरें",
+    "empty": "अभी कोई मुहर नहीं। Vardenia से किसी साझेदार जगह पर टेबल या कमरा बुक करें, और यात्रा के बाद आपकी पहली मुहर लगेगी।",
+    "visits": "{count, plural, one {# यात्रा} other {# यात्राएँ}}",
+    "pendingLabel": "रास्ते में",
+    "pendingBy": "{date} तक लगेगी",
+    "nextStamp": "आपकी अगली मुहर",
+    "milestonesHeading": "उपलब्धियाँ",
+    "reached": "पूरा हुआ",
+    "progress": "{target} में से {count}",
+    "milestone": {
+      "first": "पहली मुहर",
+      "five": "पाँच जगहें",
+      "ten": "दस जगहें",
+      "threeSections": "तीन सेक्शन",
+      "allSections": "सभी सेक्शन",
+      "threeRegions": "तीन क्षेत्र",
+      "allRegions": "लेबनान के सभी क्षेत्र"
+    }
   }
 }

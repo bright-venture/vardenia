@@ -258,3 +258,18 @@ export function beirutDayLabel(instant: Date, locale: Locale = 'en'): string {
     month: 'long',
   }).format(instant)
 }
+
+/**
+ * A date as a passport stamp carries it: "12 Oct 2026", on Beirut's calendar.
+ *
+ * The year is there because a stamp is a record kept for years, where every
+ * other date on the site is about the next few weeks. Latin digits, as above.
+ */
+export function beirutStampDate(instant: Date, locale: Locale = 'en'): string {
+  return new Intl.DateTimeFormat(dateLocale(locale, true), {
+    timeZone: BEIRUT,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(instant)
+}

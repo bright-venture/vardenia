@@ -311,7 +311,8 @@
     "rule_number": "ایک ہندسہ",
     "rule_symbol": "ایک خاص علامت",
     "rule_case": "بڑے اور چھوٹے حروف",
-    "details": "آپ کی تفصیلات"
+    "details": "آپ کی تفصیلات",
+    "passportLink": "آپ کا پاسپورٹ"
   },
   "partner": {
     "eyebrow": "شراکت داروں کے لیے",
@@ -591,5 +592,32 @@
     "unverified": "رائے دینے سے پہلے اپنا ای میل تصدیق کریں۔",
     "guestsSay": "مہمان کیا کہتے ہیں",
     "readAll": "{count, plural, one {جائزہ پڑھیں} other {تمام # جائزے پڑھیں}}"
+  },
+  "passport": {
+    "title": "آپ کا Vardenia پاسپورٹ",
+    "signInToSee": "اپنا پاسپورٹ دیکھنے کے لیے سائن ان کریں۔",
+    "coverLabel": "Vardenia پاسپورٹ",
+    "points": "پوائنٹس",
+    "stamps": "مہریں",
+    "how": "Vardenia کے ذریعے بک کی گئی ہر پارٹنر جگہ پر جانے کے لیے ایک مہر۔ نئی جگہ کے {newPoints} پوائنٹس، ہر بار دوبارہ جانے پر {returnPoints}۔",
+    "howLand": "مہر تب لگتی ہے جب جگہ آپ کا وزٹ درج کرے، یا ایسا نہ ہونے پر ایک ہفتے بعد۔",
+    "stampsHeading": "مہریں",
+    "empty": "ابھی کوئی مہر نہیں۔ Vardenia کے ذریعے کسی پارٹنر جگہ پر میز یا کمرہ بک کریں، اور وزٹ کے بعد آپ کی پہلی مہر لگے گی۔",
+    "visits": "{count, plural, one {# وزٹ} other {# وزٹس}}",
+    "pendingLabel": "راستے میں",
+    "pendingBy": "{date} تک لگے گی",
+    "nextStamp": "آپ کی اگلی مہر",
+    "milestonesHeading": "سنگ میل",
+    "reached": "حاصل",
+    "progress": "{target} میں سے {count}",
+    "milestone": {
+      "first": "پہلی مہر",
+      "five": "پانچ جگہیں",
+      "ten": "دس جگہیں",
+      "threeSections": "تین سیکشن",
+      "allSections": "تمام سیکشن",
+      "threeRegions": "تین علاقے",
+      "allRegions": "لبنان کے تمام علاقے"
+    }
   }
 }

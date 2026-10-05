@@ -99,9 +99,14 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
           <p className="text-ink-500 mt-2 text-sm">{customer.email}</p>
-          <Link href="/account/saved" className={`${LINK} mt-3 inline-block`}>
-            {t('savedLink')}
-          </Link>
+          <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+            <Link href="/account/passport" className={LINK}>
+              {t('passportLink')}
+            </Link>
+            <Link href="/account/saved" className={LINK}>
+              {t('savedLink')}
+            </Link>
+          </p>
         </div>
         <SignOutButton />
       </header>
