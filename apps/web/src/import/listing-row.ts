@@ -75,35 +75,34 @@ export interface ImportedListing {
  *
  * The fits are read from what the listings actually are, not from the word:
  * Getaways are the boutique guesthouses and villas rented for a short escape;
- * Pools are day pool-and-water resorts, which is what `beach-clubs` already
- * covers; Gyms have no fitness slug so they sit under `wellness`; Hidden Gems in
- * this file are natural sites - a waterfall, a grotto - so `eco-tourism`; Boat
- * Rentals are marine activities, so `adventure`; Malls take the one shopping slug.
+ * Pools are day pool-and-water resorts; Hidden Gems in this file are natural
+ * sites - a waterfall, a grotto - and Boat Rentals are marine activities, so
+ * both are Activities. Since the October 2026 list the headings and the
+ * taxonomy mostly use the same words; see core/taxonomy.
  * A few are approximate, and a person can move a listing afterwards; the point is
  * that every row lands somewhere real rather than being skipped.
  */
 const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory: string }> = {
-  Hotels: { category: 'hospitality', subcategory: 'luxury-hotels' },
-  'Guest Houses': { category: 'hospitality', subcategory: 'guest-houses' },
-  Getaways: { category: 'hospitality', subcategory: 'guest-houses' },
+  Hotels: { category: 'hospitality', subcategory: 'hotels' },
+  'Guest Houses': { category: 'hospitality', subcategory: 'getaways' },
+  Getaways: { category: 'hospitality', subcategory: 'getaways' },
   Restaurants: { category: 'food-and-beverage', subcategory: 'restaurants' },
   'Coffee Shops': { category: 'food-and-beverage', subcategory: 'coffee-shops' },
   Nightlife: { category: 'food-and-beverage', subcategory: 'nightlife' },
-  Pools: { category: 'food-and-beverage', subcategory: 'beach-clubs' },
-  Activities: { category: 'tourism', subcategory: 'adventure' },
-  'Boat Rentals': { category: 'tourism', subcategory: 'adventure' },
+  Pools: { category: 'food-and-beverage', subcategory: 'pools' },
+  Activities: { category: 'tourism', subcategory: 'activities' },
+  'Boat Rentals': { category: 'tourism', subcategory: 'activities' },
   'Tour Guides': { category: 'tourism', subcategory: 'tour-guides' },
   Festivals: { category: 'tourism', subcategory: 'festivals' },
-  'Hidden Gems': { category: 'tourism', subcategory: 'eco-tourism' },
+  'Hidden Gems': { category: 'tourism', subcategory: 'activities' },
   // Both had their own subcategory added rather than borrowing a near-enough
   // one. A gym under healthcare/wellness sat beside hospitals and clinics, and
   // a shopping centre under luxury-shopping claimed to be a boutique.
   Gyms: { category: 'lifestyle', subcategory: 'gyms' },
   Malls: { category: 'lifestyle', subcategory: 'malls' },
-  // The Bekaa file. The valley's wineries and its ruins are what people go
-  // there for, and both already had a subcategory; filing Ksara under
-  // adventure and Baalbek's temples under an activity would hide them.
-  Wineries: { category: 'food-and-beverage', subcategory: 'wine-experiences' },
+  // The Bekaa file. Wineries are visited for a tasting, which is an activity
+  // in the October 2026 list; Baalbek's temples keep Historic Sites.
+  Wineries: { category: 'tourism', subcategory: 'activities' },
   'Historical Sites': { category: 'tourism', subcategory: 'historical-sites' },
 }
 
@@ -437,11 +436,9 @@ export function toListing(
     warnings.push('spans two districts, filed under Keserwan')
   }
 
-  const stars = Number(value(row, 'Hotel Stars'))
-  const subcategory =
-    heading === 'Hotels' && Number.isFinite(stars) && stars > 0 && stars < 4
-      ? 'boutique-hotels'
-      : mapping.subcategory
+  // Every hotel is Hotels now. The star rating used to split boutique from
+  // luxury, a distinction the October 2026 list dropped.
+  const subcategory = mapping.subcategory
 
   /** Unique from the start, because the slug column refuses a duplicate. */
   let slug = slugify(name)

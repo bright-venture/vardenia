@@ -120,9 +120,9 @@ export function resolveDestination(qr: QrDoc, rawSiteUrl: string): string {
        * `/g/CODE`, and this function runs fresh on every scan, so codes already
        * in circulation follow the new address without anything being reprinted.
        *
-       * A category with no section is impossible - the mapping is exhaustive by
-       * type - but the fallback stays, because this is a printed code and a
-       * homepage beats a 404.
+       * A retired category has no section - healthcare, since October 2026 -
+       * so it lands on the directory: this is a printed code, and the directory
+       * beats a 404.
        */
       const slug = typeof qr.category === 'string' ? qr.category : null
       const section = sectionForCategory(slug)

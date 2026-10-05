@@ -189,12 +189,12 @@ describe('the rows that need a person', () => {
  */
 describe('the Chouf headings, mapped to existing subcategories', () => {
   const EXPECTED: Record<string, [string, string]> = {
-    Getaways: ['hospitality', 'guest-houses'],
+    Getaways: ['hospitality', 'getaways'],
     'Coffee Shops': ['food-and-beverage', 'coffee-shops'],
     Nightlife: ['food-and-beverage', 'nightlife'],
-    Pools: ['food-and-beverage', 'beach-clubs'],
-    'Boat Rentals': ['tourism', 'adventure'],
-    'Hidden Gems': ['tourism', 'eco-tourism'],
+    Pools: ['food-and-beverage', 'pools'],
+    'Boat Rentals': ['tourism', 'activities'],
+    'Hidden Gems': ['tourism', 'activities'],
     // Both had their own subcategory added rather than borrowing a neighbour:
     // a gym under healthcare sat beside hospitals, and a mall under
     // luxury-shopping claimed to be a boutique.
@@ -410,7 +410,7 @@ describe('the Bekaa, across its two governorates', () => {
     }
   })
 
-  it('sends wineries and historical sites to their own subcategories', () => {
+  it('sends wineries to Activities and historical sites to Historic Sites', () => {
     const winery = toListing({ ID: 'X', Category: 'Wineries', 'Name / Listing': 'Château Ksara' })
     const ruins = toListing({
       ID: 'Y',
@@ -419,8 +419,8 @@ describe('the Bekaa, across its two governorates', () => {
     })
 
     expect(winery).toMatchObject({
-      category: 'food-and-beverage',
-      subcategories: ['wine-experiences'],
+      category: 'tourism',
+      subcategories: ['activities'],
     })
     expect(ruins).toMatchObject({ category: 'tourism', subcategories: ['historical-sites'] })
   })

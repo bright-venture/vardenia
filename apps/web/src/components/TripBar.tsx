@@ -40,7 +40,6 @@ const WORDING: Record<string, Wording> = {
   },
   weddings: { title: 'weddings', date: 'date', time: 'time', party: 'guests', apply: 'showFree' },
   lifestyle: { title: 'other', date: 'date', time: 'time', party: 'people', apply: 'showFree' },
-  health: { title: 'other', date: 'date', time: 'time', party: 'people', apply: 'showFree' },
   'getting-around': {
     title: 'transport',
     date: 'date',

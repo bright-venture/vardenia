@@ -14,18 +14,25 @@ interface Option {
   value: string
 }
 
-export const categoryOptions: Option[] = CATEGORIES.filter((c) => !c.retired).map((c) => ({
-  label: c.en,
+/**
+ * Every slug the taxonomy has ever shipped, retired ones included.
+ *
+ * These become the Postgres enums, and an enum value cannot be dropped while a
+ * row holds it - old versions of a listing keep the subcategory they were saved
+ * with. So retiring a slug must never take it out of the type. What a person is
+ * offered is narrowed in the collection instead, with `filterOptions`, and a
+ * retired value is refused on save there. See Businesses and core/taxonomy.
+ */
+export const categoryOptions: Option[] = CATEGORIES.map((c) => ({
+  label: c.retired ? `${c.en} (retired)` : c.en,
   value: c.slug,
 }))
 
 export const subcategoryOptions: Option[] = CATEGORIES.flatMap((category) =>
-  category.children
-    .filter((child) => !child.retired)
-    .map((child) => ({
-      label: `${category.en} > ${child.en}`,
-      value: child.slug,
-    })),
+  category.children.map((child) => ({
+    label: `${category.en} > ${child.en}${child.retired ? ' (retired)' : ''}`,
+    value: child.slug,
+  })),
 )
 
 export const governorateOptions: Option[] = GOVERNORATES.map((g) => ({

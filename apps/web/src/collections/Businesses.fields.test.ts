@@ -37,12 +37,27 @@ describe('subcategories', () => {
       options: optionsOf('subcategories'),
       data: { category: 'hospitality' },
     }).map((o) => o.value)
-    expect(offered).toContain('guest-houses')
+    expect(offered).toEqual(['hotels', 'getaways'])
     expect(offered).not.toContain('restaurants')
   })
 
+  it('never offers a retired one, though the enum still holds it', () => {
+    expect(optionsOf('subcategories').map((o) => o.value)).toContain('guest-houses')
+    const offered = sub.filterOptions!({ options: optionsOf('subcategories'), data: {} }).map(
+      (o) => o.value,
+    )
+    expect(offered).not.toContain('guest-houses')
+    expect(offered).not.toContain('hospitals')
+  })
+
+  it('refuses a retired one on save', () => {
+    expect(sub.validate!(['guest-houses'], { data: { category: 'hospitality' } })).toContain(
+      'guest-houses',
+    )
+  })
+
   it('refuses one from another category, and names it', () => {
-    expect(sub.validate!(['guest-houses'], { data: { category: 'hospitality' } })).toBe(true)
+    expect(sub.validate!(['getaways'], { data: { category: 'hospitality' } })).toBe(true)
     expect(sub.validate!(['restaurants'], { data: { category: 'hospitality' } })).toContain(
       'restaurants',
     )

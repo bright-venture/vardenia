@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TAXONOMY } from './taxonomy'
+import { CATEGORIES, TAXONOMY } from './taxonomy'
 import { SECTIONS, SECTION_PATHS, sectionForCategory, sectionForPath } from './sections'
 
 /**
@@ -13,11 +13,19 @@ import { SECTIONS, SECTION_PATHS, sectionForCategory, sectionForPath } from './s
  */
 
 describe('SECTIONS', () => {
-  it('gives every category in the taxonomy a home', () => {
+  it('gives every live category in the taxonomy a home', () => {
     const covered = SECTIONS.map((section) => section.category).sort()
-    const all = TAXONOMY.map((category) => category.slug).sort()
+    const live = CATEGORIES.filter((category) => !category.retired)
+      .map((category) => category.slug)
+      .sort()
 
-    expect(covered).toEqual(all)
+    expect(covered).toEqual(live)
+  })
+
+  it('has no section for a retired category', () => {
+    expect(sectionForCategory('healthcare')).toBeNull()
+    expect(sectionForPath('health')).toBeNull()
+    expect(SECTIONS).toHaveLength(6)
   })
 
   it('has no section for a category that does not exist', () => {

@@ -1,5 +1,11 @@
 import type { CollectionConfig } from 'payload'
-import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
+import {
+  DEFAULT_PLACEMENT,
+  QR_PLACEMENTS,
+  QR_TARGET_TYPES,
+  TAXONOMY,
+  isActiveCategory,
+} from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { committedReason, protectPrintedCodes } from '../hooks/protectPrintedCodes'
 import {
@@ -163,6 +169,11 @@ export const QrCodes: CollectionConfig = {
       type: 'select',
       access: { update: destinationOpen },
       options: TAXONOMY.map((entry) => ({ label: entry.en, value: entry.slug })),
+      // Retired categories stay in the enum and are not offered. See collections/options.
+      filterOptions: ({ options }) =>
+        options.filter((option) =>
+          isActiveCategory(typeof option === 'string' ? option : option.value),
+        ),
       admin: {
         condition: (data) => data?.targetType === 'category',
         description: 'Opens the directory filtered to this category.',

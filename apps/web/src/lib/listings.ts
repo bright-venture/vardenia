@@ -56,7 +56,7 @@ export interface ListingQuery {
   locale: Locale
   category?: string
   /**
-   * One of the category's own children, e.g. `boutique-hotels` under
+   * One of the category's own children, e.g. `hotels` under
    * `hospitality`. The section pages filter on this, which is why fifty-one
    * subcategories need no templates of their own.
    */

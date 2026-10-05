@@ -51,7 +51,6 @@ const SECTION_IMAGES: Record<string, string> = {
   experiences: '/images/cat-experiences.jpg',
   weddings: '/images/cat-weddings.jpg',
   lifestyle: '/images/cat-lifestyle.jpg',
-  health: '/images/cat-health.jpg',
   'getting-around': '/images/cat-around.jpg',
 }
 

@@ -1,7 +1,7 @@
 import type { CategorySlug } from './taxonomy'
 
 /**
- * The seven sections of the site, and the category each one is.
+ * The six sections of the site, and the category each one is.
  *
  * # Why this exists
  *
@@ -48,9 +48,9 @@ export interface SiteSection {
   en: string
   ar: string
   /**
-   * One line, for the menu that lists all seven at once.
+   * One line, for the menu that lists all six at once.
    *
-   * Seven names in a row tell a first-time visitor almost nothing - "Lifestyle"
+   * Six names in a row tell a first-time visitor almost nothing - "Lifestyle"
    * and "Experiences" could be anything. These say what is actually behind each
    * one, in the words a reader would use rather than the taxonomy's.
    */
@@ -63,36 +63,36 @@ const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
     path: 'stay',
     en: 'Stay',
     ar: 'الضيافة',
-    descriptionEn: 'Hotels, guesthouses, chalets and villas',
-    descriptionAr: 'فنادق وبيوت ضيافة وشاليهات وفلل',
+    descriptionEn: 'Hotels and getaways',
+    descriptionAr: 'فنادق واستراحات',
   },
   'food-and-beverage': {
     path: 'eat-and-drink',
     en: 'Eat & Drink',
     ar: 'المأكولات والمشروبات',
-    descriptionEn: 'Restaurants, cafes, beach clubs and nightlife',
-    descriptionAr: 'مطاعم ومقاهي ونوادي شاطئية وحياة ليلية',
+    descriptionEn: 'Restaurants, cafes, pools and nightlife',
+    descriptionAr: 'مطاعم ومقاهي ومسابح وحياة ليلية',
   },
   tourism: {
     path: 'experiences',
     en: 'Experiences',
     ar: 'السياحة',
-    descriptionEn: 'Historic sites, mountain escapes and hidden villages',
-    descriptionAr: 'مواقع تاريخية واستراحات جبلية وقرى مخفية',
+    descriptionEn: 'Historic sites, guided tours, festivals and activities',
+    descriptionAr: 'مواقع تاريخية وجولات مع مرشد ومهرجانات وأنشطة',
   },
   weddings: {
     path: 'weddings',
     en: 'Weddings',
     ar: 'الأعراس',
-    descriptionEn: 'Venues, planners, photographers and everything after',
-    descriptionAr: 'قاعات ومنظمون ومصورون وكل ما يليها',
+    descriptionEn: 'Event planners for the day itself',
+    descriptionAr: 'منظمو مناسبات ليومكم الكبير',
   },
   lifestyle: {
     path: 'lifestyle',
     en: 'Lifestyle',
     ar: 'نمط الحياة',
-    descriptionEn: 'Shopping, jewellery, fashion and beauty',
-    descriptionAr: 'تسوق ومجوهرات وأزياء وتجميل',
+    descriptionEn: 'Malls and gyms',
+    descriptionAr: 'مراكز تسوق ونوادي رياضية',
   },
   healthcare: {
     path: 'health',
@@ -105,7 +105,7 @@ const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
     path: 'getting-around',
     en: 'Getting Around',
     ar: 'النقل',
-    descriptionEn: 'Car hire, airport transfers and private drivers',
+    descriptionEn: 'Car rental, airport transfers and private drivers',
     descriptionAr: 'تأجير سيارات ونقل من المطار وسائقون خاصون',
   },
 }
@@ -114,9 +114,15 @@ const BY_CATEGORY: Record<CategorySlug, Omit<SiteSection, 'category'>> = {
  * Navigation order, which is not the taxonomy's order.
  *
  * Stay, Eat & Drink and Experiences come first because they are what a visitor
- * arrives looking for and where the listings are today. Health and Getting
- * Around are things you need once you are here rather than things you browse,
- * so they sit at the end.
+ * arrives looking for and where the listings are today. Getting Around is
+ * something you need once you are here rather than something you browse, so
+ * it sits at the end.
+ *
+ * Healthcare is not here: it was retired in October 2026, with every kind of
+ * place in it, and its section went with it. Its entry stays in the record
+ * above because the type demands one for every category slug, and the slug
+ * stays in the taxonomy because old listing versions still carry it. Leaving
+ * it out of this list is what takes /health off the site.
  */
 const ORDER: readonly CategorySlug[] = [
   'hospitality',
@@ -124,7 +130,6 @@ const ORDER: readonly CategorySlug[] = [
   'tourism',
   'weddings',
   'lifestyle',
-  'healthcare',
   'transportation',
 ]
 
@@ -144,7 +149,7 @@ export function sectionForCategory(category: string | null | undefined): SiteSec
  *
  * Null is what makes `/stayy` a 404 rather than an empty listing page. The route
  * is a top-level dynamic segment, so it sees every unmatched one-segment path
- * and has to reject anything that is not one of the seven.
+ * and has to reject anything that is not one of the six.
  */
 export function sectionForPath(path: string | null | undefined): SiteSection | null {
   if (!path) return null

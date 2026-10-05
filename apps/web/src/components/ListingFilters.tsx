@@ -1,5 +1,12 @@
 import { getTranslations } from 'next-intl/server'
-import { AMENITIES, AMENITY_SLUGS, GOVERNORATES, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core'
+import {
+  AMENITIES,
+  AMENITY_SLUGS,
+  GOVERNORATES,
+  PRICE_RANGES,
+  PRICE_SLUGS,
+  currentSubcategory,
+} from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'
@@ -165,9 +172,12 @@ export function parseFilterState(
 ): FilterState {
   const governorate = GOVERNORATES.some((g) => g.slug === raw.where) ? raw.where : undefined
   const districts = GOVERNORATES.find((g) => g.slug === governorate)?.districts ?? []
+  const current = currentSubcategory(raw.filter) ?? undefined
 
   return {
-    subcategory: subcategories.some((c) => c.slug === raw.filter) ? raw.filter : undefined,
+    // A retired slug from an old link is read as the one its listings moved to,
+    // so /stay?filter=boutique-hotels opens Hotels. See core SUBCATEGORY_MOVES.
+    subcategory: subcategories.some((c) => c.slug === current) ? current : undefined,
     governorate,
     district: districts.some((d) => d.slug === raw.district) ? raw.district : undefined,
     priceRange: PRICE_SLUGS.includes(raw.price ?? '') ? raw.price : undefined,

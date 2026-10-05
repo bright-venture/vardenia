@@ -62,11 +62,11 @@ describe('the list matches the routes that exist', () => {
     }
   })
 
-  it('covers all seven sections', () => {
+  it('covers all six sections', () => {
     for (const section of SECTION_PATHS) {
       expect(KNOWN_SEGMENTS.has(section), `${section} is a section but not known`).toBe(true)
     }
-    expect(SECTION_PATHS.length).toBe(7)
+    expect(SECTION_PATHS.length).toBe(6)
   })
 })
 

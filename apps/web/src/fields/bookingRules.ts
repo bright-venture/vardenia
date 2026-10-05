@@ -1,4 +1,5 @@
 import type { Field } from 'payload'
+import { canTakeBookings } from '@vardenia/core'
 import { isStaffFieldLevel } from '../access/index'
 
 /**
@@ -33,8 +34,18 @@ export const bookingRulesField: Field = {
       defaultValue: false,
       admin: {
         description:
-          'Off means the listing shows contact details only. Nothing else here applies until this is on.',
+          'Off means the listing shows contact details only. Nothing else here applies until this is on. Only hotels, getaways, restaurants, guided tours, activities, event planners, car rental, airport transfers and private drivers can take bookings.',
       },
+      /*
+       * Pools, cafes, nightlife, festivals, historic sites, gyms and malls are
+       * listed and advertised, never booked. Refused here rather than hidden, so
+       * a listing that moves from Restaurants to Cafes is told why its booking
+       * switch no longer saves instead of silently losing it. See core/taxonomy.
+       */
+      validate: (value: unknown, { data }: { data: Partial<{ subcategories: string[] }> }) =>
+        value !== true || canTakeBookings(data?.subcategories ?? [])
+          ? true
+          : 'This kind of place is listed only and cannot take bookings. Choose a bookable kind of place first, or turn booking off.',
     },
 
     {

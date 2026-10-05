@@ -24,7 +24,11 @@ describe('legacyCategoryRedirect', () => {
 
   it('keeps the reader in their language', () => {
     expect(run('/ar/directory?category=hospitality')).toBe('/ar/stay')
-    expect(run('/ar/directory?category=healthcare')).toBe('/ar/health')
+    expect(run('/ar/directory?category=tourism')).toBe('/ar/experiences')
+  })
+
+  it('leaves a retired category on the directory rather than a section that is gone', () => {
+    expect(run('/directory?category=healthcare')).toBeNull()
   })
 
   it('carries the page number across', () => {

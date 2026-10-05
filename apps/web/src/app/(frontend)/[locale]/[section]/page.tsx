@@ -5,6 +5,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   SECTION_PATHS,
   TAXONOMY,
+  categoryTakesBookings,
+  isBookableSubcategory,
   sectionForPath,
   type SiteSection,
   type SubCategory,
@@ -243,7 +245,17 @@ async function SectionResults({
         ) : null}
       </div>
 
-      <TripBar base={base} state={state} locale={locale} section={section.path} />
+      {/* Only where something here can be booked. Lifestyle, and Cafes, Pools,
+          Nightlife, Festivals and Historic Sites, are listed and advertised but
+          never booked, so asking for a date there promises an answer nobody can
+          give. See bookable in core/taxonomy. */}
+      {(
+        state.subcategory
+          ? isBookableSubcategory(state.subcategory)
+          : categoryTakesBookings(section.category)
+      ) ? (
+        <TripBar base={base} state={state} locale={locale} section={section.path} />
+      ) : null}
 
       <ListingFilters base={base} state={state} locale={locale} counts={counts} />
 

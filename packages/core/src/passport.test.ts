@@ -98,7 +98,7 @@ describe('the passport', () => {
     expect(byKey.five!.count).toBe(4)
     expect(byKey.threeSections!.reached).toBe(true)
     expect(byKey.allSections!.count).toBe(3)
-    expect(byKey.allSections!.target).toBe(7)
+    expect(byKey.allSections!.target).toBe(6)
     expect(byKey.threeRegions!.count).toBe(3)
     expect(byKey.allRegions!.target).toBe(8)
   })
