@@ -46,7 +46,8 @@ const listingOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
  * Users collection already says QR codes are the admin's to manage.
  */
 type FieldArgs = Parameters<typeof isAdminFieldLevel>[0] & { doc?: Record<string, unknown> }
-const adminOnly = (args: FieldArgs) => Boolean(isAdminFieldLevel(args))
+// No request means no signed-in admin; never a crash in the admin form.
+const adminOnly = (args: FieldArgs) => Boolean(args?.req && isAdminFieldLevel(args))
 
 /**
  * An issue, once set, is the admin's to change.

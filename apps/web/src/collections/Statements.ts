@@ -210,9 +210,13 @@ function assertIssuedUnchanged(before: StatementData, next: StatementData): void
 
   const dates = ['sentAt', 'disputeUntil', 'dueAt'] as const
   const record = (doc: StatementData) => doc as Record<string, unknown>
-  const changedDates = dates.some(
-    (field) => field in record(next) && !sameInstant(record(before)[field], record(next)[field]),
-  )
+  // Only a value that is actually given counts as a change. An admin save that
+  // leaves the hidden date fields empty is not moving them - and deriveFields
+  // never clears them - so it must not be refused for it.
+  const changedDates = dates.some((field) => {
+    const given = record(next)[field]
+    return given != null && !sameInstant(record(before)[field], given)
+  })
 
   if (changedLines || changedDates) {
     throw new APIError(

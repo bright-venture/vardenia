@@ -140,3 +140,25 @@ describe('an issued statement', () => {
     expect(result.lines.find((l) => l.id === 'a')?.disputeOutcome).toBeUndefined()
   })
 })
+
+describe('an issued statement, saved from the admin', () => {
+  it('is not refused when the hidden date fields come back empty', async () => {
+    const hook = Statements.hooks!.beforeChange![0]!
+    const sent = {
+      status: 'sent',
+      lines: [],
+      sentAt: '2026-11-08T08:00:00.000Z',
+      disputeUntil: '2099-11-15T08:00:00.000Z',
+      dueAt: '2099-11-23T08:00:00.000Z',
+    }
+    await expect(
+      hook({
+        data: { ...sent, status: 'paid', sentAt: null, dueAt: undefined },
+        originalDoc: sent,
+        operation: 'update',
+        context: {},
+        req: { payload: {} },
+      } as never),
+    ).resolves.toBeTruthy()
+  })
+})
