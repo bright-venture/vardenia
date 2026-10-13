@@ -23,7 +23,7 @@ import { reportError } from '../../../lib/report'
  * This was at /account/signup, which is the URL the sign-up *page* should own.
  * They cannot share it: the intl middleware rewrites page paths into the locale
  * tree, so whichever one is not excluded gets swallowed. `/auth/*` is JSON and
- * excluded, `/account/*` is pages and localized. See middleware.ts, which also
+ * excluded, `/account/*` is pages and localized. See proxy.ts, which also
  * explains why none of these endpoints was reachable before that file was fixed.
  *
  * # Every outcome looks identical from outside

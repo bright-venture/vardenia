@@ -1,25 +1,13 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { FlatCompat } from '@eslint/eslintrc'
-import reactHooks from 'eslint-plugin-react-hooks'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
 
 /**
  * ESLint 9 flat config, replacing .eslintrc.json and `next lint`.
  *
- * `next lint` is deprecated and disappears in Next 16. Doing this now rather
- * than during the framework upgrade keeps the two problems separate - and lint
- * was already painful to get working here once (there was no config anywhere,
- * so CI dropped into an interactive prompt and hung).
- *
- * eslint-config-next 15 still ships eslintrc-format configs rather than flat
- * ones, so FlatCompat translates them. That is exactly what Next's own codemod
- * produces. When eslint-config-next 16 lands with native flat support, the
- * compat layer and the @eslint/eslintrc dependency both come out.
+ * `next lint` is gone in Next 16, and lint was already painful to get working
+ * here once (there was no config anywhere, so CI dropped into an interactive
+ * prompt and hung).
  */
-const compat = new FlatCompat({
-  baseDirectory: path.dirname(fileURLToPath(import.meta.url)),
-})
-
 const config = [
   {
     /**
@@ -34,7 +22,7 @@ const config = [
       '.next/**',
       // The dev server's own output directory. Separate from .next so a
       // production build cannot corrupt a running dev server - see distDir in
-      // next.config.mjs. Linting it means linting Next's compiled bundles, and
+      // next.config.ts. Linting it means linting Next's compiled bundles, and
       // it produced around nine thousand problems about code nobody wrote.
       '.next-dev/**',
       '.turbo/**',
@@ -49,40 +37,17 @@ const config = [
   },
 
   /**
-   * eslint-config-next, minus its own copy of the react-hooks plugin.
+   * eslint-config-next 16, in the flat format it now ships natively.
    *
-   * `next build` runs a lint pass of its own, and it resolved
-   * eslint-plugin-react-hooks 7 while this compat layer resolved 5. Both
-   * versions are in the tree. The two passes therefore disagreed about which
-   * rules exist: `pnpm lint` was clean, `next build` was clean on my machine,
-   * and the Netlify build failed on `react-hooks/purity` and
-   * `react-hooks/set-state-in-effect` - neither of which v5 has.
-   *
-   * Both findings were real, a `Date.now()` during render and a setState inside
-   * an effect, so the code was what changed. This stops the next one costing a
-   * round trip through CI to discover.
-   *
-   * Dropping the plugin here rather than registering v7 under a second name, so
-   * that a rule fires under the same name it has in the build log. Two plugins
-   * cannot claim `react-hooks`, and the version that reports more is the one
-   * worth keeping.
+   * Version 15 shipped eslintrc configs that FlatCompat had to translate, and
+   * its own copy of the react-hooks plugin (v5) disagreed with the v7 that
+   * `next build` resolved: `pnpm lint` was clean while the Netlify build failed
+   * on `react-hooks/purity` and `react-hooks/set-state-in-effect`. Version 16
+   * carries react-hooks 7 with those rules itself, so the compat layer and the
+   * separately registered plugin both came out with the upgrade.
    */
-  ...compat.extends('next/core-web-vitals', 'next/typescript').map((entry) => {
-    if (!entry.plugins?.['react-hooks']) return entry
-    const plugins = { ...entry.plugins }
-    delete plugins['react-hooks']
-    return { ...entry, plugins }
-  }),
-
-  /**
-   * `configs.flat['recommended-latest']`, not `configs['recommended-latest']`.
-   *
-   * The top-level entries in v7 are still eslintrc-format - their `plugins` is
-   * an array of names - and handing one to flat config fails with a message
-   * about plugins needing to be an object. The `flat` namespace holds the same
-   * rule sets in the shape ESLint 9 wants.
-   */
-  reactHooks.configs.flat['recommended-latest'],
+  ...nextVitals,
+  ...nextTypescript,
 ]
 
 export default config

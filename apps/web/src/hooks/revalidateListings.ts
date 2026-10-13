@@ -34,7 +34,9 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'paylo
 const clear = async () => {
   try {
     const { revalidateTag } = await import('next/cache')
-    revalidateTag('businesses')
+    // Expire now, as the one-argument call did before Next 16: a publish should
+    // show on the next view, not after a stale one is served while it refreshes.
+    revalidateTag('businesses', { expire: 0 })
   } catch {
     // Outside a Next request. Nothing is cached, so nothing needs clearing.
   }

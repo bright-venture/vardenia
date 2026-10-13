@@ -2,7 +2,7 @@ import { colors } from '@vardenia/tokens'
 
 /**
  * The pre-launch splash. Reached by the middleware rewrite from every public URL
- * while the coming-soon gate is on; see lib/coming-soon and middleware.ts.
+ * while the coming-soon gate is on; see lib/coming-soon and proxy.ts.
  *
  * It is deliberately splash only - a wordmark, a line, no way in and nothing to
  * fill in. The one flourish is the "coming soon" line cycling through the ten

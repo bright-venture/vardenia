@@ -110,6 +110,22 @@ interface CodeRow {
 }
 
 /**
+ * The schema and table names are the only parts of these queries that are not
+ * bound parameters, because Postgres cannot bind an identifier. They are never
+ * user input - the schema is DB_SCHEMA and the tables are a fixed union - but a
+ * query built by string is one careless caller away from injection, so every
+ * name is held to a plain lower-case identifier before it reaches the SQL.
+ */
+const IDENTIFIER = /^[a-z_][a-z0-9_]*$/
+
+export function assertIdentifier(name: string): string {
+  if (!IDENTIFIER.test(name)) {
+    throw new Error(`Not a plain SQL identifier: ${JSON.stringify(name)}`)
+  }
+  return name
+}
+
+/**
  * One query, three left joins. The joins turn the target ids into the target
  * slugs; `category` and `external_url` are stored on the code row itself and need
  * no join. Ordered by code so the file is byte-stable run to run - that is what
@@ -167,7 +183,7 @@ export async function exportPermanence(
   exec: SqlExecutor,
   schema: string = DB_SCHEMA,
 ): Promise<PermanenceFile> {
-  const { rows } = await exec.query(exportSql(schema))
+  const { rows } = await exec.query(exportSql(assertIdentifier(schema)))
   const codes = (rows as unknown as CodeRow[]).map(toCode)
   return { version: PERMANENCE_VERSION, count: codes.length, codes }
 }
@@ -249,7 +265,7 @@ async function idBySlug(
   slug: string,
 ): Promise<number | null> {
   const { rows } = await exec.query(
-    `select id from "${schema}"."${table}" where slug = $1 limit 1`,
+    `select id from "${assertIdentifier(schema)}"."${assertIdentifier(table)}" where slug = $1 limit 1`,
     [slug],
   )
   const id = rows[0]?.id
@@ -327,6 +343,7 @@ export async function restorePermanence(
   }
 
   const result: RestoreResult = { inserted: 0, updated: 0, relinked: 0, unresolved: [] }
+  assertIdentifier(schema)
   const upsert = upsertSql(schema)
 
   for (const c of file.codes) {

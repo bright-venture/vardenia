@@ -159,6 +159,12 @@ const nextConfig: NextConfig = {
      * host that does not replace the optimiser.
      */
     minimumCacheTTL: 60 * 60 * 24 * 365,
+    /*
+     * Next 16 accepts only quality 75 unless told otherwise, and quietly rounds
+     * anything else to it. The hero photographs ask for less (70 for the photo
+     * tour, 60 for the film poster) to keep the first screen light.
+     */
+    qualities: [60, 70, 75],
 
     // next/image refuses any host not listed here, so every storage backend we
     // might serve uploads from has to be named.

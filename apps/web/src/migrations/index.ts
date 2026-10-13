@@ -35,6 +35,7 @@ import * as migration_20260928_090000_restore_row_level_security from './2026092
 import * as migration_20260929_074613_payment_methods from './20260929_074613_payment_methods'
 import * as migration_20260929_082335_booking_answered_at from './20260929_082335_booking_answered_at'
 import * as migration_20261005_090000_october_taxonomy from './20261005_090000_october_taxonomy'
+import * as migration_20261013_075115_payload_3_90 from './20261013_075115_payload_3_90'
 
 export const migrations = [
   {
@@ -221,5 +222,10 @@ export const migrations = [
     up: migration_20261005_090000_october_taxonomy.up,
     down: migration_20261005_090000_october_taxonomy.down,
     name: '20261005_090000_october_taxonomy',
+  },
+  {
+    up: migration_20261013_075115_payload_3_90.up,
+    down: migration_20261013_075115_payload_3_90.down,
+    name: '20261013_075115_payload_3_90',
   },
 ]

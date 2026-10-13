@@ -193,7 +193,7 @@ function comingSoonGate(request: NextRequest): NextResponse | null {
  *
  * Every other matched path is locale routing exactly as before.
  */
-export default function middleware(request: NextRequest): NextResponse {
+export default function proxy(request: NextRequest): NextResponse {
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const target = adminRedirectFor(request.cookies.get(PAYLOAD_COOKIE)?.value)
 

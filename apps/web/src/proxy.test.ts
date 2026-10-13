@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NextRequest, NextResponse } from 'next/server'
-import { syncSessionHint, config } from './middleware'
+import { syncSessionHint, config } from './proxy'
 import { PAYLOAD_COOKIE } from './lib/admin-guard'
 import { SESSION_HINT } from './lib/session-hint'
 
