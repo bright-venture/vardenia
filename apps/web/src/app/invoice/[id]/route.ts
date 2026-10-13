@@ -4,6 +4,7 @@ import { lineCounts, statementState, type StatementStatus } from '@vardenia/core
 import config from '../../../payload.config'
 import { BUSINESS_USER_COLLECTION, ownedBusinessIds } from '../../../access/index'
 import { isStaffRequest } from '../../../lib/billing-auth'
+import { OWNER_VISIBLE_STATUSES } from '../../../collections/Statements'
 import { beirutCalendarDayLabel, beirutDate } from '../../../lib/beirut'
 
 const day = (iso: string) => beirutCalendarDayLabel(beirutDate(new Date(iso)), 'en')
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       typeof statement.business === 'object' ? statement.business?.id : statement.business
     const allowed =
       user?.collection === BUSINESS_USER_COLLECTION &&
-      statement.status !== 'draft' &&
+      OWNER_VISIBLE_STATUSES.includes(String(statement.status)) &&
       ownedBusinessIds(user).map(String).includes(String(businessId))
     // Someone else's invoice answers exactly like one that does not exist.
     if (!allowed) return new Response('Not found.', { status: 404 })

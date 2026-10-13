@@ -50,6 +50,14 @@ export { STATEMENT_MOVES }
  * dispute, which checks the window and touches only that line.
  */
 
+/**
+ * The statements a venue partner may see: sent and paid. A draft is not
+ * finished and a void one was withdrawn, so neither is theirs to read - in
+ * the dashboard, through the API, or as a printable invoice. One list, so the
+ * invoice route and this rule cannot disagree again.
+ */
+export const OWNER_VISIBLE_STATUSES: readonly string[] = ['sent', 'paid']
+
 export const readStatements: Access = ({ req }) => {
   const { user } = req
   if (!user) return false
@@ -58,7 +66,7 @@ export const readStatements: Access = ({ req }) => {
     const owned = ownedBusinessIds(user)
     if (owned.length === 0) return false
     const where: Where = {
-      and: [{ business: { in: owned } }, { status: { in: ['sent', 'paid'] } }],
+      and: [{ business: { in: owned } }, { status: { in: [...OWNER_VISIBLE_STATUSES] } }],
     }
     return where
   }

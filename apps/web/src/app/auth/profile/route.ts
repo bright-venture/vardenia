@@ -150,6 +150,10 @@ export const PATCH = withRateLimit(
         data: { password: data.password },
         overrideAccess: false,
         user,
+        // The current password was checked just above. Without this the
+        // account guard refuses a self-service password change; see
+        // hooks/guardSelfAccountUpdate.
+        context: { reauthenticated: true },
       })
 
       /**

@@ -1,3 +1,7 @@
+import {
+  revalidateReviewsAfterChange,
+  revalidateReviewsAfterDelete,
+} from '../hooks/revalidateReviews'
 import type { Access, CollectionConfig, Where } from 'payload'
 import { fixedOnceCreated, isAdmin, isStaff, isStaffFieldLevel, isStaffUser } from '../access/index'
 
@@ -31,6 +35,11 @@ const readReviews: Access = ({ req }) => {
 }
 
 export const Reviews: CollectionConfig = {
+  hooks: {
+    // Moderation shows at once, not at the next hourly rebuild. hooks/revalidateReviews.
+    afterChange: [revalidateReviewsAfterChange],
+    afterDelete: [revalidateReviewsAfterDelete],
+  },
   slug: 'reviews',
   admin: {
     // Can be grouped by listing in the list view (Group by, then Business), so

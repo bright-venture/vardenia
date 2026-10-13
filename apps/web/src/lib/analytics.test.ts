@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { analyticsConfig } from './analytics'
+import {
+  analyticsConfig,
+  BEFORE_SEND,
+  beforeSendScript,
+  isSecretUrl,
+  redactSecretUrl,
+} from './analytics'
 
 /**
  * The only thing worth testing here is when analytics does *not* load.
@@ -57,5 +63,39 @@ describe('analytics loads', () => {
     const config = analyticsConfig('  https://plausible.io/js/script.js  ', ' vardenia.com ')
     expect(config?.src).toBe('https://plausible.io/js/script.js')
     expect(config?.domain).toBe('vardenia.com')
+  })
+})
+
+describe('pages whose address is a secret', () => {
+  it('recognises reset and confirmation links, with or without a language', () => {
+    expect(isSecretUrl('https://vardenia.com/account/reset/abc123')).toBe(true)
+    expect(isSecretUrl('https://vardenia.com/ar/account/verify/abc123?x=1')).toBe(true)
+    expect(isSecretUrl('/fr/partner/reset/abc123')).toBe(true)
+    expect(isSecretUrl('https://vardenia.com/account/reset')).toBe(false)
+    expect(isSecretUrl('https://vardenia.com/stay')).toBe(false)
+    expect(isSecretUrl(null)).toBe(false)
+  })
+
+  it('takes the token out of a URL that still has to be sent', () => {
+    expect(redactSecretUrl('https://vardenia.com/account/reset/abc123')).toBe(
+      'https://vardenia.com/account/reset/[token]',
+    )
+  })
+
+  /**
+   * The browser copy of the rule, run as the browser would. It is written out as
+   * a string because it must exist before the tracker loads, so this is what
+   * stops it drifting from isSecretUrl.
+   */
+  it('cancels events from a token page and scrubs referrers in the browser hook', () => {
+    const win: Record<string, (type: string, payload: Record<string, unknown>) => unknown> = {}
+    new Function('window', beforeSendScript())(win)
+    const hook = win[BEFORE_SEND]!
+
+    expect(hook('event', { url: '/ar/account/reset/abc123' })).toBe(false)
+    expect(
+      hook('event', { url: '/stay', referrer: 'https://vardenia.com/account/verify/abc123' }),
+    ).toEqual({ url: '/stay', referrer: 'https://vardenia.com/account/verify/[token]' })
+    expect(hook('event', { url: '/stay' })).toEqual({ url: '/stay' })
   })
 })

@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
-import { isAdmin, isStaff } from '../access/index'
+import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { committedReason, protectPrintedCodes } from '../hooks/protectPrintedCodes'
 import {
   revalidateQrCodesAfterChange,
@@ -36,6 +36,26 @@ const destinationOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
 
 const listingOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
   destinationOpen({ doc }) || !doc?.business
+
+/**
+ * Only an admin may aim a code at another website.
+ *
+ * Every other destination is a page of this site. An external address sends
+ * whoever scans a printed code wherever it says, under Vardenia's name, so it
+ * is the one destination a staff account could turn into a phishing link. The
+ * Users collection already says QR codes are the admin's to manage.
+ */
+type FieldArgs = Parameters<typeof isAdminFieldLevel>[0] & { doc?: Record<string, unknown> }
+const adminOnly = (args: FieldArgs) => Boolean(isAdminFieldLevel(args))
+
+/**
+ * An issue, once set, is the admin's to change.
+ *
+ * Being given an issue is what makes a code permanent (see committedReason),
+ * so clearing it was a way to unlock a printed code and re-aim it. Staff may
+ * still give a code its issue; taking it away, or moving it, is admin-only.
+ */
+const issueEditable = (args: FieldArgs) => adminOnly(args) || !args.doc?.issue
 
 const TARGET_LABELS: Record<string, string> = {
   business: 'A listing',
@@ -137,6 +157,11 @@ export const QrCodes: CollectionConfig = {
       defaultValue: 'business',
       options: QR_TARGET_TYPES.map((value) => ({ label: TARGET_LABELS[value] ?? value, value })),
       access: { update: destinationOpen },
+      // An external destination is admin-only; see adminOnly above.
+      validate: (value: unknown, { req }: { req: FieldArgs['req'] }) =>
+        value !== 'external' ||
+        adminOnly({ req } as FieldArgs) ||
+        'Only an admin can point a code at another website.',
       admin: {
         description:
           'What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, untick Active.',
@@ -176,7 +201,10 @@ export const QrCodes: CollectionConfig = {
       name: 'externalUrl',
       label: 'Web address',
       type: 'text',
-      access: { update: destinationOpen },
+      access: {
+        create: adminOnly,
+        update: (args) => adminOnly(args as FieldArgs) && destinationOpen(args),
+      },
       admin: {
         condition: (data) => data?.targetType === 'external',
         description: 'Full web address. A bare domain like leroyal.com.lb is fine.',
@@ -224,6 +252,7 @@ export const QrCodes: CollectionConfig = {
       name: 'issue',
       type: 'relationship',
       relationTo: 'issues',
+      access: { update: issueEditable },
       admin: {
         // Previously hidden unless placement was magazine-page, which combined
         // with a 'digital' default meant the field never appeared at all - so no
@@ -249,6 +278,11 @@ export const QrCodes: CollectionConfig = {
       type: 'number',
       defaultValue: 0,
       index: true,
+      // Counted by the scan route in SQL, never typed in. Read-only in the admin
+      // was not enough: through the API, staff could reset it to 0 and so
+      // unlock a printed code (see committedReason). The import teardown
+      // overrides access and still resets it.
+      access: { create: () => false, update: () => false },
       admin: {
         readOnly: true,
         position: 'sidebar',

@@ -98,3 +98,48 @@ export function trackEvent(event: AnalyticsEvent, props?: Record<string, string>
     // Deliberately silent. Nothing downstream of a booking should notice.
   }
 }
+
+/**
+ * Pages whose address is a secret: a password reset or an email confirmation
+ * carries its one-time token in the path, for guests and partners alike, with
+ * or without a language prefix.
+ *
+ * A page view sends its URL, and the next page view sends the previous one as
+ * its referrer, so without this the analytics provider received working reset
+ * tokens. Matching is on the path segment, so a query string or hash after the
+ * token is covered too.
+ */
+export const SECRET_PATH = /\/(account|partner)\/(reset|verify)\/[^/?#]+/
+
+/** True when a URL or path is one of the token pages. */
+export function isSecretUrl(url: string | null | undefined): boolean {
+  return typeof url === 'string' && SECRET_PATH.test(url)
+}
+
+/** The same URL with any token replaced, for a referrer that must still be sent. */
+export function redactSecretUrl(url: string): string {
+  return url.replace(new RegExp(SECRET_PATH.source, 'g'), '/$1/$2/[token]')
+}
+
+/** The global the Umami script calls before each event; see beforeSendScript. */
+export const BEFORE_SEND = 'vardeniaAnalyticsBeforeSend'
+
+/**
+ * Umami's `data-before-send` hook, as an inline script that must run before
+ * the tracker loads. It cancels any event from a token page outright, and
+ * strips the token from a referrer that points back to one.
+ *
+ * The same rule as isSecretUrl and redactSecretUrl, written out for the
+ * browser because it has to exist before any bundle does.
+ */
+export function beforeSendScript(): string {
+  const source = JSON.stringify(SECRET_PATH.source)
+  return (
+    `window.${BEFORE_SEND}=function(type,payload){` +
+    `var re=new RegExp(${source});` +
+    `if(payload&&typeof payload.url==='string'&&re.test(payload.url))return false;` +
+    `if(payload&&typeof payload.referrer==='string')` +
+    `payload.referrer=payload.referrer.replace(new RegExp(${source},'g'),'/$1/$2/[token]');` +
+    `return payload};`
+  )
+}

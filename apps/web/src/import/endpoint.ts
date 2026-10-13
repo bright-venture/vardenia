@@ -1,5 +1,5 @@
 import type { Endpoint, PayloadRequest } from 'payload'
-import { readableMessage } from '../lib/report'
+import { reportError } from '../lib/report'
 import { runImport } from './run'
 
 /**
@@ -139,8 +139,24 @@ export const importListingsEndpoint: Endpoint = {
        * rows failed, which comes back in `failures` with a 200.
        */
       req.payload.logger.error({ err: error, batch, offset }, 'Listing import window failed')
+      await reportError(error, {
+        source: 'import.window',
+        path: '/admin/import-listings',
+        extra: { batch, offset },
+      })
 
-      return json({ error: readableMessage(error) || 'The import failed.' }, 500)
+      /*
+       * Not the error's own message. The importer throws nothing on purpose, so
+       * anything that reaches here is a database or provider failure, whose text
+       * names tables, constraints and hosts. The detail is in the error log.
+       */
+      return json(
+        {
+          error:
+            'The import stopped with an error. The details are in the admin, under Reports, Errors.',
+        },
+        500,
+      )
     }
   },
 }

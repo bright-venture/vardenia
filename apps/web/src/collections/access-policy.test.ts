@@ -566,3 +566,44 @@ describe('QR codes: a printed code keeps its destination', () => {
     expect(updateOf('business')(on({ scanCount: 5, issue: 2, business: null }))).toBe(true)
   })
 })
+
+/**
+ * What keeps a printed code where it was printed. A code is locked once it has
+ * an issue or a scan (committedReason), so those two must not be undoable by
+ * staff, and only an admin may send a code to another website.
+ */
+describe('QR codes: the printed-code locks', () => {
+  type Access = { create?: FieldAccess; update?: FieldAccess }
+  const access = (name: string) => (fieldNamed(QrCodes.fields, name) as { access?: Access }).access!
+  const withDoc = (user: unknown, doc: Record<string, unknown>) =>
+    ({ req: { user }, doc }) as unknown as Parameters<FieldAccess>[0]
+
+  it('never lets anyone write the scan count through the API', () => {
+    expect(access('scanCount').update!(fieldCtx(admin))).toBe(false)
+    expect(access('scanCount').create!(fieldCtx(admin))).toBe(false)
+  })
+
+  it('lets staff give a code its issue, but only an admin change or clear one', () => {
+    expect(access('issue').update!(withDoc(staff, { issue: null }))).toBe(true)
+    expect(access('issue').update!(withDoc(staff, { issue: 3 }))).toBe(false)
+    expect(access('issue').update!(withDoc(admin, { issue: 3 }))).toBe(true)
+  })
+
+  it('keeps the external web address to admins', () => {
+    expect(access('externalUrl').create!(fieldCtx(staff))).toBe(false)
+    expect(access('externalUrl').create!(fieldCtx(admin))).toBe(true)
+    expect(access('externalUrl').update!(withDoc(staff, {}))).toBe(false)
+    expect(access('externalUrl').update!(withDoc(admin, {}))).toBe(true)
+  })
+
+  it('refuses the external target type from staff', () => {
+    const validate = (
+      fieldNamed(QrCodes.fields, 'targetType') as {
+        validate: (value: unknown, options: unknown) => true | string
+      }
+    ).validate
+    expect(validate('external', { req: { user: staff } })).toMatch(/Only an admin/)
+    expect(validate('external', { req: { user: admin } })).toBe(true)
+    expect(validate('business', { req: { user: staff } })).toBe(true)
+  })
+})

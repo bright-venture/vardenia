@@ -10,6 +10,16 @@ name: Back up the permanence layer
 #
 # Personal data (bookings, customers) is deliberately not here. It waits for
 # Supabase's own backups once there is anything worth losing.
+#
+# # Each credential reaches only the step that needs it
+#
+# This job holds two things worth stealing: production's connection string and a
+# token that can push to the repository. `pnpm install` runs the install scripts
+# of a few hundred packages, so anything in the job's environment, or left in the
+# checkout's git config, is readable by all of them. So the database URL is set
+# on the export step alone, the checkout does not keep its token, and the push
+# hands the token to git for that one command. Third-party actions are pinned to
+# a commit, not a tag a compromised maintainer could move.
 
 on:
   schedule:
@@ -31,18 +41,16 @@ jobs:
       # The only thing this job does is commit the backup file.
       contents: write
 
-    env:
-      # Read-only use, so the transaction pooler is fine. Set this repository
-      # secret to production's connection string. It is the only secret the job
-      # needs: the export talks to Postgres directly and never boots Payload.
-      DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
-
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          # Do not leave the push token in .git/config for every install script
+          # to read. The commit step below supplies it for the push alone.
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 22
           cache: pnpm
@@ -53,9 +61,17 @@ jobs:
       # resolves. A failed run here is the alarm, not a nuisance: it means a code
       # on paper has stopped pointing anywhere.
       - name: Export
+        env:
+          # Read-only use, so the transaction pooler is fine. Set this repository
+          # secret to production's connection string, ideally for a role that can
+          # only read. The export talks to Postgres directly and never boots
+          # Payload. Scoped to this step, so no other step can see it.
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
         run: pnpm --filter @vardenia/web backup:export
 
       - name: Commit if the layer changed
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add backups/qr-permanence.json
           # --cached, so a brand-new file (the very first snapshot) counts as a
@@ -67,4 +83,5 @@ jobs:
           git config user.name "vardenia-backup"
           git config user.email "backup@users.noreply.github.com"
           git commit -m "Back up the QR permanence layer"
-          git push
+          # The token for this one push, never written to the git config.
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}"

@@ -195,5 +195,37 @@ export async function closeCustomerAccount(
     overrideAccess: true,
   })
 
+  await revokeAllSessions(payload, customerId)
+
   return { cancelled, anonymised: true }
+}
+
+/**
+ * Ends every signed-in session the account still has, on every device.
+ *
+ * Changing the password does not do it. A login is a session id kept on the
+ * account row, and the token in someone's cookie stays good for as long as its
+ * id is still listed - so a closed account went on working in any browser that
+ * was signed in when it closed, until that cookie expired a week later.
+ *
+ * The same write Payload's own "log out everywhere" makes: the row read
+ * through the adapter, its sessions emptied, written back without touching
+ * updatedAt.
+ */
+export async function revokeAllSessions(
+  payload: Payload,
+  customerId: number | string,
+): Promise<void> {
+  const row = await payload.db.findOne<{ id: number | string } & Record<string, unknown>>({
+    collection: 'customers',
+    where: { id: { equals: customerId } },
+  })
+  if (!row) return
+
+  await payload.db.updateOne({
+    collection: 'customers',
+    id: customerId,
+    data: { ...row, sessions: [], updatedAt: null },
+    returning: false,
+  })
 }

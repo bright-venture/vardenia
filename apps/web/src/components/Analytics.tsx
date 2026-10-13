@@ -1,4 +1,4 @@
-import { analyticsConfig } from '../lib/analytics'
+import { analyticsConfig, BEFORE_SEND, beforeSendScript } from '../lib/analytics'
 
 /**
  * The analytics script tag, or nothing at all.
@@ -27,13 +27,20 @@ export function Analytics() {
   if (!config) return null
 
   return (
-    <script
-      src={config.src}
-      defer
-      // Plausible reads data-domain, Umami reads data-website-id. Whichever is
-      // absent is simply not rendered; neither provider minds the other's.
-      data-domain={config.domain ?? undefined}
-      data-website-id={config.websiteId ?? undefined}
-    />
+    <>
+      {/* Before the tracker, so the hook exists when it first fires: no event
+          leaves a password-reset or email-confirmation page, whose address is
+          a working one-time token. See SECRET_PATH in lib/analytics. */}
+      <script dangerouslySetInnerHTML={{ __html: beforeSendScript() }} />
+      <script
+        src={config.src}
+        defer
+        data-before-send={BEFORE_SEND}
+        // Plausible reads data-domain, Umami reads data-website-id. Whichever is
+        // absent is simply not rendered; neither provider minds the other's.
+        data-domain={config.domain ?? undefined}
+        data-website-id={config.websiteId ?? undefined}
+      />
+    </>
   )
 }

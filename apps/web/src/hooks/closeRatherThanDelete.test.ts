@@ -37,6 +37,11 @@ function harness({ bookings = 0, deletedAt = null, cancelled = 0 }: Options = {}
     }),
     // closeCustomerAccount deletes the customer's shortlist on the way through.
     delete: vi.fn(async () => ({})),
+    // Closing an account also ends its sessions, through the adapter.
+    db: {
+      findOne: vi.fn(async () => ({ id: 1, sessions: [] })),
+      updateOne: vi.fn(async () => ({})),
+    },
   }
 
   // The cancellations happen inside closeCustomerAccount, which finds them

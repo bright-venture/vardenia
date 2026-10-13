@@ -71,6 +71,7 @@ describe('closeCustomerAccount', () => {
   function harness(bookings: Record<string, unknown>[] = []) {
     const calls: Record<string, unknown>[] = []
     const deletes: Record<string, unknown>[] = []
+    const dbWrites: Record<string, unknown>[] = []
 
     const payload = {
       find: vi.fn(async () => ({ docs: bookings, totalDocs: bookings.length })),
@@ -82,9 +83,16 @@ describe('closeCustomerAccount', () => {
         deletes.push(args)
         return {}
       }),
+      db: {
+        findOne: vi.fn(async () => ({ id: 7, sessions: [{ id: 'phone' }, { id: 'laptop' }] })),
+        updateOne: vi.fn(async (args: Record<string, unknown>) => {
+          dbWrites.push(args)
+          return {}
+        }),
+      },
     } as unknown as Payload
 
-    return { payload, calls, deletes }
+    return { payload, calls, deletes, dbWrites }
   }
 
   it('opens its own transaction for every write', async () => {
@@ -126,6 +134,30 @@ describe('closeCustomerAccount', () => {
     expect(saved).toBeDefined()
     expect((saved?.where as { customer?: { equals?: unknown } })?.customer?.equals).toBe(7)
     expect(saved).not.toHaveProperty('req')
+  })
+})
+
+describe('closing an account ends every session', () => {
+  it('empties the sessions list, so a cookie signed in elsewhere stops working', async () => {
+    const dbWrites: Record<string, unknown>[] = []
+    const payload = {
+      find: vi.fn(async () => ({ docs: [], totalDocs: 0 })),
+      update: vi.fn(async () => ({})),
+      delete: vi.fn(async () => ({})),
+      db: {
+        findOne: vi.fn(async () => ({ id: 7, sessions: [{ id: 'phone' }] })),
+        updateOne: vi.fn(async (args: Record<string, unknown>) => {
+          dbWrites.push(args)
+          return {}
+        }),
+      },
+    } as unknown as Payload
+
+    await closeCustomerAccount(payload, 7)
+
+    expect(dbWrites).toHaveLength(1)
+    expect(dbWrites[0]).toMatchObject({ collection: 'customers', id: 7 })
+    expect((dbWrites[0]?.data as { sessions?: unknown[] })?.sessions).toEqual([])
   })
 })
 

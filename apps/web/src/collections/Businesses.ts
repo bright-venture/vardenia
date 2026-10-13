@@ -469,7 +469,10 @@ export const Businesses: CollectionConfig = {
               name: 'importBatch',
               type: 'text',
               index: true,
-              access: { read: isStaffFieldLevel, update: isAdminFieldLevel },
+              // Written only by the importer, which overrides access. Anyone else
+              // setting it, on create or update, could tag a listing for another
+              // batch's removal script to delete.
+              access: { read: isStaffFieldLevel, create: () => false, update: () => false },
               admin: {
                 readOnly: true,
                 description:

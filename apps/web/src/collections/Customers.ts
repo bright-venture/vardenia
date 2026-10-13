@@ -1,3 +1,4 @@
+import { guardSelfAccountUpdate } from '../hooks/guardSelfAccountUpdate'
 import type { CollectionConfig } from 'payload'
 import {
   CUSTOMER_COLLECTION,
@@ -126,6 +127,9 @@ export const Customers: CollectionConfig = {
     // with no bookings), the saves must go first or the delete fails on their
     // not-null foreign key. When it anonymises instead, the anonymise path clears
     // them itself - see closeCustomerAccount. hooks/cleanupSavedListings.
+    // Email and password change only through /auth/profile, which asks for
+    // the current password first. hooks/guardSelfAccountUpdate.
+    beforeOperation: [guardSelfAccountUpdate],
     beforeDelete: [closeRatherThanDelete, cleanupSavedListings('customer')],
   },
 
