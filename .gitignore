@@ -171,7 +171,10 @@ vite.config.ts.timestamp-*
 .turbo/
 
 # Payload
-apps/web/src/payload-types.ts
+# payload-types.ts is committed, not ignored. It used to be generated on each
+# deploy only, and when that step produced nothing on Netlify the build failed
+# type-checking against types that did not exist. Regenerate it with
+# `pnpm --filter @vardenia/web generate:types` after changing a collection.
 apps/web/public/media/
 apps/web/media/
 
