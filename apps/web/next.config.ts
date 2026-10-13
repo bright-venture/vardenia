@@ -87,12 +87,14 @@ const nextConfig: NextConfig = {
     '@vardenia/tokens',
     '@vardenia/api-client',
   ],
-  // Keep zod out of the server vendor-chunk split. Next's static-paths worker
-  // loads route modules in a separate process and can reference a vendor chunk
-  // webpack has not flushed yet, which fails dev with a phantom
-  // "Cannot find module './vendor-chunks/zod@x.y.z.js'". Requiring it from
-  // node_modules at runtime sidesteps the split entirely.
-  serverExternalPackages: ['zod'],
+  /*
+   * No serverExternalPackages. zod used to be listed, to dodge a webpack dev
+   * bug where a vendor chunk was referenced before it was written. Next 16
+   * builds with Turbopack, which has no such split - and an external package
+   * cannot be loaded by the proxy on Netlify, which runs it as an edge
+   * function: the deploy failed bundling it with "Relative import path
+   * 'zod-...' not prefixed". The proxy reaches zod through @vardenia/core.
+   */
   /**
    * Security headers, including the Content-Security-Policy.
    *
