@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   checkAvailability,
+  occupiedDays,
   resolveRules,
   unavailableMessage,
   UNAVAILABLE_REASONS,
@@ -506,4 +507,47 @@ describe('messages', () => {
       }
     },
   )
+})
+
+/**
+ * A stay holds every night from check-in to the night before check-out. Only
+ * the arrival day used to be checked, so a stay could start the day before a
+ * closed fortnight and run straight through it.
+ */
+describe('closures across a whole stay', () => {
+  // Beirut is UTC+3 in October; 14:00 and 11:00 local.
+  const arrive = (day: string) => new Date(`${day}T11:00:00Z`)
+  const leave = (day: string) => new Date(`${day}T08:00:00Z`)
+
+  it('counts every night of a stay, and only the start day of anything shorter', () => {
+    expect(occupiedDays(arrive('2026-10-10'), leave('2026-10-14'))).toEqual([
+      '2026-10-10',
+      '2026-10-13',
+    ])
+    expect(occupiedDays(arrive('2026-10-10'), leave('2026-10-11'))).toEqual([
+      '2026-10-10',
+      '2026-10-10',
+    ])
+    // A dinner from 23:00 to 01:00 Beirut holds the evening it started.
+    expect(
+      occupiedDays(new Date('2026-10-10T20:00:00Z'), new Date('2026-10-10T22:00:00Z')),
+    ).toEqual(['2026-10-10', '2026-10-10'])
+  })
+
+  it('refuses a stay that runs into a closure, and allows one that leaves on its first day', () => {
+    const rules: BookingRules = { enabled: true, capacity: 1, maxDurationMinutes: 60 * 24 * 14 }
+    const closures: ClosedPeriod[] = [{ startsOn: '2026-10-12', endsOn: '2026-10-20' }]
+    const stay = (from: string, to: string) =>
+      checkAvailability({
+        rules,
+        hours: null,
+        closures,
+        existing: [],
+        now: new Date('2026-10-01T09:00:00Z'),
+        request: { interval: { start: arrive(from), end: leave(to) }, partySize: 2 },
+      })
+
+    expect(stay('2026-10-10', '2026-10-14')).toMatchObject({ ok: false, reason: 'closed-period' })
+    expect(stay('2026-10-10', '2026-10-12')).toEqual({ ok: true })
+  })
 })

@@ -35,6 +35,8 @@ export type BookingOutcome =
 
 /** Postgres raises this when the capacity trigger refuses an insert. */
 const CAPACITY_MESSAGE = 'fully booked'
+/** Raised by the enforce_customer_booking_limit trigger; see translateInsertError. */
+const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
 
 /**
  * How many bookings one email may hold, awaiting confirmation, at one time.
@@ -161,6 +163,19 @@ export function translateInsertError(error: unknown, locale: Locale = 'en'): Boo
    */
   if (message.toLowerCase().includes(CAPACITY_MESSAGE)) {
     return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity', locale) }
+  }
+
+  /*
+   * The database's own copy of the per-customer limit, for the requests that
+   * raced past the count above. Same answer as the count gives. See the
+   * customer_booking_limit migration.
+   */
+  if (message.toLowerCase().includes(CUSTOMER_LIMIT_MESSAGE)) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${MAX_PENDING_PER_CUSTOMER} upcoming bookings. Please cancel one before making another.`,
+    }
   }
 
   return { ok: false, code: 'error', message: COULD_NOT_BOOK[locale] ?? COULD_NOT_BOOK.en }

@@ -37,8 +37,14 @@ function fakeReq(docs: FakeDocs) {
         if (!found) throw new Error(`no ${collection} ${id}`)
         return found
       },
-      find: async ({ where }: { where: { business: { equals: string | number } } }) => {
-        const businessId = String(where.business.equals)
+      find: async ({ where }: { where: Record<string, unknown> }) => {
+        // The guard asks for one listing's committed codes inside an 'and'; the
+        // committed filter itself is left to committedReason in the hook.
+        const clauses = (where.and as Record<string, unknown>[] | undefined) ?? [where]
+        const byBusiness = clauses.find((clause) => 'business' in clause) as {
+          business: { equals: string | number }
+        }
+        const businessId = String(byBusiness.business.equals)
         const found = Object.values(docs.codes).filter(
           (code) => String(code.business) === businessId,
         )

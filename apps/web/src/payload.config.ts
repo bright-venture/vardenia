@@ -31,6 +31,7 @@ import { importListingsEndpoint } from './import/endpoint'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
+import { databaseSsl } from './lib/db-ssl'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -349,6 +350,9 @@ export default buildConfig({
      */
     pool: {
       connectionString: process.env.DATABASE_URL,
+      // TLS. Without this the connection was plain text across the internet;
+      // see lib/db-ssl.
+      ssl: databaseSsl(),
       max: POOL_MAX,
       idleTimeoutMillis: 120_000,
       connectionTimeoutMillis: 15_000,

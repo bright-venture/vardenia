@@ -1,12 +1,6 @@
 import { guardSelfAccountUpdate } from '../hooks/guardSelfAccountUpdate'
 import type { CollectionConfig } from 'payload'
-import {
-  CUSTOMER_COLLECTION,
-  isAdmin,
-  isStaff,
-  isStaffFieldLevel,
-  selfOrStaff,
-} from '../access/index'
+import { CUSTOMER_COLLECTION, isAdmin, isStaff, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
 import { closeRatherThanDelete } from '../hooks/closeRatherThanDelete'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
@@ -159,7 +153,11 @@ export const Customers: CollectionConfig = {
       name: 'deletedAt',
       type: 'date',
       index: true,
-      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+      // Written only by closeCustomerAccount, which anonymises the row in the same
+      // write and overrides access to do it. Set by hand, it marked an account
+      // closed with the name, email and phone still on it - and closed accounts
+      // are what the delete guard lets through. lib/account-deletion.
+      access: { create: () => false, update: () => false },
       admin: {
         readOnly: true,
         position: 'sidebar',

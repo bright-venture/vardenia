@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHmac } from 'node:crypto'
 import type { Payload } from 'payload'
 import { rawDb } from './db'
 
@@ -22,8 +22,14 @@ import { rawDb } from './db'
  *
  * A bucket is a budget and a caller, and the caller is an IP address. Storing
  * those in the clear would turn a counter table into a log of who visited,
- * which is a thing the privacy policy would then have to describe. The hash is
- * one-way and the table is closed to every API, so it stays a counter.
+ * which is a thing the privacy policy would then have to describe. The table is
+ * closed to every API, so it stays a counter.
+ *
+ * Keyed, not a plain hash. There are only four billion IPv4 addresses, so a
+ * plain SHA-256 of one is undone by hashing them all - anyone who could read
+ * this table could read who had been here. An HMAC with the site secret cannot
+ * be undone without the secret. The same goes for email addresses counted by
+ * the send cap (lib/email-cap).
  */
 
 interface Hit {
@@ -31,9 +37,19 @@ interface Hit {
   resetAt: number
 }
 
+/**
+ * A counter key for a value that must not be stored readably: an IP address or
+ * an email address. Keyed on PAYLOAD_SECRET, so it cannot be reversed by
+ * hashing every candidate. See the note above.
+ */
+export function counterKey(scope: string, value: string): string {
+  const secret = process.env.PAYLOAD_SECRET || 'vardenia-development-only'
+  return createHmac('sha256', secret).update(`${scope}:${value}`).digest('hex').slice(0, 32)
+}
+
 /** Never an address in the clear. See the note above. */
 export function bucketKey(budget: number, ip: string): string {
-  return createHash('sha256').update(`${budget}:${ip}`).digest('hex').slice(0, 32)
+  return counterKey(String(budget), ip)
 }
 
 /**

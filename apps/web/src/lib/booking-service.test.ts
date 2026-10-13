@@ -33,6 +33,23 @@ describe('translateInsertError', () => {
   })
 
   /**
+   * The trigger in migrations/20261013_120000_customer_booking_limit, which
+   * holds the per-customer limit against simultaneous requests. Matched on its
+   * wording, so a change to it fails here rather than turning into "could not
+   * book" for the guest.
+   */
+  it('turns the per-customer limit refusal into the same answer the count gives', () => {
+    const outcome = translateInsertError(
+      pgError('This account already has the most upcoming bookings allowed.'),
+    )
+
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.code).toBe('rate-limited')
+    expect(outcome.message).toMatch(/upcoming bookings/)
+  })
+
+  /**
    * This took no language, so the customer who lost the race for the last table
    * was told "fully booked" in English - on the Arabic site as well.
    */

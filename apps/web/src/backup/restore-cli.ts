@@ -6,6 +6,7 @@ import { Pool } from 'pg'
 import { DB_SCHEMA } from '../lib/db'
 import { checkSeedTarget, databaseIdentity } from '../seed/guard'
 import { BACKUP_RELATIVE, restorePermanence, type PermanenceFile } from './permanence'
+import { databaseSsl } from '../lib/db-ssl'
 
 /**
  * Rebuilds the code rows from the backup file.
@@ -118,7 +119,7 @@ async function main(): Promise<void> {
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: databaseSsl(),
     connectionTimeoutMillis: 15_000,
   })
 

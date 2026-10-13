@@ -95,24 +95,19 @@ export const POST = withRateLimit(
     }
 
     try {
+      /*
+       * Which line and why, not a rewritten copy of every line. The statement's
+       * own hook opens the dispute against the lines as they stand at write
+       * time, so a staff decision made since this request read the statement is
+       * never overwritten. See applyDispute in collections/Statements.
+       */
       await payload.update({
         collection: 'statements',
         id: statement.id,
-        data: {
-          lines: lines.map((entry) =>
-            entry.id === lineId
-              ? {
-                  ...entry,
-                  disputeOutcome: 'open',
-                  disputeReason: reason,
-                  disputedAt: new Date().toISOString(),
-                }
-              : entry,
-          ),
-        },
+        data: {},
         depth: 0,
         overrideAccess: true,
-        context: { skipStatementEmail: true },
+        context: { skipStatementEmail: true, openDispute: { line: lineId, reason } },
       })
     } catch (error) {
       await reportError(error, { source: 'billing.dispute', extra: { statement: statement.id } })

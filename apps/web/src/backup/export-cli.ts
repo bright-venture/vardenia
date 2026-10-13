@@ -6,6 +6,7 @@ import { Pool } from 'pg'
 import { DB_SCHEMA } from '../lib/db'
 import { databaseIdentity } from '../seed/guard'
 import { BACKUP_RELATIVE, exportPermanence, findDrift, serialize } from './permanence'
+import { databaseSsl } from '../lib/db-ssl'
 
 /**
  * Writes the permanence layer to backups/qr-permanence.json.
@@ -42,7 +43,7 @@ async function main(): Promise<void> {
     connectionString,
     // Supabase's certificate chain is not one Node ships; the connection is still
     // encrypted. Same setting the Payload adapter and lib/qr-fast use.
-    ssl: { rejectUnauthorized: false },
+    ssl: databaseSsl(),
     connectionTimeoutMillis: 15_000,
   })
 

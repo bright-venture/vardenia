@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
 import { isStaffRequest, sameOrigin } from '../../../lib/billing-auth'
-import { sendDrafts } from '../../../lib/statements'
+import { NotReadyError, sendDrafts } from '../../../lib/statements'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -30,8 +30,12 @@ export async function POST(request: Request) {
     const sent = await sendDrafts(payload, period)
     message = `${sent} statement${sent === 1 ? '' : 's'} sent.`
   } catch (error) {
-    await reportError(error, { source: 'billing.send', extra: { period } })
-    message = 'Sending failed part way. The error has been reported; check the list below.'
+    if (error instanceof NotReadyError) {
+      message = error.message
+    } else {
+      await reportError(error, { source: 'billing.send', extra: { period } })
+      message = 'Sending failed part way. The error has been reported; check the list below.'
+    }
   }
 
   const back = new URL('/admin/billing', request.url)

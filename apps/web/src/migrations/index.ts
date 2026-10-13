@@ -36,6 +36,8 @@ import * as migration_20260929_074613_payment_methods from './20260929_074613_pa
 import * as migration_20260929_082335_booking_answered_at from './20260929_082335_booking_answered_at'
 import * as migration_20261005_090000_october_taxonomy from './20261005_090000_october_taxonomy'
 import * as migration_20261013_075115_payload_3_90 from './20261013_075115_payload_3_90'
+import * as migration_20261013_120000_customer_booking_limit from './20261013_120000_customer_booking_limit'
+import * as migration_20261013_121000_one_review_and_statement from './20261013_121000_one_review_and_statement'
 
 export const migrations = [
   {
@@ -227,5 +229,15 @@ export const migrations = [
     up: migration_20261013_075115_payload_3_90.up,
     down: migration_20261013_075115_payload_3_90.down,
     name: '20261013_075115_payload_3_90',
+  },
+  {
+    up: migration_20261013_120000_customer_booking_limit.up,
+    down: migration_20261013_120000_customer_booking_limit.down,
+    name: '20261013_120000_customer_booking_limit',
+  },
+  {
+    up: migration_20261013_121000_one_review_and_statement.up,
+    down: migration_20261013_121000_one_review_and_statement.down,
+    name: '20261013_121000_one_review_and_statement',
   },
 ]

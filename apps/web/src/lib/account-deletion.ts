@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 import { OCCUPYING_STATUSES } from '@vardenia/core'
+import { findEvery } from './find-every'
 
 /**
  * Closing a customer account.
@@ -95,73 +96,30 @@ export async function closeCustomerAccount(
   customerId: number | string,
   now: Date = new Date(),
 ): Promise<DeletionOutcome> {
-  const upcoming = await payload.find({
-    collection: 'bookings',
-    where: {
-      and: [
-        { customer: { equals: customerId } },
-        { status: { in: [...OCCUPYING_STATUSES] } },
-        { end: { greater_than: now.toISOString() } },
-      ],
-    },
-    limit: 200,
-    depth: 0,
-    overrideAccess: true,
-  })
-
-  let cancelled = 0
-
-  for (const booking of upcoming.docs) {
-    /**
-     * One at a time, and a failure on one does not abandon the rest. A booking
-     * that refuses to cancel is worth reporting, but it must not leave the
-     * account half-closed with the customer's details still on it.
-     */
-    try {
-      await payload.update({
-        collection: 'bookings',
-        id: booking.id,
-        data: { status: 'cancelled' },
-        overrideAccess: true,
-
-        /**
-         * Read by notifyBookingStatus, which otherwise emails the customer
-         * about each cancellation.
-         *
-         * They asked to close the account; being told twice that their bookings
-         * were cancelled is noise at the worst possible moment, and the wording
-         * would be wrong as well - "the business could not take your booking"
-         * blames the venue for something the customer did. The venue is still
-         * told, because the table really is free.
-         *
-         * The address is also about to stop existing, so the message would be
-         * the last thing we ever send them and it would be untrue.
-         */
-        context: { closingAccount: true },
-      })
-      cancelled += 1
-    } catch {
-      // Reported by the caller, which has the request context to report with.
-    }
-  }
-
-  /**
-   * The notes are the customer's words and can carry a dietary requirement or an
-   * accessibility need - health information, and the most sensitive thing in the
-   * booking. Cleared on every booking, not only the cancelled ones: a past
-   * dinner has served its purpose and the venue's record of *what happened* does
-   * not need it.
+  /*
+   * Signed out everywhere first, so no device can start a booking while the
+   * rest of this runs. A booking request already in flight can still land; the
+   * second cancellation pass at the end is for that one.
    */
-  const all = await payload.find({
+  await revokeAllSessions(payload, customerId)
+
+  const failures: string[] = []
+  let cancelled = await cancelUpcoming(payload, customerId, now, failures)
+
+  /*
+   * Every booking, however many - this used to stop at the first 500, so a
+   * customer with a long history kept notes ("nut allergy", "wheelchair") on
+   * the rest after "closing" the account.
+   */
+  const withNotes = await findEvery<{ id: number | string }>(payload, {
     collection: 'bookings',
-    where: { customer: { equals: customerId } },
-    limit: 500,
+    where: { and: [{ customer: { equals: customerId } }, { notes: { exists: true } }] },
     depth: 0,
     overrideAccess: true,
+    select: { notes: true },
   })
-
-  for (const booking of all.docs) {
-    if (!booking.notes) continue
+  for (const booking of withNotes.docs) {
+    if (!(booking as { notes?: unknown }).notes) continue
     await payload
       .update({
         collection: 'bookings',
@@ -169,24 +127,28 @@ export async function closeCustomerAccount(
         data: { notes: null },
         overrideAccess: true,
       })
-      .catch(() => {})
+      .catch(() => failures.push(`notes on booking ${String(booking.id)}`))
   }
 
-  /**
-   * The shortlist goes too. A save is only an id pointing at a listing, so it
-   * holds nothing identifying, but a closed account should own nothing at all -
-   * and unlike the customer row, which is anonymised rather than removed to
-   * protect a venue's booking record, nothing depends on a save surviving. The
-   * hard-delete path clears these through hooks/cleanupSavedListings; this is the
-   * anonymise path, which never deletes the row and so must clear them here.
-   */
   await payload
     .delete({
       collection: 'saved-listings',
       where: { customer: { equals: customerId } },
       overrideAccess: true,
     })
-    .catch(() => {})
+    .catch(() => failures.push('saved places'))
+
+  /*
+   * Nothing is anonymised while anything above failed. Reporting "closed" with
+   * a live reservation or a note left behind is the one outcome worse than
+   * failing: the person believes their data is gone. The account stays as it
+   * was, signed out, and closing it again picks up where this stopped.
+   */
+  if (failures.length > 0) {
+    throw new Error(
+      `Account ${String(customerId)} was not closed: could not clear ${failures.join(', ')}.`,
+    )
+  }
 
   await payload.update({
     collection: 'customers',
@@ -195,9 +157,54 @@ export async function closeCustomerAccount(
     overrideAccess: true,
   })
 
-  await revokeAllSessions(payload, customerId)
+  // A booking that raced the closure, made before the sessions went.
+  cancelled += await cancelUpcoming(payload, customerId, now, [])
 
   return { cancelled, anonymised: true }
+}
+
+/**
+ * Cancels every booking still ahead, however many. Failures are named in
+ * `failures` for the caller to act on rather than swallowed.
+ */
+async function cancelUpcoming(
+  payload: Payload,
+  customerId: number | string,
+  now: Date,
+  failures: string[],
+): Promise<number> {
+  const upcoming = await findEvery<{ id: number | string }>(payload, {
+    collection: 'bookings',
+    where: {
+      and: [
+        { customer: { equals: customerId } },
+        { status: { in: [...OCCUPYING_STATUSES] } },
+        { end: { greater_than: now.toISOString() } },
+      ],
+    },
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  let cancelled = 0
+  for (const booking of upcoming.docs) {
+    try {
+      await payload.update({
+        collection: 'bookings',
+        id: booking.id,
+        data: { status: 'cancelled' },
+        overrideAccess: true,
+        // No email to the customer, who cancelled these by closing the account
+        // and whose address is about to stop existing. The venue is still told,
+        // and the customer row is intact here, so it is told who is not coming.
+        context: { closingAccount: true },
+      })
+      cancelled += 1
+    } catch {
+      failures.push(`booking ${String(booking.id)}`)
+    }
+  }
+  return cancelled
 }
 
 /**

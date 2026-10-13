@@ -75,9 +75,12 @@ export const POST = withRateLimit(
         limit: 1,
         depth: 0,
         overrideAccess: true,
+        // The verification token is a hidden field; it is needed to resend it.
+        showHiddenFields: true,
       })
 
-      const customer = found.docs[0] as { id: number; _verified?: boolean } | undefined
+      const customer = found.docs[0] as
+        { id: number; _verified?: boolean; _verificationToken?: string | null } | undefined
 
       // Nothing to do for an address we do not hold, or one already confirmed.
       if (!customer || customer._verified === true) return json(SAME_ANSWER)
@@ -89,14 +92,23 @@ export const POST = withRateLimit(
        * working would mean two live credentials for one account, and the older
        * may be sitting in a mail archive. Same reasoning as /auth/profile.
        */
-      const token = randomUUID()
-
-      await payload.update({
-        collection: 'customers',
-        id: customer.id,
-        data: { _verificationToken: token },
-        overrideAccess: true,
-      })
+      /*
+       * The same link again, not a new one. Anyone can ask for a resend for
+       * any address, and minting a token each time let a stranger invalidate
+       * the link already sitting in someone's inbox, over and over, without
+       * ever being able to read the replacement. A new token is made only when
+       * the account has none.
+       */
+      let token = customer._verificationToken ?? ''
+      if (!token) {
+        token = randomUUID()
+        await payload.update({
+          collection: 'customers',
+          id: customer.id,
+          data: { _verificationToken: token },
+          overrideAccess: true,
+        })
+      }
 
       const mail = verificationEmail(token)
       await payload.sendEmail({ to: parsed.data.email, subject: mail.subject, html: mail.html })

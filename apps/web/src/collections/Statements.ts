@@ -10,6 +10,7 @@ import {
   DISPUTE_OUTCOMES,
   FEE_UNITS,
   STATEMENT_STATUSES,
+  canDispute,
   isPeriod,
   statementDeadlines,
   statementNumber,
@@ -130,7 +131,104 @@ const idOf = (value: unknown): string | number | null => {
  * deadlines are stamped once, the first time the statement is sent: re-saving a
  * sent statement must not move a venue's due date.
  */
-const deriveFields: CollectionBeforeChangeHook = async ({ data, originalDoc, operation, req }) => {
+interface LineData {
+  id?: string | null
+  booking?: unknown
+  reference?: string | null
+  day?: string | null
+  unit?: string | null
+  quantity?: number | null
+  rate?: number | null
+  amount?: number | null
+  disputeOutcome?: string | null
+  disputeReason?: string | null
+  disputedAt?: string | null
+}
+
+/**
+ * A partner's dispute, applied to the lines as they stand in this write.
+ *
+ * The dispute route used to read the statement, change one line, and write the
+ * whole array back. Staff settling another line in between had their decision
+ * overwritten by that stale copy. The route now sends only which line and why,
+ * as `context.openDispute`, and the line is opened here against the document
+ * Payload has just read for this update - and refused if it can no longer be
+ * disputed by then.
+ */
+function applyDispute(next: StatementData, before: StatementData, request: unknown): void {
+  const dispute = request as { line?: unknown; reason?: unknown } | undefined
+  if (!dispute || typeof dispute.line !== 'string' || typeof dispute.reason !== 'string') return
+
+  const current = (before.lines ?? []) as LineData[]
+  const target = current.find((line) => line.id === dispute.line)
+  const statement = before as { status: never; disputeUntil?: string | null }
+  if (!target || !canDispute(statement, target as never, new Date())) {
+    throw new APIError('This line can no longer be disputed.', 409)
+  }
+
+  next.lines = current.map((line) =>
+    line.id === dispute.line
+      ? {
+          ...line,
+          disputeOutcome: 'open',
+          disputeReason: dispute.reason as string,
+          disputedAt: new Date().toISOString(),
+        }
+      : line,
+  ) as never
+}
+
+/** What a line bills for. Fixed once the statement is issued; see below. */
+const LOCKED_LINE_FIELDS = ['reference', 'day', 'unit', 'quantity', 'rate', 'amount'] as const
+
+const sameInstant = (a: unknown, b: unknown) =>
+  (a ?? null) === (b ?? null) ||
+  (a != null && b != null && new Date(String(a)).getTime() === new Date(String(b)).getTime())
+
+/**
+ * Once a statement has left draft, what it bills and its deadlines are fixed.
+ *
+ * A sent statement is an invoice a venue holds. Through the API a staff account
+ * could still change a line's quantity, rate or amount, or move the dates the
+ * venue's dispute window and payment deadline are counted from - silently
+ * rewriting a document the venue has already been sent. Disputes are settled
+ * through each line's outcome, and payment through its own fields; both stay
+ * open. A statement drawn up wrongly is voided and drawn up again.
+ */
+function assertIssuedUnchanged(before: StatementData, next: StatementData): void {
+  const was = (before.lines ?? []) as LineData[]
+  const now = (next.lines ?? before.lines ?? []) as LineData[]
+
+  const changedLines =
+    was.length !== now.length ||
+    now.some((line, i) => {
+      const old = was[i]
+      if (!old || old.id !== line.id) return true
+      if (String(idOf(old.booking)) !== String(idOf(line.booking))) return true
+      return LOCKED_LINE_FIELDS.some((field) => (old[field] ?? null) !== (line[field] ?? null))
+    })
+
+  const dates = ['sentAt', 'disputeUntil', 'dueAt'] as const
+  const record = (doc: StatementData) => doc as Record<string, unknown>
+  const changedDates = dates.some(
+    (field) => field in record(next) && !sameInstant(record(before)[field], record(next)[field]),
+  )
+
+  if (changedLines || changedDates) {
+    throw new APIError(
+      'An issued statement keeps its lines and dates. Settle a line through its dispute outcome, or set the statement to Void and draw the month up again.',
+      400,
+    )
+  }
+}
+
+const deriveFields: CollectionBeforeChangeHook = async ({
+  data,
+  originalDoc,
+  operation,
+  req,
+  context,
+}) => {
   const next = data as StatementData
   const before = (originalDoc ?? {}) as StatementData
 
@@ -172,6 +270,11 @@ const deriveFields: CollectionBeforeChangeHook = async ({ data, originalDoc, ope
         400,
       )
     }
+  }
+
+  if (operation === 'update') {
+    applyDispute(next, before, context?.openDispute)
+    if (before.status && before.status !== 'draft') assertIssuedUnchanged(before, next)
   }
 
   const lines = next.lines ?? before.lines ?? []

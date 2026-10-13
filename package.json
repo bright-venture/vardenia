@@ -49,7 +49,8 @@
       "@xmldom/xmldom@^0.8.0": "^0.8.15",
       "shell-quote": "^1.11.0",
       "compression": "^1.8.2",
-      "brace-expansion@^5.0.0": "^5.0.12"
+      "brace-expansion@^5.0.0": "^5.0.12",
+      "pg": "8.23.1"
     }
   }
 }

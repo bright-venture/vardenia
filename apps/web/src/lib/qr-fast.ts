@@ -1,6 +1,7 @@
 import { Pool } from 'pg'
 import { DB_SCHEMA } from './db'
 import type { QrDoc } from './qr-doc'
+import { databaseSsl } from './db-ssl'
 
 /**
  * The scan path, with Payload taken out of it.
@@ -85,10 +86,9 @@ function db(): Pool {
   pool = new Pool({
     connectionString,
     max: 2,
-    // Supabase terminates TLS with a certificate chain Node does not ship. The
-    // connection is still encrypted; this only skips verifying the issuer, and
-    // it is what the Payload adapter does against the same host.
-    ssl: { rejectUnauthorized: false },
+    // Encrypted always, and verified once DATABASE_CA_CERT holds Supabase's CA.
+    // See lib/db-ssl.
+    ssl: databaseSsl(),
     // A reader is waiting. Failing fast and sending them to the "we could not
     // find this" page beats holding the request open for thirty seconds.
     connectionTimeoutMillis: 5000,

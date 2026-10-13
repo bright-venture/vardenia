@@ -7,7 +7,7 @@ import {
   type Interval,
 } from '@vardenia/core'
 import { isOpenNow, type OpeningHour } from './hours'
-import { beirutDate } from './beirut'
+import { addDays, beirutDate } from './beirut'
 import type { Locale } from '@vardenia/i18n'
 
 /**
@@ -255,13 +255,13 @@ export function checkAvailability({
    * day a customer is refused is the day the owner sees on their own screen.
    */
   if (closures && closures.length > 0) {
-    const day = beirutDate(start)
+    const [firstDay, lastDay] = occupiedDays(start, request.interval.end)
     const shut = closures.some(
       (period) =>
         isCalendarDay(period.startsOn) &&
         isCalendarDay(period.endsOn) &&
-        day >= period.startsOn &&
-        day <= period.endsOn,
+        period.startsOn <= lastDay &&
+        period.endsOn >= firstDay,
     )
     if (shut) return { ok: false, reason: 'closed-period' }
   }
@@ -464,4 +464,22 @@ const MESSAGES: Record<UnavailableReason, Record<Locale, string>> = {
 
 export function unavailableMessage(reason: UnavailableReason, locale: Locale = 'en'): string {
   return MESSAGES[reason][locale] ?? MESSAGES[reason].en
+}
+
+/**
+ * The Beirut days a booking holds the venue, first and last, as "YYYY-MM-DD".
+ *
+ * A stay holds every night from check-in to the night before check-out: a
+ * guest arriving on the 10th and leaving on the 14th needs the venue open on
+ * the 10th to the 13th, not only on the 10th. Checking the arrival day alone
+ * let a stay start just before a closed fortnight and run straight through it.
+ *
+ * A booking within one day - or one that runs past midnight, a dinner from
+ * 23:00 to 01:00 - holds only the day it starts.
+ */
+export function occupiedDays(start: Date, end: Date): [string, string] {
+  const firstDay = beirutDate(start)
+  const endDay = beirutDate(end)
+  const lastNight = addDays(endDay, -1)
+  return [firstDay, endDay > firstDay && lastNight > firstDay ? lastNight : firstDay]
 }

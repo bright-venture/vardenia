@@ -1,4 +1,5 @@
-import type { EmailAdapter } from 'payload'
+import type { EmailAdapter, Payload } from 'payload'
+import { counterKey, hit } from './rate-limit-store'
 import { reportError } from './report'
 
 /**
@@ -168,6 +169,46 @@ export function checkSendBudget(addresses: string[], now = Date.now()): CapVerdi
 }
 
 /**
+ * The same ceilings, counted in the database every instance shares.
+ *
+ * The counters above live in one server's memory, and production runs as many
+ * short-lived instances, each starting at zero - so "five resets an hour to an
+ * address" was five per instance, which is no cap against someone spraying
+ * reset requests at a victim's inbox. These count in rate_limits instead
+ * (lib/rate-limit-store), keyed so no address is stored readably.
+ *
+ * Null when the store cannot be reached, and the caller then falls back to the
+ * per-instance count: a cap that degrades is better than one that stops mail.
+ */
+export async function checkSharedSendBudget(
+  payload: Payload,
+  addresses: string[],
+  now = Date.now(),
+): Promise<CapVerdict | null> {
+  const recipients = addresses.map((address) => address.toLowerCase())
+
+  const total = await hit(payload, counterKey('email:all', 'all'), WINDOW_MS, now)
+  if (!total) return null
+  if (total.count > GLOBAL_PER_WINDOW) {
+    return { allowed: false, reason: 'global', detail: `${GLOBAL_PER_WINDOW} messages in an hour` }
+  }
+
+  for (const address of recipients) {
+    const sent = await hit(payload, counterKey('email:to', address), WINDOW_MS, now)
+    if (!sent) return null
+    if (sent.count > PER_RECIPIENT) {
+      return {
+        allowed: false,
+        reason: 'recipient',
+        detail: `${address} has had ${PER_RECIPIENT} messages in the last hour`,
+      }
+    }
+  }
+
+  return { allowed: true }
+}
+
+/**
  * Wrap an email adapter so it cannot exceed the ceilings above.
  *
  * # An adapter is a factory, not an object
@@ -195,7 +236,9 @@ export function withSendCap<T extends EmailAdapter<unknown>>(adapter: T): T {
         let verdict: CapVerdict
 
         try {
-          verdict = checkSendBudget(recipientsOf(message.to))
+          const recipients = recipientsOf(message.to)
+          verdict =
+            (await checkSharedSendBudget(args.payload, recipients)) ?? checkSendBudget(recipients)
         } catch (error) {
           void reportError(error, { source: 'email.cap', extra: { stage: 'accounting' } })
           return send(message)

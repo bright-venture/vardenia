@@ -159,10 +159,23 @@ export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async 
   if (isClearingListings(context, id)) return
   if (await isTeardownOfBatch(req, context, id)) return
 
+  /*
+   * Only the committed codes - scanned, or given an issue - asked for in the
+   * query itself. This used to read the listing's first 100 codes and filter
+   * them here, so a printed code past the hundredth was never looked at and the
+   * listing could be deleted from under it. Asking the database for exactly the
+   * ones that block means a page limit can cut the list short but never empty
+   * it: one is enough to refuse.
+   */
   const codes = await req.payload.find({
     collection: 'qr-codes',
-    where: { business: { equals: id } },
-    limit: 100,
+    where: {
+      and: [
+        { business: { equals: id } },
+        { or: [{ scanCount: { greater_than: 0 } }, { issue: { exists: true } }] },
+      ],
+    },
+    limit: 10,
     depth: 0,
     overrideAccess: true,
   })

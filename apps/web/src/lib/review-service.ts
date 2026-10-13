@@ -1,3 +1,4 @@
+import { isUniqueViolation } from './db-errors'
 import type { Payload } from 'payload'
 import type { ReviewRequest } from '@vardenia/core'
 
@@ -135,7 +136,11 @@ export async function createReview({
       overrideAccess: true,
     })
     return { ok: true, reviewId: Number(review.id) }
-  } catch {
+  } catch (error) {
+    // Two submissions at once both pass the check above; the database's unique
+    // index on (customer, listing) refuses the second. See the
+    // one_review_and_statement migration.
+    if (isUniqueViolation(error)) return { ok: false, code: 'already-reviewed' }
     return { ok: false, code: 'error' }
   }
 }

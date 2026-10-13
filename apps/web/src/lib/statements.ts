@@ -1,3 +1,4 @@
+import { isUniqueViolation } from './db-errors'
 import type { Payload } from 'payload'
 import {
   countsAsCompleted,
@@ -185,11 +186,20 @@ export async function drawUpStatements(
       continue
     }
 
-    await payload.create({
-      collection: 'statements',
-      data: { business: venue.id, period, status: 'draft', lines },
-      overrideAccess: true,
-    })
+    try {
+      await payload.create({
+        collection: 'statements',
+        data: { business: venue.id, period, status: 'draft', lines },
+        overrideAccess: true,
+      })
+    } catch (error) {
+      // Another run drew this venue up first - the database's one-per-month
+      // index refused this one. That is the answer the check above would
+      // have given a moment later.
+      if (!isUniqueViolation(error)) throw error
+      result.alreadyDrawnUp += 1
+      continue
+    }
     result.created += 1
   }
 
@@ -197,8 +207,18 @@ export async function drawUpStatements(
 }
 
 /** Sends every draft of the month: stamps the deadlines and emails each venue. */
-export async function sendDrafts(payload: Payload, period: string): Promise<number> {
+export async function sendDrafts(
+  payload: Payload,
+  period: string,
+  now: Date = new Date(),
+): Promise<number> {
   if (!isPeriod(period)) return 0
+  /*
+   * The same readiness rule as drawing up. A draft can exist early - drawn up by
+   * hand, or from a run before the rule moved - and sending it would bill a
+   * month whose bookings have not had their seven days to be marked.
+   */
+  assertReady(period, now)
 
   const drafts = await findEvery<{ id: number }>(payload, {
     collection: 'statements',
