@@ -67,6 +67,9 @@ jobs:
           # only read. The export talks to Postgres directly and never boots
           # Payload. Scoped to this step, so no other step can see it.
           DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          # Supabase's CA, so the connection is verified as well as encrypted
+          # (lib/db-ssl). Unset, it still encrypts but trusts any certificate.
+          DATABASE_CA_CERT: ${{ secrets.DATABASE_CA_CERT }}
         run: pnpm --filter @vardenia/web backup:export
 
       - name: Commit if the layer changed
