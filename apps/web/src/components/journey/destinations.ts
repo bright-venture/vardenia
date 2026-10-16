@@ -1,3 +1,4 @@
+import { GOVERNORATES } from '@vardenia/core'
 export type Feeling =
   'all' | 'coast' | 'mountain' | 'heritage' | 'nature' | 'villages' | 'harbours' | 'sunsets'
 export const DESTINATIONS = [
@@ -104,8 +105,19 @@ export const routePath =
 export function coordinates(p: { lat: number; lon: number }) {
   return `${p.lat.toFixed(4)}° N   ${p.lon.toFixed(4)}° E`
 }
+/**
+ * The directory filtered to a destination's area.
+ *
+ * The directory's `where` takes a governorate only; a district goes in
+ * `district`, under its governorate (see parseFilterState). Four of the six
+ * destinations are districts (Jbeil, Bsharri, Tyre, Chouf), and sent as
+ * `where` they were silently dropped, so "Explore this region" opened the
+ * whole directory. A district now names its governorate as well.
+ */
 export function directoryFor(p: Pick<Destination, 'where'>) {
-  return `/directory?where=${p.where}`
+  if (GOVERNORATES.some((g) => g.slug === p.where)) return `/directory?where=${p.where}`
+  const parent = GOVERNORATES.find((g) => g.districts.some((d) => d.slug === p.where))
+  return parent ? `/directory?where=${parent.slug}&district=${p.where}` : '/directory'
 }
 
 /** A place can belong to several ways of exploring; filters never imply bookable activities. */

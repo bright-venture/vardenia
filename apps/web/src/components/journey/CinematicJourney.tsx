@@ -280,7 +280,8 @@ export function CinematicJourney({
         const p = DESTINATIONS.find((p) => p.id === id)!
         return [
           `${i + 1}. ${name(p)}`,
-          `${location.origin}/${locale === 'en' ? '' : locale + '/'}directory?where=${p.where}`,
+          // The same filtered link as the page's own buttons (directoryFor).
+          `${location.origin}${locale === 'en' ? '' : '/' + locale}${directoryFor(p)}`,
           '',
         ]
       }),
