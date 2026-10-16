@@ -15,7 +15,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: url('/journey/natural-paper-grain.png') center/1450px;
+  background: url('/journey/natural-paper-grain.webp') center/1450px;
   opacity: 0.055;
   mix-blend-mode: multiply;
 }
@@ -311,7 +311,7 @@
   height: 115px;
   z-index: 7;
   pointer-events: none;
-  background: var(--vd-paper) url('/journey/natural-paper-grain.png') center/1450px;
+  background: var(--vd-paper) url('/journey/natural-paper-grain.webp') center/1450px;
   mask-image: url('/journey/photographed-torn-edge.jpg');
   mask-mode: luminance;
   mask-size: 100% 260%;

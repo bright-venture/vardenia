@@ -97,7 +97,7 @@
   inset: auto 0 -1px;
   height: 90px;
   pointer-events: none;
-  background: var(--vd-paper) url('/journey/natural-paper-grain.png') 48% 56%/220% 600%;
+  background: var(--vd-paper) url('/journey/natural-paper-grain.webp') 48% 56%/220% 600%;
   background-blend-mode: soft-light;
   mask-image: url('/journey/photographed-torn-edge.jpg');
   mask-mode: luminance;
@@ -855,7 +855,7 @@
   color: var(--vd-paper);
 }
 .vd-passport-page > section:first-of-type {
-  background-image: url('/journey/natural-paper-grain.png');
+  background-image: url('/journey/natural-paper-grain.webp');
   background-blend-mode: soft-light;
   background-size: 220% 600%;
 }

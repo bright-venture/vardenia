@@ -286,7 +286,7 @@
 }
 .vd-print-card {
   position: relative;
-  background: #eeeae2 url('/journey/natural-paper-grain.png') center / 1000px;
+  background: #eeeae2 url('/journey/natural-paper-grain.webp') center / 1000px;
   padding: 30px 24px;
   text-align: center;
   transform: rotate(calc(-7deg + var(--vd-print-progress) * 5deg));
@@ -473,7 +473,7 @@
   background: var(--vd-paper);
 }
 .vd-magazine-placeholder {
-  background: var(--vd-paper) url('/journey/natural-paper-grain.png') center/1000px;
+  background: var(--vd-paper) url('/journey/natural-paper-grain.webp') center/1000px;
   color: var(--vd-ink);
   height: 100%;
   padding: 34px;
@@ -1297,10 +1297,14 @@
   overflow: hidden;
   pointer-events: none;
 }
+/*
+ * The hero photograph is not in this list: its file (journey/byblos-hero.webp)
+ * has the same grade applied in advance. Filtering the largest image on the
+ * first screen live cost about a third of a second before it could be painted.
+ */
 .vd-public
   :is(
     [data-vd-photo],
-    .vd-hero-media > img,
     .vd-scene-image > img,
     .vd-city-images > img,
     .vd-destination-images > img,
@@ -1600,7 +1604,7 @@
   justify-content: center;
   align-items: center;
   gap: 5%;
-  background: #eeeae2 url('/journey/natural-paper-grain.png') center / 600px;
+  background: #eeeae2 url('/journey/natural-paper-grain.webp') center / 600px;
   color: var(--vd-ink);
   transform: rotate(-10deg) scale(1.18);
   transition: transform 1200ms var(--vd-ease);
@@ -1798,4 +1802,28 @@
 .vd-print-still .vd-scan-live-page,
 .vd-print-still .vd-scan-camera-view {
   transition: none;
+}
+
+/*
+ * Chapters below the first screen are not styled, laid out or painted until
+ * they come near it. The home page is one long document, and the browser used
+ * to lay out every chapter before it could paint the first, which kept the
+ * hero off screen for about half a second. `auto` in contain-intrinsic-size
+ * remembers each chapter's real height once it has rendered, so the scrollbar
+ * settles after the first pass. The pinned chapters (the statement and the
+ * scan sequence) are left out: they rely on sticky positioning through their
+ * full height.
+ */
+.vd-home
+  > :is(
+    .vd-landscape,
+    .vd-city-slider,
+    .vd-atlas,
+    .vd-trip-panel,
+    .vd-detours,
+    .vd-home-places,
+    .vd-magazine
+  ) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
 }

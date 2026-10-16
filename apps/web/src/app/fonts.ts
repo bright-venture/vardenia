@@ -20,18 +20,25 @@ export const plexMono = IBM_Plex_Mono({
   display: 'swap',
   variable: '--font-plex-mono',
   weight: ['400', '500'],
+  // Reference codes only: not worth a high-priority download on every page.
+  preload: false,
 })
 export const amiri = Amiri({
   subsets: ['arabic'],
   display: 'swap',
   variable: '--font-amiri',
   weight: ['400', '700'],
+  // Arabic pages fetch it as soon as their styles ask for it. Preloaded, it
+  // was a high-priority download on every English page, ahead of the hero.
+  preload: false,
 })
 export const notoArabic = Noto_Sans_Arabic({
   subsets: ['arabic'],
   display: 'swap',
   variable: '--font-noto-arabic',
   weight: ['400', '500', '600'],
+  // As Amiri above.
+  preload: false,
 })
 export const notoSerif = Noto_Serif({
   subsets: ['latin', 'cyrillic'],

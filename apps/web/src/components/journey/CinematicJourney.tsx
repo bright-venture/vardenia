@@ -59,9 +59,52 @@ export function CinematicJourney({
   const shown = DESTINATIONS.filter((p) => matchesFeeling(p, feeling))
   const available = shown.filter((p) => selection === 'all' || p.where === selection)
   const place = available.find((p) => p.id === active) || available[0]
+  /**
+   * The film waits for the page. It is 8 MB, and started with the page it
+   * took the bandwidth the hero photograph needed, so the first view took
+   * seconds to appear. The photograph (also the poster) shows at once; the
+   * film begins once the page has loaded and the browser is idle.
+   */
+  const [pageReady, setPageReady] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    const ready = () => {
+      const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 200))
+      idle(() => {
+        if (!cancelled) setPageReady(true)
+      })
+    }
+    if (document.readyState === 'complete') ready()
+    else window.addEventListener('load', ready, { once: true })
+    return () => {
+      cancelled = true
+      window.removeEventListener('load', ready)
+    }
+  }, [])
+  /**
+   * The city slider's photographs, fetched as they are needed: the current
+   * city and the next one, so the crossfade always has its picture ready, and
+   * none before the page has loaded. All six used to sit in the slider at once,
+   * near enough the first screen for the browser to fetch every one of them
+   * (about 1.8 MB) while the hero was still loading. The city just left stays
+   * too, so it can fade out; one seen earlier comes back from the cache.
+   */
+  const [shownCity, setShownCity] = useState(cityIndex)
+  const [leavingCity, setLeavingCity] = useState<number | null>(null)
+  if (shownCity !== cityIndex) {
+    // Adjusting state while rendering, React's pattern for "remember the
+    // previous value": no effect, no extra commit.
+    setLeavingCity(shownCity)
+    setShownCity(cityIndex)
+  }
+  const cityLoaded = pageReady
+    ? [leavingCity, cityIndex, (cityIndex + 1) % DESTINATIONS.length]
+        .filter((index): index is number => index !== null)
+        .map((index) => DESTINATIONS[index]!.id)
+    : []
   useEffect(() => {
     const el = film.current
-    if (!el) return
+    if (!el || !pageReady) return
     let inView = false,
       cancelled = false
     const play = () => {
@@ -86,7 +129,7 @@ export function CinematicJourney({
       document.removeEventListener('visibilitychange', play)
       el.pause()
     }
-  }, [motion, failed])
+  }, [motion, failed, pageReady])
   useEffect(() => {
     const host = root.current
     if (!host) return
@@ -256,8 +299,12 @@ export function CinematicJourney({
       <figure className={`vd-scene-photo ${extra}`} data-vd-parallax={shift} data-vd-reveal>
         <div className="vd-scene-image">
           <img
-            src={assets + p.image}
-            srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
+            src={pageReady ? assets + p.image : undefined}
+            srcSet={
+              pageReady
+                ? `${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`
+                : undefined
+            }
             sizes="(max-width:700px) calc(100vw - 48px), 60vw"
             alt={p.alt}
             width="1600"
@@ -290,7 +337,7 @@ export function CinematicJourney({
         <div className="vd-hero">
           <div className="vd-hero-media">
             <img
-              src={assets + 'byblos.webp'}
+              src={assets + 'byblos-hero.webp'}
               alt="Byblos old harbour"
               width="1600"
               height="1200"
@@ -299,12 +346,11 @@ export function CinematicJourney({
             {!failed && (
               <video
                 ref={film}
-                poster={assets + 'byblos.webp'}
+                poster={assets + 'byblos-hero.webp'}
                 muted
-                autoPlay={motion}
                 playsInline
                 loop
-                preload="auto"
+                preload="none"
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
                 onError={(event) => {
@@ -477,7 +523,7 @@ export function CinematicJourney({
         }}
       >
         <div className="vd-stone-image vd-city-images" aria-hidden>
-          {DESTINATIONS.map((p) => (
+          {DESTINATIONS.filter((p) => cityLoaded.includes(p.id)).map((p) => (
             <img
               key={p.id}
               className={p.id === city.id ? 'vd-city-current' : ''}
@@ -529,7 +575,7 @@ export function CinematicJourney({
             {DESTINATIONS.map((p) => (
               <img
                 key={p.id}
-                src={assets + p.image}
+                src={pageReady ? assets + p.image : undefined}
                 alt=""
                 width="1600"
                 height="1200"
@@ -683,7 +729,17 @@ export function CinematicJourney({
                 const p = DESTINATIONS.find((p) => p.id === id)!
                 return (
                   <li key={id}>
-                    <img src={assets + p.image} alt="" width="90" height="70" />
+                    {/* A 180x140 thumbnail (twice the drawn size, for sharp
+                        screens) rather than the 1600px photograph: six of
+                        those, ~1.8 MB, loaded at once for 90px buttons. */}
+                    <img
+                      src={`${assets}thumbs/${p.image}`}
+                      alt=""
+                      width="90"
+                      height="70"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <Link href={directoryFor(p)}>{name(p)}</Link>
                     <div>
                       <button
@@ -781,8 +837,12 @@ export function CinematicJourney({
                     <div className="vd-postcard-front" inert={back}>
                       <Link href={directoryFor(p)} aria-label={name(p)}>
                         <img
-                          src={assets + p.image}
-                          srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
+                          src={pageReady ? assets + p.image : undefined}
+                          srcSet={
+                            pageReady
+                              ? `${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`
+                              : undefined
+                          }
                           sizes="(max-width:700px) calc(100vw - 72px), 31vw"
                           alt={p.alt}
                           width="1600"
