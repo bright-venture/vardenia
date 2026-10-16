@@ -58,9 +58,10 @@ export function FilterChip({
       href={href}
       aria-current={active ? 'true' : undefined}
       className={
-        active
+        'vd-filter-chip ' +
+        (active
           ? 'bg-cedar-900 text-surface-base border-cedar-900 inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm'
-          : 'border-ink-100 text-ink-700 hover:border-ink-500 hover:bg-surface-raised inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm transition-colors'
+          : 'border-ink-100 text-ink-700 hover:border-ink-500 hover:bg-surface-raised inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 text-sm transition-colors')
       }
     >
       {children}

@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -6,7 +7,7 @@ import { Link } from '../../../../../i18n/routing'
 import { currentCustomer } from '../../../../../lib/session'
 import { savedListingsForCurrent } from '../../../../../lib/saved'
 import { ListingGrid } from '../../../../../components/ListingGrid'
-import { LINK, PRIMARY_BUTTON } from '../../../../../components/formStyles'
+import { LINK } from '../../../../../components/formStyles'
 
 /**
  * The shortlist as a page.
@@ -40,17 +41,15 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
 
   if (!customer) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-24">
-        <h1 className="font-display text-ink-900 text-3xl">{t('savedTitle')}</h1>
-        <p className="text-ink-500 mt-4">{t('signInToSaved')}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/account/login" className={PRIMARY_BUTTON}>
-            {t('signIn')}
+      <main data-ui className="vd-account-gate">
+        <PageHero title={t('savedTitle')} intro={t('signInToSaved')} place={1} locale={locale}>
+          <Link href="/account/login" className="vd-button">
+            {t('signIn')} <span aria-hidden>↗</span>
           </Link>
-          <Link href="/account/signup" className={LINK}>
+          <Link href="/account/signup" className="vd-text-link">
             {t('signUp')}
           </Link>
-        </div>
+        </PageHero>
       </main>
     )
   }
@@ -58,8 +57,8 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
   const listings = await savedListingsForCurrent(locale as Locale)
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <main data-ui className="vd-saved-page mx-auto max-w-6xl px-6 py-16">
+      <header className="vd-personal-header flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('savedTitle')}</h1>
           <p className="text-ink-500 mt-2 max-w-md text-sm">{t('savedSubtitle')}</p>

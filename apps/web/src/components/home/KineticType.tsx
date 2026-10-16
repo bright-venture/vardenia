@@ -9,13 +9,17 @@
  * rather than on spaces, because Chinese has none and Hindi, Bengali and Urdu
  * words are not always where a space split would put them.
  *
- * Read by a screen reader as one plain heading: the moving copy is hidden from
- * it, and a visually hidden heading carries the sentence. A reader who asked
- * for less motion gets the plain sentence, still.
+ * The sentence remains one semantic heading. Server/no-script rendering and
+ * the shared motion-off preference show the complete sentence, with its gold accent.
  */
 
-import { useMemo, useRef } from 'react'
-import { clamp01, smooth, usePinProgress, useReducedMotion } from '../../lib/motion'
+import { useMemo, useRef, useSyncExternalStore } from 'react'
+import { clamp01, smooth, usePinProgress } from '../../lib/motion'
+import { useJourneyMotion } from '../journey/browser-state'
+
+const subscribeReady = () => () => {}
+const clientReady = () => true
+const serverReady = () => false
 
 interface Segment {
   text: string
@@ -50,28 +54,24 @@ export function KineticType({
   accent,
   locale,
   className = '',
+  headingId,
 }: {
   text: string
   /** The word that stamps last, exactly as it appears in `text`. */
   accent: string
   locale: string
   className?: string
+  headingId?: string
 }) {
-  const reduced = useReducedMotion()
+  const [motion] = useJourneyMotion()
+  const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady)
+  const disabled = !motion || !ready
   const ref = useRef<HTMLDivElement>(null)
-  const progress = usePinProgress(ref, reduced)
+  const progress = usePinProgress(ref, disabled)
 
   const segments = useMemo(() => segmentsOf(text, locale), [text, locale])
   const words = segments.filter((s) => s.index >= 0).length
   const accentIndex = segments.find((s) => s.index >= 0 && s.text.startsWith(accent))?.index ?? -1
-
-  if (reduced) {
-    return (
-      <div className="py-28 text-center lg:py-40">
-        <h2 className={className}>{text}</h2>
-      </div>
-    )
-  }
 
   /** 0..1 for word `i`: the accent is held back for the end of the pin. */
   const wordProgress = (i: number) => {
@@ -82,33 +82,36 @@ export function KineticType({
   }
 
   return (
-    <div ref={ref} style={{ height: '160svh' }}>
-      <div className="sticky top-0 flex h-[100svh] items-center justify-center">
-        <h2 className="sr-only">{text}</h2>
-        <p aria-hidden className={className}>
+    <div
+      ref={ref}
+      className={`vd-kinetic-track ${disabled ? 'vd-kinetic-static' : ''}`}
+      style={{ height: disabled ? 'auto' : '160svh' }}
+    >
+      <div className="vd-kinetic-stage">
+        <h2 id={headingId} className={className}>
           {segments.map((segment, i) => {
             if (segment.index < 0) return <span key={i}>{segment.text}</span>
-            const p = wordProgress(segment.index)
+            const p = disabled ? 1 : wordProgress(segment.index)
             const isAccent = segment.index === accentIndex
             const settle = p > 0.7 && p < 1 ? (p - 0.85) * 30 : 0
             return (
               <span
                 key={i}
-                className={
-                  isAccent
-                    ? 'text-gold-300 inline-block will-change-transform'
-                    : 'inline-block will-change-transform'
+                className={`vd-kinetic-word ${isAccent ? 'vd-manifesto-emphasis' : ''}`}
+                style={
+                  disabled
+                    ? undefined
+                    : {
+                        opacity: p,
+                        transform: `translateY(${(1 - p) * (isAccent ? 26 : 40) - settle}px) scale(${isAccent ? 0.96 + p * 0.04 : 1})`,
+                      }
                 }
-                style={{
-                  opacity: p,
-                  transform: `translateY(${(1 - p) * (isAccent ? 26 : 40) - settle}px) scale(${isAccent ? 0.96 + p * 0.04 : 1})`,
-                }}
               >
                 {segment.text}
               </span>
             )
           })}
-        </p>
+        </h2>
       </div>
     </div>
   )

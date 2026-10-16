@@ -124,7 +124,7 @@ export function ListingCard({
     // keyboard-focused on its small anchor, and a ring around two words of a
     // heading is easy to miss on a grid. `has-[a:focus-visible]` moves it to the
     // card, and the anchor drops its own outline below so the two do not stack.
-    <article className="has-[a:focus-visible]:outline-gold-500 group relative has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
+    <article className="vd-listing-card has-[a:focus-visible]:outline-gold-500 group relative has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
       <div className="relative">
         <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
 
@@ -148,7 +148,7 @@ export function ListingCard({
           covered one is not.
         */}
         <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
-          <span className="bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
+          <span className="vd-card-category bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
             {categoryLabel(category, locale)}
           </span>
 
@@ -182,7 +182,7 @@ export function ListingCard({
       */}
       <div className="mt-4">
         {place || distanceKm !== null ? (
-          <p className="text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
+          <p className="vd-card-place text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
             {/* The distance first: on a suggestion it is the reason it is here. */}
             {distanceKm !== null ? (
               <span className="text-gold-700">{t('distanceKm', { km: formatKm(distanceKm) })}</span>
@@ -276,7 +276,10 @@ export function ListingCard({
           cannot unbalance a row. Worth putting back to the designer.
         */}
         {tagline ? (
-          <p dir="auto" className="text-ink-500 mt-2 line-clamp-2 text-sm leading-relaxed">
+          <p
+            dir="auto"
+            className="vd-card-body text-ink-500 mt-2 line-clamp-2 text-sm leading-relaxed"
+          >
             {tagline}
           </p>
         ) : null}

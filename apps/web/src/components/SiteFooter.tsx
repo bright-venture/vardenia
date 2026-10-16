@@ -1,3 +1,4 @@
+import { MotionControl } from './editorial/MotionControl'
 import { getTranslations } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
 import type { LucideIcon } from 'lucide-react'
@@ -60,14 +61,14 @@ interface FooterLink {
 
 function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
-    <div>
+    <div className="vd-footer-column">
       <h3 className="text-ink-900 text-xs font-semibold uppercase tracking-wider">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map(({ href, label, icon: Icon }) => (
           <li key={href}>
             <Link
               href={href}
-              className="text-ink-500 hover:text-ink-900 group inline-flex items-center gap-2 text-sm transition-colors"
+              className="vd-footer-link text-ink-500 hover:text-ink-900 group inline-flex items-center gap-2 text-sm transition-colors"
             >
               {/* Decorative. The label is the content; an icon announced as
                   "bed double" next to the word "Stay" is noise. */}
@@ -87,6 +88,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations()
+  const j = await getTranslations('journey')
 
   const discover: FooterLink[] = SECTIONS.map((section) => ({
     href: `/${section.path}`,
@@ -120,47 +122,36 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
   ]
 
   return (
-    <footer className="border-ink-100 bg-surface-raised mt-24 border-t">
-      <div className="mx-auto max-w-6xl px-6 pb-10 pt-16">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-4">
-            <p className="font-display text-ink-900 text-xl">Vardenia</p>
-            <p className="text-ink-500 mt-3 max-w-xs text-sm leading-relaxed">
-              {t('footer.tagline')}
-            </p>
-            {/* Social accounts go here when they exist. Left out rather than
-                pointed at invented handles, for the same reason the contact
-                address is a marked gap rather than a plausible mailbox. */}
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
-            <FooterColumn title={t('footer.discover')} links={discover} />
-            <FooterColumn title={t('footer.read')} links={read} />
-            <FooterColumn title={t('footer.company')} links={company} />
-            <FooterColumn title={t('footer.business')} links={business} />
-          </div>
-        </div>
-
-        {/* Legal sits beside the copyright rather than in a column of its own.
-            Two links do not make a category, and this is where a reader looks
-            for them. */}
-        <div className="border-ink-100 mt-16 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-          <p className="text-ink-500 text-xs">
-            &copy; {new Date().getFullYear()} Vardenia. {t('footer.rights')}
-          </p>
-
-          <nav aria-label={t('footer.legal')} className="flex items-center gap-5 text-xs">
-            <Link
-              href="/legal/privacy"
-              className="text-ink-500 hover:text-ink-900 transition-colors"
-            >
-              {t('footer.privacy')}
-            </Link>
-            <Link href="/legal/terms" className="text-ink-500 hover:text-ink-900 transition-colors">
-              {t('footer.terms')}
-            </Link>
-          </nav>
-        </div>
+    <footer className="vd-footer">
+      <div className="vd-footer-top">
+        <h2>
+          {j('footerA')}
+          <br />
+          {j('footerB')}
+        </h2>
+        <Link className="vd-button vd-button-light" href="/directory">
+          {j('footerLink')} ↗
+        </Link>
+      </div>
+      <nav className="vd-footer-links" aria-label={t('footer.discover')}>
+        <FooterColumn title={t('footer.discover')} links={discover} />
+        <FooterColumn title={t('footer.read')} links={read} />
+        <FooterColumn title={t('footer.company')} links={company} />
+        <FooterColumn title={t('footer.business')} links={business} />
+      </nav>
+      <p className="vd-footer-word">Vardenia</p>
+      <div className="vd-footer-bottom">
+        <p>
+          © {new Date().getFullYear()} Vardenia. {t('footer.rights')}
+        </p>
+        <nav aria-label={t('footer.legal')}>
+          <Link href="/legal/privacy">{t('footer.privacy')}</Link>
+          <Link href="/legal/terms">{t('footer.terms')}</Link>
+          <Link href="/credits">{j('credits')}</Link>
+        </nav>
+      </div>
+      <div className="vd-footer-settings">
+        <MotionControl />
       </div>
     </footer>
   )

@@ -123,7 +123,7 @@ export function ListingGrid({
   const editorial = kind === 'editorial'
 
   return (
-    <div className={GRIDS[kind]}>
+    <div className={`vd-listing-grid ${GRIDS[kind]}`} data-kind={kind}>
       {listings.map((listing, index) => (
         <div key={listing.id} className={editorial ? EDITORIAL_SPANS[index] : undefined}>
           <ListingCard

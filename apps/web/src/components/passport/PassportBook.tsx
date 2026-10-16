@@ -41,7 +41,7 @@ export async function PassportBook({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
+    <main className="vd-passport-page mx-auto max-w-5xl px-6 py-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="sr-only">{t('title')}</h1>
         <Link href="/account" className={LINK}>

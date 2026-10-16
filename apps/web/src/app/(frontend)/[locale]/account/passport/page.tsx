@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -5,7 +6,6 @@ import { isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../i18n/routing'
 import { currentCustomer } from '../../../../../lib/session'
 import { passportForCurrent } from '../../../../../lib/passport'
-import { LINK, PRIMARY_BUTTON } from '../../../../../components/formStyles'
 import { PassportBook } from '../../../../../components/passport/PassportBook'
 
 /**
@@ -40,17 +40,15 @@ export default async function PassportPage({ params }: { params: Promise<{ local
 
   if (!customer) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-24">
-        <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
-        <p className="text-ink-500 mt-4">{t('signInToSee')}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/account/login" className={PRIMARY_BUTTON}>
-            {account('signIn')}
+      <main className="vd-account-gate">
+        <PageHero title={t('title')} intro={t('signInToSee')} place={1} locale={locale}>
+          <Link href="/account/login" className="vd-button">
+            {account('signIn')} <span aria-hidden>↗</span>
           </Link>
-          <Link href="/account/signup" className={LINK}>
+          <Link href="/account/signup" className="vd-text-link">
             {account('signUp')}
           </Link>
-        </div>
+        </PageHero>
       </main>
     )
   }

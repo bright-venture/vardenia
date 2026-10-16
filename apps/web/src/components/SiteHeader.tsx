@@ -1,3 +1,4 @@
+import { MobileMenu } from './header/MobileMenu'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { Heart } from 'lucide-react'
@@ -10,6 +11,7 @@ import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { MenuLink } from './header/MenuLink'
+import { DiscoveryMenu } from './header/DiscoveryMenu'
 import {
   BUSINESS_ICON,
   CONTACT_ICON,
@@ -20,60 +22,31 @@ import {
 } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 
-/**
- * The site header.
- *
- * # Two menus rather than eleven links
- *
- * The previous version listed all seven sections plus magazine, search and
- * account in one row. That is eleven things competing at the top of every page,
- * it wrapped on anything narrower than a laptop, and seven bare nouns tell a
- * first-time reader nothing: "Lifestyle" and "Experiences" could be anything.
- *
- * The seven now sit behind **Discover**, each with the icon the taxonomy has
- * carried since it was written and a line saying what is actually in it. The
- * standing pages sit behind **About**. Both are generated from the same sources
- * as before, so a category or a content page still cannot exist without a way to
- * reach it.
- *
- * # Almost none of this is a client component
- *
- * The dropdowns open on hover and on `focus-within`, which is CSS. The mobile
- * menu is a `<details>` element. Only the scrolled state needs the browser, and
- * it is isolated in HeaderBar. So the header stays server-rendered and every
- * prerendered page stays prerendered - the thing that makes these pages 6ms
- * rather than 350ms.
- *
- * # Ordering
- *
- * Discover first because it is what the site is. Sign up is the only solid
- * control, because opening an account is the one thing here we ask a reader to
- * do rather than offer.
- */
+/** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
+  const categoryPhotos: Record<string, number> = {
+    stay: 1,
+    'eat-and-drink': 0,
+    experiences: 3,
+    weddings: 5,
+    lifestyle: 2,
+    'getting-around': 4,
+  }
 
   const sectionMenu = (
-    <div className="grid w-[34rem] grid-cols-2 gap-1">
-      {SECTIONS.map((section) => (
-        <MenuLink
-          key={section.path}
-          href={`/${section.path}`}
-          title={sectionName(section, locale)}
-          description={sectionSummary(section, locale)}
-          icon={SECTION_ICONS[section.category]}
-        />
-      ))}
-
-      {/* The odd one out in a seven-item grid, and useful there: it is the way
-          to see everything at once when none of the seven is quite it. */}
-      <MenuLink
-        href="/directory"
-        title={t('home.wholeDirectory')}
-        description={t('home.wholeDirectoryNote')}
-        icon={SEARCH_ICON}
-      />
-    </div>
+    <DiscoveryMenu
+      title={t('homeFinish.browseTitle')}
+      body={t('homeFinish.browseBody')}
+      arabic={locale === 'ar'}
+      directoryLabel={t('home.wholeDirectory')}
+      items={SECTIONS.map((section) => ({
+        path: section.path,
+        name: sectionName(section, locale),
+        description: sectionSummary(section, locale),
+        destination: categoryPhotos[section.path] ?? 0,
+      }))}
+    />
   )
 
   const aboutMenu = (
@@ -106,6 +79,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       />
     </div>
   )
+  const magazineMenu = (
+    <div className="grid w-[22rem] gap-1">
+      <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
+      <MenuLink href="/magazine/issues" title={t('footer.issues')} icon={MAGAZINE_ICON} />
+      <MenuLink
+        href="/magazine/articles"
+        title={t('footer.articles')}
+        description={t('homeFinish.storiesBody')}
+        icon={MAGAZINE_ICON}
+      />
+    </div>
+  )
 
   const language = (
     <Suspense fallback={<LanguageSwitcherLinks current={locale} search="" />}>
@@ -115,25 +100,22 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
   return (
     <HeaderBar>
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <div className="flex items-center gap-1">
-          <Link href="/" className="font-display text-ink-900 shrink-0 pe-3 text-xl tracking-tight">
+      <div className="vd-header-inner">
+        <div className="contents">
+          <Link href="/" className="vd-brand">
             Vardenia
           </Link>
 
-          <nav aria-label={t('nav.directory')} className="hidden items-center gap-1 lg:flex">
-            <DropdownNav label={t('nav.discover')}>{sectionMenu}</DropdownNav>
-            <Link
-              href="/magazine"
-              className="text-ink-700 hover:text-ink-900 px-2 py-1.5 text-sm transition-colors"
-            >
-              {t('nav.magazine')}
-            </Link>
+          <nav aria-label={t('nav.directory')} className="vd-desktop-nav">
+            <DropdownNav label={t('nav.discover')} wide>
+              {sectionMenu}
+            </DropdownNav>
+            <DropdownNav label={t('nav.magazine')}>{magazineMenu}</DropdownNav>
             <DropdownNav label={t('nav.about')}>{aboutMenu}</DropdownNav>
           </nav>
         </div>
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="vd-header-tools">
           <Link
             href="/search"
             aria-label={t('nav.search')}
@@ -143,42 +125,39 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </Link>
           {/* Shown only to a signed-in reader; see SavedNavLink. */}
           <SavedNavLink label={t('nav.saved')} />
-          <AccountLink />
+          <span className="vd-account-link">
+            <AccountLink />
+          </span>
           {language}
         </div>
 
         {/* Narrow: one disclosure holding the same links. Both navigations are
             in the markup and one is `display: none` at any width, which keeps it
             out of the accessibility tree as well as off the screen. */}
-        <details className="relative lg:hidden">
-          <summary
-            className="text-ink-700 flex cursor-pointer list-none items-center gap-2 text-sm"
-            aria-label={t('nav.menu')}
-          >
-            <span className="flex flex-col gap-[3px]" aria-hidden>
-              <span className="bg-ink-700 block h-[1.5px] w-5" />
-              <span className="bg-ink-700 block h-[1.5px] w-5" />
-              <span className="bg-ink-700 block h-[1.5px] w-5" />
-            </span>
-            {t('nav.menu')}
-          </summary>
-
+        <MobileMenu label={t('nav.menu')}>
           <nav
             aria-label={t('nav.directory')}
             className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 max-h-[80vh] w-[19rem] overflow-y-auto border p-2 shadow-xl"
           >
+            <div className="vd-mobile-discovery-heading">
+              <h2>{t('homeFinish.browseTitle')}</h2>
+              <p>{t('homeFinish.browseBody')}</p>
+            </div>
             {SECTIONS.map((section) => (
               <MenuLink
                 key={section.path}
                 href={`/${section.path}`}
                 title={sectionName(section, locale)}
+                description={sectionSummary(section, locale)}
                 icon={SECTION_ICONS[section.category]}
               />
             ))}
+            <MenuLink href="/directory" title={t('home.wholeDirectory')} icon={SEARCH_ICON} />
 
             <span className="border-ink-100 my-2 block border-t" />
 
             <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
+            <MenuLink href="/magazine/articles" title={t('footer.articles')} icon={MAGAZINE_ICON} />
             <MenuLink href="/search" title={t('nav.search')} icon={SEARCH_ICON} />
             {/* Always listed here as a destination: on a phone the menu is the
                 way around, and a signed-out tap lands on the sign-in prompt. */}
@@ -196,12 +175,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 thumb. `[&_a]` pads every anchor inside this row up to a size a
                 thumb can actually hit without enlarging them on desktop, where
                 they sit in a tight bar and a pointer is precise. */}
-            <div className="flex items-center justify-between gap-3 p-2 [&_a]:px-2 [&_a]:py-2.5">
+            <div className="vd-mobile-actions flex items-center justify-between gap-3 p-2 [&_a]:px-2 [&_a]:py-2.5">
               <AccountLink />
               {language}
             </div>
           </nav>
-        </details>
+        </MobileMenu>
       </div>
     </HeaderBar>
   )

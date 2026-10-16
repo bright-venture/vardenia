@@ -79,12 +79,12 @@ export default async function IssuePage({ params }: Params) {
   const edition = resolveImage(issue.digitalEdition as never, 'card')
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
+    <main className="vd-issue-page mx-auto max-w-6xl px-6 py-16">
       <Link href="/magazine/issues" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
         {t('magazine.issues')}
       </Link>
 
-      <div className="mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="vd-issue-header mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
         <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
           {cover ? (
             <Image
@@ -92,7 +92,7 @@ export default async function IssuePage({ params }: Params) {
               alt={cover.alt}
               fill
               priority
-              sizes="260px"
+              sizes="(max-width:700px) 100vw, 40vw"
               className="object-cover"
             />
           ) : null}
@@ -102,7 +102,10 @@ export default async function IssuePage({ params }: Params) {
           <p className="text-ink-500 text-xs uppercase tabular-nums tracking-widest">
             {t('magazine.issueNumber', { number: issue.issueNumber })}
           </p>
-          <h1 className="font-display text-ink-900 mt-2 text-4xl leading-tight md:text-5xl">
+          <h1
+            dir="auto"
+            className="font-display text-ink-900 mt-2 text-4xl leading-tight md:text-5xl"
+          >
             {issue.title}
           </h1>
 
@@ -139,14 +142,14 @@ export default async function IssuePage({ params }: Params) {
       </div>
 
       <section className="mt-16">
-        <h2 className="text-ink-500 text-xs uppercase tracking-widest">
+        <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">
           {t('magazine.inThisIssue')}
         </h2>
 
         {articles.length === 0 ? (
           <p className="text-ink-500 mt-4 text-sm">{t('magazine.noArticlesInIssue')}</p>
         ) : (
-          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="vd-editorial-grid mt-6 grid gap-8 sm:grid-cols-2">
             {articles.map((article) => {
               const print = article.print as {
                 pageFrom?: number | null

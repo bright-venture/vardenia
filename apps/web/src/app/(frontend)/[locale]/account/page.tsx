@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -11,7 +12,7 @@ import {
   partitionBookings,
 } from '../../../../lib/session'
 import { beirutDate, beirutDayLabel, formatBeirut } from '../../../../lib/beirut'
-import { LINK, NOTICE_INFO, PRIMARY_BUTTON } from '../../../../components/formStyles'
+import { LINK, NOTICE_INFO } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
 import { ChangeEmail, ChangeName, ChangePassword } from '../../../../components/ProfileForms'
@@ -54,17 +55,15 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   if (!customer) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-24">
-        <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
-        <p className="text-ink-500 mt-4">{t('signInToSee')}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/account/login" className={PRIMARY_BUTTON}>
-            {t('signIn')}
+      <main data-ui className="vd-account-gate">
+        <PageHero title={t('title')} intro={t('signInToSee')} place={1} locale={locale}>
+          <Link href="/account/login" className="vd-button">
+            {t('signIn')} <span aria-hidden>↗</span>
           </Link>
-          <Link href="/account/signup" className={LINK}>
+          <Link href="/account/signup" className="vd-text-link">
             {t('signUp')}
           </Link>
-        </div>
+        </PageHero>
       </main>
     )
   }
@@ -94,7 +93,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <main data-ui className="vd-account-page mx-auto max-w-3xl px-6 py-16">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
@@ -219,7 +218,11 @@ async function BookingList({
           const canReview = invite.has(String(booking.id))
 
           return (
-            <li key={booking.id} className="border-ink-100 bg-surface-raised border p-4">
+            <li
+              key={booking.id}
+              data-status={booking.status}
+              className="vd-reservation border-ink-100 bg-surface-raised border p-4"
+            >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 {slug ? (
                   <Link href={`/directory/${slug}`} className="text-ink-900 font-semibold">

@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
+import { PageMotion } from '../../../components/editorial/PageMotion'
+import { CinematicGrade } from '../../../components/journey/CinematicGrade'
 import { SiteHeader } from '../../../components/SiteHeader'
 import { SiteFooter } from '../../../components/SiteFooter'
 import { WhatsAppButton } from '../../../components/WhatsAppButton'
@@ -14,6 +16,9 @@ import { isIndexingAllowed } from '../../../lib/indexing'
 import { organizationSchema } from '../../../lib/structured-data'
 import { FONT_VARIABLES } from '../../fonts'
 import '../../globals.css'
+import '../../redesign.css'
+import '../../inner-pages.css'
+import '../../home-finish.css'
 
 /**
  * Site-level metadata, per locale.
@@ -120,11 +125,15 @@ export default async function FrontendLayout({
     <html lang={locale} dir={dirFor(locale)} className={FONT_VARIABLES}>
       {/* The flex column keeps the footer at the bottom on short pages
           (a 404 or an empty directory) instead of floating mid-screen. */}
-      <body className="bg-surface-base text-ink-900 flex min-h-screen flex-col antialiased">
+      <body className="vd-public bg-surface-base text-ink-900 flex min-h-screen flex-col antialiased">
+        <CinematicGrade />
         {/* Locale passed explicitly so client components rendered outside a
             page - the error and not-found boundaries - can still read it. */}
         {/* Identifies the publisher once, on every page, so search engines tie
             the site to one entity rather than to unattributed pages. */}
+        <a className="vd-skip-link" href="#vd-content">
+          {t('skipToContent')}
+        </a>
         <JsonLd data={organizationSchema()} />
 
         {/* Renders nothing unless the analytics variables are set, so local
@@ -146,7 +155,9 @@ export default async function FrontendLayout({
         <NextIntlClientProvider locale={locale}>
           <SavedProvider loginPath={loginPath} saveLabel={t('save')} savedLabel={t('saved')}>
             <SiteHeader locale={locale as Locale} />
-            <div className="flex-1">{children}</div>
+            <div id="vd-content" className="flex-1" tabIndex={-1}>
+              <PageMotion>{children}</PageMotion>
+            </div>
             <SiteFooter locale={locale as Locale} />
             {/* Renders nothing until NEXT_PUBLIC_WHATSAPP_NUMBER is set. */}
             <WhatsAppButton />

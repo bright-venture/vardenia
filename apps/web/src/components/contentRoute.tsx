@@ -66,7 +66,7 @@ export function contentRoute(slug: ContentPageSlug) {
     const page = contentPage(slug, locale)
     if (!page) notFound()
 
-    return <ContentPageView page={page} />
+    return <ContentPageView page={page} slug={slug} locale={locale} />
   }
 
   return { generateMetadata, Page }

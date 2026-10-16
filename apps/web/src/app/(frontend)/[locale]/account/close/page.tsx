@@ -50,7 +50,7 @@ export default async function CloseAccountPage({
   const t = await getTranslations('account')
 
   return (
-    <main className="mx-auto max-w-md px-6 py-20">
+    <main className="vd-task-page mx-auto max-w-md px-6 py-20">
       <h1 className="font-display text-ink-900 text-3xl">{t('closeTitle')}</h1>
       <div className="mt-8">
         <CloseAccountForm upcoming={live} />

@@ -35,7 +35,7 @@ export default async function ScanNotFoundPage({
   const t = await getTranslations()
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-24">
+    <main className="vd-task-page mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-24">
       <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('common.brand')}</p>
 
       <h1 className="font-display text-ink-900 mt-4 text-3xl leading-tight md:text-4xl">

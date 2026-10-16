@@ -31,13 +31,15 @@ export function DropdownNav({
   label,
   children,
   align = 'start',
+  wide = false,
 }: {
   label: string
   children: ReactNode
   align?: 'start' | 'end'
+  wide?: boolean
 }) {
   return (
-    <div className="group relative">
+    <div className={wide ? 'vd-discovery-dropdown group' : 'group relative'}>
       <button
         type="button"
         // Not a link: it goes nowhere, and announcing it as one promises a
@@ -70,7 +72,13 @@ export function DropdownNav({
           align === 'end' ? 'end-0' : 'start-0',
         ].join(' ')}
       >
-        <div className="border-ink-100 bg-surface-base shadow-ink-900/5 border p-2 shadow-xl">
+        <div
+          className={
+            wide
+              ? 'vd-discovery-panel'
+              : 'border-ink-100 bg-surface-base shadow-ink-900/5 border p-2 shadow-xl'
+          }
+        >
           {children}
         </div>
       </div>

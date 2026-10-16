@@ -84,86 +84,91 @@ export default async function ArticlePage({ params }: Params) {
   const author = article.author as { name?: string | null } | null
 
   return (
-    <article className="pb-24">
-      <JsonLd data={articleSchema(article as never, locale as Locale)} />
+    <main>
+      <article className="vd-article pb-24">
+        <JsonLd data={articleSchema(article as never, locale as Locale)} />
 
-      {hero ? (
-        <div className="bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
-          <Image
-            src={hero.src}
-            alt={hero.alt}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-        </div>
-      ) : null}
+        {hero ? (
+          <div className="vd-article-photo bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
+            <Image
+              src={hero.src}
+              alt={hero.alt}
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        ) : null}
 
-      <div className="mx-auto max-w-3xl px-6 pt-10">
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {kindLabel(article.kind, locale as Locale)}
-        </p>
+        <div className="vd-article-copy mx-auto max-w-3xl px-6 pt-10">
+          <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
+            {kindLabel(article.kind, locale as Locale)}
+          </p>
 
-        <h1 className="font-display text-ink-900 mt-3 text-4xl leading-tight md:text-5xl">
-          {article.title}
-        </h1>
+          <h1
+            dir="auto"
+            className="font-display text-ink-900 mt-3 text-4xl leading-tight md:text-5xl"
+          >
+            {article.title}
+          </h1>
 
-        {article.excerpt ? <p className="text-ink-700 mt-6 text-lg">{article.excerpt}</p> : null}
+          {article.excerpt ? <p className="text-ink-700 mt-6 text-lg">{article.excerpt}</p> : null}
 
-        <div className="text-ink-500 border-ink-100 mt-8 flex flex-wrap gap-x-4 gap-y-1 border-t pt-4 text-sm">
-          {author?.name ? <span>{t('article.byAuthor', { name: author.name })}</span> : null}
-          {article.publishedAt ? (
-            <time dateTime={article.publishedAt}>
-              {formatDate(new Date(article.publishedAt), locale as Locale)}
-            </time>
-          ) : null}
-          {credit ? <span className="text-ink-500">{credit}</span> : null}
-        </div>
+          <div className="text-ink-500 border-ink-100 mt-8 flex flex-wrap gap-x-4 gap-y-1 border-t pt-4 text-sm">
+            {author?.name ? <span>{t('article.byAuthor', { name: author.name })}</span> : null}
+            {article.publishedAt ? (
+              <time dateTime={article.publishedAt}>
+                {formatDate(new Date(article.publishedAt), locale as Locale)}
+              </time>
+            ) : null}
+            {credit ? <span className="text-ink-500">{credit}</span> : null}
+          </div>
 
-        {/*
+          {/*
           Disclosure, not decoration. A sponsored feature must say so before the
           reader starts reading it, not in small print at the end.
         */}
-        {article.kind === 'sponsored' ? (
-          <p className="border-gold-500 bg-gold-100 text-ink-700 mt-6 border-s-2 px-4 py-3 text-sm">
-            {sponsor?.name
-              ? t('article.paidPartnershipWith', { sponsor: sponsor.name })
-              : t('article.paidPartnership')}
-          </p>
-        ) : null}
+          {article.kind === 'sponsored' ? (
+            <p className="border-gold-500 bg-gold-100 text-ink-700 mt-6 border-s-2 px-4 py-3 text-sm">
+              {sponsor?.name
+                ? t('article.paidPartnershipWith', { sponsor: sponsor.name })
+                : t('article.paidPartnership')}
+            </p>
+          ) : null}
 
-        {article.body ? (
-          <div className="prose-vardenia mt-10">
-            <RichText data={article.body as never} />
-          </div>
-        ) : null}
-      </div>
+          {article.body ? (
+            <div className="prose-vardenia mt-10">
+              <RichText data={article.body as never} />
+            </div>
+          ) : null}
+        </div>
 
-      {featured.length > 0 ? (
-        <section className="mx-auto mt-16 max-w-6xl px-6">
-          <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-            {t('magazine.placesInStory')}
-          </h2>
-          <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((business) => (
-              <ListingCard
-                key={String(business.id)}
-                slug={String(business.slug ?? '')}
-                name={String(business.name ?? '')}
-                tagline={business.tagline as string | null}
-                category={business.category as string | null}
-                governorate={business.governorate as string | null}
-                district={business.district as string | null}
-                priceRange={business.priceRange as string | null}
-                verified={business.verified as boolean | null}
-                heroImage={business.heroImage as never}
-                locale={locale}
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </article>
+        {featured.length > 0 ? (
+          <section className="mx-auto mt-16 max-w-6xl px-6">
+            <h2 className="text-ink-500 text-xs uppercase tracking-widest">
+              {t('magazine.placesInStory')}
+            </h2>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((business) => (
+                <ListingCard
+                  key={String(business.id)}
+                  slug={String(business.slug ?? '')}
+                  name={String(business.name ?? '')}
+                  tagline={business.tagline as string | null}
+                  category={business.category as string | null}
+                  governorate={business.governorate as string | null}
+                  district={business.district as string | null}
+                  priceRange={business.priceRange as string | null}
+                  verified={business.verified as boolean | null}
+                  heroImage={business.heroImage as never}
+                  locale={locale}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+      </article>
+    </main>
   )
 }

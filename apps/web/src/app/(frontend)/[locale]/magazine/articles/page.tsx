@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
@@ -57,21 +58,24 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
   const t = await getTranslations()
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <header>
-        <Link href="/magazine" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {t('magazine.title')}
+    <main className="vd-magazine-index vd-magazine-articles">
+      <PageHero
+        title={t('magazine.articles')}
+        intro={t('magazine.articlesMetaDescription')}
+        place={1}
+        locale={locale}
+      >
+        <Link href="/magazine" className="vd-text-link">
+          {t('magazine.title')} <span aria-hidden>↗</span>
         </Link>
-        <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {t('magazine.articles')}
-        </h1>
-      </header>
-
-      {/* `searchParams` is handed over unawaited so this boundary is the only
+      </PageHero>
+      <div className="vd-editorial-results">
+        {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it, matching the directory page. */}
-      <Suspense fallback={<ListingsSkeleton />}>
-        <ArticleResults locale={locale} searchParams={searchParams} />
-      </Suspense>
+        <Suspense fallback={<ListingsSkeleton />}>
+          <ArticleResults locale={locale} searchParams={searchParams} />
+        </Suspense>
+      </div>
     </main>
   )
 }
@@ -91,9 +95,9 @@ async function ArticleResults({
   return (
     <>
       {result.docs.length === 0 ? (
-        <p className="text-ink-500 mt-16 text-center">{t('magazine.noArticles')}</p>
+        <p className="vd-archive-empty text-ink-500 mt-16">{t('magazine.noArticles')}</p>
       ) : (
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="vd-editorial-grid mt-10 grid gap-8 sm:grid-cols-2">
           {result.docs.map((article) => (
             <ArticleCard
               key={article.id}

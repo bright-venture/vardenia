@@ -11,6 +11,7 @@ import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
+import { EditorialIntro } from '../../../../components/journey/EditorialIntro'
 import { TripBar } from '../../../../components/TripBar'
 import { tripVerdicts } from '../../../../lib/trip-availability'
 import { tripParams } from '../../../../lib/trip'
@@ -59,10 +60,8 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const t = await getTranslations('directory')
-
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
+    <main className="vd-directory mx-auto max-w-6xl px-6 py-16">
       {/*
         The design puts the result count beside the title. It cannot go here:
         this shell is deliberately static and the count needs the query, so
@@ -71,14 +70,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
         avoid. It stays above the grid, inside the boundary, where it already
         was.
       */}
-      <header>
-        <p className="text-gold-700 font-mono text-[11px] uppercase tracking-[0.2em]">
-          {t('discoverLebanon')}
-        </p>
-        <h1 className="font-display text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">
-          {t('title')}
-        </h1>
-      </header>
+      <EditorialIntro locale={locale} />
 
       {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it. */}

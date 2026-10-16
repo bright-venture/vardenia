@@ -55,7 +55,7 @@ export default async function DashboardLayout({
   const listings = await ownerListings()
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-16">
+    <main data-ui className="vd-partner-page mx-auto max-w-4xl px-6 py-16">
       {/*
         Titled with the business, not the account.
 

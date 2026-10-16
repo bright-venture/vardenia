@@ -1,3 +1,4 @@
+import { colors } from '@vardenia/tokens'
 import Image from 'next/image'
 import { resolvePhotograph, type MediaField } from '../../lib/media'
 
@@ -110,7 +111,7 @@ export function Plate({
 
   return (
     <div
-      className={`bg-surface-sunken relative overflow-hidden ${RATIOS[ratio]} ${className}`}
+      className={`vd-plate bg-surface-sunken relative overflow-hidden ${RATIOS[ratio]} ${className}`}
       // The hatch is inline because it is one gradient used in one place, and
       // a Tailwind arbitrary value for it would be less readable than this.
       style={
@@ -121,8 +122,7 @@ export function Plate({
               // cannot take a colour class. Update it with the palette - this
               // held the old #10302a through the 2026 rebrand and tinted every
               // photograph-less card green on an otherwise navy site.
-              backgroundImage:
-                'repeating-linear-gradient(-45deg, rgba(11,23,57,0.05) 0 10px, transparent 10px 20px), linear-gradient(160deg, rgba(11,23,57,0.09), rgba(11,23,57,0.03))',
+              backgroundColor: colors.surface.sunken,
             }
       }
     >

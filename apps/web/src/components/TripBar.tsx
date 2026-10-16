@@ -114,7 +114,7 @@ export async function TripBar({
   return (
     <section
       aria-labelledby="trip-bar-title"
-      className="border-ink-100 bg-surface-raised mt-8 border p-4 sm:p-5"
+      className="vd-trip-bar border-ink-100 bg-surface-raised mt-8 border p-4 sm:p-5"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 id="trip-bar-title" className="font-display text-ink-900 text-xl">

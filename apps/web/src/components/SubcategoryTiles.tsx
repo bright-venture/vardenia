@@ -82,7 +82,7 @@ export async function SubcategoryTiles({
     'border-ink-100 flex items-baseline justify-between gap-4 border-b px-1 py-5 transition-colors'
 
   return (
-    <nav className="mt-10" aria-label={t('chooseType')}>
+    <nav className="vd-subcategories mt-10" aria-label={t('chooseType')}>
       <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.2em]">
         {t('chooseType')}
       </h2>

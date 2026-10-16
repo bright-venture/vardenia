@@ -269,7 +269,7 @@ export function FilterSheet({
           Longhand on both sides rather than `sm:m-auto`, so there is no
           shorthand-versus-longhand ordering question to get wrong.
         */
-        className="bg-surface-base text-ink-900 backdrop:bg-ink-950/50 sm: mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none p-0 shadow-2xl backdrop:backdrop-blur-[2px] sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl"
+        className="vd-filter-dialog bg-surface-base text-ink-900 backdrop:bg-ink-950/50 mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none p-0 shadow-2xl sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl"
       >
         <div className="flex max-h-[88vh] flex-col sm:max-h-[80vh]">
           {/* The grab handle is a phone affordance and noise on a laptop. */}

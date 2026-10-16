@@ -46,7 +46,7 @@ import { Link } from '../../i18n/routing'
  */
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 font-medium transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45'
+  'vd-ui-button inline-flex items-center justify-center gap-2 font-medium transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45'
 
 const VARIANTS = {
   solid: 'bg-cedar-900 text-surface-base hover:bg-cedar-700',

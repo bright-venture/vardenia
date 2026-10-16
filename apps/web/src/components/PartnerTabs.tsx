@@ -45,7 +45,7 @@ export function PartnerTabs({
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
 
   return (
-    <nav className="border-ink-100 mt-8 flex gap-6 border-b" aria-label={bookings}>
+    <nav className="vd-partner-tabs border-ink-100 mt-8 flex gap-6 border-b" aria-label={bookings}>
       <Tab href="/partner" active={!onListing && !onScans && !onStatements}>
         {bookings}
       </Tab>

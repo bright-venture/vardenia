@@ -68,11 +68,11 @@ export function Band({
   return (
     <section
       id={id}
-      className={`${TONES[tone]} ${compact ? 'py-12 sm:py-16' : 'py-16 sm:py-24'} ${className}`}
+      className={`vd-band ${TONES[tone]} ${compact ? 'py-12 sm:py-16' : 'py-16 sm:py-24'} ${className}`}
     >
       <div className={`mx-auto px-6 ${wide ? 'max-w-7xl' : 'max-w-6xl'}`}>
         {hasHeading ? (
-          <div className="mb-10 flex flex-col gap-6 sm:mb-12 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+          <div className="vd-band-heading mb-10 flex flex-col gap-6 sm:mb-12 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
             <div className="min-w-0">
               {eyebrow ? <Eyebrow inverse={tone === 'inverse'}>{eyebrow}</Eyebrow> : null}
               {title ? (
@@ -90,7 +90,7 @@ export function Band({
               <div className="flex shrink-0 flex-col items-start gap-4 lg:items-end">
                 {note ? (
                   <p
-                    className={`max-w-[46ch] text-sm leading-relaxed lg:text-end ${
+                    className={`vd-band-note max-w-[46ch] text-sm leading-relaxed lg:text-end ${
                       tone === 'inverse' ? 'text-cedar-100/75' : 'text-ink-500'
                     }`}
                   >
@@ -118,7 +118,7 @@ export function Band({
 export function Eyebrow({ children, inverse = false }: { children: ReactNode; inverse?: boolean }) {
   return (
     <p
-      className={`font-mono text-[11px] uppercase tracking-[0.16em] ${
+      className={`vd-eyebrow font-mono text-[11px] uppercase tracking-[0.16em] ${
         inverse ? 'text-gold-300' : 'text-gold-700'
       }`}
     >

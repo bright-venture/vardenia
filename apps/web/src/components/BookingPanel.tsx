@@ -108,7 +108,10 @@ export async function BookingPanel({
    * without fighting it.
    */
   return (
-    <section id="book" className="border-ink-100 bg-surface-raised border p-6 md:p-8">
+    <section
+      id="book"
+      className="vd-booking-panel border-ink-100 bg-surface-raised border p-6 md:p-8"
+    >
       <h2 className="font-display text-ink-900 text-2xl">
         {model.mode === 'nights' ? t('headingStay') : t('heading')}
       </h2>

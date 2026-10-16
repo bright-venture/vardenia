@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -8,7 +9,6 @@ import { search } from '../../../../lib/search'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { ArticleCard } from '../../../../components/ArticleCard'
 import { SearchForm } from '../../../../components/SearchForm'
-import { Eyebrow } from '../../../../components/ui'
 
 /**
  * Search across listings and editorial.
@@ -53,77 +53,67 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const results = await search({ locale, q: q ?? '' })
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-      <header>
-        <Eyebrow>{t('common.brand')}</Eyebrow>
-        {/*
-          The same masthead treatment the directory got: a mono kicker over a
-          title set as large as the page can carry. A search page is a real
-          destination on this site - the header links to it and the home page
-          submits to it - and at `text-4xl` it read as a utility screen bolted
-          onto the side of the product.
-        */}
-        <h1 className="text-ink-900 mt-3 text-5xl leading-none lg:text-7xl">{t('search.title')}</h1>
-        <div className="mt-10 max-w-2xl">
-          <SearchForm locale={locale} initial={results.query ?? ''} />
-        </div>
-      </header>
-
-      {results.query === null ? (
-        <Prompt />
-      ) : results.total === 0 ? (
-        <NoResults query={results.query} />
-      ) : (
-        <>
-          {/*
+    <main className="vd-search-page">
+      <PageHero title={t('search.title')} intro={t('search.prompt')} place={2} locale={locale}>
+        <SearchForm locale={locale} initial={results.query ?? ''} />
+      </PageHero>
+      <div className="vd-search-results">
+        {results.query === null ? (
+          <Prompt />
+        ) : results.total === 0 ? (
+          <NoResults query={results.query} />
+        ) : (
+          <>
+            {/*
             Mono, because it is a count rather than a sentence, and it is the
             one line telling the reader their query was understood. `dir="auto"`
             on the quoted term: somebody who typed Arabic into the box should
             see it back the way they typed it.
           */}
-          <p
-            dir="auto"
-            className="text-ink-500 mt-14 font-mono text-[11px] uppercase tracking-[0.16em]"
-          >
-            {t('search.resultCount', { count: results.total, query: results.query })}
-          </p>
+            <p
+              dir="auto"
+              className="text-ink-500 mt-14 font-mono text-[11px] uppercase tracking-[0.16em]"
+            >
+              {t('search.resultCount', { count: results.total, query: results.query })}
+            </p>
 
-          {results.listings.totalDocs > 0 ? (
-            <section className="mt-8">
-              <h2 className="text-ink-900 text-3xl">{t('search.places')}</h2>
-              <div className="mt-8">
-                <ListingGrid
-                  listings={results.listings.docs}
-                  locale={locale}
-                  // Listings are the first block of results on the page.
-                  eager
-                  empty={t('search.nothing')}
-                />
-              </div>
-            </section>
-          ) : null}
-
-          {results.articles.totalDocs > 0 ? (
-            <section className="border-ink-100 mt-16 border-t pt-10">
-              <h2 className="text-ink-900 text-3xl">{t('search.reading')}</h2>
-              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {results.articles.docs.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    slug={article.slug ?? ''}
-                    title={article.title ?? ''}
-                    excerpt={article.excerpt}
-                    kind={article.kind}
-                    heroImage={article.heroImage as never}
-                    publishedAt={article.publishedAt}
+            {results.listings.totalDocs > 0 ? (
+              <section className="mt-8">
+                <h2 className="text-ink-900 text-3xl">{t('search.places')}</h2>
+                <div className="mt-8">
+                  <ListingGrid
+                    listings={results.listings.docs}
                     locale={locale}
+                    // Listings are the first block of results on the page.
+                    eager
+                    empty={t('search.nothing')}
                   />
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </>
-      )}
+                </div>
+              </section>
+            ) : null}
+
+            {results.articles.totalDocs > 0 ? (
+              <section className="border-ink-100 mt-16 border-t pt-10">
+                <h2 className="text-ink-900 text-3xl">{t('search.reading')}</h2>
+                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {results.articles.docs.map((article) => (
+                    <ArticleCard
+                      key={article.id}
+                      slug={article.slug ?? ''}
+                      title={article.title ?? ''}
+                      excerpt={article.excerpt}
+                      kind={article.kind}
+                      heroImage={article.heroImage as never}
+                      publishedAt={article.publishedAt}
+                      locale={locale}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </>
+        )}
+      </div>
     </main>
   )
 }

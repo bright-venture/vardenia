@@ -8,6 +8,7 @@ import { Link } from '../../../../i18n/routing'
 import { findArticles } from '../../../../lib/articles'
 import { findIssues } from '../../../../lib/issues'
 import { resolveImage } from '../../../../lib/media'
+import { EditorialIntro } from '../../../../components/journey/EditorialIntro'
 import { ArticleCard } from '../../../../components/ArticleCard'
 import { ButtonLink } from '../../../../components/ui'
 
@@ -90,15 +91,8 @@ export default async function MagazinePage({ params }: Props) {
   const cover = current ? resolveImage(current.cover as never, 'portrait') : null
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <header>
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">
-          {t('magazine.discoverLebanon')}
-        </p>
-        <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {t('magazine.title')}
-        </h1>
-      </header>
+    <main className="vd-magazine-index mx-auto max-w-6xl px-6 py-16">
+      <EditorialIntro locale={locale} kind="magazine" />
 
       {current ? (
         <section className="border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">

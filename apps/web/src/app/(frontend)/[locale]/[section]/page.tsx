@@ -15,7 +15,8 @@ import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
-import { sectionName } from '../../../../lib/labels'
+import { PageHero } from '../../../../components/editorial/PageHero'
+import { sectionName, sectionSummary } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { SubcategoryTiles } from '../../../../components/SubcategoryTiles'
 import { LINK } from '../../../../components/formStyles'
@@ -102,20 +103,36 @@ export default async function SectionPage({ params, searchParams }: Props) {
   const t = await getTranslations('directory')
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <header>
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('discoverLebanon')}</p>
-        <h1 className="font-display text-ink-900 mt-3 text-4xl md:text-5xl">
-          {nameFor(section, locale)}
-        </h1>
-      </header>
-
-      {/* Same arrangement as the directory: `searchParams` is what makes a route
+    <main className="vd-category-page">
+      <PageHero
+        title={nameFor(section, locale)}
+        intro={sectionSummary(section, locale)}
+        locale={locale}
+        place={
+          (
+            {
+              stay: 1,
+              'eat-and-drink': 0,
+              experiences: 3,
+              weddings: 5,
+              lifestyle: 2,
+              'getting-around': 4,
+            } as Record<string, number>
+          )[path] ?? 0
+        }
+      >
+        <a className="vd-button" href="#section-results">
+          {t('chooseType')} <span aria-hidden>↓</span>
+        </a>
+      </PageHero>
+      <div className="vd-category-results" id="section-results">
+        {/* Same arrangement as the directory: `searchParams` is what makes a route
           dynamic, so it is handed over unawaited and only this boundary blocks
           on it. The heading above ships from the static build. */}
-      <Suspense fallback={<SectionSkeleton />}>
-        <SectionResults locale={locale} section={section} searchParams={searchParams} />
-      </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
+          <SectionResults locale={locale} section={section} searchParams={searchParams} />
+        </Suspense>
+      </div>
     </main>
   )
 }

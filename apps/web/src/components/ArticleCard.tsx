@@ -30,7 +30,7 @@ export function ArticleCard({
   priority = false,
 }: Props) {
   return (
-    <article className="group">
+    <article className="vd-article-card group">
       <Link href={`/magazine/articles/${slug}`} className="block">
         {/* An article's picture is 3:2, where a listing's is 4:3. Editorial
             photography is shot landscape and the extra width is the point;

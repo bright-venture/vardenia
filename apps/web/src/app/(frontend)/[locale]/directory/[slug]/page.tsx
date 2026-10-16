@@ -27,6 +27,7 @@ import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { mapsLink } from '../../../../../lib/maps-link'
+import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
@@ -250,12 +251,13 @@ export default async function ListingPage({ params }: Params) {
   const anyNear = related.some((entry) => entry.nearby.near)
 
   return (
-    <article>
-      {/* Invisible to readers, read by search engines. See lib/structured-data. */}
-      <JsonLd data={listingSchema(listing as never, locale as Locale)} />
+    <main>
+      <article className="vd-listing">
+        {/* Invisible to readers, read by search engines. See lib/structured-data. */}
+        <JsonLd data={listingSchema(listing as never, locale as Locale)} />
 
-      <header className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden">
-        {/*
+        <header className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden">
+          {/*
           `alt=""` and aria-hidden together: this is the ground the name sits on
           rather than content, and a description of it read out before the
           heading tells a screen reader nothing it needs. `priority` because it
@@ -266,34 +268,35 @@ export default async function ListingPage({ params }: Params) {
           than ivory type on white. That is the difference between a page that
           looks unfinished and one that looks plain.
         */}
-        {hero ? (
-          <>
-            <Image
-              src={hero.src}
-              alt=""
-              aria-hidden
-              fill
-              priority
-              sizes="100vw"
-              className="-z-10 object-cover"
-            />
-            <div
-              aria-hidden
-              className="from-cedar-900 via-cedar-900/70 to-cedar-900/30 absolute inset-0 -z-10 bg-gradient-to-t"
-            />
-          </>
-        ) : null}
+          {hero ? (
+            <>
+              <Image
+                data-vd-photo
+                src={hero.src}
+                alt=""
+                aria-hidden
+                fill
+                priority
+                sizes="100vw"
+                className="-z-10 object-cover"
+              />
+              <div
+                aria-hidden
+                className="from-cedar-900 via-cedar-900/70 to-cedar-900/30 absolute inset-0 -z-10 bg-gradient-to-t"
+              />
+            </>
+          ) : null}
 
-        {/*
+          {/*
           Shorter without a photograph. 70svh of empty navy is a wall between
           the reader and the listing; the same block at 40 reads as a masthead.
         */}
-        <div
-          className={`mx-auto flex w-full max-w-6xl flex-col justify-end px-6 ${
-            hero ? 'min-h-[70svh] pb-12 pt-24 sm:pb-16' : 'pb-12 pt-14'
-          }`}
-        >
-          {/*
+          <div
+            className={`mx-auto flex w-full max-w-6xl flex-col justify-end px-6 ${
+              hero ? 'min-h-[70svh] pb-12 pt-24 sm:pb-16' : 'pb-12 pt-14'
+            }`}
+          >
+            {/*
             Back to the directory, above the name.
 
             A reader who arrived from a printed code has no history to go back
@@ -301,17 +304,17 @@ export default async function ListingPage({ params }: Params) {
             own back button does nothing for them. This is the only way off the
             page other than the suggestions at the foot.
           */}
-          <Link
-            href="/directory"
-            className="text-cedar-100/70 hover:text-surface-base mb-8 inline-flex w-fit items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors"
-          >
-            <span aria-hidden className="rtl:-scale-x-100">
-              &larr;
-            </span>
-            {t('title')}
-          </Link>
+            <Link
+              href="/directory"
+              className="text-cedar-100/70 hover:text-surface-base mb-8 inline-flex w-fit items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors"
+            >
+              <span aria-hidden className="rtl:-scale-x-100">
+                &larr;
+              </span>
+              {t('title')}
+            </Link>
 
-          {/*
+            {/*
             The one moment the paper and the site meet.
 
             Wrapped in Suspense because it reads the query string on the client:
@@ -320,15 +323,17 @@ export default async function ListingPage({ params }: Params) {
             is what lets this page stay cached. `null` as the fallback, so a
             reader who did not scan anything never sees a placeholder.
           */}
-          <Suspense fallback={null}>
-            <ScanArrival />
-          </Suspense>
+            <Suspense fallback={null}>
+              <ScanArrival />
+            </Suspense>
 
-          <Eyebrow inverse>
-            {[categoryLabel(listing.category, locale as Locale), place].filter(Boolean).join(' · ')}
-          </Eyebrow>
+            <Eyebrow inverse>
+              {[categoryLabel(listing.category, locale as Locale), place]
+                .filter(Boolean)
+                .join(' · ')}
+            </Eyebrow>
 
-          {/* `dir="auto"` rather than a fixed direction, on every field that
+            {/* `dir="auto"` rather than a fixed direction, on every field that
               holds text somebody typed into the admin.
 
               Payload falls back to English when a listing has no Arabic yet, and
@@ -339,17 +344,18 @@ export default async function ListingPage({ params }: Params) {
               first strong character, which is right in both states and during
               the long middle where some listings are translated and some are
               not. */}
-          <h1
-            dir="auto"
-            className="text-surface-base mt-4 text-[clamp(2.5rem,7vw,5rem)] leading-[1.02]"
-          >
-            {listing.name}
-          </h1>
+            <h1
+              dir="auto"
+              className="text-surface-base mt-4 text-[clamp(2.5rem,7vw,5rem)] leading-[1.02]"
+            >
+              {listing.name}
+            </h1>
+            {point && <Coordinates place={{ lat: point[1], lon: point[0] }} enabled />}
 
-          <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            {price ? <span className="font-mono tabular-nums">{price}</span> : null}
+            <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              {price ? <span className="font-mono tabular-nums">{price}</span> : null}
 
-            {/*
+              {/*
               A dot and a word, per the design. `state.success` rather than a
               brand colour: "open" is a status, and it should stay green if the
               brand ever stops being - the brand ground is navy now.
@@ -357,19 +363,19 @@ export default async function ListingPage({ params }: Params) {
               The dot is aria-hidden because the word beside it already says
               it. Colour is never the only signal here.
             */}
-            {open !== null ? (
-              <span className="inline-flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    open ? 'bg-state-success' : 'bg-cedar-100/50'
-                  }`}
-                />
-                {open ? t('openNow') : t('closedNow')}
-              </span>
-            ) : null}
+              {open !== null ? (
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      open ? 'bg-state-success' : 'bg-cedar-100/50'
+                    }`}
+                  />
+                  {open ? t('openNow') : t('closedNow')}
+                </span>
+              ) : null}
 
-            {/*
+              {/*
               The word, not the badge component.
 
               ui/Tier paints itself `bg-cedar-900` so it reads as a mark on a
@@ -380,107 +386,107 @@ export default async function ListingPage({ params }: Params) {
               that matters and the part the short badge has to put in an
               aria-label to keep.
             */}
-            {listing.verified ? (
-              <span className="text-gold-300 font-medium">{t('verified')}</span>
-            ) : null}
+              {listing.verified ? (
+                <span className="text-gold-300 font-medium">{t('verified')}</span>
+              ) : null}
 
-            {/*
+              {/*
               The reviews, as a link down to them. The average only once there
               are enough reviews to mean something; before that, the count.
             */}
-            {reviews.count > 0 ? (
-              <a
-                href="#reviews"
-                className="hover:text-surface-base inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:underline"
-              >
-                {reviews.average !== null && reviews.count >= SCORE_MIN_REVIEWS ? (
-                  <>
-                    <span aria-hidden className="text-gold-300">
-                      ★
-                    </span>
-                    <span className="font-mono tabular-nums">
-                      {reviews.average.toLocaleString(dataLocale(locale as Locale), {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 1,
-                      })}
-                    </span>
-                    <span aria-hidden>·</span>
-                  </>
-                ) : null}
-                {tReview('count', { count: reviews.count })}
-              </a>
-            ) : null}
+              {reviews.count > 0 ? (
+                <a
+                  href="#reviews"
+                  className="hover:text-surface-base inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:underline"
+                >
+                  {reviews.average !== null && reviews.count >= SCORE_MIN_REVIEWS ? (
+                    <>
+                      <span aria-hidden className="text-gold-300">
+                        ★
+                      </span>
+                      <span className="font-mono tabular-nums">
+                        {reviews.average.toLocaleString(dataLocale(locale as Locale), {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })}
+                      </span>
+                      <span aria-hidden>·</span>
+                    </>
+                  ) : null}
+                  {tReview('count', { count: reviews.count })}
+                </a>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div
-        className={`mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
-          bookable ? 'lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-20' : ''
-        }`}
-      >
-        <div className={bookable ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
-          {/*
+        <div
+          className={`mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
+            bookable ? 'lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-20' : ''
+          }`}
+        >
+          <div className={bookable ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
+            {/*
             The tagline set as display type, which is the design's call and a
             good one: it is one line saying what the place is, and at body size
             it reads as a caption nobody stops for. It is also the only prose
             most listings have.
           */}
-          {listing.tagline ? (
-            <p dir="auto" className="font-display text-ink-700 text-2xl leading-snug lg:text-3xl">
-              {listing.tagline}
-            </p>
-          ) : null}
+            {listing.tagline ? (
+              <p dir="auto" className="font-display text-ink-700 text-2xl leading-snug lg:text-3xl">
+                {listing.tagline}
+              </p>
+            ) : null}
 
-          {/* Directions (only with coordinates) sits beside Save (always). A
+            {/* Directions (only with coordinates) sits beside Save (always). A
               listing with no location still offers the heart. */}
-          <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-            <ActionBar
-              name={listing.name ?? ''}
-              address={listing.address}
-              place={place}
-              coordinates={point}
-            />
-            <SaveButton slug={slug} variant="button" />
-          </div>
+            <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
+              <ActionBar
+                name={listing.name ?? ''}
+                address={listing.address}
+                place={place}
+                coordinates={point}
+              />
+              <SaveButton slug={slug} variant="button" />
+            </div>
 
-          {/*
+            {/*
             What guests say, where the reader is deciding rather than at the
             foot of the page. Two lines from the best recent reviews, each a
             <q> so the quote marks follow the page's language; the full list,
             good and bad, is below and one link away.
           */}
-          {highlights.length > 0 ? (
-            <section className="mt-10" aria-labelledby="guests-say">
-              <h2
-                id="guests-say"
-                className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]"
-              >
-                {tReview('guestsSay')}
-              </h2>
-              <ul className="mt-4 grid gap-5 sm:grid-cols-2">
-                {highlights.map((highlight) => (
-                  <li key={highlight.id} className="border-gold-700/40 border-s-2 ps-4">
-                    <q dir="auto" className="text-ink-900 leading-relaxed">
-                      {highlight.quote}
-                    </q>
-                    <p className="text-ink-500 mt-2 flex items-center gap-2 text-xs">
-                      <span>{highlight.authorName}</span>
-                      <Stars rating={highlight.rating} />
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="#reviews"
-                className="text-gold-700 hover:text-ink-900 mt-4 inline-block text-sm underline underline-offset-4"
-              >
-                {tReview('readAll', { count: reviews.count })}
-              </a>
-            </section>
-          ) : null}
+            {highlights.length > 0 ? (
+              <section className="mt-10" aria-labelledby="guests-say">
+                <h2
+                  id="guests-say"
+                  className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]"
+                >
+                  {tReview('guestsSay')}
+                </h2>
+                <ul className="mt-4 grid gap-5 sm:grid-cols-2">
+                  {highlights.map((highlight) => (
+                    <li key={highlight.id} className="border-gold-700/40 border-s-2 ps-4">
+                      <q dir="auto" className="text-ink-900 leading-relaxed">
+                        {highlight.quote}
+                      </q>
+                      <p className="text-ink-500 mt-2 flex items-center gap-2 text-xs">
+                        <span>{highlight.authorName}</span>
+                        <Stars rating={highlight.rating} />
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="#reviews"
+                  className="text-gold-700 hover:text-ink-900 mt-4 inline-block text-sm underline underline-offset-4"
+                >
+                  {tReview('readAll', { count: reviews.count })}
+                </a>
+              </section>
+            ) : null}
 
-          {/*
+            {/*
             The facts, as a ruled table rather than a sidebar.
 
             Address and hours are what somebody standing outside the place needs,
@@ -490,51 +496,51 @@ export default async function ListingPage({ params }: Params) {
             directly under the name instead, which is also how a listing reads in
             print.
           */}
-          {/*
+            {/*
             The rule at the top belongs to the block, not to the first row, so
             it is only drawn when there is something under it. A listing with no
             address, type or price - and there are some - would otherwise get a
             stray line across the page.
           */}
-          <div className={hasFacts ? 'border-ink-100 mt-12 border-t' : undefined}>
-            {hasRows ? (
-              <dl>
-                {listing.address ? (
-                  <Row label={t('address')}>
-                    <p className="whitespace-pre-line">{listing.address}</p>
-                    <a
-                      className="text-gold-700 hover:text-ink-900 mt-2 inline-block underline underline-offset-4"
-                      href={mapsLink({
-                        name: listing.name ?? '',
-                        address: listing.address,
-                        place,
-                        coordinates: point,
-                      })}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t('viewOnMap')}
-                    </a>
-                  </Row>
-                ) : null}
+            <div className={hasFacts ? 'border-ink-100 mt-12 border-t' : undefined}>
+              {hasRows ? (
+                <dl>
+                  {listing.address ? (
+                    <Row label={t('address')}>
+                      <p className="whitespace-pre-line">{listing.address}</p>
+                      <a
+                        className="text-gold-700 hover:text-ink-900 mt-2 inline-block underline underline-offset-4"
+                        href={mapsLink({
+                          name: listing.name ?? '',
+                          address: listing.address,
+                          place,
+                          coordinates: point,
+                        })}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t('viewOnMap')}
+                      </a>
+                    </Row>
+                  ) : null}
 
-                {subcategories.length > 0 ? (
-                  <Row label={t('type')}>
-                    {subcategories
-                      .map((sub) => subcategoryLabel(sub, locale as Locale))
-                      .join(' · ')}
-                  </Row>
-                ) : null}
+                  {subcategories.length > 0 ? (
+                    <Row label={t('type')}>
+                      {subcategories
+                        .map((sub) => subcategoryLabel(sub, locale as Locale))
+                        .join(' · ')}
+                    </Row>
+                  ) : null}
 
-                {price ? (
-                  <Row label={t('price')}>
-                    <span className="font-mono tabular-nums">{price}</span>
-                  </Row>
-                ) : null}
-              </dl>
-            ) : null}
+                  {price ? (
+                    <Row label={t('price')}>
+                      <span className="font-mono tabular-nums">{price}</span>
+                    </Row>
+                  ) : null}
+                </dl>
+              ) : null}
 
-            {/*
+              {/*
             Hours, as a disclosure, and outside the list above rather than in it.
 
             Two reasons, and the second is the one that decided it. It costs no
@@ -549,175 +555,176 @@ export default async function ListingPage({ params }: Params) {
             page, and the urgent half of the question - open or not - is already
             answered beside the name.
           */}
-            {hours.length > 0 ? (
-              <details className="border-ink-100 group border-b py-5">
-                <summary className="flex cursor-pointer list-none items-center gap-4 sm:grid sm:grid-cols-[180px_1fr]">
-                  <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                    {t('openingHours')}
-                  </span>
-                  <span className="text-ink-700 ms-auto text-sm sm:ms-0">
-                    {t('showWeek')}
-                    <span
-                      aria-hidden
-                      className="text-ink-500 ms-2 inline-block transition-transform group-open:rotate-180"
-                    >
-                      &#9662;
+              {hours.length > 0 ? (
+                <details className="border-ink-100 group border-b py-5">
+                  <summary className="flex cursor-pointer list-none items-center gap-4 sm:grid sm:grid-cols-[180px_1fr]">
+                    <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                      {t('openingHours')}
                     </span>
-                  </span>
-                </summary>
-                <div className="mt-4 sm:ps-[180px]">
-                  <OpeningHoursTable hours={listing.openingHours as never} />
-                </div>
-              </details>
-            ) : null}
-          </div>
+                    <span className="text-ink-700 ms-auto text-sm sm:ms-0">
+                      {t('showWeek')}
+                      <span
+                        aria-hidden
+                        className="text-ink-500 ms-2 inline-block transition-transform group-open:rotate-180"
+                      >
+                        &#9662;
+                      </span>
+                    </span>
+                  </summary>
+                  <div className="mt-4 sm:ps-[180px]">
+                    <OpeningHoursTable hours={listing.openingHours as never} />
+                  </div>
+                </details>
+              ) : null}
+            </div>
 
-          {/*
+            {/*
             Square chips, matching every other control on the site since the
             2026 design. They are a list because that is what they are - a
             screen reader saying "list, 6 items" before reading them is how
             somebody knows how long it is.
           */}
-          {amenities.length > 0 ? (
-            <ul className="mt-10 flex flex-wrap gap-2">
-              {amenities.map((amenity) => (
-                <li
-                  key={amenity}
-                  className="border-ink-100 text-ink-700 border px-3 py-1.5 text-xs"
-                >
-                  {amenityLabel(amenity, locale as Locale)}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+            {amenities.length > 0 ? (
+              <ul className="mt-10 flex flex-wrap gap-2">
+                {amenities.map((amenity) => (
+                  <li
+                    key={amenity}
+                    className="border-ink-100 text-ink-700 border px-3 py-1.5 text-xs"
+                  >
+                    {amenityLabel(amenity, locale as Locale)}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
 
-          {listing.description ? (
-            <div dir="auto" className="prose-vardenia mt-14 max-w-2xl">
-              <RichText data={listing.description as never} />
-            </div>
-          ) : null}
+            {listing.description ? (
+              <div dir="auto" className="prose-vardenia mt-14 max-w-2xl">
+                <RichText data={listing.description as never} />
+              </div>
+            ) : null}
 
-          {/*
+            {/*
             Rooms, for a stay. The types the listing offers, with the venue's own
             note beside each - the same set a guest picks from in the booking
             form, shown here so they can weigh the options before opening it.
           */}
-          {roomTypes.length > 0 ? (
-            <section className="mt-14">
-              <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                {t('rooms')}
-              </h2>
-              <ul className="border-ink-100 mt-4 border-t">
-                {roomTypes.map((room) => (
-                  <li
-                    key={room.label}
-                    className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
-                  >
-                    <span className="text-ink-900">{room.label}</span>
-                    <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
-                      {room.price != null ? (
-                        // A starting nightly rate. The number is pinned dir=ltr so
-                        // the "$120 / night" does not reorder on an Arabic page.
-                        <span dir="ltr" className="text-ink-700 font-mono tabular-nums">
-                          ${room.price.toLocaleString('en-US')} / {tCommon('perNight')}
-                        </span>
-                      ) : null}
-                      {room.note ? <span>{room.note}</span> : null}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+            {roomTypes.length > 0 ? (
+              <section className="mt-14">
+                <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                  {t('rooms')}
+                </h2>
+                <ul className="border-ink-100 mt-4 border-t">
+                  {roomTypes.map((room) => (
+                    <li
+                      key={room.label}
+                      className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
+                    >
+                      <span className="text-ink-900">{room.label}</span>
+                      <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
+                        {room.price != null ? (
+                          // A starting nightly rate. The number is pinned dir=ltr so
+                          // the "$120 / night" does not reorder on an Arabic page.
+                          <span dir="ltr" className="text-ink-700 font-mono tabular-nums">
+                            ${room.price.toLocaleString('en-US')} / {tCommon('perNight')}
+                          </span>
+                        ) : null}
+                        {room.note ? <span>{room.note}</span> : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
-          {/* The menu, as a link to the file. Restaurants and cafes keep one as a
+            {/* The menu, as a link to the file. Restaurants and cafes keep one as a
               PDF or a photo; it opens in a new tab. */}
-          {menuHref ? (
-            <section className="mt-14">
-              <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                {t('menu')}
-              </h2>
-              <a
-                href={menuHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="border-ink-100 text-ink-900 hover:bg-surface-raised mt-4 inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium transition-colors"
-              >
-                {t('viewMenu')}
-                <span aria-hidden>&#8599;</span>
-              </a>
-            </section>
-          ) : null}
+            {menuHref ? (
+              <section className="mt-14">
+                <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                  {t('menu')}
+                </h2>
+                <a
+                  href={menuHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border-ink-100 text-ink-900 hover:bg-surface-raised mt-4 inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  {t('viewMenu')}
+                  <span aria-hidden>&#8599;</span>
+                </a>
+              </section>
+            ) : null}
 
-          {gallery.length > 0 ? (
-            <section className="mt-16">
-              <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                {t('gallery')}
-              </h2>
-              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-                {gallery.map((image) => (
-                  <div key={image.src} className="bg-surface-sunken relative aspect-[4/3]">
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          ) : null}
+            {gallery.length > 0 ? (
+              <section className="mt-16">
+                <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                  {t('gallery')}
+                </h2>
+                <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
+                  {gallery.map((image) => (
+                    <div key={image.src} className="bg-surface-sunken relative aspect-[4/3]">
+                      <Image
+                        data-vd-photo
+                        src={image.src}
+                        alt={image.alt}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-          {/*
+            {/*
             Guest reviews: the average and the latest few, then the form. Distinct
             from the Google rating in the header - that is another site's number,
             this is Vardenia's own guests, and only from people who completed a
             booking here. Written reviews arrive pending and show once approved.
           */}
-          {/* `id` so a guest's account page can link a finished booking straight
+            {/* `id` so a guest's account page can link a finished booking straight
               to the form, rather than to the top of a long page. */}
-          <section id="reviews" className="mt-16 scroll-mt-24">
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-              <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
-              {reviews.average !== null ? (
-                <span className="flex items-center gap-2">
-                  <Stars rating={reviews.average} />
-                  <span className="text-ink-500 text-sm">
-                    {tReview('count', { count: reviews.count })}
+            <section id="reviews" className="mt-16 scroll-mt-24">
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
+                {reviews.average !== null ? (
+                  <span className="flex items-center gap-2">
+                    <Stars rating={reviews.average} />
+                    <span className="text-ink-500 text-sm">
+                      {tReview('count', { count: reviews.count })}
+                    </span>
                   </span>
-                </span>
-              ) : null}
-            </div>
+                ) : null}
+              </div>
 
-            {reviews.reviews.length > 0 ? (
-              <ul className="mt-6 space-y-6">
-                {reviews.reviews.map((r) => (
-                  <li key={r.id} className="border-ink-100 border-t pt-5">
-                    <div className="flex items-center gap-3">
-                      <Stars rating={r.rating} />
-                      <span className="text-ink-900 text-sm font-medium">{r.authorName}</span>
-                    </div>
-                    {r.title ? <p className="text-ink-900 mt-2 font-medium">{r.title}</p> : null}
-                    <p
-                      dir="auto"
-                      className="text-ink-700 mt-1 whitespace-pre-line text-sm leading-relaxed"
-                    >
-                      {r.body}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-ink-500 mt-4 text-sm">{tReview('none')}</p>
-            )}
+              {reviews.reviews.length > 0 ? (
+                <ul className="mt-6 space-y-6">
+                  {reviews.reviews.map((r) => (
+                    <li key={r.id} className="border-ink-100 border-t pt-5">
+                      <div className="flex items-center gap-3">
+                        <Stars rating={r.rating} />
+                        <span className="text-ink-900 text-sm font-medium">{r.authorName}</span>
+                      </div>
+                      {r.title ? <p className="text-ink-900 mt-2 font-medium">{r.title}</p> : null}
+                      <p
+                        dir="auto"
+                        className="text-ink-700 mt-1 whitespace-pre-line text-sm leading-relaxed"
+                      >
+                        {r.body}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-ink-500 mt-4 text-sm">{tReview('none')}</p>
+              )}
 
-            <ReviewForm businessId={listing.id} locale={locale as Locale} />
-          </section>
-        </div>
+              <ReviewForm businessId={listing.id} locale={locale as Locale} />
+            </section>
+          </div>
 
-        {/*
+          {/*
           Rendered once, and in the sidebar.
 
           The first version of this rendered it twice - once here, once higher up
@@ -734,23 +741,23 @@ export default async function ListingPage({ params }: Params) {
           description rather than under it, so it interrupts nothing and can
           follow the reader down.
         */}
-        {bookable ? (
-          <aside>
-            <div className="lg:sticky lg:top-10">
-              <BookingPanel
-                businessId={listing.id}
-                rules={listing.booking as never}
-                locale={locale as Locale}
-                venue={listing.name}
-                payments={(listing as { payments?: PaymentsAccepted | null }).payments}
-                answerHours={answerHours}
-              />
-            </div>
-          </aside>
-        ) : null}
-      </div>
+          {bookable ? (
+            <aside>
+              <div className="lg:sticky lg:top-10">
+                <BookingPanel
+                  businessId={listing.id}
+                  rules={listing.booking as never}
+                  locale={locale as Locale}
+                  venue={listing.name}
+                  payments={(listing as { payments?: PaymentsAccepted | null }).payments}
+                  answerHours={answerHours}
+                />
+              </div>
+            </aside>
+          ) : null}
+        </div>
 
-      {/*
+        {/*
         Somewhere to go next.
 
         This is the only page on the site most readers will ever see - they
@@ -758,57 +765,58 @@ export default async function ListingPage({ params }: Params) {
         back through. Three more places is the difference between a visit of one
         page and a visit of two.
       */}
-      {related.length > 0 ? (
-        <section className="bg-surface-raised border-ink-100 border-t">
-          <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-            {anyNear ? <Eyebrow>{t('nearby')}</Eyebrow> : null}
-            <h2
-              className={
-                anyNear
-                  ? 'text-ink-900 mt-3 text-3xl sm:text-4xl'
-                  : 'text-ink-900 text-3xl sm:text-4xl'
-              }
-            >
-              {t('moreLikeThis')}
-            </h2>
-            <div className="mt-10">
-              <ListingGrid
-                listings={related}
-                locale={locale}
-                kind="related"
-                distances={new Map(related.map((entry) => [entry.id, entry.nearby.km]))}
-                empty={t('resultCount', { count: 0 })}
-              />
+        {related.length > 0 ? (
+          <section className="bg-surface-raised border-ink-100 border-t">
+            <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+              {anyNear ? <Eyebrow>{t('nearby')}</Eyebrow> : null}
+              <h2
+                className={
+                  anyNear
+                    ? 'text-ink-900 mt-3 text-3xl sm:text-4xl'
+                    : 'text-ink-900 text-3xl sm:text-4xl'
+                }
+              >
+                {t('moreLikeThis')}
+              </h2>
+              <div className="mt-10">
+                <ListingGrid
+                  listings={related}
+                  locale={locale}
+                  kind="related"
+                  distances={new Map(related.map((entry) => [entry.id, entry.nearby.km]))}
+                  empty={t('resultCount', { count: 0 })}
+                />
+              </div>
             </div>
-          </div>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {/*
+        {/*
         The one line that explains Vardenia to somebody who arrived by scanning
         a code and has read nothing else. Navy, because it is the brand
         speaking rather than the listing.
       */}
-      <section className="bg-cedar-900">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-6 py-12">
-          <p className="text-surface-base font-display max-w-xl text-xl leading-snug">
-            {t('ctaBanner')}
-          </p>
-          {/*
+        <section className="bg-cedar-900">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-6 py-12">
+            <p className="text-surface-base font-display max-w-xl text-xl leading-snug">
+              {t('ctaBanner')}
+            </p>
+            {/*
             Gold outline on navy. The kit's ButtonLink has no variant for this -
             its outline is an ink hairline meant for the ivory ground, and would
             all but vanish here. Worth a variant when a second one appears; not
             worth widening the kit for one button.
           */}
-          <Link
-            href="/directory"
-            className="border-gold-300 text-gold-300 hover:bg-gold-300 hover:text-cedar-900 inline-flex h-12 items-center border px-6 text-sm font-semibold transition-colors"
-          >
-            {t('browse')}
-          </Link>
-        </div>
-      </section>
-    </article>
+            <Link
+              href="/directory"
+              className="border-gold-300 text-gold-300 hover:bg-gold-300 hover:text-cedar-900 inline-flex h-12 items-center border px-6 text-sm font-semibold transition-colors"
+            >
+              {t('browse')}
+            </Link>
+          </div>
+        </section>
+      </article>
+    </main>
   )
 }
 

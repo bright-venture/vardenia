@@ -1,3 +1,4 @@
+import { PageHero } from '../../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -5,7 +6,6 @@ import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../../i18n/routing'
 import { currentOwner } from '../../../../../../lib/session'
 import { ownerScanReport, type ScanReport } from '../../../../../../lib/scan-report'
-import { PRIMARY_BUTTON } from '../../../../../../components/formStyles'
 
 /**
  * What the printed codes are doing: how often a partner's listings are scanned,
@@ -54,13 +54,12 @@ export default async function PartnerScansPage({ params }: Props) {
 
   if (!owner) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-24">
-        <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('eyebrow')}</p>
-        <h1 className="font-display text-ink-900 mt-3 text-3xl">{t('title')}</h1>
-        <p className="text-ink-500 mt-4">{t('signInToSee')}</p>
-        <Link href="/partner/login" className={`${PRIMARY_BUTTON} mt-8`}>
-          {t('signIn')}
-        </Link>
+      <main className="vd-account-gate">
+        <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
+          <Link href="/partner/login" className="vd-button">
+            {t('signIn')} <span aria-hidden>↗</span>
+          </Link>
+        </PageHero>
       </main>
     )
   }

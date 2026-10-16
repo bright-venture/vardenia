@@ -1,4 +1,10 @@
-import type { ContentPage } from '../lib/pages'
+import type { ContentPage, ContentPageSlug } from '../lib/pages'
+import type { Locale } from '@vardenia/i18n'
+import { getTranslations } from 'next-intl/server'
+import Image from 'next/image'
+import { PageHero } from './editorial/PageHero'
+import { Link } from '../i18n/routing'
+import { DESTINATIONS } from './journey/destinations'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
 import { withEmphasis } from './emphasis'
@@ -54,9 +60,7 @@ function Line({ text, id }: { text: string; id: string }) {
         lang="en"
         className="border-state-warning bg-gold-100 text-ink-900 my-4 border-s-4 px-4 py-3 text-start text-sm"
       >
-        <span className="text-state-warning me-2 text-xs font-semibold uppercase tracking-wider">
-          Not settled
-        </span>
+        <span className="text-state-warning me-2 text-sm font-semibold">Not settled</span>
         {body.replace(`${PLACEHOLDER} `, '')}
       </p>
     )
@@ -74,34 +78,109 @@ function Line({ text, id }: { text: string; id: string }) {
  * component that takes both the copy and the language it is in has two sources
  * of truth for one fact.
  */
-export function ContentPageView({ page }: { page: ContentPage }) {
+export async function ContentPageView({
+  page,
+  slug = 'about',
+  locale = 'en',
+}: {
+  page: ContentPage
+  slug?: ContentPageSlug
+  locale?: Locale
+}) {
+  const t = await getTranslations({ locale })
+  const faq = slug === 'faq'
+  const place = {
+    about: 1,
+    contact: 2,
+    faq: 0,
+    'add-your-business': 0,
+    'partner-with-us': 5,
+    advertise: 3,
+  }[slug]
+  const body = (section: ContentPage['sections'][number], sectionIndex: number) =>
+    groupLines(section.body).map((group, groupIndex) => {
+      const id = `${sectionIndex}-${groupIndex}`
+      return group.kind === 'list' ? (
+        <ul key={id} className="list-disc ps-6">
+          {group.lines.map((item, itemIndex) => (
+            <Line key={`${id}-${itemIndex}`} text={item} id={`${id}-${itemIndex}`} />
+          ))}
+        </ul>
+      ) : (
+        <Line key={id} text={group.lines[0]} id={id} />
+      )
+    })
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="font-display text-ink-900 text-4xl">{page.title}</h1>
-
-      <p className="text-ink-700 mt-8 text-lg leading-relaxed">{page.intro}</p>
-
-      {page.sections.map((section, sectionIndex) => (
-        <section key={section.heading} className="mt-12">
-          <h2 className="font-display text-ink-900 text-2xl">{section.heading}</h2>
-
-          {groupLines(section.body).map((group, groupIndex) => {
-            const id = `${sectionIndex}-${groupIndex}`
-
-            if (group.kind === 'list') {
-              return (
-                <ul key={id} className="mt-4 list-disc ps-6">
-                  {group.lines.map((item, itemIndex) => (
-                    <Line key={`${id}-${itemIndex}`} text={item} id={`${id}-${itemIndex}`} />
-                  ))}
-                </ul>
-              )
-            }
-
-            return <Line key={id} text={group.lines[0]} id={id} />
-          })}
-        </section>
-      ))}
+    <main className={`vd-standing-page vd-standing-${slug}`}>
+      <PageHero
+        title={page.title}
+        intro={page.intro}
+        place={place}
+        locale={locale}
+        immersive={slug === 'about'}
+      >
+        <a href="#page-story" className={`vd-button ${slug === 'about' ? 'vd-button-paper' : ''}`}>
+          {page.sections[0]?.heading} <span aria-hidden>↓</span>
+        </a>
+      </PageHero>
+      <div className="vd-story-layout" id="page-story">
+        <aside className="vd-story-index">
+          <nav aria-label={page.title}>
+            {page.sections.map((section, i) => (
+              <a key={section.heading} href={`#story-${i}`}>
+                {section.heading}
+                <span aria-hidden>↗</span>
+              </a>
+            ))}
+          </nav>
+          <Link
+            href={slug === 'about' || slug === 'contact' || faq ? '/directory' : '/contact'}
+            className="vd-button"
+          >
+            {t(slug === 'about' || slug === 'contact' || faq ? 'nav.directory' : 'nav.contact')}{' '}
+            <span aria-hidden>↗</span>
+          </Link>
+        </aside>
+        <div className="vd-content-sections">
+          {page.sections.map((section, i) =>
+            faq ? (
+              <details
+                className="vd-question"
+                key={section.heading}
+                id={`story-${i}`}
+                open={i === 0}
+              >
+                <summary>
+                  <h2>{section.heading}</h2>
+                  <span className="vd-question-sign" aria-hidden>
+                    +
+                  </span>
+                </summary>
+                <div className="vd-story-body">{body(section, i)}</div>
+              </details>
+            ) : (
+              <section className="vd-story-section" key={section.heading} id={`story-${i}`}>
+                <h2>{section.heading}</h2>
+                <div className="vd-story-body">{body(section, i)}</div>
+                {slug === 'about' && i === 0 ? (
+                  <figure className="vd-story-photograph" data-vd-reveal>
+                    <Image
+                      src="/journey/deir-el-qamar.webp"
+                      alt={DESTINATIONS[5].alt}
+                      width={1600}
+                      height={1200}
+                      sizes="(max-width:700px) 100vw, 60vw"
+                    />
+                    <figcaption>
+                      {locale === 'ar' ? DESTINATIONS[5].ar : DESTINATIONS[5].name}
+                    </figcaption>
+                  </figure>
+                ) : null}
+              </section>
+            ),
+          )}
+        </div>
+      </div>
     </main>
   )
 }

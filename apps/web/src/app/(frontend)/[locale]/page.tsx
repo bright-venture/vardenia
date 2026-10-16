@@ -1,95 +1,22 @@
 import type { Metadata } from 'next'
+import QRCode from 'qrcode'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { FEATURED_PLACES, SECTIONS } from '@vardenia/core'
-import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
+import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
+import { FEATURED_PLACES } from '@vardenia/core'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
-import { Hero } from '../../../components/home/Hero'
-import { SectionIndex } from '../../../components/home/SectionIndex'
+import { findListings, findFeaturedListings, printedCodes } from '../../../lib/listings'
+import { findIssues } from '../../../lib/issues'
+import { resolveImage, resolvePhotograph } from '../../../lib/media'
+import { getPathname } from '../../../i18n/routing'
+import { scanUrl } from '../../../lib/qr-url'
+import { CinematicJourney } from '../../../components/journey/CinematicJourney'
+import { MagazineArt } from '../../../components/journey/MagazineArt'
+import { HomePlaces } from '../../../components/home/HomePlaces'
 import { Manifesto } from '../../../components/home/Manifesto'
-import { ScanSequence, type ScanListing } from '../../../components/home/ScanSequence'
-import { InPrint } from '../../../components/home/InPrint'
-import { Verified } from '../../../components/home/Verified'
-import { NumbersBand } from '../../../components/home/NumbersBand'
-import { resolvePhotograph } from '../../../lib/media'
-import { placeLabel } from '../../../lib/labels'
-import { RegionIndex } from '../../../components/home/RegionIndex'
-import { ArticleCard } from '../../../components/ArticleCard'
-import { Accent } from '../../../components/Accent'
-import { ListingGrid } from '../../../components/ListingGrid'
-import { Band, ButtonLink } from '../../../components/ui'
-import {
-  countCodes,
-  findFeaturedListings,
-  findListings,
-  printedCodes,
-  type ListingSummary,
-} from '../../../lib/listings'
-import { findArticles } from '../../../lib/articles'
+import { PrintConnection } from '../../../components/home/PrintConnection'
 
-/**
- * The homepage.
- *
- * # What it was
- *
- * A holding page: a heading, two links, and a list of taxonomy categories
- * rendered as unclickable boxes with a subcategory count. It was honest about
- * being unfinished, which is more than the version before it managed, but it
- * was not a front door. Nothing on it showed a single listing or article, which
- * on a directory is the only thing a visitor came for.
- *
- * # What it is
- *
- * Five bands, in the order a first-time visitor needs them:
- *
- * 1. The masthead, which says where this is and why the listings can be trusted.
- * 2. The seven sections, so somebody who knows what they want leaves immediately.
- * 3. Listings, because a directory that shows no places is a brochure.
- * 4. The magazine, because the print edition is half of what this is.
- * 5. One line for business owners, at the bottom where it belongs.
- *
- * # Why the data is fetched here and not in the components
- *
- * The two grids are pure and take what they are given, so they can be dropped
- * onto a section page or an issue page without dragging a query along. This
- * page is the only thing that knows the homepage shows six listings and three
- * articles.
- *
- * # It survives an empty database
- *
- * Both queries can legitimately return nothing: the directory is pre-launch and
- * on some days there genuinely are no published articles. Neither case renders
- * an empty grid with a heading over it. The listings band falls back to an
- * explanation, and the magazine band removes itself entirely rather than
- * announcing a section with nothing in it.
- */
-/**
- * Only the alternates. Title and description are inherited from the layout,
- * which builds them from the `site` namespace in both languages.
- *
- * Next merges metadata field by field, so returning `alternates` alone leaves
- * the layout's title template intact. Returning a title here would replace it.
- *
- * The homepage is the one page that passes '/' to `alternatesFor`, which is the
- * case the helper was written to keep consistent: the canonical of the Arabic
- * homepage is `/ar`, not `/ar/`.
- */
-/**
- * An hour, stated rather than inherited.
- *
- * There was no `revalidate` here at all, so Next inferred one from the shortest
- * data cache the page touches. That was `LISTINGS_TTL`, and it was sixty
- * seconds - which is how the busiest page in the product came to be entitled to
- * 1,440 rebuilds a day for content that changes weekly.
- *
- * Setting it here alone does nothing: Next takes the minimum of this and the
- * caches the page reads, so the real fix was raising `LISTINGS_TTL`. See the
- * note on it in lib/listings for why an hour is not staler than a minute when
- * publishing already clears the tag. This stays so the intent is written down
- * where somebody reading the page will find it.
- */
 export const revalidate = 3600
-
 export async function generateMetadata({
   params,
 }: {
@@ -98,203 +25,62 @@ export async function generateMetadata({
   const { locale } = await params
   return { alternates: alternatesFor('/', isLocale(locale) ? locale : DEFAULT_LOCALE) }
 }
-
+/** Published directory/editorial content; visual-review samples live only in review/. */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params
-  /**
-   * Before anything is fetched, and not in the layout.
-   *
-   * The layout guards too, but layouts and pages render in parallel, so its
-   * `notFound()` does not stop the two queries below. This page was the only one
-   * that fetched without checking, which is how `/favicon.ico` became a 500 in
-   * production. See lib/require-locale.
-   */
   const locale = requireLocale(raw)
   setRequestLocale(locale)
-
-  const t = await getTranslations('home')
-  const nav = await getTranslations('nav')
-
-  /**
-   * Both in parallel. They are independent, and awaiting them in sequence would
-   * add the slower one's latency to the faster one's for no reason.
-   *
-   * `findListings` with no filter is the cacheable path, so this is usually a
-   * cache read rather than a round trip to Frankfurt.
-   */
-  const [listings, featured, articles, codes] = await Promise.all([
+  const j = await getTranslations('journey')
+  const t = await getTranslations('homeFinish')
+  const [listings, featured, issues] = await Promise.all([
     findListings({ locale, perPage: 6 }),
-    // The paid band above the directory taste. Empty for most of the first
-    // year, and the section removes itself when it is - see below.
     findFeaturedListings({ locale, limit: FEATURED_PLACES }),
-    findArticles({ locale, perPage: 3 }),
-    // The masthead's third figure. Cached on the same hour as the rest of the
-    // page, so it is not a per-view round trip. See lib/listings countCodes.
-    countCodes(),
+    findIssues(locale),
   ])
-
-  /**
-   * The listing the scan sequence opens, and whose printed code "In print"
-   * shows: the first on the page that has both a photograph and a code, so the
-   * phone shows a real place and the code really resolves to it.
-   */
-  const pictured = [...featured, ...(listings.docs as ListingSummary[])].filter((doc) =>
+  const issue = issues.docs[0]
+  const cover = issue ? resolveImage(issue.cover as never, 'portrait') : null
+  const pictured = [...featured, ...listings.docs].filter((doc) =>
     resolvePhotograph(doc.heroImage as never),
   )
-  const codesById = await printedCodes(pictured.map((doc) => doc.id))
-  const scanDoc = pictured.find((doc) => codesById.has(doc.id))
-  const scanCode = scanDoc ? (codesById.get(scanDoc.id) ?? null) : null
-  const scanListing: ScanListing | null = scanDoc
-    ? {
-        name: scanDoc.name ?? '',
-        slug: scanDoc.slug ?? '',
-        place: placeLabel(scanDoc.governorate, scanDoc.district, locale as Locale) || null,
-        tagline: scanDoc.tagline ?? null,
-        image: resolvePhotograph(scanDoc.heroImage as never)?.src ?? null,
-      }
-    : null
-  const codeSteps = t.raw('codeSteps') as { title: string; sub: string }[]
-
+  const codes = await printedCodes(pictured.map((doc) => doc.id))
+  const connected = pictured.find((doc) => codes.has(doc.id))
+  const code = connected ? codes.get(connected.id) : null
+  const magazineHref = getPathname({ locale, href: '/magazine' })
+  // A fallback code opens the magazine, never a fabricated venue.
+  const targetUrl =
+    connected && code
+      ? scanUrl(code)
+      : new URL(magazineHref, process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vardenia.com').href
+  const qr = await QRCode.toDataURL(targetUrl, {
+    width: 360,
+    margin: 4,
+    color: { dark: '#111d2d', light: '#ffffff' },
+  })
+  const target = {
+    title: connected && code ? (connected.name ?? '') : t('magazineName'),
+    image: connected && code ? resolvePhotograph(connected.heroImage as never) : cover,
+    href: connected && code ? `/g/${encodeURIComponent(code)}` : magazineHref,
+    liveCode: Boolean(connected && code),
+  }
   return (
-    <main>
-      {/* The place count is already in hand from the query above; the code count
-          is its own cached figure. The masthead states real numbers either way. */}
-      <Hero places={listings.totalDocs} codes={codes} />
-
-      {/*
-        What a venue buys, and the reason it sits directly under the masthead:
-        this is the placement being sold. Removed entirely when nothing is
-        featured rather than shown empty - a "Featured" heading over an empty row
-        advertises that nobody has bought anything, which is the one thing a
-        sales page must not do. The magazine band below takes the same approach.
-      */}
-      {featured.length > 0 ? (
-        <Band eyebrow={t('featuredEyebrow')} title={t('featuredTitle')} note={t('featuredNote')}>
-          <ListingGrid
-            listings={featured}
-            locale={locale}
-            kind="editorial"
-            empty={t('listingsEmpty')}
-          />
-        </Band>
-      ) : null}
-
-      <Band eyebrow={t('sectionsEyebrow')} title={t('sectionsTitle')} note={t('sectionsNote')}>
-        <SectionIndex locale={locale} />
-      </Band>
-
-      <Band
-        tone="raised"
-        eyebrow={t('listingsEyebrow')}
-        title={t('listingsTitle')}
-        action={
-          <ButtonLink href="/directory" variant="outline" size="sm">
-            {t('seeAllListings')}
-          </ButtonLink>
+    <main className="vd-main-home">
+      <CinematicJourney
+        locale={locale}
+        directory={<HomePlaces listings={featured} locale={locale} featured />}
+        connection={
+          <>
+            <Manifesto />
+            <PrintConnection qr={qr} target={target} />
+          </>
         }
-      >
-        <ListingGrid
-          listings={listings.docs as ListingSummary[]}
-          locale={locale}
-          // The homepage band is a taste of the directory, not a results page.
-          // See GridKind in ListingGrid.
-          kind="editorial"
-          empty={t('listingsEmpty')}
-          emptyBody={t('listingsEmptyBody')}
-          emptyAction={
-            <ButtonLink href="/magazine" variant="outline" size="sm">
-              {nav('magazine')}
-            </ButtonLink>
-          }
-        />
-      </Band>
-
-      {/* The redesign's middle run: the dark pause, the scan, the issue with a
-          live code, what the Verified mark means, and the figures in gold. */}
-      <Manifesto />
-
-      {scanListing ? (
-        <ScanSequence
-          label={t('codeEyebrow')}
-          title={t('codeTitle')}
-          steps={codeSteps}
-          end={t('codeEnd')}
-          openLabel={t('codeOpen')}
-          bookLabel={t('codeBook')}
-          listing={scanListing}
-        />
-      ) : null}
-
-      <InPrint code={scanCode} />
-
-      <Verified />
-
-      <NumbersBand
-        figures={[
-          [listings.totalDocs.toLocaleString('en-US'), t('statsPlaces')],
-          [String(SECTIONS.length).padStart(2, '0'), t('statsSections')],
-          [codes.toLocaleString('en-US'), t('statsCodes')],
-          ['01', t('statsIssue')],
-        ]}
+        magazine={
+          <MagazineArt
+            title={issue?.title ?? t('magazineName')}
+            href={issue ? `/magazine/issues/${issue.slug}` : '/magazine'}
+            openLabel={issue ? t('openIssue') : j('readMagazine')}
+          />
+        }
       />
-
-      {/* Removed entirely rather than shown empty. A "From the magazine"
-          heading with nothing under it advertises an absence. */}
-      {articles.docs.length > 0 ? (
-        <Band
-          eyebrow={t('magazineEyebrow')}
-          title={t('magazineTitle')}
-          action={
-            <ButtonLink href="/magazine/articles" variant="outline" size="sm">
-              {t('allArticles')}
-            </ButtonLink>
-          }
-        >
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {/*
-              No `priority` on the first card, unlike the grids on /directory
-              and /magazine/articles. This band sits below the hero, the section
-              index and the listings, so preloading its image made the homepage
-              request a second `as="image"` resource that competed with the
-              actual LCP. See ListingGrid for the same mistake and its fix.
-            */}
-            {articles.docs.map((article) => (
-              <ArticleCard
-                key={article.id}
-                slug={article.slug ?? ''}
-                title={article.title ?? ''}
-                excerpt={article.excerpt}
-                kind={article.kind}
-                publishedAt={article.publishedAt}
-                heroImage={article.heroImage as never}
-                locale={locale}
-              />
-            ))}
-          </div>
-        </Band>
-      ) : null}
-
-      {/* The region index closes the dark run and hands the reader somewhere to
-          go, on its own photographic ground rather than a third flat band. */}
-      <RegionIndex locale={locale} eyebrow={t('regionsEyebrow')} title={t('regionsTitle')} />
-
-      {/*
-        The design ends on a bordered box on the ivory ground rather than another
-        dark band, so the page returns to paper before the sign-up.
-      */}
-      <section className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
-        <div className="border-ink-100 grid items-center gap-8 border p-10 lg:grid-cols-[1fr_auto] lg:p-14">
-          <div>
-            <h2 className="text-ink-900 text-2xl sm:text-3xl lg:text-4xl">
-              <Accent text={t('businessTitle')} accent="مكاناً" />
-            </h2>
-            <p className="text-ink-500 mt-4 max-w-xl leading-relaxed">{t('businessBody')}</p>
-          </div>
-          <ButtonLink href="/add-your-business" variant="gold" size="lg" className="shrink-0">
-            {t('addBusiness')}
-          </ButtonLink>
-        </div>
-      </section>
     </main>
   )
 }
