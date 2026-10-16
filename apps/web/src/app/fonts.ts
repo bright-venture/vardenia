@@ -10,7 +10,10 @@ import {
   Noto_Serif,
 } from 'next/font/google'
 export const fraunces = Playfair_Display({
-  subsets: ['latin', 'cyrillic'],
+  // Latin only. Russian pages set their display face in Noto Serif (see
+  // :root:lang(ru) in globals.css), so a preloaded Cyrillic Playfair was a
+  // download every English page made for nothing.
+  subsets: ['latin'],
   display: 'swap',
   variable: '--font-fraunces',
 })
