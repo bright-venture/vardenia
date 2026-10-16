@@ -21,6 +21,8 @@ import { findEvery } from './find-every'
  * 8th of the next month. It does
  * three things, in order:
  *
+ * A booking belongs to the month it ENDS in (see the query below for why).
+ *
  * 1. Marks as completed every confirmed booking of the month that ended at least
  *    seven days ago and was never marked. The venue had its week; the booking
  *    now reads the same in its dashboard as on its statement.
@@ -120,13 +122,24 @@ export async function drawUpStatements(
       continue
     }
 
+    /**
+     * A month's bookings are the ones that ENDED in it, not the ones that began.
+     *
+     * A booking only counts once it ended seven days ago, and the month is
+     * drawn up on the 8th of the next. Selected by start, a stay from 30
+     * October to 2 November was not yet countable when October was drawn up
+     * (it ended too recently) and was outside November's query (it started in
+     * October), so it was billed in neither and stayed confirmed for ever.
+     * Selected by end, everything in the month ended by its last minute, so
+     * all of it has had its seven days by the 8th.
+     */
     const bookings = await findEvery<BookingRow>(payload, {
       collection: 'bookings',
       where: {
         and: [
           { business: { equals: venue.id } },
-          { start: { greater_than_equal: from.toISOString() } },
-          { start: { less_than: to.toISOString() } },
+          { end: { greater_than_equal: from.toISOString() } },
+          { end: { less_than: to.toISOString() } },
           { status: { in: ['confirmed', 'completed'] } },
         ],
       },
@@ -135,15 +148,45 @@ export async function drawUpStatements(
       sort: 'start',
     })
 
-    // A statement missing bookings would undercharge without anyone noticing.
-    // Better none, and a name on the page saying why.
-    if (!bookings.complete) {
+    /**
+     * Never a booking that is already on a live statement.
+     *
+     * Months used to be chosen by start date, so a stay that crossed a month
+     * end may already be on the earlier month's statement. Checking the lines
+     * themselves, rather than reasoning about which rule applied when, keeps
+     * any booking from being billed twice whatever the history.
+     */
+    const issued = await findEvery<{ lines?: { booking?: unknown }[] | null }>(payload, {
+      collection: 'statements',
+      where: {
+        and: [{ business: { equals: venue.id } }, { status: { not_equals: 'void' } }],
+      },
+      depth: 0,
+      overrideAccess: true,
+      select: { lines: true },
+    })
+
+    // A statement missing bookings would undercharge without anyone noticing,
+    // and one that cannot see earlier statements could charge twice. Better
+    // none, and a name on the page saying why.
+    if (!bookings.complete || !issued.complete) {
       result.incomplete.push(String(venue.name ?? venue.id))
       continue
     }
 
+    const alreadyBilled = new Set(
+      issued.docs.flatMap((statement) =>
+        (statement.lines ?? []).map((line) => {
+          const booking = line.booking as { id?: unknown } | number | string | null | undefined
+          return String(typeof booking === 'object' && booking !== null ? booking.id : booking)
+        }),
+      ),
+    )
+
     const lines = []
     for (const row of bookings.docs) {
+      if (alreadyBilled.has(String(row.id))) continue
+
       const billable: BillableBooking = {
         start: new Date(row.start),
         end: new Date(row.end),

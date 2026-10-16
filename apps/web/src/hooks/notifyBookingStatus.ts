@@ -2,7 +2,12 @@ import type { CollectionAfterChangeHook } from 'payload'
 import type { BookingStatus } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import type { PayloadRequest } from 'payload'
-import { outcomeFor, sendBookingOutcome, sendVenueCancellation } from '../lib/booking-email'
+import {
+  outcomeFor,
+  sendBookingOutcome,
+  sendVenueCancellation,
+  venueOwnerEmails,
+} from '../lib/booking-email'
 import { reportError } from '../lib/report'
 
 /**
@@ -185,15 +190,8 @@ async function notifyVenue(booking: BookingDoc, from: BookingStatus, req: Payloa
   const businessId = idOf(booking.business)
   if (businessId === null) return
 
-  const owners = await req.payload.find({
-    collection: 'business-users',
-    where: { businesses: { in: [businessId] } },
-    limit: 20,
-    depth: 0,
-    overrideAccess: true,
-  })
-
-  if (owners.docs.length === 0) return
+  const recipients = await venueOwnerEmails(req.payload, businessId)
+  if (recipients.length === 0) return
 
   const business = await req.payload
     .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
@@ -210,10 +208,7 @@ async function notifyVenue(booking: BookingDoc, from: BookingStatus, req: Payloa
   const start = new Date(String(booking.start))
   if (Number.isNaN(start.getTime())) return
 
-  for (const owner of owners.docs) {
-    const to = String((owner as { email?: unknown }).email ?? '')
-    if (!to) continue
-
+  for (const to of recipients) {
     await sendVenueCancellation({
       payload: req.payload,
       to,

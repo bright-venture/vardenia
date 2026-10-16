@@ -1026,28 +1026,62 @@ export function venueCancellationContent({
     ? `Booking cancelled - ${reference}`
     : `Booking request withdrawn - ${reference}`
 
-  const rows: [string, string][] = [
-    ['Guest', guestName || 'Guest'],
-    ['When', whenEn],
-    ['People', String(partySize)],
-    ['Reference', reference],
-  ]
+  return venueEmail({
+    subject,
+    heading: wasConfirmed ? 'Booking cancelled' : 'Request withdrawn',
+    leadEn,
+    leadAr,
+    rows: [
+      ['Guest', guestName || 'Guest'],
+      ['When', whenEn],
+      ['People', String(partySize)],
+      ['Reference', reference],
+    ],
+    detailAr: [`${whenAr} - ${partySize}`, reference],
+    link: `${siteOrigin()}/partner`,
+  })
+}
 
+/**
+ * The one layout every message to a venue uses: English, then Arabic, then a
+ * link to the dashboard. Shared so the request and cancellation emails cannot
+ * drift apart in look or in what they promise.
+ */
+interface VenueEmailParts {
+  subject: string
+  heading: string
+  leadEn: string
+  leadAr: string
+  rows: [string, string][]
+  /** The short facts repeated under the Arabic lead, one per line. */
+  detailAr: string[]
+  /** Where "Your bookings" points. */
+  link: string
+}
+
+function venueEmail({
+  subject,
+  heading,
+  leadEn,
+  leadAr,
+  rows,
+  detailAr,
+  link,
+}: VenueEmailParts): BookingEmailContent {
   const text = [
     leadEn,
     '',
     ...rows.map(([label, value]) => `${label}: ${value}`),
     '',
-    `Your bookings: ${siteOrigin()}/partner`,
+    `Your bookings: ${link}`,
     '',
     '---',
     '',
     leadAr,
     '',
-    `${whenAr} - ${partySize}`,
-    reference,
+    ...detailAr,
     '',
-    `حجوزاتك: ${siteOrigin()}/partner`,
+    `حجوزاتك: ${link}`,
     '',
     'Vardenia',
   ].join('\n')
@@ -1057,7 +1091,7 @@ export function venueCancellationContent({
 <body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
   <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
     <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
-    <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(wasConfirmed ? 'Booking cancelled' : 'Request withdrawn')}</h1>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(heading)}</h1>
     <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(leadEn)}</p>
     <table style="width:100%;border-collapse:collapse;font-size:15px;">
       ${rows
@@ -1068,7 +1102,7 @@ export function venueCancellationContent({
         .join('\n      ')}
     </table>
     <p style="margin:24px 0 0;font-size:13px;color:${emailPalette.quiet};">
-      <a href="${escapeHtml(siteOrigin())}/partner" style="color:${emailPalette.accent};">${escapeHtml(siteOrigin())}/partner</a>
+      <a href="${escapeHtml(link)}" style="color:${emailPalette.accent};">${escapeHtml(link)}</a>
     </p>
     <div dir="rtl" lang="ar" style="margin-top:24px;border-top:1px solid ${emailPalette.edge};padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
       <p style="margin:0;font-size:15px;line-height:1.8;color:${emailPalette.body};">${escapeHtml(leadAr)}</p>
@@ -1102,5 +1136,133 @@ export async function sendVenueCancellation({
       extra: { reference: rest.reference },
     })
     return false
+  }
+}
+
+/** Every partner address for a listing. */
+export async function venueOwnerEmails(
+  payload: Payload,
+  businessId: number | string,
+): Promise<string[]> {
+  const owners = await payload.find({
+    collection: 'business-users',
+    where: { businesses: { in: [businessId] } },
+    limit: 20,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return owners.docs
+    .map((owner) => String((owner as { email?: unknown }).email ?? ''))
+    .filter((email) => email.length > 0)
+}
+
+/**
+ * Tells a business that a guest has just booked.
+ *
+ * Without it a request waited, unseen, until somebody happened to open the
+ * partner dashboard, while the guest waited for an answer that nobody knew
+ * was owed. Both languages, for the reason given on the cancellation email.
+ */
+export interface VenueRequestArgs {
+  businessName: string
+  guestName: string
+  reference: string
+  start: Date
+  end: Date
+  partySize: number
+  roomType?: string
+  /** Confirmed straight away by the venue's own auto-confirm setting. */
+  confirmed: boolean
+}
+
+const beirutDay = (date: Date) => date.toLocaleDateString('en-CA', { timeZone: BEIRUT })
+
+export function venueRequestContent({
+  businessName,
+  guestName,
+  reference,
+  start,
+  end,
+  partySize,
+  roomType,
+  confirmed,
+}: VenueRequestArgs): BookingEmailContent {
+  const whenAr = formatWhen(start, 'ar')
+
+  // A request needs an answer; an automatic confirmation is only news.
+  const leadEn = confirmed
+    ? `New booking at ${businessName}. It was confirmed automatically, so the guest already has their confirmation.`
+    : `New booking request at ${businessName}. The guest is waiting for your answer: accept or decline it from your bookings.`
+  const leadAr = confirmed
+    ? `حجز جديد في ${businessName}. تم تأكيده تلقائيًا وقد استلم الضيف التأكيد.`
+    : `طلب حجز جديد في ${businessName}. الضيف بانتظار ردّك: اقبله أو ارفضه من صفحة حجوزاتك.`
+
+  const rows: [string, string][] = [
+    ['Guest', guestName || 'Guest'],
+    ['When', formatWhen(start, 'en')],
+    // A stay or a rental runs over several days; a table does not need "until".
+    ...(beirutDay(end) !== beirutDay(start)
+      ? ([['Until', formatWhen(end, 'en')]] as [string, string][])
+      : []),
+    ['People', String(partySize)],
+    ...(roomType ? ([['Room', roomType]] as [string, string][]) : []),
+    ['Reference', reference],
+  ]
+
+  return venueEmail({
+    subject: confirmed ? `New booking - ${reference}` : `New booking request - ${reference}`,
+    heading: confirmed ? 'New booking' : 'New booking request',
+    leadEn,
+    leadAr,
+    rows,
+    detailAr: [`${whenAr} - ${partySize}`, reference],
+    // Straight to the requests waiting for an answer.
+    link: confirmed
+      ? `${siteOrigin()}/partner`
+      : `${siteOrigin()}/partner?status=pending&window=all`,
+  })
+}
+
+/**
+ * Emails every partner of the listing about a new booking. Never throws, and
+ * returns how many messages went out.
+ *
+ * A listing with no partner account gets nothing and that is not an error:
+ * those are answered by the team from the admin (see notifyBookingStatus).
+ */
+export async function notifyVenueOfBooking({
+  payload,
+  businessId,
+  ...rest
+}: VenueRequestArgs & { payload: Payload; businessId: number | string }): Promise<number> {
+  try {
+    const recipients = await venueOwnerEmails(payload, businessId)
+    if (recipients.length === 0) return 0
+
+    const content = venueRequestContent(rest)
+    let sent = 0
+    for (const to of recipients) {
+      try {
+        await payload.sendEmail({
+          to,
+          subject: content.subject,
+          html: content.html,
+          text: content.text,
+        })
+        sent += 1
+      } catch (error) {
+        await reportError(error, {
+          source: 'booking.venue-request',
+          extra: { reference: rest.reference },
+        })
+      }
+    }
+    return sent
+  } catch (error) {
+    await reportError(error, {
+      source: 'booking.venue-request',
+      extra: { reference: rest.reference },
+    })
+    return 0
   }
 }

@@ -17,9 +17,25 @@ interface Fixture {
   venues: { id: number; name: string; bookingFee: Record<string, unknown> | null }[]
   bookings: Record<number, Record<string, unknown>[]>
   existing?: number[]
+  /** Booking ids already on a live statement, per venue. */
+  billed?: Record<number, number[]>
 }
 
-function harness({ venues, bookings, existing = [] }: Fixture) {
+type Bound = Record<string, Record<string, string>>
+
+/** The date bounds in a draw-up query, applied the way Postgres would. */
+const withinBounds = (row: Record<string, unknown>, where: unknown): boolean =>
+  ((where as { and?: Bound[] }).and ?? []).every((clause) =>
+    Object.entries(clause).every(([field, test]) => {
+      const value = row[field]
+      if (typeof value !== 'string') return true
+      if (test.greater_than_equal !== undefined && !(value >= test.greater_than_equal)) return false
+      if (test.less_than !== undefined && !(value < test.less_than)) return false
+      return true
+    }),
+  )
+
+function harness({ venues, bookings, existing = [], billed = {} }: Fixture) {
   const updates: Record<string, unknown>[] = []
   const creates: Record<string, unknown>[] = []
 
@@ -29,13 +45,16 @@ function harness({ venues, bookings, existing = [] }: Fixture) {
       if (args.collection === 'businesses') return page(venues)
       if (args.collection === 'statements') {
         const where = JSON.stringify(args.where)
-        const taken = existing.some((id) => where.includes(`"business":{"equals":${id}}`))
-        return page(taken ? [{ id: 99 }] : [])
+        const venue = Number(/"business":\{"equals":(\d+)\}/.exec(where)?.[1])
+        // The one-per-month check names a period; the already-billed lookup does not.
+        if (where.includes('"period"')) return page(existing.includes(venue) ? [{ id: 99 }] : [])
+        const ids = billed[venue] ?? []
+        return page(ids.length ? [{ lines: ids.map((booking) => ({ booking })) }] : [])
       }
       if (args.collection === 'bookings') {
         const where = JSON.stringify(args.where)
         const id = Number(/"business":\{"equals":(\d+)\}/.exec(where)?.[1])
-        return page(bookings[id] ?? [])
+        return page((bookings[id] ?? []).filter((row) => withinBounds(row, args.where)))
       }
       return page([])
     }),
@@ -114,6 +133,53 @@ describe('drawing up a month', () => {
     const result = await drawUpStatements(h.payload, '2026-10', NOW)
     expect(result.alreadyDrawnUp).toBe(1)
     expect(h.creates).toHaveLength(0)
+  })
+
+  /**
+   * The gap this rule closes: a stay from 30 October to 2 November used to be
+   * too recent to count when October was drawn up, and outside November's
+   * query because it started in October, so it was billed in neither.
+   */
+  it('bills a stay that crosses a month end exactly once, in the month it ends', async () => {
+    const stay = dinner(50, {
+      reference: 'CROSSES',
+      start: '2026-10-30T12:00:00.000Z',
+      end: '2026-11-02T09:00:00.000Z',
+      partySize: 2,
+      status: 'confirmed',
+    })
+    const fixture = {
+      venues: [{ id: 5, name: 'Hotel', bookingFee: { unit: 'night', amount: 10 } }],
+      bookings: { 5: [stay] },
+    }
+
+    const october = harness(fixture)
+    const oct = await drawUpStatements(october.payload, '2026-10', NOW)
+    expect(oct.nothingOwed).toBe(1)
+    expect(october.creates).toHaveLength(0)
+
+    const november = harness(fixture)
+    const nov = await drawUpStatements(
+      november.payload,
+      '2026-11',
+      new Date('2026-12-08T09:00:00Z'),
+    )
+    expect(nov.created).toBe(1)
+    expect(nov.markedCompleted).toBe(1)
+    const data = november.creates[0]!.data as { lines: { reference: string; quantity: number }[] }
+    expect(data.lines).toEqual([expect.objectContaining({ reference: 'CROSSES', quantity: 3 })])
+  })
+
+  it('never bills a booking that is already on a live statement', async () => {
+    const h = harness({
+      venues: [{ id: 6, name: 'Billed before', bookingFee: { unit: 'booking', amount: 5 } }],
+      bookings: { 6: [dinner(60), dinner(61)] },
+      billed: { 6: [60] },
+    })
+    const result = await drawUpStatements(h.payload, '2026-10', NOW)
+    expect(result.created).toBe(1)
+    const data = h.creates[0]!.data as { lines: { booking: number }[] }
+    expect(data.lines.map((line) => line.booking)).toEqual([61])
   })
 
   it('creates nothing when the launch offer covers the whole month', async () => {

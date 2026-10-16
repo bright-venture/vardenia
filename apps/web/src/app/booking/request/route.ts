@@ -4,7 +4,7 @@ import { bookingRequestSchema, fieldErrors } from '@vardenia/core'
 import config from '../../../payload.config'
 import { CUSTOMER_COLLECTION } from '../../../access/index'
 import { createBooking } from '../../../lib/booking-service'
-import { sendBookingConfirmation } from '../../../lib/booking-email'
+import { notifyVenueOfBooking, sendBookingConfirmation } from '../../../lib/booking-email'
 import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
 import { reportError } from '../../../lib/report'
 
@@ -162,6 +162,24 @@ export const POST = withRateLimit(
         path: '/booking/request',
         extra: { reference: outcome.reference },
       })
+    })
+
+    /**
+     * And the venue, which otherwise heard nothing until somebody opened the
+     * partner dashboard - while the guest waited for an answer. Never fails the
+     * booking: it reports its own errors and returns.
+     */
+    await notifyVenueOfBooking({
+      payload,
+      businessId: outcome.businessId,
+      businessName: outcome.businessName || 'your listing',
+      guestName: String(customer.name ?? ''),
+      reference: outcome.reference,
+      start: new Date(parsed.data.start),
+      end: new Date(parsed.data.end),
+      partySize: parsed.data.partySize,
+      roomType: outcome.roomType,
+      confirmed: outcome.status === 'confirmed',
     })
 
     /**

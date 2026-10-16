@@ -30,7 +30,16 @@ import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
  */
 
 export type BookingOutcome =
-  | { ok: true; reference: string; status: BookingStatus; bookingId: number }
+  | {
+      ok: true
+      reference: string
+      status: BookingStatus
+      bookingId: number
+      /** For the venue's email, which names the listing and the room. */
+      businessId: number
+      businessName: string
+      roomType?: string
+    }
   | { ok: false; code: 'unavailable' | 'not-found' | 'rate-limited' | 'error'; message: string }
 
 /** Postgres raises this when the capacity trigger refuses an insert. */
@@ -312,6 +321,9 @@ export async function createBooking({
       bookingId: booking.id,
       reference: String((booking as { reference?: unknown }).reference ?? ''),
       status: (booking as { status: BookingStatus }).status,
+      businessId: Number(business.id),
+      businessName: String((business as { name?: unknown }).name ?? ''),
+      ...(roomType ? { roomType } : {}),
     }
   } catch (error) {
     return translateInsertError(error, request.locale ?? 'en')

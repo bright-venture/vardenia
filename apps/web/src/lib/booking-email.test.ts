@@ -1,10 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import type { Payload } from 'payload'
 import {
   bookingConfirmationContent,
   bookingOutcomeContent,
+  notifyVenueOfBooking,
   outcomeFor,
   venueCancellationContent,
+  venueRequestContent,
 } from './booking-email'
+import { reportError } from './report'
+
+// The real reporter boots Payload and writes to the database.
+vi.mock('./report', () => ({ reportError: vi.fn(async () => {}) }))
 
 /**
  * The confirmation email.
@@ -402,5 +409,125 @@ describe('venueCancellationContent', () => {
       wasConfirmed: true,
     })
     expect(mail.html).not.toContain('<script>')
+  })
+})
+
+/**
+ * What the venue is told when a guest books, which turns on one fact: does the
+ * venue owe an answer? A request does; an automatic confirmation is only news.
+ */
+describe('venueRequestContent', () => {
+  const base = {
+    businessName: 'Le Royal',
+    guestName: 'Sami',
+    reference: 'ABCD1234',
+    start: new Date('2026-09-01T17:00:00Z'),
+    end: new Date('2026-09-01T19:00:00Z'),
+    partySize: 2,
+  }
+
+  it('asks for an answer when the booking is only requested', () => {
+    const mail = venueRequestContent({ ...base, confirmed: false })
+    expect(mail.subject).toBe('New booking request - ABCD1234')
+    expect(mail.text).toContain('accept or decline')
+    // Straight to the requests that are waiting.
+    expect(mail.text).toContain('/partner?status=pending')
+  })
+
+  it('only reports a booking the venue confirmed automatically', () => {
+    const mail = venueRequestContent({ ...base, confirmed: true })
+    expect(mail.subject).toBe('New booking - ABCD1234')
+    expect(mail.text).toContain('confirmed automatically')
+    expect(mail.text).not.toContain('accept or decline')
+  })
+
+  it('carries what the venue needs, in Beirut time', () => {
+    const mail = venueRequestContent({ ...base, confirmed: false })
+    expect(mail.text).toContain('ABCD1234')
+    expect(mail.text).toContain('Sami')
+    expect(mail.text).toContain('Le Royal')
+    expect(mail.text).toContain('20:00')
+  })
+
+  it('gives a stay its last day and room, and a table neither', () => {
+    const table = venueRequestContent({ ...base, confirmed: false })
+    expect(table.text).not.toContain('Until:')
+    expect(table.text).not.toContain('Room:')
+
+    const stay = venueRequestContent({
+      ...base,
+      end: new Date('2026-09-04T08:00:00Z'),
+      roomType: 'Sea-view suite',
+      confirmed: false,
+    })
+    expect(stay.text).toContain('Until:')
+    expect(stay.text).toContain('Room: Sea-view suite')
+  })
+
+  it('is written in both languages, because we never asked the venue', () => {
+    const mail = venueRequestContent({ ...base, confirmed: false })
+    expect(mail.html).toContain('dir="rtl"')
+    expect(/[؀-ۿ]/.test(mail.text)).toBe(true)
+  })
+
+  it('does not let a guest name or room inject markup', () => {
+    const mail = venueRequestContent({
+      ...base,
+      guestName: '<script>alert(1)</script>',
+      roomType: '<img src=x>',
+      confirmed: false,
+    })
+    expect(mail.html).not.toContain('<script>')
+    expect(mail.html).not.toContain('<img')
+  })
+})
+
+describe('notifyVenueOfBooking', () => {
+  const args = {
+    businessId: 7,
+    businessName: 'Le Royal',
+    guestName: 'Sami',
+    reference: 'ABCD1234',
+    start: new Date('2026-09-01T17:00:00Z'),
+    end: new Date('2026-09-01T19:00:00Z'),
+    partySize: 2,
+    confirmed: false,
+  }
+
+  const fakePayload = (owners: { email?: string }[], failFor: string[] = []) => {
+    const sent: string[] = []
+    const payload = {
+      find: vi.fn(async () => ({ docs: owners })),
+      sendEmail: vi.fn(async ({ to }: { to: string }) => {
+        if (failFor.includes(to)) throw new Error('smtp down')
+        sent.push(to)
+      }),
+    }
+    return { payload: payload as unknown as Payload, sent }
+  }
+
+  it('emails every partner of the listing', async () => {
+    const { payload, sent } = fakePayload([{ email: 'a@venue.lb' }, { email: 'b@venue.lb' }])
+    await expect(notifyVenueOfBooking({ payload, ...args })).resolves.toBe(2)
+    expect(sent).toEqual(['a@venue.lb', 'b@venue.lb'])
+  })
+
+  it('sends nothing, quietly, for a listing the team answers itself', async () => {
+    const { payload, sent } = fakePayload([])
+    await expect(notifyVenueOfBooking({ payload, ...args })).resolves.toBe(0)
+    expect(sent).toEqual([])
+  })
+
+  it('keeps going when one address fails, and never throws', async () => {
+    const { payload, sent } = fakePayload(
+      [{ email: 'a@venue.lb' }, { email: 'b@venue.lb' }],
+      ['a@venue.lb'],
+    )
+    await expect(notifyVenueOfBooking({ payload, ...args })).resolves.toBe(1)
+    expect(sent).toEqual(['b@venue.lb'])
+    expect(reportError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ source: 'booking.venue-request' }),
+    )
   })
 })
