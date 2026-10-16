@@ -11,7 +11,7 @@ import {
   type BookingStatus,
 } from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from '../lib/availability'
-import { beirutDate } from '../lib/beirut'
+import { closedPeriods } from '../lib/booking-service'
 
 /**
  * Which collection a session came from, as a role.
@@ -260,9 +260,6 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const end = asDate(data.end ?? originalDoc?.end)
   if (!start || !end) return data
 
-  /** The Beirut day this booking falls on. See the Closures collection. */
-  const bookingDay = beirutDate(start)
-
   const business = await payload
     .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
     .catch(() => null)
@@ -323,21 +320,12 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
    * ordinary path would find nothing. A closure nobody can see is a closure that
    * does not close anything.
    *
-   * Only the periods that could contain this booking are fetched, which for a
-   * single interval is at most a handful of rows. `endsOn` is inclusive, so the
-   * comparison is `>=` on the day the booking starts.
+   * Only the periods that overlap this booking's own days, bounded on both
+   * sides, through the same lookup as the booking service and the form's live
+   * check (closedPeriods). Bounded on one side only, as this was, a venue with
+   * more than 50 future closures could have the relevant one cut off.
    */
-  const closed = await payload.find({
-    collection: 'closures',
-    depth: 0,
-    limit: 50,
-    pagination: false,
-    overrideAccess: true,
-    where: {
-      and: [{ business: { equals: businessId } }, { endsOn: { greater_than_equal: bookingDay } }],
-    },
-    select: { startsOn: true, endsOn: true },
-  })
+  const closures = await closedPeriods(payload, businessId, start, end)
 
   const occupied: ExistingBooking[] = existing.docs.flatMap((doc) => {
     // A moved booking does not compete with where it used to be.
@@ -358,10 +346,7 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const verdict = checkAvailability({
     rules,
     hours,
-    closures: closed.docs.map((doc) => ({
-      startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
-      endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
-    })),
+    closures,
     existing: occupied,
     request: {
       interval: { start, end },

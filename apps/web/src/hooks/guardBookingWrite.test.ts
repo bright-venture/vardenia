@@ -320,3 +320,49 @@ describe('a status change that races another', () => {
     expect(plain.execute).not.toHaveBeenCalled()
   })
 })
+
+/**
+ * The guard reads closed dates through the shared, two-sided lookup, so a
+ * venue with many future closures still has the one that matters found.
+ */
+describe('a new booking on a closed day', () => {
+  const start = new Date(Date.now() + 48 * HOUR)
+  const end = new Date(start.getTime() + 2 * HOUR)
+  const day = start.toLocaleDateString('en-CA', { timeZone: 'Asia/Beirut' })
+
+  it("is refused, from a lookup bounded to the booking's own days", async () => {
+    const find = vi.fn(async (args: { collection: string }) =>
+      args.collection === 'closures' ? { docs: [{ startsOn: day, endsOn: day }] } : { docs: [] },
+    )
+    const error = await guardBookingWrite({
+      data: {
+        business: 10,
+        customer: 5,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        partySize: 2,
+      },
+      req: {
+        user: customer,
+        payload: {
+          findByID: async () => ({
+            id: 10,
+            subcategories: ['restaurants'],
+            booking: { enabled: true, capacity: 5, maxDurationMinutes: 240 },
+          }),
+          find,
+        },
+      },
+      operation: 'create',
+    } as unknown as Args).catch((e: Error) => e)
+
+    expect((error as Error).message).toMatch(/closed on that date/i)
+    const closuresQuery = find.mock.calls.find(
+      (call) => (call[0] as { collection: string }).collection === 'closures',
+    )?.[0] as unknown as { where: unknown }
+    expect(JSON.stringify(closuresQuery.where)).toContain(`"startsOn":{"less_than_equal":"${day}"}`)
+    expect(JSON.stringify(closuresQuery.where)).toContain(
+      `"endsOn":{"greater_than_equal":"${day}"}`,
+    )
+  })
+})

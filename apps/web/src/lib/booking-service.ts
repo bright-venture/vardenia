@@ -4,13 +4,13 @@ import type { BookingRequest } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import {
   checkAvailability,
+  occupiedDays,
   unavailableMessage,
   UNAVAILABLE_REASONS,
   type ClosedPeriod,
   type ExistingBooking,
 } from './availability'
 import { canTakeBookings, OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
-import { beirutDate } from './beirut'
 
 /**
  * Turning a request into a booking.
@@ -150,27 +150,37 @@ export async function overlappingBookings(
 }
 
 /**
- * The venue's closed dates that could touch a booking starting at `start`.
+ * The venue's closed dates that overlap a booking from `start` to `end`.
  *
- * Shared by the booking service and /booking/availability, so the form's
- * live check and the booking itself give the same answer about a closed day.
- * guardBookingWrite runs the same query again on the insert.
+ * Shared by the booking service, /booking/availability and guardBookingWrite,
+ * so the form's live check, the booking and the insert give the same answer
+ * about a closed day.
+ *
+ * Bounded on both sides to the days the booking occupies (`occupiedDays`, the
+ * same rule `checkAvailability` applies). It used to ask for every closure not
+ * yet over, cut to 50 rows in no order, so a venue that had entered more than
+ * 50 future closed days could have the one that mattered left out and be
+ * booked on it. Now everything returned overlaps the booking, and a single row
+ * is enough to refuse, so no limit can hide the answer.
  */
 export async function closedPeriods(
   payload: Payload,
   businessId: number | string,
   start: Date,
+  end: Date,
 ): Promise<ClosedPeriod[]> {
+  const [firstDay, lastDay] = occupiedDays(start, end)
   const result = await payload.find({
     collection: 'closures',
     depth: 0,
-    limit: 50,
+    limit: 10,
     pagination: false,
     overrideAccess: true,
     where: {
       and: [
         { business: { equals: businessId } },
-        { endsOn: { greater_than_equal: beirutDate(start) } },
+        { startsOn: { less_than_equal: lastDay } },
+        { endsOn: { greater_than_equal: firstDay } },
       ],
     },
     select: { startsOn: true, endsOn: true },
@@ -375,7 +385,7 @@ export async function createBooking({
 
   const [existing, closures] = await Promise.all([
     overlappingBookings(payload, business.id, start, end),
-    closedPeriods(payload, business.id, start),
+    closedPeriods(payload, business.id, start, end),
   ])
 
   const verdict = checkAvailability({

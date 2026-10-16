@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { createBooking, translateInsertError } from './booking-service'
+import { closedPeriods, createBooking, translateInsertError } from './booking-service'
 import { unavailableMessage } from './availability'
 
 /**
@@ -332,6 +332,43 @@ describe('createBooking, retried with the same attempt id', () => {
       ok: false,
       code: 'unavailable',
       message: unavailableMessage('at-capacity'),
+    })
+  })
+})
+
+/**
+ * Which closed dates are read for a booking. It used to be every closure not
+ * yet over, cut to 50 rows in no order, so a venue with more than 50 future
+ * closed days could have the relevant one left out and be booked on it.
+ */
+describe('closedPeriods', () => {
+  const asked = async (start: string, end: string) => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    await closedPeriods({ find } as unknown as Payload, 7, new Date(start), new Date(end))
+    return (find.mock.calls[0] as unknown as [{ where: unknown; limit: number }])[0]
+  }
+
+  it('asks only for closures overlapping the evening of a table booking', async () => {
+    // 20:00 to 22:00 Beirut on 18 October (UTC+3).
+    const query = await asked('2026-10-18T17:00:00.000Z', '2026-10-18T19:00:00.000Z')
+    expect(query.where).toEqual({
+      and: [
+        { business: { equals: 7 } },
+        { startsOn: { less_than_equal: '2026-10-18' } },
+        { endsOn: { greater_than_equal: '2026-10-18' } },
+      ],
+    })
+  })
+
+  it('asks for the nights of a stay, not the morning it leaves', async () => {
+    // In on the 18th, out on the morning of the 21st: nights of the 18th to 20th.
+    const query = await asked('2026-10-18T12:00:00.000Z', '2026-10-21T08:00:00.000Z')
+    expect(query.where).toEqual({
+      and: [
+        { business: { equals: 7 } },
+        { startsOn: { less_than_equal: '2026-10-20' } },
+        { endsOn: { greater_than_equal: '2026-10-18' } },
+      ],
     })
   })
 })

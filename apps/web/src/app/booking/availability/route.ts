@@ -73,7 +73,7 @@ export const GET = withRateLimit(async (request: Request) => {
    */
   const [existing, closures] = await Promise.all([
     overlappingBookings(payload, business.id, start, end),
-    closedPeriods(payload, business.id, start),
+    closedPeriods(payload, business.id, start, end),
   ])
 
   const verdict = checkAvailability({
