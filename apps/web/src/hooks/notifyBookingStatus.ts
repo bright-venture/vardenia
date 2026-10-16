@@ -74,7 +74,10 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
   const to = current?.status
   if (!from || !to) return doc
 
-  const outcome = outcomeFor(from, to)
+  // A request declined because nobody answered it in time (lib/booking-expiry)
+  // is its own news for the guest, and none for the venue: it was theirs to answer.
+  const expired = context?.autoDeclined === true
+  const outcome = expired ? 'expired' : outcomeFor(from, to)
   if (!outcome) return doc
 
   const actor = req?.user?.collection
@@ -88,7 +91,7 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
    * who decided last week not to come - and they find out when the evening is
    * over. An owner who cancelled it themselves already knows.
    */
-  if (to === 'cancelled' && actor !== 'business-users') {
+  if (to === 'cancelled' && actor !== 'business-users' && !expired) {
     await notifyVenue(current, from, req).catch(async (error) => {
       await reportError(error, {
         source: 'booking.venue-cancellation',

@@ -29,12 +29,14 @@ const run = (args: {
   data: Record<string, unknown>
   user: unknown
   originalDoc: Record<string, unknown>
+  context?: Record<string, unknown>
 }) =>
   guardBookingWrite({
     data: args.data,
     req: { user: args.user },
     operation: 'update',
     originalDoc: args.originalDoc,
+    context: args.context ?? {},
   } as unknown as Args)
 
 /** A confirmed booking that ended yesterday, unless told otherwise. */
@@ -217,5 +219,35 @@ describe('a new booking at a place that is listed only', () => {
     }).catch((e: Error) => e)
     expect(error).toBeInstanceOf(Error)
     expect((error as Error).message).not.toMatch(/listed only/i)
+  })
+})
+
+/**
+ * The automatic decline (lib/booking-expiry) is for requests nobody answered.
+ * If the venue accepted one a moment before the sweep wrote, that answer stands.
+ */
+describe('declining an unanswered request automatically', () => {
+  const request = { ...booking(true), status: 'pending' }
+
+  it('declines a request that is still waiting', async () => {
+    await expect(
+      run({
+        data: { status: 'cancelled' },
+        user: undefined,
+        originalDoc: request,
+        context: { autoDeclined: true },
+      }),
+    ).resolves.toBeTruthy()
+  })
+
+  it('never undoes an answer the venue has just given', async () => {
+    await expect(
+      run({
+        data: { status: 'cancelled' },
+        user: undefined,
+        originalDoc: { ...request, status: 'confirmed' },
+        context: { autoDeclined: true },
+      }),
+    ).rejects.toThrow(/has been answered/i)
   })
 })

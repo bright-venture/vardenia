@@ -84,6 +84,7 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   req,
   operation,
   originalDoc,
+  context,
 }) => {
   if (!data) return data
 
@@ -112,6 +113,15 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
 
     const from = originalDoc.status as BookingStatus
     const to = (data.status ?? from) as BookingStatus
+
+    // The automatic decline is only for a request nobody answered. If the venue
+    // answered a moment ago, it must not undo that (see lib/booking-expiry).
+    if (context?.autoDeclined === true && from !== 'pending') {
+      throw new APIError(
+        'This request has been answered, so it is not declined automatically.',
+        409,
+      )
+    }
 
     if (!canTransition(from, to)) {
       throw new APIError(

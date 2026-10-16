@@ -38,11 +38,11 @@ import { MoneyCell as MoneyCell_07f513c68167caf320c51b8dc6c45309 } from '../../.
 import { AccountHelp as AccountHelp_d5e13084357838e096328882a056e6b4 } from '../../../components/admin/AccountHelp'
 import { ResolvedCell as ResolvedCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
-import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { AdminHome as AdminHome_c8ff13fb3ed15fa560b19524fa05fa91 } from '../../../components/admin/AdminHome'
 import { BillingView as BillingView_1a2cdf321de290072bb9304599d32102 } from '../../../components/admin/BillingView'
 import { ImportListings as ImportListings_63ae5156d5323ea00059048055533c2c } from '../../../components/admin/ImportListings'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -86,9 +86,9 @@ export const importMap = {
   "/components/admin/AccountHelp#AccountHelp": AccountHelp_d5e13084357838e096328882a056e6b4,
   "/components/admin/ListCells#ResolvedCell": ResolvedCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,
-  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "/components/admin/AdminHome#AdminHome": AdminHome_c8ff13fb3ed15fa560b19524fa05fa91,
   "/components/admin/BillingView#BillingView": BillingView_1a2cdf321de290072bb9304599d32102,
   "/components/admin/ImportListings#ImportListings": ImportListings_63ae5156d5323ea00059048055533c2c,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

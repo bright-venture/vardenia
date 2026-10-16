@@ -18,7 +18,7 @@ The existing unit suite was run: **2,075 of 2,076 tests pass**; the one failure 
 **Status after fixes (16 October 2026):**
 
 - **F-01 fixed:** bookings are billed in the month they end, and a booking already on a live statement is never billed again.
-- **F-02 fixed (notification part):** every partner of the listing is emailed when a booking is made. What happens to a request nobody answers is still open.
+- **F-02 fixed:** every partner of the listing is emailed when a booking is made. A request nobody answers is declined automatically when its time arrives, and the guest is emailed "no answer from the venue". The sweep runs every 15 minutes through a Netlify scheduled function and needs `CRON_SECRET`.
 
 Both fixes have regression tests. The full suite passes: 2,087 tests.
 

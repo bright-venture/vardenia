@@ -143,7 +143,7 @@ describe('the other eight languages', () => {
       const pending = bookingConfirmationContent({ ...BASE, status: 'pending', locale })!
       expect(pending.subject).not.toBe(english.subject)
 
-      for (const outcome of ['confirmed', 'declined', 'cancelled'] as const) {
+      for (const outcome of ['confirmed', 'declined', 'cancelled', 'expired'] as const) {
         const en = bookingOutcomeContent({ ...BASE, outcome })
         const other = bookingOutcomeContent({ ...BASE, outcome, locale, reason: 'Full tonight' })
         expect(other.subject, outcome).not.toBe(en.subject)
@@ -151,6 +151,32 @@ describe('the other eight languages', () => {
       }
     },
   )
+})
+
+/**
+ * A request declined because nobody answered it. The guest must learn that
+ * the venue did not reply, not that it refused, and no "the business said"
+ * line may appear: nobody at the venue said anything.
+ */
+describe('a request nobody answered', () => {
+  it('says the venue did not answer, rather than that it refused', () => {
+    const mail = bookingOutcomeContent({ ...BASE, outcome: 'expired' })
+    expect(mail.subject).toBe('Your booking request was not answered')
+    expect(mail.text).toContain('did not answer your request')
+    expect(mail.text).not.toContain('was not able to take')
+    expect(mail.text).toContain('7VTXR24B')
+  })
+
+  it('never prints a reason as if the venue had given one', () => {
+    const mail = bookingOutcomeContent({ ...BASE, outcome: 'expired', reason: 'Full tonight' })
+    expect(mail.text).not.toContain('The business said')
+    expect(mail.text).not.toContain('Full tonight')
+  })
+
+  it('is never chosen from statuses alone', () => {
+    // Silence and a refusal look the same in the status; only the sweep knows.
+    expect(outcomeFor('pending', 'cancelled')).toBe('declined')
+  })
 })
 
 describe('statuses that are not written about', () => {

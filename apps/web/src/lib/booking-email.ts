@@ -518,9 +518,14 @@ export async function sendBookingConfirmation({
  * turned up is noise; telling them they did not is an accusation, and one we
  * would be making from a button a busy person pressed at the end of a shift.
  */
-export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled'
+/**
+ * `expired` is a request the venue never answered, declined automatically when
+ * its time arrived (lib/booking-expiry). Never produced by `outcomeFor`, which
+ * reads statuses alone and cannot tell silence from a refusal.
+ */
+export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled' | 'expired'
 
-const OUTCOME_COPY: Record<Locale, Record<BookingOutcomeKind, Copy>> = {
+const OUTCOME_COPY: Record<Locale, Record<Exclude<BookingOutcomeKind, 'expired'>, Copy>> = {
   en: {
     confirmed: {
       subject: 'Your booking is confirmed',
@@ -880,6 +885,74 @@ const OUTCOME_COPY: Record<Locale, Record<BookingOutcomeKind, Copy>> = {
  * planned around. Sending the same sentence for both would tell one of them
  * something untrue.
  */
+/**
+ * A request nobody answered. Labelled like a decline, but honest about why:
+ * the venue did not refuse, it did not reply, and the guest should not read
+ * that as a verdict on their evening.
+ */
+const EXPIRED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro'>> = {
+  en: {
+    subject: 'Your booking request was not answered',
+    heading: 'No answer from the venue',
+    intro:
+      'The venue did not answer your request before the time you asked for, so nothing has been reserved. Another time may well be free, and other places nearby are on Vardenia.',
+  },
+  ar: {
+    subject: 'لم يتم الرد على طلب حجزك',
+    heading: 'لا رد من المكان',
+    intro:
+      'لم يرد المكان على طلبك قبل الموعد الذي اخترته، ولم يتم حجز أي شيء. قد يكون موعد آخر متاحًا، وهناك أماكن أخرى قريبة على فاردينيا.',
+  },
+  fr: {
+    subject: 'Votre demande de réservation est restée sans réponse',
+    heading: "Pas de réponse de l'établissement",
+    intro:
+      "L'établissement n'a pas répondu à votre demande avant l'heure choisie, donc rien n'a été réservé. Un autre créneau est peut-être libre, et d'autres lieux à proximité sont sur Vardenia.",
+  },
+  es: {
+    subject: 'Tu solicitud de reserva no ha recibido respuesta',
+    heading: 'Sin respuesta del local',
+    intro:
+      'El local no respondió a tu solicitud antes de la hora elegida, así que no se ha reservado nada. Puede que otro horario esté libre, y hay otros lugares cerca en Vardenia.',
+  },
+  pt: {
+    subject: 'O seu pedido de reserva não teve resposta',
+    heading: 'Sem resposta do estabelecimento',
+    intro:
+      'O estabelecimento não respondeu ao seu pedido antes da hora escolhida, então nada foi reservado. Outro horário pode estar livre, e há outros lugares por perto na Vardenia.',
+  },
+  ru: {
+    subject: 'Ваш запрос на бронирование остался без ответа',
+    heading: 'Заведение не ответило',
+    intro:
+      'Заведение не ответило на ваш запрос до выбранного времени, поэтому ничего не забронировано. Возможно, свободно другое время, а другие места поблизости есть на Vardenia.',
+  },
+  zh: {
+    subject: '您的预订请求未获回复',
+    heading: '商户未回复',
+    intro:
+      '商户在您选择的时间之前没有回复您的请求，因此没有为您预留任何位置。其他时段可能还有空位，Vardenia 上也有附近的其他地点。',
+  },
+  hi: {
+    subject: 'आपके बुकिंग अनुरोध का जवाब नहीं मिला',
+    heading: 'उस जगह से कोई जवाब नहीं',
+    intro:
+      'उस जगह ने आपके चुने हुए समय से पहले आपके अनुरोध का जवाब नहीं दिया, इसलिए कुछ भी बुक नहीं हुआ है। हो सकता है कोई दूसरा समय ख़ाली हो, और आसपास की दूसरी जगहें Vardenia पर हैं।',
+  },
+  bn: {
+    subject: 'আপনার বুকিং অনুরোধের কোনো উত্তর আসেনি',
+    heading: 'জায়গাটি থেকে কোনো উত্তর নেই',
+    intro:
+      'আপনার বেছে নেওয়া সময়ের আগে জায়গাটি আপনার অনুরোধের উত্তর দেয়নি, তাই কিছুই বুক করা হয়নি। অন্য কোনো সময় হয়তো খালি আছে, আর কাছাকাছি অন্য জায়গাগুলো Vardenia-তে আছে।',
+  },
+  ur: {
+    subject: 'آپ کی بکنگ کی درخواست کا جواب نہیں ملا',
+    heading: 'مقام کی طرف سے کوئی جواب نہیں',
+    intro:
+      'مقام نے آپ کے منتخب کردہ وقت سے پہلے آپ کی درخواست کا جواب نہیں دیا، اس لیے کچھ بھی بک نہیں ہوا۔ ممکن ہے کوئی اور وقت خالی ہو، اور آس پاس کے دوسرے مقامات Vardenia پر موجود ہیں۔',
+  },
+}
+
 export function outcomeFor(from: BookingStatus, to: BookingStatus): BookingOutcomeKind | null {
   if (from === to) return null
   if (to === 'confirmed') return 'confirmed'
@@ -916,7 +989,10 @@ export function bookingOutcomeContent({
   locale,
   reason,
 }: Omit<BookingOutcomeArgs, 'payload' | 'to'>): BookingEmailContent {
-  const copy = OUTCOME_COPY[locale][outcome]
+  const copy =
+    outcome === 'expired'
+      ? { ...OUTCOME_COPY[locale].declined, ...EXPIRED_COPY[locale] }
+      : OUTCOME_COPY[locale][outcome]
   return renderBookingEmail({
     copy,
     name,
@@ -929,9 +1005,10 @@ export function bookingOutcomeContent({
      * Only on the bad news. `confirmed` carries no reason today, and if a venue
      * ever leaves one on a booking they then accept, "the business said: we are
      * fully booked" underneath "Booking confirmed" would be a contradiction we
-     * printed ourselves.
+     * printed ourselves. Nor on an expired request: the reason is printed as
+     * the venue's words, and nobody at the venue said anything.
      */
-    reason: outcome === 'confirmed' ? undefined : reason,
+    reason: outcome === 'declined' || outcome === 'cancelled' ? reason : undefined,
   })
 }
 
