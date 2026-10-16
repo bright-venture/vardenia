@@ -40,6 +40,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -163,14 +164,33 @@ export function SavedProvider({
     }
   }, [isCustomer])
 
-  const flip = useCallback((slug: string) => {
+  const show = useCallback((slug: string, saved: boolean) => {
     setSlugs((prev) => {
+      if (prev.has(slug) === saved) return prev
       const next = new Set(prev)
-      if (next.has(slug)) next.delete(slug)
-      else next.add(slug)
+      if (saved) next.add(slug)
+      else next.delete(slug)
       return next
     })
   }, [])
+
+  /**
+   * What the heart shows, read at the moment of a press. A ref beside the
+   * state so two quick presses each see the result of the one before, not
+   * the value from the last render.
+   */
+  const shown = useRef(slugs)
+  useEffect(() => {
+    shown.current = slugs
+  }, [slugs])
+
+  /**
+   * The newest press per listing. Answers can arrive out of order on a weak
+   * connection, and only the answer to the latest press may set the heart:
+   * an older one arriving last would otherwise undo what the reader did last.
+   */
+  const latest = useRef(new Map<string, number>())
+  const presses = useRef(0)
 
   const goSignIn = useCallback(() => {
     const next = window.location.pathname + window.location.search
@@ -186,18 +206,28 @@ export function SavedProvider({
         return
       }
 
-      flip(slug) // Optimistic: the heart answers the press, not the network.
+      // The state this press asks for, sent as such: a repeat of it is harmless.
+      const want = !shown.current.has(slug)
+      const press = ++presses.current
+      latest.current.set(slug, press)
+      const isLatest = () => latest.current.get(slug) === press
+
+      show(slug, want) // Optimistic: the heart answers the press, not the network.
+      shown.current = new Set(shown.current)
+      if (want) shown.current.add(slug)
+      else shown.current.delete(slug)
+
       fetch('/save', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ slug }),
+        body: JSON.stringify({ slug, saved: want }),
       })
         .then((r) => {
           // A session can lapse between load and press. Send them to sign in and
           // put the heart back rather than lying about a save that did not happen.
           if (r.status === 401) {
             setVerdict(false)
-            flip(slug)
+            if (isLatest()) show(slug, !want)
             goSignIn()
             return null
           }
@@ -206,18 +236,14 @@ export function SavedProvider({
           return r.json() as Promise<{ saved?: boolean }>
         })
         .then((data) => {
-          if (data && typeof data.saved === 'boolean') {
-            setSlugs((prev) => {
-              const next = new Set(prev)
-              if (data.saved) next.add(slug)
-              else next.delete(slug)
-              return next
-            })
-          }
+          if (data && typeof data.saved === 'boolean' && isLatest()) show(slug, data.saved)
         })
-        .catch(() => flip(slug)) // Put it back the way it was.
+        .catch(() => {
+          // Put it back the way it was, unless a newer press has moved it since.
+          if (isLatest()) show(slug, !want)
+        })
     },
-    [signedIn, flip, goSignIn],
+    [signedIn, show, goSignIn],
   )
 
   const value = useMemo<SavedContextValue>(

@@ -51,7 +51,15 @@ export async function GET(): Promise<Response> {
   return json({ slugs: await savedSlugs() })
 }
 
-const bodySchema = z.object({ slug: z.string().min(1).max(200) })
+/**
+ * `saved` is the state the heart should end in. Sending it, rather than
+ * "flip", is what makes a repeated request harmless: on a weak connection a
+ * press could be sent twice, or a second press arrive before the first had
+ * answered, and two flips cancelled each other out with the heart still
+ * showing filled. Absent, the request flips as before - a page loaded before
+ * this change still works while it is open.
+ */
+const bodySchema = z.object({ slug: z.string().min(1).max(200), saved: z.boolean().optional() })
 
 /**
  * Rate-limited like every other write: each call is a database read and a
@@ -100,14 +108,34 @@ export const POST = withRateLimit(
       user,
     })
 
+    const current = existing.docs[0]
+    const want = parsed.saved ?? !current
+
+    // Already as asked: nothing to write, and the same answer as last time.
+    if (want === Boolean(current)) return json({ ok: true, saved: want })
+
     let saved: boolean
-    if (existing.docs[0]) {
-      await payload.delete({
-        collection: 'saved-listings',
-        id: existing.docs[0].id,
-        overrideAccess: false,
-        user,
-      })
+    if (current) {
+      try {
+        await payload.delete({
+          collection: 'saved-listings',
+          id: current.id,
+          overrideAccess: false,
+          user,
+        })
+      } catch (err) {
+        // Two removals at once: the other one already deleted it, which is the
+        // outcome asked for. Anything else is a real failure.
+        const again = await payload.find({
+          collection: 'saved-listings',
+          where: { listing: { equals: listing.id } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: false,
+          user,
+        })
+        if (again.docs[0]) throw err
+      }
       saved = false
     } else {
       // `customer` is forced to the caller by the collection's beforeValidate hook

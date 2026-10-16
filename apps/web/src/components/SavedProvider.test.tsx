@@ -253,4 +253,70 @@ describe('SavedProvider', () => {
     expect(postCall()![0]).toBe('/save')
     expect(saved()).toBe(true)
   })
+
+  /**
+   * A press says what it wants, not "flip": on a weak connection a repeated
+   * request must not undo itself.
+   */
+  it('sends the state each press asks for', async () => {
+    hoisted.audience = 'customer'
+    fetchMock.mockResolvedValueOnce(okSlugs([]))
+    await mount('le-royal')
+    await flush()
+
+    fetchMock.mockResolvedValueOnce(okToggle(true))
+    await clickToggle()
+    await flush()
+    fetchMock.mockResolvedValueOnce(okToggle(false))
+    await clickToggle()
+    await flush()
+
+    const posts = fetchMock.mock.calls
+      .filter((c) => (c[1] as { method?: string } | undefined)?.method === 'POST')
+      .map((c) => JSON.parse(String((c[1] as { body: string }).body)))
+    expect(posts).toEqual([
+      { slug: 'le-royal', saved: true },
+      { slug: 'le-royal', saved: false },
+    ])
+    expect(saved()).toBe(false)
+  })
+
+  /** Two quick presses whose answers come back in the wrong order. */
+  it('lets only the latest press set the heart when answers arrive out of order', async () => {
+    hoisted.audience = 'customer'
+    fetchMock.mockResolvedValueOnce(okSlugs([]))
+    await mount('le-royal')
+    await flush()
+
+    let answerFirst: (value: unknown) => void = () => {}
+    fetchMock.mockImplementationOnce(() => new Promise((resolve) => (answerFirst = resolve)))
+    await clickToggle() // wants saved; its answer is held back
+    fetchMock.mockResolvedValueOnce(okToggle(false))
+    await clickToggle() // wants not saved; answered at once
+    await flush()
+    expect(saved()).toBe(false)
+
+    // The first press's answer finally arrives. It is stale and must not win.
+    await act(async () => answerFirst(okToggle(true)))
+    await flush()
+    expect(saved()).toBe(false)
+  })
+
+  it('does not let an older failed press undo a newer one', async () => {
+    hoisted.audience = 'customer'
+    fetchMock.mockResolvedValueOnce(okSlugs([]))
+    await mount('le-royal')
+    await flush()
+
+    let failFirst: (reason: unknown) => void = () => {}
+    fetchMock.mockImplementationOnce(() => new Promise((_, reject) => (failFirst = reject)))
+    await clickToggle() // wants saved
+    fetchMock.mockResolvedValueOnce(okToggle(false))
+    await clickToggle() // wants not saved
+    await flush()
+
+    await act(async () => failFirst(new Error('network')))
+    await flush()
+    expect(saved()).toBe(false)
+  })
 })
