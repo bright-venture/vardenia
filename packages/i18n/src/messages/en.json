@@ -380,7 +380,7 @@
     "declineReasonHint": "Optional. Sent to them with the message.",
     "declineReasonPlaceholder": "Fully booked that evening",
     "closedTitle": "Closed dates",
-    "closedIntro": "Days you are shut. New bookings will not be taken for them. Bookings you have already accepted are left alone, so deal with those yourself.",
+    "closedIntro": "Days you are shut. New bookings will not be taken for them. If bookings already fall on those days, cancel or decline them first: each guest is told by email. Then add the dates.",
     "closedNone": "No closed dates set.",
     "closedAdd": "Add closed dates",
     "closedSave": "Save",

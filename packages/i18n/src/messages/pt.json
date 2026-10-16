@@ -380,7 +380,7 @@
     "declineReasonHint": "Opcional. Enviado junto com a mensagem.",
     "declineReasonPlaceholder": "Lotado naquela noite",
     "closedTitle": "Datas de fechamento",
-    "closedIntro": "Dias em que você está fechado. Nenhuma nova reserva será aceita para eles. As reservas que você já aceitou ficam intactas, então cuide delas você mesmo.",
+    "closedIntro": "Dias em que você está fechado. Nenhuma nova reserva será aceita para eles. Se já houver reservas nesses dias, cancele-as ou recuse-as primeiro: cada cliente é avisado por e-mail. Depois adicione as datas.",
     "closedNone": "Nenhuma data de fechamento definida.",
     "closedAdd": "Adicionar datas de fechamento",
     "closedSave": "Salvar",

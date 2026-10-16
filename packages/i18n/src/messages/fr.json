@@ -380,7 +380,7 @@
     "declineReasonHint": "Facultatif. Envoyé avec le message.",
     "declineReasonPlaceholder": "Complet ce soir-là",
     "closedTitle": "Dates de fermeture",
-    "closedIntro": "Les jours où vous êtes fermé. Aucune nouvelle réservation ne sera prise pour ces jours. Les réservations déjà acceptées restent en place, gérez-les vous-même.",
+    "closedIntro": "Les jours où vous êtes fermé. Aucune nouvelle réservation ne sera prise pour ces jours. Si des réservations tombent déjà ces jours-là, annulez-les ou refusez-les d'abord : chaque client est prévenu par e-mail. Ajoutez ensuite les dates.",
     "closedNone": "Aucune date de fermeture définie.",
     "closedAdd": "Ajouter des dates de fermeture",
     "closedSave": "Enregistrer",

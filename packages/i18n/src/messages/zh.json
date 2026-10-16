@@ -380,7 +380,7 @@
     "declineReasonHint": "选填。将随消息一同发送。",
     "declineReasonPlaceholder": "那晚已订满",
     "closedTitle": "歇业日期",
-    "closedIntro": "您歇业的日子。这些日子将不再接受新预订。您已接受的预订不受影响，请自行处理。",
+    "closedIntro": "您歇业的日子。这些日子将不再接受新预订。如果这些日子已有预订，请先取消或拒绝，每位客人都会收到邮件通知。然后再添加日期。",
     "closedNone": "尚未设置歇业日期。",
     "closedAdd": "添加歇业日期",
     "closedSave": "保存",

@@ -380,7 +380,7 @@
     "declineReasonHint": "Opcional. Se envía con el mensaje.",
     "declineReasonPlaceholder": "Completo esa noche",
     "closedTitle": "Fechas de cierre",
-    "closedIntro": "Días en que estás cerrado. No se aceptarán nuevas reservas para ellos. Las reservas que ya aceptaste se quedan como están, así que ocúpate de ellas tú mismo.",
+    "closedIntro": "Días en que estás cerrado. No se aceptarán nuevas reservas para ellos. Si ya hay reservas en esos días, cancélalas o recházalas primero: cada cliente recibe un aviso por correo. Después añade las fechas.",
     "closedNone": "No hay fechas de cierre definidas.",
     "closedAdd": "Añadir fechas de cierre",
     "closedSave": "Guardar",

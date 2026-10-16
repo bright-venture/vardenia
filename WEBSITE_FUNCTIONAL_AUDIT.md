@@ -19,6 +19,7 @@ The existing unit suite was run: **2,075 of 2,076 tests pass**; the one failure 
 
 - **F-01 fixed:** bookings are billed in the month they end, and a booking already on a live statement is never billed again.
 - **F-02 fixed:** every partner of the listing is emailed when a booking is made. A request nobody answers is declined automatically when its time arrives, and the guest is emailed "no answer from the venue". The sweep runs every 15 minutes through a Netlify scheduled function and needs `CRON_SECRET`.
+- **F-04 fixed (option A, refuse):** closed dates are refused while any pending or confirmed booking still falls on them, and the venue is shown which ones. Declining or cancelling each one emails the guest, and then the closure saves.
 - **F-05 fixed:** a closed date or a listed-only place is refused before anything is written, with the right message in the guest's language. The booking guard's refusals are translated instead of reported as errors.
 - **F-06 fixed:** sending skips a venue with no partner account, leaves its statement as a draft, and names it for the team.
 - **F-07 fixed:** partner invitation links last 3 days, and the email says so in English and Arabic.

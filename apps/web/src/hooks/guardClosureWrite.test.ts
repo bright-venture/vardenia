@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { CollectionBeforeValidateHook } from 'payload'
-import { guardClosureWrite } from './guardClosureWrite'
+import { bookingsInTheWay, guardClosureWrite } from './guardClosureWrite'
 
 /**
  * Who may shut which restaurant.
@@ -28,10 +28,16 @@ const run = (args: {
   user: unknown
   operation?: 'create' | 'update'
   originalDoc?: Record<string, unknown>
+  /** Live bookings the database holds for the listing; none unless given. */
+  bookings?: Record<string, unknown>[]
+  find?: ReturnType<typeof vi.fn>
 }) =>
   guardClosureWrite({
     data: args.data,
-    req: { user: args.user },
+    req: {
+      user: args.user,
+      payload: { find: args.find ?? vi.fn(async () => ({ docs: args.bookings ?? [] })) },
+    },
     operation: args.operation ?? 'create',
     originalDoc: args.originalDoc,
   } as unknown as Args)
@@ -158,5 +164,104 @@ describe('the dates themselves', () => {
     await expect(
       run({ data: { business: 10, startsOn, endsOn: '2026-08-28' }, user: owner([10]) }),
     ).rejects.toThrow(/real days/i)
+  })
+})
+
+/**
+ * Closed dates over bookings that are still on. They used to be accepted and
+ * the bookings left as they were, so guests turned up to a closed door. Now
+ * the dates are refused, with the bookings named, until each is declined or
+ * cancelled (which emails the guest).
+ */
+describe('closing days that already have bookings', () => {
+  // 14 to 28 August 2026 in `valid`; Beirut is UTC+3 in August.
+  const dinner = (reference: string, start: string, end: string, partySize = 4) => ({
+    reference,
+    start,
+    end,
+    partySize,
+  })
+
+  it('refuses, naming the booking, its time in Beirut and its party', async () => {
+    const error = await run({
+      data: { ...valid },
+      user: owner([10]),
+      bookings: [dinner('K3M9QP2X', '2026-08-15T17:00:00.000Z', '2026-08-15T19:00:00.000Z')],
+    }).catch((e: Error) => e)
+    expect(error).toBeInstanceOf(Error)
+    const message = (error as Error).message
+    expect(message).toMatch(/There is 1 booking on these dates/)
+    expect(message).toContain('K3M9QP2X')
+    expect(message).toContain('20:00')
+    expect(message).toContain('4 people')
+    expect(message).toMatch(/each guest is told by email/)
+  })
+
+  it('refuses for staff too, since the guests are the same guests', async () => {
+    await expect(
+      run({
+        data: { ...valid },
+        user: staff,
+        bookings: [dinner('K3M9QP2X', '2026-08-15T17:00:00.000Z', '2026-08-15T19:00:00.000Z')],
+      }),
+    ).rejects.toThrow(/1 booking on these dates/)
+  })
+
+  it('counts a stay whose nights run into the closed days', async () => {
+    // Checks in 12 August, out 16 August: the nights of the 14th and 15th are closed.
+    await expect(
+      run({
+        data: { ...valid },
+        user: owner([10]),
+        bookings: [dinner('STAY0001', '2026-08-12T11:00:00.000Z', '2026-08-16T08:00:00.000Z', 2)],
+      }),
+    ).rejects.toThrow(/STAY0001/)
+  })
+
+  it('ignores a booking just outside the dates', async () => {
+    // Checks out on the morning of the 14th: it has no night inside the closure.
+    await expect(
+      run({
+        data: { ...valid },
+        user: owner([10]),
+        bookings: [dinner('LEAVES01', '2026-08-12T11:00:00.000Z', '2026-08-14T08:00:00.000Z', 2)],
+      }),
+    ).resolves.toBeTruthy()
+  })
+
+  it('asks only for pending or confirmed bookings that are not over yet', async () => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    await run({ data: { ...valid }, user: owner([10]), find })
+    const where = JSON.stringify((find.mock.calls[0] as unknown as [{ where: unknown }])[0].where)
+    expect(where).toContain('"status":{"in":["pending","confirmed"]}')
+    expect(where).toMatch(/"end":\{"greater_than":"\d{4}-/)
+  })
+
+  it('still lets a closure have only its note edited', async () => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    await expect(
+      run({
+        data: { note: 'Private event' },
+        user: owner([10]),
+        operation: 'update',
+        originalDoc: { ...valid },
+        find,
+      }),
+    ).resolves.toBeTruthy()
+    expect(find).not.toHaveBeenCalled()
+  })
+
+  it('lists five and counts the rest', () => {
+    const many = Array.from({ length: 7 }, (_, i) => ({
+      reference: `REF0000${i}`,
+      start: new Date('2026-08-15T17:00:00.000Z'),
+      end: new Date('2026-08-15T19:00:00.000Z'),
+      partySize: 1,
+    }))
+    const message = bookingsInTheWay(many)
+    expect(message).toMatch(/^There are 7 bookings/)
+    expect(message).toContain('1 person')
+    expect(message).toContain('and 2 more')
+    expect(message).not.toContain('REF00005')
   })
 })
