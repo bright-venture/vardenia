@@ -9,7 +9,7 @@ import { findListings, findFeaturedListings, printedCodes } from '../../../lib/l
 import { findIssues } from '../../../lib/issues'
 import { resolveImage, resolvePhotograph } from '../../../lib/media'
 import { getPathname } from '../../../i18n/routing'
-import { scanUrl } from '../../../lib/qr-url'
+import { QR_LIGHT } from '../../../lib/qr-image'
 import { CinematicJourney } from '../../../components/journey/CinematicJourney'
 import { MagazineArt } from '../../../components/journey/MagazineArt'
 import { HomePlaces } from '../../../components/home/HomePlaces'
@@ -46,21 +46,32 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const connected = pictured.find((doc) => codes.has(doc.id))
   const code = connected ? codes.get(connected.id) : null
   const magazineHref = getPathname({ locale, href: '/magazine' })
-  // A fallback code opens the magazine, never a fabricated venue.
-  const targetUrl =
-    connected && code
-      ? scanUrl(code)
-      : new URL(magazineHref, process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vardenia.com').href
+  /**
+   * The code and the link open the listing page itself, never /g/<code>.
+   *
+   * /g is the printed code's redirect, and every request to it is recorded as
+   * a magazine scan: the venue's scan count, the scan reports sold to
+   * advertisers, and the "already printed" lock on the code all read it. A
+   * reader clicking through from the homepage, or pointing a phone at this
+   * on-screen code, has not scanned the magazine, so neither may go through it.
+   * A fallback opens the magazine, never a fabricated venue.
+   */
+  const listingHref =
+    connected && code && connected.slug
+      ? getPathname({ locale, href: `/directory/${connected.slug}` })
+      : null
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vardenia.com'
+  const targetUrl = new URL(listingHref ?? magazineHref, site).href
   const qr = await QRCode.toDataURL(targetUrl, {
     width: 360,
     margin: 4,
-    color: { dark: '#111d2d', light: '#ffffff' },
+    color: { dark: '#111d2d', light: QR_LIGHT },
   })
   const target = {
-    title: connected && code ? (connected.name ?? '') : t('magazineName'),
-    image: connected && code ? resolvePhotograph(connected.heroImage as never) : cover,
-    href: connected && code ? `/g/${encodeURIComponent(code)}` : magazineHref,
-    liveCode: Boolean(connected && code),
+    title: listingHref && connected ? (connected.name ?? '') : t('magazineName'),
+    image: listingHref && connected ? resolvePhotograph(connected.heroImage as never) : cover,
+    href: listingHref ?? magazineHref,
+    liveCode: Boolean(listingHref),
   }
   return (
     <main className="vd-main-home">

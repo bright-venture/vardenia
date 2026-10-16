@@ -1,0 +1,871 @@
+{
+  "prepared_on": "2026-10-16",
+  "base_commit": "ea6db40787daa5a40b59ff53d79df5a9f7194ac6",
+  "delivery": "Local frontend design and deployment preparation. Not published.",
+  "changed_files": [
+    {
+      "path": "apps/web/public/journey/baalbek-m.webp",
+      "status": "new",
+      "sha256": "3ceecfb9b3440814e73bd552e1ccde3c7541d6b2c4a02b158412f72886fcffb7",
+      "bytes": 51382
+    },
+    {
+      "path": "apps/web/public/journey/baalbek.jpg",
+      "status": "new",
+      "sha256": "6616fe757b5e2f7ab544c6da24f9045b9b72e2a0096cdfb0787b22ba37186d84",
+      "bytes": 750966
+    },
+    {
+      "path": "apps/web/public/journey/baalbek.webp",
+      "status": "new",
+      "sha256": "33c76f57fcda11356b76411de3fe077bba085ec8508cec278c11e554e7ab9bba",
+      "bytes": 382368
+    },
+    {
+      "path": "apps/web/public/journey/beirut-m.webp",
+      "status": "new",
+      "sha256": "6ac95c4d9cb7013586b8d5a1a887acb9e237c5dc779dffebbada21760d29c350",
+      "bytes": 58382
+    },
+    {
+      "path": "apps/web/public/journey/beirut.jpg",
+      "status": "new",
+      "sha256": "be98ba51ee050356ecc6b62559cc7361ae293d6a9af3bfb903c7706d36310cd4",
+      "bytes": 599229
+    },
+    {
+      "path": "apps/web/public/journey/beirut.webp",
+      "status": "new",
+      "sha256": "75046eeabcb0a11d5d56f7827ab35e09ee7ec0c5b391c3cffab3449f36b30ad9",
+      "bytes": 369304
+    },
+    {
+      "path": "apps/web/public/journey/bsharri-m.webp",
+      "status": "new",
+      "sha256": "16b80ad4fe3200176677448498ba1ecf1b05274f37cc14d5f81ca255228f50f9",
+      "bytes": 52540
+    },
+    {
+      "path": "apps/web/public/journey/bsharri.jpg",
+      "status": "new",
+      "sha256": "e6259a04e17040f92a57d85c66f7af0d2b6f4fee69d237ece5e6f2f57ea9890f",
+      "bytes": 559430
+    },
+    {
+      "path": "apps/web/public/journey/bsharri.webp",
+      "status": "new",
+      "sha256": "8a3a69b5769daa773a0a03c7b48b50ffa0a37f50eea11ffcaa91083d35489a9b",
+      "bytes": 317804
+    },
+    {
+      "path": "apps/web/public/journey/byblos-m.webp",
+      "status": "new",
+      "sha256": "674a18f7b30715d171e935f9c8598d86638c1491323f1553ddefb931a89bdbee",
+      "bytes": 52494
+    },
+    {
+      "path": "apps/web/public/journey/byblos.jpg",
+      "status": "new",
+      "sha256": "52e5fb6ee65e8ce939997d9c4a418c01dd7c372999de9b6ce0bb85f49bf23df9",
+      "bytes": 985717
+    },
+    {
+      "path": "apps/web/public/journey/byblos.webp",
+      "status": "new",
+      "sha256": "10af87c4a343e2af782c2932c7258fe1fabe9d0a19021ce9079909cf974ce0f8",
+      "bytes": 287634
+    },
+    {
+      "path": "apps/web/public/journey/deir-el-qamar-m.webp",
+      "status": "new",
+      "sha256": "e4bc775a270a0ed242529c0fdd93d632e562b2d28a1d6b43adb4f46d75c82ab6",
+      "bytes": 42770
+    },
+    {
+      "path": "apps/web/public/journey/deir-el-qamar.jpg",
+      "status": "new",
+      "sha256": "7db9e038b27b0c6a7bbe683482366e4069ce8568314377fa616dbf9f31386775",
+      "bytes": 584475
+    },
+    {
+      "path": "apps/web/public/journey/deir-el-qamar.webp",
+      "status": "new",
+      "sha256": "144da32ebfcee71d0aca5c84cc05ca332c5ca8e98ecfced080cc0d8185eb2646",
+      "bytes": 274864
+    },
+    {
+      "path": "apps/web/public/journey/hero-film-mobile.mp4",
+      "status": "new",
+      "sha256": "bebb97815412fb6e68accd92fd24b6e8bf1b643ee0447e81dfa8fb2c32b676e4",
+      "bytes": 1646028
+    },
+    {
+      "path": "apps/web/public/journey/hero-film.mp4",
+      "status": "new",
+      "sha256": "b4102eb14319dcf831461afa3d00fdca4a6bda4dcc4183cf41ce8f450064b80d",
+      "bytes": 8721768
+    },
+    {
+      "path": "apps/web/public/journey/lebanon-detailed.geojson",
+      "status": "new",
+      "sha256": "50bee18e9b7bffa859c643d19a924c859d411edcac6c12e454fc4a20d6f19cc6",
+      "bytes": 10279
+    },
+    {
+      "path": "apps/web/public/journey/lebanon-relief-original.png",
+      "status": "new",
+      "sha256": "636a6d8daa25a1965cb703a088fd022a97d0b943f1c03c22adee23065885e748",
+      "bytes": 3517354
+    },
+    {
+      "path": "apps/web/public/journey/natural-paper-grain.png",
+      "status": "new",
+      "sha256": "aeb112056d4c39979e2eb5744adf8d7c97412873a7d6cb5be64649d12d92ce30",
+      "bytes": 2241290
+    },
+    {
+      "path": "apps/web/public/journey/phone-mockup-v1.webp",
+      "status": "new",
+      "sha256": "64a91d81e332947b58df6fc5f0133dacb2fb6591ee45b6afe4e8d81ff849bc39",
+      "bytes": 64610
+    },
+    {
+      "path": "apps/web/public/journey/photographed-torn-edge.jpg",
+      "status": "new",
+      "sha256": "5a731eebfe203e16212f66b31cc5f6a831490bbbdcd170ae24448d69da0d3fde",
+      "bytes": 30168
+    },
+    {
+      "path": "apps/web/public/journey/tyre-m.webp",
+      "status": "new",
+      "sha256": "f14153e5efb443dc60b3a261a3cc287e7896d52e4746d28fca2e0fa6ef7a3183",
+      "bytes": 32246
+    },
+    {
+      "path": "apps/web/public/journey/tyre.jpg",
+      "status": "new",
+      "sha256": "be6f3af9b53f74b52cf4058e3cda09facc62fb68c1211f18f1e3455222a6f3bd",
+      "bytes": 430834
+    },
+    {
+      "path": "apps/web/public/journey/tyre.webp",
+      "status": "new",
+      "sha256": "8937ed9aab61a2471b1679819e5ae949ac032c13ae1ea1cf98e7c98a27e05d5a",
+      "bytes": 192852
+    },
+    {
+      "path": "apps/web/public/journey/vardenia-magazine-open-v1.webp",
+      "status": "new",
+      "sha256": "06dff0b8f850d98fad59b5c74282db567b5aa0d1fa7560315d04c54c2dea68c1",
+      "bytes": 287748
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/[section]/page.tsx",
+      "status": "modified",
+      "sha256": "fdd778dbc04146edce098ab72bddf91699eb2bc0ab630c9fc105029d89cbf4ae",
+      "bytes": 12944
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/account/close/page.tsx",
+      "status": "modified",
+      "sha256": "59f47166d61293da948fa86fe5b7fdfbf52603607d32804c8cef764292f0aea4",
+      "bytes": 2014
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/account/page.tsx",
+      "status": "modified",
+      "sha256": "b5336f66676e968ec18bebcbfec556f44423ed912f65dbed8f09af2c9266688a",
+      "bytes": 11392
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/account/passport/page.tsx",
+      "status": "modified",
+      "sha256": "83bb33d211501d941467432b1bc7b2335038901b23ba5b87dfa4cf820dc6bade",
+      "bytes": 2198
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/account/saved/page.tsx",
+      "status": "modified",
+      "sha256": "c98e1b4ce4cfd3706eae584980bf25cb15602c02de6f01484d1397d96e03a966",
+      "bytes": 3023
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/account/verify/[token]/page.tsx",
+      "status": "modified",
+      "sha256": "d916aaa7e11c44579be53d3d4d9384b724da35b9de12775be2ca0715ee38329a",
+      "bytes": 3285
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/credits/page.tsx",
+      "status": "new",
+      "sha256": "5604e54a4129fc5010c9625971d59af784f7256a05c3c7b14c53fa20395b2757",
+      "bytes": 844
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/directory/[slug]/page.tsx",
+      "status": "modified",
+      "sha256": "3f157a74206d4682a2da4b5d2b47a31bbf0ee3b83c6e3ab7eb5b2c8f04b931a6",
+      "bytes": 36770
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/directory/page.tsx",
+      "status": "modified",
+      "sha256": "22b2ce5e7e3f648561f3ca330fe2953ef679bdfadb62ee98393526b316c3c91d",
+      "bytes": 11626
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/error.tsx",
+      "status": "modified",
+      "sha256": "633cc2b25a1eccdf57d80868d73f58ba61ae8a3f8bb4b2065fd88be95e8c7765",
+      "bytes": 2548
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/layout.tsx",
+      "status": "modified",
+      "sha256": "5ebb2afa04330aad91876489dc87626fc0006ac991eb45862abb593d5c1de1b2",
+      "bytes": 7340
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/magazine/articles/[slug]/page.tsx",
+      "status": "modified",
+      "sha256": "3d3ff4805d0dbf328b13da6e7ddef4535518fa16c3642545ac69cb752350796d",
+      "bytes": 6807
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/magazine/articles/page.tsx",
+      "status": "modified",
+      "sha256": "c3bab7abec61a96bd078f28c36540b36cd3f87ec3d13d6823d72a67c6ea345ae",
+      "bytes": 4957
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/magazine/issues/[slug]/page.tsx",
+      "status": "modified",
+      "sha256": "aeef46bb4c0a179c72cd604d53e0b21519544b800cd9625091dfeb20fa904bf0",
+      "bytes": 6515
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/magazine/issues/page.tsx",
+      "status": "modified",
+      "sha256": "06e2178f0aac165c877190379d05222a6114837807b42c5b555271a8a5fa8eed",
+      "bytes": 3892
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/magazine/page.tsx",
+      "status": "modified",
+      "sha256": "8114ae3d5489e8056549fe23b1a9353a0c42a16efb4f9ab62a6c1f33a715f24a",
+      "bytes": 6643
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/not-found.tsx",
+      "status": "new",
+      "sha256": "2a0cd9839cb1a5402e9bd9c852693cbc59ee644f30c0086220ff5b4235f285d9",
+      "bytes": 966
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/page.tsx",
+      "status": "modified",
+      "sha256": "91283729e7c64f43e9af419f9796314be880ffb45b33c54bc8fd86a40869e198",
+      "bytes": 3602
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/partner/(dashboard)/layout.tsx",
+      "status": "modified",
+      "sha256": "89e15c7db77b6b845ad5f26cd70346bd9506e71d9e6612b6a0fc425b4e0c7afb",
+      "bytes": 4333
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/partner/(dashboard)/listing/page.tsx",
+      "status": "modified",
+      "sha256": "bd7f31b141b2eb837ff66616e7f0d88ea0000dca1eb38501025eeeafabf9b7c9",
+      "bytes": 4894
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/partner/(dashboard)/page.tsx",
+      "status": "modified",
+      "sha256": "d76a43f4a8d85865f271629ace86da6c66a0e523d9a506997fa951d5f1ad35f9",
+      "bytes": 28242
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/partner/(dashboard)/scans/page.tsx",
+      "status": "modified",
+      "sha256": "e875773964458e711f4da3f0f59730ad0813f54bddc41d378986de9e8a3c377f",
+      "bytes": 7366
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/partner/(dashboard)/statements/page.tsx",
+      "status": "modified",
+      "sha256": "2d3a10353f0567bd1ff101383fb1cff71b14ae0a7391b754146d62ee5de9d882",
+      "bytes": 4356
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/scan/moved/page.tsx",
+      "status": "modified",
+      "sha256": "311c691fd353de3615207fa0d3fc46f6a4a72997cae9a6bafa8455755d6fd155",
+      "bytes": 2177
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/scan/not-found/page.tsx",
+      "status": "modified",
+      "sha256": "772d31fb796802920b7a441c84022e885772dfb010998633ec748f1e87761a57",
+      "bytes": 2265
+    },
+    {
+      "path": "apps/web/src/app/(frontend)/[locale]/search/page.tsx",
+      "status": "modified",
+      "sha256": "7a01294e9d62e4b9736d7404772cab4d5fe5bcffe3e10cbc256db3b09f06b7fb",
+      "bytes": 5626
+    },
+    {
+      "path": "apps/web/src/app/fonts.ts",
+      "status": "modified",
+      "sha256": "7566573bc7c73bc2293e09054209725abc535061c7a2caaed872ba1360ef7c8d",
+      "bytes": 1706
+    },
+    {
+      "path": "apps/web/src/app/global-error.tsx",
+      "status": "modified",
+      "sha256": "686f42c68b820e63e0769cf17220273452ad67cca3004e081add52bd114574c2",
+      "bytes": 1274
+    },
+    {
+      "path": "apps/web/src/app/global-not-found.tsx",
+      "status": "modified",
+      "sha256": "64328258a44307fc06d9fb7e3badbf937a42330bd959c3b5a5750e469a3d1259",
+      "bytes": 1239
+    },
+    {
+      "path": "apps/web/src/app/home-finish.css",
+      "status": "new",
+      "sha256": "83be9bbcf0fdfab95676b7bfce5ef1d422f77d7f316529b4d282e530ff4e254e",
+      "bytes": 37991
+    },
+    {
+      "path": "apps/web/src/app/inner-pages.css",
+      "status": "new",
+      "sha256": "2cd0df5219e06df82d4202298099718f09745096e053a76ccfe30f6a5f1fc0ac",
+      "bytes": 19268
+    },
+    {
+      "path": "apps/web/src/app/recovery.css",
+      "status": "new",
+      "sha256": "e3a7f43456e4d768b0504f923a84f5b7d1296bddc64a70567c32eec88932af1b",
+      "bytes": 2754
+    },
+    {
+      "path": "apps/web/src/app/redesign.css",
+      "status": "new",
+      "sha256": "86815b44c64f5a68cc0f477bf3557d457c3754ffd5dfb5fe0144b3623429494b",
+      "bytes": 40714
+    },
+    {
+      "path": "apps/web/src/components/ArticleCard.tsx",
+      "status": "modified",
+      "sha256": "28c7f621e715fde5a70ee16cbae5712e582a5b1c4d4e7f83a71c6682082a8394",
+      "bytes": 2283
+    },
+    {
+      "path": "apps/web/src/components/BookingPanel.tsx",
+      "status": "modified",
+      "sha256": "b2e431124d498e91ea1a55712592897bc6e1eb22d68e431b582f127224556555",
+      "bytes": 6221
+    },
+    {
+      "path": "apps/web/src/components/ContentPage.tsx",
+      "status": "modified",
+      "sha256": "f97a75b35ce3afe3f3fe6ac1921e01c1cd6a60321a0dc796515fb1b6f6f7acff",
+      "bytes": 7071
+    },
+    {
+      "path": "apps/web/src/components/FilterChip.tsx",
+      "status": "modified",
+      "sha256": "2c8dc5718986f0cb61f810e11fa54d7a0cba5aa41c562c9bb49389c6b9f555b6",
+      "bytes": 3026
+    },
+    {
+      "path": "apps/web/src/components/FilterSheet.tsx",
+      "status": "modified",
+      "sha256": "c6e74f7d849ebb5a913b91f2001b7267846a74fac70cdf77b2fba65b564990fe",
+      "bytes": 16256
+    },
+    {
+      "path": "apps/web/src/components/LegalDocument.tsx",
+      "status": "modified",
+      "sha256": "86e52f13237724395d45565902c4a4e277ec708ce5bbd8bf2c5b2fd2cf4989bc",
+      "bytes": 7937
+    },
+    {
+      "path": "apps/web/src/components/ListingCard.tsx",
+      "status": "modified",
+      "sha256": "a73df1763b42e76e299ea7eceeced7f522f2ee70811a6ad445b4560381958c40",
+      "bytes": 12526
+    },
+    {
+      "path": "apps/web/src/components/ListingGrid.tsx",
+      "status": "modified",
+      "sha256": "a215043a4aa71aeb34af8301ced02614f8dfa0e18e8cfa05b2d43d3cd66f407b",
+      "bytes": 6303
+    },
+    {
+      "path": "apps/web/src/components/PartnerTabs.tsx",
+      "status": "modified",
+      "sha256": "12c3a090fb6f48248a8b2006815f3dae9ae87099c6c34b477f6d5ee452585c31",
+      "bytes": 2545
+    },
+    {
+      "path": "apps/web/src/components/SiteFooter.tsx",
+      "status": "modified",
+      "sha256": "f9eed3b9000d21b7f507815396b3898a5d394324968f8d60cfbd812b2e763a1c",
+      "bytes": 5754
+    },
+    {
+      "path": "apps/web/src/components/SiteHeader.tsx",
+      "status": "modified",
+      "sha256": "d772d5da88cd2336387a0078b50b803e5ab11413491365712b074b3778cc0ac8",
+      "bytes": 6850
+    },
+    {
+      "path": "apps/web/src/components/SubcategoryTiles.tsx",
+      "status": "modified",
+      "sha256": "1d32070c5566ff39c4c5c61c3f46c3dcddb8d273b3c31fcdb39da12cb0fa8aca",
+      "bytes": 5757
+    },
+    {
+      "path": "apps/web/src/components/TripBar.tsx",
+      "status": "modified",
+      "sha256": "554b56df99ad3a90bc70c355caa2fcf607c087eb670e5059bd68a6f1556685ee",
+      "bytes": 7552
+    },
+    {
+      "path": "apps/web/src/components/auth/AuthCard.tsx",
+      "status": "modified",
+      "sha256": "f2f321d6f4cc4689bacee80bcf3c3c6c4f3bc55f83a379a7ba65850724144a1e",
+      "bytes": 1971
+    },
+    {
+      "path": "apps/web/src/components/contentRoute.tsx",
+      "status": "modified",
+      "sha256": "ede8d35976bb427440967c4f6f32425895484552cceed49d00476b66d15d4437",
+      "bytes": 2995
+    },
+    {
+      "path": "apps/web/src/components/editorial/MotionControl.tsx",
+      "status": "new",
+      "sha256": "2c89f3dd592bbd95ea7a84613c51654027252165424f09349c4939fccaf31827",
+      "bytes": 410
+    },
+    {
+      "path": "apps/web/src/components/editorial/PageHero.tsx",
+      "status": "new",
+      "sha256": "8d6846c6d0538c22870f8d5056a0326206e6a1091c30c72f36d1240619ed6999",
+      "bytes": 1477
+    },
+    {
+      "path": "apps/web/src/components/editorial/PageMotion.tsx",
+      "status": "new",
+      "sha256": "0812e5265ce065a8657b07e18318e11beac5c052f8af3f627361a45e68e20eb7",
+      "bytes": 4173
+    },
+    {
+      "path": "apps/web/src/components/editorial/RecoveryView.tsx",
+      "status": "new",
+      "sha256": "b01358d7c498124d7b641b946aedc5da8809aa96f31df39e4e2e562eeab528b9",
+      "bytes": 813
+    },
+    {
+      "path": "apps/web/src/components/header/DiscoveryMenu.tsx",
+      "status": "new",
+      "sha256": "8d664e55dc383cae773e8cee4ea9b2127b7105014d5cf5144a586baa2a83caf8",
+      "bytes": 2384
+    },
+    {
+      "path": "apps/web/src/components/header/DropdownNav.tsx",
+      "status": "modified",
+      "sha256": "89db9dfe0f9e198be427e62ddb9c6416f8ce9804c98249afbb7514fb00c63402",
+      "bytes": 3030
+    },
+    {
+      "path": "apps/web/src/components/header/HeaderBar.tsx",
+      "status": "modified",
+      "sha256": "9833ffe8f3a542929daa9867588bf4155201f5a1b99e63a6b1c014406b091874",
+      "bytes": 247
+    },
+    {
+      "path": "apps/web/src/components/header/MobileMenu.tsx",
+      "status": "new",
+      "sha256": "328ac990d98880aef600afa5037dc4ca9cd5830bbc66e431da4ea7e2f1f2196b",
+      "bytes": 1834
+    },
+    {
+      "path": "apps/web/src/components/home/HomeBusiness.tsx",
+      "status": "new",
+      "sha256": "07e9c2dce45d30d61301ef9570f0943311276ca780553789e6d4e8500d6e94b8",
+      "bytes": 1193
+    },
+    {
+      "path": "apps/web/src/components/home/HomePlaces.tsx",
+      "status": "new",
+      "sha256": "27c4403e9a95e82b18688729e187bdaad1b1d02804fde5ee7429aca94fb4e5f5",
+      "bytes": 2463
+    },
+    {
+      "path": "apps/web/src/components/home/HomeStories.tsx",
+      "status": "new",
+      "sha256": "dbd8f70020b49b6f861641ba7dd52b0bff91dea35b56230be7f692ddbf847ebd",
+      "bytes": 1990
+    },
+    {
+      "path": "apps/web/src/components/home/HomeTrust.tsx",
+      "status": "new",
+      "sha256": "78eeb7bb4cb584657615642f230bdff6982a96acfa3669b520d887a5327af7ec",
+      "bytes": 974
+    },
+    {
+      "path": "apps/web/src/components/home/KineticType.tsx",
+      "status": "modified",
+      "sha256": "9776725b8d28fe9041e0e0cc3cc88adbf8a2492ccd6f16628d8c6b46ca2b0446",
+      "bytes": 4183
+    },
+    {
+      "path": "apps/web/src/components/home/Manifesto.tsx",
+      "status": "modified",
+      "sha256": "873705530705e7459d22591ed42ae8d025791d87d67e746193354c47bc483dd2",
+      "bytes": 664
+    },
+    {
+      "path": "apps/web/src/components/home/PrintConnection.tsx",
+      "status": "new",
+      "sha256": "54320f9334b2650e27557b31cd47d85a39f65b981e77b1376ceaf3e633bb3376",
+      "bytes": 6902
+    },
+    {
+      "path": "apps/web/src/components/home/usePrintScan.test.tsx",
+      "status": "new",
+      "sha256": "f479d9082707d35bebf666a9601f7fa99ffc38584305429ae5b05f0424fcd99c",
+      "bytes": 3417
+    },
+    {
+      "path": "apps/web/src/components/home/usePrintScan.ts",
+      "status": "new",
+      "sha256": "c4ba29bf43c1ffdb39cf77e4a444a3e8ef4894f2150d2332c9c2252c248196ae",
+      "bytes": 1612
+    },
+    {
+      "path": "apps/web/src/components/journey/CinematicGrade.tsx",
+      "status": "new",
+      "sha256": "2d358fe132dd7f6b84e94423508ee552217b4b8e9ffa65beb215e1db2e79a734",
+      "bytes": 713
+    },
+    {
+      "path": "apps/web/src/components/journey/CinematicJourney.tsx",
+      "status": "new",
+      "sha256": "d2db2f3afa5fcb0126d3dc1034830c16839a237725604742849b54a3d722f244",
+      "bytes": 30024
+    },
+    {
+      "path": "apps/web/src/components/journey/Coordinates.tsx",
+      "status": "new",
+      "sha256": "f2d23582c89066e48c906bf6ec5fd236f68908e8391f57a124735ba177245564",
+      "bytes": 3794
+    },
+    {
+      "path": "apps/web/src/components/journey/EditorialIntro.tsx",
+      "status": "new",
+      "sha256": "7de02a17118841b87927421b84111a76aa5e9105f953f0a8a40ab179e41d8a79",
+      "bytes": 1005
+    },
+    {
+      "path": "apps/web/src/components/journey/GeographicMap.tsx",
+      "status": "new",
+      "sha256": "33af48bab0f0ac9d25577e7b26e9780f21eda271bf180fc19389ffde2079c848",
+      "bytes": 772
+    },
+    {
+      "path": "apps/web/src/components/journey/MagazineArt.tsx",
+      "status": "new",
+      "sha256": "69a09a8c8ae18040dfc13da4372600c1f55bd5dfd4de66ce7874ea81118f3a87",
+      "bytes": 838
+    },
+    {
+      "path": "apps/web/src/components/journey/PhotographyCredits.tsx",
+      "status": "new",
+      "sha256": "b161d266e3c85a013d685b084a543ad5551a29f68758644a1a371ebffe8cba83",
+      "bytes": 3006
+    },
+    {
+      "path": "apps/web/src/components/journey/browser-state.test.ts",
+      "status": "new",
+      "sha256": "4a21f79da98f8136b7af87d32386023780fb33bc4870994616bc47cc66257056",
+      "bytes": 609
+    },
+    {
+      "path": "apps/web/src/components/journey/browser-state.ts",
+      "status": "new",
+      "sha256": "9d245f64444a635c6e88de83e741418a9302e0e77186b88329adf76ccf3821ee",
+      "bytes": 2812
+    },
+    {
+      "path": "apps/web/src/components/journey/destination-themes.test.ts",
+      "status": "new",
+      "sha256": "6f9159b3e982bc53a55f6c9a0aa86a1d905aa7a2c397a439b6934609e96c6ea5",
+      "bytes": 1075
+    },
+    {
+      "path": "apps/web/src/components/journey/destinations.ts",
+      "status": "new",
+      "sha256": "98b9cb5c6f15c7bd806bf638c04c3c1d49a15624576129daf3fbef914578b16a",
+      "bytes": 4596
+    },
+    {
+      "path": "apps/web/src/components/journey/map-path.ts",
+      "status": "new",
+      "sha256": "70a11b6944c530ba566b95fb16ebbb2fa5c9e63c0764dea4c8a46d4f6ff75b89",
+      "bytes": 4666
+    },
+    {
+      "path": "apps/web/src/components/journey/map-projection.test.ts",
+      "status": "new",
+      "sha256": "8c1a308c73b10de2cda739b83247e64eda0e265caa27d18c815a1630beb79d0a",
+      "bytes": 1769
+    },
+    {
+      "path": "apps/web/src/components/journey/map-projection.ts",
+      "status": "new",
+      "sha256": "7990aedd2c5b1fc790a1c4b6b02e3b698ff107bb4c839bd012e9e360488764a8",
+      "bytes": 853
+    },
+    {
+      "path": "apps/web/src/components/journey/useCityAutoplay.test.tsx",
+      "status": "new",
+      "sha256": "120296fcb5c7e44d195cb8427799c3e1be3405306c7ad086bfe5b9361722ba2a",
+      "bytes": 3189
+    },
+    {
+      "path": "apps/web/src/components/journey/useCityAutoplay.ts",
+      "status": "new",
+      "sha256": "90c72540b5d2dd241e0f203a89964ca255857d99aa1b0614de6698adce188987",
+      "bytes": 1118
+    },
+    {
+      "path": "apps/web/src/components/passport/PassportBook.tsx",
+      "status": "modified",
+      "sha256": "586035f9980675aeb4ff87a8f50d1f9ba8333c4875e35d9772d2d48b77bfc1e6",
+      "bytes": 6835
+    },
+    {
+      "path": "apps/web/src/components/ui/Band.tsx",
+      "status": "modified",
+      "sha256": "7b514910d8d842ee46ac11f70157371d92b2e61cb22080c1a3697227ec8fad02",
+      "bytes": 4022
+    },
+    {
+      "path": "apps/web/src/components/ui/Button.tsx",
+      "status": "modified",
+      "sha256": "6e562404f02108119780ff76b1f94c16eac081c5bbda22fc960fc1ccc6d3c97f",
+      "bytes": 4183
+    },
+    {
+      "path": "apps/web/src/components/ui/EmptyState.tsx",
+      "status": "modified",
+      "sha256": "5f43d0c6820962d207a3c8de068f0673eaeeb76d0f5fb9c45ae48c93f492e306",
+      "bytes": 1485
+    },
+    {
+      "path": "apps/web/src/components/ui/Plate.tsx",
+      "status": "modified",
+      "sha256": "af197d29b188b215ed56e75c3063428b487e5bd59f24820becb88b5de492ca5b",
+      "bytes": 6021
+    },
+    {
+      "path": "packages/i18n/src/messages/ar.json",
+      "status": "modified",
+      "sha256": "9690665504c35f40497f04fa9fb8e9898d198277a8daae8b2eb6b4b734fc417b",
+      "bytes": 46557
+    },
+    {
+      "path": "packages/i18n/src/messages/bn.json",
+      "status": "modified",
+      "sha256": "08397743df71dfcf0029fad2364de1086e091a6a6f6ae0939dfd16951609dac0",
+      "bytes": 64578
+    },
+    {
+      "path": "packages/i18n/src/messages/en.json",
+      "status": "modified",
+      "sha256": "0b2e782b489052df7704c2a228915fa3f87cdbbd88861fe2f899d789f0eac1a3",
+      "bytes": 35287
+    },
+    {
+      "path": "packages/i18n/src/messages/es.json",
+      "status": "modified",
+      "sha256": "fb0c92535579e9a56888ab56455c56185d8c7103e85966cc5fc0dea02ab7afe9",
+      "bytes": 37351
+    },
+    {
+      "path": "packages/i18n/src/messages/fr.json",
+      "status": "modified",
+      "sha256": "d4365b579a5319897405191ca0f33b0bc2d7092123e03eafa97e326652153ab2",
+      "bytes": 38609
+    },
+    {
+      "path": "packages/i18n/src/messages/hi.json",
+      "status": "modified",
+      "sha256": "2b58b3e0e62926724777c4fff61067786e7cd56f8a006ee11bbd9dd900566af5",
+      "bytes": 62301
+    },
+    {
+      "path": "packages/i18n/src/messages/pt.json",
+      "status": "modified",
+      "sha256": "36719f33ad59d0d6e0f4834c9960dd4389e5e6f8e362aa4e591d2ffc45667acf",
+      "bytes": 36906
+    },
+    {
+      "path": "packages/i18n/src/messages/ru.json",
+      "status": "modified",
+      "sha256": "8eb4f225c57ef187be0a032e18e8dbff3a04d83cd5873f5e69b204230b557a24",
+      "bytes": 52945
+    },
+    {
+      "path": "packages/i18n/src/messages/ur.json",
+      "status": "modified",
+      "sha256": "faf31c7b461a60a8675d565a679a947f16c3871e6cfb78fedf771ffbc087bd85",
+      "bytes": 48669
+    },
+    {
+      "path": "packages/i18n/src/messages/zh.json",
+      "status": "modified",
+      "sha256": "4cf307add38bbd41b02f37dc6631ed02fa7e16b379104fab39a7fed24b361352",
+      "bytes": 34507
+    },
+    {
+      "path": "packages/tokens/src/index.ts",
+      "status": "modified",
+      "sha256": "538a072fefe68cdd4874d4832e4c018c2f346782f642a1840112c1d3056a89f2",
+      "bytes": 2008
+    }
+  ],
+  "removed_files": [],
+  "review_only_files": [
+    "review/AGENTS.md",
+    "review/next.config.mjs",
+    "review/package.json",
+    "review/postcss.config.cjs",
+    "review/proxy.ts",
+    "review/run.mjs",
+    "review/tailwind.config.ts",
+    "review/tsconfig.json",
+    "review/app/global-not-found.tsx",
+    "review/app/[locale]/error.tsx",
+    "review/app/[locale]/layout.tsx",
+    "review/app/[locale]/not-found.tsx",
+    "review/app/[locale]/page.tsx",
+    "review/app/[locale]/template.tsx",
+    "review/app/[locale]/[section]/page.tsx",
+    "review/app/[locale]/about/page.tsx",
+    "review/app/[locale]/account/page.tsx",
+    "review/app/[locale]/account/close/page.tsx",
+    "review/app/[locale]/account/forgot/page.tsx",
+    "review/app/[locale]/account/login/page.tsx",
+    "review/app/[locale]/account/passport/page.tsx",
+    "review/app/[locale]/account/saved/page.tsx",
+    "review/app/[locale]/account/signup/page.tsx",
+    "review/app/[locale]/add-your-business/page.tsx",
+    "review/app/[locale]/advertise/page.tsx",
+    "review/app/[locale]/contact/page.tsx",
+    "review/app/[locale]/credits/page.tsx",
+    "review/app/[locale]/design-review/page.tsx",
+    "review/app/[locale]/directory/page.tsx",
+    "review/app/[locale]/directory/[slug]/page.tsx",
+    "review/app/[locale]/faq/page.tsx",
+    "review/app/[locale]/legal/privacy/page.tsx",
+    "review/app/[locale]/legal/terms/page.tsx",
+    "review/app/[locale]/magazine/page.tsx",
+    "review/app/[locale]/magazine/articles/page.tsx",
+    "review/app/[locale]/magazine/articles/[slug]/page.tsx",
+    "review/app/[locale]/magazine/issues/page.tsx",
+    "review/app/[locale]/magazine/issues/[slug]/page.tsx",
+    "review/app/[locale]/partner/(dashboard)/layout.tsx",
+    "review/app/[locale]/partner/(dashboard)/page.tsx",
+    "review/app/[locale]/partner/(dashboard)/listing/page.tsx",
+    "review/app/[locale]/partner/(dashboard)/scans/page.tsx",
+    "review/app/[locale]/partner/(dashboard)/statements/page.tsx",
+    "review/app/[locale]/partner/(dashboard)/statements/[id]/page.tsx",
+    "review/app/[locale]/partner/forgot/page.tsx",
+    "review/app/[locale]/partner/login/page.tsx",
+    "review/app/[locale]/partner-with-us/page.tsx",
+    "review/app/[locale]/search/page.tsx",
+    "review/app/api/[...path]/route.ts",
+    "review/app/auth/[...path]/route.ts",
+    "review/app/booking/[...path]/route.ts",
+    "review/app/save/route.ts",
+    "review/fixtures/answer-time.ts",
+    "review/fixtures/articles.ts",
+    "review/fixtures/issues.ts",
+    "review/fixtures/listings.ts",
+    "review/fixtures/owner-statements.ts",
+    "review/fixtures/passport.ts",
+    "review/fixtures/payload-config.ts",
+    "review/fixtures/reviews.ts",
+    "review/fixtures/saved.ts",
+    "review/fixtures/scan-report.ts",
+    "review/fixtures/search.ts",
+    "review/fixtures/session-hint.ts",
+    "review/fixtures/session.ts",
+    "review/fixtures/trip-availability.ts",
+    "review/proof/Vardenia_Code_Found_Preview.png",
+    "review/proof/Vardenia_Design_Preview.png",
+    "review/proof/Vardenia_Hero_Video_Preview.png",
+    "review/proof/Vardenia_Magazine_Mockup_Preview.png",
+    "review/proof/Vardenia_Phone_Mockup_Preview.png",
+    "review/proof/Vardenia_Scanning_Preview.png",
+    "review/proof/about-arabic-mobile.png",
+    "review/proof/about-desktop-final.png",
+    "review/proof/account-desktop-final.png",
+    "review/proof/booking-mobile.png",
+    "review/proof/category-desktop.png",
+    "review/proof/cinema-city-desktop.png",
+    "review/proof/cinema-city-mobile.png",
+    "review/proof/discovery-menu-updated.png",
+    "review/proof/filters-mobile.png",
+    "review/proof/home-arabic-mobile.png",
+    "review/proof/home-business-finished.png",
+    "review/proof/home-categories-arabic-finished.png",
+    "review/proof/home-categories-finished.png",
+    "review/proof/home-city-slider-updated.png",
+    "review/proof/home-magazine-finished.png",
+    "review/proof/home-map-aligned.png",
+    "review/proof/home-places-finished.png",
+    "review/proof/home-print-finished.png",
+    "review/proof/home-print-mobile-finished.png",
+    "review/proof/home-statement-finished.png",
+    "review/proof/home-stories-finished.png",
+    "review/proof/issue-desktop-final.png"
+  ],
+  "documentation_files": [
+    "ASSET_CREDITS.md",
+    "DESIGN_QA.md",
+    "MOCKUP_ASSETS.md",
+    "REDESIGN_REVIEW.md"
+  ],
+  "excluded_generated_files": [
+    "**/node_modules/",
+    "**/.next*/",
+    "**/.turbo/",
+    "**/.git/",
+    "**/next-env.d.ts",
+    "**/payload-types.ts",
+    "**/*.tsbuildinfo",
+    "local environment files",
+    "symlinks"
+  ],
+  "validation": {
+    "previous_full_suite": {
+      "suites": 110,
+      "tests_passed": 2078,
+      "timing": "before homepage follow-up"
+    },
+    "latest_focused_tests": 6,
+    "web_typecheck": "passed",
+    "production_compile_mode": "passed",
+    "full_database_backed_generation": "not run",
+    "live_service_mutations": "none"
+  }
+}

@@ -46,6 +46,7 @@ const FIXED_SEGMENTS = [
   'about',
   'account',
   'add-your-business',
+  'credits',
   'advertise',
   'contact',
   'directory',

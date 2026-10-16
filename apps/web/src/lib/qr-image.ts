@@ -74,7 +74,8 @@ export { isPrintSafeBaseUrl, scanUrl } from './qr-url'
  * where the designer controls what sits behind it, and the print paths keep the
  * white.
  */
-const LIGHT = '#ffffff'
+export const QR_LIGHT = '#ffffff'
+const LIGHT = QR_LIGHT
 const TRANSPARENT_LIGHT = '#ffffff00'
 
 /**

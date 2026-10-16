@@ -307,7 +307,24 @@ export function CinematicJourney({
                 preload="auto"
                 onPlay={() => setPlaying(true)}
                 onPause={() => setPlaying(false)}
-                onError={() => setFailed(true)}
+                onError={(event) => {
+                  /**
+                   * Only a real failure hides the film. A <source> the browser
+                   * skips because its media query does not match - the phone
+                   * cut, on any screen wider than 700px - also fires `error`,
+                   * and React hands it up to this handler. Treating that as a
+                   * failure removed the film for every desktop visitor while
+                   * the desktop source was loading perfectly well. So it counts
+                   * only when the video itself errs, or no source is left.
+                   */
+                  const video = event.currentTarget
+                  if (
+                    event.target === video ||
+                    video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
+                  ) {
+                    setFailed(true)
+                  }
+                }}
                 aria-label="Vardenia brand film"
               >
                 <source
@@ -315,7 +332,7 @@ export function CinematicJourney({
                   type="video/mp4"
                   media="(max-width:700px)"
                 />
-                <source src={assets + 'hero-film.mp4'} type="video/mp4" />
+                <source src="/hero/hero-film.mp4" type="video/mp4" />
               </video>
             )}
           </div>
