@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { CollectionBeforeValidateHook } from 'payload'
 import { guardBookingWrite } from './guardBookingWrite'
 
@@ -249,5 +249,74 @@ describe('declining an unanswered request automatically', () => {
         context: { autoDeclined: true },
       }),
     ).rejects.toThrow(/has been answered/i)
+  })
+})
+
+/**
+ * Two changes to the same booking at the same moment. Each save locks the
+ * booking's row and reads its status again; the later one sees what the first
+ * left and is refused, instead of silently overwriting it.
+ */
+describe('a status change that races another', () => {
+  const pending = { ...booking(false), id: 45, status: 'pending' }
+
+  /** A database whose locked read returns `stored`, recording what was asked. */
+  const db = (stored: string | null) => {
+    const execute = vi.fn(async () => ({ rows: stored === null ? [] : [{ status: stored }] }))
+    return { execute }
+  }
+
+  const save = (args: {
+    data: Record<string, unknown>
+    stored: string | null
+    transactionID?: string
+    sessionStored?: string
+  }) => {
+    const plain = db(args.stored)
+    const inTransaction = db(args.sessionStored ?? args.stored)
+    const promise = guardBookingWrite({
+      data: args.data,
+      req: {
+        user: owner,
+        transactionID: args.transactionID,
+        payload: {
+          db: { drizzle: plain, sessions: { tx1: { db: inTransaction } } },
+          find: vi.fn(async () => ({ docs: [] })),
+          findByID: vi.fn(async () => null),
+        },
+      },
+      operation: 'update',
+      originalDoc: pending,
+      context: {},
+    } as unknown as Args)
+    return { promise, plain, inTransaction }
+  }
+
+  it('goes ahead when the booking is still as the saver saw it', async () => {
+    const { promise, plain } = save({ data: { status: 'confirmed' }, stored: 'pending' })
+    await expect(promise).resolves.toBeTruthy()
+    expect(plain.execute).toHaveBeenCalledTimes(1)
+  })
+
+  it('refuses when someone changed it a moment ago, saying what it is now', async () => {
+    const { promise } = save({ data: { status: 'confirmed' }, stored: 'cancelled' })
+    await expect(promise).rejects.toThrow(/changed a moment ago and is now cancelled/)
+  })
+
+  it('locks inside the save transaction, so the lock lasts until the write', async () => {
+    const { promise, plain, inTransaction } = save({
+      data: { status: 'confirmed' },
+      stored: 'pending',
+      transactionID: 'tx1',
+    })
+    await expect(promise).resolves.toBeTruthy()
+    expect(inTransaction.execute).toHaveBeenCalledTimes(1)
+    expect(plain.execute).not.toHaveBeenCalled()
+  })
+
+  it('takes no lock when the status is not changing', async () => {
+    const { promise, plain } = save({ data: { declineReason: 'Typo fixed' }, stored: 'pending' })
+    await expect(promise).resolves.toBeTruthy()
+    expect(plain.execute).not.toHaveBeenCalled()
   })
 })

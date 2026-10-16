@@ -1,4 +1,5 @@
-import type { CollectionBeforeValidateHook } from 'payload'
+import type { CollectionBeforeValidateHook, PayloadRequest } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
 import { APIError } from 'payload'
 import {
   canActorTransition,
@@ -128,6 +129,24 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
         `A booking cannot go from ${from} to ${to}. Make a new booking instead.`,
         400,
       )
+    }
+
+    /**
+     * Two changes at the same moment: the venue accepts while the guest cancels.
+     * Both read "pending", both pass the checks above, and whichever wrote last
+     * used to win silently - the guest told "cancelled", the booking left
+     * "confirmed". So a status change locks the booking's row for the rest of
+     * this save and reads its status again. The second save waits for the first
+     * to finish, sees the status it left, and is refused instead of undoing it.
+     */
+    if (to !== from) {
+      const now = await lockedStatus(req, (originalDoc as { id?: unknown }).id)
+      if (now !== null && now !== from) {
+        throw new APIError(
+          `This booking was changed a moment ago and is now ${now.replace('-', ' ')}. Reload to see it.`,
+          409,
+        )
+      }
     }
 
     /**
@@ -368,4 +387,44 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   }
 
   return data
+}
+
+/**
+ * The booking's status as stored right now, with its row locked until this
+ * save's transaction ends. Null when it cannot be asked (no database in
+ * reach, or an id that is not a number), in which case the save goes ahead
+ * as it always did.
+ *
+ * Runs on the save's own transaction, which Payload opens for every update,
+ * so the lock is held through the write and released at commit; the same
+ * lookup Payload's own `getTransaction` does, which the adapter does not
+ * export. `FOR UPDATE` makes a second save of the same booking wait here,
+ * then read the status the first one committed.
+ */
+export async function lockedStatus(
+  req: PayloadRequest,
+  id: unknown,
+): Promise<BookingStatus | null> {
+  const bookingId = Number(id)
+  const adapter = req.payload?.db as
+    | {
+        drizzle?: Executor
+        sessions?: Record<string | number, { db?: Executor } | undefined>
+      }
+    | undefined
+  if (!adapter?.drizzle || !Number.isInteger(bookingId)) return null
+
+  const transaction = req.transactionID ? await req.transactionID : undefined
+  const db =
+    (transaction !== undefined ? adapter.sessions?.[transaction]?.db : undefined) ?? adapter.drizzle
+
+  const result = await db.execute(
+    sql`SELECT "status" FROM "payload"."bookings" WHERE "id" = ${bookingId} FOR UPDATE`,
+  )
+  const row = result.rows?.[0] as { status?: unknown } | undefined
+  return typeof row?.status === 'string' ? (row.status as BookingStatus) : null
+}
+
+interface Executor {
+  execute: (query: ReturnType<typeof sql>) => Promise<{ rows?: unknown[] }>
 }
