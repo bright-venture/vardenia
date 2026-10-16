@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  PARTNER_LINK_DAYS,
+  partnerResetEmail,
   passwordResetEmail,
   resetUrl,
   siteOrigin,
@@ -99,5 +101,23 @@ describe('escaping', () => {
   it('does not let a token inject markup', () => {
     const mail = verificationEmail('"><script>alert(1)</script>', ORIGIN)
     expect(mail.html).not.toContain('<script>')
+  })
+})
+
+/**
+ * The partner set-password link is also the invitation, so it must outlive
+ * Payload's default hour, and the email must say how long it has.
+ */
+describe('the partner invitation', () => {
+  it('lasts as long as the email says, in both languages', async () => {
+    const { BusinessUsers } = await import('../collections/BusinessUsers')
+    const auth = BusinessUsers.auth as { forgotPassword?: { expiration?: number } }
+    expect(auth.forgotPassword?.expiration).toBe(PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000)
+    expect(PARTNER_LINK_DAYS).toBeGreaterThanOrEqual(2)
+
+    const mail = partnerResetEmail('tok123', 'https://vardenia.com')
+    expect(mail.text).toContain(`works for ${PARTNER_LINK_DAYS} days`)
+    expect(mail.text).toContain(`لمدة ${PARTNER_LINK_DAYS} أيام`)
+    expect(mail.html).toContain(`works for ${PARTNER_LINK_DAYS} days`)
   })
 })

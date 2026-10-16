@@ -2,8 +2,15 @@ import type { Payload } from 'payload'
 
 import type { BookingRequest } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
-import { checkAvailability, unavailableMessage, type ExistingBooking } from './availability'
-import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
+import {
+  checkAvailability,
+  unavailableMessage,
+  UNAVAILABLE_REASONS,
+  type ClosedPeriod,
+  type ExistingBooking,
+} from './availability'
+import { canTakeBookings, OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
+import { beirutDate } from './beirut'
 
 /**
  * Turning a request into a booking.
@@ -140,6 +147,38 @@ export async function overlappingBookings(
   })
 }
 
+/**
+ * The venue's closed dates that could touch a booking starting at `start`.
+ *
+ * Shared by the booking service and /booking/availability, so the form's
+ * live check and the booking itself give the same answer about a closed day.
+ * guardBookingWrite runs the same query again on the insert.
+ */
+export async function closedPeriods(
+  payload: Payload,
+  businessId: number | string,
+  start: Date,
+): Promise<ClosedPeriod[]> {
+  const result = await payload.find({
+    collection: 'closures',
+    depth: 0,
+    limit: 50,
+    pagination: false,
+    overrideAccess: true,
+    where: {
+      and: [
+        { business: { equals: businessId } },
+        { endsOn: { greater_than_equal: beirutDate(start) } },
+      ],
+    },
+    select: { startsOn: true, endsOn: true },
+  })
+  return result.docs.map((doc) => ({
+    startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
+    endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
+  }))
+}
+
 /** The honest failure: we do not know what went wrong, so we do not guess. */
 const COULD_NOT_BOOK: Record<Locale, string> = {
   en: 'We could not complete that booking. Please try again.',
@@ -154,24 +193,50 @@ const COULD_NOT_BOOK: Record<Locale, string> = {
   ur: 'ہم یہ بکنگ مکمل نہیں کر سکے۔ براہِ کرم دوبارہ کوشش کریں۔',
 }
 
+/** What guardBookingWrite says when a listed-only place is asked for a booking. */
+const LISTED_ONLY_MESSAGE = 'listed only and does not take bookings'
+
 /**
  * Turn a failed insert back into something a customer can read.
  *
- * Only the capacity trigger is translated. Everything else stays an error,
- * because a message invented for a failure we do not recognise is worse than an
- * honest one - it tells the customer to try a different time when the real
- * problem might be that the database is down.
+ * Only refusals we recognise are translated: the capacity trigger, and every
+ * reason the booking guard can give (it words them with `unavailableMessage`,
+ * in English). Everything else stays an error, because a message invented for a
+ * failure we do not recognise is worse than an honest one - it tells the
+ * customer to try a different time when the real problem might be that the
+ * database is down.
+ *
+ * The guard's reasons used to fall through to "We could not complete that
+ * booking", reported as an unexpected error: a closed date added after the
+ * page loaded looked to the guest like a broken site, and to the team like a
+ * bug.
  */
 export function translateInsertError(error: unknown, locale: Locale = 'en'): BookingOutcome {
   const message = isRecord(error) && typeof error.message === 'string' ? error.message : ''
+  const lower = message.toLowerCase()
 
   /*
    * In the customer's language. This took no language at all, so the customer
    * who lost the race for the last table was told "fully booked" in English -
    * on the Arabic site too, not only on the eight newer languages.
    */
-  if (message.toLowerCase().includes(CAPACITY_MESSAGE)) {
+  if (lower.includes(CAPACITY_MESSAGE)) {
     return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity', locale) }
+  }
+
+  if (lower.includes(LISTED_ONLY_MESSAGE)) {
+    return {
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('bookings-disabled', locale),
+    }
+  }
+
+  const reason = UNAVAILABLE_REASONS.find((candidate) =>
+    lower.includes(unavailableMessage(candidate, 'en').toLowerCase()),
+  )
+  if (reason) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage(reason, locale) }
   }
 
   /*
@@ -243,11 +308,25 @@ export async function createBooking({
     typeof checkAvailability
   >[0]['hours']
 
-  const existing = await overlappingBookings(payload, business.id, start, end)
+  // Asked here as well as in the guard, so the answer is "this place does not
+  // take bookings" rather than an error from the insert.
+  if (!canTakeBookings((business as { subcategories?: string[] | null }).subcategories ?? [])) {
+    return {
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('bookings-disabled', request.locale ?? 'en'),
+    }
+  }
+
+  const [existing, closures] = await Promise.all([
+    overlappingBookings(payload, business.id, start, end),
+    closedPeriods(payload, business.id, start),
+  ])
 
   const verdict = checkAvailability({
     rules,
     hours,
+    closures,
     existing,
     now,
     request: { interval: { start, end }, partySize: request.partySize },

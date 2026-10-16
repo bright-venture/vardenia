@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { NotReadyError, assertReady, drawUpStatements } from './statements'
+import { NotReadyError, assertReady, drawUpStatements, sendDrafts } from './statements'
 
 /**
  * The monthly run, against a stand-in database.
@@ -196,5 +196,58 @@ describe('drawing up a month', () => {
     const result = await drawUpStatements(h.payload, '2026-10', NOW)
     expect(result.nothingOwed).toBe(1)
     expect(h.creates).toHaveLength(0)
+  })
+})
+
+/**
+ * Sending starts a venue's seven days to question a line and fifteen to pay. A
+ * venue nobody at Vardenia can email must not have those clocks started
+ * silently, so its draft stays a draft and is named for the team.
+ */
+describe('sending a month', () => {
+  const sending = (owners: Record<number, string[]>) => {
+    const updates: Record<string, unknown>[] = []
+    const payload = {
+      find: vi.fn(async (args: { collection: string; where?: unknown }) => {
+        if (args.collection === 'statements') {
+          return {
+            docs: [
+              { id: 1, business: 10 },
+              { id: 2, business: 20 },
+            ],
+            hasNextPage: false,
+          }
+        }
+        if (args.collection === 'business-users') {
+          const venue = Number(/"in":\[(\d+)\]/.exec(JSON.stringify(args.where))?.[1])
+          return { docs: (owners[venue] ?? []).map((email) => ({ email })) }
+        }
+        return { docs: [] }
+      }),
+      findByID: vi.fn(async ({ id }: { id: number }) => ({ id, name: `Venue ${id}` })),
+      update: vi.fn(async (args: Record<string, unknown>) => {
+        updates.push(args)
+        return {}
+      }),
+    } as unknown as Payload
+    return { payload, updates }
+  }
+
+  it('sends the drafts of venues a partner can receive', async () => {
+    const h = sending({ 10: ['a@venue.lb'], 20: ['b@venue.lb'] })
+    await expect(sendDrafts(h.payload, '2026-10', NOW)).resolves.toEqual({
+      sent: 2,
+      noRecipient: [],
+    })
+    expect(h.updates.map((u) => u.id)).toEqual([1, 2])
+  })
+
+  it('leaves a venue with no partner account as a draft, and names it', async () => {
+    const h = sending({ 10: ['a@venue.lb'] })
+    await expect(sendDrafts(h.payload, '2026-10', NOW)).resolves.toEqual({
+      sent: 1,
+      noRecipient: ['Venue 20'],
+    })
+    expect(h.updates).toEqual([expect.objectContaining({ id: 1, data: { status: 'sent' } })])
   })
 })

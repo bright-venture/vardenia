@@ -13,6 +13,7 @@ import {
 } from '@vardenia/core'
 import { beirutDate, beirutInstant } from './beirut'
 import { findEvery } from './find-every'
+import { venueOwnerEmails } from './booking-email'
 
 /**
  * Drawing up a month of statements, and sending them.
@@ -249,13 +250,27 @@ export async function drawUpStatements(
   return result
 }
 
-/** Sends every draft of the month: stamps the deadlines and emails each venue. */
+export interface SendResult {
+  sent: number
+  /** Venues whose draft was left unsent because nobody there can receive it. */
+  noRecipient: string[]
+}
+
+/**
+ * Sends every draft of the month: stamps the deadlines and emails each venue.
+ *
+ * Except a venue with no partner account. Sending starts its seven days to
+ * question a line and fifteen to pay, and it used to start them with nobody
+ * told: the email went to no one and nothing was reported. Its draft is now
+ * left as a draft and named, so the team can give the venue an account and
+ * send again, or deliver it another way and set it to Sent by hand.
+ */
 export async function sendDrafts(
   payload: Payload,
   period: string,
   now: Date = new Date(),
-): Promise<number> {
-  if (!isPeriod(period)) return 0
+): Promise<SendResult> {
+  if (!isPeriod(period)) return { sent: 0, noRecipient: [] }
   /*
    * The same readiness rule as drawing up. A draft can exist early - drawn up by
    * hand, or from a run before the rule moved - and sending it would bill a
@@ -263,20 +278,34 @@ export async function sendDrafts(
    */
   assertReady(period, now)
 
-  const drafts = await findEvery<{ id: number }>(payload, {
+  const drafts = await findEvery<{ id: number; business?: unknown }>(payload, {
     collection: 'statements',
     where: { and: [{ period: { equals: period } }, { status: { equals: 'draft' } }] },
     depth: 0,
     overrideAccess: true,
   })
 
+  const result: SendResult = { sent: 0, noRecipient: [] }
   for (const draft of drafts.docs) {
+    const business = draft.business as { id?: unknown } | number | string | null | undefined
+    const businessId = typeof business === 'object' && business !== null ? business.id : business
+    if (typeof businessId !== 'number' && typeof businessId !== 'string') continue
+
+    if ((await venueOwnerEmails(payload, businessId)).length === 0) {
+      const venue = await payload
+        .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      result.noRecipient.push(String((venue as { name?: unknown } | null)?.name ?? businessId))
+      continue
+    }
+
     await payload.update({
       collection: 'statements',
       id: draft.id,
       data: { status: 'sent' },
       overrideAccess: true,
     })
+    result.sent += 1
   }
-  return drafts.docs.length
+  return result
 }

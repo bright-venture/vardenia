@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { translateInsertError } from './booking-service'
+import { describe, expect, it, vi } from 'vitest'
+import type { Payload } from 'payload'
+import { createBooking, translateInsertError } from './booking-service'
 import { unavailableMessage } from './availability'
 
 /**
@@ -113,4 +114,106 @@ describe('translateInsertError', () => {
       if (!outcome.ok) expect(outcome.code).toBe('error')
     },
   )
+})
+
+/**
+ * The booking guard's own refusals, which arrive as insert errors worded with
+ * `unavailableMessage`. They used to fall through to "could not complete that
+ * booking" and an error report, so a closed date added after the page loaded
+ * looked like a broken site to the guest and a bug to the team.
+ */
+describe('translateInsertError, for the booking guard', () => {
+  it('turns a closed-date refusal into the closed-date answer, in the guest language', () => {
+    const outcome = translateInsertError(new Error(unavailableMessage('closed-period')), 'ar')
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('closed-period', 'ar'),
+    })
+  })
+
+  it('turns a listed-only refusal into "does not take bookings"', () => {
+    const outcome = translateInsertError(
+      new Error('This place is listed only and does not take bookings.'),
+    )
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('bookings-disabled'),
+    })
+  })
+
+  it('still calls an unknown failure an error', () => {
+    expect(translateInsertError(new Error('connection reset')).ok).toBe(false)
+    expect((translateInsertError(new Error('connection reset')) as { code: string }).code).toBe(
+      'error',
+    )
+  })
+})
+
+describe('createBooking, before anything is written', () => {
+  const HOUR = 3_600_000
+  const NOW = new Date('2026-10-20T08:00:00.000Z')
+  const start = new Date(NOW.getTime() + 48 * HOUR)
+  const end = new Date(start.getTime() + 2 * HOUR)
+
+  const fakePayload = (business: Record<string, unknown>, closures: unknown[] = []) => {
+    const create = vi.fn(async () => ({ id: 1, reference: 'ABCD1234', status: 'pending' }))
+    const payload = {
+      findByID: vi.fn(async () => business),
+      find: vi.fn(async (args: { collection: string }) =>
+        args.collection === 'closures'
+          ? { docs: closures, totalDocs: closures.length }
+          : { docs: [], totalDocs: 0 },
+      ),
+      create,
+    } as unknown as Payload
+    return { payload, create }
+  }
+
+  const restaurant = {
+    id: 7,
+    name: 'Em Sherif',
+    _status: 'published',
+    subcategories: ['restaurants'],
+    booking: { enabled: true, capacity: 5, maxDurationMinutes: 240, leadTimeMinutes: 0 },
+  }
+
+  const request = {
+    business: 7,
+    start: start.toISOString(),
+    end: end.toISOString(),
+    partySize: 2,
+    locale: 'en' as const,
+  }
+
+  it('refuses a closed day with the closed-day answer, and writes nothing', async () => {
+    const day = start.toISOString().slice(0, 10)
+    const { payload, create } = fakePayload(restaurant, [{ startsOn: day, endsOn: day }])
+    const outcome = await createBooking({ payload, request, customerId: 5, now: NOW })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('closed-period'),
+    })
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a listed-only place with "does not take bookings", and writes nothing', async () => {
+    const { payload, create } = fakePayload({ ...restaurant, subcategories: ['cafes'] })
+    const outcome = await createBooking({ payload, request, customerId: 5, now: NOW })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('bookings-disabled'),
+    })
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('books an open day', async () => {
+    const { payload, create } = fakePayload(restaurant)
+    const outcome = await createBooking({ payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({ ok: true, reference: 'ABCD1234', businessName: 'Em Sherif' })
+    expect(create).toHaveBeenCalledTimes(1)
+  })
 })

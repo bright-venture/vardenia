@@ -157,13 +157,14 @@ export const PATCH = withRateLimit(
       })
 
       /**
-       * The session is deliberately left alone.
+       * Every other device is signed out by this update, and this one is kept.
        *
-       * Payload does not revoke other sessions on a password change, and forcing
-       * a sign-out here would only end the one session we know is legitimate -
-       * the person who just proved they know the password. Revoking everything
-       * else needs a token version on the collection, which is a separate piece
-       * of work and worth doing.
+       * Payload 3.90 does it: saving a new password through the signed-in user
+       * (`user` above, which carries the session id) keeps only that session and
+       * drops the rest - including the one `payload.login` just added to check
+       * the current password. So a phone left signed in, or a session somebody
+       * stole, ends here; the person who proved the password stays in. It needs
+       * `useSessions`, which session-revocation.test.ts holds on.
        */
       return json({ ok: true, message: 'Your password has been changed.' })
     }

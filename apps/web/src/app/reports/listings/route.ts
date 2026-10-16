@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
+import { staffUser } from '../../../lib/billing-auth'
 import config from '../../../payload.config'
 import { toCsv, UTF8_BOM, type CsvValue } from '../../../lib/csv'
 import { listingGaps } from '../../../lib/listing-gaps'
@@ -25,9 +26,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   const payload = await getPayload({ config })
 
-  const { user } = await payload.auth({ headers: request.headers })
-  const roles = ((user as { roles?: string[] } | null)?.roles ?? []) as string[]
-  if (!roles.some((role) => role === 'admin' || role === 'staff')) {
+  const user = await staffUser(payload, request.headers)
+  if (!user) {
     return new Response('Staff only. Sign in to the admin panel first.', { status: 403 })
   }
 

@@ -2,8 +2,7 @@ import { getPayload } from 'payload'
 import { availabilityQuerySchema, fieldErrors } from '@vardenia/core'
 import config from '../../../payload.config'
 import { checkAvailability, unavailableMessage } from '../../../lib/availability'
-import { overlappingBookings } from '../../../lib/booking-service'
-import { beirutDate } from '../../../lib/beirut'
+import { closedPeriods, overlappingBookings } from '../../../lib/booking-service'
 import { withRateLimit } from '../../../lib/rate-limit'
 
 /**
@@ -72,31 +71,15 @@ export const GET = withRateLimit(async (request: Request) => {
    * refused. Access overridden: a guest cannot read the Closures collection, and
    * only the verdict leaves this route.
    */
-  const [existing, closed] = await Promise.all([
+  const [existing, closures] = await Promise.all([
     overlappingBookings(payload, business.id, start, end),
-    payload.find({
-      collection: 'closures',
-      depth: 0,
-      limit: 50,
-      pagination: false,
-      overrideAccess: true,
-      where: {
-        and: [
-          { business: { equals: business.id } },
-          { endsOn: { greater_than_equal: beirutDate(start) } },
-        ],
-      },
-      select: { startsOn: true, endsOn: true },
-    }),
+    closedPeriods(payload, business.id, start),
   ])
 
   const verdict = checkAvailability({
     rules: (business as { booking?: never }).booking,
     hours: (business as { openingHours?: never }).openingHours,
-    closures: closed.docs.map((doc) => ({
-      startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
-      endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
-    })),
+    closures,
     existing,
     request: { interval: { start, end }, partySize },
   })

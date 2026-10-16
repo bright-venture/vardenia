@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
+import { staffUser } from '../../../lib/billing-auth'
 import {
   DEFAULT_PRINT_MM,
   formatFromWord,
@@ -113,9 +114,8 @@ const PNG_BUDGET = 1_000_000
 export async function GET(request: NextRequest) {
   const payload = await getPayload({ config: (await import('../../../payload.config')).default })
 
-  const { user } = await payload.auth({ headers: request.headers })
-  const roles = ((user as { roles?: string[] } | null)?.roles ?? []) as string[]
-  if (!roles.some((role) => role === 'admin' || role === 'staff')) {
+  const user = await staffUser(payload, request.headers)
+  if (!user) {
     return new Response('Staff only. Sign in to the admin panel first.', { status: 403 })
   }
 

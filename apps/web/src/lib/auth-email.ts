@@ -187,11 +187,23 @@ export const partnerLoginUrl = (origin = siteOrigin()) => `${origin}/partner`
  * not. Owners have to learn where the dashboard lives, and this is the one
  * message every one of them is guaranteed to receive.
  */
+/**
+ * How long a partner's set-password link works.
+ *
+ * The same link is the invitation, so it cannot be Payload's default hour: a
+ * venue owner reads email when the evening is over, not within sixty minutes
+ * of the team creating the account, and an invitation that has died before it
+ * is opened is an account nobody can get into. Read by BusinessUsers'
+ * `forgotPassword.expiration`, and stated in the email so the date is no
+ * surprise.
+ */
+export const PARTNER_LINK_DAYS = 3
+
 const PARTNER_RESET: Copy = {
   subject: 'Set your Vardenia password - تعيين كلمة المرور',
   heading: 'Set your password',
-  en: 'Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings.',
-  ar: 'افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها.',
+  en: `Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings. The link works for ${PARTNER_LINK_DAYS} days; after that, ask for a new one from the sign-in page.`,
+  ar: `افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها. يعمل الرابط لمدة ${PARTNER_LINK_DAYS} أيام، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.`,
   action: 'Set a password',
   ignoreEn: 'If you were not expecting this, you can ignore this message and nothing will change.',
   ignoreAr: 'إذا لم تكن تتوقع هذه الرسالة، تجاهلها ولن يتغير شيء.',

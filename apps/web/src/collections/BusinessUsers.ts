@@ -7,7 +7,7 @@ import {
   isStaffFieldLevel,
   selfOrStaff,
 } from '../access/index'
-import { partnerResetEmail } from '../lib/auth-email'
+import { PARTNER_LINK_DAYS, partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
@@ -56,6 +56,9 @@ export const BusinessUsers: CollectionConfig = {
      * nobody could ever use.
      */
     forgotPassword: {
+      // The invitation is this link, so it has to outlive Payload's default
+      // hour. See PARTNER_LINK_DAYS.
+      expiration: PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000,
       generateEmailSubject: () => partnerResetEmail('').subject,
       generateEmailHTML: (args) => {
         if (!args?.token) throw new Error('No reset token to put in the partner email')
