@@ -134,53 +134,59 @@ export const POST = withRateLimit(
     }
 
     /**
-     * Awaited rather than fired and forgotten, so a failure is logged against this
-     * request rather than surfacing as an unhandled rejection with no context.
-     * It still cannot fail the booking - see the note at the top.
+     * Not again for a retry of an attempt that had already booked (see
+     * bookingForAttempt): the guest and the venue were told the first time.
      */
-    await sendBookingConfirmation({
-      payload,
-      // The account's address and name, not the form's. Nothing else would make
-      // sense now that the booking belongs to a proven account.
-      to: String(customer.email),
-      name: String(customer.name ?? ''),
-      reference: outcome.reference,
-      status: outcome.status,
-      start: new Date(parsed.data.start),
-      end: new Date(parsed.data.end),
-      partySize: parsed.data.partySize,
-      locale: parsed.data.locale ?? 'en',
-    }).catch(async (error) => {
+    if (!outcome.replayed) {
       /**
-       * The most consequential silent failure in the product. The booking is real
-       * and the customer has no message saying so, which they discover by turning
-       * up or by not turning up. The reference is attached because it is the one
-       * thing that makes this recoverable by hand.
+       * Awaited rather than fired and forgotten, so a failure is logged against this
+       * request rather than surfacing as an unhandled rejection with no context.
+       * It still cannot fail the booking - see the note at the top.
        */
-      await reportError(error, {
-        source: 'booking.confirmation-email',
-        path: '/booking/request',
-        extra: { reference: outcome.reference },
+      await sendBookingConfirmation({
+        payload,
+        // The account's address and name, not the form's. Nothing else would make
+        // sense now that the booking belongs to a proven account.
+        to: String(customer.email),
+        name: String(customer.name ?? ''),
+        reference: outcome.reference,
+        status: outcome.status,
+        start: new Date(parsed.data.start),
+        end: new Date(parsed.data.end),
+        partySize: parsed.data.partySize,
+        locale: parsed.data.locale ?? 'en',
+      }).catch(async (error) => {
+        /**
+         * The most consequential silent failure in the product. The booking is real
+         * and the customer has no message saying so, which they discover by turning
+         * up or by not turning up. The reference is attached because it is the one
+         * thing that makes this recoverable by hand.
+         */
+        await reportError(error, {
+          source: 'booking.confirmation-email',
+          path: '/booking/request',
+          extra: { reference: outcome.reference },
+        })
       })
-    })
 
-    /**
-     * And the venue, which otherwise heard nothing until somebody opened the
-     * partner dashboard - while the guest waited for an answer. Never fails the
-     * booking: it reports its own errors and returns.
-     */
-    await notifyVenueOfBooking({
-      payload,
-      businessId: outcome.businessId,
-      businessName: outcome.businessName || 'your listing',
-      guestName: String(customer.name ?? ''),
-      reference: outcome.reference,
-      start: new Date(parsed.data.start),
-      end: new Date(parsed.data.end),
-      partySize: parsed.data.partySize,
-      roomType: outcome.roomType,
-      confirmed: outcome.status === 'confirmed',
-    })
+      /**
+       * And the venue, which otherwise heard nothing until somebody opened the
+       * partner dashboard - while the guest waited for an answer. Never fails the
+       * booking: it reports its own errors and returns.
+       */
+      await notifyVenueOfBooking({
+        payload,
+        businessId: outcome.businessId,
+        businessName: outcome.businessName || 'your listing',
+        guestName: String(customer.name ?? ''),
+        reference: outcome.reference,
+        start: new Date(parsed.data.start),
+        end: new Date(parsed.data.end),
+        partySize: parsed.data.partySize,
+        roomType: outcome.roomType,
+        confirmed: outcome.status === 'confirmed',
+      })
+    }
 
     /**
      * The reference is the whole receipt. It is what the customer quotes on the

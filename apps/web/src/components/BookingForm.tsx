@@ -1,12 +1,12 @@
 'use client'
 
-import { useId, useState, useSyncExternalStore } from 'react'
+import { useId, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import { Link, usePathname } from '../i18n/routing'
 import { trackEvent } from '../lib/analytics'
 import { sessionAudience } from '../lib/session-hint'
-import { durationLabel, toInterval, type BookingFormModel } from '../lib/booking-form'
+import { durationLabel, newAttemptId, toInterval, type BookingFormModel } from '../lib/booking-form'
 import { parseTrip, prefillFromTrip } from '../lib/trip'
 import {
   ERROR_TEXT,
@@ -149,6 +149,7 @@ function BookingFormFields({
   const [notes, setNotes] = useState('')
 
   const [busy, setBusy] = useState(false)
+  const attempt = useRef<{ key: string; id: string } | null>(null)
   const [refusal, setRefusal] = useState<string | null>(null)
   const [errors, setErrors] = useState<FieldErrors>({})
   const [done, setDone] = useState<Success | null>(null)
@@ -206,6 +207,27 @@ function BookingFormFields({
 
     setBusy(true)
 
+    const details = {
+      business: businessId,
+      start: interval.start,
+      end: interval.end,
+      partySize,
+      // Only a stay sends one, and only when the listing offers a choice.
+      ...(model.mode === 'nights' && roomType ? { roomType } : {}),
+      ...(phone.trim() ? { phone } : {}),
+      ...(notes.trim() ? { notes } : {}),
+      locale,
+    }
+
+    /**
+     * One id per attempt. Pressing "book" again with the same details, after an
+     * answer that never arrived, sends the same id, and the server returns the
+     * booking it already made instead of making a second. Change anything and
+     * it is a new attempt with a new id.
+     */
+    const key = JSON.stringify(details)
+    if (attempt.current?.key !== key) attempt.current = { key, id: newAttemptId() }
+
     try {
       const response = await fetch('/booking/request', {
         method: 'POST',
@@ -214,17 +236,7 @@ function BookingFormFields({
         // right customer. Same origin, so this is the default - stated because
         // it is load-bearing rather than incidental.
         credentials: 'same-origin',
-        body: JSON.stringify({
-          business: businessId,
-          start: interval.start,
-          end: interval.end,
-          partySize,
-          // Only a stay sends one, and only when the listing offers a choice.
-          ...(model.mode === 'nights' && roomType ? { roomType } : {}),
-          ...(phone.trim() ? { phone } : {}),
-          ...(notes.trim() ? { notes } : {}),
-          locale,
-        }),
+        body: JSON.stringify({ ...details, requestId: attempt.current.id }),
       })
 
       const body = (await response.json().catch(() => null)) as {
@@ -237,6 +249,8 @@ function BookingFormFields({
       } | null
 
       if (response.ok && body?.ok && body.reference) {
+        // Booked: the next booking from this form is a new attempt.
+        attempt.current = null
         setDone({
           reference: body.reference,
           status: body.status ?? 'pending',

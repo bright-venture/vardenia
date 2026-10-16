@@ -5,6 +5,7 @@ import {
   CHECK_OUT,
   durationChoices,
   durationLabel,
+  newAttemptId,
   nightChoices,
   toInterval,
 } from './booking-form'
@@ -252,5 +253,25 @@ describe('durationLabel', () => {
   it('writes Arabic without falling back to English', () => {
     expect(durationLabel(120, 'ar')).not.toContain('hour')
     expect(durationLabel(45, 'ar')).not.toContain('minutes')
+  })
+})
+
+describe('newAttemptId', () => {
+  const ACCEPTED = /^[A-Za-z0-9-]{16,64}$/
+
+  it('makes a new id every time, in the shape the server accepts', () => {
+    const ids = new Set(Array.from({ length: 50 }, () => newAttemptId()))
+    expect(ids.size).toBe(50)
+    for (const id of ids) expect(id).toMatch(ACCEPTED)
+  })
+
+  it('falls back to random bytes where randomUUID is missing', () => {
+    const source = {
+      getRandomValues: <T extends ArrayBufferView>(array: T) =>
+        globalThis.crypto.getRandomValues(array),
+    } as unknown as Crypto
+    const id = newAttemptId(source)
+    expect(id).toMatch(/^[0-9a-f]{32}$/)
+    expect(id).toMatch(ACCEPTED)
   })
 })

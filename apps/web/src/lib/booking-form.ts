@@ -265,3 +265,15 @@ export function durationLabel(minutes: number, locale: Locale = 'en'): string {
     ? new Intl.ListFormat(tag, { style: 'long', type: 'unit' }).format(parts)
     : unit(minutes, 'minute')
 }
+
+/**
+ * A fresh id for one booking attempt (see the form's submit, and
+ * `bookingForAttempt` on the server). `randomUUID` where the browser has it,
+ * which is any page served over https; random bytes otherwise, never a clock
+ * or a counter, so two guests can never share one.
+ */
+export function newAttemptId(source: Crypto = globalThis.crypto): string {
+  if (typeof source.randomUUID === 'function') return source.randomUUID()
+  const bytes = source.getRandomValues(new Uint8Array(16))
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+}

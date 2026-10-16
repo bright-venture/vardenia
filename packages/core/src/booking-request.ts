@@ -96,6 +96,22 @@ export const bookingRequestSchema = z.object({
 
   /** Which language to write the confirmation in. */
   locale: z.enum(LOCALE_CODES).optional(),
+
+  /**
+   * One booking attempt, chosen by the form and sent again on a retry.
+   *
+   * On a weak connection the booking can be made while the answer never reaches
+   * the phone, and the guest presses "book" again. With the same id, the second
+   * request returns the booking the first one made instead of making another.
+   * Optional, so an older form still books.
+   */
+  requestId: z
+    .string()
+    .trim()
+    .min(16, 'too short')
+    .max(64, 'too long')
+    .regex(/^[A-Za-z0-9-]+$/, 'letters, digits and dashes only')
+    .optional(),
 })
 
 export type BookingRequest = z.infer<typeof bookingRequestSchema>

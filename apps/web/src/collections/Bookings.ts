@@ -372,5 +372,19 @@ export const Bookings: CollectionConfig = {
       access: { read: isStaffFieldLevel, update: isStaffFieldLevel },
       admin: { description: 'Not visible to the customer.' },
     },
+
+    /**
+     * The booking form's id for one attempt, so a retry after a lost answer
+     * returns this booking instead of making a second (lib/booking-service).
+     * Unique in the database, which is what holds when two copies of the same
+     * request arrive together. Never shown, and fixed once written.
+     */
+    {
+      name: 'requestId',
+      type: 'text',
+      unique: true,
+      access: { read: isStaffFieldLevel, update: fixedOnceCreated },
+      admin: { hidden: true },
+    },
   ],
 }

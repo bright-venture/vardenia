@@ -217,3 +217,121 @@ describe('createBooking, before anything is written', () => {
     expect(create).toHaveBeenCalledTimes(1)
   })
 })
+
+/**
+ * A retry of the same booking attempt. On a weak connection the booking is made
+ * and the answer never reaches the phone; the guest presses "book" again with
+ * the same attempt id, and must get that booking back, not a second one.
+ */
+describe('createBooking, retried with the same attempt id', () => {
+  const HOUR = 3_600_000
+  const NOW = new Date('2026-10-20T08:00:00.000Z')
+  const start = new Date(NOW.getTime() + 48 * HOUR)
+  const end = new Date(start.getTime() + 2 * HOUR)
+  const ATTEMPT = '5d04e05d-6394-4372-96d9-b72e8b3ae9a7'
+
+  const restaurant = {
+    id: 7,
+    name: 'Em Sherif',
+    _status: 'published',
+    subcategories: ['restaurants'],
+    booking: { enabled: true, capacity: 1, maxDurationMinutes: 240, leadTimeMinutes: 0 },
+  }
+
+  const request = {
+    business: 7,
+    start: start.toISOString(),
+    end: end.toISOString(),
+    partySize: 2,
+    locale: 'en' as const,
+    requestId: ATTEMPT,
+  }
+
+  /**
+   * `earlier` is a booking this attempt already made. `madeMeanwhile` is one
+   * that appears only after the insert fails: the other copy of a request that
+   * arrived at the same moment.
+   */
+  const harness = (opts: {
+    earlier?: Record<string, unknown>
+    madeMeanwhile?: Record<string, unknown>
+    insertError?: Error
+  }) => {
+    let failed = false
+    const lookups: string[] = []
+    const create = vi.fn(async () => {
+      if (opts.insertError) {
+        failed = true
+        throw opts.insertError
+      }
+      return { id: 1, reference: 'NEWREF01', status: 'pending' }
+    })
+    const payload = {
+      findByID: vi.fn(async () => restaurant),
+      find: vi.fn(async (args: { collection: string; where?: unknown }) => {
+        const where = JSON.stringify(args.where ?? {})
+        if (args.collection === 'bookings' && where.includes('"requestId"')) {
+          lookups.push(where)
+          const found = opts.earlier ?? (failed ? opts.madeMeanwhile : undefined)
+          return { docs: found ? [found] : [], totalDocs: found ? 1 : 0 }
+        }
+        return { docs: [], totalDocs: 0 }
+      }),
+      create,
+    } as unknown as Payload
+    return { payload, create, lookups }
+  }
+
+  it('returns the booking the attempt already made, and makes no other', async () => {
+    const h = harness({ earlier: { id: 41, reference: 'FIRST001', status: 'pending' } })
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({
+      ok: true,
+      replayed: true,
+      reference: 'FIRST001',
+      bookingId: 41,
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('looks the attempt up for this customer only', async () => {
+    const h = harness({})
+    await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(h.lookups[0]).toContain('"customer":{"equals":5}')
+    expect(h.lookups[0]).toContain(`"requestId":{"equals":"${ATTEMPT}"}`)
+  })
+
+  it('stores the attempt id on a new booking', async () => {
+    const h = harness({})
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({ ok: true, reference: 'NEWREF01' })
+    expect(outcome).not.toHaveProperty('replayed')
+    expect(h.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ requestId: ATTEMPT }) }),
+    )
+  })
+
+  /**
+   * Both copies arrive together. Both pass the lookup (nothing made yet); the
+   * first inserts, the second is refused by the capacity trigger, which counts
+   * the first. The guest must not be told "fully booked" about their own table.
+   */
+  it('answers a simultaneous copy with the booking the other copy made', async () => {
+    const h = harness({
+      insertError: new Error('This place is fully booked at that time.'),
+      madeMeanwhile: { id: 42, reference: 'TWIN0001', status: 'pending' },
+    })
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({ ok: true, replayed: true, reference: 'TWIN0001' })
+  })
+
+  it('still reports a real refusal when no copy made a booking', async () => {
+    const h = harness({ insertError: new Error('This place is fully booked at that time.') })
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('at-capacity'),
+    })
+  })
+})

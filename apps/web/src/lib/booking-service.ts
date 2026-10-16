@@ -46,6 +46,8 @@ export type BookingOutcome =
       businessId: number
       businessName: string
       roomType?: string
+      /** A retry of an attempt that had already made this booking. */
+      replayed?: boolean
     }
   | { ok: false; code: 'unavailable' | 'not-found' | 'rate-limited' | 'error'; message: string }
 
@@ -179,6 +181,48 @@ export async function closedPeriods(
   }))
 }
 
+interface AttemptBooking {
+  id: number
+  reference?: string | null
+  status: BookingStatus
+  roomType?: string | null
+}
+
+/**
+ * The booking this customer already made with this attempt id, if any.
+ * Scoped to the customer, so an id can never return somebody else's booking.
+ */
+export async function bookingForAttempt(
+  payload: Payload,
+  customerId: number,
+  requestId: string,
+): Promise<AttemptBooking | null> {
+  const found = await payload.find({
+    collection: 'bookings',
+    where: {
+      and: [{ customer: { equals: customerId } }, { requestId: { equals: requestId } }],
+    },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return (found.docs[0] as unknown as AttemptBooking | undefined) ?? null
+}
+
+/** The original answer, again. `replayed` tells the route not to email twice. */
+function replayOf(made: AttemptBooking, business: { id: unknown; name?: unknown }): BookingOutcome {
+  return {
+    ok: true,
+    replayed: true,
+    bookingId: made.id,
+    reference: String(made.reference ?? ''),
+    status: made.status,
+    businessId: Number(business.id),
+    businessName: String(business.name ?? ''),
+    ...(made.roomType ? { roomType: made.roomType } : {}),
+  }
+}
+
 /** The honest failure: we do not know what went wrong, so we do not guess. */
 const COULD_NOT_BOOK: Record<Locale, string> = {
   en: 'We could not complete that booking. Please try again.',
@@ -301,6 +345,17 @@ export async function createBooking({
     return { ok: false, code: 'not-found', message: 'That listing is not available for booking.' }
   }
 
+  /**
+   * A retry of an attempt that already succeeded: the guest pressed "book",
+   * the booking was made, and the answer was lost on the way back. Answered
+   * with that booking, before any check - checked again, the guest's own first
+   * booking could make the slot look full.
+   */
+  if (request.requestId) {
+    const made = await bookingForAttempt(payload, customerId, request.requestId)
+    if (made) return replayOf(made, business)
+  }
+
   const rules = (business as { booking?: unknown }).booking as Parameters<
     typeof checkAvailability
   >[0]['rules']
@@ -391,6 +446,8 @@ export async function createBooking({
          * here is only ever a placeholder that satisfies the type.
          */
         status: 'pending',
+
+        ...(request.requestId ? { requestId: request.requestId } : {}),
       },
       overrideAccess: true,
     })
@@ -405,6 +462,16 @@ export async function createBooking({
       ...(roomType ? { roomType } : {}),
     }
   } catch (error) {
+    /**
+     * Two copies of the same attempt that arrived together: the first made the
+     * booking and this one was refused, by the unique index on the attempt id
+     * or by the capacity trigger counting the first. Either way the booking the
+     * guest asked for exists, so it is the answer.
+     */
+    if (request.requestId) {
+      const made = await bookingForAttempt(payload, customerId, request.requestId)
+      if (made) return replayOf(made, business)
+    }
     return translateInsertError(error, request.locale ?? 'en')
   }
 }

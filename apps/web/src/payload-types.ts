@@ -826,6 +826,7 @@ export interface Booking {
    * Not visible to the customer.
    */
   internalNotes?: string | null;
+  requestId?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1331,6 +1332,7 @@ export interface BookingsSelect<T extends boolean = true> {
   answeredAt?: T;
   declineReason?: T;
   internalNotes?: T;
+  requestId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -311,3 +311,31 @@ describe('resetPasswordSchema', () => {
     expect(parsed.success && 'email' in parsed.data).toBe(false)
   })
 })
+
+/** The form's id for one booking attempt; see lib/booking-service. */
+describe('bookingRequestSchema requestId', () => {
+  it('accepts a UUID and a hex id, and leaves it optional', () => {
+    expect(
+      bookingRequestSchema.safeParse({
+        ...VALID,
+        requestId: '5d04e05d-6394-4372-96d9-b72e8b3ae9a7',
+      }).success,
+    ).toBe(true)
+    expect(
+      bookingRequestSchema.safeParse({ ...VALID, requestId: '0123456789abcdef0123456789abcdef' })
+        .success,
+    ).toBe(true)
+    expect(bookingRequestSchema.safeParse(VALID).success).toBe(true)
+  })
+
+  it('refuses an id too short to be unguessable, too long, or with other characters', () => {
+    for (const requestId of [
+      'abc',
+      'x'.repeat(65),
+      'not an id; drop table',
+      '../../etc/passwd!!',
+    ]) {
+      expect(bookingRequestSchema.safeParse({ ...VALID, requestId }).success, requestId).toBe(false)
+    }
+  })
+})

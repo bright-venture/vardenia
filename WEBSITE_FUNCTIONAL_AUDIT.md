@@ -24,6 +24,7 @@ The existing unit suite was run: **2,075 of 2,076 tests pass**; the one failure 
 - **F-06 fixed:** sending skips a venue with no partner account, leaves its statement as a draft, and names it for the team.
 - **F-07 fixed:** partner invitation links last 3 days, and the email says so in English and Arabic.
 - **F-09 already fixed by the Payload 3.90 upgrade:** a password reset signs out every device, and a password change signs out every device but the current one. A test now keeps sessions switched on, since this depends on them.
+- **F-13 fixed:** each booking attempt carries an id. A retry of an attempt that already booked returns that booking, without emailing again, and a unique `request_id` column stops two copies arriving together from both booking (migration `20261016_100000_booking_request_id`).
 - **F-15 fixed:** every staff-only route uses one shared check, which also requires the account to be a staff account.
 
 Every fix has regression tests. The full suite passes: 2,125 tests.
