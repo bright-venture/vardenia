@@ -35,6 +35,17 @@ const nextConfig: NextConfig = {
    */
   experimental: {
     globalNotFound: true,
+    /**
+     * Stylesheets go inside the HTML instead of being fetched after it.
+     *
+     * The page cannot paint until its CSS has arrived, and on the live site
+     * that was four more round trips through Cloudflare and Netlify after the
+     * document, about a quarter of a second before anything appeared. Most
+     * visits are a single page opened from a printed code, so the CSS cache
+     * a separate file would buy is rarely used. The CSP already allows inline
+     * style.
+     */
+    inlineCss: true,
   },
 
   /**
