@@ -9,17 +9,19 @@ import {
   SHIRT_PRINT_MM,
   type QrFormat,
 } from '../../../lib/qr-image'
-import { goesToPrint, parsePlacement, populated, shirtLabel, type QrDoc } from '../../../lib/qr-doc'
+import { populated, shirtLabel, type QrDoc } from '../../../lib/qr-doc'
+import { findEvery } from '../../../lib/find-every'
+import { isFiltered, parseSheetFilters, sheetWhere } from '../../../lib/qr-sheet-filters'
 import { createZip, safeFileName, type ZipEntry } from '../../../lib/zip'
 
 /**
  * `/qr/export` - every code as its own file, in a zip.
  *
- * `?format=svg` (default) or `?format=png`, `?issue=1` to narrow to one print
- * issue, `?batch=import-2026-09-09` to narrow to one import run,
- * `?placement=t-shirt` to narrow to the shirts, `?size=40` for
- * the printed millimetre size, `?transparent=1` to drop the white background
- * from every file.
+ * `?format=svg` (default) or `?format=png`, `?transparent=1` to drop the white
+ * background from every file, `?size=40` for the printed millimetre size. Every
+ * filter on /qr/sheet works here too (issue, article, governorate, category,
+ * batch, placement and the rest - see lib/qr-sheet-filters), and the sheet's
+ * download buttons pass them across.
  *
  * # Why files rather than the sheet
  *
@@ -61,18 +63,6 @@ function labelFor(qr: QrDoc): string {
   if (typeof named?.name === 'string') return named.name
   if (qr.targetType === 'external' && typeof qr.externalUrl === 'string') return qr.externalUrl
   return qr.code
-}
-
-/**
- * A positive whole number, or null. Copied from the sheet for the same reason
- * it exists there: `?issue=abc` used to be a 500 on the page somebody opens at
- * deadline to check codes against a layout.
- */
-function parseIssueId(raw: string | null): number | null {
-  if (raw === null) return null
-  if (!/^\d+$/.test(raw)) return null
-  const value = Number(raw)
-  return Number.isSafeInteger(value) && value > 0 ? value : null
 }
 
 /**
@@ -124,14 +114,16 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url)
-  const issueParam = url.searchParams.get('issue')
-  const issueId = parseIssueId(issueParam)
 
-  if (issueParam !== null && issueId === null) {
-    return new Response(
-      `"${issueParam}" is not an issue id. Use the number from the issue's URL in the admin, for example /qr/export?issue=1.`,
-      { status: 400 },
-    )
+  /**
+   * The sheet's filters, read by the sheet's own parser, so a download carries
+   * exactly the codes the sheet showed. A value that means nothing is refused
+   * here rather than ignored: ignoring it would export more codes than asked
+   * for, which is the expensive direction to be wrong in.
+   */
+  const { filters, problems } = parseSheetFilters(url.searchParams)
+  if (problems.length > 0) {
+    return new Response(`${problems.join(' ')} Nothing was exported.`, { status: 400 })
   }
 
   const format: QrFormat = formatFromWord(url.searchParams.get('format')) ?? 'svg'
@@ -141,35 +133,6 @@ export async function GET(request: NextRequest) {
   const transparent = url.searchParams.get('transparent') === '1'
 
   /**
-   * `?batch=` narrows to the codes for one import run. The batch name lives on
-   * the business (`importBatch`), and a code points at a business, so this is a
-   * two-step: the businesses in the batch, then the codes that target them.
-   * overrideAccess because the route is already staff-gated, and the batch
-   * should resolve whether its listings are published or still drafts.
-   */
-  const batch = url.searchParams.get('batch')?.trim() || null
-  const placement = parsePlacement(url.searchParams.get('placement'))
-  let businessIds: (number | string)[] | null = null
-  if (batch) {
-    const businesses = await payload.find({
-      collection: 'businesses',
-      where: { importBatch: { equals: batch } },
-      limit: 1000,
-      depth: 0,
-      overrideAccess: true,
-    })
-    businessIds = businesses.docs.map((doc) => doc.id)
-    if (businessIds.length === 0) {
-      return new Response(
-        `No listings found for the batch "${batch}", so there is nothing to export.`,
-        {
-          status: 404,
-        },
-      )
-    }
-  }
-
-  /**
    * The sheet's own print size, not the QR library's default.
    *
    * Leaving it to the library gave 1024px regardless of what the code is
@@ -177,29 +140,54 @@ export async function GET(request: NextRequest) {
    * the sheet uses, and took twelve seconds for 318 codes.
    */
   const sizeMm =
-    Number(url.searchParams.get('size')) ||
-    (placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
+    filters.size ?? (filters.placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
 
-  const result = await payload.find({
+  // "Codes in this article" includes the listings it features, as on the sheet.
+  let featuredIds: number[] = []
+  if (filters.article !== null) {
+    const article = await payload
+      .findByID({
+        collection: 'articles',
+        id: filters.article,
+        depth: 0,
+        overrideAccess: true,
+        select: { featuredBusinesses: true },
+      })
+      .catch(() => null)
+    if (!article) {
+      return new Response(`No article with id ${filters.article}. Nothing was exported.`, {
+        status: 404,
+      })
+    }
+    featuredIds = ((article.featuredBusinesses ?? []) as (number | { id: number })[]).map((b) =>
+      typeof b === 'object' ? b.id : b,
+    )
+  }
+
+  /**
+   * Every matching code, not the first thousand. The sheet now pages, so "all"
+   * here means all the pages: with 1625 active codes, a single capped query
+   * quietly left 625 of them out of the zip.
+   */
+  const { docs, complete } = await findEvery<QrDoc>(payload, {
     collection: 'qr-codes',
-    where: {
-      active: { equals: true },
-      ...(issueId !== null ? { issue: { equals: issueId } } : {}),
-      ...(businessIds ? { business: { in: businessIds } } : {}),
-      ...(placement ? { placement: { equals: placement } } : {}),
-    },
-    limit: 1000,
+    where: sheetWhere(filters, featuredIds),
     depth: 1,
     sort: 'code',
     overrideAccess: false,
     user,
   })
 
-  // Codes for basic listings stay active but are not printed again. See goesToPrint.
-  const docs = result.docs.filter((doc) => goesToPrint(doc as unknown as QrDoc))
+  if (!complete) {
+    return new Response('Too many codes to export at once. Narrow the filters and try again.', {
+      status: 413,
+    })
+  }
 
   if (docs.length === 0) {
-    return new Response('No active codes match, so there is nothing to export.', { status: 404 })
+    return new Response('No codes match these filters, so there is nothing to export.', {
+      status: 404,
+    })
   }
 
   const cost = format === 'png' ? docs.length * sizeMm * sizeMm : 0
@@ -214,7 +202,7 @@ export async function GET(request: NextRequest) {
         'Any of these works:',
         `  - use SVG, which has no such limit and is better for print: ?format=svg`,
         `  - ask for ${affordable}mm or smaller: ?format=png&size=${affordable}`,
-        '  - narrow to one issue: ?issue=1',
+        '  - narrow the filters on the sheet, for example to one issue',
       ].join('\n'),
       { status: 413, headers: { 'content-type': 'text/plain; charset=utf-8' } },
     )
@@ -233,7 +221,7 @@ export async function GET(request: NextRequest) {
   const usedNames = new Set<string>()
 
   for (const doc of docs) {
-    const qr = doc as unknown as QrDoc
+    const qr = doc
     const label = safeFileName(labelFor(qr), qr.code)
 
     let name = `${label} - ${qr.code}.${format}`
@@ -255,13 +243,15 @@ export async function GET(request: NextRequest) {
   }
 
   const stamp = new Date().toISOString().slice(0, 10)
-  const label = batch
-    ? `batch-${safeFileName(batch)}`
-    : issueId !== null
-      ? `issue-${issueId}`
-      : placement
-        ? placement
-        : 'all'
+  const label = filters.batch
+    ? `batch-${safeFileName(filters.batch)}`
+    : typeof filters.issue === 'number'
+      ? `issue-${filters.issue}`
+      : filters.placement
+        ? filters.placement
+        : isFiltered(filters)
+          ? 'filtered'
+          : 'all'
   const bg = transparent ? '-transparent' : ''
   const filename = `vardenia-qr-${label}-${format}${bg}-${stamp}.zip`
 

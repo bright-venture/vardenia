@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
+import { CATEGORIES, GOVERNORATES, LISTING_TIERS, QR_TARGET_TYPES } from '@vardenia/core'
 import { staffUser } from '../../../lib/billing-auth'
 import {
   DEFAULT_PRINT_MM,
@@ -8,16 +9,37 @@ import {
   scanUrl,
   SHIRT_PRINT_MM,
 } from '../../../lib/qr-image'
-import { goesToPrint, parsePlacement, populated, shirtLabel, type QrDoc } from '../../../lib/qr-doc'
+import { populated, shirtLabel, type QrDoc, type RelatedDoc } from '../../../lib/qr-doc'
+import {
+  filterQuery,
+  isFiltered,
+  parseSheetFilters,
+  PER_PAGE_OPTIONS,
+  PRINTED_TIERS,
+  sheetWhere,
+  SORT_FIELD,
+  type FilterKey,
+  type SheetFilters,
+} from '../../../lib/qr-sheet-filters'
 
 /**
- * A contact sheet of every code, ready to print or hand to the layout team.
+ * A contact sheet of the codes, to check against a layout and to print.
  *
- * `/qr/sheet` covers everything active; `/qr/sheet?issue=1` narrows to the codes
- * assigned to one print issue, and `/qr/sheet?batch=import-2026-09-09` narrows to
- * the codes for one import run. `?placement=t-shirt` narrows to the codes printed
- * on shirts, each labelled with where its shirt is. Optional `?size=30` sets the
- * printed millimetre size of each code.
+ * Filtered by anything a code can be reached through: what it opens, the issue
+ * it is printed in, an article (its own code and the codes of the listings it
+ * features), the listing's governorate, district, category, tier and import
+ * batch, where it is printed (magazine or shirt), whether it is active and
+ * whether it has been scanned, plus a free-text search. The filters live in
+ * lib/qr-sheet-filters, shared with /qr/export so "download all" gives exactly
+ * the codes on screen.
+ *
+ * # Pages, not a ceiling
+ *
+ * The sheet used to load the first 1000 codes and warn about the rest, which
+ * with 1625 active codes meant every visit opened on a red "this sheet is
+ * incomplete". It is paged now, so nothing is silently missing: the count says
+ * how many match, the pages hold all of them, and a page of up to 500 is there
+ * for printing a whole issue at once.
  *
  * HTML rather than a generated PDF. The browser's own print dialogue produces a
  * PDF perfectly well, and this way the page stays viewable, searchable, and
@@ -31,6 +53,41 @@ import { goesToPrint, parsePlacement, populated, shirtLabel, type QrDoc } from '
 
 export const dynamic = 'force-dynamic'
 
+/** Kept here as well as in the filters module, where the sheet's tests import it. */
+export { parseIssueId } from '../../../lib/qr-sheet-filters'
+
+const TARGET_LABELS: Record<string, string> = {
+  business: 'Listing',
+  article: 'Article',
+  issue: 'Issue',
+  category: 'Category page',
+  external: 'Other website',
+  home: 'Home page',
+}
+
+const GOVERNORATE_NAMES = new Map<string, string>(GOVERNORATES.map((g) => [g.slug, g.en]))
+const DISTRICT_NAMES = new Map<string, string>(
+  GOVERNORATES.flatMap((g) => g.districts.map((d) => [d.slug, d.en] as [string, string])),
+)
+const CATEGORY_NAMES = new Map<string, string>(
+  CATEGORIES.flatMap((c) => [
+    [c.slug, c.en] as [string, string],
+    ...c.children.map((child) => [child.slug, child.en] as [string, string]),
+  ]),
+)
+
+interface Choice {
+  value: string
+  label: string
+}
+
+type Doc = Omit<QrDoc, 'business' | 'article' | 'issue'> & {
+  business?:
+    (RelatedDoc & { governorate?: string | null; district?: string | null }) | number | null
+  article?: (RelatedDoc & { governorate?: string | null }) | number | null
+  issue?: (RelatedDoc & { issueNumber?: number | null }) | number | null
+}
+
 export async function GET(request: NextRequest) {
   const payload = await getPayload({ config: (await import('../../../payload.config')).default })
 
@@ -40,68 +97,52 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url)
-  const issueParam = url.searchParams.get('issue')
-
-  /**
-   * The issue id went straight from the query string into two database calls,
-   * and every wrong value produced a 500: `?issue=abc` failed casting to an
-   * integer, `?issue=1.5` failed the query, and a number that simply does not
-   * exist threw NotFound out of findByID.
-   *
-   * This is the page somebody opens to check codes against the layout just
-   * before artwork goes to a printer. An unexplained crash from a mistyped
-   * issue number, at deadline, is the worst possible moment for it.
-   */
-  const issueId = parseIssueId(issueParam)
-  if (issueParam !== null && issueId === null) {
-    return new Response(
-      `"${issueParam}" is not an issue id. Use the number from the URL of the issue in the admin, for example /qr/sheet?issue=1.`,
-      { status: 400 },
-    )
-  }
-
-  /**
-   * `?batch=` narrows to one import run. The batch name lives on the business
-   * (`importBatch`) and a code points at a business, so this resolves the
-   * businesses first, then filters the codes to them. overrideAccess because the
-   * route is already staff-gated and a batch should resolve whether its listings
-   * are published or still drafts.
-   */
-  const batch = url.searchParams.get('batch')?.trim() || null
-  const placement = parsePlacement(url.searchParams.get('placement'))
+  const { filters, problems } = parseSheetFilters(url.searchParams)
   const sizeMm =
-    Number(url.searchParams.get('size')) ||
-    (placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
-  let businessIds: (number | string)[] | null = null
-  if (batch) {
-    const businesses = await payload.find({
+    filters.size ?? (filters.placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
+
+  /**
+   * The lists behind the pickers. overrideAccess because the route is already
+   * staff-gated, and a draft article or an unpublished listing's batch is still
+   * something whose codes need checking before print.
+   */
+  const [issues, articles, batched] = await Promise.all([
+    payload.find({
+      collection: 'issues',
+      limit: 200,
+      depth: 0,
+      sort: '-issueNumber',
+      overrideAccess: true,
+      select: { issueNumber: true, title: true },
+    }),
+    payload.find({
+      collection: 'articles',
+      limit: 500,
+      depth: 0,
+      sort: '-publishedAt',
+      overrideAccess: true,
+      select: { title: true, featuredBusinesses: true },
+    }),
+    payload.find({
       collection: 'businesses',
-      where: { importBatch: { equals: batch } },
-      limit: 1000,
+      where: { importBatch: { exists: true } },
+      limit: 5000,
       depth: 0,
       overrideAccess: true,
-    })
-    businessIds = businesses.docs.map((doc) => doc.id)
-    if (businessIds.length === 0) {
-      return new Response(`No listings found for the batch "${batch}".`, { status: 404 })
-    }
-  }
+      select: { importBatch: true },
+    }),
+  ])
 
-  /**
-   * Every import batch there is, for the picker at the top of the sheet, so a
-   * batch is chosen with a click rather than typed into the URL. Businesses that
-   * were not imported carry no `importBatch` and are left out. Newest first,
-   * because the batch someone wants is almost always the one they just ran.
-   */
-  const batched = await payload.find({
-    collection: 'businesses',
-    where: { importBatch: { exists: true } },
-    limit: 5000,
-    depth: 0,
-    overrideAccess: true,
-    select: { importBatch: true },
-  })
-  const batches = [
+  const issueChoices: Choice[] = issues.docs.map((doc) => ({
+    value: String(doc.id),
+    label: `Issue ${doc.issueNumber} - ${doc.title}`,
+  }))
+  const articleChoices: Choice[] = articles.docs.map((doc) => ({
+    value: String(doc.id),
+    label: String(doc.title ?? `Article ${doc.id}`),
+  }))
+  // Newest first, because the batch someone wants is almost always the one they just ran.
+  const batchChoices: Choice[] = [
     ...new Set(
       batched.docs
         .map((doc) => (doc as { importBatch?: string | null }).importBatch)
@@ -110,108 +151,81 @@ export async function GET(request: NextRequest) {
   ]
     .sort()
     .reverse()
+    .map((value) => ({ value, label: value }))
+
+  if (
+    typeof filters.issue === 'number' &&
+    !issueChoices.some((c) => c.value === String(filters.issue))
+  ) {
+    problems.push(`No issue with id ${filters.issue}. Pick one from the list.`)
+  }
+
+  // "Codes in this article": its own code, and the codes of the listings it features.
+  let featuredIds: number[] = []
+  if (filters.article !== null) {
+    const article = articles.docs.find((doc) => doc.id === filters.article)
+    if (!article) problems.push(`No article with id ${filters.article}. Pick one from the list.`)
+    featuredIds = ((article?.featuredBusinesses ?? []) as (number | { id: number })[]).map((b) =>
+      typeof b === 'object' ? b.id : b,
+    )
+  }
 
   const result = await payload.find({
     collection: 'qr-codes',
-    where: {
-      active: { equals: true },
-      ...(issueId !== null ? { issue: { equals: issueId } } : {}),
-      ...(businessIds ? { business: { in: businessIds } } : {}),
-      ...(placement ? { placement: { equals: placement } } : {}),
-    },
-    // A print run is a few hundred codes at most, and a sheet split across pages
-    // is a sheet somebody prints half of.
-    limit: 1000,
+    where: sheetWhere(filters, featuredIds),
+    limit: filters.perPage,
+    page: filters.page,
     depth: 1,
-    sort: 'code',
+    sort: SORT_FIELD[filters.sort],
     overrideAccess: false,
     user,
   })
 
-  let issueLabel = batch
-    ? `Batch ${batch}`
-    : placement === 't-shirt'
-      ? 'T-shirt codes'
-      : 'All active codes'
-  if (issueId !== null) {
-    // findByID throws rather than returning null for a missing document, and a
-    // number that does not exist is an ordinary typo, not a server fault.
-    const issue = await payload
-      .findByID({ collection: 'issues', id: issueId, depth: 0, overrideAccess: false, user })
-      .catch(() => null)
-
-    if (!issue) {
-      return new Response(`No issue with id ${issueId}. Check the issue list in the admin.`, {
-        status: 404,
-      })
-    }
-
-    issueLabel = `Issue ${issue.issueNumber} - ${issue.title}`
-  }
-
-  // Codes for basic listings stay active but are not printed again. See goesToPrint.
-  const printable = result.docs.filter((doc) => goesToPrint(doc as unknown as QrDoc))
-  const leftOut = result.docs.length - printable.length
-
   const cards = await Promise.all(
-    printable.map(async (doc) => {
-      const qr = doc as unknown as QrDoc
-      return renderCard({
-        code: qr.code,
-        label: labelFor(qr),
-        placement: qr.placement ?? '',
-        svg: await qrSvg(qr.code, { sizeMm }),
-      })
-    }),
-  )
-
-  return new Response(
-    page(
-      issueLabel,
-      printable.length,
-      result.totalDocs - leftOut,
-      cards.join('\n'),
-      issueId,
-      batch,
-      batches,
-      placement,
-      sizeMm,
+    result.docs.map(async (doc) =>
+      renderCard(doc as unknown as Doc, await qrSvg((doc as unknown as Doc).code, { sizeMm })),
     ),
-    {
-      headers: {
-        'content-type': 'text/html; charset=utf-8',
-        // Never cached: it lists who is in an unpublished issue.
-        'cache-control': 'no-store',
-      },
-    },
   )
-}
 
-/**
- * A positive whole number, or null.
- *
- * Deliberately strict. `Number('1.5')` and `Number(' 1 ')` both produce
- * something a careless check would accept and Postgres would then reject, so
- * the string has to look like an id rather than merely coerce to one.
- */
-export function parseIssueId(raw: string | null): number | null {
-  if (raw === null || !/^\d+$/.test(raw)) return null
-  const value = Number(raw)
-  return Number.isSafeInteger(value) && value > 0 ? value : null
+  const html = page({
+    filters,
+    problems,
+    sizeMm,
+    total: result.totalDocs,
+    first: result.totalDocs === 0 ? 0 : (result.page! - 1) * filters.perPage + 1,
+    last: (result.page! - 1) * filters.perPage + result.docs.length,
+    pageNumber: result.page ?? 1,
+    totalPages: result.totalPages,
+    cards: cards.join('\n'),
+    issueChoices,
+    articleChoices,
+    batchChoices,
+  })
+
+  return new Response(html, {
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      // Never cached: it lists who is in an unpublished issue.
+      'cache-control': 'no-store',
+    },
+  })
 }
 
 /** Whatever a person would recognise. Falls back to the code so a card is never blank. */
 function labelFor(qr: QrDoc): string {
+  const shirt = shirtLabel(qr)
+  if (shirt) return shirt
   // Checked before the relationships, because a home code may still be tied to
   // an issue - and "Summer 2026" on the card that goes on the cover is exactly
   // the mislabelling this sheet exists to catch.
-  const shirt = shirtLabel(qr)
-  if (shirt) return shirt
   if (qr.targetType === 'home') return 'Vardenia home page'
 
   const named = populated(qr.business) ?? populated(qr.article) ?? populated(qr.issue)
   if (typeof named?.title === 'string') return named.title
   if (typeof named?.name === 'string') return named.name
+  if (qr.targetType === 'category' && qr.category) {
+    return CATEGORY_NAMES.get(qr.category) ?? qr.category
+  }
   if (qr.targetType === 'external' && typeof qr.externalUrl === 'string') return qr.externalUrl
   return qr.code
 }
@@ -224,43 +238,299 @@ function escape(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function renderCard({
-  code,
-  label,
-  placement,
-  svg,
-}: {
-  code: string
-  label: string
-  placement: string
-  svg: string
-}): string {
-  return `<figure class="card">
+function renderCard(qr: Doc, svg: string): string {
+  const business = typeof qr.business === 'object' ? qr.business : null
+  const article = typeof qr.article === 'object' ? qr.article : null
+  const issue = typeof qr.issue === 'object' ? qr.issue : null
+  const governorate = business?.governorate ?? article?.governorate ?? null
+  const place = [
+    business?.district && business.district !== governorate
+      ? DISTRICT_NAMES.get(business.district)
+      : null,
+    governorate ? GOVERNORATE_NAMES.get(governorate) : null,
+  ]
+    .filter(Boolean)
+    .join(', ')
+  const scans = qr.scanCount ?? 0
+  const notPrinted = business?.tier != null && !PRINTED_TIERS.includes(business.tier)
+
+  const tags = [
+    `<span class="tag">${escape(TARGET_LABELS[qr.targetType ?? ''] ?? 'Code')}</span>`,
+    qr.placement === 't-shirt' ? '<span class="tag strong">T-shirt</span>' : '',
+    issue?.issueNumber != null ? `<span class="tag">Issue ${issue.issueNumber}</span>` : '',
+    place ? `<span class="tag">${escape(place)}</span>` : '',
+    `<span class="tag">${scans} scan${scans === 1 ? '' : 's'}</span>`,
+    qr.active === false ? '<span class="tag warn">Inactive</span>' : '',
+    notPrinted ? '<span class="tag warn">Website only, not printed</span>' : '',
+  ].join('')
+
+  return `<figure class="card${qr.active === false ? ' off' : ''}">
   <div class="code">${svg}</div>
   <figcaption>
-    <strong>${escape(label)}</strong>
-    <span class="mono">${escape(code)}</span>
-    <span class="meta">${escape(placement)}</span>
-    <span class="meta url">${escape(scanUrl(code))}</span>
+    <strong>${escape(labelFor(qr))}</strong>
+    <span class="mono">${escape(qr.code)}</span>
+    <span class="tags">${tags}</span>
+    <span class="url">${escape(scanUrl(qr.code))}</span>
   </figcaption>
 </figure>`
 }
 
+function options(choices: Choice[], selected: string | null, all = 'All'): string {
+  const first = `<option value=""${selected === null ? ' selected' : ''}>${escape(all)}</option>`
+  return (
+    first +
+    choices
+      .map(
+        (c) =>
+          `<option value="${escape(c.value)}"${c.value === selected ? ' selected' : ''}>${escape(c.label)}</option>`,
+      )
+      .join('')
+  )
+}
+
+function field(label: string, control: string, wide = false): string {
+  return `<label class="field${wide ? ' wide' : ''}"><span>${escape(label)}</span>${control}</label>`
+}
+
+function select(name: string, inner: string): string {
+  return `<select name="${name}">${inner}</select>`
+}
+
+function filterForm(
+  f: SheetFilters,
+  sizeMm: number,
+  issueChoices: Choice[],
+  articleChoices: Choice[],
+  batchChoices: Choice[],
+): string {
+  const districtOptions =
+    `<option value=""${f.district === null ? ' selected' : ''}>All</option>` +
+    GOVERNORATES.map(
+      (g) =>
+        `<optgroup label="${escape(g.en)}">${g.districts
+          .map(
+            (d) =>
+              `<option value="${d.slug}"${d.slug === f.district ? ' selected' : ''}>${escape(d.en)}</option>`,
+          )
+          .join('')}</optgroup>`,
+    ).join('')
+
+  const categoryOptions =
+    `<option value=""${f.category === null ? ' selected' : ''}>All</option>` +
+    CATEGORIES.filter((c) => !c.retired)
+      .map(
+        (c) =>
+          `<optgroup label="${escape(c.en)}"><option value="${c.slug}"${c.slug === f.category ? ' selected' : ''}>All ${escape(c.en.toLowerCase())}</option>${c.children
+            .filter((child) => !child.retired)
+            .map(
+              (child) =>
+                `<option value="${child.slug}"${child.slug === f.category ? ' selected' : ''}>${escape(child.en)}</option>`,
+            )
+            .join('')}</optgroup>`,
+      )
+      .join('')
+
+  const issueOptions = options(issueChoices, f.issue === null ? null : String(f.issue)).replace(
+    '</option>',
+    `</option><option value="none"${f.issue === 'none' ? ' selected' : ''}>Not in any issue</option>`,
+  )
+
+  return `<form class="filters" method="get" action="/qr/sheet">
+  ${field('Search', `<input type="search" name="q" value="${escape(f.q ?? '')}" placeholder="Code, listing, article or shirt location">`, true)}
+  ${field(
+    'Opens',
+    select(
+      'target',
+      options(
+        QR_TARGET_TYPES.map((t) => ({ value: t, label: TARGET_LABELS[t] ?? t })),
+        f.target,
+      ),
+    ),
+  )}
+  ${field(
+    'Printed on',
+    select(
+      'placement',
+      options(
+        [
+          { value: 'magazine-page', label: 'Magazine page' },
+          { value: 't-shirt', label: 'T-shirt' },
+        ],
+        f.placement,
+        'Everything',
+      ),
+    ),
+  )}
+  ${field('Issue', select('issue', issueOptions))}
+  ${field('Article', select('article', options(articleChoices, f.article === null ? null : String(f.article))))}
+  ${field(
+    'Governorate',
+    select(
+      'governorate',
+      options(
+        GOVERNORATES.map((g) => ({ value: g.slug, label: g.en })),
+        f.governorate,
+      ),
+    ),
+  )}
+  ${field('District', select('district', districtOptions))}
+  ${field('Category', select('category', categoryOptions))}
+  ${field(
+    'Tier',
+    select(
+      'tier',
+      options(
+        LISTING_TIERS.map((t) => ({ value: t, label: t[0]!.toUpperCase() + t.slice(1) })),
+        f.tier,
+      ),
+    ),
+  )}
+  ${field('Import batch', select('batch', options(batchChoices, f.batch)))}
+  ${field(
+    'Status',
+    select(
+      'status',
+      options(
+        [
+          { value: 'inactive', label: 'Inactive only' },
+          { value: 'all', label: 'Active and inactive' },
+        ],
+        f.status === 'active' ? null : f.status,
+        'Active',
+      ),
+    ),
+  )}
+  ${field(
+    'Scans',
+    select(
+      'scans',
+      options(
+        [
+          { value: 'scanned', label: 'Scanned at least once' },
+          { value: 'never', label: 'Never scanned' },
+        ],
+        f.scans === 'any' ? null : f.scans,
+        'Any',
+      ),
+    ),
+  )}
+  ${field(
+    'Website-only listings',
+    select(
+      'print',
+      options(
+        [{ value: 'all', label: 'Include them' }],
+        f.printOnly ? null : 'all',
+        'Hide (not printed)',
+      ),
+    ),
+  )}
+  ${field(
+    'Sort by',
+    select(
+      'sort',
+      options(
+        [
+          { value: 'scans', label: 'Most scanned' },
+          { value: 'newest', label: 'Newest first' },
+          { value: 'oldest', label: 'Oldest first' },
+        ],
+        f.sort === 'code' ? null : f.sort,
+        'Code',
+      ),
+    ),
+  )}
+  ${field(
+    'Per page',
+    select(
+      'per',
+      PER_PAGE_OPTIONS.map(
+        (n) => `<option value="${n}"${n === f.perPage ? ' selected' : ''}>${n}</option>`,
+      ).join(''),
+    ),
+  )}
+  ${field('Print size (mm)', `<input type="number" name="size" min="15" max="1000" value="${f.size ?? ''}" placeholder="${sizeMm}">`)}
+  <div class="actions">
+    <button type="submit">Apply filters</button>
+    <a href="/qr/sheet">Clear all</a>
+  </div>
+</form>`
+}
+
+/** One removable chip per active filter, so what is narrowing the list is never a guess. */
+function chips(f: SheetFilters, issueChoices: Choice[], articleChoices: Choice[]): string {
+  const found = (choices: Choice[], value: string) =>
+    choices.find((c) => c.value === value)?.label ?? value
+  const list: [string, string][] = []
+  const add = (label: string, key: FilterKey) =>
+    list.push([label, `/qr/sheet${filterQuery(f, { [key]: null })}`])
+
+  if (f.q) add(`Search: ${f.q}`, 'q')
+  if (f.target) add(`Opens: ${TARGET_LABELS[f.target] ?? f.target}`, 'target')
+  if (f.placement)
+    add(`Printed on: ${f.placement === 't-shirt' ? 'T-shirt' : 'Magazine page'}`, 'placement')
+  if (f.issue === 'none') add('Not in any issue', 'issue')
+  else if (f.issue !== null) add(found(issueChoices, String(f.issue)), 'issue')
+  if (f.article !== null) add(`Article: ${found(articleChoices, String(f.article))}`, 'article')
+  if (f.governorate) add(GOVERNORATE_NAMES.get(f.governorate) ?? f.governorate, 'governorate')
+  if (f.district) add(DISTRICT_NAMES.get(f.district) ?? f.district, 'district')
+  if (f.category) add(CATEGORY_NAMES.get(f.category) ?? f.category, 'category')
+  if (f.tier) add(`Tier: ${f.tier}`, 'tier')
+  if (f.batch) add(`Batch: ${f.batch}`, 'batch')
+  if (f.status !== 'active')
+    add(f.status === 'inactive' ? 'Inactive only' : 'Active and inactive', 'status')
+  if (f.scans !== 'any') add(f.scans === 'scanned' ? 'Scanned' : 'Never scanned', 'scans')
+  if (!f.printOnly) add('Including website-only listings', 'print')
+
+  if (list.length === 0) return ''
+  return `<p class="chips">${list
+    .map(
+      ([label, href]) =>
+        `<a class="chip" href="${escape(href)}" title="Remove this filter">${escape(label)} <b aria-hidden="true">&times;</b></a>`,
+    )
+    .join('')}</p>`
+}
+
 /**
- * Shown when the sheet is not the whole list.
- *
- * The query is capped at 1000, and the header used to print the number of cards
- * as though it were the total - so past that point the sheet showed 1000 codes,
- * said "1000 codes", and gave no hint anything was missing. On the document
- * somebody checks before sending artwork to a printer, a silently short list is
- * the worst possible failure: every code on it is correct, and the ones that
- * would have caught the mistake are simply absent.
+ * Links to every matching code as individual files - all pages, not just this
+ * one, and with every filter carried across. Somebody who has narrowed the
+ * sheet and then downloads everything would otherwise be given the wrong files,
+ * and would not find out until the layout.
  */
-function truncationBanner(shown: number, total: number): string {
-  if (total <= shown) return ''
-  return `<p class="warn"><strong>This sheet is incomplete.</strong> Showing ${shown} of
-    ${total} codes. Narrow it with <code>?issue=</code> and check each issue separately,
-    or this proof will miss ${total - shown} of them.</p>`
+function downloads(f: SheetFilters, total: number): string {
+  const base = filterQuery(f, { page: null, per: null, sort: null })
+  const href = (format: string, transparent = false) =>
+    `/qr/export${base}${base ? '&' : '?'}format=${format}${transparent ? '&transparent=1' : ''}`
+  return `<div class="downloads">
+  <span>Download all ${total} as files:</span>
+  <a href="${escape(href('svg'))}">SVG</a>
+  <a href="${escape(href('png'))}">PNG</a>
+  <a href="${escape(href('svg', true))}">SVG, transparent</a>
+  <a href="${escape(href('png', true))}">PNG, transparent</a>
+  <small>SVG for print. Transparent is for a coloured layout, not for print.</small>
+</div>`
+}
+
+function pager(f: SheetFilters, pageNumber: number, totalPages: number): string {
+  if (totalPages <= 1) return ''
+  const link = (n: number, text: string, current = false) =>
+    current
+      ? `<span class="on" aria-current="page">${text}</span>`
+      : `<a href="${escape(`/qr/sheet${filterQuery(f, { page: n === 1 ? null : String(n) })}`)}">${text}</a>`
+
+  const numbers = new Set<number>([1, totalPages])
+  for (let n = pageNumber - 2; n <= pageNumber + 2; n += 1)
+    if (n >= 1 && n <= totalPages) numbers.add(n)
+  const sorted = [...numbers].sort((a, b) => a - b)
+
+  const parts: string[] = []
+  if (pageNumber > 1) parts.push(link(pageNumber - 1, '&larr; Previous'))
+  sorted.forEach((n, i) => {
+    if (i > 0 && n - sorted[i - 1]! > 1) parts.push('<span class="gap">&hellip;</span>')
+    parts.push(link(n, String(n), n === pageNumber))
+  })
+  if (pageNumber < totalPages) parts.push(link(pageNumber + 1, 'Next &rarr;'))
+  return `<nav class="pager" aria-label="Pages">${parts.join('')}</nav>`
 }
 
 /**
@@ -270,157 +540,164 @@ function truncationBanner(shown: number, total: number): string {
  */
 function unsafeBaseBanner(): string {
   if (isPrintSafeBaseUrl()) return ''
-  return `<p class="warn"><strong>Not for print.</strong> These codes encode
+  return `<p class="banner danger"><strong>Not for print.</strong> These codes encode
     <code>${escape(scanUrl('CODE'))}</code>. Anything printed from this sheet will fail for every
     reader, permanently. Set NEXT_PUBLIC_SITE_URL to the live https domain and generate again.</p>`
 }
 
 /**
- * Links to the same set of codes as individual files.
- *
- * The issue filter is carried across deliberately. Somebody who has narrowed
- * the sheet to one issue and then downloads everything has been given the wrong
- * files, and would not find out until the layout.
- */
-function downloads(issueId: number | null, batch: string | null, placement: string | null): string {
-  const query = (format: string, transparent = false) =>
-    `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}${
-      batch ? `&batch=${encodeURIComponent(batch)}` : ''
-    }${placement ? `&placement=${placement}` : ''}${transparent ? '&transparent=1' : ''}`
-
-  return `<p class="downloads">
-  <a href="${query('svg')}">Download all as SVG</a>
-  <a href="${query('png')}">Download all as PNG</a>
-  <a href="${query('svg', true)}">SVG, transparent background</a>
-  <a href="${query('png', true)}">PNG, transparent background</a>
-  <span>One file per code, named after the business (or the shirt's location). SVG for print; transparent
-  drops the white for placing a code on a coloured layout, and is not for print.</span>
-</p>`
-}
-
-/**
- * The batch chooser. A row of links rather than a dropdown, to match the
- * download buttons and to need no JavaScript - clicking one reloads the sheet
- * narrowed to that batch, and the download buttons then carry it too. Absent
- * entirely until there is at least one import to choose between.
- */
-function batchLinks(batches: string[], current: string | null): string {
-  if (batches.length === 0) return ''
-
-  const link = (value: string | null, text: string): string => {
-    const href = value === null ? '/qr/sheet' : `/qr/sheet?batch=${encodeURIComponent(value)}`
-    const on = value === current ? ' class="on" aria-current="true"' : ''
-    return `<a href="${href}"${on}>${escape(text)}</a>`
-  }
-
-  return `<p class="batches"><span>Import batch:</span> ${link(null, 'All')} ${batches
-    .map((name) => link(name, name))
-    .join(' ')}</p>`
-}
-
-/**
- * All codes, or only the shirts. A shirt code has no listing and no issue, so
- * neither picker above can find the thirty of them; this one can.
- */
-function placementLinks(current: string | null): string {
-  const link = (value: string | null, text: string): string => {
-    const href = value === null ? '/qr/sheet' : `/qr/sheet?placement=${value}`
-    const on = value === current ? ' class="on" aria-current="true"' : ''
-    return `<a href="${href}"${on}>${escape(text)}</a>`
-  }
-  return `<p class="batches"><span>Printed on:</span> ${link(null, 'Everything')} ${link('t-shirt', 'T-shirts')}</p>`
-}
-
-/**
  * Columns wide enough for the code at its printed size.
  *
- * The 190px minimum fits the default 25mm. A shirt code at 70mm is about 265px,
- * and in a 190px column it ran over the card's edge and into the next one.
+ * The 200px minimum fits the default 25mm. A shirt code at 70mm is about 265px,
+ * and in a narrower column it ran over the card's edge and into the next one.
  */
 function gridColumns(sizeMm: number): string {
   const mm = Number.isFinite(sizeMm) && sizeMm > 0 ? Math.min(sizeMm, 1000) : 25
-  return `grid-template-columns: repeat(auto-fill, minmax(max(190px, calc(${mm}mm + 26px)), 1fr))`
+  return `grid-template-columns: repeat(auto-fill, minmax(max(200px, calc(${mm}mm + 32px)), 1fr))`
 }
 
-function page(
-  title: string,
-  count: number,
-  total: number,
-  cards: string,
-  issueId: number | null,
-  batch: string | null,
-  batches: string[],
-  placement: string | null,
-  sizeMm: number,
-): string {
+function page(input: {
+  filters: SheetFilters
+  problems: string[]
+  sizeMm: number
+  total: number
+  first: number
+  last: number
+  pageNumber: number
+  totalPages: number
+  cards: string
+  issueChoices: Choice[]
+  articleChoices: Choice[]
+  batchChoices: Choice[]
+}): string {
+  const f = input.filters
+  const title = isFiltered(f) ? 'QR codes, filtered' : 'QR codes'
+  const summary =
+    input.total === 0
+      ? 'No codes match these filters.'
+      : `Showing ${input.first}&ndash;${input.last} of ${input.total} code${input.total === 1 ? '' : 's'}, at ${input.sizeMm} mm.`
+
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>QR sheet - ${escape(title)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escape(title)} - Vardenia</title>
 <style>
-  :root { color-scheme: light; }
+  :root {
+    color-scheme: light;
+    --ink: #16130f; --muted: #6b645b; --line: #e3ddd3; --soft: #f7f4ef; --accent: #16130f;
+    --warn: #8a5a00; --warn-bg: #fff6e3; --danger: #9b1c1c; --danger-bg: #fdf1f1;
+  }
+  * { box-sizing: border-box; }
   body {
-    font-family: ui-sans-serif, system-ui, sans-serif;
-    margin: 0; padding: 24px 32px; background: #fff; color: #111;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    margin: 0; background: #fff; color: var(--ink); font-size: 14px; line-height: 1.45;
   }
-  header { margin-bottom: 24px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .count { color: #666; font-size: 13px; margin: 0; }
-  .downloads { margin: 12px 0 0; font-size: 13px; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 28px 32px 48px; }
+  header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; }
+  .summary { color: var(--muted); margin: 4px 0 0; }
+  .help { color: var(--muted); font-size: 13px; margin: 0; }
+
+  .filters {
+    margin: 20px 0 0; padding: 16px; background: var(--soft); border: 1px solid var(--line); border-radius: 10px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px 14px; align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field.wide { grid-column: span 2; }
+  .field > span { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field select, .field input {
+    width: 100%; font: inherit; color: var(--ink); background: #fff;
+    border: 1px solid #cfc7bb; border-radius: 6px; padding: 7px 9px; min-height: 36px;
+  }
+  .field select:focus, .field input:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .actions { display: flex; gap: 12px; align-items: center; }
+  .actions button {
+    font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 6px;
+    padding: 9px 16px; cursor: pointer; min-height: 36px;
+  }
+  .actions a { color: var(--ink); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+  .chip {
+    display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px;
+    background: var(--ink); color: #fff; text-decoration: none; font-size: 13px;
+  }
+  .chip b { font-weight: 400; opacity: 0.7; }
+  .chip:hover b { opacity: 1; }
+
+  .downloads { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 0; font-size: 13px; }
+  .downloads > span { font-weight: 600; }
   .downloads a {
-    display: inline-block; margin-inline-end: 8px; padding: 5px 10px;
-    border: 1px solid #bbb; border-radius: 4px; color: #111; text-decoration: none;
+    padding: 5px 10px; border: 1px solid #cfc7bb; border-radius: 6px; color: var(--ink); text-decoration: none; background: #fff;
   }
-  .downloads span { color: #666; }
-  .batches { margin: 12px 0 0; font-size: 13px; }
-  .batches > span { color: #666; margin-inline-end: 4px; }
-  .batches a {
-    display: inline-block; margin-inline-end: 6px; padding: 3px 8px;
-    border: 1px solid #ddd; border-radius: 4px; color: #333; text-decoration: none;
-  }
-  .batches a.on { border-color: #111; background: #111; color: #fff; }
-  /* Chooser and buttons are for the screen. On paper they are clutter. */
-  @media print { .downloads, .batches { display: none; } }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
+  .downloads a:hover { border-color: var(--ink); }
+  .downloads small { color: var(--muted); }
+
+  .banner { border-radius: 8px; padding: 10px 14px; margin: 16px 0 0; font-size: 13px; }
+  .banner.notice { background: var(--warn-bg); color: var(--warn); border: 1px solid #f0d9a8; }
+  .banner.danger { background: var(--danger-bg); color: var(--danger); border: 2px solid var(--danger); }
+  .banner code { word-break: break-all; }
+
+  .grid { display: grid; gap: 16px; margin: 20px 0 0; }
   .card {
-    margin: 0; padding: 12px; border: 1px solid #ddd; border-radius: 6px;
-    /* Keeps a code and its caption from being split across two printed pages. */
+    margin: 0; padding: 16px 12px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff;
     break-inside: avoid; page-break-inside: avoid;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
   }
+  .card.off { opacity: 0.55; }
   .code svg { display: block; }
-  figcaption { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-  figcaption strong { font-size: 13px; line-height: 1.3; }
-  .mono { font-family: ui-monospace, monospace; font-size: 13px; letter-spacing: 0.08em; }
-  .meta { font-size: 11px; color: #666; }
-  .url { word-break: break-all; }
-  .empty { color: #666; }
-  .warn {
-    border: 2px solid #b00; background: #fff4f4; color: #900;
-    padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5;
+  figcaption { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; width: 100%; }
+  figcaption strong { font-size: 14px; line-height: 1.3; }
+  .mono { font-family: ui-monospace, 'SF Mono', Consolas, monospace; font-size: 14px; letter-spacing: 0.1em; }
+  .tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 2px; }
+  .tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--soft); color: var(--muted); border: 1px solid var(--line); }
+  .tag.strong { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tag.warn { background: var(--warn-bg); color: var(--warn); border-color: #f0d9a8; }
+  .url { font-size: 11px; color: var(--muted); word-break: break-all; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+  .pager { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 28px 0 0; }
+  .pager a, .pager span {
+    min-width: 36px; padding: 6px 10px; border-radius: 6px; text-align: center; text-decoration: none; color: var(--ink);
+    border: 1px solid var(--line);
   }
-  .warn code { word-break: break-all; }
+  .pager a:hover { border-color: var(--ink); }
+  .pager .on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .pager .gap { border: 0; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 16px; }
+    .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; }
+    .field.wide, .actions { grid-column: 1 / -1; }
+  }
+  /* On paper: the codes and their names, nothing to click. */
   @media print {
-    body { padding: 0; }
-    header { margin-bottom: 12px; }
-    .card { border-color: #999; }
-    /* The URL is a proofing aid, not part of the artwork. */
-    .url { display: none; }
+    .wrap { padding: 0; max-width: none; }
+    .filters, .chips, .downloads, .pager, .help, .tags, .url, .banner.notice { display: none; }
+    .card { border-color: #999; border-radius: 4px; }
+    .card.off { opacity: 1; }
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>${escape(title)}</h1>
-  <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
-  ${placementLinks(placement)}
-  ${batchLinks(batches, batch)}
-  ${downloads(issueId, batch, placement)}
-  ${unsafeBaseBanner()}
-  ${truncationBanner(count, total)}
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>${escape(title)}</h1>
+    <p class="summary">${summary}</p>
+  </div>
+  <p class="help">Check every name against the layout before it goes to press. Print with Ctrl+P: filters and buttons are left off the paper.</p>
 </header>
-${count === 0 ? '<p class="empty">No active codes match.</p>' : `<div class="grid" style="${gridColumns(sizeMm)}">${cards}</div>`}
+${filterForm(f, input.sizeMm, input.issueChoices, input.articleChoices, input.batchChoices)}
+${chips(f, input.issueChoices, input.articleChoices)}
+${input.problems.length > 0 ? `<p class="banner notice">${input.problems.map(escape).join(' ')}</p>` : ''}
+${unsafeBaseBanner()}
+${input.total > 0 ? downloads(f, input.total) : ''}
+${input.cards ? `<div class="grid" style="${gridColumns(input.sizeMm)}">${input.cards}</div>` : `<p class="empty">${input.total > 0 ? 'Nothing on this page. Go back to page 1.' : 'No codes match. Remove a filter above, or clear them all.'}</p>`}
+${pager(f, input.pageNumber, input.totalPages)}
+</div>
 </body>
 </html>`
 }
