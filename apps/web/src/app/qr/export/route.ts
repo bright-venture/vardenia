@@ -6,16 +6,18 @@ import {
   formatFromWord,
   qrPng,
   qrSvg,
+  SHIRT_PRINT_MM,
   type QrFormat,
 } from '../../../lib/qr-image'
-import { goesToPrint, populated, type QrDoc } from '../../../lib/qr-doc'
+import { goesToPrint, parsePlacement, populated, shirtLabel, type QrDoc } from '../../../lib/qr-doc'
 import { createZip, safeFileName, type ZipEntry } from '../../../lib/zip'
 
 /**
  * `/qr/export` - every code as its own file, in a zip.
  *
  * `?format=svg` (default) or `?format=png`, `?issue=1` to narrow to one print
- * issue, `?batch=import-2026-09-09` to narrow to one import run, `?size=40` for
+ * issue, `?batch=import-2026-09-09` to narrow to one import run,
+ * `?placement=t-shirt` to narrow to the shirts, `?size=40` for
  * the printed millimetre size, `?transparent=1` to drop the white background
  * from every file.
  *
@@ -50,6 +52,8 @@ export const dynamic = 'force-dynamic'
 
 /** Matches the sheet, so the two cannot describe the same code differently. */
 function labelFor(qr: QrDoc): string {
+  const shirt = shirtLabel(qr)
+  if (shirt) return shirt
   if (qr.targetType === 'home') return 'Vardenia home page'
 
   const named = populated(qr.business) ?? populated(qr.article) ?? populated(qr.issue)
@@ -144,6 +148,7 @@ export async function GET(request: NextRequest) {
    * should resolve whether its listings are published or still drafts.
    */
   const batch = url.searchParams.get('batch')?.trim() || null
+  const placement = parsePlacement(url.searchParams.get('placement'))
   let businessIds: (number | string)[] | null = null
   if (batch) {
     const businesses = await payload.find({
@@ -171,7 +176,9 @@ export async function GET(request: NextRequest) {
    * printed at - an arbitrary number that happened to be four times the size
    * the sheet uses, and took twelve seconds for 318 codes.
    */
-  const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
+  const sizeMm =
+    Number(url.searchParams.get('size')) ||
+    (placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
 
   const result = await payload.find({
     collection: 'qr-codes',
@@ -179,6 +186,7 @@ export async function GET(request: NextRequest) {
       active: { equals: true },
       ...(issueId !== null ? { issue: { equals: issueId } } : {}),
       ...(businessIds ? { business: { in: businessIds } } : {}),
+      ...(placement ? { placement: { equals: placement } } : {}),
     },
     limit: 1000,
     depth: 1,
@@ -249,9 +257,11 @@ export async function GET(request: NextRequest) {
   const stamp = new Date().toISOString().slice(0, 10)
   const label = batch
     ? `batch-${safeFileName(batch)}`
-    : issueId === null
-      ? 'all'
-      : `issue-${issueId}`
+    : issueId !== null
+      ? `issue-${issueId}`
+      : placement
+        ? placement
+        : 'all'
   const bg = transparent ? '-transparent' : ''
   const filename = `vardenia-qr-${label}-${format}${bg}-${stamp}.zip`
 

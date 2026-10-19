@@ -59,6 +59,8 @@ async function buildListingReport(range: Parameters<typeof listingScanReport>[0]
     headers: [
       'Business',
       'Code',
+      'Placement',
+      'Location',
       'Issue',
       'Issue title',
       'Total scans',
@@ -75,6 +77,8 @@ async function buildListingReport(range: Parameters<typeof listingScanReport>[0]
     rows: report.map((r): CsvValue[] => [
       r.business,
       r.code,
+      r.placement,
+      r.location,
       r.issueNumber,
       r.issueTitle,
       r.scans,
@@ -101,6 +105,7 @@ async function buildEventExport(range: Parameters<typeof scanEventExport>[0]) {
       'Code',
       'Business',
       'Placement',
+      'Location',
       'City',
       'Country',
       'Platform',
@@ -111,6 +116,7 @@ async function buildEventExport(range: Parameters<typeof scanEventExport>[0]) {
       e.code,
       e.business,
       e.placement,
+      e.location,
       e.city,
       e.country,
       e.platform,

@@ -1,16 +1,23 @@
 import type { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import { staffUser } from '../../../lib/billing-auth'
-import { DEFAULT_PRINT_MM, isPrintSafeBaseUrl, qrSvg, scanUrl } from '../../../lib/qr-image'
-import { goesToPrint, populated, type QrDoc } from '../../../lib/qr-doc'
+import {
+  DEFAULT_PRINT_MM,
+  isPrintSafeBaseUrl,
+  qrSvg,
+  scanUrl,
+  SHIRT_PRINT_MM,
+} from '../../../lib/qr-image'
+import { goesToPrint, parsePlacement, populated, shirtLabel, type QrDoc } from '../../../lib/qr-doc'
 
 /**
  * A contact sheet of every code, ready to print or hand to the layout team.
  *
  * `/qr/sheet` covers everything active; `/qr/sheet?issue=1` narrows to the codes
  * assigned to one print issue, and `/qr/sheet?batch=import-2026-09-09` narrows to
- * the codes for one import run. Optional `?size=30` sets the printed millimetre
- * size of each code.
+ * the codes for one import run. `?placement=t-shirt` narrows to the codes printed
+ * on shirts, each labelled with where its shirt is. Optional `?size=30` sets the
+ * printed millimetre size of each code.
  *
  * HTML rather than a generated PDF. The browser's own print dialogue produces a
  * PDF perfectly well, and this way the page stays viewable, searchable, and
@@ -34,7 +41,6 @@ export async function GET(request: NextRequest) {
 
   const url = new URL(request.url)
   const issueParam = url.searchParams.get('issue')
-  const sizeMm = Number(url.searchParams.get('size')) || DEFAULT_PRINT_MM
 
   /**
    * The issue id went straight from the query string into two database calls,
@@ -62,6 +68,10 @@ export async function GET(request: NextRequest) {
    * are published or still drafts.
    */
   const batch = url.searchParams.get('batch')?.trim() || null
+  const placement = parsePlacement(url.searchParams.get('placement'))
+  const sizeMm =
+    Number(url.searchParams.get('size')) ||
+    (placement === 't-shirt' ? SHIRT_PRINT_MM : DEFAULT_PRINT_MM)
   let businessIds: (number | string)[] | null = null
   if (batch) {
     const businesses = await payload.find({
@@ -107,6 +117,7 @@ export async function GET(request: NextRequest) {
       active: { equals: true },
       ...(issueId !== null ? { issue: { equals: issueId } } : {}),
       ...(businessIds ? { business: { in: businessIds } } : {}),
+      ...(placement ? { placement: { equals: placement } } : {}),
     },
     // A print run is a few hundred codes at most, and a sheet split across pages
     // is a sheet somebody prints half of.
@@ -117,7 +128,11 @@ export async function GET(request: NextRequest) {
     user,
   })
 
-  let issueLabel = batch ? `Batch ${batch}` : 'All active codes'
+  let issueLabel = batch
+    ? `Batch ${batch}`
+    : placement === 't-shirt'
+      ? 'T-shirt codes'
+      : 'All active codes'
   if (issueId !== null) {
     // findByID throws rather than returning null for a missing document, and a
     // number that does not exist is an ordinary typo, not a server fault.
@@ -159,6 +174,8 @@ export async function GET(request: NextRequest) {
       issueId,
       batch,
       batches,
+      placement,
+      sizeMm,
     ),
     {
       headers: {
@@ -188,6 +205,8 @@ function labelFor(qr: QrDoc): string {
   // Checked before the relationships, because a home code may still be tied to
   // an issue - and "Summer 2026" on the card that goes on the cover is exactly
   // the mislabelling this sheet exists to catch.
+  const shirt = shirtLabel(qr)
+  if (shirt) return shirt
   if (qr.targetType === 'home') return 'Vardenia home page'
 
   const named = populated(qr.business) ?? populated(qr.article) ?? populated(qr.issue)
@@ -263,18 +282,18 @@ function unsafeBaseBanner(): string {
  * the sheet to one issue and then downloads everything has been given the wrong
  * files, and would not find out until the layout.
  */
-function downloads(issueId: number | null, batch: string | null): string {
+function downloads(issueId: number | null, batch: string | null, placement: string | null): string {
   const query = (format: string, transparent = false) =>
     `/qr/export?format=${format}${issueId === null ? '' : `&issue=${issueId}`}${
       batch ? `&batch=${encodeURIComponent(batch)}` : ''
-    }${transparent ? '&transparent=1' : ''}`
+    }${placement ? `&placement=${placement}` : ''}${transparent ? '&transparent=1' : ''}`
 
   return `<p class="downloads">
   <a href="${query('svg')}">Download all as SVG</a>
   <a href="${query('png')}">Download all as PNG</a>
   <a href="${query('svg', true)}">SVG, transparent background</a>
   <a href="${query('png', true)}">PNG, transparent background</a>
-  <span>One file per code, named after the business. SVG for print; transparent
+  <span>One file per code, named after the business (or the shirt's location). SVG for print; transparent
   drops the white for placing a code on a coloured layout, and is not for print.</span>
 </p>`
 }
@@ -299,6 +318,30 @@ function batchLinks(batches: string[], current: string | null): string {
     .join(' ')}</p>`
 }
 
+/**
+ * All codes, or only the shirts. A shirt code has no listing and no issue, so
+ * neither picker above can find the thirty of them; this one can.
+ */
+function placementLinks(current: string | null): string {
+  const link = (value: string | null, text: string): string => {
+    const href = value === null ? '/qr/sheet' : `/qr/sheet?placement=${value}`
+    const on = value === current ? ' class="on" aria-current="true"' : ''
+    return `<a href="${href}"${on}>${escape(text)}</a>`
+  }
+  return `<p class="batches"><span>Printed on:</span> ${link(null, 'Everything')} ${link('t-shirt', 'T-shirts')}</p>`
+}
+
+/**
+ * Columns wide enough for the code at its printed size.
+ *
+ * The 190px minimum fits the default 25mm. A shirt code at 70mm is about 265px,
+ * and in a 190px column it ran over the card's edge and into the next one.
+ */
+function gridColumns(sizeMm: number): string {
+  const mm = Number.isFinite(sizeMm) && sizeMm > 0 ? Math.min(sizeMm, 1000) : 25
+  return `grid-template-columns: repeat(auto-fill, minmax(max(190px, calc(${mm}mm + 26px)), 1fr))`
+}
+
 function page(
   title: string,
   count: number,
@@ -307,6 +350,8 @@ function page(
   issueId: number | null,
   batch: string | null,
   batches: string[],
+  placement: string | null,
+  sizeMm: number,
 ): string {
   return `<!doctype html>
 <html lang="en">
@@ -369,12 +414,13 @@ function page(
 <header>
   <h1>${escape(title)}</h1>
   <p class="count">${count} code${count === 1 ? '' : 's'} at print size. Check every name against the layout before this goes to press.</p>
+  ${placementLinks(placement)}
   ${batchLinks(batches, batch)}
-  ${downloads(issueId, batch)}
+  ${downloads(issueId, batch, placement)}
   ${unsafeBaseBanner()}
   ${truncationBanner(count, total)}
 </header>
-${count === 0 ? '<p class="empty">No active codes match.</p>' : `<div class="grid">${cards}</div>`}
+${count === 0 ? '<p class="empty">No active codes match.</p>' : `<div class="grid" style="${gridColumns(sizeMm)}">${cards}</div>`}
 </body>
 </html>`
 }

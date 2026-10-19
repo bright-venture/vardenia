@@ -43,6 +43,15 @@ export const DEFAULT_PRINT_MM = 25
 export const MIN_PRINT_MM = 15
 
 /**
+ * Default printed size on a shirt.
+ *
+ * Fabric stretches, creases and moves while it is worn, and the code is
+ * scanned from a step or two away rather than from a page in the hand. 70mm
+ * keeps it readable through all three. `?size=` still overrides it.
+ */
+export const SHIRT_PRINT_MM = 70
+
+/**
  * Upper bound on printed size.
  *
  * A metre is far beyond any real use - a double-page spread is about 420mm and a

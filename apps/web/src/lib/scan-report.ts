@@ -29,6 +29,9 @@ export interface ReportRange {
 export interface ListingScanRow {
   business: string | null
   code: string | null
+  placement: string | null
+  /** Where the shirt is, for a t-shirt code. Read from the code, not the scan. */
+  location: string | null
   issueNumber: number | null
   issueTitle: string | null
   scans: number
@@ -48,6 +51,7 @@ export interface ScanEventRow {
   code: string
   business: string | null
   placement: string | null
+  location: string | null
   city: string | null
   country: string | null
   platform: string | null
@@ -83,6 +87,8 @@ export async function listingScanReport({ from, to }: ReportRange): Promise<List
     select
       bl.name                                            as business,
       se.code                                            as code,
+      se.placement                                       as placement,
+      q.location                                         as location,
       i.issue_number                                     as issue_number,
       il.title                                           as issue_title,
       count(*)::int                                      as scans,
@@ -102,7 +108,7 @@ export async function listingScanReport({ from, to }: ReportRange): Promise<List
       left join {schema}.issues           i  on i.id  = q.issue_id
       left join {schema}.issues_locales   il on il._parent_id = i.id and il._locale = 'en'
     where se.scanned_at >= $1 and se.scanned_at < $2
-    group by bl.name, se.code, i.issue_number, il.title
+    group by bl.name, se.code, se.placement, q.location, i.issue_number, il.title
     order by scans desc, business asc
     `,
     [from, to],
@@ -111,6 +117,8 @@ export async function listingScanReport({ from, to }: ReportRange): Promise<List
   return rows.map((r) => ({
     business: str(r.business),
     code: str(r.code),
+    placement: str(r.placement),
+    location: str(r.location),
     issueNumber: r.issue_number === null ? null : num(r.issue_number),
     issueTitle: str(r.issue_title),
     scans: num(r.scans),
@@ -140,8 +148,9 @@ export async function scanEventExport(
     `
     select
       se.scanned_at, se.code, se.placement, se.city, se.country, se.platform,
-      se.is_direct_scan, bl.name as business
+      se.is_direct_scan, bl.name as business, q.location as location
     from {schema}.scan_events se
+      left join {schema}.qr_codes         q  on q.id = se.qr_code_id
       left join {schema}.businesses       b  on b.id = se.business_id
       left join {schema}.businesses_locales bl on bl._parent_id = b.id and bl._locale = 'en'
     where se.scanned_at >= $1 and se.scanned_at < $2
@@ -156,6 +165,7 @@ export async function scanEventExport(
     code: String(r.code ?? ''),
     business: str(r.business),
     placement: str(r.placement),
+    location: str(r.location),
     city: str(r.city),
     country: str(r.country),
     platform: str(r.platform),

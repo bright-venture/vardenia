@@ -39,6 +39,7 @@ import * as migration_20261013_075115_payload_3_90 from './20261013_075115_paylo
 import * as migration_20261013_120000_customer_booking_limit from './20261013_120000_customer_booking_limit'
 import * as migration_20261013_121000_one_review_and_statement from './20261013_121000_one_review_and_statement'
 import * as migration_20261016_100000_booking_request_id from './20261016_100000_booking_request_id'
+import * as migration_20261019_100000_qr_tshirt_placement from './20261019_100000_qr_tshirt_placement'
 
 export const migrations = [
   {
@@ -245,5 +246,10 @@ export const migrations = [
     up: migration_20261016_100000_booking_request_id.up,
     down: migration_20261016_100000_booking_request_id.down,
     name: '20261016_100000_booking_request_id',
+  },
+  {
+    up: migration_20261019_100000_qr_tshirt_placement.up,
+    down: migration_20261019_100000_qr_tshirt_placement.down,
+    name: '20261019_100000_qr_tshirt_placement',
   },
 ]

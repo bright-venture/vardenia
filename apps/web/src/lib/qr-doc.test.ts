@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   goesToPrint,
   isPubliclyVisible,
+  parsePlacement,
   populated,
   relatedId,
+  shirtLabel,
   type QrDoc,
   type RelatedDoc,
 } from './qr-doc'
@@ -95,5 +97,48 @@ describe('goesToPrint', () => {
     expect(goesToPrint(code(2))).toBe(true)
     expect(goesToPrint(code({ id: 2 }))).toBe(true)
     expect(goesToPrint(code(null))).toBe(true)
+  })
+})
+
+/**
+ * Thirty shirts all point at the home page, so without this the sheet and the
+ * export labelled every one of them "Vardenia home page" and the files for
+ * thirty different places were told apart by code alone.
+ */
+describe('shirtLabel', () => {
+  const shirt = (location: string | null): QrDoc => ({
+    id: 1,
+    code: 'K3M9QP2',
+    targetType: 'home',
+    placement: 't-shirt',
+    location,
+  })
+
+  it('names the place the shirt is', () => {
+    expect(shirtLabel(shirt('Byblos old souk'))).toBe('T-shirt: Byblos old souk')
+  })
+
+  it('trims the place, and still says T-shirt when there is none', () => {
+    expect(shirtLabel(shirt('  Beirut Marina '))).toBe('T-shirt: Beirut Marina')
+    expect(shirtLabel(shirt('   '))).toBe('T-shirt')
+    expect(shirtLabel(shirt(null))).toBe('T-shirt')
+  })
+
+  it('leaves every magazine code to the usual label', () => {
+    expect(
+      shirtLabel({ id: 2, code: 'ABCDEFG', placement: 'magazine-page', location: 'stray' }),
+    ).toBeNull()
+    expect(shirtLabel({ id: 3, code: 'ABCDEFG' })).toBeNull()
+  })
+})
+
+describe('parsePlacement', () => {
+  it('accepts the placements that exist', () => {
+    expect(parsePlacement('t-shirt')).toBe('t-shirt')
+    expect(parsePlacement('magazine-page')).toBe('magazine-page')
+  })
+
+  it.each([null, '', 'tshirt', 'T-shirt', 'billboard'])('ignores %o', (value) => {
+    expect(parsePlacement(value)).toBeNull()
   })
 })

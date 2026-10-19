@@ -2,7 +2,7 @@
 
 ## What it is
 
-A premium tourism and lifestyle platform for Lebanon: a printed magazine twice a year, a
+A premium tourism and lifestyle platform for Lebanon: a printed magazine once a year, a
 website, and later a mobile app. Readers move between them by scanning QR codes printed in
 the magazine and on stickers in venues.
 

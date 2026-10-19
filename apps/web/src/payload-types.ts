@@ -596,9 +596,13 @@ export interface QrCode {
    */
   externalUrl?: string | null;
   /**
-   * Codes are printed in the magazine and nowhere else, so leave this on magazine-page. The other values are surfaces we have not shipped; picking one now records something that is not true.
+   * Where the code is printed. Magazine page for every code in the magazine. T-shirt for a code printed on a shirt, which also asks where the shirt is.
    */
-  placement: 'magazine-page';
+  placement: 'magazine-page' | 't-shirt';
+  /**
+   * Where this shirt is worn or handed out, for example "Byblos old souk" or "Shirt 07, Beirut Marina". Shown on the print sheet and in the scan report.
+   */
+  location?: string | null;
   /**
    * Which printed issue carries this code. Set it before the issue goes to press: it is what the print sheet filters on, and what marks the code as permanent.
    */
@@ -964,7 +968,7 @@ export interface ScanEvent {
    */
   business?: (number | null) | Business;
   scannedAt: string;
-  placement?: 'magazine-page' | null;
+  placement?: ('magazine-page' | 't-shirt') | null;
   city?: string | null;
   country?: string | null;
   platform?: ('ios' | 'android' | 'web' | 'unknown') | null;
@@ -1292,6 +1296,7 @@ export interface QrCodesSelect<T extends boolean = true> {
   category?: T;
   externalUrl?: T;
   placement?: T;
+  location?: T;
   issue?: T;
   active?: T;
   scanCount?: T;

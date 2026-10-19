@@ -12,7 +12,7 @@
  * redirect, the print sheet, and the delete guards actually read.
  */
 
-import { can, tierOf, type QrPlacement } from '@vardenia/core'
+import { can, QR_PLACEMENTS, tierOf, type QrPlacement } from '@vardenia/core'
 
 /**
  * A relationship as Payload serialises it: the id alone at depth 0, the whole
@@ -47,6 +47,8 @@ export interface QrDoc {
   category?: string | null
   externalUrl?: string | null
   placement?: QrPlacement | null
+  /** Where the shirt is, on a t-shirt code. Null on every other code. */
+  location?: string | null
   active?: boolean | null
   scanCount?: number | null
 }
@@ -99,4 +101,24 @@ export function isPubliclyVisible(doc: RelatedDoc | null): boolean {
 export function relatedId(value: Related<RelatedDoc>): number | null {
   if (typeof value === 'number') return value
   return populated(value)?.id ?? null
+}
+
+/**
+ * The card and file label for a code printed on a shirt, or null for any other
+ * code.
+ *
+ * Thirty shirts all point at the home page, so the target cannot tell them
+ * apart; the place written on each one is the only thing that does. Checked
+ * before the target by the sheet and the export, which would otherwise label
+ * every shirt "Vardenia home page".
+ */
+export function shirtLabel(qr: QrDoc): string | null {
+  if (qr.placement !== 't-shirt') return null
+  const location = qr.location?.trim()
+  return location ? `T-shirt: ${location}` : 'T-shirt'
+}
+
+/** A `?placement=` value, or null when it is missing or not a real placement. */
+export function parsePlacement(raw: string | null): QrPlacement | null {
+  return (QR_PLACEMENTS as readonly string[]).includes(raw ?? '') ? (raw as QrPlacement) : null
 }

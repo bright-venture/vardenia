@@ -76,8 +76,7 @@ export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
 /**
  * Where the physical code lives.
  *
- * One value, because there is one surface: the printed magazine. Codes appear
- * nowhere on the website.
+ * The printed magazine, and printed shirts. Codes appear nowhere on the website.
  *
  * This list previously carried six more (window-decal, table-tent, billboard,
  * business-card, digital, event) describing surfaces that had been discussed and
@@ -89,8 +88,13 @@ export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
  * enum: today a business gets exactly one code (see hooks/ensureQrCode), so
  * telling a window decal from a magazine page means minting a code per surface
  * first. Add the value back at that point, alongside the feature that earns it.
+ *
+ * `t-shirt` is the first one to earn it: a run of home-page codes printed on
+ * shirts, one code per shirt, each with the place it is worn written on the
+ * code's `location` field. The minting per surface is done by hand, one code per
+ * shirt, so the rule above holds.
  */
-export const QR_PLACEMENTS = ['magazine-page'] as const
+export const QR_PLACEMENTS = ['magazine-page', 't-shirt'] as const
 export type QrPlacement = (typeof QR_PLACEMENTS)[number]
 
 /** Defaults key off this rather than indexing the list, so widening it stays safe. */

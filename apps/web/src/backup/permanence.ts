@@ -89,6 +89,8 @@ export interface PermanenceCode {
   category?: string
   /** The address an `external` code opens. */
   externalUrl?: string
+  /** Where the shirt is, on a t-shirt code. A label, but the only one it has. */
+  location?: string
 }
 
 export interface PermanenceFile {
@@ -104,6 +106,7 @@ interface CodeRow {
   active: boolean | null
   category: string | null
   external_url: string | null
+  location: string | null
   business_slug: string | null
   article_slug: string | null
   issue_slug: string | null
@@ -134,6 +137,7 @@ export function assertIdentifier(name: string): string {
 const exportSql = (schema: string) => `
   select
     q.code, q.target_type, q.placement, q.active, q.category, q.external_url,
+    q.location,
     b.slug as business_slug,
     a.slug as article_slug,
     i.slug as issue_slug
@@ -175,6 +179,10 @@ function toCode(row: CodeRow): PermanenceCode {
 
   const externalUrl = text(row.external_url)
   if (externalUrl) code.externalUrl = externalUrl
+
+  // Last, and only when set, so the file for every magazine code is unchanged.
+  const location = text(row.location)
+  if (location) code.location = location
 
   return code
 }
@@ -276,14 +284,14 @@ async function idBySlug(
 const upsertSql = (schema: string) => `
   insert into "${schema}"."qr_codes"
     (code, target_type, placement, active, category, external_url,
-     business_id, article_id, issue_id, updated_at, created_at)
+     business_id, article_id, issue_id, location, updated_at, created_at)
   values (
     $1,
     $2::text::"${schema}"."enum_qr_codes_target_type",
     $3::text::"${schema}"."enum_qr_codes_placement",
     $4,
     $5::text::"${schema}"."enum_qr_codes_category",
-    $6, $7, $8, $9, now(), now()
+    $6, $7, $8, $9, $10, now(), now()
   )
   on conflict (code) do update set
     target_type  = excluded.target_type,
@@ -294,6 +302,7 @@ const upsertSql = (schema: string) => `
     business_id  = excluded.business_id,
     article_id   = excluded.article_id,
     issue_id     = excluded.issue_id,
+    location     = excluded.location,
     updated_at   = now()
   returning id, (xmax = 0) as inserted
 `
@@ -384,6 +393,7 @@ export async function restorePermanence(
       businessId,
       articleId,
       issueId,
+      c.location ?? null,
     ])
 
     const row = rows[0]

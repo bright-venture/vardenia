@@ -7,7 +7,7 @@ surfaces**, where the surfaces have very different lifecycles:
 
 | Surface          | Changes          | Lifecycle                                    |
 | ---------------- | ---------------- | -------------------------------------------- |
-| Print magazine   | Twice a year     | **Immutable once printed.** Lives ~12 months |
+| Print magazine   | Once a year      | **Immutable once printed.** Lives ~12 months |
 | Website          | Continuously     | Deploy any time                              |
 | Mobile app       | Every few weeks  | App-store review gate, old versions persist  |
 | QR / short links | Never (the code) | **Permanent.** Destination is editable       |

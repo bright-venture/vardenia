@@ -58,6 +58,11 @@ const adminOnly = (args: FieldArgs) => Boolean(args?.req && isAdminFieldLevel(ar
  */
 const issueEditable = (args: FieldArgs) => adminOnly(args) || !args.doc?.issue
 
+const PLACEMENT_LABELS: Record<(typeof QR_PLACEMENTS)[number], string> = {
+  'magazine-page': 'Magazine page',
+  't-shirt': 'T-shirt',
+}
+
 const TARGET_LABELS: Record<string, string> = {
   business: 'A listing',
   article: 'A magazine article',
@@ -82,7 +87,9 @@ export const QrCodes: CollectionConfig = {
     },
     useAsTitle: 'code',
     // Where it goes, how much it is used, whether it is printed and still on.
-    defaultColumns: ['code', 'business', 'scanCount', 'issue', 'active'],
+    // Location is empty for magazine codes; it is the column that tells the
+    // shirts apart in the "Not linked to a listing" folder.
+    defaultColumns: ['code', 'business', 'location', 'scanCount', 'issue', 'active'],
     group: 'Directory',
   },
   access: {
@@ -240,13 +247,46 @@ export const QrCodes: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: DEFAULT_PLACEMENT,
-      options: QR_PLACEMENTS.map((value) => ({
-        label: value === 'magazine-page' ? 'Magazine page' : value,
-        value,
-      })),
+      options: QR_PLACEMENTS.map((value) => ({ label: PLACEMENT_LABELS[value], value })),
       admin: {
         description:
-          'Codes are printed in the magazine and nowhere else, so leave this on magazine-page. The other values are surfaces we have not shipped; picking one now records something that is not true.',
+          'Where the code is printed. Magazine page for every code in the magazine. T-shirt for a code printed on a shirt, which also asks where the shirt is.',
+      },
+    },
+    /**
+     * Where a shirt is, for a code printed on one.
+     *
+     * Only a t-shirt code has it: a magazine code already says where it is, by
+     * its listing and its issue, so the field is hidden and ignored for those.
+     * A label, not a destination - the scan still goes wherever the code points
+     * - so it stays editable after printing. It is read at report time, not
+     * copied onto each scan, so changing it relabels the scans already counted.
+     */
+    {
+      name: 'location',
+      type: 'text',
+      admin: {
+        condition: (data) => data?.placement === 't-shirt',
+        description:
+          'Where this shirt is worn or handed out, for example "Byblos old souk" or "Shirt 07, Beirut Marina". Shown on the print sheet and in the scan report.',
+      },
+      validate: (value: unknown, { siblingData }: { siblingData?: { placement?: string } }) => {
+        if (siblingData?.placement !== 't-shirt') return true
+        return typeof value === 'string' && value.trim().length > 0
+          ? true
+          : 'Say where this shirt is, so its scans can be told apart from the others.'
+      },
+      hooks: {
+        // A magazine code never carries one, even if it was typed in before the
+        // placement was changed back.
+        beforeChange: [
+          ({ value, siblingData }) =>
+            (siblingData as { placement?: string })?.placement === 't-shirt'
+              ? typeof value === 'string'
+                ? value.trim()
+                : value
+              : null,
+        ],
       },
     },
     {
