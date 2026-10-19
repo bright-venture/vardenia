@@ -405,7 +405,8 @@ export const Businesses: CollectionConfig = {
               name: 'verified',
               type: 'checkbox',
               defaultValue: false,
-              access: { update: isAdminFieldLevel },
+              // As tier: staff cannot create a listing already marked verified.
+              access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
               admin: { description: 'Vardenia has physically visited and vetted this business.' },
             },
             // The four below are staff-only at the FIELD level, not merely hidden

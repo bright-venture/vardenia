@@ -77,7 +77,10 @@ export const tierField: SelectField = {
   // Every listing imported from the magazine is on this tier.
   defaultValue: 'silver',
   index: true,
-  access: { update: isAdminFieldLevel },
+  // Admin-only on create as well as update. With update alone, a listing made
+  // by staff (or duplicated from a silver one) could start on any tier; denied,
+  // the value falls back to the default above. The importer overrides access.
+  access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
   admin: {
     components: { Cell: '/components/admin/ListCells#TierCell' },
@@ -91,7 +94,8 @@ export const featuredField: CheckboxField = {
   type: 'checkbox',
   defaultValue: false,
   index: true,
-  access: { update: isAdminFieldLevel },
+  // As tier: a new listing made by staff starts unfeatured.
+  access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
   validate: validateFeatured,
   admin: {
     description: `An add-on to either tier: a place at the top of the home page, and first place in every listing grid. The home page has ${FEATURED_PLACES} places, and the box cannot be ticked on a seventh listing.`,

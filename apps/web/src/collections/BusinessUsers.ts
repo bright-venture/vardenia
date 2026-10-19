@@ -1,4 +1,5 @@
 import { guardSelfAccountUpdate } from '../hooks/guardSelfAccountUpdate'
+import { guardAccountIdentity } from '../hooks/guardAccountIdentity'
 import type { CollectionConfig } from 'payload'
 import {
   BUSINESS_USER_COLLECTION,
@@ -78,8 +79,9 @@ export const BusinessUsers: CollectionConfig = {
      */
     afterChange: [inviteBusinessUser],
     // A partner changes their password only by the emailed reset link, never
-    // with a session alone. hooks/guardSelfAccountUpdate.
-    beforeOperation: [guardSelfAccountUpdate],
+    // with a session alone. hooks/guardSelfAccountUpdate. And only an admin
+    // changes another person's email or password. hooks/guardAccountIdentity.
+    beforeOperation: [guardSelfAccountUpdate, guardAccountIdentity],
   },
 
   admin: {

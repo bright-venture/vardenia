@@ -25,7 +25,9 @@ export const bookingFeeField: GroupField = {
   name: 'bookingFee',
   type: 'group',
   label: 'Booking fee',
-  access: { read: isStaffFieldLevel, update: isAdminFieldLevel },
+  // Admin sets the price, on a new listing as on an existing one. Staff creating
+  // a listing leave it empty, which bills nothing until an admin fills it in.
+  access: { read: isStaffFieldLevel, create: isAdminFieldLevel, update: isAdminFieldLevel },
   admin: {
     description:
       'From the agreement the venue signed. Leave the unit empty and the venue is never billed. No-shows and cancellations are never charged.',

@@ -25,12 +25,14 @@ The existing unit suite was run: **2,075 of 2,076 tests pass**; the one failure 
 - **F-07 fixed:** partner invitation links last 3 days, and the email says so in English and Arabic.
 - **F-09 already fixed by the Payload 3.90 upgrade:** a password reset signs out every device, and a password change signs out every device but the current one. A test now keeps sessions switched on, since this depends on them.
 - **F-10 fixed:** closed dates are read only where they overlap the booking's own days, bounded on both sides, through one shared lookup used by the booking service, the live availability check and the booking guard. However many closures a venue has, the one that matters is found.
+- **F-08 fixed:** creating a statement takes a database lock held until it commits, so statements are numbered one at a time and two at once get consecutive numbers. The one-per-month check runs under the same lock. "Already drawn up" is reported only when a live statement for that venue and month is really there. A number clash is tried again, and anything else is an error. This also fixed unique refusals never being recognised: Payload rethrows them as a ValidationError without the database code, so the old check missed every one. It affected draw-up and reviews.
 - **F-11 fixed:** a status change locks the booking's row inside its save and reads the status again. A second change made at the same moment waits, sees the first, and is refused with "changed a moment ago, reload" instead of overwriting it.
+- **F-12 fixed:** every save of a statement locks its row and works from the statement as it stands, not the copy read at the start. Two lines questioned at once both stay open. A staff save from a form opened before a question arrived keeps that question open instead of erasing it. What the venue wrote is always kept from the database.
 - **F-13 fixed:** each booking attempt carries an id. A retry of an attempt that already booked returns that booking, without emailing again, and a unique `request_id` column stops two copies arriving together from both booking (migration `20261016_100000_booking_request_id`).
 - **F-14 fixed:** the save heart sends the state it wants (`saved: true` or `false`), so a repeated request changes nothing, and only the latest press's answer can set the heart.
 - **F-15 fixed:** every staff-only route uses one shared check, which also requires the account to be a staff account.
 
-Every fix has regression tests. The full suite passes: 2,125 tests.
+Every fix has regression tests. The full suite passes: 2,221 tests. F-08 and F-12 were also checked with simultaneous saves against the development database.
 
 ---
 

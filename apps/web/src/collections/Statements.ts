@@ -6,6 +6,7 @@ import type {
   Where,
 } from 'payload'
 import { APIError } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
 import {
   DISPUTE_OUTCOMES,
   FEE_UNITS,
@@ -26,6 +27,7 @@ import {
 } from '../access/index'
 import { sendStatementEmail } from '../lib/statement-email'
 import { reportError } from '../lib/report'
+import { transactionDb } from '../lib/transaction-db'
 import { STATEMENT_MOVES } from '../lib/statement-moves'
 
 // Re-exported for the tests and anything that imported it from here.
@@ -85,9 +87,46 @@ interface StatementData {
   paidAt?: string | null
 }
 
-/** The next "VRD-2026-0007" for this year: the highest so far, plus one. */
+/** Any fixed number, so the lock below means "creating a statement" and nothing else. */
+const NUMBER_LOCK = 4_820_001
+
+/**
+ * One statement is created at a time, until each one commits.
+ *
+ * Taken before the one-per-month check as well as before numbering. The check
+ * is a read followed by a write, which two draw-ups at once both passed; the
+ * database's partial index catches that in production, but only where the
+ * migration that made it has run, and on the development database, which is
+ * synced without migrations, it went straight through. Serialised, the second
+ * save reads the first one's statement and is refused in words. Statements are
+ * created a few hundred times a month, so the wait costs nothing.
+ *
+ * Taking it twice in one transaction is fine: Postgres counts it, and both are
+ * released at commit.
+ */
+async function lockStatementCreation(req: Parameters<CollectionBeforeChangeHook>[0]['req']) {
+  const db = await transactionDb(req)
+  if (db) await db.execute(sql`SELECT pg_advisory_xact_lock(${NUMBER_LOCK}, 0)`)
+}
+
+/**
+ * The next "VRD-2026-0007" for this year: the highest so far, plus one.
+ *
+ * # Under a lock, because "highest plus one" is a race on its own
+ *
+ * Two statements created at the same moment - two staff drawing up, or a
+ * draw-up and a statement made by hand - both read 0006 and both chose 0007.
+ * The unique index refused the second, and the draw-up then reported that
+ * venue as "already drawn up" when it had never been drawn up at all.
+ *
+ * The creation lock (below) is held by this save's transaction until it
+ * commits. A second numbering waits for it, and by the time it reads, the
+ * first statement and its number are committed. Numbers stay consecutive, with no gaps from a
+ * sequence handing out numbers to saves that later fail.
+ */
 async function nextNumber(req: Parameters<CollectionBeforeChangeHook>[0]['req']) {
   const year = new Date().getUTCFullYear()
+  await lockStatementCreation(req)
   const latest = await req.payload.find({
     collection: 'statements',
     where: { number: { like: `VRD-${year}-` } },
@@ -178,6 +217,65 @@ function applyDispute(next: StatementData, before: StatementData, request: unkno
   ) as never
 }
 
+/**
+ * The statement as it stands in the database now, with its row locked until
+ * this save commits.
+ *
+ * # Why the copy Payload hands the hook is not enough
+ *
+ * Payload reads `originalDoc` at the start of an update, unlocked, and writes
+ * the whole `lines` array back at the end. Two saves at once - a venue
+ * questioning one line while another of its people questions a second, or
+ * staff settling a line while a venue questions another - each started from the
+ * same copy, and whichever wrote last erased the other's change. A question
+ * could simply disappear.
+ *
+ * `FOR UPDATE` makes the second save wait for the first to commit, and the
+ * read after it, on the same transaction, sees what the first one wrote. Null
+ * when it cannot be asked, and the save goes ahead on Payload's copy as before.
+ */
+async function lockedStatement(
+  req: Parameters<CollectionBeforeChangeHook>[0]['req'],
+  id: unknown,
+): Promise<StatementData | null> {
+  const statementId = Number(id)
+  const db = await transactionDb(req)
+  if (!db || !Number.isInteger(statementId)) return null
+
+  await db.execute(
+    sql`SELECT "id" FROM "payload"."statements" WHERE "id" = ${statementId} FOR UPDATE`,
+  )
+  return (await req.payload
+    .findByID({ collection: 'statements', id: statementId, depth: 0, overrideAccess: true, req })
+    .catch(() => null)) as StatementData | null
+}
+
+/**
+ * Keeps a question the venue asked after this form was opened.
+ *
+ * Staff save the whole form, every line included, from a copy loaded minutes
+ * ago. A line the venue questioned since then is "not questioned" in that copy,
+ * and saving it would close the question unanswered. The venue's half of a
+ * dispute - the reason and when it was asked - only ever comes from the venue,
+ * so it is always taken from the database. The decision is staff's, but only
+ * on a question they could see: if the form never showed this question, the
+ * line keeps it open.
+ */
+export function keepVenueQuestions(lines: LineData[], stored: LineData[]): LineData[] {
+  const byId = new Map(stored.filter((line) => line.id).map((line) => [line.id, line]))
+  return lines.map((line) => {
+    const saved = line.id ? byId.get(line.id) : undefined
+    if (!saved?.disputedAt) return line
+    const sawQuestion = sameInstant(line.disputedAt, saved.disputedAt)
+    return {
+      ...line,
+      disputeReason: saved.disputeReason ?? null,
+      disputedAt: saved.disputedAt,
+      disputeOutcome: sawQuestion ? line.disputeOutcome : saved.disputeOutcome,
+    }
+  })
+}
+
 /** What a line bills for. Fixed once the statement is issued; see below. */
 const LOCKED_LINE_FIELDS = ['reference', 'day', 'unit', 'quantity', 'rate', 'amount'] as const
 
@@ -234,7 +332,7 @@ const deriveFields: CollectionBeforeChangeHook = async ({
   context,
 }) => {
   const next = data as StatementData
-  const before = (originalDoc ?? {}) as StatementData
+  let before = (originalDoc ?? {}) as StatementData
 
   if (operation === 'create') {
     if (!isPeriod(next.period)) {
@@ -242,7 +340,9 @@ const deriveFields: CollectionBeforeChangeHook = async ({
     }
 
     // One statement per venue per month. A void one does not count, so a
-    // statement drawn up wrongly can be voided and drawn up again.
+    // statement drawn up wrongly can be voided and drawn up again. Under the
+    // creation lock, so two at once cannot both pass. See lockStatementCreation.
+    await lockStatementCreation(req)
     const businessId = idOf(next.business)
     const existing = await req.payload.find({
       collection: 'statements',
@@ -263,6 +363,21 @@ const deriveFields: CollectionBeforeChangeHook = async ({
     }
 
     if (!next.number) next.number = await nextNumber(req)
+  }
+
+  // On update, everything below is checked against the statement as it stands
+  // now, locked, rather than the copy read at the start. See lockedStatement.
+  if (operation === 'update') {
+    const stored = await lockedStatement(req, (originalDoc as { id?: unknown } | undefined)?.id)
+    if (stored) {
+      // A new object: Payload's own copy is left as it read it.
+      before = { ...before, ...stored }
+      if (next.lines)
+        next.lines = keepVenueQuestions(
+          next.lines as LineData[],
+          (stored.lines ?? []) as LineData[],
+        ) as never
+    }
   }
 
   if (operation === 'update' && before.status && next.status && next.status !== before.status) {

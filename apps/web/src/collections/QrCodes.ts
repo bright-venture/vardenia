@@ -42,8 +42,7 @@ const listingOpen = ({ doc }: { doc?: Record<string, unknown> }) =>
  *
  * Every other destination is a page of this site. An external address sends
  * whoever scans a printed code wherever it says, under Vardenia's name, so it
- * is the one destination a staff account could turn into a phishing link. The
- * Users collection already says QR codes are the admin's to manage.
+ * is the one destination a staff account could turn into a phishing link.
  */
 type FieldArgs = Parameters<typeof isAdminFieldLevel>[0] & { doc?: Record<string, unknown> }
 // No request means no signed-in admin; never a crash in the admin form.
@@ -57,6 +56,18 @@ const adminOnly = (args: FieldArgs) => Boolean(args?.req && isAdminFieldLevel(ar
  * still give a code its issue; taking it away, or moving it, is admin-only.
  */
 const issueEditable = (args: FieldArgs) => adminOnly(args) || !args.doc?.issue
+
+/**
+ * Switching a printed code off, or back on, is the admin's.
+ *
+ * Staff make and edit codes - every listing mints one, and the team prints its
+ * own, like the shirts - and until a code is printed they may switch it off and
+ * on freely. Once printed (given an issue, or scanned), unticking Active sends
+ * every reader holding that paper to the "this has moved" page, which is the
+ * one thing a code exists to prevent. That decision sits with whoever may also
+ * delete codes.
+ */
+const activeEditable = (args: FieldArgs) => adminOnly(args) || destinationOpen(args)
 
 const PLACEMENT_LABELS: Record<(typeof QR_PLACEMENTS)[number], string> = {
   'magazine-page': 'Magazine page',
@@ -172,7 +183,7 @@ export const QrCodes: CollectionConfig = {
         'Only an admin can point a code at another website.',
       admin: {
         description:
-          'What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, untick Active.',
+          'What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.',
       },
     },
     {
@@ -307,10 +318,11 @@ export const QrCodes: CollectionConfig = {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,
+      access: { update: activeEditable },
       admin: {
         components: { Cell: '/components/admin/ListCells#ActiveCell' },
         description:
-          'Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code.',
+          'Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code. Once a code is printed (given an issue, or scanned), only an admin can switch it off or on.',
       },
     },
     {

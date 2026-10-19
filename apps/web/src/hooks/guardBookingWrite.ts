@@ -12,6 +12,7 @@ import {
 } from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from '../lib/availability'
 import { closedPeriods } from '../lib/booking-service'
+import { transactionDb } from '../lib/transaction-db'
 
 /**
  * Which collection a session came from, as a role.
@@ -391,25 +392,12 @@ export async function lockedStatus(
   id: unknown,
 ): Promise<BookingStatus | null> {
   const bookingId = Number(id)
-  const adapter = req.payload?.db as
-    | {
-        drizzle?: Executor
-        sessions?: Record<string | number, { db?: Executor } | undefined>
-      }
-    | undefined
-  if (!adapter?.drizzle || !Number.isInteger(bookingId)) return null
-
-  const transaction = req.transactionID ? await req.transactionID : undefined
-  const db =
-    (transaction !== undefined ? adapter.sessions?.[transaction]?.db : undefined) ?? adapter.drizzle
+  const db = await transactionDb(req)
+  if (!db || !Number.isInteger(bookingId)) return null
 
   const result = await db.execute(
     sql`SELECT "status" FROM "payload"."bookings" WHERE "id" = ${bookingId} FOR UPDATE`,
   )
   const row = result.rows?.[0] as { status?: unknown } | undefined
   return typeof row?.status === 'string' ? (row.status as BookingStatus) : null
-}
-
-interface Executor {
-  execute: (query: ReturnType<typeof sql>) => Promise<{ rows?: unknown[] }>
 }

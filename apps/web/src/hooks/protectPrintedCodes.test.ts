@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { protectBusinessWithPrintedCode, protectPrintedCodes } from './protectPrintedCodes'
+import {
+  protectArticleWithPrintedCode,
+  protectBusinessWithPrintedCode,
+  protectPrintedCodes,
+} from './protectPrintedCodes'
 
 /**
  * The guard that stops a code in circulation from being deleted, and the one
@@ -92,7 +96,9 @@ describe('a code that is in circulation', () => {
   })
 
   it('says what to do instead rather than only refusing', async () => {
-    await expect(call(protectPrintedCodes, '1', scanned)).rejects.toThrow(/Uncheck "active"/)
+    await expect(call(protectPrintedCodes, '1', scanned)).rejects.toThrow(
+      /an admin uncheck "active"/,
+    )
   })
 })
 
@@ -256,5 +262,49 @@ describe('clearing every listing', () => {
 
   it('changes nothing when the flag is absent', async () => {
     await expect(call(protectPrintedCodes, '1', attached)).rejects.toThrow(/cannot be deleted/)
+  })
+})
+
+/**
+ * Articles had no such guard, so a printed article could be deleted and its
+ * code sent to "not found". Unpublishing is the way out instead.
+ */
+describe('deleting an article', () => {
+  const articleReq = (codes: Record<string, unknown>[]) =>
+    ({
+      payload: {
+        find: async ({ where }: { where: { and: Record<string, unknown>[] } }) => {
+          const byArticle = where.and.find((clause) => 'article' in clause) as {
+            article: { equals: string | number }
+          }
+          return {
+            docs: codes.filter((code) => String(code.article) === String(byArticle.article.equals)),
+          }
+        },
+      },
+    }) as never
+
+  const remove = (id: string, codes: Record<string, unknown>[]) =>
+    protectArticleWithPrintedCode({
+      id,
+      req: articleReq(codes),
+      context: {},
+      collection: {} as never,
+    } as never)
+
+  it('refuses when its code has been scanned or is in an issue', async () => {
+    await expect(
+      remove('20', [{ id: 9, code: 'ART1234', scanCount: 2, article: 20 }]),
+    ).rejects.toThrow(/ART1234.*Unpublish/)
+    await expect(
+      remove('20', [{ id: 9, code: 'ART1234', scanCount: 0, issue: 3, article: 20 }]),
+    ).rejects.toThrow(/print issue/)
+  })
+
+  it('allows it when its code never left the CMS, or it has none', async () => {
+    await expect(
+      remove('20', [{ id: 9, code: 'ART1234', scanCount: 0, issue: null, article: 20 }]),
+    ).resolves.toBeUndefined()
+    await expect(remove('21', [])).resolves.toBeUndefined()
   })
 })

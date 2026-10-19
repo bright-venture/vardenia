@@ -230,17 +230,8 @@ export async function drawUpStatements(
       continue
     }
 
-    try {
-      await payload.create({
-        collection: 'statements',
-        data: { business: venue.id, period, status: 'draft', lines },
-        overrideAccess: true,
-      })
-    } catch (error) {
-      // Another run drew this venue up first - the database's one-per-month
-      // index refused this one. That is the answer the check above would
-      // have given a moment later.
-      if (!isUniqueViolation(error)) throw error
+    const outcome = await createStatement(payload, { business: venue.id, period, lines })
+    if (outcome === 'already-drawn-up') {
       result.alreadyDrawnUp += 1
       continue
     }
@@ -308,4 +299,51 @@ export async function sendDrafts(
     result.sent += 1
   }
   return result
+}
+
+/**
+ * Creates one venue's statement, and says when the month was already drawn up.
+ *
+ * "Already drawn up" used to be the answer to any unique refusal, which also
+ * covered a clash on the statement number: the venue was reported as done
+ * when nothing had been written for it. Now it is the answer only when a live
+ * statement for that venue and month is actually there, whichever check
+ * refused this one. Any other refusal - a
+ * number clash, which the numbering lock in collections/Statements should have
+ * made impossible - is tried again, and a third failure is an error, never a
+ * quiet "done".
+ */
+export async function createStatement(
+  payload: Payload,
+  data: { business: number | string; period: string; lines: unknown[] },
+  attempts = 3,
+): Promise<'created' | 'already-drawn-up'> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await payload.create({
+        collection: 'statements',
+        data: { ...data, status: 'draft' } as never,
+        overrideAccess: true,
+      })
+      return 'created'
+    } catch (error) {
+      // Whatever refused it, a live statement for this venue and month means
+      // the month is drawn up: by the index, or by the statement's own check.
+      const live = await payload.find({
+        collection: 'statements',
+        where: {
+          and: [
+            { business: { equals: data.business } },
+            { period: { equals: data.period } },
+            { status: { not_equals: 'void' } },
+          ],
+        },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      })
+      if (live.totalDocs > 0) return 'already-drawn-up'
+      if (!isUniqueViolation(error) || attempt >= attempts) throw error
+    }
+  }
 }

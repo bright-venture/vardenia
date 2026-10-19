@@ -45,7 +45,7 @@ export function committedReason(qr: QrDoc): string | null {
 }
 
 const RETIRE_INSTEAD =
-  'Uncheck "active" instead. Retired codes land on the "this listing has moved" page, ' +
+  'Have an admin uncheck "active" instead. Retired codes land on the "this listing has moved" page, ' +
   'which is what keeps already-printed copies working. If the code was never printed, ' +
   'clear its issue first and then delete it.'
 
@@ -193,6 +193,49 @@ export const protectBusinessWithPrintedCode: CollectionBeforeDeleteHook = async 
     `This listing owns a code that is already in circulation: ${detail}. ` +
       'Deleting the listing and making it again would mint a different code and strand the ' +
       'printed one. Edit this listing instead, or retire its code first.',
+    400,
+  )
+}
+
+/**
+ * The same protection for an article.
+ *
+ * A code can open an article as well as a listing, and nothing stopped staff
+ * deleting an article whose code is in print: the code's link to it is cleared
+ * with the row, and every reader who scans it lands on "not found" rather than
+ * on the "this has moved" page that exists for exactly this. Listings had the
+ * guard above and articles did not, which was the inconsistency.
+ *
+ * Unpublishing is the way out, as retiring is for a code: an article set back to
+ * draft sends its code to the "moved" page.
+ */
+export const protectArticleWithPrintedCode: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  const codes = await req.payload.find({
+    collection: 'qr-codes',
+    where: {
+      and: [
+        { article: { equals: id } },
+        { or: [{ scanCount: { greater_than: 0 } }, { issue: { exists: true } }] },
+      ],
+    },
+    limit: 10,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  const blocked = codes.docs
+    .map((doc) => doc as unknown as QrDoc)
+    .map((doc) => ({ doc, reason: committedReason(doc) }))
+    .filter((entry) => entry.reason !== null)
+
+  if (blocked.length === 0) return
+
+  const detail = blocked.map((entry) => `${entry.doc.code} (${entry.reason})`).join(', ')
+
+  throw new APIError(
+    `This article has a code that is already in circulation: ${detail}. ` +
+      'Deleting it would send every reader who scans that code to "not found". ' +
+      'Unpublish the article instead: its code then opens the "this has moved" page.',
     400,
   )
 }

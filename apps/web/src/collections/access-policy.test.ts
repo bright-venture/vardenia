@@ -119,6 +119,45 @@ describe('Businesses: the Commercial tab', () => {
   })
 })
 
+/**
+ * Locked on edit and not on create was a way round the lock: a staff member
+ * could make a listing that started out featured, verified or on a booking fee,
+ * or duplicate one that was. Denied on create, each falls back to its default.
+ */
+describe('Businesses: commercial values on a new listing', () => {
+  const fields = tabFields(Businesses, 'Commercial')
+
+  it.each(['tier', 'featured', 'verified', 'bookingFee'])('%s is admin-only on create', (name) => {
+    const field = fieldNamed(fields, name)
+    const create = 'access' in field ? field.access?.create : undefined
+
+    expect(create, `${name} should be admin-only on create`).toBeDefined()
+    expect(create!(fieldCtx(staff))).toBe(false)
+    expect(create!(fieldCtx(admin))).toBe(true)
+  })
+})
+
+/**
+ * Staff make and edit codes. Switching one off once it is printed sends every
+ * reader holding that paper to the "moved" page, so that part is the admin's.
+ */
+describe('QrCodes: switching a code off', () => {
+  const active = fieldNamed(QrCodes.fields, 'active')
+  const update = ('access' in active ? active.access?.update : undefined)!
+  const withDoc = (user: unknown, doc: Record<string, unknown>) =>
+    ({ req: { user }, doc }) as unknown as Parameters<FieldAccess>[0]
+
+  it('is open to staff before the code is printed', () => {
+    expect(update(withDoc(staff, { scanCount: 0, issue: null }))).toBe(true)
+  })
+
+  it('is for an admin once the code is scanned or given an issue', () => {
+    expect(update(withDoc(staff, { scanCount: 3, issue: null }))).toBe(false)
+    expect(update(withDoc(staff, { scanCount: 0, issue: 1 }))).toBe(false)
+    expect(update(withDoc(admin, { scanCount: 3, issue: 1 }))).toBe(true)
+  })
+})
+
 // ---------------------------------------------------------------------------
 
 describe('collection read access', () => {

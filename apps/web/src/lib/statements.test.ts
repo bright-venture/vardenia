@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { NotReadyError, assertReady, drawUpStatements, sendDrafts } from './statements'
+import {
+  NotReadyError,
+  assertReady,
+  createStatement,
+  drawUpStatements,
+  sendDrafts,
+} from './statements'
 
 /**
  * The monthly run, against a stand-in database.
@@ -249,5 +255,86 @@ describe('sending a month', () => {
       noRecipient: ['Venue 20'],
     })
     expect(h.updates).toEqual([expect.objectContaining({ id: 1, data: { status: 'sent' } })])
+  })
+})
+
+/**
+ * F-08. "Already drawn up" used to be the answer to any unique refusal,
+ * including a clash on the statement number, so a venue could be reported as
+ * done when nothing had been written for it.
+ */
+describe('createStatement', () => {
+  const refusal = () =>
+    Object.assign(new Error('Value must be unique'), {
+      name: 'ValidationError',
+      data: { errors: [{ path: 'number', tableName: 'statements' }] },
+    })
+
+  const fakePayload = (creates: (() => unknown)[], liveAfterRefusal: number[]) => {
+    let created = 0
+    let looked = 0
+    return {
+      calls: () => ({ created, looked }),
+      payload: {
+        create: async () => {
+          const step = creates[created++]
+          return step ? step() : {}
+        },
+        find: async () => ({ totalDocs: liveAfterRefusal[looked++] ?? 0 }),
+      } as never,
+    }
+  }
+
+  const data = { business: 1, period: '2026-09', lines: [] }
+
+  it('creates it', async () => {
+    const fake = fakePayload([() => ({})], [])
+    await expect(createStatement(fake.payload, data)).resolves.toBe('created')
+  })
+
+  it('says already drawn up only when that month is really there', async () => {
+    const fake = fakePayload(
+      [
+        () => {
+          throw refusal()
+        },
+      ],
+      [1],
+    )
+    await expect(createStatement(fake.payload, data)).resolves.toBe('already-drawn-up')
+  })
+
+  it('tries again after a refusal that was not the month', async () => {
+    const fake = fakePayload(
+      [
+        () => {
+          throw refusal()
+        },
+        () => ({}),
+      ],
+      [0],
+    )
+    await expect(createStatement(fake.payload, data)).resolves.toBe('created')
+    expect(fake.calls().created).toBe(2)
+  })
+
+  it('fails loudly rather than reporting a venue done when it keeps failing', async () => {
+    const always = () => {
+      throw refusal()
+    }
+    const fake = fakePayload([always, always, always], [0, 0, 0])
+    await expect(createStatement(fake.payload, data)).rejects.toThrow(/unique/)
+  })
+
+  it('passes any other error straight through', async () => {
+    const fake = fakePayload(
+      [
+        () => {
+          throw new Error('database is down')
+        },
+      ],
+      [],
+    )
+    await expect(createStatement(fake.payload, data)).rejects.toThrow(/database is down/)
   })
 })

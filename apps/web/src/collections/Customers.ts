@@ -1,4 +1,5 @@
 import { guardSelfAccountUpdate } from '../hooks/guardSelfAccountUpdate'
+import { guardAccountIdentity } from '../hooks/guardAccountIdentity'
 import type { CollectionConfig } from 'payload'
 import { CUSTOMER_COLLECTION, isAdmin, isStaff, selfOrStaff } from '../access/index'
 import { passwordResetEmail, verificationEmail } from '../lib/auth-email'
@@ -122,8 +123,9 @@ export const Customers: CollectionConfig = {
     // not-null foreign key. When it anonymises instead, the anonymise path clears
     // them itself - see closeCustomerAccount. hooks/cleanupSavedListings.
     // Email and password change only through /auth/profile, which asks for
-    // the current password first. hooks/guardSelfAccountUpdate.
-    beforeOperation: [guardSelfAccountUpdate],
+    // the current password first. hooks/guardSelfAccountUpdate. And only an
+    // admin changes another person's. hooks/guardAccountIdentity.
+    beforeOperation: [guardSelfAccountUpdate, guardAccountIdentity],
     beforeDelete: [closeRatherThanDelete, cleanupSavedListings('customer')],
   },
 

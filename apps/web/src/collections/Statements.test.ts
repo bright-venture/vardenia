@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Access, FieldAccess } from 'payload'
-import { STATEMENT_MOVES, Statements, readStatements } from './Statements'
+import { STATEMENT_MOVES, Statements, keepVenueQuestions, readStatements } from './Statements'
 
 /**
  * Who can see a venue's statements.
@@ -160,5 +160,61 @@ describe('an issued statement, saved from the admin', () => {
         req: { payload: {} },
       } as never),
     ).resolves.toBeTruthy()
+  })
+})
+
+/**
+ * F-12. Staff save the whole form from a copy loaded minutes ago. A line the
+ * venue questioned since then reads "not questioned" in that copy, and saving
+ * it closed the question unanswered.
+ */
+describe('keepVenueQuestions', () => {
+  const asked = '2026-10-09T08:00:00.000Z'
+  const stored = [
+    {
+      id: 'a',
+      amount: 10,
+      disputeOutcome: 'open',
+      disputeReason: 'They never came',
+      disputedAt: asked,
+    },
+    { id: 'b', amount: 20, disputeOutcome: 'none', disputeReason: null, disputedAt: null },
+  ]
+
+  it('keeps a question the form never showed', () => {
+    const stale = [
+      { id: 'a', amount: 10, disputeOutcome: 'none', disputeReason: null, disputedAt: null },
+      { id: 'b', amount: 20, disputeOutcome: 'none', disputeReason: null, disputedAt: null },
+    ]
+    const [a, b] = keepVenueQuestions(stale, stored)
+    expect(a).toMatchObject({
+      disputeOutcome: 'open',
+      disputeReason: 'They never came',
+      disputedAt: asked,
+    })
+    expect(b).toMatchObject({ disputeOutcome: 'none' })
+  })
+
+  it('lets staff decide a question they could see', () => {
+    const decided = [
+      {
+        id: 'a',
+        amount: 10,
+        disputeOutcome: 'upheld',
+        disputeReason: 'They never came',
+        disputedAt: asked,
+      },
+      stored[1]!,
+    ]
+    expect(keepVenueQuestions(decided, stored)[0]).toMatchObject({ disputeOutcome: 'upheld' })
+  })
+
+  it('never lets the form rewrite what the venue said', () => {
+    const edited = [
+      { id: 'a', amount: 10, disputeOutcome: 'upheld', disputeReason: 'edited', disputedAt: asked },
+    ]
+    expect(keepVenueQuestions(edited, stored)[0]).toMatchObject({
+      disputeReason: 'They never came',
+    })
   })
 })

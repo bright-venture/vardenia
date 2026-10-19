@@ -47,7 +47,7 @@ export const Users: CollectionConfig = {
       ],
       admin: {
         description:
-          'Staff create and edit all content. Admin additionally manages accounts, QR codes and commercial flags. Venue owners sign in with a partner account, not here.',
+          'Staff create and edit all content, make and edit QR codes, and run bookings and billing. Admin additionally manages the team, changes the sign-in of partner and customer accounts, sets tier, featured, verified and booking fees, deletes what cannot be undone, and switches printed QR codes off. Venue owners sign in with a partner account, not here.',
       },
     },
     { name: 'phone', type: 'text' },

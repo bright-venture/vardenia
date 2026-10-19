@@ -24,9 +24,15 @@
  * contract values in a stranger's hands.
  *
  * The division of labour:
- *  - staff own content: listings, articles, issues, media.
- *  - admin owns identity (all three collections) and the permanence layer (QR
- *    codes, scan events), plus commercial flags like tier and verification.
+ *  - staff own content: listings, articles, issues, media. They make and edit
+ *    QR codes, run bookings and billing, and create and look after partner and
+ *    customer accounts.
+ *  - admin owns identity: the team itself, and the sign-in (email, password,
+ *    verification) of partner and customer accounts - hooks/guardAccountIdentity.
+ *    Admin owns what cannot be undone: deleting accounts, issues, bookings,
+ *    statements and QR codes, and switching a printed code off. And the
+ *    commercial flags - tier, featured, verified, booking fee - on create as
+ *    well as on update.
  *  - business-users own nothing yet; they read their own listings.
  */
 

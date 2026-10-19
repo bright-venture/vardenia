@@ -547,7 +547,7 @@ export interface User {
   id: number;
   name: string;
   /**
-   * Staff create and edit all content. Admin additionally manages accounts, QR codes and commercial flags. Venue owners sign in with a partner account, not here.
+   * Staff create and edit all content, make and edit QR codes, and run bookings and billing. Admin additionally manages the team, changes the sign-in of partner and customer accounts, sets tier, featured, verified and booking fees, deletes what cannot be undone, and switches printed QR codes off. Venue owners sign in with a partner account, not here.
    */
   roles: ('admin' | 'staff')[];
   phone?: string | null;
@@ -582,7 +582,7 @@ export interface QrCode {
    */
   code: string;
   /**
-   * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, untick Active.
+   * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.
    */
   targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home';
   business?: (number | null) | Business;
@@ -608,7 +608,7 @@ export interface QrCode {
    */
   issue?: (number | null) | Issue;
   /**
-   * Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code.
+   * Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code. Once a code is printed (given an issue, or scanned), only an admin can switch it off or on.
    */
   active?: boolean | null;
   /**
