@@ -24,77 +24,21 @@
   },
   "home": {
     "eyebrow": "Découvrir le Liban",
-    "headlineA": "Un seul Liban.",
-    "headlineB": "Des découvertes",
-    "headlineEmphasis": "sans fin.",
     "intro": "Des lieux où séjourner, des saveurs à découvrir et des expériences à retenir, de la côte aux montagnes et jusqu'à la Békaa.",
     "browse": "Parcourir l'annuaire",
     "read": "Lire le magazine",
-    "sectionsEyebrow": "Par où commencer",
-    "sectionsTitle": "Six sections, une seule taxonomie",
-    "sectionsNote": "Chaque fiche appartient à une seule section, et le code imprimé sur un chevalet de table renvoie à la section sous laquelle il a été vendu. C'est pourquoi cet ensemble ne change pas.",
     "wholeDirectory": "Tout l'annuaire",
-    "wholeDirectoryNote": "Toutes les fiches, filtrées à votre goût",
-    "listingsEyebrow": "Depuis l'annuaire",
-    "listingsTitle": "Des lieux où nous sommes allés",
     "seeAllListings": "Voir toutes les fiches",
-    "listingsEmpty": "L'annuaire est encore en construction",
-    "listingsEmptyBody": "Nous visitons et vérifions chaque lieu avant qu'il n'apparaisse ici, les premières fiches sont donc encore en cours de préparation. Pour l'instant, le magazine reste le moyen le plus rapide d'entrer.",
-    "magazineEyebrow": "Depuis le magazine",
-    "magazineTitle": "Lire",
-    "allArticles": "Tous les articles",
-    "businessTitle": "Vous tenez un établissement au Liban ?",
-    "businessBody": "Une inscription commence par une visite. Nous nous occupons de la rédaction, de la photographie et du code QR qui figure sur vos chevalets de table.",
     "addBusiness": "Ajouter votre établissement",
     "searchPlaceholder": "Rechercher un lieu, une région, une expérience...",
     "searchAction": "Rechercher",
-    "statsPlaces": "lieux",
-    "statsSections": "sections",
-    "statsCodes": "codes imprimés",
     "scroll": "Faire défiler",
     "manifesto": "Un guide que l'on tient en main. Un code auquel on peut se fier.",
-    "manifestoSub": "Vardenia se construit lentement : chaque lieu visité, chaque horaire d'ouverture confirmé, chaque code imprimé permanent. Ici, le papier et le numérique ne sont pas deux produits, mais une même promesse.",
-    "regionsEyebrow": "Où aller",
-    "regionsTitle": "Choisissez un rivage, une montagne, une ville",
-    "printEyebrow": "En version imprimée",
     "printTitle": "Le numéro 01 est chez l'imprimeur",
     "printBody": "Chaque lieu du magazine porte un code. Pointez-y un téléphone et la fiche s'ouvre, avec les horaires d'aujourd'hui plutôt que ceux du jour de l'impression.",
-    "printCta": "Lire le magazine",
-    "printImageAlt": "Un numéro imprimé de Vardenia ouvert sur une table",
-    "featuredEyebrow": "À la une",
     "featuredTitle": "Des adresses qui valent le détour",
     "featuredNote": "Choisies par les établissements qui soutiennent ce guide.",
-    "heroPhotoBy": "Photo",
-    "heroSlides": [
-      {
-        "place": "Beyrouth",
-        "note": "Le front de mer au crépuscule"
-      },
-      {
-        "place": "Byblos",
-        "note": "Le château des croisés au-dessus de la vieille ville"
-      },
-      {
-        "place": "Bcharré",
-        "note": "Une église perchée au-dessus de la vallée de la Qadisha"
-      },
-      {
-        "place": "Baalbek",
-        "note": "Les colonnes de Jupiter, plaine de la Békaa"
-      },
-      {
-        "place": "Saïda",
-        "note": "Le château de la Mer au coucher du soleil"
-      },
-      {
-        "place": "Harissa",
-        "note": "La baie de Jounieh vue de la montagne"
-      }
-    ],
     "manifestoAccent": "fier",
-    "statsIssue": "numéro, à l'impression",
-    "codeEyebrow": "Le code, en pratique",
-    "codeTitle": "Du papier au lieu en trois secondes",
     "codeSteps": [
       {
         "title": "Le code imprimé",
@@ -107,27 +51,6 @@
       {
         "title": "La fiche, à jour",
         "sub": "Le lieu s'ouvre avec ses horaires d'aujourd'hui, pas ceux du jour de l'impression."
-      }
-    ],
-    "codeEnd": "Chaque code fonctionne. Pour toujours.",
-    "codeOpen": "Ouvrir ce lieu",
-    "codeBook": "Itinéraire",
-    "issueCodeLabel": "Un code imprimé, actif",
-    "verifiedEyebrow": "La mention, expliquée",
-    "verifiedTitle": "Ce que veut dire « Vérifié »",
-    "verifiedNote": "Certaines fiches portent une petite mention : Vérifié par Vardenia. Voici ce qu'il faut pour l'obtenir.",
-    "verifiedSteps": [
-      {
-        "title": "Quelqu'un s'y rend",
-        "sub": "Un membre de l'équipe Vardenia visite le lieu en personne avant d'ajouter la mention."
-      },
-      {
-        "title": "La fiche est contrôlée",
-        "sub": "Ce que dit la fiche, de l'adresse aux horaires, est comparé à ce qui existe sur place."
-      },
-      {
-        "title": "Alors seulement, la mention",
-        "sub": "Un administrateur l'ajoute après la visite. Aucune formule ni aucun paiement ne permet de l'acheter."
       }
     ]
   },
@@ -750,17 +673,9 @@
     "onlineLabel": "La page en ligne",
     "openPage": "Ouvrir cette page",
     "scanAction": "Suivre le code",
-    "trustTitle": "Derrière le label.",
     "magazineName": "Le magazine Vardenia",
-    "printFallback": "Le Liban sur papier.",
     "openIssue": "Ouvrir ce numéro",
-    "storiesTitle": "Un peu plus loin.",
     "storiesBody": "Des récits à lire maintenant. Des lieux à garder en mémoire.",
-    "readStory": "Lire le récit",
-    "businessA": "Votre adresse.",
-    "businessB": "Notre prochain récit.",
-    "businessImageAlt": "La mosquée Fakhreddine et les façades en pierre de Deir el Qamar",
-    "businessPlace": "Deir el Qamar · Chouf",
     "promiseBody": "Un guide imprimé, un annuaire en ligne et une découverte qui continue. Suivez le code de la page au lieu, et cherchez le label Vérifié sur les adresses visitées et contrôlées par l’équipe.",
     "cameraLabel": "Appareil photo",
     "scanAim": "Cadrez le code imprimé",

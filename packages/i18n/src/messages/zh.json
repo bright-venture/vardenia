@@ -24,77 +24,21 @@
   },
   "home": {
     "eyebrow": "发现黎巴嫩",
-    "headlineA": "一个黎巴嫩，",
-    "headlineB": "无尽的",
-    "headlineEmphasis": "发现。",
     "intro": "住宿之处、待尝的风味与难忘的体验，从海岸到群山，再到贝卡谷地。",
     "browse": "浏览名录",
     "read": "阅读杂志",
-    "sectionsEyebrow": "从何处开始",
-    "sectionsTitle": "六个板块，一套分类",
-    "sectionsNote": "每条记录只属于一个板块，而餐桌卡片上印制的代码会指向它被售出时所属的同一板块。因此这套板块不会改变。",
     "wholeDirectory": "整个名录",
-    "wholeDirectoryNote": "所有记录，按您的喜好筛选",
-    "listingsEyebrow": "来自名录",
-    "listingsTitle": "我们去过的地方",
     "seeAllListings": "查看所有记录",
-    "listingsEmpty": "名录仍在建设中",
-    "listingsEmptyBody": "我们会先探访并核实每个地方，它才会出现在这里，因此最初的记录仍在整理中。目前，杂志是最快的入门方式。",
-    "magazineEyebrow": "来自杂志",
-    "magazineTitle": "阅读",
-    "allArticles": "所有文章",
-    "businessTitle": "您在黎巴嫩经营场所吗？",
-    "businessBody": "收录始于一次探访。文字、摄影以及印在您餐桌卡片上的二维码，都由我们负责。",
     "addBusiness": "添加您的商户",
     "searchPlaceholder": "搜索地点、地区或体验...",
     "searchAction": "搜索",
-    "statsPlaces": "个地点",
-    "statsSections": "个板块",
-    "statsCodes": "个印刷代码",
     "scroll": "向下滚动",
     "manifesto": "一本可以握在手中的指南。一个可以信赖的代码。",
-    "manifestoSub": "Vardenia 以慢工细活的方式打造：每个地方都实地探访，每个营业时间都逐一确认，每个印刷代码都永久有效。在这里，印刷与数字并非两种产品，而是同一份承诺。",
-    "regionsEyebrow": "去往何处",
-    "regionsTitle": "选一片海岸、一座山、一座城",
-    "printEyebrow": "印刷版",
     "printTitle": "第 01 期已在印刷中",
     "printBody": "杂志中的每个地方都带有一个代码。用手机对准它，记录便会打开，显示的是今天的营业时间，而非付印当天的。",
-    "printCta": "阅读杂志",
-    "printImageAlt": "一本翻开摊在桌上的 Vardenia 印刷刊",
-    "featuredEyebrow": "精选",
     "featuredTitle": "值得专程前往",
     "featuredNote": "由支持本指南的场所甄选。",
-    "heroPhotoBy": "摄影",
-    "heroSlides": [
-      {
-        "place": "贝鲁特",
-        "note": "黄昏时的海滨"
-      },
-      {
-        "place": "比布鲁斯",
-        "note": "老城之上的十字军城堡"
-      },
-      {
-        "place": "卜舍里",
-        "note": "俯瞰卡迪沙谷地的山顶教堂"
-      },
-      {
-        "place": "巴勒贝克",
-        "note": "朱庇特神庙的石柱，贝卡谷地"
-      },
-      {
-        "place": "赛达",
-        "note": "日落时的海上城堡"
-      },
-      {
-        "place": "哈里萨",
-        "note": "从山上眺望朱尼耶海湾"
-      }
-    ],
     "manifestoAccent": "信赖",
-    "statsIssue": "期，正在付印",
-    "codeEyebrow": "代码如何运作",
-    "codeTitle": "三秒，从纸页到现场",
     "codeSteps": [
       {
         "title": "印刷的代码",
@@ -107,27 +51,6 @@
       {
         "title": "实时页面",
         "sub": "打开的是今天的营业时间，而不是印刷那天的。"
-      }
-    ],
-    "codeEnd": "每个代码都有效，永久如此。",
-    "codeOpen": "打开这个地点",
-    "codeBook": "获取路线",
-    "issueCodeLabel": "一个有效的印刷代码",
-    "verifiedEyebrow": "标记说明",
-    "verifiedTitle": "“已核实”是什么意思",
-    "verifiedNote": "部分地点带有一个小标记：经 Vardenia 核实。以下是获得它的条件。",
-    "verifiedSteps": [
-      {
-        "title": "我们亲自到访",
-        "sub": "在添加标记之前，Vardenia 团队成员会亲自到访该地点。"
-      },
-      {
-        "title": "核对页面",
-        "sub": "页面上的信息，从地址到营业时间，都会与实际情况核对。"
-      },
-      {
-        "title": "之后才有标记",
-        "sub": "由管理员在到访后添加。任何套餐或付费都无法买到它。"
       }
     ]
   },
@@ -750,17 +673,9 @@
     "onlineLabel": "在线页面",
     "openPage": "打开此页面",
     "scanAction": "跟随二维码",
-    "trustTitle": "认证背后的故事。",
     "magazineName": "Vardenia 杂志",
-    "printFallback": "纸上的黎巴嫩。",
     "openIssue": "打开本期",
-    "storiesTitle": "再远一点。",
     "storiesBody": "此刻阅读故事，日后铭记风景。",
-    "readStory": "阅读故事",
-    "businessA": "你的地方。",
-    "businessB": "我们的下个故事。",
-    "businessImageAlt": "代尔卡马尔的法赫雷丁清真寺与石砌建筑",
-    "businessPlace": "代尔卡马尔 · 舒夫",
     "promiseBody": "纸质指南与在线目录，让发现不断延续。跟随二维码，从书页走向目的地；团队实地探访并核对过的地点，会带有认证标识。",
     "cameraLabel": "相机",
     "scanAim": "将印刷二维码置于框内",

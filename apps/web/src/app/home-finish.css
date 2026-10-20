@@ -90,9 +90,7 @@
   margin-bottom: 56px;
 }
 .vd-home .vd-home-heading h2,
-.vd-home .vd-print-copy h2,
-.vd-home .vd-home-trust h2,
-.vd-home .vd-home-business h2 {
+.vd-home .vd-print-copy h2 {
   text-transform: none;
   font-size: clamp(44px, 5.6vw, 84px);
   max-width: 12ch;
@@ -121,8 +119,7 @@
 .vd-text-link:active {
   transform: translateY(1px);
 }
-.vd-home-places,
-.vd-home-stories {
+.vd-home-places {
   padding: 120px var(--vd-gutter);
 }
 .vd-home .vd-detours {
@@ -397,48 +394,6 @@
   transform: none;
   transition: none;
 }
-.vd-home-trust {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 7vw;
-  padding: 80px var(--vd-gutter) 130px;
-}
-.vd-home-trust > div > p {
-  max-width: 40ch;
-  margin-top: 28px;
-}
-.vd-trust-answers details {
-  background: #eeeae2;
-  margin-bottom: 14px;
-  padding: 0 28px;
-}
-.vd-trust-answers summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  cursor: pointer;
-  list-style: none;
-  padding: 24px 0;
-  font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 1.2;
-}
-.vd-trust-answers summary::-webkit-details-marker {
-  display: none;
-}
-.vd-trust-answers summary > span {
-  font-family: var(--font-body);
-  font-size: 22px;
-}
-.vd-trust-answers details[open] summary > span {
-  transform: rotate(45deg);
-}
-.vd-home .vd-trust-answers p {
-  padding-bottom: 24px;
-  font-size: 17px;
-  line-height: 1.6;
-}
 .vd-home .vd-magazine {
   padding-block: 130px;
   gap: 7vw;
@@ -493,85 +448,6 @@
   font-family: var(--font-display);
   font-size: clamp(28px, 3.6vw, 48px);
   line-height: 1.15;
-}
-.vd-home-story-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 60px 40px;
-}
-.vd-home-story:first-child {
-  grid-column: 1 / -1;
-}
-.vd-home-story:first-child > a {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  align-items: center;
-  gap: 6vw;
-}
-.vd-home-story > a {
-  display: block;
-}
-.vd-home-story .vd-plate {
-  aspect-ratio: 1.5;
-}
-.vd-home-story h3 {
-  font-size: clamp(30px, 3vw, 46px);
-  margin-top: 28px;
-}
-.vd-home-story:first-child h3 {
-  font-size: clamp(34px, 4.4vw, 66px);
-  margin-top: 0;
-}
-.vd-home .vd-home-story p {
-  margin-top: 24px;
-  max-width: 40ch;
-}
-.vd-home-story time {
-  display: block;
-  font-size: 14px;
-  margin-block: 24px 12px;
-}
-.vd-home-story a:hover .vd-text-link {
-  text-decoration-thickness: 2px;
-}
-.vd-home-business {
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 8vw;
-  align-items: center;
-  padding: 110px var(--vd-gutter);
-  background: #eeeae2;
-}
-.vd-home-business figure {
-  position: relative;
-  aspect-ratio: 0.95;
-}
-.vd-home-business figure img {
-  object-fit: cover;
-}
-.vd-home-business figcaption {
-  position: absolute;
-  inset-inline: 22px;
-  bottom: 22px;
-  background: var(--vd-paper);
-  padding: 8px 14px;
-  width: fit-content;
-  font-size: 14px;
-}
-.vd-home .vd-home-business h2 {
-  max-width: none;
-  font-size: clamp(40px, 5.2vw, 78px);
-}
-.vd-home-business > div > p {
-  max-width: 43ch;
-  margin-top: 30px;
-}
-.vd-business-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px 28px;
-  align-items: center;
-  margin-top: 36px;
 }
 .vd-main-home .vd-credits {
   padding-block: 26px;
@@ -631,8 +507,7 @@
     margin-bottom: 32px;
   }
   .vd-home .vd-home-heading h2,
-  .vd-home .vd-print-copy h2,
-  .vd-home .vd-home-trust h2 {
+  .vd-home .vd-print-copy h2 {
     font-size: clamp(38px, 10vw, 54px);
     max-width: 13ch;
   }
@@ -644,8 +519,7 @@
   .vd-home-heading > a {
     margin-top: 20px;
   }
-  .vd-home-places,
-  .vd-home-stories {
+  .vd-home-places {
     padding: 72px 24px;
   }
   .vd-home .vd-detours {
@@ -782,23 +656,6 @@
   .vd-print-hint {
     margin-top: 14px;
   }
-  .vd-home-trust {
-    display: block;
-    padding: 0 24px 90px;
-  }
-  .vd-home-trust > div > p {
-    font-size: 17px;
-    margin-top: 24px;
-  }
-  .vd-trust-answers {
-    margin-top: 32px;
-  }
-  .vd-trust-answers details {
-    padding-inline: 20px;
-  }
-  .vd-trust-answers summary {
-    font-size: 25px;
-  }
   .vd-home .vd-magazine {
     padding: 105px 24px;
     gap: 46px;
@@ -822,47 +679,6 @@
   }
   .vd-home .vd-magazine-placeholder > p {
     font-size: 34px;
-  }
-  .vd-home-story-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 46px;
-  }
-  .vd-home-story:first-child > a {
-    display: block;
-  }
-  .vd-home-story:first-child h3,
-  .vd-home-story h3 {
-    font-size: 34px;
-    margin-top: 26px;
-  }
-  .vd-home .vd-home-story p {
-    font-size: 17px;
-    margin-top: 18px;
-  }
-  .vd-home-story time {
-    margin-top: 20px;
-  }
-  .vd-home-business {
-    display: flex;
-    flex-direction: column;
-    padding: 70px 24px;
-    gap: 40px;
-    align-items: stretch;
-  }
-  .vd-home-business figure {
-    aspect-ratio: 1.2;
-  }
-  .vd-home .vd-home-business h2 {
-    font-size: clamp(36px, 9.4vw, 50px);
-  }
-  .vd-home-business > div > p {
-    margin-top: 24px;
-    font-size: 17px;
-  }
-  .vd-business-actions {
-    margin-top: 28px;
-    gap: 14px 24px;
   }
   .vd-main-home .vd-credits {
     margin-inline: 24px;
@@ -935,17 +751,6 @@
   text-transform: none;
   font-size: clamp(44px, 5.6vw, 84px);
 }
-.vd-trust-mark {
-  margin-top: 26px;
-  display: inline-block;
-}
-.vd-trust-mark > span {
-  font-family: var(--font-body);
-  font-size: 14px;
-  text-transform: none;
-  letter-spacing: 0;
-  padding: 9px 14px;
-}
 .vd-print-keyboard .vd-print-phone,
 .vd-print-keyboard .vd-print-card {
   transform: none;
@@ -953,15 +758,6 @@
 }
 .vd-print-keyboard .vd-print-scan {
   display: none;
-}
-.vd-home-story-grid[data-count='2'] > .vd-home-story:nth-child(2) {
-  grid-column: 1 / -1;
-}
-.vd-home-story-grid[data-count='2'] > .vd-home-story:nth-child(2) > a {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: 6vw;
-  align-items: center;
 }
 .vd-home-sponsored .vd-home-place-grid[data-count='1'] {
   grid-template-columns: minmax(0, 1fr);
@@ -972,9 +768,6 @@
   grid-auto-flow: row;
 }
 @media (max-width: 700px) {
-  .vd-home-story-grid[data-count='2'] > .vd-home-story:nth-child(2) > a {
-    display: block;
-  }
   .vd-home-sponsored .vd-home-place-grid[data-count='2'] {
     grid-template-columns: none;
     grid-auto-flow: column;
@@ -1302,28 +1095,6 @@
  * has the same grade applied in advance. Filtering the largest image on the
  * first screen live cost about a third of a second before it could be painted.
  */
-.vd-public
-  :is(
-    [data-vd-photo],
-    .vd-scene-image > img,
-    .vd-city-images > img,
-    .vd-destination-images > img,
-    .vd-postcard-front img,
-    .vd-trip-panel li > img,
-    .vd-discovery-photo img,
-    .vd-plate img,
-    .vd-inner-hero-media img,
-    .vd-page-intro figure > img,
-    .vd-story-photograph img,
-    .vd-article-photo img,
-    .vd-auth-image > img,
-    .vd-recovery-photo > img,
-    .prose-vardenia img,
-    .vd-home-business figure img,
-    .vd-home-stories article img
-  ) {
-  filter: url('#vd-cinematic-grade');
-}
 .vd-city-autoplay span {
   display: block;
   font-size: 22px;

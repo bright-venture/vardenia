@@ -68,15 +68,11 @@ const files = execFileSync('git', ['ls-files', 'apps/web/src'], {
 const RADIUS = /\brounded(?:-[a-z0-9]+)*\b/g
 
 /**
- * Deliberate exceptions, by file. Each is a drawing of a real object whose
- * corners are part of what it is, not a corner of the interface.
- *
- * - The phone in the home page's scan sequence: square, it stops reading as a
- *   phone. `rounded-[2rem]` matches here as bare `rounded`.
+ * Deliberate exceptions, by file. Each must be a drawing of a real object whose
+ * corners are part of what it is, not a corner of the interface. Empty since
+ * the old home page's scan sequence (a drawn phone) was removed.
  */
-const ALLOWED: Record<string, readonly string[]> = {
-  'apps/web/src/components/home/ScanSequence.tsx': ['rounded'],
-}
+const ALLOWED: Record<string, readonly string[]> = {}
 
 /** `rounded`, `rounded-md`, `rounded-t-xl` - but never `rounded-full`. */
 const isSized = (token: string) => !token.endsWith('-full')
