@@ -33,6 +33,8 @@ export function CinematicJourney({
     root = useRef<HTMLDivElement>(null),
     film = useRef<HTMLVideoElement>(null)
   const userPaused = useRef(false)
+  // Pressed Play themselves, which overrides holding the film back on a slow line.
+  const userStarted = useRef(false)
   const postcards = useRef<HTMLDivElement>(null)
   const [motion, toggleMotion] = useJourneyMotion(),
     [playing, setPlaying] = useState(false),
@@ -66,12 +68,20 @@ export function CinematicJourney({
    * film begins once the page has loaded and the browser is idle.
    */
   const [pageReady, setPageReady] = useState(false)
+  const [poster, setPoster] = useState<string | undefined>(undefined)
   useEffect(() => {
     let cancelled = false
     const ready = () => {
       const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 200))
       idle(() => {
-        if (!cancelled) setPageReady(true)
+        if (cancelled) return
+        setPageReady(true)
+        setPoster(
+          assets +
+            (window.matchMedia('(max-width:700px)').matches
+              ? 'byblos-hero-m.webp'
+              : 'byblos-hero.webp'),
+        )
       })
     }
     if (document.readyState === 'complete') ready()
@@ -107,7 +117,19 @@ export function CinematicJourney({
     if (!el || !pageReady) return
     let inView = false,
       cancelled = false
+    /**
+     * Not on its own on a connection that cannot afford it. The phone cut is
+     * 1.6 MB, which on a slow line or with Data Saver on is most of what the
+     * visit costs. The photograph stays, and the film's own Play button still
+     * works for anyone who wants it.
+     */
+    const link = (
+      navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+    ).connection
+    const thrifty =
+      link?.saveData === true || ['slow-2g', '2g', '3g'].includes(link?.effectiveType ?? '')
     const play = () => {
+      if (thrifty && !userStarted.current) return
       if (motion && !failed && inView && !document.hidden && !userPaused.current)
         void el.play().catch(() => {
           if (!cancelled) setPlaying(false)
@@ -337,17 +359,31 @@ export function CinematicJourney({
       <section className="vd-hero-track" aria-label={t('heroA')}>
         <div className="vd-hero">
           <div className="vd-hero-media">
-            <img
-              src={assets + 'byblos-hero.webp'}
-              alt="Byblos old harbour"
-              width="1600"
-              height="1200"
-              fetchPriority="high"
-            />
+            {/*
+             * A phone gets its own crop of the photograph. The hero fills a tall
+             * screen, so a phone only ever showed the middle of the 1600x1200
+             * landscape file - and still downloaded all of it, 172 KB, as the
+             * largest thing on its first screen. The crop is that middle, 720x1200,
+             * at half the weight. Same breakpoint as the phone cut of the film.
+             */}
+            <picture>
+              <source media="(max-width:700px)" srcSet={assets + 'byblos-hero-m.webp'} />
+              <img
+                src={assets + 'byblos-hero.webp'}
+                alt="Byblos old harbour"
+                width="1600"
+                height="1200"
+                fetchPriority="high"
+              />
+            </picture>
             {!failed && (
               <video
                 ref={film}
-                poster={assets + 'byblos-hero.webp'}
+                // Set once mounted, to the same crop the <picture> chose: a
+                // poster cannot follow a media query, and the desktop file as
+                // a phone's poster downloaded the 172 KB photograph after all.
+                // Until then the photograph underneath shows through.
+                poster={poster}
                 muted
                 playsInline
                 loop
@@ -418,6 +454,7 @@ export function CinematicJourney({
                     if (!v) return
                     if (v.paused) {
                       userPaused.current = false
+                      userStarted.current = true
                       void v.play().catch(() => setFailed(true))
                     } else {
                       userPaused.current = true

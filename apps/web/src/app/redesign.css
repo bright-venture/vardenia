@@ -208,7 +208,7 @@
   background: var(--vd-ink);
 }
 .vd-hero-media,
-.vd-hero-media > img,
+.vd-hero-media > picture > img,
 .vd-hero-media video,
 .vd-hero-shade {
   position: absolute;
@@ -221,7 +221,7 @@
   z-index: -3;
   overflow: hidden;
 }
-.vd-hero-media > img,
+.vd-hero-media > picture > img,
 .vd-hero-media video {
   transform: scale(var(--vd-film-scale, 1));
   transform-origin: center;
@@ -2040,7 +2040,7 @@
   .vd-journey-pin {
     display: none;
   }
-  .vd-hero-media > img,
+  .vd-hero-media > picture > img,
   .vd-hero-media video,
   .vd-scene-photo,
   .vd-stone-image {
