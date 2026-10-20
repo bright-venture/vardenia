@@ -76,6 +76,9 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
           return (
             <li key={locale}>
               <NextLink
+                // Not prefetched: one of these is always the page already open,
+                // and switching language is rare enough to wait for.
+                prefetch={false}
                 href={`${getPathname({ href: pathname, locale })}${search}`}
                 hrefLang={locale}
                 className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 block px-3 py-1.5 transition-colors"

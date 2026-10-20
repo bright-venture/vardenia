@@ -35,17 +35,16 @@ const nextConfig: NextConfig = {
    */
   experimental: {
     globalNotFound: true,
-    /**
-     * Stylesheets go inside the HTML instead of being fetched after it.
-     *
-     * The page cannot paint until its CSS has arrived, and on the live site
-     * that was four more round trips through Cloudflare and Netlify after the
-     * document, about a quarter of a second before anything appeared. Most
-     * visits are a single page opened from a printed code, so the CSS cache
-     * a separate file would buy is rarely used. The CSP already allows inline
-     * style.
+    /*
+     * No `inlineCss`. It was on for a few days to save the round trips to the
+     * stylesheets, and measured on the live site it cost more than it saved:
+     * Next puts the CSS in the page twice, once in the <style> tags and again
+     * in the RSC data that rides along for client navigation. Every page grew
+     * by about 165 KB of CSS each way - the home page HTML went from 230 KB to
+     * 597 KB, 40 KB to 80 KB compressed - and every prefetch carried it too.
+     * Lighthouse mobile went from 73 to 70 with the first paint later. Linked
+     * stylesheets are cached after the first page; inlined ones never are.
      */
-    inlineCss: true,
   },
 
   /**

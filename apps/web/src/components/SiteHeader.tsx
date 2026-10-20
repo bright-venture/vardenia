@@ -102,7 +102,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <HeaderBar>
       <div className="vd-header-inner">
         <div className="contents">
-          <Link href="/" className="vd-brand">
+          {/* No prefetch: on the home page it fetched the page already open, a
+              second copy of its data in the middle of the first load. */}
+          <Link href="/" prefetch={false} className="vd-brand">
             Vardenia
           </Link>
 
