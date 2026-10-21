@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 1625,
+  "count": 1627,
   "codes": [
     {
       "code": "003T5D1",
@@ -808,6 +808,13 @@
       "businessSlug": "maison-pastel"
     },
     {
+      "code": "2SWG6WZ",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-karim"
+    },
+    {
       "code": "2T8QFAB",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1247,6 +1254,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "aiden-chalets-faraya"
+    },
+    {
+      "code": "3Y262P3",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "chez-joumana"
     },
     {
       "code": "3YC1R62",
