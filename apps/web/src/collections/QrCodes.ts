@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, PayloadRequest } from 'payload'
 import { DEFAULT_PLACEMENT, QR_PLACEMENTS, QR_TARGET_TYPES, TAXONOMY } from '@vardenia/core'
 import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { committedReason, protectPrintedCodes } from '../hooks/protectPrintedCodes'
@@ -68,6 +68,68 @@ const issueEditable = (args: FieldArgs) => adminOnly(args) || !args.doc?.issue
  * delete codes.
  */
 const activeEditable = (args: FieldArgs) => adminOnly(args) || destinationOpen(args)
+
+/**
+ * One code per listing for each place it is printed.
+ *
+ * A listing mints its own code when it is saved (hooks/ensureQrCode), which is
+ * not obvious from the QR form. Two listings were created and then given a
+ * code each by hand, and each ended up with two: the one the listing points
+ * at and a stray beside it on the print sheet, which is the kind of decoy that
+ * ends up printed. A second code on the same placement is refused, naming the
+ * one that exists. Another placement - a window sticker, a shirt - is a
+ * different code by design.
+ *
+ * Only when the listing is being set or changed, so an existing pair saved
+ * before this rule can still be edited and cleaned up.
+ */
+async function oneCodePerListing(
+  value: unknown,
+  {
+    req,
+    id,
+    operation,
+    previousValue,
+    siblingData,
+  }: {
+    req: PayloadRequest
+    id?: number | string
+    operation?: string
+    previousValue?: unknown
+    siblingData?: unknown
+  },
+): Promise<string | true> {
+  const sibling = (siblingData ?? {}) as { targetType?: string; placement?: string }
+  const listing = idOf(value)
+  if (sibling.targetType !== 'business' || listing === null || !req?.payload) return true
+  if (operation === 'update' && idOf(previousValue) === listing) return true
+
+  const existing = await req.payload.find({
+    collection: 'qr-codes',
+    where: {
+      and: [
+        { business: { equals: listing } },
+        { placement: { equals: sibling.placement ?? DEFAULT_PLACEMENT } },
+        ...(id !== undefined && id !== null ? [{ id: { not_equals: id } }] : []),
+      ],
+    },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const code = existing.docs[0]?.code
+  return code
+    ? `This listing already has code ${code}, made automatically when the listing was saved. Use that one instead of making another.`
+    : true
+}
+
+const idOf = (value: unknown): number | string | null => {
+  if (typeof value === 'number' || typeof value === 'string') return value
+  const nested =
+    (value as { id?: unknown; value?: unknown } | null)?.id ??
+    (value as { value?: unknown } | null)?.value
+  return typeof nested === 'number' || typeof nested === 'string' ? nested : null
+}
 
 const PLACEMENT_LABELS: Record<(typeof QR_PLACEMENTS)[number], string> = {
   'magazine-page': 'Magazine page',
@@ -193,7 +255,12 @@ export const QrCodes: CollectionConfig = {
       relationTo: 'businesses',
       index: true,
       access: { update: listingOpen },
-      admin: { condition: (data) => data?.targetType === 'business' },
+      admin: {
+        condition: (data) => data?.targetType === 'business',
+        description:
+          'Every listing gets its code automatically when it is saved. Make one here only for a listing that has none.',
+      },
+      validate: oneCodePerListing,
     },
     {
       name: 'article',
