@@ -472,9 +472,9 @@ export interface Business {
 export interface Media {
   id: number;
   /**
-   * Describe the image for screen readers and search engines.
+   * Describe the image for screen readers and search engines. Optional for now, but fill it in before the picture is used on a listing.
    */
-  alt: string;
+  alt?: string | null;
   caption?: string | null;
   /**
    * Photographer or rights holder. Required for licensed imagery.
@@ -585,6 +585,9 @@ export interface QrCode {
    * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.
    */
   targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home';
+  /**
+   * Every listing gets its code automatically when it is saved. Make one here only for a listing that has none.
+   */
   business?: (number | null) | Business;
   article?: (number | null) | Article;
   /**

@@ -5,8 +5,10 @@ import { unguessableFilename } from '../hooks/unguessableFilename'
 
 /**
  * Photography is the product for a luxury title, so the image sizes here are
- * generous and the alt text is required - an inaccessible premium magazine is
- * still an inaccessible magazine, and Google reads alt text on every listing.
+ * generous and alt text matters - an inaccessible premium magazine is still an
+ * inaccessible magazine, and Google reads alt text on every listing. It is
+ * optional for now only so photographs can be bulk-uploaded first and
+ * described afterwards; see the field below.
  */
 const WEBP = { format: 'webp', options: { quality: 82 } } as const
 
@@ -74,9 +76,15 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      required: true,
+      // Optional for now, so photographs can be bulk-uploaded and described
+      // afterwards. A picture without one renders with alt="" (treated as
+      // decorative by screen readers), and search engines get no description,
+      // so fill it in before the picture goes on a listing.
       localized: true,
-      admin: { description: 'Describe the image for screen readers and search engines.' },
+      admin: {
+        description:
+          'Describe the image for screen readers and search engines. Optional for now, but fill it in before the picture is used on a listing.',
+      },
     },
     { name: 'caption', type: 'text', localized: true },
     {
