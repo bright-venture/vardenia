@@ -116,6 +116,24 @@ export function resolveImage(
 ): ResolvedImage | null {
   if (!field || typeof field !== 'object') return null
 
+  /**
+   * The original, when the size asked for was never made.
+   *
+   * Payload skips a size the original is too small for, so a missing preferred
+   * size means a small photograph. Falling through the list then landed on the
+   * 400px thumbnail - a magazine photo 780px wide was shown as a blurry 400px
+   * card. The original is the largest version that exists, so it is the right
+   * answer whenever the preferred size is not there.
+   */
+  if (!field.sizes?.[preferred]?.url && field.url) {
+    return {
+      src: toRenderableSrc(field.url),
+      alt: field.alt ?? '',
+      width: field.width ?? 1600,
+      height: field.height ?? 900,
+    }
+  }
+
   const order = [preferred, ...FALLBACK_ORDER.filter((s) => s !== preferred)]
   for (const size of order) {
     const candidate = field.sizes?.[size]

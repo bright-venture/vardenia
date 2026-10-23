@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { can, tierOf } from '@vardenia/core'
 import {
+  resolveImage,
   PLACEHOLDER_STEM,
   isPlaceholder,
   resolveGallery,
@@ -116,5 +117,30 @@ describe('tierOf', () => {
     for (const v of [null, undefined, '', 'gold', 42, {}]) {
       expect(tierOf(v)).toBe('basic')
     }
+  })
+})
+
+/**
+ * A small photograph has no card size: Payload skips sizes the original is too
+ * small for. The 400px thumbnail used to be chosen ahead of the 780px original.
+ */
+describe('a photograph smaller than the size asked for', () => {
+  const small = {
+    url: 'https://example.com/media/small.webp',
+    filename: 'small.webp',
+    alt: 'Small',
+    width: 786,
+    height: 442,
+    sizes: {
+      thumbnail: { url: 'https://example.com/media/small-400x300.webp', width: 400, height: 300 },
+    },
+  }
+
+  it('uses the original rather than the thumbnail', () => {
+    expect(resolveImage(small as never, 'card')).toMatchObject({ width: 786, height: 442 })
+  })
+
+  it('still uses the size asked for when it exists', () => {
+    expect(resolveImage(small as never, 'thumbnail')).toMatchObject({ width: 400, height: 300 })
   })
 })
