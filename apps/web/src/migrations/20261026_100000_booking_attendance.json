@@ -3729,6 +3729,13 @@
           "typeSchema": "payload",
           "primaryKey": false,
           "notNull": false
+        },
+        "attendance_disputed": {
+          "name": "attendance_disputed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {
@@ -3887,6 +3894,21 @@
           "columns": [
             {
               "expression": "attendance_asked_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bookings_attendance_disputed_idx": {
+          "name": "bookings_attendance_disputed_idx",
+          "columns": [
+            {
+              "expression": "attendance_disputed",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

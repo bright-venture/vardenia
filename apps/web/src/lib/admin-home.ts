@@ -166,6 +166,7 @@ export async function adminHome(
     drafts,
     reviews,
     waiting,
+    visitDisputes,
   ] = await Promise.all([
     dashboardCounts(payload, windowStart),
     payload.count({
@@ -271,6 +272,20 @@ export async function adminHome(
       select: { reference: true, createdAt: true, start: true, business: true },
       populate: { businesses: { name: true } },
     }),
+
+    // Visits where the guest and the venue disagree and nobody has decided
+    // (core/attendance). Each is money: a real visit marked a no-show is a
+    // fee the venue is not paying.
+    payload.find({
+      ...opts,
+      limit: WAITING_SHOWN,
+      depth: 1,
+      collection: 'bookings',
+      where: { attendanceDisputed: { equals: true } },
+      sort: 'end',
+      select: { reference: true, status: true, guestAnswer: true, business: true },
+      populate: { businesses: { name: true } },
+    }),
   ])
 
   const attention: AttentionItem[] = []
@@ -314,6 +329,37 @@ export async function adminHome(
       detail: 'The oldest are listed above. The full list is under Bookings.',
       href: '/admin/collections/bookings?where[status][equals]=pending',
       tone: 'warn',
+    })
+  }
+
+  for (const doc of visitDisputes.docs as {
+    id: number
+    reference?: string | null
+    status?: string
+    guestAnswer?: string | null
+    business?: { name?: string | null } | number | null
+  }[]) {
+    const venue =
+      typeof doc.business === 'object' && doc.business?.name ? doc.business.name : 'the venue'
+    attention.push({
+      area: 'Bookings',
+      title: `${doc.reference ?? `Booking ${doc.id}`}: disputed visit at ${venue}`,
+      detail:
+        doc.guestAnswer === 'came'
+          ? `The guest says they came; the venue marked it ${doc.status === 'cancelled' ? 'cancelled' : 'a no-show'}. Check with the venue, then set Team decision on the booking.`
+          : 'The guest says they did not come; the venue marked it completed. Check with the venue, then set Team decision on the booking.',
+      href: `/admin/collections/bookings/${doc.id}`,
+      tone: 'error',
+    })
+  }
+  if (visitDisputes.totalDocs > visitDisputes.docs.length) {
+    const more = visitDisputes.totalDocs - visitDisputes.docs.length
+    attention.push({
+      area: 'Bookings',
+      title: `${more} more disputed visit${more === 1 ? '' : 's'}`,
+      detail: 'The oldest are listed above. All of them are under Bookings, filtered to disputed.',
+      href: '/admin/collections/bookings?where[attendanceDisputed][equals]=true',
+      tone: 'error',
     })
   }
 

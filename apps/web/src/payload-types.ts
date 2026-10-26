@@ -841,6 +841,10 @@ export interface Booking {
   guestAnsweredAt?: string | null;
   attendanceAskedAt?: string | null;
   /**
+   * The guest and the venue disagree. Settle it with "Team decision" below.
+   */
+  attendanceDisputed?: boolean | null;
+  /**
    * Only when the guest and the venue disagree. "The guest is right" puts the visit on the next statement and gives the guest the stamp.
    */
   attendanceVerdict?: ('guest' | 'venue') | null;
@@ -1354,6 +1358,7 @@ export interface BookingsSelect<T extends boolean = true> {
   guestAnswer?: T;
   guestAnsweredAt?: T;
   attendanceAskedAt?: T;
+  attendanceDisputed?: T;
   attendanceVerdict?: T;
   updatedAt?: T;
   createdAt?: T;

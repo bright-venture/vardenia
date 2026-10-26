@@ -17,6 +17,7 @@ import {
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
 import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
 import { alertAttendanceMismatch } from '../hooks/alertAttendanceMismatch'
+import { markAttendanceDispute } from '../hooks/markAttendanceDispute'
 import { stampAnsweredAt } from '../hooks/stampAnsweredAt'
 
 /**
@@ -100,7 +101,7 @@ export const Bookings: CollectionConfig = {
       views: { list: { Component: '/components/admin/FolderListView#FolderListView' } },
     },
     useAsTitle: 'reference',
-    defaultColumns: ['reference', 'business', 'start', 'partySize', 'status'],
+    defaultColumns: ['reference', 'business', 'start', 'partySize', 'status', 'attendanceDisputed'],
     group: 'Bookings',
     listSearchableFields: ['reference'],
   },
@@ -118,7 +119,7 @@ export const Bookings: CollectionConfig = {
   hooks: {
     beforeValidate: [guardBookingWrite],
     // When the venue first answered; see hooks/stampAnsweredAt.
-    beforeChange: [stampAnsweredAt],
+    beforeChange: [stampAnsweredAt, markAttendanceDispute],
     /**
      * Tells the customer when the business accepts or declines. On the
      * collection rather than in the partner dashboard, because a booking is
@@ -437,6 +438,23 @@ export const Bookings: CollectionConfig = {
           admin: {
             readOnly: true,
             date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+          },
+        },
+        {
+          /**
+           * True while the guest and the venue disagree and nobody has
+           * decided. Set by hooks/markAttendanceDispute on every save, never
+           * by hand: it is what the admin home and the bookings list filter on.
+           */
+          name: 'attendanceDisputed',
+          label: 'Disputed',
+          type: 'checkbox',
+          defaultValue: false,
+          index: true,
+          access: { create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            description: 'The guest and the venue disagree. Settle it with "Team decision" below.',
           },
         },
         {
