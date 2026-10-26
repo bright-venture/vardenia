@@ -1,5 +1,12 @@
 import type { BookingStatus } from './booking'
 import { AUTO_COMPLETE_DAYS, countsAsCompleted } from './booking-fees'
+import {
+  answerDeadline,
+  ATTENDANCE_START,
+  canGuestAnswer,
+  type AttendanceVerdict,
+  type GuestAnswer,
+} from './attendance'
 import { GOVERNORATES } from './regions'
 import { SECTIONS } from './sections'
 
@@ -40,8 +47,13 @@ const DAY_MS = 86_400_000
 
 export interface PassportVisit {
   businessId: string
+  /** The booking itself, so the passport can ask the guest about it. */
+  bookingId?: string
   status: BookingStatus
   end: Date
+  /** Whether the guest said they came, and the team's decision if it was disputed. */
+  guestAnswer?: GuestAnswer | null
+  verdict?: AttendanceVerdict | null
   /** The listing's category, which is its section. */
   category?: string | null
   governorate?: string | null
@@ -59,8 +71,19 @@ export interface PassportStamp {
 
 export interface PendingStamp {
   businessId: string
-  /** The latest day it lands without the venue doing anything. */
+  /**
+   * Why there is no stamp yet:
+   *  - `waiting`: a visit from before guests were asked, inside the venue's
+   *    seven days. It lands on `landsBy` by itself.
+   *  - `confirm`: the guest has not said whether they came. It lands when they
+   *    do; `landsBy` is the last day they can.
+   *  - `review`: the guest says they came and the venue says they did not. The
+   *    team is checking.
+   */
+  kind: 'waiting' | 'confirm' | 'review'
   landsBy: Date
+  /** The booking to answer about, for `confirm`. */
+  bookingId?: string
 }
 
 export type MilestoneKey =
@@ -86,18 +109,48 @@ export interface Passport {
 /**
  * Whether one booking stamps, is waiting to, or never will.
  *
- * Pending is a confirmed booking that has ended and is still inside the
- * window. One that has not ended yet is not pending: nobody has been anywhere.
+ * # Since guests are asked (ATTENDANCE_START)
+ *
+ * A stamp needs the guest to say they came, and the venue not to say
+ * otherwise. Until the guest answers, the visit is `confirm`: the passport asks
+ * them. If they say they came and the venue marked a no-show, it is `review`
+ * until the team decides, and the team's decision is final either way.
+ *
+ * # Before then
+ *
+ * The old rule, so nobody loses a stamp they already had: the venue's word, and
+ * a confirmed visit left unmarked lands after AUTO_COMPLETE_DAYS (`pending`).
  */
 export function stampStateOf(
-  visit: Pick<PassportVisit, 'status' | 'end'>,
+  visit: Pick<PassportVisit, 'status' | 'end' | 'guestAnswer' | 'verdict'>,
   now: Date,
-): 'stamped' | 'pending' | null {
-  if (countsAsCompleted(visit, now)) return 'stamped'
+): 'stamped' | 'pending' | 'confirm' | 'review' | null {
   const end = visit.end.getTime()
-  if (visit.status === 'confirmed' && Number.isFinite(end) && end < now.getTime()) return 'pending'
+  if (!Number.isFinite(end)) return null
+
+  if (visit.end < ATTENDANCE_START) {
+    if (countsAsCompleted(visit, now)) return 'stamped'
+    if (visit.status === 'confirmed' && end < now.getTime()) return 'pending'
+    return null
+  }
+
+  if (end > now.getTime()) return null
+  if (visit.verdict === 'guest') return visit.guestAnswer === 'came' ? 'stamped' : null
+  if (visit.guestAnswer === 'came') {
+    if (visit.status === 'completed' || visit.status === 'confirmed') return 'stamped'
+    if (visit.verdict === 'venue') return null
+    if (visit.status === 'no-show' || visit.status === 'cancelled') return 'review'
+    return null
+  }
+  if (visit.guestAnswer === 'did-not-come') return null
+  if (visit.status === 'completed' || visit.status === 'confirmed') {
+    return canGuestAnswer(visit, now) ? 'confirm' : null
+  }
   return null
 }
+
+/** When two visits to one place are both unstamped, the one to show. */
+const PENDING_RANK: Record<PendingStamp['kind'], number> = { confirm: 0, review: 1, waiting: 2 }
 
 const milestone = (key: MilestoneKey, count: number, target: number): Milestone => ({
   key,
@@ -108,7 +161,7 @@ const milestone = (key: MilestoneKey, count: number, target: number): Milestone 
 
 export function buildPassport(visits: readonly PassportVisit[], now: Date): Passport {
   const stamped = new Map<string, PassportStamp>()
-  const waiting = new Map<string, Date>()
+  const waiting = new Map<string, PendingStamp>()
 
   // Oldest first, so the first honoured visit is the one that dates the stamp.
   const ordered = [...visits].sort((a, b) => a.end.getTime() - b.end.getTime())
@@ -126,18 +179,38 @@ export function buildPassport(visits: readonly PassportVisit[], now: Date): Pass
           category: visit.category ?? null,
           governorate: visit.governorate ?? null,
         })
-    } else if (state === 'pending') {
-      const landsBy = new Date(visit.end.getTime() + AUTO_COMPLETE_DAYS * DAY_MS)
+    } else if (state === 'pending' || state === 'confirm' || state === 'review') {
+      const next: PendingStamp =
+        state === 'pending'
+          ? {
+              businessId: visit.businessId,
+              kind: 'waiting',
+              landsBy: new Date(visit.end.getTime() + AUTO_COMPLETE_DAYS * DAY_MS),
+            }
+          : state === 'confirm'
+            ? {
+                businessId: visit.businessId,
+                kind: 'confirm',
+                landsBy: answerDeadline(visit.end),
+                ...(visit.bookingId ? { bookingId: visit.bookingId } : {}),
+              }
+            : { businessId: visit.businessId, kind: 'review', landsBy: visit.end }
       const earlier = waiting.get(visit.businessId)
-      if (!earlier || landsBy < earlier) waiting.set(visit.businessId, landsBy)
+      const better =
+        !earlier ||
+        PENDING_RANK[next.kind] < PENDING_RANK[earlier.kind] ||
+        (next.kind === earlier.kind && next.landsBy < earlier.landsBy)
+      if (better) waiting.set(visit.businessId, next)
     }
   }
 
   const stamps = [...stamped.values()]
-  const pending = [...waiting.entries()]
-    .filter(([businessId]) => !stamped.has(businessId))
-    .map(([businessId, landsBy]) => ({ businessId, landsBy }))
-    .sort((a, b) => a.landsBy.getTime() - b.landsBy.getTime())
+  const pending = [...waiting.values()]
+    .filter((entry) => !stamped.has(entry.businessId))
+    .sort(
+      (a, b) =>
+        PENDING_RANK[a.kind] - PENDING_RANK[b.kind] || a.landsBy.getTime() - b.landsBy.getTime(),
+    )
 
   const visitsTotal = stamps.reduce((sum, stamp) => sum + stamp.visits, 0)
   const points =

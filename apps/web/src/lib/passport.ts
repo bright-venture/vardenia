@@ -2,7 +2,9 @@ import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import {
   buildPassport,
+  type AttendanceVerdict,
   type BookingStatus,
+  type GuestAnswer,
   type PassportStamp,
   type PassportVisit,
   type PendingStamp,
@@ -11,6 +13,7 @@ import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import { CUSTOMER_COLLECTION } from '../access/index'
 import { findEvery } from './find-every'
+import { attendanceToken } from './attendance'
 
 /**
  * The signed-in guest's passport, read from their own bookings.
@@ -46,14 +49,18 @@ export interface PassportPlace {
 
 export interface PassportView {
   stamps: (PassportStamp & { place: PassportPlace })[]
-  pending: (PendingStamp & { place: PassportPlace })[]
+  /** `token` is set on a visit waiting for the guest's answer: see lib/attendance. */
+  pending: (PendingStamp & { place: PassportPlace; token?: string })[]
   points: number
   milestones: ReturnType<typeof buildPassport>['milestones']
 }
 
 interface BookingRow {
+  id: number
   status: BookingStatus
   end: string
+  guestAnswer?: GuestAnswer | null
+  attendanceVerdict?: AttendanceVerdict | null
   business:
     | number
     | {
@@ -80,11 +87,13 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
 
   const { docs } = await findEvery<BookingRow>(payload, {
     collection: 'bookings',
-    // Only the two statuses that can ever stamp; see core stampStateOf.
-    where: { status: { in: ['completed', 'confirmed'] } },
+    // The statuses that can stamp, and the two a disputed visit can have (a
+    // guest says they came to a booking marked no-show or cancelled, which
+    // the passport shows as being checked). See core stampStateOf.
+    where: { status: { in: ['completed', 'confirmed', 'no-show', 'cancelled'] } },
     depth: 1,
     locale: dataLocale(locale),
-    select: { status: true, end: true, business: true },
+    select: { status: true, end: true, business: true, guestAnswer: true, attendanceVerdict: true },
     populate: {
       businesses: {
         name: true,
@@ -123,8 +132,11 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
     if (!partners.has(id)) continue
     visits.push({
       businessId: id,
+      bookingId: String(row.id),
       status: row.status,
       end: new Date(row.end),
+      guestAnswer: row.guestAnswer ?? null,
+      verdict: row.attendanceVerdict ?? null,
       category: business.category,
       governorate: business.governorate,
     })
@@ -134,7 +146,13 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
 
   return {
     stamps: passport.stamps.map((stamp) => ({ ...stamp, place: places.get(stamp.businessId)! })),
-    pending: passport.pending.map((stamp) => ({ ...stamp, place: places.get(stamp.businessId)! })),
+    pending: passport.pending.map((stamp) => ({
+      ...stamp,
+      place: places.get(stamp.businessId)!,
+      ...(stamp.kind === 'confirm' && stamp.bookingId
+        ? { token: attendanceToken(stamp.bookingId) }
+        : {}),
+    })),
     points: passport.points,
     milestones: passport.milestones,
   }

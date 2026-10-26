@@ -137,6 +137,12 @@ const AREAS: { title: string; items: Destination[] }[] = [
         external: true,
       },
       {
+        label: 'Performance',
+        href: '/reports/performance',
+        hint: 'Each business this month: scans, bookings, no-shows, what to improve',
+        external: true,
+      },
+      {
         label: 'Scan report',
         href: '/reports/scans',
         hint: 'QR scans, last 90 days (CSV)',

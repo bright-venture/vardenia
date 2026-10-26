@@ -124,16 +124,55 @@ export async function PassportBook({
           )
         })}
 
-        {passport.pending.map((stamp) => (
-          <li key={`pending-${stamp.businessId}`}>
-            <Stamp
-              state="pending"
-              top={t('pendingLabel')}
-              name={stamp.place.name}
-              note={t('pendingBy', { date: beirutStampDate(stamp.landsBy, locale) })}
-            />
-          </li>
-        ))}
+        {passport.pending.map((stamp) => {
+          const date = beirutStampDate(stamp.landsBy, locale)
+          const top =
+            stamp.kind === 'confirm'
+              ? t('confirmLabel')
+              : stamp.kind === 'review'
+                ? t('reviewLabel')
+                : t('pendingLabel')
+          const note =
+            stamp.kind === 'confirm'
+              ? t('confirmNote', { date })
+              : stamp.kind === 'review'
+                ? t('reviewNote')
+                : t('pendingBy', { date })
+          return (
+            <li key={`pending-${stamp.businessId}`}>
+              <Stamp state="pending" top={top} name={stamp.place.name} note={note} />
+              {stamp.kind === 'confirm' && stamp.token ? (
+                // The guest's answer, without leaving the passport. The same
+                // endpoint as the email's page; see lib/attendance.
+                <form
+                  method="post"
+                  action="/booking/attendance/answer"
+                  className="mt-2 flex flex-wrap justify-center gap-2"
+                >
+                  <input type="hidden" name="token" value={stamp.token} />
+                  <input type="hidden" name="locale" value={locale} />
+                  <input type="hidden" name="from" value="passport" />
+                  <button
+                    type="submit"
+                    name="answer"
+                    value="came"
+                    className="bg-cedar-900 text-surface-base hover:bg-cedar-700 px-3 py-1.5 text-xs font-semibold transition-colors"
+                  >
+                    {t('confirmYes')}
+                  </button>
+                  <button
+                    type="submit"
+                    name="answer"
+                    value="did-not-come"
+                    className="border-ink-100 text-ink-900 hover:border-ink-300 border px-3 py-1.5 text-xs font-semibold transition-colors"
+                  >
+                    {t('confirmNo')}
+                  </button>
+                </form>
+              ) : null}
+            </li>
+          )
+        })}
 
         {Array.from({ length: blanks }, (_, i) => (
           <li key={`blank-${i}`} aria-hidden>

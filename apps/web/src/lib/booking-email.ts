@@ -44,7 +44,7 @@ const BEIRUT = 'Asia/Beirut'
  * confirmation that says 17:00 for a 20:00 table is worse than no confirmation:
  * it is wrong in a way the reader has no way to detect.
  */
-function formatWhen(date: Date, locale: Locale): string {
+export function formatWhen(date: Date, locale: Locale): string {
   // The language's own tag, from lib/beirut. Native digits, as the Arabic
   // email always had - this is the customer's own confirmation.
   return new Intl.DateTimeFormat(dateLocale(locale), {

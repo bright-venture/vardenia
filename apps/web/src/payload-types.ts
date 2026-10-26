@@ -834,6 +834,16 @@ export interface Booking {
    */
   internalNotes?: string | null;
   requestId?: string | null;
+  /**
+   * Their answer to "Did you go?". Empty until they answer.
+   */
+  guestAnswer?: ('came' | 'did-not-come') | null;
+  guestAnsweredAt?: string | null;
+  attendanceAskedAt?: string | null;
+  /**
+   * Only when the guest and the venue disagree. "The guest is right" puts the visit on the next statement and gives the guest the stamp.
+   */
+  attendanceVerdict?: ('guest' | 'venue') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1341,6 +1351,10 @@ export interface BookingsSelect<T extends boolean = true> {
   declineReason?: T;
   internalNotes?: T;
   requestId?: T;
+  guestAnswer?: T;
+  guestAnsweredAt?: T;
+  attendanceAskedAt?: T;
+  attendanceVerdict?: T;
   updatedAt?: T;
   createdAt?: T;
 }

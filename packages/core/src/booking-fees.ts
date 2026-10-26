@@ -23,6 +23,7 @@
  */
 
 import type { BookingStatus } from './booking'
+import type { AttendanceVerdict, GuestAnswer } from './attendance'
 
 /** What a fee is counted in. */
 export const FEE_UNITS = ['guest', 'night', 'booking'] as const
@@ -70,6 +71,9 @@ export interface BillableBooking {
   end: Date
   partySize: number
   status: BookingStatus
+  /** The guest's own answer, and the team's decision where it disagreed. */
+  guestAnswer?: GuestAnswer | null
+  verdict?: AttendanceVerdict | null
   /** The Beirut day the booking starts on, "YYYY-MM-DD". */
   day: string
 }
@@ -100,11 +104,20 @@ export function hasFee(settings: FeeSettings | null | undefined): boolean {
  * `completed` says so. A `confirmed` booking the venue never marked counts too,
  * once it ended at least AUTO_COMPLETE_DAYS ago. Everything else - pending,
  * cancelled, no-show, or confirmed and still inside the window - is not billed.
+ *
+ * Except where the guest and the venue disagreed and the team decided for the
+ * guest (see ./attendance): then the guest's answer is what counts. A visit
+ * the venue marked a no-show is billed if the guest came; a visit the venue
+ * marked completed is not, if the guest did not.
  */
 export function countsAsCompleted(
-  booking: Pick<BillableBooking, 'status' | 'end'>,
+  booking: Pick<BillableBooking, 'status' | 'end'> & {
+    guestAnswer?: GuestAnswer | null
+    verdict?: AttendanceVerdict | null
+  },
   now: Date,
 ): boolean {
+  if (booking.verdict === 'guest') return booking.guestAnswer === 'came'
   if (booking.status === 'completed') return true
   if (booking.status !== 'confirmed') return false
   const end = booking.end.getTime()

@@ -1,5 +1,10 @@
 import type { Access, CollectionConfig, Where } from 'payload'
-import { BOOKING_STATUSES, generateBookingReference } from '@vardenia/core'
+import {
+  ATTENDANCE_VERDICTS,
+  BOOKING_STATUSES,
+  GUEST_ANSWERS,
+  generateBookingReference,
+} from '@vardenia/core'
 import { LOCALES, LOCALE_META } from '@vardenia/i18n'
 import {
   isAdmin,
@@ -11,6 +16,7 @@ import {
 } from '../access/index'
 import { guardBookingWrite } from '../hooks/guardBookingWrite'
 import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
+import { alertAttendanceMismatch } from '../hooks/alertAttendanceMismatch'
 import { stampAnsweredAt } from '../hooks/stampAnsweredAt'
 
 /**
@@ -119,7 +125,7 @@ export const Bookings: CollectionConfig = {
      * answered from there, from the admin panel, and by staff on the phone -
      * and a notification wired to one button does not fire from the others.
      */
-    afterChange: [notifyBookingStatus],
+    afterChange: [notifyBookingStatus, alertAttendanceMismatch],
   },
 
   fields: [
@@ -385,6 +391,76 @@ export const Bookings: CollectionConfig = {
       unique: true,
       access: { read: isStaffFieldLevel, update: fixedOnceCreated },
       admin: { hidden: true },
+    },
+
+    /**
+     * Did the guest come, in the guest's own words (see core/attendance).
+     *
+     * Asked by email a couple of hours after the visit, and from the passport.
+     * Written only by the server with access overridden (lib/attendance), so
+     * neither the guest editing their booking nor the venue can set it here.
+     * Staff may correct one, which is why update is staff and not nobody.
+     */
+    {
+      type: 'collapsible',
+      label: 'Did the guest come?',
+      admin: { position: 'sidebar', initCollapsed: false },
+      fields: [
+        {
+          name: 'guestAnswer',
+          label: 'The guest says',
+          type: 'select',
+          index: true,
+          options: GUEST_ANSWERS.map((value) => ({
+            label: value === 'came' ? 'I came' : 'I did not come',
+            value,
+          })),
+          access: { create: () => false, update: isStaffFieldLevel },
+          admin: { description: 'Their answer to "Did you go?". Empty until they answer.' },
+        },
+        {
+          name: 'guestAnsweredAt',
+          label: 'Answered on',
+          type: 'date',
+          access: { create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+          },
+        },
+        {
+          name: 'attendanceAskedAt',
+          label: 'Asked on',
+          type: 'date',
+          index: true,
+          access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+          },
+        },
+        {
+          /**
+           * The team's decision where the guest and the venue disagreed. It is
+           * what billing and the passport follow from then on: "the guest is
+           * right" bills a visit the venue marked a no-show, and stamps it.
+           */
+          name: 'attendanceVerdict',
+          label: 'Team decision',
+          type: 'select',
+          options: ATTENDANCE_VERDICTS.map((value) => ({
+            label: value === 'guest' ? 'The guest is right' : 'The venue is right',
+            value,
+          })),
+          // Readable by whoever can read the booking - the guest's passport
+          // follows it - and set by staff only.
+          access: { create: () => false, update: isStaffFieldLevel },
+          admin: {
+            description:
+              'Only when the guest and the venue disagree. "The guest is right" puts the visit on the next statement and gives the guest the stamp.',
+          },
+        },
+      ],
     },
   ],
 }

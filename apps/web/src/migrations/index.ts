@@ -41,6 +41,7 @@ import * as migration_20261013_121000_one_review_and_statement from './20261013_
 import * as migration_20261016_100000_booking_request_id from './20261016_100000_booking_request_id'
 import * as migration_20261019_100000_qr_tshirt_placement from './20261019_100000_qr_tshirt_placement'
 import * as migration_20261022_100000_media_alt_optional from './20261022_100000_media_alt_optional'
+import * as migration_20261026_100000_booking_attendance from './20261026_100000_booking_attendance'
 
 export const migrations = [
   {
@@ -257,5 +258,10 @@ export const migrations = [
     up: migration_20261022_100000_media_alt_optional.up,
     down: migration_20261022_100000_media_alt_optional.down,
     name: '20261022_100000_media_alt_optional',
+  },
+  {
+    up: migration_20261026_100000_booking_attendance.up,
+    down: migration_20261026_100000_booking_attendance.down,
+    name: '20261026_100000_booking_attendance',
   },
 ]

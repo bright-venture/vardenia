@@ -541,7 +541,7 @@
     "points": "Points",
     "stamps": "Tampons",
     "how": "Un tampon pour chaque lieu partenaire réservé via Vardenia et visité. {newPoints} points pour un nouveau lieu, {returnPoints} pour chaque nouvelle visite.",
-    "howLand": "Le tampon arrive quand l'établissement confirme votre visite, ou une semaine après s'il ne l'a pas fait.",
+    "howLand": "Un tampon s'ajoute dès que vous confirmez y être allé et que l'établissement le confirme. Nous vous le demandons par e-mail après chaque visite, ou vous pouvez confirmer ici.",
     "stampsHeading": "Tampons",
     "empty": "Aucun tampon pour l'instant. Réservez une table ou une chambre dans un lieu partenaire via Vardenia, et votre premier tampon arrive après votre visite.",
     "visits": "{count, plural, one {# visite} other {# visites}}",
@@ -559,7 +559,13 @@
       "allSections": "Toutes les rubriques",
       "threeRegions": "Trois régions",
       "allRegions": "Toutes les régions du Liban"
-    }
+    },
+    "confirmLabel": "Y êtes-vous allé ?",
+    "confirmNote": "À confirmer avant le {date}",
+    "confirmYes": "Oui, j'y suis allé",
+    "confirmNo": "Non",
+    "reviewLabel": "En vérification",
+    "reviewNote": "Le registre de l'établissement diffère du vôtre. Nous vérifions."
   },
   "journey": {
     "heroA": "Le Liban,",
@@ -683,5 +689,19 @@
     "scanFound": "Code détecté",
     "scanOpening": "Ouverture de Vardenia…",
     "scanReplay": "Revoir le scan"
+  },
+  "visit": {
+    "question": "Êtes-vous allé à {place} ?",
+    "when": "Votre réservation était pour {when}.",
+    "yes": "Oui, j'y suis allé",
+    "no": "Non, je n'y suis pas allé",
+    "why": "Votre réponse ajoute le tampon à votre passeport Vardenia et nous aide à garder chaque adresse honnête.",
+    "thanksCame": "Merci. Votre tampon arrive.",
+    "thanksNot": "Merci de nous avoir prévenus.",
+    "already": "Votre réponse était déjà enregistrée.",
+    "closed": "Cette visite ne peut plus être confirmée.",
+    "notFound": "Nous n'avons pas trouvé cette visite.",
+    "error": "Une erreur s'est produite. Veuillez réessayer.",
+    "browse": "Voir les adresses"
   }
 }

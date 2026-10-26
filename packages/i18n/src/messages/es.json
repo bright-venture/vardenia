@@ -541,7 +541,7 @@
     "points": "Puntos",
     "stamps": "Sellos",
     "how": "Un sello por cada lugar asociado que reservas a través de Vardenia y visitas. {newPoints} puntos por un lugar nuevo, {returnPoints} por cada visita repetida.",
-    "howLand": "El sello llega cuando el local registra tu visita, o una semana después si no lo ha hecho.",
+    "howLand": "Un sello se añade cuando confirmas que fuiste y el local lo confirma. Te lo preguntamos por correo después de cada visita, o puedes confirmarlo aquí.",
     "stampsHeading": "Sellos",
     "empty": "Aún no tienes sellos. Reserva una mesa o una habitación en un lugar asociado a través de Vardenia y tu primer sello llegará después de tu visita.",
     "visits": "{count, plural, one {# visita} other {# visitas}}",
@@ -559,7 +559,13 @@
       "allSections": "Todas las secciones",
       "threeRegions": "Tres regiones",
       "allRegions": "Todas las regiones del Líbano"
-    }
+    },
+    "confirmLabel": "¿Fuiste?",
+    "confirmNote": "Confirma antes del {date}",
+    "confirmYes": "Sí, fui",
+    "confirmNo": "No",
+    "reviewLabel": "En revisión",
+    "reviewNote": "El registro del local no coincide con el tuyo. Lo estamos revisando."
   },
   "journey": {
     "heroA": "Líbano,",
@@ -683,5 +689,19 @@
     "scanFound": "Código encontrado",
     "scanOpening": "Abriendo Vardenia…",
     "scanReplay": "Repetir el escaneo"
+  },
+  "visit": {
+    "question": "¿Fuiste a {place}?",
+    "when": "Tu reserva era para el {when}.",
+    "yes": "Sí, fui",
+    "no": "No, no fui",
+    "why": "Tu respuesta añade el sello a tu pasaporte Vardenia y nos ayuda a que cada lugar sea honesto.",
+    "thanksCame": "Gracias. Tu sello está en camino.",
+    "thanksNot": "Gracias por avisarnos.",
+    "already": "Tu respuesta ya estaba registrada.",
+    "closed": "Esta visita ya no se puede confirmar.",
+    "notFound": "No encontramos esta visita.",
+    "error": "Algo salió mal. Inténtalo de nuevo.",
+    "browse": "Ver lugares"
   }
 }

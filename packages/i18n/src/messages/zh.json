@@ -541,7 +541,7 @@
     "points": "积分",
     "stamps": "印章",
     "how": "每通过 Vardenia 预订并到访一家合作场所，即可获得一枚印章。新场所 {newPoints} 分，每次回访 {returnPoints} 分。",
-    "howLand": "场所确认您的到访后即会盖章；如未确认，则在到访一周后自动盖章。",
+    "howLand": "当您确认去过且商户也认可后，印章就会加上。每次到访后我们会发邮件询问您，您也可以在这里确认。",
     "stampsHeading": "印章",
     "empty": "还没有印章。通过 Vardenia 在合作场所预订餐桌或房间，到访后即可获得第一枚印章。",
     "visits": "{count, plural, other {# 次到访}}",
@@ -559,7 +559,13 @@
       "allSections": "全部版块",
       "threeRegions": "三个省份",
       "allRegions": "黎巴嫩全部省份"
-    }
+    },
+    "confirmLabel": "您去了吗？",
+    "confirmNote": "请在 {date} 前确认",
+    "confirmYes": "是的，我去了",
+    "confirmNo": "没有",
+    "reviewLabel": "核实中",
+    "reviewNote": "商户的记录与您的不同，我们正在核实。"
   },
   "journey": {
     "heroA": "黎巴嫩，",
@@ -683,5 +689,19 @@
     "scanFound": "已识别二维码",
     "scanOpening": "正在打开 Vardenia…",
     "scanReplay": "重播扫码过程"
+  },
+  "visit": {
+    "question": "您去了{place}吗？",
+    "when": "您的预订时间为{when}。",
+    "yes": "是的，我去了",
+    "no": "没有，我没去",
+    "why": "您的回答会为您的 Vardenia 护照加盖印章，也帮助我们确保每个地方诚实可信。",
+    "thanksCame": "谢谢。您的印章即将到来。",
+    "thanksNot": "谢谢您告诉我们。",
+    "already": "您的回答已经记录。",
+    "closed": "这次到访已无法再确认。",
+    "notFound": "我们找不到这次到访。",
+    "error": "出了点问题，请重试。",
+    "browse": "浏览地点"
   }
 }

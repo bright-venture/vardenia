@@ -46,6 +46,13 @@ const TOOLS: Tool[] = [
     external: true,
   },
   {
+    label: 'Performance report',
+    href: '/reports/performance',
+    title:
+      'Each business this month: scans and where from, bookings, no-shows, disputes, and what to improve',
+    external: true,
+  },
+  {
     label: 'Scan report (CSV)',
     href: '/reports/scans',
     title: 'A spreadsheet of QR scans from the last 90 days',

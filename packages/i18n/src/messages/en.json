@@ -541,7 +541,7 @@
     "points": "Points",
     "stamps": "Stamps",
     "how": "A stamp for every partner place you book through Vardenia and visit. {newPoints} points for a new place, {returnPoints} for each return visit.",
-    "howLand": "A stamp lands when the venue marks your visit, or a week after it if they have not.",
+    "howLand": "A stamp lands once you confirm you went and the venue agrees. We ask you by email after each visit, or you can confirm here.",
     "stampsHeading": "Stamps",
     "empty": "No stamps yet. Book a table or a room at a partner place through Vardenia, and your first stamp lands after your visit.",
     "visits": "{count, plural, one {# visit} other {# visits}}",
@@ -559,7 +559,13 @@
       "allSections": "Every section",
       "threeRegions": "Three regions",
       "allRegions": "Every region of Lebanon"
-    }
+    },
+    "confirmLabel": "Did you go?",
+    "confirmNote": "Confirm by {date}",
+    "confirmYes": "Yes, I went",
+    "confirmNo": "No",
+    "reviewLabel": "Being checked",
+    "reviewNote": "The venue's record differs from yours. We are checking."
   },
   "journey": {
     "heroA": "Lebanon,",
@@ -683,5 +689,19 @@
     "scanFound": "Code found",
     "scanOpening": "Opening Vardenia…",
     "scanReplay": "Replay the scan"
+  },
+  "visit": {
+    "question": "Did you go to {place}?",
+    "when": "Your booking was for {when}.",
+    "yes": "Yes, I went",
+    "no": "No, I did not go",
+    "why": "Your answer adds the stamp to your Vardenia passport and helps us keep every place honest.",
+    "thanksCame": "Thank you. Your stamp is on its way.",
+    "thanksNot": "Thank you for letting us know.",
+    "already": "Your answer was already recorded.",
+    "closed": "This visit can no longer be confirmed.",
+    "notFound": "We could not find this visit.",
+    "error": "Something went wrong. Please try again.",
+    "browse": "Browse places"
   }
 }

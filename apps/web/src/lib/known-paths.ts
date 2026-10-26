@@ -57,6 +57,8 @@ const FIXED_SEGMENTS = [
   'partner-with-us',
   'scan',
   'search',
+  // The "Did you go?" page a guest opens from the email. lib/attendance.
+  'visit',
 ] as const
 
 /**

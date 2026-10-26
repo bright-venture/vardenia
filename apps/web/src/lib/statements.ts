@@ -7,9 +7,11 @@ import {
   isPeriod,
   periodBounds,
   statementReadyOn,
+  type AttendanceVerdict,
   type BillableBooking,
   type BookingStatus,
   type FeeSettings,
+  type GuestAnswer,
 } from '@vardenia/core'
 import { beirutDate, beirutInstant } from './beirut'
 import { findEvery } from './find-every'
@@ -57,6 +59,8 @@ interface BookingRow {
   end: string
   partySize?: number | null
   status: BookingStatus
+  guestAnswer?: GuestAnswer | null
+  attendanceVerdict?: AttendanceVerdict | null
 }
 
 export class NotReadyError extends Error {}
@@ -139,9 +143,27 @@ export async function drawUpStatements(
       where: {
         and: [
           { business: { equals: venue.id } },
-          { end: { greater_than_equal: from.toISOString() } },
           { end: { less_than: to.toISOString() } },
-          { status: { in: ['confirmed', 'completed'] } },
+          /*
+           * Visits in this month the venue says happened, and any visit up to
+           * the end of this month the team decided did happen whatever the
+           * venue marked (core/attendance). The second has no lower bound
+           * because a dispute is often settled after its own month was drawn
+           * up; it lands on the next statement instead, and alreadyBilled
+           * below keeps it from being billed twice. countsAsCompleted has the
+           * final say on each.
+           */
+          {
+            or: [
+              {
+                and: [
+                  { end: { greater_than_equal: from.toISOString() } },
+                  { status: { in: ['confirmed', 'completed'] } },
+                ],
+              },
+              { attendanceVerdict: { equals: 'guest' } },
+            ],
+          },
         ],
       },
       depth: 0,
@@ -194,6 +216,8 @@ export async function drawUpStatements(
         partySize: Number(row.partySize ?? 1),
         status: row.status,
         day: beirutDate(new Date(row.start)),
+        guestAnswer: row.guestAnswer ?? null,
+        verdict: row.attendanceVerdict ?? null,
       }
 
       // Step 1: the seven-day rule, written onto the booking itself.

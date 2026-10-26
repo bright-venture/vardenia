@@ -79,7 +79,7 @@ describe('the passport', () => {
       NOW,
     )
     expect(passport.stamps).toEqual([])
-    expect(passport.pending).toEqual([{ businessId: '2', landsBy: daysAgo(-5) }])
+    expect(passport.pending).toEqual([{ businessId: '2', kind: 'waiting', landsBy: daysAgo(-5) }])
   })
 
   it('counts sections and regions toward the milestones', () => {

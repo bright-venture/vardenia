@@ -541,7 +541,7 @@
     "points": "Pontos",
     "stamps": "Carimbos",
     "how": "Um carimbo por cada local parceiro que reserva através da Vardenia e visita. {newPoints} pontos por um local novo, {returnPoints} por cada visita repetida.",
-    "howLand": "O carimbo chega quando o local regista a sua visita, ou uma semana depois se não o fizer.",
+    "howLand": "Um carimbo é adicionado quando confirma que foi e o estabelecimento concorda. Perguntamos por e-mail depois de cada visita, ou pode confirmar aqui.",
     "stampsHeading": "Carimbos",
     "empty": "Ainda não tem carimbos. Reserve uma mesa ou um quarto num local parceiro através da Vardenia e o seu primeiro carimbo chega depois da visita.",
     "visits": "{count, plural, one {# visita} other {# visitas}}",
@@ -559,7 +559,13 @@
       "allSections": "Todas as secções",
       "threeRegions": "Três regiões",
       "allRegions": "Todas as regiões do Líbano"
-    }
+    },
+    "confirmLabel": "Você foi?",
+    "confirmNote": "Confirme até {date}",
+    "confirmYes": "Sim, fui",
+    "confirmNo": "Não",
+    "reviewLabel": "Em verificação",
+    "reviewNote": "O registo do estabelecimento é diferente do seu. Estamos a verificar."
   },
   "journey": {
     "heroA": "O Líbano,",
@@ -683,5 +689,19 @@
     "scanFound": "Código encontrado",
     "scanOpening": "Abrindo Vardenia…",
     "scanReplay": "Repetir a leitura"
+  },
+  "visit": {
+    "question": "Você foi a {place}?",
+    "when": "A sua reserva era para {when}.",
+    "yes": "Sim, fui",
+    "no": "Não, não fui",
+    "why": "A sua resposta acrescenta o carimbo ao seu passaporte Vardenia e ajuda-nos a manter cada lugar honesto.",
+    "thanksCame": "Obrigado. O seu carimbo está a caminho.",
+    "thanksNot": "Obrigado por nos avisar.",
+    "already": "A sua resposta já estava registada.",
+    "closed": "Esta visita já não pode ser confirmada.",
+    "notFound": "Não encontrámos esta visita.",
+    "error": "Algo correu mal. Tente novamente.",
+    "browse": "Ver lugares"
   }
 }
