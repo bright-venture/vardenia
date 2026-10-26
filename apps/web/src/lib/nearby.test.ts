@@ -53,7 +53,7 @@ describe('rankNearby', () => {
   it('falls back to the district, then the governorate, without coordinates', () => {
     const bare = at(1, null, { district: 'zahle', governorate: 'beqaa' })
     const picks = rankNearby(bare, [
-      at(2, null, { district: 'jbeil', governorate: 'mount-lebanon' }),
+      at(2, null, { district: 'jbeil', governorate: 'keserwan-jbeil' }),
       at(3, null, { district: 'baalbek', governorate: 'beqaa' }),
       at(4, null, { district: 'zahle', governorate: 'beqaa' }),
     ])

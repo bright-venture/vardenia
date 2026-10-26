@@ -80,12 +80,14 @@ describe('the whole file', () => {
   })
 
   it('only ever uses a district that exists, under the right governorate', () => {
-    const mountLebanon = GOVERNORATES.find((g) => g.slug === 'mount-lebanon')
-    const districts = new Set(mountLebanon?.districts.map((d) => d.slug))
+    const parent = new Map<string, string>(
+      GOVERNORATES.flatMap((g) => g.districts.map((d) => [d.slug, g.slug] as [string, string])),
+    )
 
     for (const listing of listings) {
-      expect(listing.governorate).toBe('mount-lebanon')
-      if (listing.district) expect(districts, listing.name).toContain(listing.district)
+      expect(GOVERNORATES.map((g): string => g.slug)).toContain(listing.governorate)
+      if (listing.district)
+        expect(parent.get(listing.district), listing.name).toBe(listing.governorate)
     }
   })
 

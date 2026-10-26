@@ -109,17 +109,17 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
 /**
  * The district headings the files use, each paired with the governorate it sits
  * in. Governorate travels with the district rather than being one constant,
- * because the directory has outgrown a single muhafazah: the Keserwan and Chouf
- * files are Mount Lebanon, and the Beirut file is its own governorate whose one
- * district shares its name. The neighbourhood (Ashrafieh, Gemmayzeh, Sodeco)
+ * because the directory has outgrown a single muhafazah: the Chouf file is Mount
+ * Lebanon, the Keserwan file is Keserwan-Jbeil, and the Beirut file is its own
+ * governorate whose one district shares its name. The neighbourhood (Ashrafieh, Gemmayzeh, Sodeco)
  * rides in the Location column and becomes the address, not the district.
  */
 const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: string }> = {
-  'Keserwan District': { district: 'keserwan', governorate: 'mount-lebanon' },
-  'Byblos / Jbeil District': { district: 'jbeil', governorate: 'mount-lebanon' },
+  'Keserwan District': { district: 'keserwan', governorate: 'keserwan-jbeil' },
+  'Byblos / Jbeil District': { district: 'jbeil', governorate: 'keserwan-jbeil' },
   // Six rows span both. Keserwan wins because the directory is a Keserwan one,
   // and the row is flagged so a person can split it later if it matters.
-  'Keserwan + Byblos / Jbeil Districts': { district: 'keserwan', governorate: 'mount-lebanon' },
+  'Keserwan + Byblos / Jbeil Districts': { district: 'keserwan', governorate: 'keserwan-jbeil' },
   // The Chouf file. One district, no towns split across two.
   'Chouf District': { district: 'chouf', governorate: 'mount-lebanon' },
   // The Matn, Baabda and Aley files: the rest of Mount Lebanon's cazas. Same

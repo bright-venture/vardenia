@@ -284,7 +284,15 @@ export interface Business {
    */
   tags?: string[] | null;
   governorate:
-    'beirut' | 'mount-lebanon' | 'north-lebanon' | 'akkar' | 'beqaa' | 'baalbek-hermel' | 'south-lebanon' | 'nabatieh';
+    | 'beirut'
+    | 'mount-lebanon'
+    | 'keserwan-jbeil'
+    | 'north-lebanon'
+    | 'akkar'
+    | 'beqaa'
+    | 'baalbek-hermel'
+    | 'south-lebanon'
+    | 'nabatieh';
   /**
    * Only the districts of the governorate above are offered.
    */
@@ -294,9 +302,9 @@ export interface Business {
         | 'aley'
         | 'baabda'
         | 'chouf'
+        | 'matn'
         | 'jbeil'
         | 'keserwan'
-        | 'matn'
         | 'batroun'
         | 'bsharri'
         | 'koura'
@@ -663,6 +671,7 @@ export interface Article {
     | (
         | 'beirut'
         | 'mount-lebanon'
+        | 'keserwan-jbeil'
         | 'north-lebanon'
         | 'akkar'
         | 'beqaa'

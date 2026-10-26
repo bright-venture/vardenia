@@ -2,6 +2,8 @@
  * Lebanon's administrative geography, used for directory filtering and for the
  * "explore by region" browse experience.
  *
+ * The nine governorates as they stand today, Keserwan-Jbeil included.
+ *
  * Two levels only - governorate (muhafazah) and district (qada). Towns are NOT
  * modelled here: a listing carries its own address + lat/lng, and "near me"
  * queries run against PostGIS rather than a town lookup table.
@@ -35,9 +37,17 @@ export const GOVERNORATES = [
       { slug: 'aley', en: 'Aley', ar: 'عاليه' },
       { slug: 'baabda', en: 'Baabda', ar: 'بعبدا' },
       { slug: 'chouf', en: 'Chouf', ar: 'الشوف' },
+      { slug: 'matn', en: 'Matn', ar: 'المتن' },
+    ],
+  },
+  {
+    // Split from Mount Lebanon in 2017; its first governor took office in 2020.
+    slug: 'keserwan-jbeil',
+    en: 'Keserwan-Jbeil',
+    ar: 'كسروان - جبيل',
+    districts: [
       { slug: 'jbeil', en: 'Jbeil (Byblos)', ar: 'جبيل' },
       { slug: 'keserwan', en: 'Keserwan', ar: 'كسروان' },
-      { slug: 'matn', en: 'Matn', ar: 'المتن' },
     ],
   },
   {

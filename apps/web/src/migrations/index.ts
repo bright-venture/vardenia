@@ -42,6 +42,8 @@ import * as migration_20261016_100000_booking_request_id from './20261016_100000
 import * as migration_20261019_100000_qr_tshirt_placement from './20261019_100000_qr_tshirt_placement'
 import * as migration_20261022_100000_media_alt_optional from './20261022_100000_media_alt_optional'
 import * as migration_20261026_100000_booking_attendance from './20261026_100000_booking_attendance'
+import * as migration_20261026_110000_keserwan_jbeil_governorate from './20261026_110000_keserwan_jbeil_governorate'
+import * as migration_20261026_110100_keserwan_jbeil_listings from './20261026_110100_keserwan_jbeil_listings'
 
 export const migrations = [
   {
@@ -263,5 +265,15 @@ export const migrations = [
     up: migration_20261026_100000_booking_attendance.up,
     down: migration_20261026_100000_booking_attendance.down,
     name: '20261026_100000_booking_attendance',
+  },
+  {
+    up: migration_20261026_110000_keserwan_jbeil_governorate.up,
+    down: migration_20261026_110000_keserwan_jbeil_governorate.down,
+    name: '20261026_110000_keserwan_jbeil_governorate',
+  },
+  {
+    up: migration_20261026_110100_keserwan_jbeil_listings.up,
+    down: migration_20261026_110100_keserwan_jbeil_listings.down,
+    name: '20261026_110100_keserwan_jbeil_listings',
   },
 ]
