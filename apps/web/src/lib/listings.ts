@@ -145,7 +145,7 @@ const LISTINGS_TTL = 60 * 60
  * is the obvious next move. Against production on 2026-09-03:
  *
  *   Index Scan using businesses_category_idx  (actual time=0.136..0.588 rows=62)
- *     Filter: (_status = 'published' AND governorate = 'mount-lebanon')
+ *     Filter: (_status = 'published' AND governorate = 'matn')
  *     Rows Removed by Filter: 84
  *   Planning Time: 2.752 ms
  *   Execution Time: 0.755 ms

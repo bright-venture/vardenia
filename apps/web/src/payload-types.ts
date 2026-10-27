@@ -285,14 +285,12 @@ export interface Business {
   tags?: string[] | null;
   governorate:
     | 'beirut'
-    | 'mount-lebanon'
-    | 'keserwan-jbeil'
+    | 'matn'
+    | 'keserwan'
     | 'north-lebanon'
-    | 'akkar'
+    | 'chouf'
     | 'beqaa'
-    | 'baalbek-hermel'
-    | 'south-lebanon'
-    | 'nabatieh';
+    | 'south-lebanon';
   /**
    * Only the districts of the governorate above are offered.
    */
@@ -670,14 +668,12 @@ export interface Article {
   governorate?:
     | (
         | 'beirut'
-        | 'mount-lebanon'
-        | 'keserwan-jbeil'
+        | 'matn'
+        | 'keserwan'
         | 'north-lebanon'
-        | 'akkar'
+        | 'chouf'
         | 'beqaa'
-        | 'baalbek-hermel'
         | 'south-lebanon'
-        | 'nabatieh'
       )
     | null;
   author?: (number | null) | User;

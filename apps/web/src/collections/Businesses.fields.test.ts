@@ -66,12 +66,12 @@ describe('district', () => {
       options: optionsOf('district'),
       data: { governorate: 'beqaa' },
     }).map((o) => o.value)
-    expect(offered.sort()).toEqual(['rachaya', 'western-beqaa', 'zahle'])
+    expect(offered.sort()).toEqual(['baalbek', 'hermel', 'rachaya', 'western-beqaa', 'zahle'])
   })
 
   it('refuses a district from another governorate', () => {
     expect(district.validate!('zahle', { data: { governorate: 'beqaa' } })).toBe(true)
-    expect(district.validate!('baalbek', { data: { governorate: 'beqaa' } })).not.toBe(true)
+    expect(district.validate!('tyre', { data: { governorate: 'beqaa' } })).not.toBe(true)
     expect(district.validate!(null, { data: { governorate: 'beqaa' } })).toBe(true)
   })
 })

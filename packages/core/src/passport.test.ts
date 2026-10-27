@@ -86,7 +86,7 @@ describe('the passport', () => {
     const passport = buildPassport(
       [
         visit({ businessId: '1', category: 'hospitality', governorate: 'beirut' }),
-        visit({ businessId: '2', category: 'tourism', governorate: 'mount-lebanon' }),
+        visit({ businessId: '2', category: 'tourism', governorate: 'matn' }),
         visit({ businessId: '3', category: 'food-and-beverage', governorate: 'north-lebanon' }),
         // An unknown category or governorate counts as a place, nothing more.
         visit({ businessId: '4', category: 'nonsense', governorate: null }),
@@ -100,6 +100,6 @@ describe('the passport', () => {
     expect(byKey.allSections!.count).toBe(3)
     expect(byKey.allSections!.target).toBe(6)
     expect(byKey.threeRegions!.count).toBe(3)
-    expect(byKey.allRegions!.target).toBe(9)
+    expect(byKey.allRegions!.target).toBe(7)
   })
 })

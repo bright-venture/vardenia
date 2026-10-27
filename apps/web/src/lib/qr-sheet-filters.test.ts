@@ -32,7 +32,7 @@ describe('parseSheetFilters', () => {
 
   it('reads every filter', () => {
     const { filters, problems } = parse(
-      'q=byblos&placement=t-shirt&target=home&issue=3&article=10&governorate=mount-lebanon&district=batroun&category=hotels&tier=silver&batch=import-2026-09-25&status=all&scans=never&print=all&sort=scans&per=200&size=40&page=2',
+      'q=byblos&placement=t-shirt&target=home&issue=3&article=10&governorate=north-lebanon&district=batroun&category=hotels&tier=silver&batch=import-2026-09-25&status=all&scans=never&print=all&sort=scans&per=200&size=40&page=2',
     )
     expect(problems).toEqual([])
     expect(filters).toEqual({
@@ -41,7 +41,7 @@ describe('parseSheetFilters', () => {
       target: 'home',
       issue: 3,
       article: 10,
-      governorate: 'mount-lebanon',
+      governorate: 'north-lebanon',
       district: 'batroun',
       category: 'hotels',
       tier: 'silver',

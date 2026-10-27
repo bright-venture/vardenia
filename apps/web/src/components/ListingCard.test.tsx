@@ -62,9 +62,9 @@ describe('ListingCard', () => {
   })
 
   it('shows a place as district then governorate', () => {
-    const html = text(render({ governorate: 'keserwan-jbeil', district: 'jbeil' }))
+    const html = text(render({ governorate: 'keserwan', district: 'jbeil' }))
     expect(html).toContain('Jbeil')
-    expect(html).toContain('Keserwan-Jbeil')
+    expect(html).toContain('Keserwan')
   })
 
   /** Beirut is both a governorate and its only district. "Beirut, Beirut" reads as a bug. */
@@ -129,7 +129,7 @@ describe('ListingCard', () => {
     })
 
     it('translates the place', () => {
-      const html = text(render({ governorate: 'mount-lebanon', locale: 'ar' }))
+      const html = text(render({ governorate: 'matn', locale: 'ar' }))
       expect(html).toMatch(/[؀-ۿ]/)
     })
 

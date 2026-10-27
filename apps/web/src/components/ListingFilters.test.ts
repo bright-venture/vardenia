@@ -29,8 +29,8 @@ describe('filterHref', () => {
 
   it('keeps the facets already chosen', () => {
     const current = state({ subcategory: 'boutique-hotels' })
-    expect(filterHref(base, current, { governorate: 'mount-lebanon' })).toBe(
-      '/stay?filter=boutique-hotels&where=mount-lebanon',
+    expect(filterHref(base, current, { governorate: 'matn' })).toBe(
+      '/stay?filter=boutique-hotels&where=matn',
     )
   })
 
@@ -45,14 +45,14 @@ describe('filterHref', () => {
    * reader sees an empty section and no reason for it.
    */
   it('drops the district when the governorate changes', () => {
-    const current = state({ governorate: 'keserwan-jbeil', district: 'keserwan' })
+    const current = state({ governorate: 'keserwan', district: 'keserwan' })
     expect(filterHref(base, current, { governorate: 'beirut' })).toBe('/stay?where=beirut')
   })
 
   it('keeps the district when the governorate is unchanged', () => {
-    const current = state({ governorate: 'keserwan-jbeil', district: 'keserwan' })
+    const current = state({ governorate: 'keserwan', district: 'keserwan' })
     expect(filterHref(base, current, { priceRange: '2' })).toBe(
-      '/stay?where=keserwan-jbeil&district=keserwan&price=2',
+      '/stay?where=keserwan&district=keserwan&price=2',
     )
   })
 
@@ -76,14 +76,14 @@ describe('filterHref', () => {
   it('always orders the parameters the same way', () => {
     const full = state({
       subcategory: 'boutique-hotels',
-      governorate: 'keserwan-jbeil',
+      governorate: 'keserwan',
       district: 'keserwan',
       priceRange: '4',
       amenities: ['pool'],
     })
 
     expect(filterHref(base, full, {})).toBe(
-      '/stay?filter=boutique-hotels&where=keserwan-jbeil&district=keserwan&price=4&has=pool',
+      '/stay?filter=boutique-hotels&where=keserwan&district=keserwan&price=4&has=pool',
     )
   })
 
@@ -129,7 +129,7 @@ describe('parseFilterState', () => {
       parseFilterState(
         {
           filter: 'boutique-hotels',
-          where: 'keserwan-jbeil',
+          where: 'keserwan',
           district: 'keserwan',
           price: '3',
           has: 'pool,wifi',
@@ -138,7 +138,7 @@ describe('parseFilterState', () => {
       ),
     ).toEqual({
       subcategory: 'boutique-hotels',
-      governorate: 'keserwan-jbeil',
+      governorate: 'keserwan',
       district: 'keserwan',
       priceRange: '3',
       amenities: ['pool', 'wifi'],

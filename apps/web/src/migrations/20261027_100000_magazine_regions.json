@@ -9458,14 +9458,12 @@
       "schema": "payload",
       "values": [
         "beirut",
-        "mount-lebanon",
-        "keserwan-jbeil",
+        "matn",
+        "keserwan",
         "north-lebanon",
-        "akkar",
+        "chouf",
         "beqaa",
-        "baalbek-hermel",
-        "south-lebanon",
-        "nabatieh"
+        "south-lebanon"
       ]
     },
     "payload.enum_businesses_district": {
@@ -9618,14 +9616,12 @@
       "schema": "payload",
       "values": [
         "beirut",
-        "mount-lebanon",
-        "keserwan-jbeil",
+        "matn",
+        "keserwan",
         "north-lebanon",
-        "akkar",
+        "chouf",
         "beqaa",
-        "baalbek-hermel",
-        "south-lebanon",
-        "nabatieh"
+        "south-lebanon"
       ]
     },
     "payload.enum__businesses_v_version_district": {
@@ -9837,14 +9833,12 @@
       "schema": "payload",
       "values": [
         "beirut",
-        "mount-lebanon",
-        "keserwan-jbeil",
+        "matn",
+        "keserwan",
         "north-lebanon",
-        "akkar",
+        "chouf",
         "beqaa",
-        "baalbek-hermel",
-        "south-lebanon",
-        "nabatieh"
+        "south-lebanon"
       ]
     },
     "payload.enum_articles_status": {
@@ -9884,14 +9878,12 @@
       "schema": "payload",
       "values": [
         "beirut",
-        "mount-lebanon",
-        "keserwan-jbeil",
+        "matn",
+        "keserwan",
         "north-lebanon",
-        "akkar",
+        "chouf",
         "beqaa",
-        "baalbek-hermel",
-        "south-lebanon",
-        "nabatieh"
+        "south-lebanon"
       ]
     },
     "payload.enum__articles_v_version_status": {
@@ -9990,6 +9982,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "4adde8ee-1f02-4135-b1a4-48b3c4ba6bba",
-  "prevId": "4cb50dc4-4bf2-4800-a28a-2a501b81497d"
+  "id": "25bb0797-2722-45bc-8d1b-a480608a7281",
+  "prevId": "6c0e9b52-3f1d-4a87-b2e5-9d41c7a0f3b8"
 }

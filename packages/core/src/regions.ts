@@ -1,12 +1,24 @@
 /**
- * Lebanon's administrative geography, used for directory filtering and for the
- * "explore by region" browse experience.
+ * Where a listing is, used for directory filtering and for the "explore by
+ * region" browse experience.
  *
- * The nine governorates as they stand today, Keserwan-Jbeil included.
+ * # Regions, not the official governorates
  *
- * Two levels only - governorate (muhafazah) and district (qada). Towns are NOT
- * modelled here: a listing carries its own address + lat/lng, and "near me"
- * queries run against PostGIS rather than a town lookup table.
+ * The seven regions are the magazine's own: one per regional edition, the
+ * Region column of the magazine entries sheet. They are what readers see in
+ * print, so the site groups places the same way. Lebanon's official map has
+ * nine governorates and draws the lines elsewhere (Aley and Baabda are in
+ * Mount Lebanon, Akkar and Baalbek-Hermel are governorates of their own); here
+ * each district sits in the region whose edition carries it.
+ *
+ * The names are the sheet's own (North, Bekaa, Jnoub), as printed. The slugs
+ * stay plain-English and URL-safe, because they are stored values and appear
+ * in filter links. The field and the type keep the name `governorate`, because
+ * that is the database column. Its options are these seven.
+ *
+ * Two levels only - region and district (qada). Towns are NOT modelled here: a
+ * listing carries its own address + lat/lng, and "near me" queries run against
+ * PostGIS rather than a town lookup table.
  */
 
 export interface District {
@@ -30,21 +42,19 @@ export const GOVERNORATES = [
     districts: [{ slug: 'beirut', en: 'Beirut', ar: 'بيروت' }],
   },
   {
-    slug: 'mount-lebanon',
-    en: 'Mount Lebanon',
-    ar: 'جبل لبنان',
+    slug: 'matn',
+    en: 'Matn',
+    ar: 'المتن',
     districts: [
       { slug: 'aley', en: 'Aley', ar: 'عاليه' },
       { slug: 'baabda', en: 'Baabda', ar: 'بعبدا' },
-      { slug: 'chouf', en: 'Chouf', ar: 'الشوف' },
       { slug: 'matn', en: 'Matn', ar: 'المتن' },
     ],
   },
   {
-    // Split from Mount Lebanon in 2017; its first governor took office in 2020.
-    slug: 'keserwan-jbeil',
-    en: 'Keserwan-Jbeil',
-    ar: 'كسروان - جبيل',
+    slug: 'keserwan',
+    en: 'Keserwan',
+    ar: 'كسروان',
     districts: [
       { slug: 'jbeil', en: 'Jbeil (Byblos)', ar: 'جبيل' },
       { slug: 'keserwan', en: 'Keserwan', ar: 'كسروان' },
@@ -52,9 +62,10 @@ export const GOVERNORATES = [
   },
   {
     slug: 'north-lebanon',
-    en: 'North Lebanon',
-    ar: 'لبنان الشمالي',
+    en: 'North',
+    ar: 'الشمال',
     districts: [
+      { slug: 'akkar', en: 'Akkar', ar: 'عكار' },
       { slug: 'batroun', en: 'Batroun', ar: 'البترون' },
       { slug: 'bsharri', en: 'Bsharri', ar: 'بشري' },
       { slug: 'koura', en: 'Koura', ar: 'الكورة' },
@@ -64,49 +75,35 @@ export const GOVERNORATES = [
     ],
   },
   {
-    slug: 'akkar',
-    en: 'Akkar',
-    ar: 'عكار',
-    districts: [{ slug: 'akkar', en: 'Akkar', ar: 'عكار' }],
+    slug: 'chouf',
+    en: 'Chouf',
+    ar: 'الشوف',
+    districts: [{ slug: 'chouf', en: 'Chouf', ar: 'الشوف' }],
   },
   {
     slug: 'beqaa',
-    en: 'Beqaa',
+    en: 'Bekaa',
     ar: 'البقاع',
     districts: [
+      { slug: 'baalbek', en: 'Baalbek', ar: 'بعلبك' },
+      { slug: 'hermel', en: 'Hermel', ar: 'الهرمل' },
       { slug: 'rachaya', en: 'Rachaya', ar: 'راشيا' },
       { slug: 'western-beqaa', en: 'Western Beqaa', ar: 'البقاع الغربي' },
       { slug: 'zahle', en: 'Zahle', ar: 'زحلة' },
     ],
   },
   {
-    slug: 'baalbek-hermel',
-    en: 'Baalbek-Hermel',
-    ar: 'بعلبك الهرمل',
-    districts: [
-      { slug: 'baalbek', en: 'Baalbek', ar: 'بعلبك' },
-      { slug: 'hermel', en: 'Hermel', ar: 'الهرمل' },
-    ],
-  },
-  {
     slug: 'south-lebanon',
-    en: 'South Lebanon',
-    ar: 'لبنان الجنوبي',
-    districts: [
-      { slug: 'jezzine', en: 'Jezzine', ar: 'جزين' },
-      { slug: 'sidon', en: 'Sidon (Saida)', ar: 'صيدا' },
-      { slug: 'tyre', en: 'Tyre (Sour)', ar: 'صور' },
-    ],
-  },
-  {
-    slug: 'nabatieh',
-    en: 'Nabatieh',
-    ar: 'النبطية',
+    en: 'Jnoub',
+    ar: 'الجنوب',
     districts: [
       { slug: 'bint-jbeil', en: 'Bint Jbeil', ar: 'بنت جبيل' },
       { slug: 'hasbaya', en: 'Hasbaya', ar: 'حاصبيا' },
+      { slug: 'jezzine', en: 'Jezzine', ar: 'جزين' },
       { slug: 'marjeyoun', en: 'Marjeyoun', ar: 'مرجعيون' },
       { slug: 'nabatieh', en: 'Nabatieh', ar: 'النبطية' },
+      { slug: 'sidon', en: 'Sidon (Saida)', ar: 'صيدا' },
+      { slug: 'tyre', en: 'Tyre (Sour)', ar: 'صور' },
     ],
   },
 ] as const satisfies readonly Governorate[]

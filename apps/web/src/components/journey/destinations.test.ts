@@ -24,7 +24,7 @@ describe('directoryFor', () => {
   )
 
   it('names the governorate of a district', () => {
-    expect(directoryFor({ where: 'jbeil' })).toBe('/directory?where=keserwan-jbeil&district=jbeil')
+    expect(directoryFor({ where: 'jbeil' })).toBe('/directory?where=keserwan&district=jbeil')
     expect(directoryFor({ where: 'tyre' })).toBe('/directory?where=south-lebanon&district=tyre')
     expect(directoryFor({ where: 'beirut' })).toBe('/directory?where=beirut')
   })

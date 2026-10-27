@@ -56,7 +56,7 @@ export const DESTINATIONS = [
     ar: 'بعلبك',
     region: 'Bekaa',
     regionAr: 'البقاع',
-    where: 'baalbek-hermel',
+    where: 'baalbek',
     feeling: 'heritage',
     image: 'baalbek.webp',
     lat: 34.0067,

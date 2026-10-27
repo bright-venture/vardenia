@@ -220,7 +220,7 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
       expect(listing!.subcategories, heading).toEqual([subcategory])
       // The subcategory really is a child of the category it was filed under.
       expect(SUBCATEGORY_PARENT[subcategory], heading).toBe(category)
-      expect(listing!.governorate, heading).toBe('mount-lebanon')
+      expect(listing!.governorate, heading).toBe('chouf')
       expect(listing!.district, heading).toBe('chouf')
       // A clean Chouf row needs nobody: known district, known category, no season.
       expect(listing!.warnings, heading).toHaveLength(0)
@@ -260,19 +260,20 @@ describe('the Beirut file, its own governorate', () => {
 
 /**
  * The rest of Mount Lebanon. Matn, Baabda and Aley are the cazas the Keserwan
- * and Chouf files never reached; each has to file under the Mount Lebanon
- * governorate and its own district, with no unknown-district warning.
+ * and Chouf files never reached; the magazine prints all three in its Matn
+ * edition, so each files under the Matn region and its own district, with no
+ * unknown-district warning.
  */
-describe('the other Mount Lebanon districts', () => {
+describe('the Matn region', () => {
   const CASES: Record<string, string> = {
     'Matn District': 'matn',
     'Baabda District': 'baabda',
     'Aley District': 'aley',
   }
 
-  it('files Matn, Baabda and Aley under Mount Lebanon, cleanly', () => {
-    const mountLebanon = GOVERNORATES.find((g) => g.slug === 'mount-lebanon')
-    const known = new Set(mountLebanon?.districts.map((d) => d.slug))
+  it('files Matn, Baabda and Aley under Matn, cleanly', () => {
+    const matn = GOVERNORATES.find((g) => g.slug === 'matn')
+    const known = new Set(matn?.districts.map((d) => d.slug))
 
     for (const [heading, slug] of Object.entries(CASES)) {
       const listing = toListing({
@@ -284,7 +285,7 @@ describe('the other Mount Lebanon districts', () => {
       })
 
       expect(listing, heading).not.toBeNull()
-      expect(listing!.governorate, heading).toBe('mount-lebanon')
+      expect(listing!.governorate, heading).toBe('matn')
       expect(listing!.district, heading).toBe(slug)
       expect(known, heading).toContain(slug)
       expect(listing!.warnings, heading).toHaveLength(0)
@@ -293,10 +294,9 @@ describe('the other Mount Lebanon districts', () => {
 })
 
 /**
- * The North Lebanon file, which arrives with Akkar mixed into it. Akkar is a
- * governorate in its own right rather than a caza of the north, so this is the
- * case that proves governorate really does travel with the district instead of
- * being inferred from the file a row came in.
+ * The North Lebanon file, which arrives with Akkar mixed into it. Officially
+ * Akkar is a governorate of its own; in the magazine it is part of the North
+ * edition, so it files under North Lebanon with its own district.
  */
 describe('North Lebanon, and Akkar alongside it', () => {
   const CASES: Record<string, [string, string]> = {
@@ -306,10 +306,10 @@ describe('North Lebanon, and Akkar alongside it', () => {
     'Miniyeh-Danniyeh District': ['north-lebanon', 'miniyeh-danniyeh'],
     'Tripoli District': ['north-lebanon', 'tripoli'],
     'Zgharta District': ['north-lebanon', 'zgharta'],
-    'Akkar District': ['akkar', 'akkar'],
+    'Akkar District': ['north-lebanon', 'akkar'],
   }
 
-  it('files each caza under the governorate that actually owns it', () => {
+  it('files each caza under the region that carries it', () => {
     for (const [heading, [governorate, district]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
@@ -335,23 +335,23 @@ describe('North Lebanon, and Akkar alongside it', () => {
 })
 
 /**
- * The South Lebanon file. Without these headings every row fell to the Mount
- * Lebanon default, so the whole south would have been filed in the wrong
- * governorate. Nabatieh is its own governorate that the south reaches into,
- * Jbaa on the Jezzine road being the first case.
+ * The South Lebanon file. Without these headings every row fell to the
+ * default, so the whole south would have been filed in the wrong region. The
+ * south reaches into Nabatieh's cazas too, Jbaa on the Jezzine road being the
+ * first case, and the magazine's South edition carries them all.
  */
 describe('South Lebanon, and Nabatieh beside it', () => {
   const CASES: Record<string, [string, string]> = {
     'Sidon District': ['south-lebanon', 'sidon'],
     'Tyre District': ['south-lebanon', 'tyre'],
     'Jezzine District': ['south-lebanon', 'jezzine'],
-    'Nabatieh District': ['nabatieh', 'nabatieh'],
-    'Marjeyoun District': ['nabatieh', 'marjeyoun'],
-    'Hasbaya District': ['nabatieh', 'hasbaya'],
-    'Bint Jbeil District': ['nabatieh', 'bint-jbeil'],
+    'Nabatieh District': ['south-lebanon', 'nabatieh'],
+    'Marjeyoun District': ['south-lebanon', 'marjeyoun'],
+    'Hasbaya District': ['south-lebanon', 'hasbaya'],
+    'Bint Jbeil District': ['south-lebanon', 'bint-jbeil'],
   }
 
-  it('files each caza under the governorate that actually owns it', () => {
+  it('files each caza under the region that carries it', () => {
     for (const [heading, [governorate, district]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
@@ -376,20 +376,21 @@ describe('South Lebanon, and Nabatieh beside it', () => {
 })
 
 /**
- * The Bekaa file: two governorates, Beqaa and Baalbek-Hermel, and two headings
- * that send wineries and ruins to the subcategories that already existed.
+ * The Bekaa file: officially two governorates, Beqaa and Baalbek-Hermel, one
+ * region in the magazine, and two headings that send wineries and ruins to the
+ * subcategories that already existed.
  */
-describe('the Bekaa, across its two governorates', () => {
+describe('the Bekaa, one region', () => {
   const CASES: Record<string, [string, string]> = {
     'Zahle District': ['beqaa', 'zahle'],
     'West Bekaa District': ['beqaa', 'western-beqaa'],
     'Western Beqaa District': ['beqaa', 'western-beqaa'],
     'Rachaya District': ['beqaa', 'rachaya'],
-    'Baalbek District': ['baalbek-hermel', 'baalbek'],
-    'Hermel District': ['baalbek-hermel', 'hermel'],
+    'Baalbek District': ['beqaa', 'baalbek'],
+    'Hermel District': ['beqaa', 'hermel'],
   }
 
-  it('files each caza under the governorate that actually owns it', () => {
+  it('files each caza under the region that carries it', () => {
     for (const [heading, [governorate, district]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
