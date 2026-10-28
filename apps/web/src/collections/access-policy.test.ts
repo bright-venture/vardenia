@@ -127,7 +127,7 @@ describe('Businesses: the Commercial tab', () => {
 describe('Businesses: commercial values on a new listing', () => {
   const fields = tabFields(Businesses, 'Commercial')
 
-  it.each(['tier', 'featured', 'verified', 'bookingFee'])('%s is admin-only on create', (name) => {
+  it.each(['tier', 'featured', 'verified', 'commission'])('%s is admin-only on create', (name) => {
     const field = fieldNamed(fields, name)
     const create = 'access' in field ? field.access?.create : undefined
 

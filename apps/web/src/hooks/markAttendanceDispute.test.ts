@@ -31,3 +31,15 @@ describe('markAttendanceDispute', () => {
     ).toBe(false)
   })
 })
+
+describe('markAttendanceDispute, on what was spent', () => {
+  const done = { status: 'completed', end: visit.end, guestAnswer: 'came', guestAmount: 120 }
+
+  it('flags a venue amount far from the guest one', () => {
+    expect(run(done, { amount: 40 }).attendanceDisputed).toBe(true)
+  })
+
+  it('leaves amounts that roughly agree alone', () => {
+    expect(run(done, { amount: 110 }).attendanceDisputed).toBe(false)
+  })
+})

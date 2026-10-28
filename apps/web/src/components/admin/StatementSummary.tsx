@@ -85,7 +85,7 @@ export function StatementSummary() {
   // every render would make the render impure.
   const [openedAt] = useState(() => Date.now())
 
-  // A statement is made from Booking fees, not here; a new one has nothing yet.
+  // A statement is made from Commissions, not here; a new one has nothing yet.
   if (!f.number) return null
 
   const saved = (status.initialValue ?? status.value ?? 'draft') as Status
@@ -156,7 +156,7 @@ export function StatementSummary() {
           })
         ) : (
           <span className="vd-muted">
-            Void. Nothing more happens to it; draw the month up again from Booking fees if needed.
+            Void. Nothing more happens to it; draw the month up again from Commissions if needed.
           </span>
         )}
       </div>

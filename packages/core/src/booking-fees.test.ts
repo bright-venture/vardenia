@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   AUTO_COMPLETE_DAYS,
   canDispute,
+  billableAmount,
+  commissionFor,
   countsAsCompleted,
-  feeFor,
-  hasFee,
-  nightsIn,
+  effectiveRate,
+  hasCommission,
   periodBounds,
   previousPeriod,
   statementDeadlines,
@@ -55,51 +56,60 @@ describe('which bookings are billed', () => {
 })
 
 describe('what one booking costs', () => {
-  it('charges nothing when no fee is set, so nobody is billed without an agreement', () => {
-    expect(hasFee(null)).toBe(false)
-    expect(hasFee({ unit: 'guest' })).toBe(false)
-    expect(hasFee({ unit: 'guest', amount: 0 })).toBe(false)
-    expect(feeFor({}, booking(), NOW)).toBeNull()
+  it('charges nothing when no rate is set, so nobody is billed without an agreement', () => {
+    expect(hasCommission(null)).toBe(false)
+    expect(hasCommission({ rate: 0 })).toBe(false)
+    expect(commissionFor({}, booking({ amount: 100 }), NOW)).toBeNull()
   })
 
-  it('charges per guest', () => {
-    expect(feeFor({ unit: 'guest', amount: 1 }, booking({ partySize: 4 }), NOW)).toEqual({
-      unit: 'guest',
-      quantity: 4,
-      rate: 1,
-      amount: 4,
+  it('takes the rate of what the guest spent', () => {
+    expect(commissionFor({ rate: 10 }, booking({ amount: 120 }), NOW)).toEqual({
+      base: 120,
+      rate: 10,
+      amount: 12,
     })
-  })
-
-  it('caps the whole booking, not each guest', () => {
-    const line = feeFor({ unit: 'guest', amount: 1, cap: 12 }, booking({ partySize: 14 }), NOW)
-    expect(line?.amount).toBe(12)
-    expect(line?.quantity).toBe(14)
-  })
-
-  it('charges per night for a stay', () => {
-    const stay = booking({
-      start: new Date('2026-10-10T11:00:00Z'),
-      end: new Date('2026-10-12T08:00:00Z'),
-    })
-    expect(feeFor({ unit: 'night', amount: 8 }, stay, NOW)).toMatchObject({
-      quantity: 2,
-      amount: 16,
-    })
-  })
-
-  it('counts an afternoon check-in and a morning check-out as one night', () => {
-    expect(nightsIn(new Date('2026-10-10T11:00:00Z'), new Date('2026-10-11T08:00:00Z'))).toBe(1)
   })
 
   it('keeps cents exact', () => {
-    expect(feeFor({ unit: 'guest', amount: 1.5 }, booking({ partySize: 3 }), NOW)?.amount).toBe(4.5)
+    expect(commissionFor({ rate: 10 }, booking({ amount: 45.5 }), NOW)).toMatchObject({
+      amount: 4.55,
+    })
+  })
+
+  it('says so when the guest came but nobody gave an amount', () => {
+    expect(commissionFor({ rate: 10 }, booking(), NOW)).toBe('no-amount')
+  })
+
+  it('never bills a guest who did not come, whatever the amount', () => {
+    expect(commissionFor({ rate: 10 }, booking({ status: 'no-show', amount: 80 }), NOW)).toBeNull()
   })
 
   it('bills nothing inside the launch offer, including its last day', () => {
-    const settings = { unit: 'guest' as const, amount: 1, waivedUntil: '2026-10-10' }
-    expect(feeFor(settings, booking({ day: '2026-10-10' }), NOW)).toBeNull()
-    expect(feeFor(settings, booking({ day: '2026-10-11' }), NOW)).not.toBeNull()
+    const settings = { rate: 10, waivedUntil: '2026-10-10' }
+    expect(commissionFor(settings, booking({ day: '2026-10-10', amount: 50 }), NOW)).toBeNull()
+    expect(commissionFor(settings, booking({ day: '2026-10-11', amount: 50 }), NOW)).not.toBeNull()
+  })
+})
+
+describe('which amount the commission is taken of', () => {
+  it("takes the venue's figure, and the guest's when the venue gave none", () => {
+    expect(billableAmount({ amount: 100, guestAmount: 90 })).toBe(100)
+    expect(billableAmount({ amount: null, guestAmount: 90 })).toBe(90)
+    expect(billableAmount({})).toBeNull()
+  })
+
+  it("takes the guest's figure where the team sided with the guest", () => {
+    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'guest' })).toBe(120)
+    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'venue' })).toBe(40)
+  })
+})
+
+describe('which rate applies', () => {
+  it("uses the listing's own rate, even zero, and the default otherwise", () => {
+    expect(effectiveRate(8, 10)).toBe(8)
+    expect(effectiveRate(0, 10)).toBe(0)
+    expect(effectiveRate(null, 10)).toBe(10)
+    expect(effectiveRate(null, null)).toBeNull()
   })
 })
 

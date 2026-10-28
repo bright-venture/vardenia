@@ -57,9 +57,8 @@ describe('StatementLines', () => {
       booking: 41,
       reference: 'HX8PM8VW',
       day: '2026-07-02',
-      unit: 'night',
-      quantity: 2,
-      rate: 8,
+      base: 160,
+      rate: 10,
       amount: 16,
       disputeOutcome: 'none',
     })
@@ -67,9 +66,8 @@ describe('StatementLines', () => {
       booking: { id: 42 },
       reference: 'VTZENHNV',
       day: '2026-07-14',
-      unit: 'guest',
-      quantity: 1,
-      rate: 24,
+      base: 240,
+      rate: 10,
       amount: 24,
       disputeOutcome: 'open',
     })
@@ -79,8 +77,8 @@ describe('StatementLines', () => {
 
     const text = view.textContent ?? ''
     expect(text).toContain('2 Jul 2026')
-    expect(text).toContain('2 nights')
-    expect(text).toContain('1 guest')
+    expect(text).toContain('$160.00')
+    expect(text).toContain('10%')
     expect(text).toContain('Questioned: decide above')
 
     const links = [...view.querySelectorAll('a')].map((a) => [
@@ -97,18 +95,16 @@ describe('StatementLines', () => {
     line(0, {
       reference: 'A',
       day: '2026-07-02',
-      unit: 'night',
-      quantity: 2,
-      rate: 8,
+      base: 160,
+      rate: 10,
       amount: 16,
       disputeOutcome: 'none',
     })
     line(1, {
       reference: 'B',
       day: '2026-07-19',
-      unit: 'night',
-      quantity: 2,
-      rate: 9,
+      base: 180,
+      rate: 10,
       amount: 18,
       disputeOutcome: 'upheld',
     })

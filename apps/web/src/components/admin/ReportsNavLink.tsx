@@ -24,9 +24,9 @@ interface Tool {
 
 const TOOLS: Tool[] = [
   {
-    label: 'Booking fees',
+    label: 'Commissions',
     href: '/admin/billing',
-    title: 'Draw up and send the monthly booking-fee statements',
+    title: 'Draw up and send the monthly commission statements',
   },
   {
     label: 'Import listings',

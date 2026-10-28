@@ -108,25 +108,47 @@ export default async function VisitPage({
       <p className="text-ink-500 mt-5">{t('when', { when })}</p>
       {done === 'error' ? <p className="text-ink-700 mt-4 text-sm">{t('error')}</p> : null}
 
-      <form method="post" action="/booking/attendance/answer" className="mt-8 flex flex-wrap gap-3">
+      <form method="post" action="/booking/attendance/answer" className="mt-8">
         <input type="hidden" name="token" value={token} />
         <input type="hidden" name="locale" value={locale} />
-        <button
-          type="submit"
-          name="answer"
-          value="came"
-          className={preferred === 'did-not-come' ? SECONDARY : PRIMARY}
-        >
-          {t('yes')}
-        </button>
-        <button
-          type="submit"
-          name="answer"
-          value="did-not-come"
-          className={preferred === 'did-not-come' ? PRIMARY : SECONDARY}
-        >
-          {t('no')}
-        </button>
+        {/* Optional, and read only with "Yes": what the venue is billed on is
+            checked against it (core/attendance). A guest who leaves it empty
+            has answered all the same. */}
+        <label htmlFor="spent" className="text-ink-700 block text-sm">
+          {t('spentLabel')}
+        </label>
+        <div className="border-ink-100 focus-within:border-gold-500 mt-2 flex max-w-[12rem] items-center border transition-colors">
+          <span className="text-ink-500 ps-3 text-sm" aria-hidden>
+            $
+          </span>
+          <input
+            id="spent"
+            name="spent"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            className="text-ink-900 w-full bg-transparent px-2 py-2 text-sm outline-none"
+          />
+        </div>
+        <p className="text-ink-500 mt-1 text-xs">{t('spentHint')}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="submit"
+            name="answer"
+            value="came"
+            className={preferred === 'did-not-come' ? SECONDARY : PRIMARY}
+          >
+            {t('yes')}
+          </button>
+          <button
+            type="submit"
+            name="answer"
+            value="did-not-come"
+            className={preferred === 'did-not-come' ? PRIMARY : SECONDARY}
+          >
+            {t('no')}
+          </button>
+        </div>
       </form>
       <p className="text-ink-500 mt-6 text-sm">{t('why')}</p>
     </>,

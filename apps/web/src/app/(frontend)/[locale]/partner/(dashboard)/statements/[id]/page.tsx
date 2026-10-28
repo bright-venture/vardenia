@@ -44,7 +44,6 @@ export default async function PartnerStatementPage({ params }: Props) {
   if (!statement || statement.state === 'draft') notFound()
 
   const t = await getTranslations('partner')
-  const perUnit = { guest: t('perGuest'), night: t('perNight'), booking: t('perBooking') }
   const canQuestion = statement.lines.some((line) => line.canDispute)
 
   return (
@@ -90,8 +89,8 @@ export default async function PartnerStatementPage({ params }: Props) {
           <tr className="border-ink-100 text-ink-500 border-b text-xs uppercase tracking-wider">
             <th className="py-2 text-start font-medium">{t('statementDate')}</th>
             <th className="py-2 text-start font-medium">{t('statementBooking')}</th>
-            <th className="py-2 text-end font-medium">{t('statementQuantity')}</th>
-            <th className="py-2 text-end font-medium">{t('statementFee')}</th>
+            <th className="py-2 text-end font-medium">{t('statementSpent')}</th>
+            <th className="py-2 text-end font-medium">{t('statementCommission')}</th>
           </tr>
         </thead>
         <tbody>
@@ -124,9 +123,9 @@ export default async function PartnerStatementPage({ params }: Props) {
                   ) : null}
                 </td>
                 <td className="py-3 text-end">
-                  {line.quantity}
+                  {money(line.base, locale)}
                   <span className="text-ink-500 block text-xs">
-                    {money(line.rate, locale)} {perUnit[line.unit]}
+                    {t('statementRate', { rate: line.rate })}
                   </span>
                 </td>
                 <td className={`py-3 text-end ${removed ? 'text-ink-500 line-through' : ''}`}>

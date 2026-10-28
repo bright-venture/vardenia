@@ -1,16 +1,15 @@
 import { isUniqueViolation } from './db-errors'
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 import {
+  commissionFor,
   countsAsCompleted,
-  feeFor,
-  hasFee,
+  effectiveRate,
   isPeriod,
   periodBounds,
   statementReadyOn,
   type AttendanceVerdict,
   type BillableBooking,
   type BookingStatus,
-  type FeeSettings,
   type GuestAnswer,
 } from '@vardenia/core'
 import { beirutDate, beirutInstant } from './beirut'
@@ -20,7 +19,7 @@ import { venueOwnerEmails } from './booking-email'
 /**
  * Drawing up a month of statements, and sending them.
  *
- * Staff run this from Booking fees in the admin (/admin/billing) on or after the
+ * Staff run this from Commissions in the admin (/admin/billing) on or after the
  * 8th of the next month. It does
  * three things, in order:
  *
@@ -29,9 +28,14 @@ import { venueOwnerEmails } from './booking-email'
  * 1. Marks as completed every confirmed booking of the month that ended at least
  *    seven days ago and was never marked. The venue had its week; the booking
  *    now reads the same in its dashboard as on its statement.
- * 2. Works out each booking's fee from the venue's own settings.
+ * 2. Works out each booking's commission: the venue's rate, or the default on
+ *    the Commissions page, of what the guest spent (core/booking-fees).
  * 3. Creates one draft statement per venue that owes something, skipping a venue
  *    that already has a statement for that month.
+ *
+ * A booking the guest came to but nobody gave an amount for is not billed and
+ * not dropped: it is named in the result, for the team to ask the venue, and
+ * billed on a later month once the amount is in.
  *
  * Drafts, never sent. The team reads them before a venue does.
  */
@@ -44,24 +48,58 @@ export interface DrawUpResult {
   markedCompleted: number
   /** Venues whose bookings could not all be read. Nothing is created for them. */
   incomplete: string[]
+  /** "Venue (REFERENCE)" for each visit owed but with no amount yet. */
+  missingAmount: string[]
+  /** Venues with visits to bill but no rate, here or on the Commissions page. */
+  noRate: string[]
 }
 
 interface BusinessRow {
   id: number
   name?: string | null
-  bookingFee?: FeeSettings | null
+  commission?: { rate?: number | null; waivedUntil?: string | null } | null
 }
 
 interface BookingRow {
   id: number
+  business?: unknown
   reference?: string | null
   start: string
   end: string
   partySize?: number | null
   status: BookingStatus
+  amount?: number | null
+  guestAmount?: number | null
   guestAnswer?: GuestAnswer | null
   attendanceVerdict?: AttendanceVerdict | null
 }
+
+const idOf = (value: unknown): number | string | null => {
+  const id = typeof value === 'object' && value !== null ? (value as { id?: unknown }).id : value
+  return typeof id === 'number' || typeof id === 'string' ? id : null
+}
+
+/**
+ * The bookings a month's statements are drawn from, for one venue or all.
+ *
+ * Everything that ended before the month was out, not only what ended in it:
+ * a visit owed but missing its amount is billed on the first month after the
+ * amount arrives, and a dispute settled late lands on the month it was settled
+ * in. Nothing is billed twice, because each venue's earlier lines are checked
+ * below. countsAsCompleted has the final say on each.
+ */
+const candidates = (to: Date, business?: number | string): Where => ({
+  and: [
+    ...(business !== undefined ? [{ business: { equals: business } }] : []),
+    { end: { less_than: to.toISOString() } },
+    {
+      or: [
+        { status: { in: ['confirmed', 'completed'] } },
+        { attendanceVerdict: { equals: 'guest' } },
+      ],
+    },
+  ],
+})
 
 export class NotReadyError extends Error {}
 
@@ -83,10 +121,9 @@ export async function drawUpStatements(
 ): Promise<DrawUpResult> {
   assertReady(period, now)
 
-  const { first, next } = periodBounds(period)
-  const from = beirutInstant(first, '00:00')
+  const { next } = periodBounds(period)
   const to = beirutInstant(next, '00:00')
-  if (!from || !to) throw new NotReadyError(`Could not read the dates of ${period}.`)
+  if (!to) throw new NotReadyError(`Could not read the dates of ${period}.`)
 
   const result: DrawUpResult = {
     period,
@@ -95,19 +132,45 @@ export async function drawUpStatements(
     nothingOwed: 0,
     markedCompleted: 0,
     incomplete: [],
+    missingAmount: [],
+    noRate: [],
   }
 
-  const venues = await findEvery<BusinessRow>(payload, {
-    collection: 'businesses',
-    where: { 'bookingFee.unit': { exists: true } },
+  const settings = (await payload
+    .findGlobal({ slug: 'commission-settings', depth: 0, overrideAccess: true })
+    .catch(() => null)) as { defaultRate?: number | null } | null
+  const defaultRate = settings?.defaultRate ?? null
+
+  // The venues with anything to bill, rather than every listing in the directory.
+  const owed = await findEvery<BookingRow>(payload, {
+    collection: 'bookings',
+    where: candidates(to),
     depth: 0,
     overrideAccess: true,
-    draft: true,
-    select: { name: true, bookingFee: true },
+    select: { business: true },
   })
+  const venueIds = [
+    ...new Set(owed.docs.map((row) => idOf(row.business)).filter((id) => id !== null)),
+  ]
+  const venues =
+    venueIds.length === 0
+      ? { docs: [] as BusinessRow[] }
+      : await findEvery<BusinessRow>(payload, {
+          collection: 'businesses',
+          where: { id: { in: venueIds } },
+          depth: 0,
+          overrideAccess: true,
+          draft: true,
+          select: { name: true, commission: true },
+        })
 
   for (const venue of venues.docs) {
-    if (!hasFee(venue.bookingFee)) continue
+    const rate = effectiveRate(venue.commission?.rate, defaultRate)
+    if (rate === null || rate <= 0) {
+      if (rate === null) result.noRate.push(String(venue.name ?? venue.id))
+      continue
+    }
+    const terms = { rate, waivedUntil: venue.commission?.waivedUntil?.slice(0, 10) ?? null }
 
     const existing = await payload.find({
       collection: 'statements',
@@ -127,45 +190,9 @@ export async function drawUpStatements(
       continue
     }
 
-    /**
-     * A month's bookings are the ones that ENDED in it, not the ones that began.
-     *
-     * A booking only counts once it ended seven days ago, and the month is
-     * drawn up on the 8th of the next. Selected by start, a stay from 30
-     * October to 2 November was not yet countable when October was drawn up
-     * (it ended too recently) and was outside November's query (it started in
-     * October), so it was billed in neither and stayed confirmed for ever.
-     * Selected by end, everything in the month ended by its last minute, so
-     * all of it has had its seven days by the 8th.
-     */
     const bookings = await findEvery<BookingRow>(payload, {
       collection: 'bookings',
-      where: {
-        and: [
-          { business: { equals: venue.id } },
-          { end: { less_than: to.toISOString() } },
-          /*
-           * Visits in this month the venue says happened, and any visit up to
-           * the end of this month the team decided did happen whatever the
-           * venue marked (core/attendance). The second has no lower bound
-           * because a dispute is often settled after its own month was drawn
-           * up; it lands on the next statement instead, and alreadyBilled
-           * below keeps it from being billed twice. countsAsCompleted has the
-           * final say on each.
-           */
-          {
-            or: [
-              {
-                and: [
-                  { end: { greater_than_equal: from.toISOString() } },
-                  { status: { in: ['confirmed', 'completed'] } },
-                ],
-              },
-              { attendanceVerdict: { equals: 'guest' } },
-            ],
-          },
-        ],
-      },
+      where: candidates(to, venue.id),
       depth: 0,
       overrideAccess: true,
       sort: 'start',
@@ -215,6 +242,8 @@ export async function drawUpStatements(
         end: new Date(row.end),
         partySize: Number(row.partySize ?? 1),
         status: row.status,
+        amount: row.amount ?? null,
+        guestAmount: row.guestAmount ?? null,
         day: beirutDate(new Date(row.start)),
         guestAnswer: row.guestAnswer ?? null,
         verdict: row.attendanceVerdict ?? null,
@@ -234,17 +263,20 @@ export async function drawUpStatements(
         result.markedCompleted += 1
       }
 
-      const fee = feeFor(venue.bookingFee, billable, now)
-      if (!fee) continue
+      const line = commissionFor(terms, billable, now)
+      if (line === 'no-amount') {
+        result.missingAmount.push(`${venue.name ?? venue.id} (${row.reference ?? row.id})`)
+        continue
+      }
+      if (!line) continue
 
       lines.push({
         booking: row.id,
         reference: row.reference ?? '',
         day: billable.day,
-        unit: fee.unit,
-        quantity: fee.quantity,
-        rate: fee.rate,
-        amount: fee.amount,
+        base: line.base,
+        rate: line.rate,
+        amount: line.amount,
         disputeOutcome: 'none' as const,
       })
     }

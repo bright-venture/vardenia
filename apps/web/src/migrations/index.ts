@@ -43,6 +43,7 @@ import * as migration_20261019_100000_qr_tshirt_placement from './20261019_10000
 import * as migration_20261022_100000_media_alt_optional from './20261022_100000_media_alt_optional'
 import * as migration_20261026_100000_booking_attendance from './20261026_100000_booking_attendance'
 import * as migration_20261027_100000_magazine_regions from './20261027_100000_magazine_regions'
+import * as migration_20261028_100000_commissions from './20261028_100000_commissions'
 
 export const migrations = [
   {
@@ -269,5 +270,10 @@ export const migrations = [
     up: migration_20261027_100000_magazine_regions.up,
     down: migration_20261027_100000_magazine_regions.down,
     name: '20261027_100000_magazine_regions',
+  },
+  {
+    up: migration_20261028_100000_commissions.up,
+    down: migration_20261028_100000_commissions.down,
+    name: '20261028_100000_commissions',
   },
 ]

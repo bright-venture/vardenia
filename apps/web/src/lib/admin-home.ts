@@ -92,7 +92,7 @@ const SWITCH_OFF_DAYS = 30
 /** The tiers that get a QR code, so a missing one is a fault rather than the design. */
 const TIERS_WITH_CODES = LISTING_TIERS.filter((tier) => can(tier, 'qrCode'))
 
-export type AttentionArea = 'Site setup' | 'Bookings' | 'Booking fees' | 'Listings' | 'Reviews'
+export type AttentionArea = 'Site setup' | 'Bookings' | 'Commissions' | 'Listings' | 'Reviews'
 
 export interface AttentionItem {
   area: AttentionArea
@@ -365,7 +365,7 @@ export async function adminHome(
 
   for (const doc of disputed.docs as { id: number; number?: string | null }[]) {
     attention.push({
-      area: 'Booking fees',
+      area: 'Commissions',
       title: `${doc.number ?? `Statement ${doc.id}`}: a line was questioned`,
       detail: 'Check with the guest, then set the line to upheld (removed) or rejected (kept).',
       href: `/admin/collections/statements/${doc.id}`,
@@ -379,7 +379,7 @@ export async function adminHome(
     sentAt?: string
   }[]) {
     attention.push({
-      area: 'Booking fees',
+      area: 'Commissions',
       title: `${doc.number ?? `Statement ${doc.id}`}: overdue`,
       detail: overdueDetail(doc.dueAt, doc.sentAt, now),
       href: `/admin/collections/statements/${doc.id}`,
@@ -388,9 +388,9 @@ export async function adminHome(
   }
   if (drafts.totalDocs > 0) {
     attention.push({
-      area: 'Booking fees',
+      area: 'Commissions',
       title: `${drafts.totalDocs} draft statement${drafts.totalDocs === 1 ? '' : 's'} not sent`,
-      detail: 'Read them, then send them from Booking fees. Venues see nothing until then.',
+      detail: 'Read them, then send them from Commissions. Venues see nothing until then.',
       href: '/admin/billing',
       tone: 'warn',
     })

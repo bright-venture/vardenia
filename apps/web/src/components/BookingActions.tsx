@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { availableActions, type BookingStatus } from '@vardenia/core'
 import { useRouter } from '../i18n/routing'
+import { readSpent } from '../lib/spent'
 import { NOTICE_ERROR, SECONDARY_BUTTON, PRIMARY_BUTTON } from './formStyles'
 
 /**
@@ -54,14 +55,26 @@ export function BookingActions({
    * hydration mismatch waiting to happen.
    */
   ended,
+  /**
+   * What the guest spent, as this venue entered it, or null. The commission is
+   * taken of it (core/booking-fees), so "Mark as done" asks for it, and a visit
+   * closed without one - by the team, after the seven days - offers to add it.
+   */
+  amount = null,
 }: {
   id: number | string
   status: BookingStatus
   ended: boolean
+  amount?: number | null
 }) {
   const t = useTranslations('partner')
   const common = useTranslations('common')
+  const locale = useLocale()
   const router = useRouter()
+
+  /** Asking what the guest spent: to mark the visit done, or for one already done. */
+  const [askingSpent, setAskingSpent] = useState<'complete' | 'add' | null>(null)
+  const [spent, setSpent] = useState('')
 
   const [busy, setBusy] = useState<BookingStatus | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
@@ -85,7 +98,18 @@ export function BookingActions({
   const [confirmingNoShow, setConfirmingNoShow] = useState(false)
 
   const actions = availableActions('owner', status, ended)
-  if (actions.length === 0) return null
+  const missingAmount = status === 'completed' && (amount === null || amount === undefined)
+  const dollars = (value: number) =>
+    new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(value)
+
+  if (status === 'completed' && !missingAmount && askingSpent === null) {
+    return (
+      <p className="text-ink-500 mt-3 text-xs">
+        {t('spentShown', { amount: dollars(amount as number) })}
+      </p>
+    )
+  }
+  if (actions.length === 0 && !missingAmount) return null
 
   /**
    * The button that looks like the answer. Accept, usually; but a request whose
@@ -94,7 +118,7 @@ export function BookingActions({
    */
   const primary: BookingStatus = status === 'pending' && ended ? 'cancelled' : 'confirmed'
 
-  async function change(to: BookingStatus, withReason = '') {
+  async function change(to: BookingStatus, withReason = '', spentAmount: number | null = null) {
     setProblem(null)
     setBusy(to)
 
@@ -109,14 +133,18 @@ export function BookingActions({
          * `afterChange` on the same write, so a reason arriving a moment later
          * would land after the email had already gone.
          */
-        body: JSON.stringify(
-          withReason ? { status: to, declineReason: withReason } : { status: to },
-        ),
+        body: JSON.stringify({
+          ...(to === status ? {} : { status: to }),
+          ...(withReason ? { declineReason: withReason } : {}),
+          ...(spentAmount !== null ? { amount: spentAmount } : {}),
+        }),
       })
 
       if (response.ok) {
         setAsking(null)
         setReason('')
+        setAskingSpent(null)
+        setSpent('')
         // The list is server-rendered, so the new status only appears once the
         // server component runs again.
         router.refresh()
@@ -142,7 +170,82 @@ export function BookingActions({
         </p>
       ) : null}
 
-      {confirmingNoShow ? (
+      {askingSpent ? (
+        /*
+          The amount rides in the same PATCH as "completed", so the server's
+          rule that a venue marking a visit done says what was spent
+          (guardBookingWrite) is met in one save. Once given it is final for
+          the venue, and the hint says so.
+        */
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            const value = readSpent(spent)
+            if (value === null) {
+              setProblem(t('spentRequired'))
+              return
+            }
+            void change(askingSpent === 'complete' ? 'completed' : status, '', value)
+          }}
+          className="border-ink-100 mt-1 border-s-2 ps-3"
+        >
+          <label className="text-ink-700 block text-xs" htmlFor={`spent-${id}`}>
+            {t('spentLabel')}
+          </label>
+          <p className="text-ink-500 mt-0.5 text-[11px]">{t('spentHint')}</p>
+          <div className="border-ink-100 focus-within:border-gold-500 mt-2 flex max-w-[12rem] items-center border transition-colors">
+            <span className="text-ink-500 ps-3 text-sm" aria-hidden>
+              $
+            </span>
+            <input
+              id={`spent-${id}`}
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={spent}
+              onChange={(event) => setSpent(event.target.value)}
+              autoFocus
+              className="text-ink-900 w-full bg-transparent px-2 py-2 text-sm outline-none"
+            />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={busy !== null}
+              className={`${PRIMARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {busy !== null
+                ? t('working')
+                : askingSpent === 'complete'
+                  ? t('markCompleted')
+                  : t('spentSave')}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() => {
+                setAskingSpent(null)
+                setSpent('')
+                setProblem(null)
+              }}
+              className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+            >
+              {common('close')}
+            </button>
+          </div>
+        </form>
+      ) : missingAmount ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-ink-700 text-xs">{t('spentMissing')}</p>
+          <button
+            type="button"
+            onClick={() => setAskingSpent('add')}
+            className={`${SECONDARY_BUTTON} px-4 py-2 text-xs`}
+          >
+            {t('addSpent')}
+          </button>
+        </div>
+      ) : confirmingNoShow ? (
         <div className="border-state-danger mt-1 border-s-2 ps-3" role="group">
           <p className="text-ink-700 text-sm">{t('noShowConfirm')}</p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -231,7 +334,9 @@ export function BookingActions({
                   ? setAsking(to)
                   : to === 'no-show'
                     ? setConfirmingNoShow(true)
-                    : change(to)
+                    : to === 'completed'
+                      ? setAskingSpent('complete')
+                      : change(to)
               }
               // Accepting is the common action on a pending booking, so it gets
               // the weight. Everything else is deliberately quieter - declining

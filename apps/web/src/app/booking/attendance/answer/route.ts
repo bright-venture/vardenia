@@ -3,6 +3,7 @@ import { GUEST_ANSWERS, type GuestAnswer } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import config from '../../../../payload.config'
 import { bookingIdFromToken, recordGuestAnswer, visitPageUrl } from '../../../../lib/attendance'
+import { readSpent } from '../../../../lib/spent'
 import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
 import { siteOrigin } from '../../../../lib/auth-email'
 import { reportError } from '../../../../lib/report'
@@ -11,7 +12,7 @@ import { reportError } from '../../../../lib/report'
  * Where the guest's "Yes, I went" or "No" lands, from the visit page or the
  * passport. A plain form post, so it works without JavaScript.
  *
- *   POST /booking/attendance/answer   token, answer, locale
+ *   POST /booking/attendance/answer   token, answer, locale, spent (optional)
  *
  * The token is the permission: it is signed for one booking (lib/attendance),
  * so it needs no sign-in and cannot be used for anybody else's visit. The answer
@@ -36,7 +37,13 @@ export const POST = withRateLimit(async (request: Request) => {
   let outcome = 'error'
   try {
     const payload = await getPayload({ config })
-    outcome = await recordGuestAnswer(payload, bookingId, answer as GuestAnswer)
+    outcome = await recordGuestAnswer(
+      payload,
+      bookingId,
+      answer as GuestAnswer,
+      new Date(),
+      readSpent(form?.get('spent')),
+    )
   } catch (error) {
     await reportError(error, { source: 'attendance.answer', extra: { booking: bookingId } })
   }

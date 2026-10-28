@@ -28,8 +28,7 @@ export const dynamic = 'force-dynamic'
 interface Line {
   reference?: string | null
   day?: string | null
-  unit?: 'guest' | 'night' | 'booking' | null
-  quantity?: number | null
+  base?: number | null
   rate?: number | null
   amount?: number | null
   disputeOutcome?: 'none' | 'open' | 'upheld' | 'rejected' | null
@@ -56,8 +55,6 @@ const escapeHtml = (value: string) =>
 
 const dollars = (amount: number) =>
   `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-
-const UNIT: Record<string, string> = { guest: 'guests', night: 'nights', booking: 'booking' }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -123,20 +120,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     </div>
   </div>
 
-  <h1>Booking fees, ${escapeHtml(statement.period ?? '')}</h1>
+  <h1>Commission, ${escapeHtml(statement.period ?? '')}</h1>
   <p><strong>${escapeHtml(venue?.name ?? '')}</strong>${venue?.address ? `<br>${escapeHtml(venue.address)}` : ''}</p>
-  <p class="muted">One line for each guest booking made through Vardenia that took place. No-shows and cancellations are never charged.${state === 'paid' ? ' <strong>Paid.</strong>' : ''}${state === 'void' ? ' <strong>Void.</strong>' : ''}</p>
+  <p class="muted">One line for each guest booking made through Vardenia that took place: the commission on what the guest spent. No-shows and cancellations are never charged.${state === 'paid' ? ' <strong>Paid.</strong>' : ''}${state === 'void' ? ' <strong>Void.</strong>' : ''}</p>
 
   <table>
-    <thead><tr><th>Date</th><th>Booking</th><th class="n">Quantity</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead>
+    <thead><tr><th>Date</th><th>Booking</th><th class="n">Spent</th><th class="n">Rate</th><th class="n">Commission</th></tr></thead>
     <tbody>
       ${lines
         .map(
           (line) => `<tr${lineCounts(line) ? '' : ' class="off"'}>
         <td>${escapeHtml(line.day ?? '')}</td>
         <td>${escapeHtml(line.reference ?? '')}${line.disputeOutcome === 'open' ? ' (questioned)' : ''}${line.disputeOutcome === 'upheld' ? ' (removed)' : ''}</td>
-        <td class="n">${Number(line.quantity ?? 0)} ${UNIT[line.unit ?? 'booking'] ?? ''}</td>
-        <td class="n">${dollars(Number(line.rate ?? 0))}</td>
+        <td class="n">${dollars(Number(line.base ?? 0))}</td>
+        <td class="n">${Number(line.rate ?? 0)}%</td>
         <td class="n">${dollars(Number(line.amount ?? 0))}</td>
       </tr>`,
         )

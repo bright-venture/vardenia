@@ -1,19 +1,22 @@
 /**
- * Booking fees - what a venue owes Vardenia for the guests it sent, as rules
+ * Commissions - what a venue owes Vardenia for the guests it sent, as rules
  * rather than as tables.
  *
- * A venue pays a small fixed fee for each guest who booked through Vardenia and
- * came: per person at a restaurant or an activity, per night at a hotel or a
- * guesthouse. Nothing is charged for a no-show or a cancellation. Once a month
- * every venue with a fee gets a statement, has a few days to question a line,
- * and a few more to pay.
+ * A venue pays a percentage of what each guest who booked through Vardenia and
+ * came actually spent: the bill at a restaurant, the stay at a hotel. The venue
+ * enters that amount when it marks the visit, and the guest is asked roughly
+ * what they spent; where the two are far apart the team decides (see
+ * ./attendance). Nothing is charged for a no-show or a cancellation. Once a
+ * month every venue that owes something gets a statement, has a few days to
+ * question a line, and a few more to pay.
  *
- * # No amounts in here
+ * # No rates in here
  *
- * The fee a venue pays is set on its listing by staff, from the agreement the
- * venue signed. This file knows the arithmetic and the calendar, never a price:
- * prices live in documents, and a default written into code would be billed to
- * somebody who never agreed to it. A listing with no fee set is never billed.
+ * The rate is set in the admin: a default on the Commissions page, which a
+ * listing may override from the agreement the venue signed. This file knows the
+ * arithmetic and the calendar, never a price: prices live in documents, and a
+ * rate written into code would be billed to somebody who never agreed to it.
+ * With no rate set anywhere, nobody is billed.
  *
  * # Beirut days, handed in
  *
@@ -24,10 +27,6 @@
 
 import type { BookingStatus } from './booking'
 import type { AttendanceVerdict, GuestAnswer } from './attendance'
-
-/** What a fee is counted in. */
-export const FEE_UNITS = ['guest', 'night', 'booking'] as const
-export type FeeUnit = (typeof FEE_UNITS)[number]
 
 /**
  * A confirmed booking the venue has not marked this many days after it ended
@@ -56,12 +55,9 @@ export const STATEMENT_DAY = AUTO_COMPLETE_DAYS + 1
 
 const DAY_MS = 86_400_000
 
-export interface FeeSettings {
-  unit?: FeeUnit | null
-  /** In US dollars, per unit. */
-  amount?: number | null
-  /** The most one booking can cost, in US dollars. Empty for no cap. */
-  cap?: number | null
+export interface CommissionSettings {
+  /** Percent of what the guest spent, the listing's own or the default. */
+  rate?: number | null
   /** "YYYY-MM-DD". Bookings on or before this Beirut day are not billed. */
   waivedUntil?: string | null
 }
@@ -71,6 +67,10 @@ export interface BillableBooking {
   end: Date
   partySize: number
   status: BookingStatus
+  /** What the venue says the guest spent, in US dollars. */
+  amount?: number | null
+  /** What the guest says they spent, roughly, in US dollars. */
+  guestAmount?: number | null
   /** The guest's own answer, and the team's decision where it disagreed. */
   guestAnswer?: GuestAnswer | null
   verdict?: AttendanceVerdict | null
@@ -78,9 +78,10 @@ export interface BillableBooking {
   day: string
 }
 
-export interface FeeLine {
-  unit: FeeUnit
-  quantity: number
+export interface CommissionLine {
+  /** What the guest spent, the amount the rate is taken of. */
+  base: number
+  /** Percent. */
   rate: number
   amount: number
 }
@@ -88,14 +89,76 @@ export interface FeeLine {
 /** Dollars to the cent, without floating-point leftovers like 0.30000000000000004. */
 export const toCents = (value: number): number => Math.round(value * 100) / 100
 
-/** A fee is set when there is a unit and an amount above zero. */
-export function hasFee(settings: FeeSettings | null | undefined): boolean {
-  return Boolean(
-    settings?.unit &&
-    FEE_UNITS.includes(settings.unit) &&
-    typeof settings.amount === 'number' &&
-    settings.amount > 0,
-  )
+const positive = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
+
+/**
+ * The rate that applies to a listing: its own, or the default.
+ *
+ * A listing's own rate wins even at 0, which is how a venue that agreed to pay
+ * nothing is recorded. Empty means "the default".
+ */
+export function effectiveRate(
+  listingRate: number | null | undefined,
+  defaultRate: number | null | undefined,
+): number | null {
+  if (typeof listingRate === 'number' && Number.isFinite(listingRate) && listingRate >= 0) {
+    return listingRate
+  }
+  return positive(defaultRate)
+}
+
+/** A commission is set when there is a rate above zero. */
+export function hasCommission(settings: CommissionSettings | null | undefined): boolean {
+  return positive(settings?.rate) !== null
+}
+
+/**
+ * What the commission is taken of.
+ *
+ * The venue's figure, normally. Where the team sided with the guest over the
+ * amount, the guest's. Where the venue never gave one - a booking it did not
+ * mark, completed after its seven days - the guest's estimate is better than
+ * nothing. Null when neither said anything: the line cannot be billed until
+ * somebody does.
+ */
+export function billableAmount(
+  booking: Pick<BillableBooking, 'amount' | 'guestAmount' | 'verdict'>,
+): number | null {
+  const venue = positive(booking.amount)
+  const guest = positive(booking.guestAmount)
+  if (booking.verdict === 'guest') return guest ?? venue
+  return venue ?? guest
+}
+
+/** True when the launch offer covers this booking. */
+export function isWaived(
+  settings: CommissionSettings,
+  booking: Pick<BillableBooking, 'day'>,
+): boolean {
+  return Boolean(settings.waivedUntil && booking.day <= settings.waivedUntil)
+}
+
+/**
+ * What one booking costs the venue.
+ *
+ * Null when it costs nothing: no rate, the guest did not come, or the launch
+ * offer covers it. `'no-amount'` when it is owed but nobody has said what the
+ * guest spent, so the team can chase the venue instead of the line vanishing.
+ */
+export function commissionFor(
+  settings: CommissionSettings | null | undefined,
+  booking: BillableBooking,
+  now: Date,
+): CommissionLine | 'no-amount' | null {
+  if (!settings || !hasCommission(settings)) return null
+  if (!countsAsCompleted(booking, now)) return null
+  if (isWaived(settings, booking)) return null
+  const base = billableAmount(booking)
+  if (base === null) return 'no-amount'
+  const rate = settings.rate as number
+  const amount = toCents((toCents(base) * rate) / 100)
+  return amount > 0 ? { base: toCents(base), rate, amount } : null
 }
 
 /**
@@ -123,61 +186,6 @@ export function countsAsCompleted(
   const end = booking.end.getTime()
   if (!Number.isFinite(end)) return false
   return end + AUTO_COMPLETE_DAYS * DAY_MS <= now.getTime()
-}
-
-/**
- * Nights in a stay, from check-in to check-out.
- *
- * Rounded to the nearest whole day, because a stay is 14:00 to 11:00 and that
- * is one night, not 0.875 of one. Never less than one: a booking that exists
- * was at least one night.
- */
-export function nightsIn(start: Date, end: Date): number {
-  const hours = (end.getTime() - start.getTime()) / 3_600_000
-  if (!Number.isFinite(hours) || hours <= 0) return 1
-  return Math.max(1, Math.round(hours / 24))
-}
-
-export function quantityFor(unit: FeeUnit, booking: BillableBooking): number {
-  switch (unit) {
-    case 'guest':
-      return Math.max(1, Math.floor(booking.partySize))
-    case 'night':
-      return nightsIn(booking.start, booking.end)
-    case 'booking':
-      return 1
-  }
-}
-
-/** True when the launch offer covers this booking. */
-export function isWaived(settings: FeeSettings, booking: Pick<BillableBooking, 'day'>): boolean {
-  return Boolean(settings.waivedUntil && booking.day <= settings.waivedUntil)
-}
-
-/**
- * What one booking costs the venue, or null when it costs nothing.
- *
- * Null when no fee is set, when the guest did not come, or when the launch
- * offer covers it. The cap applies to the whole booking: a table of fourteen at
- * a restaurant capped at twelve is twelve.
- */
-export function feeFor(
-  settings: FeeSettings | null | undefined,
-  booking: BillableBooking,
-  now: Date,
-): FeeLine | null {
-  if (!settings || !hasFee(settings)) return null
-  if (!countsAsCompleted(booking, now)) return null
-  if (isWaived(settings, booking)) return null
-
-  const unit = settings.unit as FeeUnit
-  const rate = toCents(settings.amount as number)
-  const quantity = quantityFor(unit, booking)
-  const full = toCents(rate * quantity)
-  const cap = typeof settings.cap === 'number' && settings.cap > 0 ? toCents(settings.cap) : null
-  const amount = cap !== null ? Math.min(full, cap) : full
-
-  return amount > 0 ? { unit, quantity, rate, amount } : null
 }
 
 // ---------------------------------------------------------------------------

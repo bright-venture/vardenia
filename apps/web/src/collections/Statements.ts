@@ -9,7 +9,6 @@ import { APIError } from 'payload'
 import { sql } from '@payloadcms/db-postgres'
 import {
   DISPUTE_OUTCOMES,
-  FEE_UNITS,
   STATEMENT_STATUSES,
   canDispute,
   isPeriod,
@@ -34,12 +33,12 @@ import { STATEMENT_MOVES } from '../lib/statement-moves'
 export { STATEMENT_MOVES }
 
 /**
- * A venue's monthly booking-fee statement, which is also its invoice.
+ * A venue's monthly commission statement, which is also its invoice.
  *
- * One per venue per month, drawn up by staff from Booking fees in the admin on the 8th,
+ * One per venue per month, drawn up by staff from Commissions in the admin on the 8th,
  * once every booking of the month has had its seven days to be marked. It
  * starts as a draft nobody outside the team can see. Sending it - setting the
- * status to `sent`, on the statement or from Booking fees - stamps the two deadlines
+ * status to `sent`, on the statement or from Commissions - stamps the two deadlines
  * and emails the venue. See packages/core/src/booking-fees for the rules.
  *
  * # Who sees what
@@ -175,8 +174,7 @@ interface LineData {
   booking?: unknown
   reference?: string | null
   day?: string | null
-  unit?: string | null
-  quantity?: number | null
+  base?: number | null
   rate?: number | null
   amount?: number | null
   disputeOutcome?: string | null
@@ -277,7 +275,7 @@ export function keepVenueQuestions(lines: LineData[], stored: LineData[]): LineD
 }
 
 /** What a line bills for. Fixed once the statement is issued; see below. */
-const LOCKED_LINE_FIELDS = ['reference', 'day', 'unit', 'quantity', 'rate', 'amount'] as const
+const LOCKED_LINE_FIELDS = ['reference', 'day', 'base', 'rate', 'amount'] as const
 
 const sameInstant = (a: unknown, b: unknown) =>
   (a ?? null) === (b ?? null) ||
@@ -287,7 +285,7 @@ const sameInstant = (a: unknown, b: unknown) =>
  * Once a statement has left draft, what it bills and its deadlines are fixed.
  *
  * A sent statement is an invoice a venue holds. Through the API a staff account
- * could still change a line's quantity, rate or amount, or move the dates the
+ * could still change a line's spent amount, rate or commission, or move the dates the
  * venue's dispute window and payment deadline are counted from - silently
  * rewriting a document the venue has already been sent. Disputes are settled
  * through each line's outcome, and payment through its own fields; both stay
@@ -384,7 +382,7 @@ const deriveFields: CollectionBeforeChangeHook = async ({
     if (!(STATEMENT_MOVES[before.status] ?? []).includes(next.status)) {
       throw new APIError(
         before.status === 'void'
-          ? 'A void statement stays void. Draw the month up again from Booking fees.'
+          ? 'A void statement stays void. Draw the month up again from Commissions.'
           : `A ${before.status} statement cannot go back to ${next.status}. Set it to Void and draw the month up again instead.`,
         400,
       )
@@ -447,7 +445,7 @@ export const Statements: CollectionConfig = {
     group: 'Bookings',
     listSearchableFields: ['number', 'period'],
     description:
-      'Monthly booking-fee statements. Draw them up and send them from Booking fees in the menu; settle disputes and record payments here.',
+      'Monthly commission statements. Draw them up and send them from Commissions in the menu; settle disputes and record payments here.',
   },
 
   access: {
@@ -585,22 +583,29 @@ export const Statements: CollectionConfig = {
               relationTo: 'bookings',
               admin: { width: '30%' },
             },
-            { name: 'reference', type: 'text', admin: { width: '20%' } },
-            { name: 'day', type: 'text', admin: { width: '20%', description: 'YYYY-MM-DD' } },
-            {
-              name: 'unit',
-              type: 'select',
-              options: FEE_UNITS.map((unit) => ({ label: unit, value: unit })),
-              admin: { width: '30%', isClearable: false },
-            },
+            { name: 'reference', type: 'text', admin: { width: '35%' } },
+            { name: 'day', type: 'text', admin: { width: '35%', description: 'YYYY-MM-DD' } },
           ],
         },
         {
           type: 'row',
           fields: [
-            { name: 'quantity', type: 'number', min: 0, admin: { width: '33%' } },
-            { name: 'rate', type: 'number', min: 0, admin: { width: '33%' } },
-            { name: 'amount', type: 'number', min: 0, admin: { width: '34%' } },
+            {
+              // What the guest spent, which the rate is taken of.
+              name: 'base',
+              label: 'Spent (USD)',
+              type: 'number',
+              min: 0,
+              admin: { width: '33%' },
+            },
+            { name: 'rate', label: 'Rate (%)', type: 'number', min: 0, admin: { width: '33%' } },
+            {
+              name: 'amount',
+              label: 'Commission (USD)',
+              type: 'number',
+              min: 0,
+              admin: { width: '34%' },
+            },
           ],
         },
         {

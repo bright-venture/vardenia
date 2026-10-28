@@ -14,7 +14,7 @@ import { beirutDate } from '../../lib/beirut'
 import { findEvery } from '../../lib/find-every'
 
 /**
- * Booking fees, in the admin panel: a month of statements, and the two buttons
+ * Commissions, in the admin panel: a month of statements, and the two buttons
  * that draw them up and send them.
  *
  *   /admin/billing              last month
@@ -78,7 +78,7 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
       <DefaultTemplate {...template}>
         <main>
           <Gutter>
-            <h1>Booking fees</h1>
+            <h1>Commissions</h1>
             <p>Staff only.</p>
           </Gutter>
         </main>
@@ -123,7 +123,7 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
       <main>
         <Gutter>
           <div style={styles.wrap}>
-            <h1 style={{ margin: 0 }}>Booking fees, {period}</h1>
+            <h1 style={{ margin: 0 }}>Commissions, {period}</h1>
 
             <form method="get" action="/admin/billing" style={styles.row}>
               <input
@@ -164,7 +164,7 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
 
             <p style={styles.muted}>
               {ready
-                ? 'Drawing up marks unmarked bookings older than seven days as completed, then creates one draft per venue with a booking fee. Read the drafts before sending: sending emails each venue and starts its deadlines.'
+                ? 'Drawing up marks unmarked bookings older than seven days as completed, then creates one draft per venue that owes a commission. Read the drafts before sending: sending emails each venue and starts its deadlines.'
                 : `This month can be drawn up from ${readyOn}, once every booking in it has had seven days to be marked.`}
             </p>
 

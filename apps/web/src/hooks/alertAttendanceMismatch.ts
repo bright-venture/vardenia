@@ -12,9 +12,9 @@ import { alertTeam } from '../lib/attendance'
  *
  * The guest's answer raises its own alert when it arrives (lib/attendance).
  * This is the other order: the guest said "I came", and the venue marks the
- * booking a no-show or cancels it afterwards. Only on a change of status, and
- * only when the booking was not already in dispute, so one dispute is one
- * email.
+ * booking a no-show or cancels it afterwards, or enters an amount far from the
+ * guest's. Only on a change of status or amount, and only when the booking was
+ * not already in dispute, so one dispute is one email.
  */
 
 interface Facts {
@@ -22,6 +22,8 @@ interface Facts {
   end: string
   guestAnswer?: GuestAnswer | null
   attendanceVerdict?: AttendanceVerdict | null
+  amount?: number | null
+  guestAmount?: number | null
 }
 
 const mismatchOf = (doc: Facts | undefined) =>
@@ -31,6 +33,8 @@ const mismatchOf = (doc: Facts | undefined) =>
         end: new Date(doc.end),
         guestAnswer: doc.guestAnswer ?? null,
         verdict: doc.attendanceVerdict ?? null,
+        amount: doc.amount ?? null,
+        guestAmount: doc.guestAmount ?? null,
       })
     : null
 
@@ -44,7 +48,9 @@ export const alertAttendanceMismatch: CollectionAfterChangeHook = async ({
   if (operation !== 'update' || context?.attendance) return doc
   const before = previousDoc as Facts | undefined
   const after = doc as Facts
-  if (!before || before.status === after.status) return doc
+  if (!before) return doc
+  if (before.status === after.status && (before.amount ?? null) === (after.amount ?? null))
+    return doc
 
   const now = mismatchOf(after)
   if (now && !mismatchOf(before)) await alertTeam(req.payload, (doc as { id: number }).id, now)

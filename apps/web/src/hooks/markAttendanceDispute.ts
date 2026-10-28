@@ -13,8 +13,8 @@ import {
  * Stored rather than worked out on reading, so the admin can list, count and
  * filter disputed visits like any other field: the home page's to-do list and
  * the bookings list both read it. Recomputed on every save from the booking as
- * it will be after the save, so a status change, the guest's answer and the
- * team's decision all keep it right.
+ * it will be after the save, so a status change, an amount, the guest's answer
+ * and the team's decision all keep it right.
  */
 export const markAttendanceDispute: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   const next = { ...(originalDoc ?? {}), ...(data ?? {}) } as {
@@ -22,6 +22,8 @@ export const markAttendanceDispute: CollectionBeforeChangeHook = ({ data, origin
     end?: string
     guestAnswer?: GuestAnswer | null
     attendanceVerdict?: AttendanceVerdict | null
+    amount?: number | null
+    guestAmount?: number | null
   }
   if (!next.status || !next.end) return data
   data.attendanceDisputed =
@@ -30,6 +32,8 @@ export const markAttendanceDispute: CollectionBeforeChangeHook = ({ data, origin
       end: new Date(next.end),
       guestAnswer: next.guestAnswer ?? null,
       verdict: next.attendanceVerdict ?? null,
+      amount: next.amount ?? null,
+      guestAmount: next.guestAmount ?? null,
     }) !== null
   return data
 }

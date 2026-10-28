@@ -1,4 +1,4 @@
-import type { Access, CollectionConfig, Where } from 'payload'
+import type { Access, CollectionConfig, FieldAccess, Where } from 'payload'
 import {
   ATTENDANCE_VERDICTS,
   BOOKING_STATUSES,
@@ -7,10 +7,12 @@ import {
 } from '@vardenia/core'
 import { LOCALES, LOCALE_META } from '@vardenia/i18n'
 import {
+  BUSINESS_USER_COLLECTION,
   isAdmin,
   isStaff,
   isStaffFieldLevel,
   isStaffOrOwnerFieldLevel,
+  isStaffUser,
   fixedOnceCreated,
   ownedBusinessIds,
 } from '../access/index'
@@ -19,6 +21,24 @@ import { notifyBookingStatus } from '../hooks/notifyBookingStatus'
 import { alertAttendanceMismatch } from '../hooks/alertAttendanceMismatch'
 import { markAttendanceDispute } from '../hooks/markAttendanceDispute'
 import { stampAnsweredAt } from '../hooks/stampAnsweredAt'
+import { stampAmountEnteredAt } from '../hooks/stampAmountEnteredAt'
+
+/**
+ * What the guest spent: the venue gives it once, staff may correct it.
+ *
+ * Once, like the guest's own answer, because it is what the commission is
+ * taken of: a venue that could lower it after the guest has said otherwise
+ * would settle every dispute in its own favour. A venue that typed it wrong
+ * asks the team.
+ */
+const venueOnceOrStaff: FieldAccess = ({ req, doc }) => {
+  if (isStaffUser(req.user)) return true
+  if ((req.user as { collection?: string } | null)?.collection !== BUSINESS_USER_COLLECTION) {
+    return false
+  }
+  const stored = (doc as { amount?: unknown } | undefined)?.amount
+  return stored === null || stored === undefined
+}
 
 /**
  * A reservation: one customer, one business, one interval.
@@ -119,7 +139,7 @@ export const Bookings: CollectionConfig = {
   hooks: {
     beforeValidate: [guardBookingWrite],
     // When the venue first answered; see hooks/stampAnsweredAt.
-    beforeChange: [stampAnsweredAt, markAttendanceDispute],
+    beforeChange: [stampAnsweredAt, stampAmountEnteredAt, markAttendanceDispute],
     /**
      * Tells the customer when the business accepts or declines. On the
      * collection rather than in the partner dashboard, because a booking is
@@ -475,7 +495,65 @@ export const Bookings: CollectionConfig = {
           access: { create: () => false, update: isStaffFieldLevel },
           admin: {
             description:
-              'Only when the guest and the venue disagree. "The guest is right" puts the visit on the next statement and gives the guest the stamp.',
+              'Only when the guest and the venue disagree, on the visit or on what was spent. "The guest is right" bills the visit on the amount the guest gave, and gives the guest the stamp.',
+          },
+        },
+      ],
+    },
+
+    /**
+     * What the guest spent, which the commission is taken of (core/booking-fees).
+     *
+     * The venue enters it when it marks the visit as done; the guest gives a
+     * rough figure with their "Did you go?" answer. Where the two are far
+     * apart the booking is disputed like any other disagreement above.
+     * Neither figure is shown to the guest.
+     */
+    {
+      type: 'collapsible',
+      label: 'What the guest spent',
+      admin: { position: 'sidebar', initCollapsed: false },
+      fields: [
+        {
+          name: 'amount',
+          label: 'Amount, as the venue says (USD)',
+          type: 'number',
+          min: 0,
+          access: {
+            read: isStaffOrOwnerFieldLevel,
+            create: isStaffFieldLevel,
+            update: venueOnceOrStaff,
+          },
+          admin: {
+            step: 0.01,
+            description:
+              'The bill or the stay, entered by the venue when it marks the visit as done. The commission is taken of this.',
+          },
+        },
+        {
+          name: 'amountEnteredAt',
+          label: 'Entered on',
+          type: 'date',
+          access: {
+            read: isStaffOrOwnerFieldLevel,
+            create: () => false,
+            update: () => false,
+          },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+          },
+        },
+        {
+          name: 'guestAmount',
+          label: 'Amount, as the guest says (USD)',
+          type: 'number',
+          min: 0,
+          access: { read: isStaffFieldLevel, create: () => false, update: isStaffFieldLevel },
+          admin: {
+            step: 0.01,
+            description:
+              'Roughly, from the answer the guest gave to "Did you go?". Used when the venue gave none, or when the team sides with the guest.',
           },
         },
       ],

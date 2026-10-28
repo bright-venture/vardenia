@@ -666,6 +666,7 @@ async function BookingList({
                       id={row.id}
                       status={row.status as BookingStatus}
                       ended={row.ended}
+                      amount={typeof row.amount === 'number' ? row.amount : null}
                     />
                   </div>
 

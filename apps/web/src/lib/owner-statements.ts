@@ -4,7 +4,6 @@ import {
   canDispute,
   statementState,
   type DisputeOutcome,
-  type FeeUnit,
   type StatementState,
   type StatementStatus,
 } from '@vardenia/core'
@@ -24,8 +23,9 @@ export interface OwnerStatementLine {
   id: string
   day: string
   reference: string
-  unit: FeeUnit
-  quantity: number
+  /** What the guest spent, which the rate is taken of. */
+  base: number
+  /** Percent. */
   rate: number
   amount: number
   disputeOutcome: DisputeOutcome
@@ -66,8 +66,7 @@ interface Doc {
         id?: string | null
         day?: string | null
         reference?: string | null
-        unit?: FeeUnit | null
-        quantity?: number | null
+        base?: number | null
         rate?: number | null
         amount?: number | null
         disputeOutcome?: DisputeOutcome | null
@@ -93,8 +92,7 @@ function shape(doc: Doc, now: Date): OwnerStatement {
       id: line.id ?? '',
       day: line.day ?? '',
       reference: line.reference ?? '',
-      unit: line.unit ?? 'booking',
-      quantity: Number(line.quantity ?? 0),
+      base: Number(line.base ?? 0),
       rate: Number(line.rate ?? 0),
       amount: Number(line.amount ?? 0),
       disputeOutcome: line.disputeOutcome ?? 'none',

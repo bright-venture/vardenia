@@ -167,6 +167,20 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
     }
 
     /**
+     * A venue marking a visit as done says what the guest spent, in the same
+     * save. The commission is taken of that amount (core/booking-fees), and a
+     * venue that could mark visits without one would never be billed. Staff
+     * are exempt: they close out bookings the venue never answered, and the
+     * guest's own figure covers those.
+     */
+    if (actor === 'owner' && to === 'completed' && from !== 'completed') {
+      const amount = Number(data.amount ?? (originalDoc as { amount?: unknown }).amount)
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new APIError('Enter what the guest spent to mark the visit as done.', 400)
+      }
+    }
+
+    /**
      * An outcome cannot be recorded before the thing it is an outcome of.
      *
      * The partner dashboard stopped offering "Mark as done" and "Did not arrive"

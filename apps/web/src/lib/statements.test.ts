@@ -13,15 +13,21 @@ import {
  *
  * What matters is what it writes: which bookings it marks completed, which
  * lines end up on a statement, and that it never bills a venue twice or bills
- * one with no fee agreed.
+ * one with no rate set. The rates here are made up for the test.
  */
 
 // 2026-11-10, after the 8th, so October can be drawn up.
 const NOW = new Date('2026-11-10T09:00:00Z')
 
 interface Fixture {
-  venues: { id: number; name: string; bookingFee: Record<string, unknown> | null }[]
+  venues: {
+    id: number
+    name: string
+    commission?: { rate?: number | null; waivedUntil?: string | null } | null
+  }[]
   bookings: Record<number, Record<string, unknown>[]>
+  /** The rate on the Commissions page. */
+  defaultRate?: number | null
   existing?: number[]
   /** Booking ids already on a live statement, per venue. */
   billed?: Record<number, number[]>
@@ -29,23 +35,23 @@ interface Fixture {
 
 type Bound = Record<string, Record<string, string>>
 
-/** The date bounds in a draw-up query, applied the way Postgres would. */
+/** The date bound in a draw-up query, applied the way Postgres would. */
 const withinBounds = (row: Record<string, unknown>, where: unknown): boolean =>
   ((where as { and?: Bound[] }).and ?? []).every((clause) =>
     Object.entries(clause).every(([field, test]) => {
       const value = row[field]
       if (typeof value !== 'string') return true
-      if (test.greater_than_equal !== undefined && !(value >= test.greater_than_equal)) return false
       if (test.less_than !== undefined && !(value < test.less_than)) return false
       return true
     }),
   )
 
-function harness({ venues, bookings, existing = [], billed = {} }: Fixture) {
+function harness({ venues, bookings, defaultRate = null, existing = [], billed = {} }: Fixture) {
   const updates: Record<string, unknown>[] = []
   const creates: Record<string, unknown>[] = []
 
   const payload = {
+    findGlobal: vi.fn(async () => ({ defaultRate })),
     find: vi.fn(async (args: { collection: string; where?: unknown; page?: number }) => {
       const page = (docs: unknown[]) => ({ docs, totalDocs: docs.length, hasNextPage: false })
       if (args.collection === 'businesses') return page(venues)
@@ -59,8 +65,13 @@ function harness({ venues, bookings, existing = [], billed = {} }: Fixture) {
       }
       if (args.collection === 'bookings') {
         const where = JSON.stringify(args.where)
-        const id = Number(/"business":\{"equals":(\d+)\}/.exec(where)?.[1])
-        return page((bookings[id] ?? []).filter((row) => withinBounds(row, args.where)))
+        const match = /"business":\{"equals":(\d+)\}/.exec(where)
+        const rows = match
+          ? (bookings[Number(match[1])] ?? [])
+          : Object.entries(bookings).flatMap(([venue, list]) =>
+              list.map((row) => ({ ...row, business: Number(venue) })),
+            )
+        return page(rows.filter((row) => withinBounds(row, args.where)))
       }
       return page([])
     }),
@@ -84,6 +95,7 @@ const dinner = (id: number, over: Record<string, unknown> = {}) => ({
   end: '2026-10-10T19:00:00.000Z',
   partySize: 4,
   status: 'completed',
+  amount: 100,
   ...over,
 })
 
@@ -94,15 +106,17 @@ describe('drawing up a month', () => {
     expect(() => assertReady('October', NOW)).toThrow(NotReadyError)
   })
 
-  it('bills the guests who came and nobody else', async () => {
+  it('bills the default rate of what each guest who came spent', async () => {
     const h = harness({
-      venues: [{ id: 1, name: 'Em Sherif', bookingFee: { unit: 'guest', amount: 1, cap: 12 } }],
+      defaultRate: 10,
+      venues: [{ id: 1, name: 'Em Sherif' }],
       bookings: {
         1: [
-          dinner(10),
-          dinner(11, { partySize: 14 }),
+          dinner(10, { amount: 120 }),
+          dinner(11, { amount: 45.5 }),
           // Confirmed, never marked, ended long enough ago: counts, and is marked.
-          dinner(12, { status: 'confirmed', partySize: 2 }),
+          // The venue gave no amount, so the guest's estimate is used.
+          dinner(12, { status: 'confirmed', amount: null, guestAmount: 60 }),
         ],
       },
     })
@@ -115,24 +129,56 @@ describe('drawing up a month', () => {
       expect.objectContaining({ collection: 'bookings', id: 12, data: { status: 'completed' } }),
     ])
 
-    const data = h.creates[0]!.data as { status: string; lines: { amount: number }[] }
+    const data = h.creates[0]!.data as {
+      status: string
+      lines: { base: number; rate: number; amount: number }[]
+    }
     expect(data.status).toBe('draft')
-    expect(data.lines.map((line) => line.amount)).toEqual([4, 12, 2])
+    expect(data.lines.map((line) => [line.base, line.rate, line.amount])).toEqual([
+      [120, 10, 12],
+      [45.5, 10, 4.55],
+      [60, 10, 6],
+    ])
   })
 
-  it('never bills a venue with no fee agreed', async () => {
+  it("uses a listing's own rate over the default", async () => {
     const h = harness({
-      venues: [{ id: 2, name: 'No agreement', bookingFee: { unit: 'guest' } }],
+      defaultRate: 10,
+      venues: [{ id: 7, name: 'Own rate', commission: { rate: 8 } }],
+      bookings: { 7: [dinner(70, { amount: 200 })] },
+    })
+    await drawUpStatements(h.payload, '2026-10', NOW)
+    const data = h.creates[0]!.data as { lines: { amount: number }[] }
+    expect(data.lines.map((line) => line.amount)).toEqual([16])
+  })
+
+  it('never bills a venue when no rate is set, and says so', async () => {
+    const h = harness({
+      venues: [{ id: 2, name: 'No agreement' }],
       bookings: { 2: [dinner(20)] },
     })
     const result = await drawUpStatements(h.payload, '2026-10', NOW)
     expect(result.created).toBe(0)
+    expect(result.noRate).toEqual(['No agreement'])
     expect(h.creates).toHaveLength(0)
+  })
+
+  it('names a visit owed with no amount, rather than dropping it', async () => {
+    const h = harness({
+      defaultRate: 10,
+      venues: [{ id: 8, name: 'Chez Nouna' }],
+      bookings: { 8: [dinner(80, { amount: null }), dinner(81)] },
+    })
+    const result = await drawUpStatements(h.payload, '2026-10', NOW)
+    expect(result.missingAmount).toEqual(['Chez Nouna (REF80)'])
+    const data = h.creates[0]!.data as { lines: { booking: number }[] }
+    expect(data.lines.map((line) => line.booking)).toEqual([81])
   })
 
   it('does not bill a venue twice for the same month', async () => {
     const h = harness({
-      venues: [{ id: 3, name: 'Already billed', bookingFee: { unit: 'guest', amount: 1 } }],
+      defaultRate: 10,
+      venues: [{ id: 3, name: 'Already billed' }],
       bookings: { 3: [dinner(30)] },
       existing: [3],
     })
@@ -153,15 +199,17 @@ describe('drawing up a month', () => {
       end: '2026-11-02T09:00:00.000Z',
       partySize: 2,
       status: 'confirmed',
+      amount: 300,
     })
     const fixture = {
-      venues: [{ id: 5, name: 'Hotel', bookingFee: { unit: 'night', amount: 10 } }],
+      defaultRate: 10,
+      venues: [{ id: 5, name: 'Hotel' }],
       bookings: { 5: [stay] },
     }
 
     const october = harness(fixture)
     const oct = await drawUpStatements(october.payload, '2026-10', NOW)
-    expect(oct.nothingOwed).toBe(1)
+    expect(oct.created).toBe(0)
     expect(october.creates).toHaveLength(0)
 
     const november = harness(fixture)
@@ -172,13 +220,14 @@ describe('drawing up a month', () => {
     )
     expect(nov.created).toBe(1)
     expect(nov.markedCompleted).toBe(1)
-    const data = november.creates[0]!.data as { lines: { reference: string; quantity: number }[] }
-    expect(data.lines).toEqual([expect.objectContaining({ reference: 'CROSSES', quantity: 3 })])
+    const data = november.creates[0]!.data as { lines: { reference: string; amount: number }[] }
+    expect(data.lines).toEqual([expect.objectContaining({ reference: 'CROSSES', amount: 30 })])
   })
 
   it('never bills a booking that is already on a live statement', async () => {
     const h = harness({
-      venues: [{ id: 6, name: 'Billed before', bookingFee: { unit: 'booking', amount: 5 } }],
+      defaultRate: 10,
+      venues: [{ id: 6, name: 'Billed before' }],
       bookings: { 6: [dinner(60), dinner(61)] },
       billed: { 6: [60] },
     })
@@ -190,13 +239,8 @@ describe('drawing up a month', () => {
 
   it('creates nothing when the launch offer covers the whole month', async () => {
     const h = harness({
-      venues: [
-        {
-          id: 4,
-          name: 'New venue',
-          bookingFee: { unit: 'guest', amount: 1, waivedUntil: '2026-12-31' },
-        },
-      ],
+      defaultRate: 10,
+      venues: [{ id: 4, name: 'New venue', commission: { waivedUntil: '2026-12-31' } }],
       bookings: { 4: [dinner(40)] },
     })
     const result = await drawUpStatements(h.payload, '2026-10', NOW)

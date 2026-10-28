@@ -245,26 +245,35 @@ export async function recordGuestAnswer(
   bookingId: number,
   answer: GuestAnswer,
   now: Date = new Date(),
+  /** Roughly what they spent, given only with "I came". */
+  spent: number | null = null,
 ): Promise<AnswerOutcome> {
   const doc = (await payload
     .findByID({ collection: 'bookings', id: bookingId, depth: 0, overrideAccess: true })
-    .catch(() => null)) as unknown as (AskRow & { reference?: string | null }) | null
+    .catch(() => null)) as unknown as
+    (AskRow & { reference?: string | null; amount?: number | null }) | null
   if (!doc) return 'not-found'
   if (doc.guestAnswer) return 'already'
-  const facts = { status: doc.status, end: new Date(doc.end), guestAnswer: null }
+  const facts = {
+    status: doc.status,
+    end: new Date(doc.end),
+    guestAnswer: null,
+    amount: doc.amount ?? null,
+  }
   if (!canGuestAnswer(facts, now)) return 'closed'
 
+  const guestAmount = answer === 'came' && spent !== null && spent > 0 ? spent : null
   const written = await payload.update({
     collection: 'bookings',
     where: { and: [{ id: { equals: bookingId } }, { guestAnswer: { exists: false } }] },
-    data: { guestAnswer: answer, guestAnsweredAt: now.toISOString() } as never,
+    data: { guestAnswer: answer, guestAnsweredAt: now.toISOString(), guestAmount } as never,
     depth: 0,
     overrideAccess: true,
     context: { attendance: true },
   })
   if (written.docs.length === 0) return 'already'
 
-  const mismatch = attendanceMismatch({ ...facts, guestAnswer: answer })
+  const mismatch = attendanceMismatch({ ...facts, guestAnswer: answer, guestAmount })
   if (mismatch) await alertTeam(payload, bookingId, mismatch)
   return 'recorded'
 }
@@ -280,7 +289,11 @@ const teamAddress = () =>
 const MISMATCH_TEXT: Record<AttendanceMismatch, string> = {
   'guest-says-came': 'The guest says they came, but the venue marked the booking',
   'guest-says-absent': 'The guest says they did not come, but the venue marked the booking',
+  'amount-differs': 'The guest and the venue disagree on what was spent. The booking is',
 }
+
+const dollars = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value) ? `$${value.toFixed(2)}` : 'not given'
 
 /**
  * Emails the team about one disputed visit. Never throws: the guest's answer
@@ -301,7 +314,11 @@ export async function alertTeam(
       id: bookingId,
       depth: 1,
       overrideAccess: true,
-    })) as unknown as AskRow & { reference?: string | null }
+    })) as unknown as AskRow & {
+      reference?: string | null
+      amount?: number | null
+      guestAmount?: number | null
+    }
     const business = typeof doc.business === 'object' ? doc.business : null
     const link = `${siteOrigin()}/admin/collections/bookings/${bookingId}`
     const subject = `Disputed visit: ${business?.name ?? 'a listing'} (${doc.reference ?? bookingId})`
@@ -311,11 +328,17 @@ export async function alertTeam(
       `Place: ${business?.name ?? '-'}`,
       `Booking: ${doc.reference ?? bookingId}`,
       `Visit: ${new Date(doc.start).toISOString().slice(0, 16).replace('T', ' ')} UTC`,
+      ...(mismatch === 'amount-differs'
+        ? [
+            `Spent, as the venue says: ${dollars(doc.amount)}`,
+            `Spent, as the guest says: ${dollars(doc.guestAmount)}`,
+          ]
+        : []),
       '',
       'Check with the venue, then set "Team decision" on the booking:',
       link,
       '',
-      '"The guest is right" puts the visit on the next statement and gives the guest their stamp.',
+      '"The guest is right" bills the visit on the amount the guest gave, on the next statement, and gives the guest their stamp.',
     ].join('\n')
     await payload.sendEmail({
       to,

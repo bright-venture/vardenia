@@ -45,6 +45,27 @@ export interface AttendanceFacts {
   end: Date
   guestAnswer?: GuestAnswer | null
   verdict?: AttendanceVerdict | null
+  /** What the venue says the guest spent, in US dollars. */
+  amount?: number | null
+  /** What the guest says they spent, roughly. */
+  guestAmount?: number | null
+}
+
+/**
+ * How far apart the two amounts may be before the team is asked, as a share of
+ * the larger. A guest remembers roughly what they spent, not to the dollar, so
+ * a small gap is the guest's memory and a large one is a question.
+ */
+export const AMOUNT_TOLERANCE = 0.25
+
+/** True when both amounts are known and further apart than AMOUNT_TOLERANCE. */
+export function amountsDisagree(
+  amount: number | null | undefined,
+  guestAmount: number | null | undefined,
+): boolean {
+  if (typeof amount !== 'number' || typeof guestAmount !== 'number') return false
+  if (!(amount > 0) || !(guestAmount > 0)) return false
+  return Math.abs(amount - guestAmount) > AMOUNT_TOLERANCE * Math.max(amount, guestAmount)
 }
 
 /**
@@ -52,9 +73,11 @@ export interface AttendanceFacts {
  *
  * `guest-says-came` is the leak this exists for: a real visit marked a no-show
  * (or cancelled) so it is not billed. `guest-says-absent` is the opposite, a
- * visit billed that the guest says never happened.
+ * visit billed that the guest says never happened. `amount-differs` is the same
+ * question about money: both agree the guest came, but not on what they spent,
+ * which is what the commission is taken of.
  */
-export type AttendanceMismatch = 'guest-says-came' | 'guest-says-absent'
+export type AttendanceMismatch = 'guest-says-came' | 'guest-says-absent' | 'amount-differs'
 
 export function attendanceMismatch(facts: AttendanceFacts): AttendanceMismatch | null {
   if (facts.verdict) return null
@@ -66,6 +89,13 @@ export function attendanceMismatch(facts: AttendanceFacts): AttendanceMismatch |
   }
   if (facts.guestAnswer === 'did-not-come' && facts.status === 'completed') {
     return 'guest-says-absent'
+  }
+  if (
+    facts.guestAnswer === 'came' &&
+    (facts.status === 'completed' || facts.status === 'confirmed') &&
+    amountsDisagree(facts.amount, facts.guestAmount)
+  ) {
+    return 'amount-differs'
   }
   return null
 }

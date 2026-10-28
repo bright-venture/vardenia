@@ -366,3 +366,28 @@ describe('a new booking on a closed day', () => {
     )
   })
 })
+
+/**
+ * The commission is taken of what the guest spent, so a venue marking a visit
+ * done says how much in the same save. Staff close out visits the venue never
+ * answered, and are not asked.
+ */
+describe('marking a visit as done', () => {
+  it('refuses a venue that gives no amount', async () => {
+    await expect(
+      run({ data: { status: 'completed' }, user: owner, originalDoc: booking(true) }),
+    ).rejects.toThrow(/what the guest spent/)
+  })
+
+  it('lets a venue through with the amount in the same save', async () => {
+    await expect(
+      run({ data: { status: 'completed', amount: 85 }, user: owner, originalDoc: booking(true) }),
+    ).resolves.toBeTruthy()
+  })
+
+  it('never asks staff', async () => {
+    await expect(
+      run({ data: { status: 'completed' }, user: staff, originalDoc: booking(true) }),
+    ).resolves.toBeTruthy()
+  })
+})

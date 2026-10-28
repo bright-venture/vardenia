@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { ATTENDANCE_START, attendanceMismatch, canGuestAnswer, shouldAskGuest } from './attendance'
+import {
+  ATTENDANCE_START,
+  amountsDisagree,
+  attendanceMismatch,
+  canGuestAnswer,
+  shouldAskGuest,
+} from './attendance'
 import { countsAsCompleted } from './booking-fees'
 import { buildPassport, stampStateOf } from './passport'
 
@@ -73,6 +79,21 @@ describe('when the guest and the venue disagree', () => {
         verdict: 'venue',
       }),
     ).toBeNull()
+  })
+
+  it('flags a guest and a venue far apart on what was spent', () => {
+    const facts = { status: 'completed' as const, end: daysAgo(1), guestAnswer: 'came' as const }
+    expect(attendanceMismatch({ ...facts, amount: 40, guestAmount: 120 })).toBe('amount-differs')
+    expect(attendanceMismatch({ ...facts, amount: 100, guestAmount: 90 })).toBeNull()
+    expect(
+      attendanceMismatch({ ...facts, amount: 40, guestAmount: 120, verdict: 'venue' }),
+    ).toBeNull()
+  })
+
+  it('leaves a rough guess alone, and needs both amounts to compare', () => {
+    expect(amountsDisagree(100, 80)).toBe(false)
+    expect(amountsDisagree(100, 70)).toBe(true)
+    expect(amountsDisagree(100, null)).toBe(false)
   })
 })
 

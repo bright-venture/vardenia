@@ -5,7 +5,7 @@ import { NotReadyError, drawUpStatements } from '../../../lib/statements'
 import { reportError } from '../../../lib/report'
 
 /**
- * Draws up the drafts for one month. Staff only, from Booking fees in the admin.
+ * Draws up the drafts for one month. Staff only, from Commissions in the admin.
  *
  * Answers with a redirect back to the page carrying a one-line summary, so a
  * reload of the result does not post the form again.
@@ -36,6 +36,12 @@ export async function POST(request: Request) {
       result.nothingOwed > 0 ? `${result.nothingOwed} venue(s) owed nothing.` : '',
       result.incomplete.length > 0
         ? `Not drawn up, bookings could not all be read: ${result.incomplete.join(', ')}.`
+        : '',
+      result.noRate.length > 0
+        ? `No commission rate, so not billed: ${result.noRate.join(', ')}. Set the default on the Commissions page.`
+        : '',
+      result.missingAmount.length > 0
+        ? `Owed but no amount yet, ask the venue and they will be billed next month: ${result.missingAmount.join(', ')}.`
         : '',
     ]
       .filter(Boolean)

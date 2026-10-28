@@ -1,19 +1,19 @@
 /**
- * Booking-fee demo data for the dev database, so the whole pipeline can be seen.
+ * Commission demo data for the dev database, so the whole pipeline can be seen.
  *
  *   pnpm seed:billing          add it
  *   pnpm seed:billing:reset    take it away again
  *
  * What it builds, on the seeded fixture venues:
  *
- * - Fee settings on five venues: a restaurant per guest with a cap, a hotel and
- *   a guesthouse per night, an activity per person, and a winery inside a
- *   launch offer so it owes nothing.
+ * - Commission rates on five venues, made-up demo values: four billed at their
+ *   own rate, and a winery inside a launch offer so it owes nothing. Each visit
+ *   carries what the guest spent, as a venue would enter it.
  * - Bookings in June, July and August 2026: guests who came, no-shows,
  *   cancellations, and confirmed bookings nobody marked.
  * - Statements for June and July in every state: one paid, one overdue, one
  *   sent with a line the venue questioned, and one draft waiting to be sent.
- * - August is left for you: open Booking fees in the admin, pick 2026-08, and
+ * - August is left for you: open Commissions in the admin, pick 2026-08, and
  *   press Draw up drafts to watch the monthly run mark and bill it.
  *
  * Beit Douma's July statement is the one to open as its partner
@@ -34,11 +34,11 @@ import { fileURLToPath } from 'node:url'
 import { config as loadEnv } from 'dotenv'
 import { getPayload, type Payload } from 'payload'
 import {
-  feeFor,
+  commissionFor,
   generateBookingReference,
   statementDeadlines,
   type BookingStatus,
-  type FeeSettings,
+  type CommissionSettings,
 } from '@vardenia/core'
 import { assertSeedTarget } from './guard'
 
@@ -51,21 +51,22 @@ interface DemoManifest {
   createdAt: string
   bookings: number[]
   statements: number[]
-  /** Each venue's fee settings before the demo, to put back on reset. */
-  fees: Record<string, FeeSettings | null>
+  /** Each venue's commission settings before the demo, to put back on reset. */
+  fees: Record<string, CommissionSettings | null>
 }
 
 // ---------------------------------------------------------------------------
-// The venues and their fees
+// The venues and their rates
 // ---------------------------------------------------------------------------
 
-const VENUES: Record<string, FeeSettings> = {
-  'em-sherif': { unit: 'guest', amount: 1, cap: 12 },
-  'hotel-albergo': { unit: 'night', amount: 8 },
-  'beit-douma': { unit: 'night', amount: 6 },
-  'mzaar-kfardebian': { unit: 'guest', amount: 1.5 },
+/** Demo values for the dev database only, not anybody's price. */
+const VENUES: Record<string, CommissionSettings> = {
+  'em-sherif': { rate: 10 },
+  'hotel-albergo': { rate: 10 },
+  'beit-douma': { rate: 10 },
+  'mzaar-kfardebian': { rate: 10 },
   // Inside its launch offer until the end of October: every booking is free.
-  'chateau-ksara': { unit: 'guest', amount: 1, waivedUntil: '2026-10-31' },
+  'chateau-ksara': { rate: 10, waivedUntil: '2026-10-31' },
 }
 
 // ---------------------------------------------------------------------------
@@ -118,7 +119,7 @@ const BOOKINGS: DemoBooking[] = [
   // August: left undrawn, for the monthly run.
   table('em-sherif', '2026-08-01', 2),
   table('em-sherif', '2026-08-07', 4),
-  table('em-sherif', '2026-08-14', 14), // a large table: the $12 cap applies
+  table('em-sherif', '2026-08-14', 14), // a large table
   table('em-sherif', '2026-08-20', 3),
   table('em-sherif', '2026-08-22', 2, 'no-show'),
   table('em-sherif', '2026-08-24', 6, 'cancelled'),
@@ -138,6 +139,16 @@ const BOOKINGS: DemoBooking[] = [
   table('chateau-ksara', '2026-08-08', 6), // launch offer: not billed
   table('chateau-ksara', '2026-08-15', 4), // launch offer: not billed
 ]
+
+/**
+ * What the guest spent, as the venue would enter it: a made-up bill per guest
+ * at a table, a made-up rate per night for a stay. Only for visits that took
+ * place; an unmarked one gets none, which is what the monthly run reports.
+ */
+function spent(booking: DemoBooking): number | null {
+  if (booking.status !== 'completed') return null
+  return booking.nights ? booking.nights * 120 : booking.party * 35
+}
 
 /** Beirut is UTC+3 in summer. Tables at 20:00 for two hours; stays 14:00 to 11:00. */
 function interval(booking: DemoBooking): { start: Date; end: Date } {
@@ -215,7 +226,7 @@ async function venueIds(payload: Payload): Promise<Record<string, number>> {
     limit: 20,
     draft: true,
     overrideAccess: true,
-    select: { slug: true, bookingFee: true },
+    select: { slug: true, commission: true },
   })
   const ids: Record<string, number> = {}
   for (const doc of found.docs as { id: number; slug?: string }[]) {
@@ -228,12 +239,12 @@ async function venueIds(payload: Payload): Promise<Record<string, number>> {
   return ids
 }
 
-async function setFee(payload: Payload, id: number, fee: FeeSettings | null) {
+async function setFee(payload: Payload, id: number, fee: CommissionSettings | null) {
   await payload.update({
     collection: 'businesses',
     id,
     data: {
-      bookingFee: fee ?? { unit: null, amount: null, cap: null, waivedUntil: null },
+      commission: fee ?? { rate: null, waivedUntil: null },
     } as never,
     overrideAccess: true,
     context: { skipAutoTranslate: true },
@@ -273,8 +284,8 @@ async function add(payload: Payload) {
         depth: 0,
         draft: true,
         overrideAccess: true,
-      })) as { bookingFee?: FeeSettings | null }
-      manifest.fees[slug] = current.bookingFee?.unit ? current.bookingFee : null
+      })) as { commission?: CommissionSettings | null }
+      manifest.fees[slug] = typeof current.commission?.rate === 'number' ? current.commission : null
       await setFee(payload, ids[slug]!, fee)
     }
 
@@ -293,6 +304,7 @@ async function add(payload: Payload) {
           end: end.toISOString(),
           partySize: demo.party,
           status: demo.status,
+          amount: spent(demo),
           locale: 'en',
           notes: 'Billing demo',
         },
@@ -307,18 +319,19 @@ async function add(payload: Payload) {
       const lines = made
         .filter((row) => row.demo.venue === plan.venue && row.demo.day.startsWith(plan.period))
         .flatMap((row) => {
-          const line = feeFor(
+          const line = commissionFor(
             fee,
             {
               start: row.start,
               end: row.end,
               partySize: row.demo.party,
               status: row.demo.status,
+              amount: spent(row.demo),
               day: row.demo.day,
             },
             now,
           )
-          return line
+          return line && line !== 'no-amount'
             ? [
                 {
                   booking: row.id,
@@ -373,9 +386,9 @@ async function add(payload: Payload) {
   }
 
   payload.logger.info(
-    `Billing demo in: fees on ${Object.keys(VENUES).length} venues, ${manifest.bookings.length} bookings, ${manifest.statements.length} statements.`,
+    `Billing demo in: commission on ${Object.keys(VENUES).length} venues, ${manifest.bookings.length} bookings, ${manifest.statements.length} statements.`,
   )
-  payload.logger.info('Open Booking fees in the admin, pick 2026-08 and press Draw up drafts.')
+  payload.logger.info('Open Commissions in the admin, pick 2026-08 and press Draw up drafts.')
   payload.logger.info('Remove it again with: pnpm seed:billing:reset')
 }
 
@@ -418,7 +431,7 @@ async function reset(payload: Payload) {
 
   await unlink(MANIFEST).catch(() => undefined)
   payload.logger.info(
-    `Billing demo removed: ${removedStatements} statements, ${manifest.bookings.length} bookings, fees restored on ${Object.keys(manifest.fees).length} venues.`,
+    `Billing demo removed: ${removedStatements} statements, ${manifest.bookings.length} bookings, commission restored on ${Object.keys(manifest.fees).length} venues.`,
   )
 }
 

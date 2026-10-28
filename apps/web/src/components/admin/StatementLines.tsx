@@ -25,17 +25,10 @@ interface Row {
   booking: string | number | null
   reference: string
   day: string
-  unit: string
-  quantity: number
+  base: number
   rate: number
   amount: number
   outcome: Outcome
-}
-
-const UNITS: Record<string, [string, string]> = {
-  guest: ['guest', 'guests'],
-  night: ['night', 'nights'],
-  booking: ['booking', 'bookings'],
 }
 
 const money = (value: number) =>
@@ -78,8 +71,7 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
         booking: null,
         reference: '',
         day: '',
-        unit: '',
-        quantity: 0,
+        base: 0,
         rate: 0,
         amount: 0,
         outcome: 'none' as Outcome,
@@ -95,11 +87,8 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
         case 'day':
           row.day = String(value ?? '')
           break
-        case 'unit':
-          row.unit = String(value ?? '')
-          break
-        case 'quantity':
-          row.quantity = Number(value) || 0
+        case 'base':
+          row.base = Number(value) || 0
           break
         case 'rate':
           row.rate = Number(value) || 0
@@ -126,7 +115,7 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
         <p>
           Copied from completed bookings when the statement was drawn up, so they cannot be edited
           here. If one is wrong, correct the booking, set this statement to Void and draw the month
-          up again from Booking fees.
+          up again from Commissions.
         </p>
       </header>
 
@@ -139,15 +128,14 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
               <tr>
                 <th>Date</th>
                 <th>Booking</th>
-                <th>Charged for</th>
+                <th className="vd-num">Spent</th>
                 <th className="vd-num">Rate</th>
-                <th className="vd-num">Fee</th>
+                <th className="vd-num">Commission</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
-                const [one, many] = UNITS[row.unit] ?? [row.unit, row.unit]
                 const status = STATUS[row.outcome] ?? STATUS.none
                 return (
                   <tr key={row.index} className={row.outcome === 'upheld' ? 'is-removed' : ''}>
@@ -161,10 +149,8 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
                         row.reference || 'No booking'
                       )}
                     </td>
-                    <td>
-                      {row.quantity} {row.quantity === 1 ? one : many}
-                    </td>
-                    <td className="vd-num">{money(row.rate)}</td>
+                    <td className="vd-num">{money(row.base)}</td>
+                    <td className="vd-num">{row.rate}%</td>
                     <td className="vd-num vd-fee">{money(row.amount)}</td>
                     <td>
                       {status.className ? (

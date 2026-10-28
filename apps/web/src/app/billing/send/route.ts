@@ -5,7 +5,7 @@ import { NotReadyError, sendDrafts } from '../../../lib/statements'
 import { reportError } from '../../../lib/report'
 
 /**
- * Sends every draft of one month. Staff only, from Booking fees in the admin.
+ * Sends every draft of one month. Staff only, from Commissions in the admin.
  *
  * Sending is what starts a venue's clock: the seven days to question a line and
  * the fifteen to pay are stamped by the collection the moment each statement

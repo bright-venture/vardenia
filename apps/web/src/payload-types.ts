@@ -59,172 +59,177 @@ export type SupportedTimezones =
   | 'Pacific/Guam'
   | 'Pacific/Noumea'
   | 'Pacific/Auckland'
-  | 'Pacific/Fiji';
+  | 'Pacific/Fiji'
 
 export interface Config {
   auth: {
-    'business-users': BusinessUserAuthOperations;
-    customers: CustomerAuthOperations;
-    users: UserAuthOperations;
-  };
-  blocks: {};
+    'business-users': BusinessUserAuthOperations
+    customers: CustomerAuthOperations
+    users: UserAuthOperations
+  }
+  blocks: {}
   collections: {
-    businesses: Business;
-    'qr-codes': QrCode;
-    reviews: Review;
-    bookings: Booking;
-    statements: Statement;
-    closures: Closure;
-    articles: Article;
-    issues: Issue;
-    media: Media;
-    'business-users': BusinessUser;
-    customers: Customer;
-    users: User;
-    'scan-events': ScanEvent;
-    'error-events': ErrorEvent;
-    'saved-listings': SavedListing;
-    'rate-limits': RateLimit;
-    'payload-kv': PayloadKv;
-    'payload-locked-documents': PayloadLockedDocument;
-    'payload-preferences': PayloadPreference;
-    'payload-migrations': PayloadMigration;
-  };
-  collectionsJoins: {};
+    businesses: Business
+    'qr-codes': QrCode
+    reviews: Review
+    bookings: Booking
+    statements: Statement
+    closures: Closure
+    articles: Article
+    issues: Issue
+    media: Media
+    'business-users': BusinessUser
+    customers: Customer
+    users: User
+    'scan-events': ScanEvent
+    'error-events': ErrorEvent
+    'saved-listings': SavedListing
+    'rate-limits': RateLimit
+    'payload-kv': PayloadKv
+    'payload-locked-documents': PayloadLockedDocument
+    'payload-preferences': PayloadPreference
+    'payload-migrations': PayloadMigration
+  }
+  collectionsJoins: {}
   collectionsSelect: {
-    businesses: BusinessesSelect<false> | BusinessesSelect<true>;
-    'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>;
-    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
-    bookings: BookingsSelect<false> | BookingsSelect<true>;
-    statements: StatementsSelect<false> | StatementsSelect<true>;
-    closures: ClosuresSelect<false> | ClosuresSelect<true>;
-    articles: ArticlesSelect<false> | ArticlesSelect<true>;
-    issues: IssuesSelect<false> | IssuesSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    'business-users': BusinessUsersSelect<false> | BusinessUsersSelect<true>;
-    customers: CustomersSelect<false> | CustomersSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    'scan-events': ScanEventsSelect<false> | ScanEventsSelect<true>;
-    'error-events': ErrorEventsSelect<false> | ErrorEventsSelect<true>;
-    'saved-listings': SavedListingsSelect<false> | SavedListingsSelect<true>;
-    'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
-    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
-    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
-    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
-    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
-  };
+    businesses: BusinessesSelect<false> | BusinessesSelect<true>
+    'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>
+    bookings: BookingsSelect<false> | BookingsSelect<true>
+    statements: StatementsSelect<false> | StatementsSelect<true>
+    closures: ClosuresSelect<false> | ClosuresSelect<true>
+    articles: ArticlesSelect<false> | ArticlesSelect<true>
+    issues: IssuesSelect<false> | IssuesSelect<true>
+    media: MediaSelect<false> | MediaSelect<true>
+    'business-users': BusinessUsersSelect<false> | BusinessUsersSelect<true>
+    customers: CustomersSelect<false> | CustomersSelect<true>
+    users: UsersSelect<false> | UsersSelect<true>
+    'scan-events': ScanEventsSelect<false> | ScanEventsSelect<true>
+    'error-events': ErrorEventsSelect<false> | ErrorEventsSelect<true>
+    'saved-listings': SavedListingsSelect<false> | SavedListingsSelect<true>
+    'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>
+    'payload-locked-documents':
+      PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>
+  }
   db: {
-    defaultIDType: number;
-  };
+    defaultIDType: number
+  }
   fallbackLocale:
     | ('false' | 'none' | 'null')
     | false
     | null
     | ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur')
-    | ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur')[];
-  globals: {};
-  globalsSelect: {};
-  locale: 'en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur';
+    | ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur')[]
+  globals: {
+    'commission-settings': CommissionSetting
+  }
+  globalsSelect: {
+    'commission-settings': CommissionSettingsSelect<false> | CommissionSettingsSelect<true>
+  }
+  locale: 'en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur'
   widgets: {
-    collections: CollectionsWidget;
-  };
-  user: BusinessUser | Customer | User;
+    collections: CollectionsWidget
+  }
+  user: BusinessUser | Customer | User
   jobs: {
-    tasks: unknown;
-    workflows: unknown;
-  };
+    tasks: unknown
+    workflows: unknown
+  }
 }
 export interface BusinessUserAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 export interface CustomerAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 export interface UserAuthOperations {
   forgotPassword: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   login: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   registerFirstUser: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
   unlock: {
-    email: string;
-    password: string;
-  };
+    email: string
+    password: string
+  }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "businesses".
  */
 export interface Business {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /**
    * The web address. Printed QR codes keep working if it changes, but links people have shared and search results break, so change it only before launch or when it is wrong.
    */
-  slug: string;
-  tagline?: string | null;
+  slug: string
+  tagline?: string | null
   description?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  heroImage: number | Media;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
+  heroImage: number | Media
   /**
    * Gallery size is capped by listing tier - extra images are hidden, not deleted.
    */
-  gallery?: (number | Media)[] | null;
-  logo?: (number | null) | Media;
+  gallery?: (number | Media)[] | null
+  logo?: (number | null) | Media
   /**
    * A PDF or photo of the menu. Shown as a "View menu" link on the listing.
    */
-  menu?: (number | null) | Media;
+  menu?: (number | null) | Media
   amenities?:
     | (
         | 'sea-view'
@@ -244,18 +249,19 @@ export interface Business {
         | 'wifi'
         | 'air-conditioning'
       )[]
-    | null;
-  priceRange?: ('1' | '2' | '3' | '4') | null;
+    | null
+  priceRange?: ('1' | '2' | '3' | '4') | null
   /**
    * Tick what the venue accepts. Shown to guests next to the Book button; leave all empty if unknown.
    */
   payments?: {
-    cash?: boolean | null;
-    card?: boolean | null;
-    whish?: boolean | null;
-    omt?: boolean | null;
-  };
-  category: 'hospitality' | 'food-and-beverage' | 'tourism' | 'weddings' | 'lifestyle' | 'transportation';
+    cash?: boolean | null
+    card?: boolean | null
+    whish?: boolean | null
+    omt?: boolean | null
+  }
+  category:
+    'hospitality' | 'food-and-beverage' | 'tourism' | 'weddings' | 'lifestyle' | 'transportation'
   /**
    * Only the subcategories of the category above are offered.
    */
@@ -278,19 +284,13 @@ export interface Business {
         | 'airport-transfers'
         | 'private-drivers'
       )[]
-    | null;
+    | null
   /**
    * Free-form editorial tags ("sunset", "hidden gem"). Powers curated collections.
    */
-  tags?: string[] | null;
+  tags?: string[] | null
   governorate:
-    | 'beirut'
-    | 'matn'
-    | 'keserwan'
-    | 'north-lebanon'
-    | 'chouf'
-    | 'beqaa'
-    | 'south-lebanon';
+    'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon'
   /**
    * Only the districts of the governorate above are offered.
    */
@@ -299,55 +299,55 @@ export interface Business {
         | 'beirut'
         | 'aley'
         | 'baabda'
-        | 'chouf'
         | 'matn'
         | 'jbeil'
         | 'keserwan'
+        | 'akkar'
         | 'batroun'
         | 'bsharri'
         | 'koura'
         | 'miniyeh-danniyeh'
         | 'tripoli'
         | 'zgharta'
-        | 'akkar'
+        | 'chouf'
+        | 'baalbek'
+        | 'hermel'
         | 'rachaya'
         | 'western-beqaa'
         | 'zahle'
-        | 'baalbek'
-        | 'hermel'
-        | 'jezzine'
-        | 'sidon'
-        | 'tyre'
         | 'bint-jbeil'
         | 'hasbaya'
+        | 'jezzine'
         | 'marjeyoun'
         | 'nabatieh'
+        | 'sidon'
+        | 'tyre'
       )
-    | null;
-  address?: string | null;
+    | null
+  address?: string | null
   /**
    * Filled by the link above. Drives "near me" search and Google Maps directions.
    *
    * @minItems 2
    * @maxItems 2
    */
-  location?: [number, number] | null;
+  location?: [number, number] | null
   /**
    * Leave empty if hours vary. Powers the "Open now" filter.
    */
   openingHours?:
     | {
-        day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
-        opens?: string | null;
+        day: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+        opens?: string | null
         /**
          * Can be after midnight, like 02:00.
          */
-        closes?: string | null;
-        closed?: boolean | null;
-        id?: string | null;
+        closes?: string | null
+        closed?: boolean | null
+        id?: string | null
       }[]
-    | null;
-  seasonality?: ('year-round' | 'summer' | 'winter')[] | null;
+    | null
+  seasonality?: ('year-round' | 'summer' | 'winter')[] | null
   /**
    * Only fill this in once the business has agreed to take bookings through us.
    */
@@ -355,625 +355,637 @@ export interface Business {
     /**
      * Off means the listing shows contact details only. Nothing else here applies until this is on. Only hotels, getaways, restaurants, guided tours, activities, event planners, car rental, airport transfers and private drivers can take bookings.
      */
-    enabled?: boolean | null;
+    enabled?: boolean | null
     /**
      * On, a booking is confirmed immediately. Off, it arrives as a request for the business to accept. A restaurant with free tables wants this on; a wedding venue does not.
      */
-    autoConfirm?: boolean | null;
+    autoConfirm?: boolean | null
     /**
      * How many bookings may overlap at once - tables, rooms, seats. This is enforced in the database, not just here.
      */
-    capacity?: number | null;
-    minPartySize?: number | null;
-    maxPartySize?: number | null;
+    capacity?: number | null
+    minPartySize?: number | null
+    maxPartySize?: number | null
     /**
      * Minimum notice. 0 means walk-ins welcome.
      */
-    leadTimeMinutes?: number | null;
+    leadTimeMinutes?: number | null
     /**
      * How far ahead the calendar is open.
      */
-    maxAdvanceDays?: number | null;
+    maxAdvanceDays?: number | null
     /**
      * A dinner sitting, or one night for a hotel (1440).
      */
-    minDurationMinutes?: number | null;
+    minDurationMinutes?: number | null
     /**
      * Longest single booking. A hotel needs this in the thousands.
      */
-    maxDurationMinutes?: number | null;
+    maxDurationMinutes?: number | null
     /**
      * Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.
      */
     roomTypes?:
       | {
-          label: string;
+          label: string
           /**
            * Nightly price "from", in USD. Optional; shown as "from $X".
            */
-          price?: number | null;
+          price?: number | null
           /**
            * Optional, e.g. "Sleeps 2, sea view".
            */
-          note?: string | null;
-          id?: string | null;
+          note?: string | null
+          id?: string | null
         }[]
-      | null;
+      | null
     /**
      * Shown to the customer before they book, e.g. "Free cancellation up to 48 hours before". Leave empty to show nothing.
      */
-    cancellationPolicy?: string | null;
-  };
+    cancellationPolicy?: string | null
+  }
   /**
    * Basic: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Home page placement is the Featured box below, which either tier can have.
    */
-  tier: 'basic' | 'silver';
+  tier: 'basic' | 'silver'
   /**
    * An add-on to either tier: a place at the top of the home page, and first place in every listing grid. The home page has 6 places, and the box cannot be ticked on a seventh listing.
    */
-  featured?: boolean | null;
+  featured?: boolean | null
   /**
-   * From the agreement the venue signed. Leave the unit empty and the venue is never billed. No-shows and cancellations are never charged.
+   * A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the default on the Commissions page. No-shows and cancellations are never charged.
    */
-  bookingFee?: {
-    unit?: ('guest' | 'night' | 'booking') | null;
+  commission?: {
     /**
-     * US dollars per unit.
+     * Only if this venue agreed a different rate. 0 bills nothing.
      */
-    amount?: number | null;
-    /**
-     * Most one booking can cost, in US dollars. Empty for no cap.
-     */
-    cap?: number | null;
+    rate?: number | null
     /**
      * Launch offer: bookings on or before this day are not billed. Empty when there is none.
      */
-    waivedUntil?: string | null;
-  };
+    waivedUntil?: string | null
+  }
   /**
    * Vardenia has physically visited and vetted this business.
    */
-  verified?: boolean | null;
-  contractStartsAt?: string | null;
+  verified?: boolean | null
+  contractStartsAt?: string | null
   /**
    * Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.
    */
-  contractEndsAt?: string | null;
-  salesOwner?: (number | null) | User;
+  contractEndsAt?: string | null
+  salesOwner?: (number | null) | User
   /**
    * Never shown publicly. Enforced by field access above.
    */
-  internalNotes?: string | null;
+  internalNotes?: string | null
   /**
    * Set by a bulk import. A listing carrying this can be removed by scripts/remove-import, including its QR code. Blank means a person created it.
    */
-  importBatch?: string | null;
+  importBatch?: string | null
   /**
    * Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.
    */
-  qrCode?: (number | null) | QrCode;
+  qrCode?: (number | null) | QrCode
   seo?: {
     /**
      * Falls back to the document title when empty.
      */
-    title?: string | null;
-    description?: string | null;
+    title?: string | null
+    description?: string | null
     /**
      * Open Graph image. Falls back to the hero image.
      */
-    image?: (number | null) | Media;
+    image?: (number | null) | Media
     /**
      * Google and the others are asked not to list this page. Anyone with the link can still open it.
      */
-    noIndex?: boolean | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+    noIndex?: boolean | null
+  }
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
-  id: number;
+  id: number
   /**
    * Describe the image for screen readers and search engines. Optional for now, but fill it in before the picture is used on a listing.
    */
-  alt?: string | null;
-  caption?: string | null;
+  alt?: string | null
+  caption?: string | null
   /**
    * Photographer or rights holder. Required for licensed imagery.
    */
-  credit?: string | null;
+  credit?: string | null
   /**
    * Track this. Reusing a supplied photo in a paid ad without rights is a real liability.
    */
-  usageRights?: ('owned' | 'licensed' | 'supplied') | null;
-  _objectKey?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
+  usageRights?: ('owned' | 'licensed' | 'supplied') | null
+  _objectKey?: string | null
+  updatedAt: string
+  createdAt: string
+  url?: string | null
+  thumbnailURL?: string | null
+  filename?: string | null
+  mimeType?: string | null
+  filesize?: number | null
+  width?: number | null
+  height?: number | null
+  focalX?: number | null
+  focalY?: number | null
   sizes?: {
     thumbnail?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     card?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     portrait?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     hero?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
     og?: {
-      url?: string | null;
-      width?: number | null;
-      height?: number | null;
-      mimeType?: string | null;
-      filesize?: number | null;
-      filename?: string | null;
-    };
-  };
+      url?: string | null
+      width?: number | null
+      height?: number | null
+      mimeType?: string | null
+      filesize?: number | null
+      filename?: string | null
+    }
+  }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /**
    * Staff create and edit all content, make and edit QR codes, and run bookings and billing. Admin additionally manages the team, changes the sign-in of partner and customer accounts, sets tier, featured, verified and booking fees, deletes what cannot be undone, and switches printed QR codes off. Venue owners sign in with a partner account, not here.
    */
-  roles: ('admin' | 'staff')[];
-  phone?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
+  roles: ('admin' | 'staff')[]
+  phone?: string | null
+  updatedAt: string
+  createdAt: string
+  email: string
+  resetPasswordToken?: string | null
+  resetPasswordExpiration?: string | null
+  salt?: string | null
+  hash?: string | null
+  resetPasswordRequestedAt?: string | null
+  loginAttempts?: number | null
+  lockUntil?: string | null
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        id: string
+        createdAt?: string | null
+        expiresAt: string
       }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
+    | null
+  password?: string | null
+  collection: 'users'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "qr-codes".
  */
 export interface QrCode {
-  id: number;
+  id: number
   /**
    * Immutable. This is what gets printed.
    */
-  code: string;
+  code: string
   /**
    * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.
    */
-  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home';
+  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home'
   /**
    * Every listing gets its code automatically when it is saved. Make one here only for a listing that has none.
    */
-  business?: (number | null) | Business;
-  article?: (number | null) | Article;
+  business?: (number | null) | Business
+  article?: (number | null) | Article
   /**
    * Opens the directory filtered to this category.
    */
-  category?: ('hospitality' | 'food-and-beverage' | 'tourism' | 'weddings' | 'lifestyle' | 'transportation') | null;
+  category?:
+    | (
+        | 'hospitality'
+        | 'food-and-beverage'
+        | 'tourism'
+        | 'weddings'
+        | 'lifestyle'
+        | 'transportation'
+      )
+    | null
   /**
    * Full web address. A bare domain like leroyal.com.lb is fine.
    */
-  externalUrl?: string | null;
+  externalUrl?: string | null
   /**
    * Where the code is printed. Magazine page for every code in the magazine. T-shirt for a code printed on a shirt, which also asks where the shirt is.
    */
-  placement: 'magazine-page' | 't-shirt';
+  placement: 'magazine-page' | 't-shirt'
   /**
    * Where this shirt is worn or handed out, for example "Byblos old souk" or "Shirt 07, Beirut Marina". Shown on the print sheet and in the scan report.
    */
-  location?: string | null;
+  location?: string | null
   /**
    * Which printed issue carries this code. Set it before the issue goes to press: it is what the print sheet filters on, and what marks the code as permanent.
    */
-  issue?: (number | null) | Issue;
+  issue?: (number | null) | Issue
   /**
    * Inactive codes land on a "this listing has moved" page rather than 404 - never delete a printed code. Once a code is printed (given an issue, or scanned), only an admin can switch it off or on.
    */
-  active?: boolean | null;
+  active?: boolean | null
   /**
    * Scans so far. Each one is listed under Reports, QR scans.
    */
-  scanCount?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  scanCount?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles".
  */
 export interface Article {
-  id: number;
-  title: string;
+  id: number
+  title: string
   /**
    * The web address. Printed QR codes keep working if it changes, but links people have shared and search results break, so change it only before launch or when it is wrong.
    */
-  slug: string;
-  excerpt?: string | null;
-  kind: 'feature' | 'guide' | 'interview' | 'itinerary' | 'news' | 'sponsored';
+  slug: string
+  excerpt?: string | null
+  kind: 'feature' | 'guide' | 'interview' | 'itinerary' | 'news' | 'sponsored'
   /**
    * Shown with a "Paid partnership" label. Required for a sponsored article.
    */
-  sponsoredBy?: (number | null) | Business;
-  heroImage: number | Media;
+  sponsoredBy?: (number | null) | Business
+  heroImage: number | Media
   body?: {
     root: {
-      type: string;
+      type: string
       children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
+        type: any
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
   /**
    * Renders as linked cards, and drives "as seen in" on the listing.
    */
-  featuredBusinesses?: (number | Business)[] | null;
-  category?: ('hospitality' | 'food-and-beverage' | 'tourism' | 'weddings' | 'lifestyle' | 'transportation') | null;
-  governorate?:
+  featuredBusinesses?: (number | Business)[] | null
+  category?:
     | (
-        | 'beirut'
-        | 'matn'
-        | 'keserwan'
-        | 'north-lebanon'
-        | 'chouf'
-        | 'beqaa'
-        | 'south-lebanon'
+        | 'hospitality'
+        | 'food-and-beverage'
+        | 'tourism'
+        | 'weddings'
+        | 'lifestyle'
+        | 'transportation'
       )
-    | null;
-  author?: (number | null) | User;
+    | null
+  governorate?:
+    ('beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon') | null
+  author?: (number | null) | User
   /**
    * Set when it is first published, if left empty.
    */
-  publishedAt?: string | null;
+  publishedAt?: string | null
   print?: {
-    issue?: (number | null) | Issue;
-    pageFrom?: number | null;
-    pageTo?: number | null;
-  };
+    issue?: (number | null) | Issue
+    pageFrom?: number | null
+    pageTo?: number | null
+  }
   seo?: {
     /**
      * Falls back to the document title when empty.
      */
-    title?: string | null;
-    description?: string | null;
+    title?: string | null
+    description?: string | null
     /**
      * Open Graph image. Falls back to the hero image.
      */
-    image?: (number | null) | Media;
+    image?: (number | null) | Media
     /**
      * Google and the others are asked not to list this page. Anyone with the link can still open it.
      */
-    noIndex?: boolean | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
+    noIndex?: boolean | null
+  }
+  updatedAt: string
+  createdAt: string
+  _status?: ('draft' | 'published') | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "issues".
  */
 export interface Issue {
-  id: number;
-  title: string;
+  id: number
+  title: string
   /**
    * The web address. Printed QR codes keep working if it changes, but links people have shared and search results break, so change it only before launch or when it is wrong.
    */
-  slug: string;
-  issueNumber: number;
-  season?: string | null;
-  cover: number | Media;
-  publishedAt: string;
-  pageCount?: number | null;
+  slug: string
+  issueNumber: number
+  season?: string | null
+  cover: number | Media
+  publishedAt: string
+  pageCount?: number | null
   /**
    * Copies printed. Used to compute scan rate per thousand copies.
    */
-  printRun?: number | null;
+  printRun?: number | null
   /**
    * PDF flipbook of the full issue.
    */
-  digitalEdition?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
+  digitalEdition?: (number | null) | Media
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews".
  */
 export interface Review {
-  id: number;
-  business: number | Business;
-  rating: number;
-  title?: string | null;
+  id: number
+  business: number | Business
+  rating: number
+  title?: string | null
   /**
    * Change only to remove personal details, like a phone number. If the review is not acceptable, reject it instead.
    */
-  body: string;
-  authorName: string;
+  body: string
+  authorName: string
   /**
    * Set with Publish or Reject on the review, then Save.
    */
-  status: 'pending' | 'published' | 'rejected';
+  status: 'pending' | 'published' | 'rejected'
   /**
    * The guest who wrote it, filled in automatically. Empty only for a review added by hand, such as test data.
    */
-  customer?: (number | null) | Customer;
+  customer?: (number | null) | Customer
   /**
    * The completed booking that allowed the review, filled in automatically. Empty only for a review added by hand.
    */
-  booking?: (number | null) | Booking;
-  updatedAt: string;
-  createdAt: string;
+  booking?: (number | null) | Booking
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customers".
  */
 export interface Customer {
-  id: number;
-  name: string;
-  phone?: string | null;
+  id: number
+  name: string
+  phone?: string | null
   /**
    * Set when the customer closed their account. Nothing personal remains.
    */
-  deletedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
+  deletedAt?: string | null
+  updatedAt: string
+  createdAt: string
+  email: string
+  resetPasswordToken?: string | null
+  resetPasswordExpiration?: string | null
+  salt?: string | null
+  hash?: string | null
+  resetPasswordRequestedAt?: string | null
+  _verified?: boolean | null
+  _verificationToken?: string | null
+  loginAttempts?: number | null
+  lockUntil?: string | null
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        id: string
+        createdAt?: string | null
+        expiresAt: string
       }[]
-    | null;
-  password?: string | null;
-  collection: 'customers';
+    | null
+  password?: string | null
+  collection: 'customers'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bookings".
  */
 export interface Booking {
-  id: number;
+  id: number
   /**
    * What the customer quotes. Generated, never edited.
    */
-  reference?: string | null;
-  business: number | Business;
-  customer: number | Customer;
-  start: string;
-  end: string;
-  partySize: number;
+  reference?: string | null
+  business: number | Business
+  customer: number | Customer
+  start: string
+  end: string
+  partySize: number
   /**
    * The room or unit type requested, for a stay. Empty for a table booking.
    */
-  roomType?: string | null;
+  roomType?: string | null
   /**
    * Change it with the buttons on the booking, then Save.
    */
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show'
   /**
    * What the customer told us - a dietary requirement, an anniversary.
    */
-  notes?: string | null;
+  notes?: string | null
   /**
    * The language this customer is written to in.
    */
-  locale?: ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur') | null;
+  locale?: ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur') | null
   /**
    * When the venue first confirmed or declined it. Set automatically.
    */
-  answeredAt?: string | null;
+  answeredAt?: string | null
   /**
    * Optional. Sent to the guest when a booking is declined or called off. One line.
    */
-  declineReason?: string | null;
+  declineReason?: string | null
   /**
    * Not visible to the customer.
    */
-  internalNotes?: string | null;
-  requestId?: string | null;
+  internalNotes?: string | null
+  requestId?: string | null
   /**
    * Their answer to "Did you go?". Empty until they answer.
    */
-  guestAnswer?: ('came' | 'did-not-come') | null;
-  guestAnsweredAt?: string | null;
-  attendanceAskedAt?: string | null;
+  guestAnswer?: ('came' | 'did-not-come') | null
+  guestAnsweredAt?: string | null
+  attendanceAskedAt?: string | null
   /**
    * The guest and the venue disagree. Settle it with "Team decision" below.
    */
-  attendanceDisputed?: boolean | null;
+  attendanceDisputed?: boolean | null
   /**
-   * Only when the guest and the venue disagree. "The guest is right" puts the visit on the next statement and gives the guest the stamp.
+   * Only when the guest and the venue disagree, on the visit or on what was spent. "The guest is right" bills the visit on the amount the guest gave, and gives the guest the stamp.
    */
-  attendanceVerdict?: ('guest' | 'venue') | null;
-  updatedAt: string;
-  createdAt: string;
+  attendanceVerdict?: ('guest' | 'venue') | null
+  /**
+   * The bill or the stay, entered by the venue when it marks the visit as done. The commission is taken of this.
+   */
+  amount?: number | null
+  amountEnteredAt?: string | null
+  /**
+   * Roughly, from the answer the guest gave to "Did you go?". Used when the venue gave none, or when the team sides with the guest.
+   */
+  guestAmount?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
- * Monthly booking-fee statements. Draw them up and send them from Booking fees in the menu; settle disputes and record payments here.
+ * Monthly commission statements. Draw them up and send them from Commissions in the menu; settle disputes and record payments here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "statements".
  */
 export interface Statement {
-  id: number;
+  id: number
   /**
    * Given automatically.
    */
-  number?: string | null;
-  business: number | Business;
+  number?: string | null
+  business: number | Business
   /**
    * The month billed.
    */
-  period: string;
+  period: string
   /**
    * Change it with the buttons at the top, then Save.
    */
-  status: 'draft' | 'sent' | 'paid' | 'void';
+  status: 'draft' | 'sent' | 'paid' | 'void'
   /**
    * Today if left empty.
    */
-  paidAt?: string | null;
-  paymentMethod?: ('whish' | 'bank' | 'card' | 'cash') | null;
+  paidAt?: string | null
+  paymentMethod?: ('whish' | 'bank' | 'card' | 'cash') | null
   /**
    * The transfer or receipt number.
    */
-  paymentReference?: string | null;
+  paymentReference?: string | null
   lines?:
     | {
-        booking?: (number | null) | Booking;
-        reference?: string | null;
+        booking?: (number | null) | Booking
+        reference?: string | null
         /**
          * YYYY-MM-DD
          */
-        day?: string | null;
-        unit?: ('guest' | 'night' | 'booking') | null;
-        quantity?: number | null;
-        rate?: number | null;
-        amount?: number | null;
-        disputeOutcome?: ('none' | 'open' | 'upheld' | 'rejected') | null;
-        disputeReason?: string | null;
-        disputedAt?: string | null;
-        id?: string | null;
+        day?: string | null
+        base?: number | null
+        rate?: number | null
+        amount?: number | null
+        disputeOutcome?: ('none' | 'open' | 'upheld' | 'rejected') | null
+        disputeReason?: string | null
+        disputedAt?: string | null
+        id?: string | null
       }[]
-    | null;
+    | null
   /**
    * 0 until VAT registration. Can change only while a draft.
    */
-  vatRate?: number | null;
-  subtotal?: number | null;
-  vat?: number | null;
-  total?: number | null;
-  sentAt?: string | null;
-  disputeUntil?: string | null;
-  dueAt?: string | null;
+  vatRate?: number | null
+  subtotal?: number | null
+  vat?: number | null
+  total?: number | null
+  sentAt?: string | null
+  disputeUntil?: string | null
+  dueAt?: string | null
   /**
    * Not visible to the venue.
    */
-  internalNotes?: string | null;
-  updatedAt: string;
-  createdAt: string;
+  internalNotes?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "closures".
  */
 export interface Closure {
-  id: number;
-  business: number | Business;
+  id: number
+  business: number | Business
   /**
    * First day closed, in Beirut.
    */
-  startsOn: string;
+  startsOn: string
   /**
    * Last day closed, inclusive. The same date for a single day.
    */
-  endsOn: string;
+  endsOn: string
   /**
    * Why. Not shown to guests.
    */
-  note?: string | null;
-  updatedAt: string;
-  createdAt: string;
+  note?: string | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
 export interface BusinessUser {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /**
    * Which listings this account manages. A group may hold several. Only staff can change this.
    */
-  businesses: (number | Business)[];
-  phone?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
+  businesses: (number | Business)[]
+  phone?: string | null
+  updatedAt: string
+  createdAt: string
+  email: string
+  resetPasswordToken?: string | null
+  resetPasswordExpiration?: string | null
+  salt?: string | null
+  hash?: string | null
+  resetPasswordRequestedAt?: string | null
+  loginAttempts?: number | null
+  lockUntil?: string | null
   sessions?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        id: string
+        createdAt?: string | null
+        expiresAt: string
       }[]
-    | null;
-  password?: string | null;
-  collection: 'business-users';
+    | null
+  password?: string | null
+  collection: 'business-users'
 }
 /**
  * Read-only. Written by the QR redirect endpoint.
@@ -982,22 +994,22 @@ export interface BusinessUser {
  * via the `definition` "scan-events".
  */
 export interface ScanEvent {
-  id: number;
-  code: string;
-  qrCode?: (number | null) | QrCode;
+  id: number
+  code: string
+  qrCode?: (number | null) | QrCode
   /**
    * Denormalised so advertiser analytics need no join.
    */
-  business?: (number | null) | Business;
-  scannedAt: string;
-  placement?: ('magazine-page' | 't-shirt') | null;
-  city?: string | null;
-  country?: string | null;
-  platform?: ('ios' | 'android' | 'web' | 'unknown') | null;
+  business?: (number | null) | Business
+  scannedAt: string
+  placement?: ('magazine-page' | 't-shirt') | null
+  city?: string | null
+  country?: string | null
+  platform?: ('ios' | 'android' | 'web' | 'unknown') | null
   /**
    * False when the link was shared onward rather than scanned off a printed surface.
    */
-  isDirectScan?: boolean | null;
+  isDirectScan?: boolean | null
 }
 /**
  * Written by the server when something fails. Read-only.
@@ -1006,720 +1018,745 @@ export interface ScanEvent {
  * via the `definition` "error-events".
  */
 export interface ErrorEvent {
-  id: number;
+  id: number
   /**
    * Identity of the bug. Occurrences with the same one are counted together.
    */
-  fingerprint: string;
-  message: string;
-  name?: string | null;
+  fingerprint: string
+  message: string
+  name?: string | null
   /**
    * What was happening: booking.confirmation-email, auth.reset, request.
    */
-  source?: string | null;
-  path?: string | null;
-  level?: ('error' | 'warning') | null;
+  source?: string | null
+  path?: string | null
+  level?: ('error' | 'warning') | null
   /**
    * How many times this has happened.
    */
-  count?: number | null;
-  firstSeen?: string | null;
-  lastSeen?: string | null;
+  count?: number | null
+  firstSeen?: string | null
+  lastSeen?: string | null
   /**
    * Truncated, and scrubbed of secrets and addresses.
    */
-  stack?: string | null;
+  stack?: string | null
   /**
    * Context the caller attached, scrubbed the same way.
    */
-  extra?: string | null;
+  extra?: string | null
   /**
    * Tick when it is fixed. A later occurrence unticks it automatically, so a bug that comes back does not stay hidden.
    */
-  resolved?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
+  resolved?: boolean | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "saved-listings".
  */
 export interface SavedListing {
-  id: number;
-  customer: number | Customer;
-  listing: number | Business;
-  updatedAt: string;
-  createdAt: string;
+  id: number
+  customer: number | Customer
+  listing: number | Business
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rate-limits".
  */
 export interface RateLimit {
-  id: number;
+  id: number
   /**
    * Budget and caller, hashed. Never an address in the clear.
    */
-  key: string;
-  count: number;
+  key: string
+  count: number
   /**
    * When this window ends and the count starts again.
    */
-  resetAt: string;
+  resetAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: number;
-  key: string;
+  id: number
+  key: string
   data:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
+    | null
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: number;
+  id: number
   document?:
     | ({
-        relationTo: 'businesses';
-        value: number | Business;
+        relationTo: 'businesses'
+        value: number | Business
       } | null)
     | ({
-        relationTo: 'qr-codes';
-        value: number | QrCode;
+        relationTo: 'qr-codes'
+        value: number | QrCode
       } | null)
     | ({
-        relationTo: 'reviews';
-        value: number | Review;
+        relationTo: 'reviews'
+        value: number | Review
       } | null)
     | ({
-        relationTo: 'bookings';
-        value: number | Booking;
+        relationTo: 'bookings'
+        value: number | Booking
       } | null)
     | ({
-        relationTo: 'statements';
-        value: number | Statement;
+        relationTo: 'statements'
+        value: number | Statement
       } | null)
     | ({
-        relationTo: 'closures';
-        value: number | Closure;
+        relationTo: 'closures'
+        value: number | Closure
       } | null)
     | ({
-        relationTo: 'articles';
-        value: number | Article;
+        relationTo: 'articles'
+        value: number | Article
       } | null)
     | ({
-        relationTo: 'issues';
-        value: number | Issue;
+        relationTo: 'issues'
+        value: number | Issue
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'media'
+        value: number | Media
       } | null)
     | ({
-        relationTo: 'business-users';
-        value: number | BusinessUser;
+        relationTo: 'business-users'
+        value: number | BusinessUser
       } | null)
     | ({
-        relationTo: 'customers';
-        value: number | Customer;
+        relationTo: 'customers'
+        value: number | Customer
       } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
+        relationTo: 'users'
+        value: number | User
       } | null)
     | ({
-        relationTo: 'scan-events';
-        value: number | ScanEvent;
+        relationTo: 'scan-events'
+        value: number | ScanEvent
       } | null)
     | ({
-        relationTo: 'error-events';
-        value: number | ErrorEvent;
+        relationTo: 'error-events'
+        value: number | ErrorEvent
       } | null)
     | ({
-        relationTo: 'saved-listings';
-        value: number | SavedListing;
+        relationTo: 'saved-listings'
+        value: number | SavedListing
       } | null)
     | ({
-        relationTo: 'rate-limits';
-        value: number | RateLimit;
-      } | null);
-  globalSlug?: string | null;
+        relationTo: 'rate-limits'
+        value: number | RateLimit
+      } | null)
+  globalSlug?: string | null
   user:
     | {
-        relationTo: 'business-users';
-        value: number | BusinessUser;
+        relationTo: 'business-users'
+        value: number | BusinessUser
       }
     | {
-        relationTo: 'customers';
-        value: number | Customer;
+        relationTo: 'customers'
+        value: number | Customer
       }
     | {
-        relationTo: 'users';
-        value: number | User;
-      };
-  updatedAt: string;
-  createdAt: string;
+        relationTo: 'users'
+        value: number | User
+      }
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: number;
+  id: number
   user:
     | {
-        relationTo: 'business-users';
-        value: number | BusinessUser;
+        relationTo: 'business-users'
+        value: number | BusinessUser
       }
     | {
-        relationTo: 'customers';
-        value: number | Customer;
+        relationTo: 'customers'
+        value: number | Customer
       }
     | {
-        relationTo: 'users';
-        value: number | User;
-      };
-  key?: string | null;
+        relationTo: 'users'
+        value: number | User
+      }
+  key?: string | null
   value?:
     | {
-        [k: string]: unknown;
+        [k: string]: unknown
       }
     | unknown[]
     | string
     | number
     | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
+    | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: number;
-  name?: string | null;
-  batch?: number | null;
-  updatedAt: string;
-  createdAt: string;
+  id: number
+  name?: string | null
+  batch?: number | null
+  updatedAt: string
+  createdAt: string
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "businesses_select".
  */
 export interface BusinessesSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  tagline?: T;
-  description?: T;
-  heroImage?: T;
-  gallery?: T;
-  logo?: T;
-  menu?: T;
-  amenities?: T;
-  priceRange?: T;
+  name?: T
+  slug?: T
+  tagline?: T
+  description?: T
+  heroImage?: T
+  gallery?: T
+  logo?: T
+  menu?: T
+  amenities?: T
+  priceRange?: T
   payments?:
     | T
     | {
-        cash?: T;
-        card?: T;
-        whish?: T;
-        omt?: T;
-      };
-  category?: T;
-  subcategories?: T;
-  tags?: T;
-  governorate?: T;
-  district?: T;
-  address?: T;
-  location?: T;
+        cash?: T
+        card?: T
+        whish?: T
+        omt?: T
+      }
+  category?: T
+  subcategories?: T
+  tags?: T
+  governorate?: T
+  district?: T
+  address?: T
+  location?: T
   openingHours?:
     | T
     | {
-        day?: T;
-        opens?: T;
-        closes?: T;
-        closed?: T;
-        id?: T;
-      };
-  seasonality?: T;
+        day?: T
+        opens?: T
+        closes?: T
+        closed?: T
+        id?: T
+      }
+  seasonality?: T
   booking?:
     | T
     | {
-        enabled?: T;
-        autoConfirm?: T;
-        capacity?: T;
-        minPartySize?: T;
-        maxPartySize?: T;
-        leadTimeMinutes?: T;
-        maxAdvanceDays?: T;
-        minDurationMinutes?: T;
-        maxDurationMinutes?: T;
+        enabled?: T
+        autoConfirm?: T
+        capacity?: T
+        minPartySize?: T
+        maxPartySize?: T
+        leadTimeMinutes?: T
+        maxAdvanceDays?: T
+        minDurationMinutes?: T
+        maxDurationMinutes?: T
         roomTypes?:
           | T
           | {
-              label?: T;
-              price?: T;
-              note?: T;
-              id?: T;
-            };
-        cancellationPolicy?: T;
-      };
-  tier?: T;
-  featured?: T;
-  bookingFee?:
+              label?: T
+              price?: T
+              note?: T
+              id?: T
+            }
+        cancellationPolicy?: T
+      }
+  tier?: T
+  featured?: T
+  commission?:
     | T
     | {
-        unit?: T;
-        amount?: T;
-        cap?: T;
-        waivedUntil?: T;
-      };
-  verified?: T;
-  contractStartsAt?: T;
-  contractEndsAt?: T;
-  salesOwner?: T;
-  internalNotes?: T;
-  importBatch?: T;
-  qrCode?: T;
+        rate?: T
+        waivedUntil?: T
+      }
+  verified?: T
+  contractStartsAt?: T
+  contractEndsAt?: T
+  salesOwner?: T
+  internalNotes?: T
+  importBatch?: T
+  qrCode?: T
   seo?:
     | T
     | {
-        title?: T;
-        description?: T;
-        image?: T;
-        noIndex?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        title?: T
+        description?: T
+        image?: T
+        noIndex?: T
+      }
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "qr-codes_select".
  */
 export interface QrCodesSelect<T extends boolean = true> {
-  code?: T;
-  targetType?: T;
-  business?: T;
-  article?: T;
-  category?: T;
-  externalUrl?: T;
-  placement?: T;
-  location?: T;
-  issue?: T;
-  active?: T;
-  scanCount?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  code?: T
+  targetType?: T
+  business?: T
+  article?: T
+  category?: T
+  externalUrl?: T
+  placement?: T
+  location?: T
+  issue?: T
+  active?: T
+  scanCount?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews_select".
  */
 export interface ReviewsSelect<T extends boolean = true> {
-  business?: T;
-  rating?: T;
-  title?: T;
-  body?: T;
-  authorName?: T;
-  status?: T;
-  customer?: T;
-  booking?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  business?: T
+  rating?: T
+  title?: T
+  body?: T
+  authorName?: T
+  status?: T
+  customer?: T
+  booking?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "bookings_select".
  */
 export interface BookingsSelect<T extends boolean = true> {
-  reference?: T;
-  business?: T;
-  customer?: T;
-  start?: T;
-  end?: T;
-  partySize?: T;
-  roomType?: T;
-  status?: T;
-  notes?: T;
-  locale?: T;
-  answeredAt?: T;
-  declineReason?: T;
-  internalNotes?: T;
-  requestId?: T;
-  guestAnswer?: T;
-  guestAnsweredAt?: T;
-  attendanceAskedAt?: T;
-  attendanceDisputed?: T;
-  attendanceVerdict?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  reference?: T
+  business?: T
+  customer?: T
+  start?: T
+  end?: T
+  partySize?: T
+  roomType?: T
+  status?: T
+  notes?: T
+  locale?: T
+  answeredAt?: T
+  declineReason?: T
+  internalNotes?: T
+  requestId?: T
+  guestAnswer?: T
+  guestAnsweredAt?: T
+  attendanceAskedAt?: T
+  attendanceDisputed?: T
+  attendanceVerdict?: T
+  amount?: T
+  amountEnteredAt?: T
+  guestAmount?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "statements_select".
  */
 export interface StatementsSelect<T extends boolean = true> {
-  number?: T;
-  business?: T;
-  period?: T;
-  status?: T;
-  paidAt?: T;
-  paymentMethod?: T;
-  paymentReference?: T;
+  number?: T
+  business?: T
+  period?: T
+  status?: T
+  paidAt?: T
+  paymentMethod?: T
+  paymentReference?: T
   lines?:
     | T
     | {
-        booking?: T;
-        reference?: T;
-        day?: T;
-        unit?: T;
-        quantity?: T;
-        rate?: T;
-        amount?: T;
-        disputeOutcome?: T;
-        disputeReason?: T;
-        disputedAt?: T;
-        id?: T;
-      };
-  vatRate?: T;
-  subtotal?: T;
-  vat?: T;
-  total?: T;
-  sentAt?: T;
-  disputeUntil?: T;
-  dueAt?: T;
-  internalNotes?: T;
-  updatedAt?: T;
-  createdAt?: T;
+        booking?: T
+        reference?: T
+        day?: T
+        base?: T
+        rate?: T
+        amount?: T
+        disputeOutcome?: T
+        disputeReason?: T
+        disputedAt?: T
+        id?: T
+      }
+  vatRate?: T
+  subtotal?: T
+  vat?: T
+  total?: T
+  sentAt?: T
+  disputeUntil?: T
+  dueAt?: T
+  internalNotes?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "closures_select".
  */
 export interface ClosuresSelect<T extends boolean = true> {
-  business?: T;
-  startsOn?: T;
-  endsOn?: T;
-  note?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  business?: T
+  startsOn?: T
+  endsOn?: T
+  note?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  excerpt?: T;
-  kind?: T;
-  sponsoredBy?: T;
-  heroImage?: T;
-  body?: T;
-  featuredBusinesses?: T;
-  category?: T;
-  governorate?: T;
-  author?: T;
-  publishedAt?: T;
+  title?: T
+  slug?: T
+  excerpt?: T
+  kind?: T
+  sponsoredBy?: T
+  heroImage?: T
+  body?: T
+  featuredBusinesses?: T
+  category?: T
+  governorate?: T
+  author?: T
+  publishedAt?: T
   print?:
     | T
     | {
-        issue?: T;
-        pageFrom?: T;
-        pageTo?: T;
-      };
+        issue?: T
+        pageFrom?: T
+        pageTo?: T
+      }
   seo?:
     | T
     | {
-        title?: T;
-        description?: T;
-        image?: T;
-        noIndex?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-  _status?: T;
+        title?: T
+        description?: T
+        image?: T
+        noIndex?: T
+      }
+  updatedAt?: T
+  createdAt?: T
+  _status?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "issues_select".
  */
 export interface IssuesSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  issueNumber?: T;
-  season?: T;
-  cover?: T;
-  publishedAt?: T;
-  pageCount?: T;
-  printRun?: T;
-  digitalEdition?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  title?: T
+  slug?: T
+  issueNumber?: T
+  season?: T
+  cover?: T
+  publishedAt?: T
+  pageCount?: T
+  printRun?: T
+  digitalEdition?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  caption?: T;
-  credit?: T;
-  usageRights?: T;
-  _objectKey?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
+  alt?: T
+  caption?: T
+  credit?: T
+  usageRights?: T
+  _objectKey?: T
+  updatedAt?: T
+  createdAt?: T
+  url?: T
+  thumbnailURL?: T
+  filename?: T
+  mimeType?: T
+  filesize?: T
+  width?: T
+  height?: T
+  focalX?: T
+  focalY?: T
   sizes?:
     | T
     | {
         thumbnail?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         card?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         portrait?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         hero?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
         og?:
           | T
           | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
+              url?: T
+              width?: T
+              height?: T
+              mimeType?: T
+              filesize?: T
+              filename?: T
+            }
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users_select".
  */
 export interface BusinessUsersSelect<T extends boolean = true> {
-  name?: T;
-  businesses?: T;
-  phone?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  name?: T
+  businesses?: T
+  phone?: T
+  updatedAt?: T
+  createdAt?: T
+  email?: T
+  resetPasswordToken?: T
+  resetPasswordExpiration?: T
+  salt?: T
+  hash?: T
+  resetPasswordRequestedAt?: T
+  loginAttempts?: T
+  lockUntil?: T
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+        id?: T
+        createdAt?: T
+        expiresAt?: T
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customers_select".
  */
 export interface CustomersSelect<T extends boolean = true> {
-  name?: T;
-  phone?: T;
-  deletedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  _verified?: T;
-  _verificationToken?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  name?: T
+  phone?: T
+  deletedAt?: T
+  updatedAt?: T
+  createdAt?: T
+  email?: T
+  resetPasswordToken?: T
+  resetPasswordExpiration?: T
+  salt?: T
+  hash?: T
+  resetPasswordRequestedAt?: T
+  _verified?: T
+  _verificationToken?: T
+  loginAttempts?: T
+  lockUntil?: T
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+        id?: T
+        createdAt?: T
+        expiresAt?: T
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  roles?: T;
-  phone?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  resetPasswordRequestedAt?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
+  name?: T
+  roles?: T
+  phone?: T
+  updatedAt?: T
+  createdAt?: T
+  email?: T
+  resetPasswordToken?: T
+  resetPasswordExpiration?: T
+  salt?: T
+  hash?: T
+  resetPasswordRequestedAt?: T
+  loginAttempts?: T
+  lockUntil?: T
   sessions?:
     | T
     | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
+        id?: T
+        createdAt?: T
+        expiresAt?: T
+      }
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "scan-events_select".
  */
 export interface ScanEventsSelect<T extends boolean = true> {
-  code?: T;
-  qrCode?: T;
-  business?: T;
-  scannedAt?: T;
-  placement?: T;
-  city?: T;
-  country?: T;
-  platform?: T;
-  isDirectScan?: T;
+  code?: T
+  qrCode?: T
+  business?: T
+  scannedAt?: T
+  placement?: T
+  city?: T
+  country?: T
+  platform?: T
+  isDirectScan?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "error-events_select".
  */
 export interface ErrorEventsSelect<T extends boolean = true> {
-  fingerprint?: T;
-  message?: T;
-  name?: T;
-  source?: T;
-  path?: T;
-  level?: T;
-  count?: T;
-  firstSeen?: T;
-  lastSeen?: T;
-  stack?: T;
-  extra?: T;
-  resolved?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  fingerprint?: T
+  message?: T
+  name?: T
+  source?: T
+  path?: T
+  level?: T
+  count?: T
+  firstSeen?: T
+  lastSeen?: T
+  stack?: T
+  extra?: T
+  resolved?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "saved-listings_select".
  */
 export interface SavedListingsSelect<T extends boolean = true> {
-  customer?: T;
-  listing?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  customer?: T
+  listing?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rate-limits_select".
  */
 export interface RateLimitsSelect<T extends boolean = true> {
-  key?: T;
-  count?: T;
-  resetAt?: T;
+  key?: T
+  count?: T
+  resetAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
-  key?: T;
-  data?: T;
+  key?: T
+  data?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents_select".
  */
 export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
-  document?: T;
-  globalSlug?: T;
-  user?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  document?: T
+  globalSlug?: T
+  user?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-preferences_select".
  */
 export interface PayloadPreferencesSelect<T extends boolean = true> {
-  user?: T;
-  key?: T;
-  value?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  user?: T
+  key?: T
+  value?: T
+  updatedAt?: T
+  createdAt?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-migrations_select".
  */
 export interface PayloadMigrationsSelect<T extends boolean = true> {
-  name?: T;
-  batch?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  name?: T
+  batch?: T
+  updatedAt?: T
+  createdAt?: T
+}
+/**
+ * Each guest who books through Vardenia and comes is billed to the venue as a percentage of what they spent. The venue enters the amount when it marks the visit, and the guest is asked roughly what they spent; where the two are more than 25% apart, the booking is flagged for the team. Statements are drawn up from Commission statements.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "commission-settings".
+ */
+export interface CommissionSetting {
+  id: number
+  /**
+   * Applies to every listing that takes bookings and has no rate of its own. Empty bills nobody.
+   */
+  defaultRate?: number | null
+  updatedAt?: string | null
+  createdAt?: string | null
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "commission-settings_select".
+ */
+export interface CommissionSettingsSelect<T extends boolean = true> {
+  defaultRate?: T
+  updatedAt?: T
+  createdAt?: T
+  globalType?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1727,18 +1764,17 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface CollectionsWidget {
   data?: {
-    [k: string]: unknown;
-  };
-  width: 'full';
+    [k: string]: unknown
+  }
+  width: 'full'
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "auth".
  */
 export interface Auth {
-  [k: string]: unknown;
+  [k: string]: unknown
 }
-
 
 declare module 'payload' {
   export interface GeneratedTypes extends Config {}
