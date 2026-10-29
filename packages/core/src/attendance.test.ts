@@ -4,6 +4,7 @@ import {
   amountsDisagree,
   attendanceMismatch,
   canGuestAnswer,
+  canSendReceipt,
   shouldAskGuest,
 } from './attendance'
 import { countsAsCompleted } from './booking-fees'
@@ -182,5 +183,22 @@ describe('the passport after launch', () => {
       ['1', 'confirm', '11'],
       ['2', 'review', undefined],
     ])
+  })
+})
+
+describe('sending a receipt', () => {
+  const visit = { status: 'completed' as const, end: daysAgo(2), hasReceipt: false }
+
+  it('is open after the visit, answered or not, until a receipt is in', () => {
+    expect(canSendReceipt(visit, NOW)).toBe(true)
+    expect(canSendReceipt({ ...visit, guestAnswer: 'came' }, NOW)).toBe(true)
+    expect(canSendReceipt({ ...visit, hasReceipt: true }, NOW)).toBe(false)
+  })
+
+  it('is closed to a guest who said they did not go, before the visit, and after 30 days', () => {
+    expect(canSendReceipt({ ...visit, guestAnswer: 'did-not-come' }, NOW)).toBe(false)
+    expect(canSendReceipt({ ...visit, end: daysAgo(-1) }, NOW)).toBe(false)
+    expect(canSendReceipt({ ...visit, end: daysAgo(31) }, NOW)).toBe(false)
+    expect(canSendReceipt({ ...visit, status: 'cancelled' }, NOW)).toBe(false)
   })
 })

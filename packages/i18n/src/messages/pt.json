@@ -570,7 +570,8 @@
     "confirmYes": "Sim, fui",
     "confirmNo": "Não",
     "reviewLabel": "Em verificação",
-    "reviewNote": "O registo do estabelecimento é diferente do seu. Estamos a verificar."
+    "reviewNote": "O registo do estabelecimento é diferente do seu. Estamos a verificar.",
+    "receiptLink": "Adicione seu recibo"
   },
   "journey": {
     "heroA": "O Líbano,",
@@ -709,6 +710,23 @@
     "closed": "Esta visita já não pode ser confirmada.",
     "notFound": "Não encontrámos esta visita.",
     "error": "Algo correu mal. Tente novamente.",
-    "browse": "Ver lugares"
+    "browse": "Ver lugares",
+    "receiptTitle": "Adicione seu recibo",
+    "receiptHint": "Uma foto do recibo mostra o que você pagou, para que o lugar seja cobrado de forma justa. Só você e a equipe da Vardenia podem vê-la.",
+    "receiptFile": "Foto ou PDF do recibo",
+    "receiptAmount": "Total do recibo",
+    "receiptCurrency": "Moeda",
+    "receiptSend": "Enviar o recibo",
+    "receiptDone": "Obrigado. Seu recibo foi salvo.",
+    "receiptHave": "Recibo recebido: {amount}",
+    "receiptSent": "Recibo enviado",
+    "receiptTooBig": "O arquivo é grande demais. Envie uma foto ou um PDF com menos de 5 MB.",
+    "receiptBadType": "Envie uma foto (JPEG, PNG ou WebP) ou um PDF.",
+    "receiptNoFile": "Escolha uma foto ou um PDF do recibo.",
+    "receiptNoAmount": "Informe o total que aparece no recibo.",
+    "receiptAlready": "Um recibo já foi enviado para esta visita.",
+    "receiptClosed": "Não é mais possível enviar um recibo para esta visita.",
+    "receiptError": "Não conseguimos salvar seu recibo. Tente novamente.",
+    "receiptLink": "Adicione seu recibo"
   }
 }

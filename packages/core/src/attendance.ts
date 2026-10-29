@@ -130,3 +130,22 @@ export function canGuestAnswer(facts: AttendanceFacts, now: Date): boolean {
 export function answerDeadline(end: Date): Date {
   return new Date(end.getTime() + ANSWER_WITHIN_DAYS * DAY_MS)
 }
+
+/**
+ * Whether the guest may send a receipt for this visit.
+ *
+ * Within the same window as the answer, for a visit that has happened, unless
+ * the guest has said they did not go, and only once: the first receipt is the
+ * one kept. A receipt is also an answer - nobody photographs the bill of a
+ * dinner they missed - so a guest who has not answered yet may send one.
+ */
+export function canSendReceipt(
+  facts: AttendanceFacts & { hasReceipt: boolean },
+  now: Date,
+): boolean {
+  if (facts.hasReceipt) return false
+  if (facts.guestAnswer === 'did-not-come') return false
+  if (!ASKABLE.includes(facts.status)) return false
+  if (!ended(facts.end, now)) return false
+  return facts.end.getTime() + ANSWER_WITHIN_DAYS * DAY_MS > now.getTime()
+}

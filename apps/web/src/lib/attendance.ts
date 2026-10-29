@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import {
   attendanceMismatch,
   canGuestAnswer,
+  canSendReceipt,
   shouldAskGuest,
   ASK_AFTER_HOURS,
   ASK_WITHIN_DAYS,
@@ -208,6 +209,10 @@ export interface VisitSummary {
   start: Date
   answer: GuestAnswer | null
   open: boolean
+  /** The receipt already sent, if any: what it says, never the file. */
+  receipt: { amount: number | null; currency: string } | null
+  /** Whether a receipt can still be sent (core/canSendReceipt). */
+  receiptOpen: boolean
 }
 
 /** What the visit page shows: the place, the time, and whether it can still be answered. */
@@ -219,17 +224,31 @@ export async function visitSummary(
 ): Promise<VisitSummary | null> {
   const doc = (await payload
     .findByID({ collection: 'bookings', id: bookingId, depth: 0, overrideAccess: true })
-    .catch(() => null)) as unknown as AskRow | null
+    .catch(() => null)) as unknown as (AskRow & { receipt?: unknown }) | null
   if (!doc) return null
   const businessId = typeof doc.business === 'object' ? doc.business?.id : doc.business
   const place = businessId ? await placeName(payload, businessId, locale) : 'Vardenia'
   const facts = { status: doc.status, end: new Date(doc.end), guestAnswer: doc.guestAnswer ?? null }
+  const receiptId =
+    typeof doc.receipt === 'object' && doc.receipt !== null
+      ? (doc.receipt as { id?: unknown }).id
+      : doc.receipt
+  const receipt =
+    typeof receiptId === 'number'
+      ? ((await payload
+          .findByID({ collection: 'receipts', id: receiptId, depth: 0, overrideAccess: true })
+          .catch(() => null)) as { amount?: number | null; currency?: string | null } | null)
+      : null
   return {
     bookingId: doc.id,
     place,
     start: new Date(doc.start),
     answer: doc.guestAnswer ?? null,
     open: canGuestAnswer(facts, now),
+    receipt: receipt
+      ? { amount: receipt.amount ?? null, currency: receipt.currency ?? 'USD' }
+      : null,
+    receiptOpen: canSendReceipt({ ...facts, hasReceipt: receiptId != null }, now),
   }
 }
 

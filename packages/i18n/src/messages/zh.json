@@ -570,7 +570,8 @@
     "confirmYes": "是的，我去了",
     "confirmNo": "没有",
     "reviewLabel": "核实中",
-    "reviewNote": "商户的记录与您的不同，我们正在核实。"
+    "reviewNote": "商户的记录与您的不同，我们正在核实。",
+    "receiptLink": "添加您的收据"
   },
   "journey": {
     "heroA": "黎巴嫩，",
@@ -709,6 +710,23 @@
     "closed": "这次到访已无法再确认。",
     "notFound": "我们找不到这次到访。",
     "error": "出了点问题，请重试。",
-    "browse": "浏览地点"
+    "browse": "浏览地点",
+    "receiptTitle": "添加您的收据",
+    "receiptHint": "收据照片能显示您支付的金额，让商户被公平计费。只有您和 Vardenia 团队可以查看。",
+    "receiptFile": "收据的照片或 PDF",
+    "receiptAmount": "收据上的总额",
+    "receiptCurrency": "货币",
+    "receiptSend": "发送收据",
+    "receiptDone": "谢谢。您的收据已保存。",
+    "receiptHave": "已收到收据：{amount}",
+    "receiptSent": "收据已发送",
+    "receiptTooBig": "文件过大。请发送小于 5 MB 的照片或 PDF。",
+    "receiptBadType": "请发送照片（JPEG、PNG 或 WebP）或 PDF。",
+    "receiptNoFile": "请选择收据的照片或 PDF。",
+    "receiptNoAmount": "请填写收据上的总额。",
+    "receiptAlready": "此次到访的收据已经发送过。",
+    "receiptClosed": "此次到访已无法再发送收据。",
+    "receiptError": "无法保存您的收据，请重试。",
+    "receiptLink": "添加您的收据"
   }
 }

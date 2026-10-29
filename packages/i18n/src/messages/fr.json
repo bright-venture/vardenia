@@ -570,7 +570,8 @@
     "confirmYes": "Oui, j'y suis allé",
     "confirmNo": "Non",
     "reviewLabel": "En vérification",
-    "reviewNote": "Le registre de l'établissement diffère du vôtre. Nous vérifions."
+    "reviewNote": "Le registre de l'établissement diffère du vôtre. Nous vérifions.",
+    "receiptLink": "Ajoutez votre reçu"
   },
   "journey": {
     "heroA": "Le Liban,",
@@ -709,6 +710,23 @@
     "closed": "Cette visite ne peut plus être confirmée.",
     "notFound": "Nous n'avons pas trouvé cette visite.",
     "error": "Une erreur s'est produite. Veuillez réessayer.",
-    "browse": "Voir les adresses"
+    "browse": "Voir les adresses",
+    "receiptTitle": "Ajoutez votre reçu",
+    "receiptHint": "Une photo du reçu montre ce que vous avez payé, pour que l'adresse soit facturée équitablement. Seuls vous et l'équipe Vardenia pouvez la voir.",
+    "receiptFile": "Photo ou PDF du reçu",
+    "receiptAmount": "Total du reçu",
+    "receiptCurrency": "Devise",
+    "receiptSend": "Envoyer le reçu",
+    "receiptDone": "Merci. Votre reçu est enregistré.",
+    "receiptHave": "Reçu bien reçu : {amount}",
+    "receiptSent": "Reçu envoyé",
+    "receiptTooBig": "Ce fichier est trop lourd. Envoyez une photo ou un PDF de moins de 5 Mo.",
+    "receiptBadType": "Envoyez une photo (JPEG, PNG ou WebP) ou un PDF.",
+    "receiptNoFile": "Choisissez une photo ou un PDF du reçu.",
+    "receiptNoAmount": "Indiquez le total figurant sur le reçu.",
+    "receiptAlready": "Un reçu a déjà été envoyé pour cette visite.",
+    "receiptClosed": "Il n'est plus possible d'envoyer un reçu pour cette visite.",
+    "receiptError": "Nous n'avons pas pu enregistrer votre reçu. Veuillez réessayer.",
+    "receiptLink": "Ajoutez votre reçu"
   }
 }

@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
-import type { BookingStatus } from '@vardenia/core'
+import { canSendReceipt, type BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
 import {
   currentCustomer,
@@ -12,6 +12,7 @@ import {
   partitionBookings,
 } from '../../../../lib/session'
 import { beirutDate, beirutDayLabel, formatBeirut } from '../../../../lib/beirut'
+import { attendanceToken } from '../../../../lib/attendance'
 import { LINK, NOTICE_INFO } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
@@ -190,6 +191,8 @@ async function BookingList({
   const status = await getTranslations('bookingStatus')
   const t = await getTranslations('booking')
   const partner = await getTranslations('partner')
+  const visit = await getTranslations('visit')
+  const now = new Date()
 
   return (
     <section className="mt-6">
@@ -216,6 +219,21 @@ async function BookingList({
               : 0
 
           const canReview = invite.has(String(booking.id))
+          /*
+           * The receipt of a visit that happened, sent on the "Did you go?"
+           * page through the booking's own signed link (lib/receipts), so the
+           * account page and the email lead to the same form.
+           */
+          const hasReceipt = booking.receipt != null
+          const receiptOpen = canSendReceipt(
+            {
+              status: booking.status as BookingStatus,
+              end: new Date(booking.end),
+              guestAnswer: booking.guestAnswer ?? null,
+              hasReceipt,
+            },
+            now,
+          )
 
           return (
             <li
@@ -278,6 +296,17 @@ async function BookingList({
                   className={`${LINK} mt-3 inline-block text-sm`}
                 >
                   {t('writeReview')}
+                </Link>
+              ) : null}
+
+              {hasReceipt ? (
+                <p className="text-ink-500 mt-3 text-sm">{visit('receiptSent')}</p>
+              ) : receiptOpen ? (
+                <Link
+                  href={`/visit/${attendanceToken(booking.id)}`}
+                  className={`${LINK} mt-3 block text-sm`}
+                >
+                  {visit('receiptLink')}
                 </Link>
               ) : null}
             </li>

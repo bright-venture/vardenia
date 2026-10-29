@@ -7,6 +7,7 @@ import config from '../../../../../payload.config'
 import { Link } from '../../../../../i18n/routing'
 import { bookingIdFromToken, visitSummary } from '../../../../../lib/attendance'
 import { formatWhen } from '../../../../../lib/booking-email'
+import { ReceiptPicker } from '../../../../../components/ReceiptPicker'
 
 /**
  * "Did you go?" - opened from the email a guest gets after a visit.
@@ -18,7 +19,24 @@ import { formatWhen } from '../../../../../lib/booking-email'
  *
  * No sign-in: the token in the address is signed for this one booking
  * (lib/attendance) and is the only permission needed.
+ *
+ * Once the guest has said they went, the page also takes their receipt
+ * (lib/receipts). The account page and the passport link here for that, so
+ * there is one receipt form however the guest arrives.
  */
+
+/** What `?receipt=` from /booking/receipt says, as a message key. */
+const RECEIPT_MESSAGE: Record<string, string> = {
+  saved: 'receiptDone',
+  'too-big': 'receiptTooBig',
+  'bad-file': 'receiptBadType',
+  'no-file': 'receiptNoFile',
+  'no-amount': 'receiptNoAmount',
+  already: 'receiptAlready',
+  closed: 'receiptClosed',
+  'not-found': 'receiptError',
+  error: 'receiptError',
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -37,13 +55,13 @@ export default async function VisitPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; token: string }>
-  searchParams: Promise<{ answer?: string; done?: string }>
+  searchParams: Promise<{ answer?: string; done?: string; receipt?: string }>
 }) {
   const { locale, token } = await params
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const { answer, done } = await searchParams
+  const { answer, done, receipt } = await searchParams
   const t = await getTranslations('visit')
   const common = await getTranslations('common')
 
@@ -71,6 +89,81 @@ export default async function VisitPage({
 
   const when = formatWhen(visit.start, locale)
 
+  const receiptMessage = receipt ? RECEIPT_MESSAGE[receipt] : undefined
+  const receiptSection = (
+    <section className="border-ink-100 mt-10 border-t pt-8">
+      <h2 className="text-ink-900 text-lg font-semibold">{t('receiptTitle')}</h2>
+      {receiptMessage ? (
+        <p
+          role={receipt === 'saved' ? 'status' : 'alert'}
+          className={`mt-3 text-sm ${receipt === 'saved' ? 'text-ink-700' : 'text-state-danger'}`}
+        >
+          {t(receiptMessage)}
+        </p>
+      ) : null}
+      {visit.receipt ? (
+        <p className="text-ink-700 mt-3 text-sm">
+          {visit.receipt.amount !== null
+            ? t('receiptHave', {
+                amount: new Intl.NumberFormat(locale, {
+                  style: 'currency',
+                  currency: visit.receipt.currency,
+                  maximumFractionDigits: visit.receipt.currency === 'LBP' ? 0 : 2,
+                }).format(visit.receipt.amount),
+              })
+            : t('receiptSent')}
+        </p>
+      ) : visit.receiptOpen ? (
+        <form
+          method="post"
+          action="/booking/receipt"
+          encType="multipart/form-data"
+          className="mt-4 flex flex-col gap-4"
+        >
+          <p className="text-ink-500 text-sm">{t('receiptHint')}</p>
+          <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="locale" value={locale} />
+          <ReceiptPicker id="receipt-file" label={t('receiptFile')} />
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label htmlFor="receipt-amount" className="text-ink-700 block text-sm">
+                {t('receiptAmount')}
+              </label>
+              <input
+                id="receipt-amount"
+                name="amount"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                required
+                className="border-ink-100 focus:border-gold-500 text-ink-900 mt-2 w-40 border bg-transparent px-3 py-2 text-sm outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="receipt-currency" className="text-ink-700 block text-sm">
+                {t('receiptCurrency')}
+              </label>
+              <select
+                id="receipt-currency"
+                name="currency"
+                defaultValue="USD"
+                className="border-ink-100 text-ink-900 mt-2 border bg-transparent px-3 py-2 text-sm"
+              >
+                <option value="USD">USD</option>
+                <option value="LBP">LBP</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <button type="submit" className={PRIMARY}>
+              {t('receiptSend')}
+            </button>
+          </div>
+        </form>
+      ) : null}
+    </section>
+  )
+
   // Just answered, or answered before: say what is recorded.
   if (done === 'recorded' || visit.answer) {
     const said = visit.answer ?? (done === 'recorded' ? answer : null)
@@ -82,7 +175,12 @@ export default async function VisitPage({
         <p className="text-ink-500 mt-5">
           {visit.place} · {when}
         </p>
-        {done !== 'recorded' ? <p className="text-ink-500 mt-4 text-sm">{t('already')}</p> : null}
+        {done !== 'recorded' && !receipt ? (
+          <p className="text-ink-500 mt-4 text-sm">{t('already')}</p>
+        ) : null}
+        {said === 'came' && (visit.receipt || visit.receiptOpen || receiptMessage)
+          ? receiptSection
+          : null}
       </>,
     )
   }

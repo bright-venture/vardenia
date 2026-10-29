@@ -1,6 +1,7 @@
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import {
+  canSendReceipt,
   buildPassport,
   type AttendanceVerdict,
   type BookingStatus,
@@ -48,9 +49,10 @@ export interface PassportPlace {
 }
 
 export interface PassportView {
-  stamps: (PassportStamp & { place: PassportPlace })[]
+  /** `receiptToken` opens the receipt form for the place's latest visit that takes one. */
+  stamps: (PassportStamp & { place: PassportPlace; receiptToken?: string })[]
   /** `token` is set on a visit waiting for the guest's answer: see lib/attendance. */
-  pending: (PendingStamp & { place: PassportPlace; token?: string })[]
+  pending: (PendingStamp & { place: PassportPlace; token?: string; receiptToken?: string })[]
   points: number
   milestones: ReturnType<typeof buildPassport>['milestones']
 }
@@ -61,6 +63,7 @@ interface BookingRow {
   end: string
   guestAnswer?: GuestAnswer | null
   attendanceVerdict?: AttendanceVerdict | null
+  receipt?: unknown
   business:
     | number
     | {
@@ -93,7 +96,14 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
     where: { status: { in: ['completed', 'confirmed', 'no-show', 'cancelled'] } },
     depth: 1,
     locale: dataLocale(locale),
-    select: { status: true, end: true, business: true, guestAnswer: true, attendanceVerdict: true },
+    select: {
+      status: true,
+      end: true,
+      business: true,
+      guestAnswer: true,
+      attendanceVerdict: true,
+      receipt: true,
+    },
     populate: {
       businesses: {
         name: true,
@@ -142,13 +152,48 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
     })
   }
 
-  const passport = buildPassport(visits, new Date())
+  const now = new Date()
+  const passport = buildPassport(visits, now)
+
+  /*
+   * Per place, the latest visit that still takes a receipt (core/canSendReceipt),
+   * so a stamp can offer "Add your receipt" for it. One link per place, like
+   * the stamp itself, however many visits the place has had.
+   */
+  const receiptFor = new Map<string, { end: number; token: string }>()
+  for (const row of docs) {
+    const business = row.business
+    if (!business || typeof business !== 'object') continue
+    const id = String(business.id)
+    const open = canSendReceipt(
+      {
+        status: row.status,
+        end: new Date(row.end),
+        guestAnswer: row.guestAnswer ?? null,
+        hasReceipt: row.receipt != null,
+      },
+      now,
+    )
+    const end = new Date(row.end).getTime()
+    if (open && end > (receiptFor.get(id)?.end ?? -Infinity)) {
+      receiptFor.set(id, { end, token: attendanceToken(row.id) })
+    }
+  }
+  const receiptToken = (businessId: string) => {
+    const found = receiptFor.get(businessId)
+    return found ? { receiptToken: found.token } : {}
+  }
 
   return {
-    stamps: passport.stamps.map((stamp) => ({ ...stamp, place: places.get(stamp.businessId)! })),
+    stamps: passport.stamps.map((stamp) => ({
+      ...stamp,
+      place: places.get(stamp.businessId)!,
+      ...receiptToken(stamp.businessId),
+    })),
     pending: passport.pending.map((stamp) => ({
       ...stamp,
       place: places.get(stamp.businessId)!,
+      ...receiptToken(stamp.businessId),
       ...(stamp.kind === 'confirm' && stamp.bookingId
         ? { token: attendanceToken(stamp.bookingId) }
         : {}),

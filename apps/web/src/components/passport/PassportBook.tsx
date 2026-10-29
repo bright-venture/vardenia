@@ -120,6 +120,16 @@ export async function PassportBook({
                   .filter(Boolean)
                   .join(' · ')}
               />
+              {stamp.receiptToken ? (
+                // The receipt of the latest visit that takes one, on the same
+                // page as the email's (lib/receipts).
+                <Link
+                  href={`/visit/${stamp.receiptToken}`}
+                  className={`${LINK} mt-2 block text-center text-xs`}
+                >
+                  {t('receiptLink')}
+                </Link>
+              ) : null}
             </li>
           )
         })}
@@ -169,6 +179,16 @@ export async function PassportBook({
                     {t('confirmNo')}
                   </button>
                 </form>
+              ) : null}
+              {stamp.receiptToken ? (
+                // The receipt of the latest visit that takes one, on the same
+                // page as the email's (lib/receipts).
+                <Link
+                  href={`/visit/${stamp.receiptToken}`}
+                  className={`${LINK} mt-2 block text-center text-xs`}
+                >
+                  {t('receiptLink')}
+                </Link>
               ) : null}
             </li>
           )

@@ -570,7 +570,8 @@
     "confirmYes": "Yes, I went",
     "confirmNo": "No",
     "reviewLabel": "Being checked",
-    "reviewNote": "The venue's record differs from yours. We are checking."
+    "reviewNote": "The venue's record differs from yours. We are checking.",
+    "receiptLink": "Add your receipt"
   },
   "journey": {
     "heroA": "Lebanon,",
@@ -709,6 +710,23 @@
     "closed": "This visit can no longer be confirmed.",
     "notFound": "We could not find this visit.",
     "error": "Something went wrong. Please try again.",
-    "browse": "Browse places"
+    "browse": "Browse places",
+    "receiptTitle": "Add your receipt",
+    "receiptHint": "A photo of the receipt shows what you paid, so the place is billed fairly. Only you and the Vardenia team can see it.",
+    "receiptFile": "Photo or PDF of the receipt",
+    "receiptAmount": "Total on the receipt",
+    "receiptCurrency": "Currency",
+    "receiptSend": "Send the receipt",
+    "receiptDone": "Thank you. Your receipt is saved.",
+    "receiptHave": "Receipt received: {amount}",
+    "receiptSent": "Receipt sent",
+    "receiptTooBig": "That file is too large. Send a photo or PDF under 5 MB.",
+    "receiptBadType": "Send a photo (JPEG, PNG or WebP) or a PDF.",
+    "receiptNoFile": "Choose a photo or PDF of the receipt.",
+    "receiptNoAmount": "Enter the total shown on the receipt.",
+    "receiptAlready": "A receipt was already sent for this visit.",
+    "receiptClosed": "Receipts can no longer be sent for this visit.",
+    "receiptError": "We could not save your receipt. Please try again.",
+    "receiptLink": "Add your receipt"
   }
 }
