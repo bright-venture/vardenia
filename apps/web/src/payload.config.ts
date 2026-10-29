@@ -19,6 +19,7 @@ import { SavedListings } from './collections/SavedListings'
 import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
 import { Media } from './collections/Media'
+import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
@@ -112,6 +113,23 @@ const publicStorageBase = (() => {
   return `${base}/${bucket}`
 })()
 
+/** One S3 client setup for both buckets. */
+const s3Client = {
+  region: process.env.S3_REGION ?? 'auto',
+  endpoint: process.env.S3_ENDPOINT,
+  // Supabase Storage addresses buckets by path, not by subdomain. Without this
+  // the SDK builds `https://<bucket>.<host>/...` and every upload fails to
+  // resolve.
+  forcePathStyle: true,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
+  },
+}
+
+/** The private bucket for receipts; see the second storage plugin below. */
+const receiptsBucket = process.env.S3_RECEIPTS_BUCKET?.trim() || ''
+
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SITE_URL,
   admin: {
@@ -173,6 +191,7 @@ export default buildConfig({
     QrCodes,
     Reviews,
     Bookings,
+    Receipts,
     Statements,
     Closures,
     Articles,
@@ -407,19 +426,27 @@ export default buildConfig({
             },
           },
           bucket: process.env.S3_BUCKET ?? '',
-          config: {
-            region: process.env.S3_REGION ?? 'auto',
-            endpoint: process.env.S3_ENDPOINT,
-            // Supabase Storage addresses buckets by path, not by subdomain.
-            // Without this the SDK builds `https://<bucket>.<host>/...` and
-            // every upload fails to resolve.
-            forcePathStyle: true,
-            credentials: {
-              accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
-              secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
-            },
-          },
+          config: s3Client,
         }),
+        /**
+         * Receipts, in a bucket of their own that is not public.
+         *
+         * The media bucket above is public by design, so a receipt there would
+         * be one leaked address away from anyone. Here every file is fetched
+         * through Payload (no `disablePayloadAccessControl`), which runs the
+         * Receipts collection's read rule first: the guest it belongs to and
+         * the team, nobody else. Without the bucket set, nothing registers and
+         * the collection refuses uploads in production (collections/Receipts).
+         */
+        ...(receiptsBucket
+          ? [
+              s3Storage({
+                collections: { receipts: true },
+                bucket: receiptsBucket,
+                config: s3Client,
+              }),
+            ]
+          : []),
       ]
     : [],
 

@@ -73,6 +73,7 @@ export interface Config {
     'qr-codes': QrCode
     reviews: Review
     bookings: Booking
+    receipts: Receipt
     statements: Statement
     closures: Closure
     articles: Article
@@ -96,6 +97,7 @@ export interface Config {
     'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>
     reviews: ReviewsSelect<false> | ReviewsSelect<true>
     bookings: BookingsSelect<false> | BookingsSelect<true>
+    receipts: ReceiptsSelect<false> | ReceiptsSelect<true>
     statements: StatementsSelect<false> | StatementsSelect<true>
     closures: ClosuresSelect<false> | ClosuresSelect<true>
     articles: ArticlesSelect<false> | ArticlesSelect<true>
@@ -863,11 +865,46 @@ export interface Booking {
   amount?: number | null
   amountEnteredAt?: string | null
   /**
+   * The receipt the guest sent, if any. Private to the guest and the team.
+   */
+  receipt?: (number | null) | Receipt
+  /**
    * Roughly, from the answer the guest gave to "Did you go?". Used when the venue gave none, or when the team sides with the guest.
    */
   guestAmount?: number | null
   updatedAt: string
   createdAt: string
+}
+/**
+ * What guests paid, as photographed. Private: only the guest and the team can open one.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "receipts".
+ */
+export interface Receipt {
+  id: number
+  booking: number | Booking
+  /**
+   * The guest the booking belongs to.
+   */
+  customer?: (number | null) | Customer
+  amount?: number | null
+  currency?: ('USD' | 'LBP') | null
+  /**
+   * For the team. Never shown to the guest.
+   */
+  note?: string | null
+  updatedAt: string
+  createdAt: string
+  url?: string | null
+  thumbnailURL?: string | null
+  filename?: string | null
+  mimeType?: string | null
+  filesize?: number | null
+  width?: number | null
+  height?: number | null
+  focalX?: number | null
+  focalY?: number | null
 }
 /**
  * Monthly commission statements. Draw them up and send them from Commissions in the menu; settle disputes and record payments here.
@@ -1118,6 +1155,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'bookings'
         value: number | Booking
+      } | null)
+    | ({
+        relationTo: 'receipts'
+        value: number | Receipt
       } | null)
     | ({
         relationTo: 'statements'
@@ -1377,9 +1418,32 @@ export interface BookingsSelect<T extends boolean = true> {
   attendanceVerdict?: T
   amount?: T
   amountEnteredAt?: T
+  receipt?: T
   guestAmount?: T
   updatedAt?: T
   createdAt?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "receipts_select".
+ */
+export interface ReceiptsSelect<T extends boolean = true> {
+  booking?: T
+  customer?: T
+  amount?: T
+  currency?: T
+  note?: T
+  updatedAt?: T
+  createdAt?: T
+  url?: T
+  thumbnailURL?: T
+  filename?: T
+  mimeType?: T
+  filesize?: T
+  width?: T
+  height?: T
+  focalX?: T
+  focalY?: T
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

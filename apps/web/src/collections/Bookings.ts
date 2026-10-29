@@ -8,6 +8,7 @@ import {
 import { LOCALES, LOCALE_META } from '@vardenia/i18n'
 import {
   BUSINESS_USER_COLLECTION,
+  CUSTOMER_COLLECTION,
   isAdmin,
   isStaff,
   isStaffFieldLevel,
@@ -542,6 +543,27 @@ export const Bookings: CollectionConfig = {
           admin: {
             readOnly: true,
             date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+          },
+        },
+        {
+          /**
+           * The guest's receipt, when they sent one (collections/Receipts).
+           * The guest sees their own, the team every one; a venue does not, as
+           * it can carry the guest's card digits. Set by the upload route with
+           * access overridden, or by staff.
+           */
+          name: 'receipt',
+          type: 'upload',
+          relationTo: 'receipts',
+          access: {
+            read: ({ req }) =>
+              isStaffUser(req.user) ||
+              (req.user as { collection?: string } | null)?.collection === CUSTOMER_COLLECTION,
+            create: isStaffFieldLevel,
+            update: isStaffFieldLevel,
+          },
+          admin: {
+            description: 'The receipt the guest sent, if any. Private to the guest and the team.',
           },
         },
         {
