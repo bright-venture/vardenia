@@ -157,6 +157,18 @@ export const Receipts: CollectionConfig = {
       ],
     },
     {
+      /*
+       * Where the file sits in the private bucket. The storage plugin adds this
+       * field itself, but only when S3_RECEIPTS_BUCKET is set, which made the
+       * table's columns depend on an environment variable: the first migration
+       * was generated without it and the column was missing. Declared here so it
+       * always exists; the plugin replaces it with its own copy when it runs.
+       */
+      name: '_objectKey',
+      type: 'text',
+      admin: { hidden: true, readOnly: true },
+    },
+    {
       name: 'note',
       type: 'textarea',
       access: { read: isStaffFieldLevel },

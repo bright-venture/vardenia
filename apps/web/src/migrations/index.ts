@@ -45,6 +45,7 @@ import * as migration_20261026_100000_booking_attendance from './20261026_100000
 import * as migration_20261027_100000_magazine_regions from './20261027_100000_magazine_regions'
 import * as migration_20261028_100000_commissions from './20261028_100000_commissions'
 import * as migration_20261029_071140_receipts from './20261029_071140_receipts'
+import * as migration_20261029_074210_receipts_object_key from './20261029_074210_receipts_object_key'
 
 export const migrations = [
   {
@@ -281,5 +282,10 @@ export const migrations = [
     up: migration_20261029_071140_receipts.up,
     down: migration_20261029_071140_receipts.down,
     name: '20261029_071140_receipts',
+  },
+  {
+    up: migration_20261029_074210_receipts_object_key.up,
+    down: migration_20261029_074210_receipts_object_key.down,
+    name: '20261029_074210_receipts_object_key',
   },
 ]

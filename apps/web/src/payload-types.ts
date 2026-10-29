@@ -894,6 +894,7 @@ export interface Receipt {
    * For the team. Never shown to the guest.
    */
   note?: string | null
+  _objectKey?: string | null
   updatedAt: string
   createdAt: string
   url?: string | null
@@ -1433,6 +1434,7 @@ export interface ReceiptsSelect<T extends boolean = true> {
   amount?: T
   currency?: T
   note?: T
+  _objectKey?: T
   updatedAt?: T
   createdAt?: T
   url?: T
