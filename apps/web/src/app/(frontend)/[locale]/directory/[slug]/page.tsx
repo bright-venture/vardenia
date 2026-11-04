@@ -33,6 +33,7 @@ import { BookingPanel } from '../../../../../components/BookingPanel'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
+import { listingSummary } from '../../../../../lib/plain-text'
 import { ReviewForm } from '../../../../../components/ReviewForm'
 import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
@@ -119,7 +120,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return buildMetadata({
     seo: listing.seo,
     title: listing.name,
-    description: listing.tagline,
+    // The tagline when there is one, else the opening of the description: the
+    // October cleaning emptied every tagline (lib/plain-text).
+    description: listingSummary(listing),
     fallbackImage: listing.heroImage as never,
     path: `/directory/${slug}`,
     locale,

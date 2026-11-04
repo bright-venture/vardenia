@@ -80,6 +80,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: nameFor(section, locale),
+    // The one-line summary the section menu already shows, so a search result
+    // says what is behind "Lifestyle" rather than the site-wide sentence.
+    description: sectionSummary(section, isLocale(locale) ? locale : DEFAULT_LOCALE),
     /**
      * Built from `section.path`, not from the `path` off the URL. They are equal
      * here because `sectionForPath` matches exactly, but the canonical URL of a

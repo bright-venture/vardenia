@@ -2,6 +2,7 @@ import type { Locale } from '@vardenia/i18n'
 import { districtLabel, governorateLabel, priceLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
 import { localizedPath } from './seo'
+import { listingSummary } from './plain-text'
 
 /** The publisher, named once, so markup and the organisation block agree. */
 const SITE_NAME = 'Vardenia'
@@ -115,6 +116,7 @@ export interface ListingForSchema {
   name?: string | null
   slug?: string | null
   tagline?: string | null
+  description?: unknown
   category?: string | null
   governorate?: string | null
   district?: string | null
@@ -175,7 +177,7 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
     '@context': 'https://schema.org',
     '@type': SCHEMA_TYPE[listing.category ?? ''] ?? 'LocalBusiness',
     name: listing.name,
-    description: listing.tagline,
+    description: listingSummary(listing),
     url: listing.slug ? absolute(`/directory/${listing.slug}`, locale) : undefined,
     image: image?.src,
     priceRange: priceLabel(listing.priceRange) ?? undefined,

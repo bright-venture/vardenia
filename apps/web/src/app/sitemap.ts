@@ -5,6 +5,7 @@ import { CONTENT_PAGE_SLUGS } from '../lib/pages'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
 import { findAllIssueSlugs } from '../lib/issues'
+import { isIndexingAllowed } from '../lib/indexing'
 
 /**
  * The list of pages we want indexed, handed to search engines directly.
@@ -72,6 +73,13 @@ function localized(path: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  /*
+   * Empty while the site asks not to be indexed. robots.txt already says so,
+   * but the sitemap was still served in full, listing every listing's address
+   * to anyone who asked before launch. It fills in on the deploy that sets
+   * NEXT_PUBLIC_ALLOW_INDEX.
+   */
+  if (!isIndexingAllowed()) return []
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
   const now = new Date()
 
