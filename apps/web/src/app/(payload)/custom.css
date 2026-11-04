@@ -353,6 +353,83 @@
   color: var(--theme-elevation-700);
 }
 
+/* A disputed visit, three accounts side by side. See components/admin/BookingDispute. */
+.vd-dispute__title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.vd-dispute__why {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.vd-dispute__sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem 1.5rem;
+  align-items: start;
+}
+
+.vd-dispute__side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.vd-dispute__side--receipt {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .vd-dispute__side--receipt {
+    grid-column: auto;
+  }
+}
+
+/* The guest's receipt. See components/admin/ReceiptPreview. */
+.vd-receipt {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vd-receipt__img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+}
+
+.vd-receipt--compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.vd-receipt--compact .vd-receipt__img {
+  max-width: 96px;
+  max-height: 96px;
+}
+
+.vd-receipt__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.vd-receipt__pdf {
+  color: var(--theme-elevation-900);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Help on the account screens. See components/admin/AccountHelp. */
 .vd-help__title {
   margin: 0;

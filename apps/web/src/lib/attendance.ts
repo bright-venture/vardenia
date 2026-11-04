@@ -337,8 +337,21 @@ export async function alertTeam(
       reference?: string | null
       amount?: number | null
       guestAmount?: number | null
+      receipt?: { amount?: number | null; currency?: string | null } | number | null
     }
     const business = typeof doc.business === 'object' ? doc.business : null
+    // Only that one was sent and what the guest typed: the file stays behind
+    // the admin's sign-in, never in an inbox.
+    const receipt = typeof doc.receipt === 'object' && doc.receipt !== null ? doc.receipt : null
+    const receiptLine = receipt
+      ? `Receipt: sent by the guest, total ${
+          typeof receipt.amount === 'number'
+            ? receipt.currency === 'LBP'
+              ? `${receipt.amount.toLocaleString('en-US')} LBP`
+              : dollars(receipt.amount)
+            : 'not typed'
+        }. See it on the booking.`
+      : 'Receipt: none sent yet.'
     const link = `${siteOrigin()}/admin/collections/bookings/${bookingId}`
     const subject = `Disputed visit: ${business?.name ?? 'a listing'} (${doc.reference ?? bookingId})`
     const text = [
@@ -353,6 +366,7 @@ export async function alertTeam(
             `Spent, as the guest says: ${dollars(doc.guestAmount)}`,
           ]
         : []),
+      receiptLine,
       '',
       'Check with the venue, then set "Team decision" on the booking:',
       link,

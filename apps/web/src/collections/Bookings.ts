@@ -162,6 +162,17 @@ export const Bookings: CollectionConfig = {
       admin: { components: { Field: '/components/admin/BookingCard#BookingCard' } },
     },
     {
+      /**
+       * A disputed visit with the venue's account, the guest's and the guest's
+       * receipt side by side. Nothing stored: the buttons set "Team decision".
+       * Shown only when there is a dispute, a decision or a receipt. See
+       * components/admin/BookingDispute.
+       */
+      name: 'bookingDispute',
+      type: 'ui',
+      admin: { components: { Field: '/components/admin/BookingDispute#BookingDispute' } },
+    },
+    {
       name: 'reference',
       type: 'text',
       unique: true,

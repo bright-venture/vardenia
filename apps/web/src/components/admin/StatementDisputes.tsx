@@ -1,6 +1,7 @@
 'use client'
 
 import { useField, useFormFields } from '@payloadcms/ui'
+import { ReceiptPreview, useReceiptsFor, type ReceiptSummary } from './ReceiptPreview'
 
 /**
  * The questioned lines of a fee statement, and the decision on each.
@@ -15,14 +16,20 @@ import { useField, useFormFields } from '@payloadcms/ui'
  * buttons that say what happens: remove it from the bill, or keep it. A button
  * sets the line's outcome in the form like the dropdown did, and Save records
  * it, so the totals and the venue's page follow from the same save as before.
+ *
+ * Where the guest sent a receipt for the booking, it sits under the venue's
+ * reason, next to the amount the line was billed on: "the guest spent less" is
+ * answered by looking at it.
  */
 
 type Outcome = 'none' | 'open' | 'upheld' | 'rejected'
 
 interface Line {
   index: number
+  booking: number | string | null
   reference: string
   day: string
+  base: number | null
   amount: number
   outcome: Outcome
   reason: string
@@ -52,8 +59,10 @@ export function StatementDisputes() {
       const index = Number(match[1])
       const line = rows.get(index) ?? {
         index,
+        booking: null,
         reference: '',
         day: '',
+        base: null,
         amount: 0,
         outcome: 'none' as Outcome,
         reason: '',
@@ -61,6 +70,15 @@ export function StatementDisputes() {
       }
       const value = field?.value
       switch (match[2]) {
+        case 'booking': {
+          const id =
+            typeof value === 'object' && value !== null ? (value as { id?: unknown }).id : value
+          line.booking = typeof id === 'number' || typeof id === 'string' ? id : null
+          break
+        }
+        case 'base':
+          line.base = typeof value === 'number' && Number.isFinite(value) ? value : null
+          break
         case 'reference':
           line.reference = String(value ?? '')
           break
@@ -90,6 +108,9 @@ export function StatementDisputes() {
 
   const questioned = lines.filter((line) => line.outcome !== 'none')
   const waiting = questioned.filter((line) => line.outcome === 'open').length
+  const receipts = useReceiptsFor(
+    questioned.map((line) => line.booking).filter((id): id is number | string => id !== null),
+  )
 
   // What the total will be once saved, by the same rule as the server: only an
   // upheld line leaves the total. Shown so the effect of a click is visible.
@@ -123,7 +144,11 @@ export function StatementDisputes() {
 
       <ol style={styles.list}>
         {questioned.map((line) => (
-          <Dispute key={line.index} line={line} />
+          <Dispute
+            key={line.index}
+            line={line}
+            receipt={line.booking === null ? undefined : receipts.get(String(line.booking))}
+          />
         ))}
       </ol>
 
@@ -135,7 +160,7 @@ export function StatementDisputes() {
   )
 }
 
-function Dispute({ line }: { line: Line }) {
+function Dispute({ line, receipt }: { line: Line; receipt?: ReceiptSummary }) {
   const { setValue } = useField<Outcome>({ path: `lines.${line.index}.disputeOutcome` })
 
   const decided = line.outcome === 'upheld' || line.outcome === 'rejected'
@@ -155,6 +180,17 @@ function Dispute({ line }: { line: Line }) {
         <span style={styles.reasonLabel}>The venue wrote</span>
         {line.reason ? `"${line.reason}"` : 'No reason given.'}
       </blockquote>
+
+      <div style={styles.evidence}>
+        {line.base !== null ? (
+          <span style={styles.reasonLabel}>Billed on {money(line.base)} spent</span>
+        ) : null}
+        {receipt ? (
+          <ReceiptPreview receipt={receipt} compact />
+        ) : (
+          <span style={styles.muted}>The guest did not send a receipt for this visit.</span>
+        )}
+      </div>
 
       {decided ? (
         <div style={styles.decision}>
@@ -252,6 +288,7 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.06em',
     color: 'var(--theme-elevation-700)',
   },
+  evidence: { display: 'flex', flexDirection: 'column', gap: '0.35rem' },
   actions: { display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' },
   decision: { display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' },
   link: {

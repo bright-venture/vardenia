@@ -31,6 +31,7 @@ import { FolderListView as FolderListView_cd05df67b980cd74ed008187e07c7615 } fro
 import { ReviewCard as ReviewCard_fa8978e4c0e0aa2483423be0a0f51ebc } from '../../../components/admin/ReviewCard'
 import { StarsCell as StarsCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { BookingCard as BookingCard_2ecf71ffb530267e7dc8abec916e2262 } from '../../../components/admin/BookingCard'
+import { BookingDispute as BookingDispute_0036b118f0477a66cb0b71eba66186b0 } from '../../../components/admin/BookingDispute'
 import { StatementSummary as StatementSummary_51a3edca525465eee09fa7e02dd8cc5e } from '../../../components/admin/StatementSummary'
 import { StatementDisputes as StatementDisputes_5adc2dd7b59f3080352673dc54f49823 } from '../../../components/admin/StatementDisputes'
 import { StatementLines as StatementLines_199a681780455e814151ac98ca81d7a7 } from '../../../components/admin/StatementLines'
@@ -79,6 +80,7 @@ export const importMap = {
   "/components/admin/ReviewCard#ReviewCard": ReviewCard_fa8978e4c0e0aa2483423be0a0f51ebc,
   "/components/admin/ListCells#StarsCell": StarsCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/BookingCard#BookingCard": BookingCard_2ecf71ffb530267e7dc8abec916e2262,
+  "/components/admin/BookingDispute#BookingDispute": BookingDispute_0036b118f0477a66cb0b71eba66186b0,
   "/components/admin/StatementSummary#StatementSummary": StatementSummary_51a3edca525465eee09fa7e02dd8cc5e,
   "/components/admin/StatementDisputes#StatementDisputes": StatementDisputes_5adc2dd7b59f3080352673dc54f49823,
   "/components/admin/StatementLines#StatementLines": StatementLines_199a681780455e814151ac98ca81d7a7,

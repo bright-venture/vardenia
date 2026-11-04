@@ -111,6 +111,40 @@ describe('StatementDisputes', () => {
     expect(text).not.toContain('waiting for a decision')
   })
 
+  it("puts the guest's receipt under the venue's reason, fetched once for every line", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        docs: [
+          {
+            id: 9,
+            booking: 41,
+            url: '/api/receipts/file/receipt-abc.jpg',
+            mimeType: 'image/jpeg',
+            amount: 84.5,
+            currency: 'USD',
+            createdAt: '2026-11-03T18:00:00.000Z',
+          },
+        ],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    line(0, { booking: 41, reference: 'A', base: 120, amount: 12, disputeOutcome: 'open' })
+    line(1, { booking: 42, reference: 'B', base: 60, amount: 6, disputeOutcome: 'open' })
+
+    await act(async () => root.render(<StatementDisputes />))
+    const text = container.textContent ?? ''
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(decodeURIComponent(fetchMock.mock.calls[0]![0] as string)).toContain(
+      'where[booking][in]=41,42',
+    )
+    expect(text).toContain('Billed on $120.00 spent')
+    expect(text).toContain('$84.50')
+    expect(text).toContain('The guest did not send a receipt for this visit.')
+    vi.unstubAllGlobals()
+  })
+
   it('lets a decision be reopened', () => {
     line(0, { reference: 'B', amount: 18, disputeOutcome: 'rejected', disputeReason: 'x' })
     render()
