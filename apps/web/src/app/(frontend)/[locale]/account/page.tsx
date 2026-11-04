@@ -106,6 +106,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <Link href="/account/saved" className={LINK}>
               {t('savedLink')}
             </Link>
+            <Link href="/account/receipts" className={LINK}>
+              {t('receiptsLink')}
+            </Link>
           </p>
         </div>
         <SignOutButton />

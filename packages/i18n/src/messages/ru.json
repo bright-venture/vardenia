@@ -252,7 +252,17 @@
     "rule_symbol": "Специальный символ",
     "rule_case": "Верхний и нижний регистр",
     "details": "Ваши данные",
-    "passportLink": "Ваш паспорт"
+    "passportLink": "Ваш паспорт",
+    "receiptsLink": "Ваши чеки",
+    "receiptsTitle": "Ваши чеки",
+    "receiptsSubtitle": "Чеки, которые вы отправили после визитов. Их видите только вы и команда Vardenia.",
+    "signInToReceipts": "Войдите, чтобы увидеть отправленные чеки.",
+    "noReceipts": "Чеков пока нет. После визита вы можете добавить чек в своих бронированиях.",
+    "receiptsGoToBookings": "Перейти к бронированиям",
+    "receiptVisit": "Визит {date}",
+    "receiptSentOn": "Отправлен {date}",
+    "receiptView": "Открыть чек",
+    "receiptViewPdf": "Открыть PDF"
   },
   "partner": {
     "eyebrow": "Для партнёров",

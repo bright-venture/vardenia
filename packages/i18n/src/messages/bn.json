@@ -252,7 +252,17 @@
     "rule_symbol": "একটি বিশেষ অক্ষর",
     "rule_case": "বড় ও ছোট হাতের অক্ষর",
     "details": "আপনার তথ্য",
-    "passportLink": "আপনার পাসপোর্ট"
+    "passportLink": "আপনার পাসপোর্ট",
+    "receiptsLink": "আপনার রসিদগুলো",
+    "receiptsTitle": "আপনার রসিদগুলো",
+    "receiptsSubtitle": "ভিজিটের পর আপনি যে রসিদগুলো পাঠিয়েছেন। এগুলো শুধু আপনি আর Vardenia টিম দেখতে পারে।",
+    "signInToReceipts": "পাঠানো রসিদ দেখতে সাইন ইন করুন।",
+    "noReceipts": "এখনও কোনো রসিদ নেই। ভিজিটের পর আপনি আপনার বুকিং থেকে একটি রসিদ যোগ করতে পারেন।",
+    "receiptsGoToBookings": "আপনার বুকিংয়ে যান",
+    "receiptVisit": "ভিজিট: {date}",
+    "receiptSentOn": "{date} তারিখে পাঠানো",
+    "receiptView": "রসিদ দেখুন",
+    "receiptViewPdf": "PDF দেখুন"
   },
   "partner": {
     "eyebrow": "অংশীদারদের জন্য",

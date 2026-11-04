@@ -252,7 +252,17 @@
     "rule_symbol": "ایک خاص علامت",
     "rule_case": "بڑے اور چھوٹے حروف",
     "details": "آپ کی تفصیلات",
-    "passportLink": "آپ کا پاسپورٹ"
+    "passportLink": "آپ کا پاسپورٹ",
+    "receiptsLink": "آپ کی رسیدیں",
+    "receiptsTitle": "آپ کی رسیدیں",
+    "receiptsSubtitle": "وہ رسیدیں جو آپ نے اپنے دوروں کے بعد بھیجیں۔ انہیں صرف آپ اور Vardenia کی ٹیم دیکھ سکتی ہے۔",
+    "signInToReceipts": "بھیجی گئی رسیدیں دیکھنے کے لیے سائن ان کریں۔",
+    "noReceipts": "ابھی کوئی رسید نہیں۔ کسی دورے کے بعد آپ اپنی بکنگ سے رسید شامل کر سکتے ہیں۔",
+    "receiptsGoToBookings": "اپنی بکنگ پر جائیں",
+    "receiptVisit": "دورہ: {date}",
+    "receiptSentOn": "{date} کو بھیجی گئی",
+    "receiptView": "رسید دیکھیں",
+    "receiptViewPdf": "PDF دیکھیں"
   },
   "partner": {
     "eyebrow": "شراکت داروں کے لیے",

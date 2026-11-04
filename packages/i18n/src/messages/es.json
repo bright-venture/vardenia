@@ -252,7 +252,17 @@
     "rule_symbol": "Un carácter especial",
     "rule_case": "Mayúsculas y minúsculas",
     "details": "Tus datos",
-    "passportLink": "Tu pasaporte"
+    "passportLink": "Tu pasaporte",
+    "receiptsLink": "Tus recibos",
+    "receiptsTitle": "Tus recibos",
+    "receiptsSubtitle": "Los recibos que enviaste después de tus visitas. Solo tú y el equipo de Vardenia podéis verlos.",
+    "signInToReceipts": "Inicia sesión para ver los recibos que has enviado.",
+    "noReceipts": "Aún no hay recibos. Después de una visita, puedes añadir uno desde tus reservas.",
+    "receiptsGoToBookings": "Ir a tus reservas",
+    "receiptVisit": "Visita del {date}",
+    "receiptSentOn": "Enviado el {date}",
+    "receiptView": "Ver el recibo",
+    "receiptViewPdf": "Ver el PDF"
   },
   "partner": {
     "eyebrow": "Para socios",

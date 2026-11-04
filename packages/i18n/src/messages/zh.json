@@ -252,7 +252,17 @@
     "rule_symbol": "一个特殊字符",
     "rule_case": "大小写字母",
     "details": "您的资料",
-    "passportLink": "我的护照"
+    "passportLink": "我的护照",
+    "receiptsLink": "您的收据",
+    "receiptsTitle": "您的收据",
+    "receiptsSubtitle": "您在到访后发送的收据。只有您和 Vardenia 团队可以查看。",
+    "signInToReceipts": "登录即可查看您发送的收据。",
+    "noReceipts": "暂无收据。到访后，您可以在预订中添加收据。",
+    "receiptsGoToBookings": "前往您的预订",
+    "receiptVisit": "到访日期：{date}",
+    "receiptSentOn": "发送于 {date}",
+    "receiptView": "查看收据",
+    "receiptViewPdf": "查看 PDF"
   },
   "partner": {
     "eyebrow": "面向合作伙伴",

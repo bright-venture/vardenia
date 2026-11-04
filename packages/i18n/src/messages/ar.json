@@ -252,7 +252,17 @@
     "rule_symbol": "رمز خاص",
     "rule_case": "حرف كبير وآخر صغير",
     "details": "تفاصيلك",
-    "passportLink": "جوازك"
+    "passportLink": "جوازك",
+    "receiptsLink": "إيصالاتك",
+    "receiptsTitle": "إيصالاتك",
+    "receiptsSubtitle": "الإيصالات التي أرسلتها بعد زياراتك. لا يراها إلا أنت وفريق فاردينيا.",
+    "signInToReceipts": "سجّل الدخول لرؤية الإيصالات التي أرسلتها.",
+    "noReceipts": "لا توجد إيصالات بعد. بعد أي زيارة، يمكنك إضافة إيصال من حجوزاتك.",
+    "receiptsGoToBookings": "اذهب إلى حجوزاتك",
+    "receiptVisit": "زيارة بتاريخ {date}",
+    "receiptSentOn": "أُرسل في {date}",
+    "receiptView": "عرض الإيصال",
+    "receiptViewPdf": "عرض ملف PDF"
   },
   "partner": {
     "eyebrow": "للشركاء",
