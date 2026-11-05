@@ -49,7 +49,7 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-08-20'
+export const LEGAL_LAST_UPDATED = '2026-11-05'
 
 /**
  * The marker and the contact details both live in lib/placeholder now, so the
@@ -101,9 +101,14 @@ export function privacyPolicy(): LegalDocument {
           'Only what the site needs to do the things you ask it to.',
           '- **If you open an account**: your name, your email address, and a phone number if you choose to give one. Your password is stored only as a hash and cannot be read by us or recovered.',
           '- **If you make a booking**: the date and time, how many people, and anything you write in the notes field. We also keep a reference number so you and the business can identify the booking later.',
+          '- **After your visit**: we email you to ask whether you went, and roughly what you spent. We keep your answer and the amount with the booking.',
+          '- **If you send a receipt**: the photo or PDF of the bill, the total and currency you confirm, and what was read from it automatically (the total, the date printed on it, and whether the name of the place appears). A receipt can show more than the total, such as what you ordered, a name, or the last digits of a card, so please cover anything you would rather we did not see before you send it.',
+          '- **If you write a review**: what you wrote, your rating, and the first name and initial it is shown with.',
+          '- **Your passport and saved places**: the places you have visited through a booking, which earn a stamp, and the places you have saved.',
           '- **If you scan a printed code**: the code, the time, your city and country, and whether you were on a phone or a computer. We do not record your precise location, and we do not store your IP address at all - it is hashed in memory to spot repeated scans and never written down.',
           '- **If something breaks**: a record of the error, with email addresses, passwords and access tokens automatically removed before it is stored.',
           '- **When you read any page**: which pages were visited, which site the visit came from, the country it came from, and whether it was a phone or a computer. This is measured for us by an analytics provider, it sets no cookie, and it is counted rather than tied to you.',
+          '- **Every visit** passes through Cloudflare, which protects the site from attacks and, like any network, sees the address you connect from. When you open an account, Cloudflare also checks that you are a person rather than a program.',
           'We use no advertising trackers, we do not build a profile of you, and nothing here follows you to another site.',
         ],
       },
@@ -120,10 +125,24 @@ export function privacyPolicy(): LegalDocument {
       },
 
       {
+        heading: 'Your answer after a visit, and your receipt',
+        body: [
+          'Businesses listed on Vardenia pay us a commission on what their guests spend on visits booked through the site. Your visit costs you nothing extra: you pay the business as usual, and Vardenia charges you nothing.',
+          'That is why we ask whether you went, and roughly what you spent, and why you can send us the receipt. They let us check that a business is billed fairly, and settle it when the business and you remember the visit differently. Answering is up to you, and so is sending a receipt.',
+          '- **Who sees the receipt.** You, and the Vardenia team. The business never sees the photo. It sees only the amount it was billed on, and that it came from a receipt.',
+          '- **Reading it automatically.** When you choose the photo, the total, the date and the name of the place can be read from it by an automated service, so you only have to check the figure. You can always correct it before sending, and nothing is decided about you from it.',
+          '- **Who sees your answer.** The Vardenia team. If it disagrees with what the business recorded, we may tell the business that the visit is disputed while we look into it.',
+          TBD(
+            'how long receipts are kept - the original plan was to delete them 12 months after the visit - and whether sending one should need its own consent, since a receipt can carry more than the total',
+          ),
+        ],
+      },
+
+      {
         heading: 'Why we are allowed to hold it',
         body: [
           '- **To do what you asked.** Making a booking, running your account, and sending you the confirmation are all part of the arrangement between us.',
-          '- **To run the business.** Counting scans of a printed code tells an advertiser whether their placement worked. Those figures are aggregated and never identify a reader.',
+          '- **To run the business.** Counting scans of a printed code tells an advertiser whether their placement worked, and your answer after a visit and your receipt tell us what a business owes. Scan figures are aggregated and never identify a reader.',
           '- **To keep the site working and safe.** Rate limiting, spotting automated abuse, and recording errors.',
         ],
       },
@@ -131,9 +150,10 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Who else sees it',
         body: [
-          '- **The business you book with** sees your name, your phone number if you gave one, the details of the booking and your notes. They need those to hold your table and to call you if something changes. They do not see your email address.',
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the service that sends our email, and the service that counts page visits.',
-          `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database, Netlify for hosting, Resend for email, and Umami for analytics')}.`,
+          '- **The business you book with** sees your name, your phone number if you gave one, the details of the booking and your notes. They need those to hold your table and to call you if something changes. They do not see your email address, your receipt or your answer after the visit.',
+          '- **Everyone who reads the site** sees a review once we publish it, with your first name and initial, never your full name or anything else about you.',
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site, the service that sends our email, the service that counts page visits, and the service that reads receipts.',
+          `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database and the receipt files, Netlify for hosting, Cloudflare for the network and the sign-up check, Resend for email, Umami for analytics, and Anthropic for reading receipts')}.`,
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
@@ -141,9 +161,10 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Where it is kept',
         body: [
-          'Our database is hosted in the European Union, in Frankfurt, and our page-visit figures are held in the European Union too. Our website host and our email provider may process data outside it.',
+          'Our database and the receipt files are hosted in the European Union, in Frankfurt, and our page-visit figures are held in the European Union too. Our website host, our network provider and our email provider may process data outside it, and a receipt read automatically is read in the United States.',
+          'Our database host keeps a daily backup for seven days. Each week we also keep a full copy of the database and of every photo and receipt on a computer we control, outside the European Union, so that nothing is lost if a supplier fails.',
           TBD(
-            'the transfer mechanism relied on for suppliers outside the EU, and whether a full record of processing activities is needed',
+            'the transfer mechanism relied on for suppliers outside the EU and for our own weekly copy, how that copy is secured (for example encrypted, and who can reach it), and whether a full record of processing activities is needed',
           ),
         ],
       },
@@ -152,8 +173,9 @@ export function privacyPolicy(): LegalDocument {
         heading: 'How long we keep it',
         body: [
           'Bookings are kept as a record of what was agreed, because that is what a disagreement about a missed reservation is settled from.',
+          'Monthly bills to businesses are kept as long as accounting records have to be, and the bookings, answers and receipt totals they were drawn up from are kept with them.',
           TBD(
-            'actual retention periods - a proposal to review: bookings for 24 months after the date, accounts until you close them, scan records for 24 months, error records for 90 days. None of these is enforced in the software yet',
+            'actual retention periods - a proposal to review: bookings for 24 months after the date, receipts for 12 months after the visit, accounts until you close them, reviews while they are published, scan records for 24 months, error records for 90 days, bills for as long as accounting law requires. None of these is enforced in the software yet',
           ),
         ],
       },
@@ -174,6 +196,9 @@ export function privacyPolicy(): LegalDocument {
           'Two small cookies, and only once you sign in. One keeps you signed in; the other only tells the page to show your account link instead of Sign in. Neither is used to track you, neither is shared, and there is no advertising or analytics cookie on this site.',
           'That last part is deliberate. We do count page visits, and we chose a provider that needs no cookie to do it, so measuring how the site is read costs you nothing and asks you nothing.',
           'Because both are strictly necessary to provide something you asked for, there is no consent banner. If we ever add anything that is not strictly necessary, there will be.',
+          TBD(
+            'that Cloudflare, which carries every visit and checks the sign-up form, sets no cookie of its own; if it does, this section has to name it',
+          ),
         ],
       },
 
@@ -198,7 +223,7 @@ export function termsOfService(): LegalDocument {
   return {
     title: 'Terms of Use',
     intro:
-      'These terms cover using the Vardenia website, opening an account, and requesting a booking. Please read the section on bookings in particular, because it explains who your arrangement is actually with.',
+      'These terms cover using the Vardenia website, opening an account, requesting a booking, and what you send us afterwards: your answer about the visit, a receipt, or a review. Please read the section on bookings in particular, because it explains who your arrangement is actually with.',
 
     sections: [
       {
@@ -212,8 +237,23 @@ export function termsOfService(): LegalDocument {
       {
         heading: 'What Vardenia is, and is not',
         body: [
-          'We are a guide. We visit and choose the places that appear here, and we write about them ourselves - a business cannot buy an entry or edit its own.',
+          'We are a guide, and we write about the places here ourselves. A business cannot edit what we say about it.',
           'We are not the hotel, the restaurant, or the venue. We do not own them, run them, or supervise them, and we cannot guarantee your experience of them.',
+          TBD(
+            'whether every place is chosen or visited by Vardenia before it appears, or only those marked Verified by Vardenia - the directory now includes places that pay to be listed',
+          ),
+        ],
+      },
+
+      {
+        heading: 'How places are listed and ordered',
+        body: [
+          'Places pay Vardenia to be listed, at one of three levels: bronze, a listing on the website; silver, which adds a page in the printed magazine; and gold, which adds first place in every list and a place on the home page.',
+          '- **The order of a list reflects that level.** Gold places come first, then silver, then bronze, and places at the same level are in alphabetical order. A place higher in a list has paid for a higher level; it is not ranked as better.',
+          '- **The band at the top of the home page** shows gold places. It is paid placement, and is labelled as chosen by the places who back this guide.',
+          "- **A place marked 'Verified by Vardenia'** has been visited and checked by us in person.",
+          '- **Places also pay a commission** on what guests spend on visits booked through Vardenia. It does not change what you pay.',
+          'The places suggested at the foot of a listing are the nearest ones first, whatever their level.',
         ],
       },
 
@@ -232,6 +272,39 @@ export function termsOfService(): LegalDocument {
       },
 
       {
+        heading: 'After your visit: your answer and your receipt',
+        body: [
+          'After a visit booked through Vardenia, we email you to ask whether you went and roughly what you spent, and you can send us the receipt. Both are up to you.',
+          '- **Answer honestly.** Your answer is how we check what the business is billed, so please only say you went if you did. Your first answer is final, and you can give it for 30 days after the visit.',
+          '- **Send only your own receipt, and the real one.** It must be the bill for that visit. When you choose the photo, the total may be read from it automatically; check the figure before you send it, and correct it if it is wrong.',
+          "- **Disagreements.** If your account of the visit and the business's differ, the Vardenia team looks at both, and at the receipt if there is one, and decides. We may ask either of you about it.",
+          'We may refuse, or stop counting, a receipt or an answer that looks false, and suspend an account that sends them.',
+        ],
+      },
+
+      {
+        heading: 'Your passport',
+        body: [
+          'Each visit you made through a booking, which the business has confirmed, earns a stamp in your Vardenia passport.',
+          '- A stamp is a record of the visit, not money or a voucher, and has no cash value.',
+          '- A stamp can be removed if the visit turns out not to have happened, for example after a dispute is settled for the business.',
+        ],
+      },
+
+      {
+        heading: 'Reviews',
+        body: [
+          'You can review a place once a visit you booked through Vardenia is complete.',
+          '- **We read every review before it is published**, and may decline one that is not about a real visit, is abusive, or reveals personal information.',
+          '- **It is shown with your first name and initial.**',
+          '- **By sending it, you allow us** to publish it on Vardenia, and to show it with the place it is about, for as long as it is published. You can ask us to take it down.',
+          TBD(
+            'whether reviews may also appear in the printed magazine or in promotion of Vardenia',
+          ),
+        ],
+      },
+
+      {
         heading: 'Your account',
         body: [
           'You are responsible for what happens under your account, so please keep your password to yourself and tell us if you think somebody else has it.',
@@ -243,8 +316,18 @@ export function termsOfService(): LegalDocument {
       {
         heading: 'Using the site fairly',
         body: [
-          'Please do not make bookings you do not intend to keep, attempt to reach parts of the site that are not yours, scrape the directory, or use the site to break the law or harass anyone.',
+          'Please do not make bookings you do not intend to keep, send answers or receipts that are not true, attempt to reach parts of the site that are not yours, scrape the directory, or use the site to break the law or harass anyone.',
           'We may suspend an account that does any of those.',
+        ],
+      },
+
+      {
+        heading: 'If you run a listed business',
+        body: [
+          'These terms are for readers and guests. A business listed on Vardenia has its own agreement with us, covering its level, the commission, the monthly bill, the time it has to question a visit on it, and the time it has to pay.',
+          TBD(
+            'where the business terms live - in each signed agreement and the rate card, or on a partner terms page on this site - and that the partner dashboard links to them',
+          ),
         ],
       },
 
