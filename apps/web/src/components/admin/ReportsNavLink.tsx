@@ -24,9 +24,9 @@ interface Tool {
 
 const TOOLS: Tool[] = [
   {
-    label: 'Commissions',
+    label: 'Monthly billing',
     href: '/admin/billing',
-    title: 'Draw up and send the monthly commission statements',
+    title: 'Prepare and send the monthly commission bills',
   },
   {
     label: 'Import listings',

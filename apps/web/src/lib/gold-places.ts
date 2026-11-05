@@ -2,8 +2,8 @@ import type { Payload, PayloadRequest } from 'payload'
 import { HOME_PAGE_PLACES } from '@vardenia/core'
 
 /**
- * How many gold listings there can be: the number on the admin's Tiers page
- * (globals/TierSettings), or HOME_PAGE_PLACES while it is empty.
+ * How many gold listings there can be: the number on the admin's Settings page
+ * (globals/Settings, Tiers section), or HOME_PAGE_PLACES while it is empty.
  *
  * Read with access overridden, because it decides what anonymous visitors see
  * on the home page. Never throws: a setting that cannot be read falls back to
@@ -11,7 +11,7 @@ import { HOME_PAGE_PLACES } from '@vardenia/core'
  */
 export async function goldPlaces(payload: Payload, req?: PayloadRequest): Promise<number> {
   const settings = (await payload
-    .findGlobal({ slug: 'tier-settings', depth: 0, overrideAccess: true, ...(req ? { req } : {}) })
+    .findGlobal({ slug: 'settings', depth: 0, overrideAccess: true, ...(req ? { req } : {}) })
     .catch(() => null)) as { goldPlaces?: number | null } | null
   return placesOrDefault(settings?.goldPlaces)
 }

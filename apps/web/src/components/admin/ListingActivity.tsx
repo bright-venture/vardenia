@@ -27,7 +27,7 @@ interface Kind {
 const KINDS: Kind[] = [
   { collection: 'bookings', label: 'Bookings', hint: 'Every request for this place' },
   { collection: 'reviews', label: 'Reviews', hint: 'What guests wrote' },
-  { collection: 'statements', label: 'Fee statements', hint: 'Monthly invoices' },
+  { collection: 'statements', label: 'Bills', hint: 'Monthly commission bills' },
   { collection: 'closures', label: 'Closed dates', hint: 'When it is shut' },
   { collection: 'qr-codes', label: 'QR codes', hint: 'Its printed codes' },
 ]

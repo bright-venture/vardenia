@@ -600,7 +600,7 @@ export const Bookings: CollectionConfig = {
             readOnly: true,
             step: 0.01,
             description:
-              'From the receipt the guest sent, converted from LBP at the rate on the Commissions page. Billed first. Correct it on the receipt itself.',
+              'From the receipt the guest sent, converted from LBP at the pounds rate in Settings. Billed first. Correct it on the receipt itself.',
           },
         },
         {

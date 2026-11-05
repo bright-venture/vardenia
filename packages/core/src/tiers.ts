@@ -45,8 +45,8 @@ export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
  * How many gold listings there can be, which is how many the home page band
- * shows, until an admin sets another number on the Tiers page in the admin
- * (apps/web/src/globals/TierSettings). This is the default.
+ * shows, until an admin sets another number in the admin's Settings, Tiers
+ * section (apps/web/src/globals/Settings). This is the default.
  *
  * A gold listing that never appears in the band has been sold something it
  * does not get - the band is sorted and cut at the number of places, so one

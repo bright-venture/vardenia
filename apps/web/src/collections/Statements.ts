@@ -437,7 +437,7 @@ const emailWhenSent: CollectionAfterChangeHook = async ({ doc, previousDoc, req,
 
 export const Statements: CollectionConfig = {
   slug: 'statements',
-  labels: { singular: 'Fee statement', plural: 'Fee statements' },
+  labels: { singular: 'Bill', plural: 'Bills' },
 
   admin: {
     // Can be grouped by listing in the list view (Group by, then Business), so

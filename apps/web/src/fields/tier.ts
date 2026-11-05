@@ -4,7 +4,7 @@
  * The tiers and what each buys are declared in packages/core/src/tiers. This
  * file is the admin's side of them: the labels staff choose from, and the check
  * that stops one more gold listing being sold than the home page band shows
- * (the number on the admin's Tiers page, globals/TierSettings).
+ * (the number in the admin's Settings, Tiers section: globals/Settings).
  *
  * Home page placement used to be a separate Featured box either tier could
  * tick. It is the gold tier now, so a website-only listing can no longer be
@@ -39,7 +39,7 @@ export function goldPlaceCheck(
   places: number = HOME_PAGE_PLACES,
 ): string | true {
   if (othersGold < places) return true
-  return `The home page shows ${places} gold listings and all ${places} places are taken. Move one of them to silver first, or add places on the Tiers page.`
+  return `The home page shows ${places} gold listings and all ${places} places are taken. Move one of them to silver first, or add places in Settings, Commission and tiers.`
 }
 
 /**
@@ -87,6 +87,6 @@ export const tierField: SelectField = {
   admin: {
     components: { Cell: '/components/admin/ListCells#TierCell' },
     description:
-      'Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set on the Tiers page. Every silver listing comes before every bronze one.',
+      'Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set in Settings, Commission and tiers. Every silver listing comes before every bronze one.',
   },
 }

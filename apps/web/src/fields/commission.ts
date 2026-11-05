@@ -2,7 +2,7 @@
  * What a venue pays, as a share of what each guest who booked through Vardenia
  * and came spent there.
  *
- * Empty means the default rate on the Commissions page applies, which is how
+ * Empty means the default rate in Settings applies, which is how
  * almost every listing is meant to be: one rate for everybody, set in one
  * place. A rate here is for a venue that signed something different, 0
  * included. Read only by staff and by the monthly statement; see
@@ -25,7 +25,7 @@ export const commissionField: GroupField = {
   access: { read: isStaffFieldLevel, create: isAdminFieldLevel, update: isAdminFieldLevel },
   admin: {
     description:
-      'A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the default on the Commissions page. No-shows and cancellations are never charged.',
+      'A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the rate in Settings, Commission and tiers. No-shows and cancellations are never charged.',
   },
   fields: [
     {

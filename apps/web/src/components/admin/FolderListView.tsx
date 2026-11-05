@@ -47,7 +47,7 @@ const SERVER_ONLY = new Set([
 const NOUNS: Record<string, { title: string; one: string; many: string }> = {
   reviews: { title: 'Reviews', one: 'review', many: 'reviews' },
   bookings: { title: 'Bookings', one: 'booking', many: 'bookings' },
-  statements: { title: 'Fee statements', one: 'statement', many: 'statements' },
+  statements: { title: 'Bills', one: 'bill', many: 'bills' },
   closures: { title: 'Closed dates', one: 'closure', many: 'closures' },
   'qr-codes': { title: 'QR codes', one: 'code', many: 'codes' },
 }

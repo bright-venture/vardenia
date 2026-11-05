@@ -728,7 +728,7 @@ export async function findFeaturedListings({
   const run = async (): Promise<ListingSummary[]> => {
     const payload = await client()
     // As many places as the admin's Tiers page sets. Saving that page clears
-    // this cache (globals/TierSettings), so a new number shows straight away.
+    // this cache (globals/Settings), so a new number shows straight away.
     const limit = await goldPlaces(payload)
 
     const result = await payload.find({

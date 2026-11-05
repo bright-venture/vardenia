@@ -17,7 +17,7 @@ import { receiptInDollars } from '@vardenia/core'
  *   links it; staff can too), and whenever a receipt asks it to refresh;
  * - from the receipt, when staff correct its total or currency, or delete it.
  *
- * Pounds are converted at the rate on the Commissions page as it stands at that
+ * Pounds are converted at the rate on the Settings page as it stands at that
  * moment, which for a guest's upload is the day they paid.
  */
 
@@ -39,7 +39,7 @@ export async function receiptDollars(
     .catch(() => null)) as { amount?: number | null; currency?: string | null } | null
   if (!receipt) return null
   const settings = (await req.payload
-    .findGlobal({ slug: 'commission-settings', depth: 0, overrideAccess: true, req })
+    .findGlobal({ slug: 'settings', depth: 0, overrideAccess: true, req })
     .catch(() => null)) as { poundsPerDollar?: number | null } | null
   return receiptInDollars(receipt.amount, receipt.currency, settings?.poundsPerDollar)
 }

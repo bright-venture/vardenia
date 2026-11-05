@@ -29,7 +29,7 @@ import { venueOwnerEmails } from './booking-email'
  *    seven days ago and was never marked. The venue had its week; the booking
  *    now reads the same in its dashboard as on its statement.
  * 2. Works out each booking's commission: the venue's rate, or the default on
- *    the Commissions page, of what the guest spent (core/booking-fees).
+ *    Settings, of what the guest spent (core/booking-fees).
  * 3. Creates one draft statement per venue that owes something, skipping a venue
  *    that already has a statement for that month.
  *
@@ -50,7 +50,7 @@ export interface DrawUpResult {
   incomplete: string[]
   /** "Venue (REFERENCE)" for each visit owed but with no amount yet. */
   missingAmount: string[]
-  /** Venues with visits to bill but no rate, here or on the Commissions page. */
+  /** Venues with visits to bill but no rate, here or in Settings. */
   noRate: string[]
 }
 
@@ -138,7 +138,7 @@ export async function drawUpStatements(
   }
 
   const settings = (await payload
-    .findGlobal({ slug: 'commission-settings', depth: 0, overrideAccess: true })
+    .findGlobal({ slug: 'settings', depth: 0, overrideAccess: true })
     .catch(() => null)) as { defaultRate?: number | null } | null
   const defaultRate = settings?.defaultRate ?? null
 

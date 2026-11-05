@@ -26,7 +26,7 @@ interface Fixture {
     commission?: { rate?: number | null; waivedUntil?: string | null } | null
   }[]
   bookings: Record<number, Record<string, unknown>[]>
-  /** The rate on the Commissions page. */
+  /** The commission rate in Settings. */
   defaultRate?: number | null
   existing?: number[]
   /** Booking ids already on a live statement, per venue. */

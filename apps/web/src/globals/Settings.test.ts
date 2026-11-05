@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { HOME_PAGE_PLACES } from '@vardenia/core'
-import { placesFloorCheck } from './TierSettings'
+import { placesFloorCheck } from './Settings'
 import { placesOrDefault } from '../lib/gold-places'
 
 /**

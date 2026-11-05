@@ -28,17 +28,19 @@ export async function POST(request: Request) {
   try {
     const result = await drawUpStatements(payload, period)
     message = [
-      `${result.created} draft${result.created === 1 ? '' : 's'} created.`,
+      `${result.created} draft bill${result.created === 1 ? '' : 's'} prepared.`,
       result.markedCompleted > 0
         ? `${result.markedCompleted} unmarked booking${result.markedCompleted === 1 ? '' : 's'} counted as completed.`
         : '',
-      result.alreadyDrawnUp > 0 ? `${result.alreadyDrawnUp} venue(s) already had a statement.` : '',
-      result.nothingOwed > 0 ? `${result.nothingOwed} venue(s) owed nothing.` : '',
+      result.alreadyDrawnUp > 0
+        ? `${result.alreadyDrawnUp} venue(s) already had a bill for this month.`
+        : '',
+      result.nothingOwed > 0 ? `${result.nothingOwed} venue(s) owed nothing, so got no bill.` : '',
       result.incomplete.length > 0
-        ? `Not drawn up, bookings could not all be read: ${result.incomplete.join(', ')}.`
+        ? `Not prepared, bookings could not all be read: ${result.incomplete.join(', ')}.`
         : '',
       result.noRate.length > 0
-        ? `No commission rate, so not billed: ${result.noRate.join(', ')}. Set the default on the Commissions page.`
+        ? `No commission rate, so not billed: ${result.noRate.join(', ')}. Set the commission rate in Settings, Commission and tiers.`
         : '',
       result.missingAmount.length > 0
         ? `Owed but no amount yet, ask the venue and they will be billed next month: ${result.missingAmount.join(', ')}.`
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
       message = error.message
     } else {
       await reportError(error, { source: 'billing.generate', extra: { period } })
-      message = 'Drawing up failed. The error has been reported.'
+      message = 'Preparing the bills failed. The error has been reported.'
     }
   }
 

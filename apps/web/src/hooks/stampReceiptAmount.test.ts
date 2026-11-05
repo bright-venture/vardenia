@@ -42,7 +42,7 @@ describe('the receipt total on the booking', () => {
     expect(data.receiptAmount).toBe(84.5)
   })
 
-  it('converts a receipt in pounds at the rate on the Commissions page', async () => {
+  it('converts a receipt in pounds at the pounds rate in Settings', async () => {
     const { req } = request({ 9: { amount: 2_685_000, currency: 'LBP' } }, 89_500)
     const data = await run({ data: { receipt: 9 }, originalDoc: {}, req: req as never })
     expect(data.receiptAmount).toBe(30)

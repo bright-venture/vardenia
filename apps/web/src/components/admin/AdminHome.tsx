@@ -25,7 +25,7 @@ import {
  * mode.
  */
 
-const AREA_ORDER: AttentionArea[] = ['Site setup', 'Bookings', 'Commissions', 'Listings', 'Reviews']
+const AREA_ORDER: AttentionArea[] = ['Site setup', 'Bookings', 'Billing', 'Listings', 'Reviews']
 
 const dollars = (amount: number) =>
   `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -50,7 +50,7 @@ const SHORTCUTS: Destination[] = [
     href: '/admin/import-listings',
     hint: 'Many at once, from a spreadsheet',
   },
-  { label: 'Commissions', href: '/admin/billing', hint: 'Draw up and send monthly statements' },
+  { label: 'Monthly billing', href: '/admin/billing', hint: 'Prepare and send the monthly bills' },
   {
     label: 'QR code sheet',
     href: '/qr/sheet',
@@ -90,14 +90,14 @@ const AREAS: { title: string; items: Destination[] }[] = [
         hint: 'Every request and its status',
       },
       {
-        label: 'Commission statements',
+        label: 'Bills',
         href: '/admin/collections/statements',
-        hint: 'Monthly invoices to venues',
+        hint: 'Every monthly bill sent to venues',
       },
       {
-        label: 'Commission rate',
-        href: '/admin/globals/commission-settings',
-        hint: 'The default percentage venues pay',
+        label: 'Commission and tiers',
+        href: '/admin/globals/settings',
+        hint: 'Commission rate, pounds rate, gold places',
       },
       {
         label: 'Closed dates',

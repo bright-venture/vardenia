@@ -29,9 +29,9 @@ export async function POST(request: Request) {
   try {
     const { sent, noRecipient } = await sendDrafts(payload, period)
     message = [
-      `${sent} statement${sent === 1 ? '' : 's'} sent.`,
+      `${sent} bill${sent === 1 ? '' : 's'} sent.`,
       noRecipient.length > 0
-        ? `Not sent, no partner account to email: ${noRecipient.join(', ')}. Add a partner account for each and send again, or deliver it yourself and set it to Sent in Fee statements.`
+        ? `Not sent, no partner account to email: ${noRecipient.join(', ')}. Add a partner account for each and send again, or deliver it yourself and set it to Sent in Bills.`
         : '',
     ]
       .filter(Boolean)

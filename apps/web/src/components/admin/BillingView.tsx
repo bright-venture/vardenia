@@ -17,7 +17,7 @@ import { beirutDate } from '../../lib/beirut'
 import { findEvery } from '../../lib/find-every'
 
 /**
- * Commissions, in the admin panel: a month of statements, laid out as the five
+ * Monthly billing, in the admin panel: a month of statements, laid out as the five
  * steps the team takes every month, in order.
  *
  *   /admin/billing              last month
@@ -124,7 +124,7 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
       <DefaultTemplate {...template}>
         <main>
           <Gutter>
-            <h1>Commissions</h1>
+            <h1>Monthly billing</h1>
             <p>Staff only.</p>
           </Gutter>
         </main>
@@ -190,7 +190,7 @@ export async function BillingView({ initPageResult, params, searchParams }: Admi
         <Gutter>
           <div style={styles.wrap}>
             <header style={styles.header}>
-              <h1 style={{ margin: 0 }}>Commissions for {monthName(period)}</h1>
+              <h1 style={{ margin: 0 }}>Monthly billing: {monthName(period)}</h1>
               <p style={styles.lead}>
                 Once a month, each venue is billed its commission on the guests who booked through
                 Vardenia and came. Follow the steps below in order; each one says what it does.

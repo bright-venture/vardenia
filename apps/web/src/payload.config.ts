@@ -27,8 +27,7 @@ import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
-import { CommissionSettings } from './globals/CommissionSettings'
-import { TierSettings } from './globals/TierSettings'
+import { Settings } from './globals/Settings'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
 import { allowedOrigins } from './lib/origins'
@@ -214,7 +213,7 @@ export default buildConfig({
     RateLimits,
   ],
 
-  globals: [CommissionSettings, TierSettings],
+  globals: [Settings],
 
   /**
    * Errors raised anywhere inside Payload.

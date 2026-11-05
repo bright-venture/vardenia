@@ -164,8 +164,8 @@ export function BookingDispute() {
         {f.receipt !== null && f.receiptAmount === null ? (
           <span className="vd-muted">
             {' '}
-            The receipt gives no dollar total (none typed, or in LBP with no rate on the Commissions
-            page), so it is not used.
+            The receipt gives no dollar total (none typed, or in LBP with no pounds rate in
+            Settings), so it is not used.
           </span>
         ) : null}
       </p>
