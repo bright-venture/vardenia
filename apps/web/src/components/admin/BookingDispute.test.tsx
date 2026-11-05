@@ -170,6 +170,32 @@ describe('BookingDispute', () => {
     expect(button('The guest is right')).toBeUndefined()
   })
 
+  it('shows what was read from the photo, and what does not fit', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ...RECEIPT,
+        reading: { total: 64.5, currency: 'USD', date: '2026-11-02', concerns: ['amount'] },
+      }),
+    })
+    booking({ amount: 85, receipt: 9 })
+    const text = await render()
+    expect(text).toContain('Read from the photo: $64.50, dated 2 Nov 2026')
+    expect(text).toContain('The guest sent another total than the one read.')
+  })
+
+  it('says nothing about a reading when the photo was not read', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        ...RECEIPT,
+        reading: { total: null, currency: null, date: null, place: null, concerns: [] },
+      }),
+    })
+    booking({ amount: 85, receipt: 9 })
+    expect(await render()).not.toContain('Read from the photo')
+  })
+
   it('links a PDF receipt instead of showing it as a picture', async () => {
     fetchMock.mockResolvedValue({
       ok: true,

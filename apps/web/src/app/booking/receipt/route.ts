@@ -9,11 +9,13 @@ import { reportError } from '../../../lib/report'
 /**
  * Where a guest's receipt lands, from the "Did you go?" page.
  *
- *   POST /booking/receipt   token, file, amount, currency, locale
+ *   POST /booking/receipt   token, file, amount, currency, locale, reading
  *
  * A plain multipart form post, so it works without JavaScript; with it, the
  * page shrinks a large photo first (components/ReceiptPicker). The token is the
- * permission, signed for one booking (lib/attendance). Back to the visit page,
+ * permission, signed for one booking (lib/attendance). `reading` is what the
+ * page read from the photo first (/booking/receipt/read), sealed, when it did.
+ * Back to the visit page,
  * which says what happened with `?receipt=`.
  */
 
@@ -41,6 +43,7 @@ export const POST = withRateLimit(async (request: Request) => {
       bytes,
       amount: readReceiptAmount(form?.get('amount'), currency),
       currency,
+      reading: typeof form?.get('reading') === 'string' ? String(form?.get('reading')) : null,
     })
   } catch (error) {
     await reportError(error, { source: 'receipt.upload', extra: { booking: bookingId } })

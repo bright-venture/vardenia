@@ -16,6 +16,7 @@ import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { siteOrigin } from './auth-email'
 import { attendanceEmailContent } from './attendance-email'
 import { reportError } from './report'
+import { CONCERN_LABELS, type ReadingConcern } from './receipt-reading'
 
 /**
  * Asking guests whether they came, and acting on the answer.
@@ -343,7 +344,14 @@ export async function alertTeam(
       reference?: string | null
       amount?: number | null
       guestAmount?: number | null
-      receipt?: { amount?: number | null; currency?: string | null } | number | null
+      receipt?:
+        | {
+            amount?: number | null
+            currency?: string | null
+            reading?: { concerns?: string[] | null } | null
+          }
+        | number
+        | null
     }
     const business = typeof doc.business === 'object' ? doc.business : null
     // Only that one was sent and what the guest typed: the file stays behind
@@ -356,7 +364,13 @@ export async function alertTeam(
               ? `${receipt.amount.toLocaleString('en-US')} LBP`
               : dollars(receipt.amount)
             : 'not typed'
-        }. See it on the booking.`
+        }. See it on the booking.${
+          receipt.reading?.concerns?.length
+            ? ` To check: ${receipt.reading.concerns
+                .map((c) => CONCERN_LABELS[c as ReadingConcern] ?? c)
+                .join('; ')}.`
+            : ''
+        }`
       : 'Receipt: none sent yet.'
     const link = `${siteOrigin()}/admin/collections/bookings/${bookingId}`
     const subject = `Disputed visit: ${business?.name ?? 'a listing'} (${doc.reference ?? bookingId})`

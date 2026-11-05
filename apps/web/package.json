@@ -35,6 +35,7 @@
     "backup:weekly": "tsx src/backup/weekly-cli.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.5.0",
     "@payloadcms/db-postgres": "^3.90.2",
     "@payloadcms/email-resend": "^3.90.2",
     "@payloadcms/next": "^3.90.2",

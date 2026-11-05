@@ -895,6 +895,16 @@ export interface Receipt {
   amount?: number | null
   currency?: ('USD' | 'LBP') | null
   /**
+   * What Vardenia read from the photo before the guest confirmed the total. Empty when it was not read. Never billed on: the total above is.
+   */
+  reading?: {
+    total?: number | null
+    currency?: ('USD' | 'LBP') | null
+    date?: string | null
+    place?: ('yes' | 'no' | 'unclear') | null
+    concerns?: ('amount' | 'date' | 'place' | 'unreadable')[] | null
+  }
+  /**
    * For the team. Never shown to the guest.
    */
   note?: string | null
@@ -1439,6 +1449,15 @@ export interface ReceiptsSelect<T extends boolean = true> {
   customer?: T
   amount?: T
   currency?: T
+  reading?:
+    | T
+    | {
+        total?: T
+        currency?: T
+        date?: T
+        place?: T
+        concerns?: T
+      }
   note?: T
   _objectKey?: T
   updatedAt?: T

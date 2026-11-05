@@ -15,6 +15,12 @@ import {
 } from '../access/index'
 import { unguessableFilename } from '../hooks/unguessableFilename'
 import {
+  CONCERN_LABELS,
+  READING_CONCERNS,
+  READING_CURRENCIES,
+  READING_PLACES,
+} from '../lib/receipt-reading'
+import {
   refreshBookingAfterReceiptDelete,
   refreshBookingFromReceipt,
 } from '../hooks/stampReceiptAmount'
@@ -93,7 +99,7 @@ export const copyBookingCustomer: CollectionBeforeChangeHook = async ({ data, re
   return data
 }
 
-export const RECEIPT_CURRENCIES = ['USD', 'LBP'] as const
+export const RECEIPT_CURRENCIES = READING_CURRENCIES
 
 export const Receipts: CollectionConfig = {
   slug: 'receipts',
@@ -160,6 +166,64 @@ export const Receipts: CollectionConfig = {
           defaultValue: 'USD',
           options: RECEIPT_CURRENCIES.map((value) => ({ label: value, value })),
           admin: { width: '50%' },
+        },
+      ],
+    },
+    {
+      /*
+       * What lib/receipt-reading read from the photo when the guest picked it,
+       * before they confirmed the total above. Kept for the team only, and
+       * written only by the guest's upload (lib/receipts), with the seal checked.
+       */
+      name: 'reading',
+      label: 'Read automatically',
+      type: 'group',
+      access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+      admin: {
+        description:
+          'What Vardenia read from the photo before the guest confirmed the total. Empty when it was not read. Never billed on: the total above is.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'total',
+              type: 'number',
+              admin: { readOnly: true, width: '33%' },
+            },
+            {
+              name: 'currency',
+              type: 'select',
+              options: READING_CURRENCIES.map((value) => ({ label: value, value })),
+              admin: { readOnly: true, width: '33%' },
+            },
+            {
+              name: 'date',
+              label: 'Date printed',
+              type: 'text',
+              admin: { readOnly: true, width: '33%' },
+            },
+          ],
+        },
+        {
+          name: 'place',
+          label: 'From the place booked',
+          type: 'select',
+          options: [
+            { label: 'Yes', value: 'yes' },
+            { label: 'No, another name is on it', value: 'no' },
+            { label: 'No name could be read', value: 'unclear' },
+          ] satisfies { label: string; value: (typeof READING_PLACES)[number] }[],
+          admin: { readOnly: true },
+        },
+        {
+          name: 'concerns',
+          label: 'To check',
+          type: 'select',
+          hasMany: true,
+          options: READING_CONCERNS.map((value) => ({ label: CONCERN_LABELS[value], value })),
+          admin: { readOnly: true },
         },
       ],
     },

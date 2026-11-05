@@ -9,6 +9,7 @@ import {
 import { alertTeam, recordGuestAnswer } from './attendance'
 import { readSpent } from './spent'
 import { RECEIPT_CURRENCIES } from '../collections/Receipts'
+import { openReading, readingConcerns } from './receipt-reading'
 
 /**
  * A guest sending the receipt of a visit (collections/Receipts).
@@ -69,6 +70,7 @@ export type ReceiptOutcome =
 interface BookingRow {
   id: number
   status: BookingStatus
+  start: string
   end: string
   guestAnswer?: GuestAnswer | null
   receipt?: unknown
@@ -88,11 +90,20 @@ interface LinkedBooking extends BookingRow {
  * checked, the guest's "I came" is recorded if they had not answered, then the
  * file is stored and linked. The link is written only where none exists, so two
  * tabs sending at once keep the first receipt and the second file is removed.
+ *
+ * `reading` is what the page had read from this photo (lib/receipt-reading),
+ * sealed. It is kept, for the team, only when the seal matches this booking
+ * and these exact bytes; anything else is ignored, never refused.
  */
 export async function saveReceipt(
   payload: Payload,
   bookingId: number,
-  input: { bytes: Uint8Array | null; amount: number | null; currency: ReceiptCurrency },
+  input: {
+    bytes: Uint8Array | null
+    amount: number | null
+    currency: ReceiptCurrency
+    reading?: string | null
+  },
   now: Date = new Date(),
 ): Promise<ReceiptOutcome> {
   const doc = (await payload
@@ -126,9 +137,26 @@ export async function saveReceipt(
     )
   }
 
+  const read = input.reading ? openReading(input.reading, bookingId, input.bytes) : null
+  const reading = read
+    ? {
+        ...read,
+        concerns: readingConcerns(
+          read,
+          { amount: input.amount, currency: input.currency },
+          new Date(doc.start),
+        ),
+      }
+    : undefined
+
   const receipt = (await payload.create({
     collection: 'receipts',
-    data: { booking: bookingId, amount: input.amount, currency: input.currency } as never,
+    data: {
+      booking: bookingId,
+      amount: input.amount,
+      currency: input.currency,
+      reading,
+    } as never,
     file: {
       data: Buffer.from(input.bytes),
       mimetype: type,

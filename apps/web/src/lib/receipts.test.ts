@@ -5,6 +5,7 @@ vi.mock('./attendance', () => ({ recordGuestAnswer }))
 
 const { RECEIPT_MAX_BYTES, readReceiptAmount, receiptType, saveReceipt } =
   await import('./receipts')
+const { sealReading } = await import('./receipt-reading')
 
 /**
  * A guest's receipt: what is accepted, what is refused, and that one booking
@@ -19,6 +20,7 @@ const HTML = new TextEncoder().encode('<html><script>')
 const booking = (over: Record<string, unknown> = {}) => ({
   id: 9,
   status: 'completed',
+  start: '2026-11-03T18:00:00Z',
   end: '2026-11-03T20:00:00Z',
   guestAnswer: 'came',
   receipt: null,
@@ -97,6 +99,25 @@ describe('saving a receipt', () => {
 
   it('asks for the total', async () => {
     await expect(send(booking(), { amount: null }).run).resolves.toBe('no-amount')
+  })
+
+  it('keeps what was read from the photo, with what the team should check', async () => {
+    const read = { total: 84.5, currency: 'USD', date: '2026-11-03', place: 'yes' } as const
+    const reading = sealReading(read, 9, JPEG)
+    const same = send(booking(), { reading })
+    await same.run
+    expect(same.calls.creates[0]).toMatchObject({ data: { reading: { ...read, concerns: [] } } })
+
+    const changed = send(booking(), { reading, amount: 120 })
+    await changed.run
+    expect(changed.calls.creates[0]).toMatchObject({ data: { reading: { concerns: ['amount'] } } })
+  })
+
+  it('ignores a reading sealed for another photo or booking, and still saves', async () => {
+    const reading = sealReading({ total: 9, currency: 'USD', date: null, place: 'yes' }, 10, JPEG)
+    const { run, calls } = send(booking(), { reading })
+    await expect(run).resolves.toBe('saved')
+    expect((calls.creates[0] as { data: { reading?: unknown } }).data.reading).toBeUndefined()
   })
 
   it('keeps the first receipt of a booking', async () => {

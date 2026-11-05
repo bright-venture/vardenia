@@ -434,6 +434,19 @@
   gap: 0.15rem;
 }
 
+/* What was read from the photo (lib/receipt-reading), and what to check. */
+.vd-receipt__reading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
+}
+
+.vd-receipt__concern {
+  color: var(--theme-warning-800);
+  font-weight: 600;
+}
+
 .vd-receipt__pdf {
   color: var(--theme-elevation-900);
   font-weight: 600;
