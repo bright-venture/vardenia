@@ -374,6 +374,8 @@
     "statementSpent": "المبلغ المُنفَق",
     "statementCommission": "العمولة",
     "statementRate": "{rate}% من المبلغ المُنفَق",
+    "statementFromReceipt": "حسب إيصال الضيف",
+    "statementFromGuest": "حسب تقدير الضيف",
     "statementSubtotal": "المجموع الفرعي",
     "statementVat": "الضريبة على القيمة المضافة",
     "statementDisputeUntil": "يمكنك الاعتراض على أي سطر حتى {date}.",

@@ -26,9 +26,17 @@ interface Row {
   reference: string
   day: string
   base: number
+  from: string
   rate: number
   amount: number
   outcome: Outcome
+}
+
+/** Under "Spent": whose figure it is (core/billableAmount). Empty on older lines. */
+const FROM: Record<string, string> = {
+  receipt: 'from the receipt',
+  venue: "venue's entry",
+  guest: "guest's estimate",
 }
 
 const money = (value: number) =>
@@ -72,6 +80,7 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
         reference: '',
         day: '',
         base: 0,
+        from: '',
         rate: 0,
         amount: 0,
         outcome: 'none' as Outcome,
@@ -89,6 +98,9 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
           break
         case 'base':
           row.base = Number(value) || 0
+          break
+        case 'baseFrom':
+          row.from = String(value ?? '')
           break
         case 'rate':
           row.rate = Number(value) || 0
@@ -149,7 +161,12 @@ export function StatementLines({ path = 'lines' }: { path?: string }) {
                         row.reference || 'No booking'
                       )}
                     </td>
-                    <td className="vd-num">{money(row.base)}</td>
+                    <td className="vd-num">
+                      {money(row.base)}
+                      {FROM[row.from] ? (
+                        <span className="vd-muted vd-lines__from">{FROM[row.from]}</span>
+                      ) : null}
+                    </td>
                     <td className="vd-num">{row.rate}%</td>
                     <td className="vd-num vd-fee">{money(row.amount)}</td>
                     <td>

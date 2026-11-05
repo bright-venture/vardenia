@@ -24,6 +24,7 @@ export const markAttendanceDispute: CollectionBeforeChangeHook = ({ data, origin
     attendanceVerdict?: AttendanceVerdict | null
     amount?: number | null
     guestAmount?: number | null
+    receiptAmount?: number | null
   }
   if (!next.status || !next.end) return data
   data.attendanceDisputed =
@@ -34,6 +35,7 @@ export const markAttendanceDispute: CollectionBeforeChangeHook = ({ data, origin
       verdict: next.attendanceVerdict ?? null,
       amount: next.amount ?? null,
       guestAmount: next.guestAmount ?? null,
+      receiptAmount: next.receiptAmount ?? null,
     }) !== null
   return data
 }

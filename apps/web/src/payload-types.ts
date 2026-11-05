@@ -869,6 +869,10 @@ export interface Booking {
    */
   receipt?: (number | null) | Receipt
   /**
+   * From the receipt the guest sent, converted from LBP at the rate on the Commissions page. Billed first. Correct it on the receipt itself.
+   */
+  receiptAmount?: number | null
+  /**
    * Roughly, from the answer the guest gave to "Did you go?". Used when the venue gave none, or when the team sides with the guest.
    */
   guestAmount?: number | null
@@ -948,6 +952,7 @@ export interface Statement {
         base?: number | null
         rate?: number | null
         amount?: number | null
+        baseFrom?: ('receipt' | 'venue' | 'guest') | null
         disputeOutcome?: ('none' | 'open' | 'upheld' | 'rejected') | null
         disputeReason?: string | null
         disputedAt?: string | null
@@ -1420,6 +1425,7 @@ export interface BookingsSelect<T extends boolean = true> {
   amount?: T
   amountEnteredAt?: T
   receipt?: T
+  receiptAmount?: T
   guestAmount?: T
   updatedAt?: T
   createdAt?: T
@@ -1468,6 +1474,7 @@ export interface StatementsSelect<T extends boolean = true> {
         base?: T
         rate?: T
         amount?: T
+        baseFrom?: T
         disputeOutcome?: T
         disputeReason?: T
         disputedAt?: T
@@ -1800,7 +1807,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T
 }
 /**
- * Each guest who books through Vardenia and comes is billed to the venue as a percentage of what they spent. The venue enters the amount when it marks the visit, and the guest is asked roughly what they spent; where the two are more than 25% apart, the booking is flagged for the team. Statements are drawn up from Commission statements.
+ * Each guest who books through Vardenia and comes is billed to the venue as a percentage of what they spent. The venue enters the amount when it marks the visit, and the guest is asked roughly what they spent; the guest can also send a photo of the receipt, whose total is billed first. Where the amount the venue entered is far from the receipt, or from what the guest says, the booking is flagged for the team. Statements are drawn up from Commission statements.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "commission-settings".
@@ -1811,6 +1818,10 @@ export interface CommissionSetting {
    * Applies to every listing that takes bookings and has no rate of its own. Empty bills nobody.
    */
   defaultRate?: number | null
+  /**
+   * Used to read a guest's receipt in LBP as dollars, at the rate on the day it arrives. Empty: receipts in LBP are not used for billing, and the venue's amount is billed instead.
+   */
+  poundsPerDollar?: number | null
   updatedAt?: string | null
   createdAt?: string | null
 }
@@ -1820,6 +1831,7 @@ export interface CommissionSetting {
  */
 export interface CommissionSettingsSelect<T extends boolean = true> {
   defaultRate?: T
+  poundsPerDollar?: T
   updatedAt?: T
   createdAt?: T
   globalType?: T

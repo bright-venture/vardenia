@@ -3,6 +3,7 @@ import {
   AUTO_COMPLETE_DAYS,
   canDispute,
   billableAmount,
+  receiptInDollars,
   commissionFor,
   countsAsCompleted,
   effectiveRate,
@@ -65,6 +66,7 @@ describe('what one booking costs', () => {
   it('takes the rate of what the guest spent', () => {
     expect(commissionFor({ rate: 10 }, booking({ amount: 120 }), NOW)).toEqual({
       base: 120,
+      baseFrom: 'venue',
       rate: 10,
       amount: 12,
     })
@@ -93,14 +95,64 @@ describe('what one booking costs', () => {
 
 describe('which amount the commission is taken of', () => {
   it("takes the venue's figure, and the guest's when the venue gave none", () => {
-    expect(billableAmount({ amount: 100, guestAmount: 90 })).toBe(100)
-    expect(billableAmount({ amount: null, guestAmount: 90 })).toBe(90)
+    expect(billableAmount({ amount: 100, guestAmount: 90 })).toEqual({ amount: 100, from: 'venue' })
+    expect(billableAmount({ amount: null, guestAmount: 90 })).toEqual({ amount: 90, from: 'guest' })
     expect(billableAmount({})).toBeNull()
   })
 
-  it("takes the guest's figure where the team sided with the guest", () => {
-    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'guest' })).toBe(120)
-    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'venue' })).toBe(40)
+  it('takes the receipt over both, when the guest sent one', () => {
+    expect(billableAmount({ amount: 60, guestAmount: 90, receiptAmount: 84.5 })).toEqual({
+      amount: 84.5,
+      from: 'receipt',
+    })
+    expect(billableAmount({ amount: null, receiptAmount: 84.5 })).toMatchObject({ from: 'receipt' })
+  })
+
+  it("takes the guest's side where the team sided with the guest: the receipt, else their figure", () => {
+    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'guest' })).toEqual({
+      amount: 120,
+      from: 'guest',
+    })
+    expect(
+      billableAmount({ amount: 40, guestAmount: 120, receiptAmount: 110, verdict: 'guest' }),
+    ).toEqual({ amount: 110, from: 'receipt' })
+  })
+
+  it("takes the venue's figure, even over a receipt, where the team sided with the venue", () => {
+    expect(billableAmount({ amount: 40, guestAmount: 120, verdict: 'venue' })).toEqual({
+      amount: 40,
+      from: 'venue',
+    })
+    expect(billableAmount({ amount: 40, receiptAmount: 400, verdict: 'venue' })).toEqual({
+      amount: 40,
+      from: 'venue',
+    })
+  })
+
+  it('says on the line that it was billed on the receipt', () => {
+    expect(commissionFor({ rate: 10 }, booking({ amount: 60, receiptAmount: 84.5 }), NOW)).toEqual({
+      base: 84.5,
+      baseFrom: 'receipt',
+      rate: 10,
+      amount: 8.45,
+    })
+  })
+})
+
+describe('a receipt in dollars', () => {
+  it('keeps dollars as they are, to the cent', () => {
+    expect(receiptInDollars(84.5, 'USD', null)).toBe(84.5)
+  })
+
+  it('converts pounds at the rate set in the admin', () => {
+    expect(receiptInDollars(2_685_000, 'LBP', 89_500)).toBe(30)
+  })
+
+  it('gives no figure for pounds with no rate set, or for no total at all', () => {
+    expect(receiptInDollars(2_685_000, 'LBP', null)).toBeNull()
+    expect(receiptInDollars(2_685_000, 'LBP', 0)).toBeNull()
+    expect(receiptInDollars(null, 'USD', 89_500)).toBeNull()
+    expect(receiptInDollars(0, 'USD', 89_500)).toBeNull()
   })
 })
 

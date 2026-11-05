@@ -124,6 +124,15 @@ export default async function PartnerStatementPage({ params }: Props) {
                 </td>
                 <td className="py-3 text-end">
                   {money(line.base, locale)}
+                  {/* Only when the figure is not the venue's own, which is the
+                      case that would otherwise read as a mistake. */}
+                  {line.baseFrom === 'receipt' || line.baseFrom === 'guest' ? (
+                    <span className="text-ink-500 block text-xs">
+                      {t(
+                        line.baseFrom === 'receipt' ? 'statementFromReceipt' : 'statementFromGuest',
+                      )}
+                    </span>
+                  ) : null}
                   <span className="text-ink-500 block text-xs">
                     {t('statementRate', { rate: line.rate })}
                   </span>

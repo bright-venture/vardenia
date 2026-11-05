@@ -105,6 +105,12 @@
   text-decoration-color: currentColor;
 }
 
+/* Whose figure a line's "Spent" is, under the amount. */
+.vd-lines__from {
+  display: block;
+  font-size: 0.75rem;
+}
+
 .vd-num {
   text-align: right !important;
   font-variant-numeric: tabular-nums;
@@ -362,6 +368,11 @@
 .vd-dispute__why {
   margin: 0;
   font-size: 1rem;
+}
+
+.vd-dispute__billed {
+  margin: 0;
+  font-size: 0.95rem;
 }
 
 .vd-dispute__sides {

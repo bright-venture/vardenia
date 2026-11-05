@@ -270,7 +270,12 @@ export async function recordGuestAnswer(
   const doc = (await payload
     .findByID({ collection: 'bookings', id: bookingId, depth: 0, overrideAccess: true })
     .catch(() => null)) as unknown as
-    (AskRow & { reference?: string | null; amount?: number | null }) | null
+    | (AskRow & {
+        reference?: string | null
+        amount?: number | null
+        receiptAmount?: number | null
+      })
+    | null
   if (!doc) return 'not-found'
   if (doc.guestAnswer) return 'already'
   const facts = {
@@ -278,6 +283,7 @@ export async function recordGuestAnswer(
     end: new Date(doc.end),
     guestAnswer: null,
     amount: doc.amount ?? null,
+    receiptAmount: doc.receiptAmount ?? null,
   }
   if (!canGuestAnswer(facts, now)) return 'closed'
 

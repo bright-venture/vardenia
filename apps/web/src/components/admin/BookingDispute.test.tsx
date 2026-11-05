@@ -50,6 +50,7 @@ function booking(values: Record<string, unknown>, verdict: unknown = null) {
     amount: { value: 120 },
     guestAmount: { value: 85 },
     receipt: { value: null },
+    receiptAmount: { value: null },
     attendanceVerdict: { value: verdict, initialValue: verdict },
   }
   for (const [key, value] of Object.entries(values)) {
@@ -97,7 +98,7 @@ describe('BookingDispute', () => {
 
     expect(text).toContain('Disputed visit')
     expect(text).toContain('Waiting for a decision')
-    expect(text).toContain('disagree on what was spent')
+    expect(text).toContain('far from the receipt, or from what the guest says')
     expect(text).toContain('Spent: $120.00')
     expect(text).toContain('Spent: $85.00')
     expect(text).toContain('$84.50')
@@ -134,6 +135,31 @@ describe('BookingDispute', () => {
     expect(text).not.toContain('Waiting for a decision')
     act(() => button('Change decision')!.click())
     expect(form.set).toHaveBeenLastCalledWith('attendanceVerdict', null)
+  })
+
+  it('bills the receipt first, and says so', async () => {
+    booking({ amount: 84.5, receipt: 9, receiptAmount: 84.5 })
+    expect(await render()).toContain("Billed on $84.50, the receipt's total.")
+  })
+
+  it('flags a venue amount far from the receipt even when the guest guessed close to it', async () => {
+    booking({ amount: 60, guestAmount: 70, receipt: 9, receiptAmount: 84.5 })
+    const text = await render()
+    expect(text).toContain('Waiting for a decision')
+    expect(text).toContain("Billed on $84.50, the receipt's total.")
+  })
+
+  it("shows the venue's figure as what will be billed once the venue is found right", async () => {
+    booking({ amount: 60, receipt: 9, receiptAmount: 84.5 })
+    await render()
+    form.fields.attendanceVerdict = { value: 'venue', initialValue: null }
+    const text = await render()
+    expect(text).toContain("Billed on $60.00, the venue's entry once you save.")
+  })
+
+  it('says when a receipt gives no dollar total to bill on', async () => {
+    booking({ amount: 120, receipt: 9, receiptAmount: null })
+    expect(await render()).toContain('The receipt gives no dollar total')
   })
 
   it('shows the receipt on its own when nobody disagrees', async () => {

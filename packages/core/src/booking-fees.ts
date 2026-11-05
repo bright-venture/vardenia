@@ -71,6 +71,8 @@ export interface BillableBooking {
   amount?: number | null
   /** What the guest says they spent, roughly, in US dollars. */
   guestAmount?: number | null
+  /** The total on the guest's receipt, in US dollars (see receiptInDollars). */
+  receiptAmount?: number | null
   /** The guest's own answer, and the team's decision where it disagreed. */
   guestAnswer?: GuestAnswer | null
   verdict?: AttendanceVerdict | null
@@ -78,9 +80,15 @@ export interface BillableBooking {
   day: string
 }
 
+/** Whose figure a commission was taken of. */
+export const BASE_SOURCES = ['receipt', 'venue', 'guest'] as const
+export type BaseSource = (typeof BASE_SOURCES)[number]
+
 export interface CommissionLine {
   /** What the guest spent, the amount the rate is taken of. */
   base: number
+  /** Whose figure that is, so the venue can see why it is not its own. */
+  baseFrom: BaseSource
   /** Percent. */
   rate: number
   amount: number
@@ -114,21 +122,61 @@ export function hasCommission(settings: CommissionSettings | null | undefined): 
 }
 
 /**
- * What the commission is taken of.
+ * What the commission is taken of, and whose figure it is.
  *
- * The venue's figure, normally. Where the team sided with the guest over the
- * amount, the guest's. Where the venue never gave one - a booking it did not
- * mark, completed after its seven days - the guest's estimate is better than
- * nothing. Null when neither said anything: the line cannot be billed until
- * somebody does.
+ * The receipt first: it is what was actually paid, printed by the venue's own
+ * till, where the venue's figure is typed afterwards by the party that pays
+ * the commission and the guest's is a memory. Then the venue's, then the
+ * guest's estimate, which is better than nothing for a booking the venue never
+ * marked.
+ *
+ * Where the team settled a disagreement, its decision comes first: "the venue
+ * is right" bills the venue's figure even over a receipt (the guest may have
+ * typed the total wrong, or sent the wrong bill), and "the guest is right"
+ * bills the receipt, else the guest's figure. Null when nobody said anything:
+ * the line cannot be billed until somebody does.
  */
 export function billableAmount(
-  booking: Pick<BillableBooking, 'amount' | 'guestAmount' | 'verdict'>,
+  booking: Pick<BillableBooking, 'amount' | 'guestAmount' | 'receiptAmount' | 'verdict'>,
+): { amount: number; from: BaseSource } | null {
+  const figures: Record<BaseSource, number | null> = {
+    receipt: positive(booking.receiptAmount),
+    venue: positive(booking.amount),
+    guest: positive(booking.guestAmount),
+  }
+  const order: BaseSource[] =
+    booking.verdict === 'venue'
+      ? ['venue', 'receipt', 'guest']
+      : booking.verdict === 'guest'
+        ? ['receipt', 'guest', 'venue']
+        : ['receipt', 'venue', 'guest']
+  for (const from of order) {
+    const amount = figures[from]
+    if (amount !== null) return { amount, from }
+  }
+  return null
+}
+
+/**
+ * A receipt's total in US dollars, which commissions are billed in.
+ *
+ * Pounds are converted at the rate set on the Commissions page, as it stood
+ * when the receipt arrived: that is the rate the guest paid at. With no rate
+ * set, a receipt in pounds gives no figure and the venue's is used instead.
+ */
+export function receiptInDollars(
+  amount: number | null | undefined,
+  currency: string | null | undefined,
+  poundsPerDollar: number | null | undefined,
 ): number | null {
-  const venue = positive(booking.amount)
-  const guest = positive(booking.guestAmount)
-  if (booking.verdict === 'guest') return guest ?? venue
-  return venue ?? guest
+  const total = positive(amount)
+  if (total === null) return null
+  if (!currency || currency === 'USD') return toCents(total)
+  if (currency === 'LBP') {
+    const rate = positive(poundsPerDollar)
+    return rate === null ? null : toCents(total / rate) || null
+  }
+  return null
 }
 
 /** True when the launch offer covers this booking. */
@@ -157,8 +205,8 @@ export function commissionFor(
   const base = billableAmount(booking)
   if (base === null) return 'no-amount'
   const rate = settings.rate as number
-  const amount = toCents((toCents(base) * rate) / 100)
-  return amount > 0 ? { base: toCents(base), rate, amount } : null
+  const amount = toCents((toCents(base.amount) * rate) / 100)
+  return amount > 0 ? { base: toCents(base.amount), baseFrom: base.from, rate, amount } : null
 }
 
 /**

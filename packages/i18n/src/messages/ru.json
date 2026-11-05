@@ -374,6 +374,8 @@
     "statementSpent": "Потрачено",
     "statementCommission": "Комиссия",
     "statementRate": "{rate}% от потраченной суммы",
+    "statementFromReceipt": "По чеку гостя",
+    "statementFromGuest": "По словам гостя",
     "statementSubtotal": "Промежуточный итог",
     "statementVat": "НДС",
     "statementDisputeUntil": "Оспорить строку можно до {date}.",

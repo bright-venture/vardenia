@@ -18,7 +18,7 @@ export const CommissionSettings: GlobalConfig = {
   admin: {
     group: 'Bookings',
     description:
-      'Each guest who books through Vardenia and comes is billed to the venue as a percentage of what they spent. The venue enters the amount when it marks the visit, and the guest is asked roughly what they spent; where the two are more than 25% apart, the booking is flagged for the team. Statements are drawn up from Commission statements.',
+      'Each guest who books through Vardenia and comes is billed to the venue as a percentage of what they spent. The venue enters the amount when it marks the visit, and the guest is asked roughly what they spent; the guest can also send a photo of the receipt, whose total is billed first. Where the amount the venue entered is far from the receipt, or from what the guest says, the booking is flagged for the team. Statements are drawn up from Commission statements.',
   },
   access: { read: isStaff, update: isAdmin },
   fields: [
@@ -32,6 +32,23 @@ export const CommissionSettings: GlobalConfig = {
         step: 0.5,
         description:
           'Applies to every listing that takes bookings and has no rate of its own. Empty bills nobody.',
+      },
+    },
+    {
+      /**
+       * For receipts in pounds. Commissions are billed in dollars and the
+       * receipt's total comes first (core/billableAmount), so a receipt in
+       * pounds needs a rate to count. Applied when the receipt arrives, so a
+       * later change does not reprice a visit already paid.
+       */
+      name: 'poundsPerDollar',
+      label: 'Lebanese pounds per dollar',
+      type: 'number',
+      min: 0,
+      admin: {
+        step: 500,
+        description:
+          "Used to read a guest's receipt in LBP as dollars, at the rate on the day it arrives. Empty: receipts in LBP are not used for billing, and the venue's amount is billed instead.",
       },
     },
   ],

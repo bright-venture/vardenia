@@ -3,6 +3,8 @@
 import { useField, useFormFields } from '@payloadcms/ui'
 import {
   attendanceMismatch,
+  billableAmount,
+  type BaseSource,
   type AttendanceMismatch,
   type AttendanceVerdict,
   type BookingStatus,
@@ -38,12 +40,21 @@ const VENUE_SAYS: Record<BookingStatus, string> = {
 export const DISPUTE_TEXT: Record<AttendanceMismatch, string> = {
   'guest-says-came': 'The guest says they came, but the venue says they did not.',
   'guest-says-absent': 'The guest says they did not come, but the venue says they did.',
-  'amount-differs': 'Both say the guest came, but they disagree on what was spent.',
+  'amount-differs':
+    'Both say the guest came, but the venue entered an amount far from the receipt, or from what the guest says.',
 }
 
 const VERDICT_TEXT: Record<AttendanceVerdict, string> = {
-  guest: 'The guest is right. The visit is billed on what the guest gave, and they get the stamp.',
-  venue: 'The venue is right. Billing and the stamp follow what the venue entered.',
+  guest:
+    'The guest is right. The visit is billed on the receipt, else on what the guest gave, and they get the stamp.',
+  venue:
+    'The venue is right. The visit is billed on what the venue entered, even over a receipt, and the stamp follows the venue.',
+}
+
+const BILLED_FROM: Record<BaseSource, string> = {
+  receipt: "the receipt's total",
+  venue: "the venue's entry",
+  guest: "the guest's estimate",
 }
 
 const dollars = (value: number | null) =>
@@ -68,6 +79,7 @@ export function BookingDispute() {
     guestAnswer: (fields.guestAnswer?.value ?? null) as GuestAnswer | null,
     amount: numberOrNull(fields.amount?.value),
     guestAmount: numberOrNull(fields.guestAmount?.value),
+    receiptAmount: numberOrNull(fields.receiptAmount?.value),
     receipt: idOf(fields.receipt?.value),
   }))
   const verdict = useField<AttendanceVerdict | null>({ path: 'attendanceVerdict' })
@@ -84,6 +96,7 @@ export function BookingDispute() {
     verdict: null,
     amount: f.amount,
     guestAmount: f.guestAmount,
+    receiptAmount: f.receiptAmount,
   })
   const saved = (verdict.initialValue ?? null) as AttendanceVerdict | null
   const chosen = (verdict.value ?? null) as AttendanceVerdict | null
@@ -92,6 +105,13 @@ export function BookingDispute() {
   if (!mismatch && !saved && !chosen && f.receipt === null) return null
 
   const waiting = mismatch !== null && chosen === null
+  // What a statement would bill once this is saved, decision included.
+  const billed = billableAmount({
+    amount: f.amount,
+    guestAmount: f.guestAmount,
+    receiptAmount: f.receiptAmount,
+    verdict: chosen,
+  })
 
   return (
     <section className={waiting ? 'vd-review vd-review--pending' : 'vd-review'}>
@@ -131,6 +151,24 @@ export function BookingDispute() {
           )}
         </div>
       </div>
+
+      <p className="vd-dispute__billed">
+        {billed ? (
+          <>
+            Billed on <strong>{dollars(billed.amount)}</strong>, {BILLED_FROM[billed.from]}
+            {changed ? ' once you save' : ''}.
+          </>
+        ) : (
+          'Nothing to bill on yet: nobody has given an amount.'
+        )}
+        {f.receipt !== null && f.receiptAmount === null ? (
+          <span className="vd-muted">
+            {' '}
+            The receipt gives no dollar total (none typed, or in LBP with no rate on the Commissions
+            page), so it is not used.
+          </span>
+        ) : null}
+      </p>
 
       {mismatch || saved || chosen ? (
         <div className="vd-review__actions">

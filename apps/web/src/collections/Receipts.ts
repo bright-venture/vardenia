@@ -14,14 +14,18 @@ import {
   fixedOnceCreated,
 } from '../access/index'
 import { unguessableFilename } from '../hooks/unguessableFilename'
+import {
+  refreshBookingAfterReceiptDelete,
+  refreshBookingFromReceipt,
+} from '../hooks/stampReceiptAmount'
 
 /**
  * A photo (or PDF) of what a guest paid, attached to one booking.
  *
  * What the commission is taken of (core/booking-fees) is the amount spent, and
  * a receipt is the best evidence of it there is. This collection is only the
- * storage: the guest-facing upload, the account page and the billing rule that
- * reads it come after.
+ * storage; the guest uploads through lib/receipts, and billing takes its total
+ * first, through the copy kept on the booking (hooks/stampReceiptAmount).
  *
  * # Private, unlike every other upload
  *
@@ -110,6 +114,9 @@ export const Receipts: CollectionConfig = {
   hooks: {
     beforeOperation: [requireReceiptStorage, unguessableFilename],
     beforeChange: [copyBookingCustomer],
+    // The booking keeps a copy of the total, which billing reads first.
+    afterChange: [refreshBookingFromReceipt],
+    afterDelete: [refreshBookingAfterReceiptDelete],
   },
   upload: {
     // Outside `public/`, so on a machine with no bucket the files are still

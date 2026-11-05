@@ -374,6 +374,8 @@
     "statementSpent": "খরচ",
     "statementCommission": "কমিশন",
     "statementRate": "খরচের {rate}%",
+    "statementFromReceipt": "অতিথির রসিদ অনুযায়ী",
+    "statementFromGuest": "অতিথির অনুমান অনুযায়ী",
     "statementSubtotal": "উপমোট",
     "statementVat": "ভ্যাট",
     "statementDisputeUntil": "{date} পর্যন্ত আপনি কোনো লাইনে আপত্তি জানাতে পারবেন।",

@@ -374,6 +374,8 @@
     "statementSpent": "消费金额",
     "statementCommission": "佣金",
     "statementRate": "消费金额的 {rate}%",
+    "statementFromReceipt": "依据客人的收据",
+    "statementFromGuest": "依据客人的估计",
     "statementSubtotal": "小计",
     "statementVat": "增值税",
     "statementDisputeUntil": "您可以在 {date} 之前对某一行提出异议。",

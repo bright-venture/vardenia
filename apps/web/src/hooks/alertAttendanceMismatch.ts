@@ -13,7 +13,8 @@ import { alertTeam } from '../lib/attendance'
  * The guest's answer raises its own alert when it arrives (lib/attendance).
  * This is the other order: the guest said "I came", and the venue marks the
  * booking a no-show or cancels it afterwards, or enters an amount far from the
- * guest's. Only on a change of status or amount, and only when the booking was
+ * guest's, or a receipt arrives or is corrected far from the venue's amount.
+ * Only on a change of status or of either amount, and only when the booking was
  * not already in dispute, so one dispute is one email.
  */
 
@@ -24,6 +25,7 @@ interface Facts {
   attendanceVerdict?: AttendanceVerdict | null
   amount?: number | null
   guestAmount?: number | null
+  receiptAmount?: number | null
 }
 
 const mismatchOf = (doc: Facts | undefined) =>
@@ -35,6 +37,7 @@ const mismatchOf = (doc: Facts | undefined) =>
         verdict: doc.attendanceVerdict ?? null,
         amount: doc.amount ?? null,
         guestAmount: doc.guestAmount ?? null,
+        receiptAmount: doc.receiptAmount ?? null,
       })
     : null
 
@@ -49,7 +52,11 @@ export const alertAttendanceMismatch: CollectionAfterChangeHook = async ({
   const before = previousDoc as Facts | undefined
   const after = doc as Facts
   if (!before) return doc
-  if (before.status === after.status && (before.amount ?? null) === (after.amount ?? null))
+  if (
+    before.status === after.status &&
+    (before.amount ?? null) === (after.amount ?? null) &&
+    (before.receiptAmount ?? null) === (after.receiptAmount ?? null)
+  )
     return doc
 
   const now = mismatchOf(after)

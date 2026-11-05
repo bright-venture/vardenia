@@ -374,6 +374,8 @@
     "statementSpent": "Gastado",
     "statementCommission": "Comisión",
     "statementRate": "{rate} % de lo gastado",
+    "statementFromReceipt": "Según el recibo del cliente",
+    "statementFromGuest": "Según el cliente",
     "statementSubtotal": "Subtotal",
     "statementVat": "IVA",
     "statementDisputeUntil": "Puedes reclamar una línea hasta el {date}.",

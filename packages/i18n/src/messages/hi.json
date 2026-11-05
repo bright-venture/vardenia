@@ -374,6 +374,8 @@
     "statementSpent": "खर्च",
     "statementCommission": "कमीशन",
     "statementRate": "खर्च का {rate}%",
+    "statementFromReceipt": "मेहमान की रसीद के अनुसार",
+    "statementFromGuest": "मेहमान के अनुमान के अनुसार",
     "statementSubtotal": "उप-योग",
     "statementVat": "वैट",
     "statementDisputeUntil": "आप {date} तक किसी पंक्ति पर आपत्ति कर सकते हैं।",

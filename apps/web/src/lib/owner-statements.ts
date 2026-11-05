@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import {
   canDispute,
   statementState,
+  type BaseSource,
   type DisputeOutcome,
   type StatementState,
   type StatementStatus,
@@ -25,6 +26,8 @@ export interface OwnerStatementLine {
   reference: string
   /** What the guest spent, which the rate is taken of. */
   base: number
+  /** Whose figure that is; empty on lines from before receipts. */
+  baseFrom: BaseSource | ''
   /** Percent. */
   rate: number
   amount: number
@@ -67,6 +70,7 @@ interface Doc {
         day?: string | null
         reference?: string | null
         base?: number | null
+        baseFrom?: BaseSource | null
         rate?: number | null
         amount?: number | null
         disputeOutcome?: DisputeOutcome | null
@@ -93,6 +97,7 @@ function shape(doc: Doc, now: Date): OwnerStatement {
       day: line.day ?? '',
       reference: line.reference ?? '',
       base: Number(line.base ?? 0),
+      baseFrom: line.baseFrom ?? '',
       rate: Number(line.rate ?? 0),
       amount: Number(line.amount ?? 0),
       disputeOutcome: line.disputeOutcome ?? 'none',

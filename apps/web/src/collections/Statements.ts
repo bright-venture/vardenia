@@ -8,6 +8,7 @@ import type {
 import { APIError } from 'payload'
 import { sql } from '@payloadcms/db-postgres'
 import {
+  BASE_SOURCES,
   DISPUTE_OUTCOMES,
   STATEMENT_STATUSES,
   canDispute,
@@ -146,6 +147,13 @@ const OUTCOME_LABELS: Record<(typeof DISPUTE_OUTCOMES)[number], string> = {
   open: 'Questioned: waiting for a decision',
   upheld: 'Removed from the bill',
   rejected: 'Kept on the bill',
+}
+
+/** Whose figure a line's "Spent" is. */
+export const BASE_FROM_LABELS: Record<(typeof BASE_SOURCES)[number], string> = {
+  receipt: "The guest's receipt",
+  venue: "The venue's entry",
+  guest: "The guest's estimate",
 }
 
 /** The payment fields, once a payment is recorded (or being recorded). */
@@ -607,6 +615,19 @@ export const Statements: CollectionConfig = {
               admin: { width: '34%' },
             },
           ],
+        },
+        {
+          /**
+           * Whose figure "Spent" is: the guest's receipt, the venue's own entry
+           * or the guest's estimate (core/billableAmount). Shown to the venue
+           * beside the amount, so a figure that is not its own is explained
+           * where it reads it. Empty on lines from before receipts.
+           */
+          name: 'baseFrom',
+          label: 'Spent, according to',
+          type: 'select',
+          options: BASE_SOURCES.map((value) => ({ label: BASE_FROM_LABELS[value], value })),
+          admin: { readOnly: true },
         },
         {
           type: 'row',

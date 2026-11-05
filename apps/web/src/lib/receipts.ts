@@ -1,6 +1,12 @@
 import type { Payload } from 'payload'
-import { canSendReceipt, type BookingStatus, type GuestAnswer } from '@vardenia/core'
-import { recordGuestAnswer } from './attendance'
+import {
+  attendanceMismatch,
+  canSendReceipt,
+  type AttendanceVerdict,
+  type BookingStatus,
+  type GuestAnswer,
+} from '@vardenia/core'
+import { alertTeam, recordGuestAnswer } from './attendance'
 import { readSpent } from './spent'
 import { RECEIPT_CURRENCIES } from '../collections/Receipts'
 
@@ -66,6 +72,13 @@ interface BookingRow {
   end: string
   guestAnswer?: GuestAnswer | null
   receipt?: unknown
+}
+
+interface LinkedBooking extends BookingRow {
+  attendanceVerdict?: AttendanceVerdict | null
+  amount?: number | null
+  guestAmount?: number | null
+  receiptAmount?: number | null
 }
 
 /**
@@ -138,5 +151,23 @@ export async function saveReceipt(
     await payload.delete({ collection: 'receipts', id: receipt.id, overrideAccess: true })
     return 'already'
   }
+
+  // The link stamped the receipt's total on the booking (hooks/stampReceiptAmount)
+  // and the dispute flag read it, but this write does not email the team (its
+  // context is the guest's own). So the email is sent from here, once, when it
+  // is the receipt that opened a dispute.
+  const booking = linked.docs[0] as unknown as LinkedBooking
+  const mismatch = (receiptAmount: number | null) =>
+    attendanceMismatch({
+      status: booking.status,
+      end: new Date(booking.end),
+      guestAnswer: booking.guestAnswer ?? null,
+      verdict: booking.attendanceVerdict ?? null,
+      amount: booking.amount ?? null,
+      guestAmount: booking.guestAmount ?? null,
+      receiptAmount,
+    })
+  const opened = mismatch(booking.receiptAmount ?? null)
+  if (opened && !mismatch(null)) await alertTeam(payload, bookingId, opened)
   return 'saved'
 }

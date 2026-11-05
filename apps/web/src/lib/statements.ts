@@ -70,6 +70,7 @@ interface BookingRow {
   status: BookingStatus
   amount?: number | null
   guestAmount?: number | null
+  receiptAmount?: number | null
   guestAnswer?: GuestAnswer | null
   attendanceVerdict?: AttendanceVerdict | null
 }
@@ -244,6 +245,7 @@ export async function drawUpStatements(
         status: row.status,
         amount: row.amount ?? null,
         guestAmount: row.guestAmount ?? null,
+        receiptAmount: row.receiptAmount ?? null,
         day: beirutDate(new Date(row.start)),
         guestAnswer: row.guestAnswer ?? null,
         verdict: row.attendanceVerdict ?? null,
@@ -275,6 +277,7 @@ export async function drawUpStatements(
         reference: row.reference ?? '',
         day: billable.day,
         base: line.base,
+        baseFrom: line.baseFrom,
         rate: line.rate,
         amount: line.amount,
         disputeOutcome: 'none' as const,

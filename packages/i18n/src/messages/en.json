@@ -374,6 +374,8 @@
     "statementSpent": "Spent",
     "statementCommission": "Commission",
     "statementRate": "{rate}% of what was spent",
+    "statementFromReceipt": "From the guest's receipt",
+    "statementFromGuest": "As the guest gave it",
     "statementSubtotal": "Subtotal",
     "statementVat": "VAT",
     "statementDisputeUntil": "You can question a line until {date}.",

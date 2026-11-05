@@ -23,6 +23,7 @@ import { alertAttendanceMismatch } from '../hooks/alertAttendanceMismatch'
 import { markAttendanceDispute } from '../hooks/markAttendanceDispute'
 import { stampAnsweredAt } from '../hooks/stampAnsweredAt'
 import { stampAmountEnteredAt } from '../hooks/stampAmountEnteredAt'
+import { stampReceiptAmount } from '../hooks/stampReceiptAmount'
 
 /**
  * What the guest spent: the venue gives it once, staff may correct it.
@@ -140,7 +141,13 @@ export const Bookings: CollectionConfig = {
   hooks: {
     beforeValidate: [guardBookingWrite],
     // When the venue first answered; see hooks/stampAnsweredAt.
-    beforeChange: [stampAnsweredAt, stampAmountEnteredAt, markAttendanceDispute],
+    // The receipt's total before the dispute flag, which reads it.
+    beforeChange: [
+      stampAnsweredAt,
+      stampAmountEnteredAt,
+      stampReceiptAmount,
+      markAttendanceDispute,
+    ],
     /**
      * Tells the customer when the business accepts or declines. On the
      * collection rather than in the partner dashboard, because a booking is
@@ -575,6 +582,25 @@ export const Bookings: CollectionConfig = {
           },
           admin: {
             description: 'The receipt the guest sent, if any. Private to the guest and the team.',
+          },
+        },
+        {
+          /**
+           * The receipt's total in dollars, which billing takes first
+           * (core/billableAmount). Kept here, not read from the receipt each
+           * time, so the dispute flag and the statements read one field; set by
+           * hooks/stampReceiptAmount whenever the receipt or its total changes.
+           */
+          name: 'receiptAmount',
+          label: 'Amount, on the receipt (USD)',
+          type: 'number',
+          min: 0,
+          access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            step: 0.01,
+            description:
+              'From the receipt the guest sent, converted from LBP at the rate on the Commissions page. Billed first. Correct it on the receipt itself.',
           },
         },
         {

@@ -29,6 +29,7 @@ interface Line {
   reference?: string | null
   day?: string | null
   base?: number | null
+  baseFrom?: 'receipt' | 'venue' | 'guest' | null
   rate?: number | null
   amount?: number | null
   disputeOutcome?: 'none' | 'open' | 'upheld' | 'rejected' | null
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           (line) => `<tr${lineCounts(line) ? '' : ' class="off"'}>
         <td>${escapeHtml(line.day ?? '')}</td>
         <td>${escapeHtml(line.reference ?? '')}${line.disputeOutcome === 'open' ? ' (questioned)' : ''}${line.disputeOutcome === 'upheld' ? ' (removed)' : ''}</td>
-        <td class="n">${dollars(Number(line.base ?? 0))}</td>
+        <td class="n">${dollars(Number(line.base ?? 0))}${line.baseFrom === 'receipt' ? '<br><span class="muted">guest receipt</span>' : ''}${line.baseFrom === 'guest' ? '<br><span class="muted">guest estimate</span>' : ''}</td>
         <td class="n">${Number(line.rate ?? 0)}%</td>
         <td class="n">${dollars(Number(line.amount ?? 0))}</td>
       </tr>`,

@@ -374,6 +374,8 @@
     "statementSpent": "خرچ",
     "statementCommission": "کمیشن",
     "statementRate": "خرچ کا {rate}%",
+    "statementFromReceipt": "مہمان کی رسید کے مطابق",
+    "statementFromGuest": "مہمان کے اندازے کے مطابق",
     "statementSubtotal": "ذیلی کل",
     "statementVat": "ویٹ",
     "statementDisputeUntil": "آپ {date} تک کسی لائن پر اعتراض کر سکتے ہیں۔",

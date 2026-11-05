@@ -49,6 +49,8 @@ export interface AttendanceFacts {
   amount?: number | null
   /** What the guest says they spent, roughly. */
   guestAmount?: number | null
+  /** The total on the guest's receipt, in US dollars, when they sent one. */
+  receiptAmount?: number | null
 }
 
 /**
@@ -58,14 +60,37 @@ export interface AttendanceFacts {
  */
 export const AMOUNT_TOLERANCE = 0.25
 
-/** True when both amounts are known and further apart than AMOUNT_TOLERANCE. */
+/**
+ * The same, against a receipt. Much tighter: a receipt is not a memory, so a
+ * gap beyond a tip, a service charge or a different exchange rate means one of
+ * the two figures is wrong.
+ */
+export const RECEIPT_TOLERANCE = 0.1
+
+/** True when both amounts are known and further apart than `tolerance` of the larger. */
 export function amountsDisagree(
   amount: number | null | undefined,
   guestAmount: number | null | undefined,
+  tolerance: number = AMOUNT_TOLERANCE,
 ): boolean {
   if (typeof amount !== 'number' || typeof guestAmount !== 'number') return false
   if (!(amount > 0) || !(guestAmount > 0)) return false
-  return Math.abs(amount - guestAmount) > AMOUNT_TOLERANCE * Math.max(amount, guestAmount)
+  return Math.abs(amount - guestAmount) > tolerance * Math.max(amount, guestAmount)
+}
+
+/**
+ * Whether the venue's figure is out of line with the guest's side of it: the
+ * receipt when there is one, which settles it over their memory, else their
+ * own estimate.
+ */
+export function venueAmountDisputed(
+  facts: Pick<AttendanceFacts, 'amount' | 'guestAmount' | 'receiptAmount'>,
+): boolean {
+  const receipt = facts.receiptAmount
+  if (typeof receipt === 'number' && receipt > 0) {
+    return amountsDisagree(facts.amount, receipt, RECEIPT_TOLERANCE)
+  }
+  return amountsDisagree(facts.amount, facts.guestAmount)
 }
 
 /**
@@ -93,7 +118,7 @@ export function attendanceMismatch(facts: AttendanceFacts): AttendanceMismatch |
   if (
     facts.guestAnswer === 'came' &&
     (facts.status === 'completed' || facts.status === 'confirmed') &&
-    amountsDisagree(facts.amount, facts.guestAmount)
+    venueAmountDisputed(facts)
   ) {
     return 'amount-differs'
   }

@@ -91,6 +91,18 @@ describe('when the guest and the venue disagree', () => {
     ).toBeNull()
   })
 
+  it("judges the venue's figure against the receipt, not the guest's memory", () => {
+    const facts = { status: 'completed' as const, end: daysAgo(1), guestAnswer: 'came' as const }
+    // The guest remembered 60, the receipt says 100: the receipt agrees with the venue.
+    expect(
+      attendanceMismatch({ ...facts, amount: 100, guestAmount: 60, receiptAmount: 100 }),
+    ).toBeNull()
+    // Within a tip of each other.
+    expect(attendanceMismatch({ ...facts, amount: 92, receiptAmount: 100 })).toBeNull()
+    // The venue entered far less than the receipt, even inside the guest's 25%.
+    expect(attendanceMismatch({ ...facts, amount: 80, receiptAmount: 100 })).toBe('amount-differs')
+  })
+
   it('leaves a rough guess alone, and needs both amounts to compare', () => {
     expect(amountsDisagree(100, 80)).toBe(false)
     expect(amountsDisagree(100, 70)).toBe(true)
