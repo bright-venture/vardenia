@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { SECTIONS } from '@vardenia/core'
-import { LOCALES } from '@vardenia/i18n'
+import { DEFAULT_LOCALE } from '@vardenia/i18n'
+import { alternatesFor } from '../lib/seo'
 import { CONTENT_PAGE_SLUGS } from '../lib/pages'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
@@ -54,24 +55,6 @@ const CHANGE_FREQUENCY = {
   index: 'daily',
 } as const
 
-function localized(path: string) {
-  return {
-    // English lives unprefixed, so the canonical URL is the bare path.
-    url: path,
-    alternates: {
-      languages: Object.fromEntries(
-        LOCALES.map((locale) => {
-          if (locale === 'en') return [locale, path]
-          // The homepage is '/', and naive concatenation gives '/ar/'. That
-          // redirects rather than resolving, and a sitemap full of redirects is
-          // a sitemap a crawler half-trusts.
-          return [locale, path === '/' ? `/${locale}` : `/${locale}${path}`]
-        }),
-      ),
-    },
-  }
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /*
    * Empty while the site asks not to be indexed. robots.txt already says so,
@@ -81,11 +64,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    */
   if (!isIndexingAllowed()) return []
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
-  const now = new Date()
 
   const [listings, articles, issues] = await Promise.all([
-    findAllListingSlugs(),
-    findAllArticleSlugs(),
+    findAllListingSlugs({ indexableOnly: true }),
+    findAllArticleSlugs({ indexableOnly: true }),
     findAllIssueSlugs(),
   ])
 
@@ -96,15 +78,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: (typeof CHANGE_FREQUENCY)[keyof typeof CHANGE_FREQUENCY],
     priority: number,
   ) => {
-    const { url, alternates } = localized(path)
+    const alternates = alternatesFor(path, DEFAULT_LOCALE)
     entries.push({
-      url: `${base}${url}`,
-      lastModified: now,
+      url: `${base}${path}`,
+      // Omit lastModified until actual content revision dates are available.
+      // Regeneration time is not evidence that every page changed.
       changeFrequency,
       priority,
       alternates: {
         languages: Object.fromEntries(
-          Object.entries(alternates.languages).map(([locale, p]) => [locale, `${base}${p}`]),
+          Object.entries(alternates.languages ?? {}).map(([locale, p]) => [locale, `${base}${p}`]),
         ),
       },
     })

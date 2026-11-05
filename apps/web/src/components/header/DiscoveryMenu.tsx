@@ -1,4 +1,5 @@
 'use client'
+import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Link } from '../../i18n/routing'
@@ -51,14 +52,14 @@ export function DiscoveryMenu({
                     <span>{item.description}</span>
                   </span>
                   <span className="vd-discovery-arrow" aria-hidden>
-                    ↗
+                    <LinkArrow />
                   </span>
                 </Link>
               </li>
             ))}
           </ul>
           <Link className="vd-discovery-all" href="/directory">
-            {directoryLabel} ↗
+            {directoryLabel} <LinkArrow />
           </Link>
         </nav>
         <figure className="vd-discovery-photo">

@@ -1,10 +1,11 @@
 import { Suspense } from 'react'
+import { ResultsSkeleton } from '../../../../components/ResultsSkeleton'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../lib/seo'
+import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, findListings } from '../../../../lib/listings'
 import { sectionName } from '../../../../lib/labels'
@@ -48,11 +49,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale })
-  return {
+  return buildMetadata({
+    seo: undefined,
     title: t('directory.title'),
     description: t('directory.metaDescription'),
-    alternates: alternatesFor('/directory', isLocale(locale) ? locale : DEFAULT_LOCALE),
-  }
+    path: '/directory',
+    locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }
 
 export default async function DirectoryPage({ params, searchParams }: Props) {
@@ -74,7 +77,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
       {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it. */}
-      <Suspense fallback={<DirectorySkeleton />}>
+      <Suspense fallback={<ResultsSkeleton />}>
         <DirectoryResults locale={locale} searchParams={searchParams} />
       </Suspense>
     </main>
@@ -241,13 +244,6 @@ async function DirectoryResults({
 }
 
 /**
- * Placeholder while the listings load.
- *
- * Sized to roughly match the real grid so the page does not jump when the cards
- * arrive. `aria-hidden` because a screen reader should hear the results, not a
- * description of the wait.
- */
-/**
  * The page numbers worth showing: the first, the last, and a few either side.
  *
  * This rendered every page. At 24 listings a page that is 42 links for a
@@ -282,22 +278,4 @@ export function pageWindow(current: number, total: number, span = 2): (number | 
   })
 
   return out
-}
-
-function DirectorySkeleton() {
-  return (
-    <div aria-hidden className="animate-pulse">
-      <div className="bg-surface-sunken mt-3 h-4 w-32" />
-      <div className="mt-8 flex flex-wrap gap-2">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="bg-surface-sunken h-11 w-28" />
-        ))}
-      </div>
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="bg-surface-sunken aspect-[4/3]" />
-        ))}
-      </div>
-    </div>
-  )
 }

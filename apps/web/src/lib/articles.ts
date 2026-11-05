@@ -32,11 +32,15 @@ export const findArticleBySlug = cache(async (slug: string, locale: Locale) => {
 })
 
 /** Slugs for static generation. Published only, because that is all this returns. */
-export async function findAllArticleSlugs() {
+export async function findAllArticleSlugs({
+  indexableOnly = false,
+}: { indexableOnly?: boolean } = {}) {
   const payload = await client()
   const result = await payload.find({
     collection: 'articles',
     limit: 1000,
+    // Static generation still includes hidden pages; only the sitemap opts in.
+    ...(indexableOnly ? { where: { 'seo.noIndex': { not_equals: true } } } : {}),
     depth: 0,
     pagination: false,
     overrideAccess: false,

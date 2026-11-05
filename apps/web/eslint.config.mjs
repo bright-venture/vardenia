@@ -27,6 +27,8 @@ const config = [
       '.next-dev/**',
       '.turbo/**',
       'coverage/**',
+      // Generated upstream PDF.js assets, copied by prepare-reader.mjs.
+      'public/pdfjs-assets/**',
       'src/payload-types.ts',
       'src/migrations/**',
       'src/app/(payload)/admin/importMap.js',

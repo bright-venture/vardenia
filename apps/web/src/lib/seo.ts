@@ -75,6 +75,10 @@ export function buildMetadata({
   const resolvedTitle = seo.title || title || undefined
   const resolvedDescription = seo.description || description || undefined
   const image = resolveImage(seo.image, 'og') ?? resolveImage(fallbackImage, 'og')
+  // Child Open Graph objects replace the layout rather than merging with it.
+  const socialImage = image
+    ? { url: image.src, width: image.width, height: image.height, alt: image.alt }
+    : { url: '/og-default.png', width: 1200, height: 630, alt: 'Vardenia' }
 
   return {
     title: resolvedTitle,
@@ -96,9 +100,19 @@ export function buildMetadata({
     openGraph: {
       title: resolvedTitle,
       description: resolvedDescription,
-      images: image ? [{ url: image.src, width: image.width, height: image.height }] : undefined,
+      images: [socialImage],
+      siteName: 'Vardenia',
+      url: localizedPath(path, locale),
       type,
       ...(publishedTime ? { publishedTime } : {}),
+    },
+
+    // Otherwise Twitter inherits the homepage title and image from the layout.
+    twitter: {
+      card: 'summary_large_image',
+      title: resolvedTitle,
+      description: resolvedDescription,
+      images: [socialImage],
     },
 
     alternates: alternatesFor(path, locale),

@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Lock, Mail } from 'lucide-react'
 import { Link, useRouter } from '../i18n/routing'
@@ -45,9 +45,12 @@ export function PartnerLoginForm() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
+  const submitting = useRef(false)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
+    submitting.current = true
     setProblem(null)
     setBusy(true)
 
@@ -78,12 +81,13 @@ export function PartnerLoginForm() {
     } catch {
       setProblem(common('error'))
     } finally {
+      submitting.current = false
       setBusy(false)
     }
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={submit} aria-busy={busy} className="flex flex-col gap-5" noValidate>
       {problem ? (
         <p className={NOTICE_ERROR} role="alert">
           {problem}
@@ -102,6 +106,7 @@ export function PartnerLoginForm() {
             id={`${ids}-email`}
             type="email"
             required
+            disabled={busy}
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -122,6 +127,7 @@ export function PartnerLoginForm() {
             id={`${ids}-password`}
             type="password"
             required
+            disabled={busy}
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

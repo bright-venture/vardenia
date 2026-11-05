@@ -1059,10 +1059,14 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
  * sitemap file holds at most 50,000 URLs, so the day this throws is the day the
  * sitemap has to become an index of several files anyway.
  */
-export async function findAllListingSlugs() {
+export async function findAllListingSlugs({
+  indexableOnly = false,
+}: { indexableOnly?: boolean } = {}) {
   const payload = await client()
   const result = await findEvery<Pick<Business, 'id' | 'slug'>>(payload, {
     collection: 'businesses',
+    // Static generation still includes hidden pages; only the sitemap opts in.
+    ...(indexableOnly ? { where: { 'seo.noIndex': { not_equals: true } } } : {}),
     depth: 0,
     overrideAccess: false,
     select: { slug: true },

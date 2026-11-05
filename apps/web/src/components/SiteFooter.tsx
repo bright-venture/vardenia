@@ -1,3 +1,4 @@
+import { LinkArrow } from './LinkArrow'
 import { MotionControl } from './editorial/MotionControl'
 import { getTranslations } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
@@ -130,7 +131,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           {j('footerB')}
         </h2>
         <Link className="vd-button vd-button-light" href="/directory">
-          {j('footerLink')} ↗
+          {j('footerLink')} <LinkArrow />
         </Link>
       </div>
       <nav className="vd-footer-links" aria-label={t('footer.discover')}>

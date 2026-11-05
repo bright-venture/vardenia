@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
+
 /**
  * What a page looks like while the server is still rendering it.
  *
@@ -19,10 +22,36 @@
  * # Why the shapes are approximate
  *
  * Close enough that the page does not jump when the real content lands, not so
- * close that it looks like content and gets read. `aria-hidden` and
- * `aria-busy` on the wrapper, because a screen reader should be told the page is
- * loading rather than have a description of grey rectangles.
+ * close that it looks like content and gets read. Only the decorative shapes
+ * are hidden from assistive technology. The busy
+ * landmark remains exposed, with a localized status outside it so aria-busy
+ * does not defer the loading announcement until after the fallback unmounts.
  */
+
+function Skeleton({
+  children,
+  className,
+  embedded = false,
+}: {
+  children: ReactNode
+  className: string
+  embedded?: boolean
+}) {
+  const t = useTranslations('common')
+  const Container = embedded ? 'section' : 'main'
+  return (
+    <>
+      <p role="status" className="sr-only">
+        {t('loading')}
+      </p>
+      <Container aria-busy="true" aria-label={t('loading')} className={className}>
+        <div aria-hidden="true" className="animate-pulse motion-reduce:animate-none">
+          {children}
+        </div>
+      </Container>
+    </>
+  )
+}
 
 function Bar({ className }: { className: string }) {
   return <div className={`bg-surface-sunken ${className}`} />
@@ -72,30 +101,30 @@ function ChipRows({ rows = 2 }: { rows?: number }) {
 /** The browse pages: a heading, filters, and a grid. */
 export function ListingsSkeleton({ filters = 2 }: { filters?: number }) {
   return (
-    <main aria-hidden aria-busy className="mx-auto max-w-6xl animate-pulse px-6 py-16">
+    <Skeleton className="mx-auto max-w-6xl px-6 py-16">
       <Header wide />
       <Bar className="mt-4 h-3 w-20" />
       <ChipRows rows={filters} />
       <CardGrid />
-    </main>
+    </Skeleton>
   )
 }
 
 /** Search: a heading, the box, and nothing else until a query runs. */
 export function SearchSkeleton() {
   return (
-    <main aria-hidden aria-busy className="mx-auto max-w-6xl animate-pulse px-6 py-16">
+    <Skeleton className="mx-auto max-w-6xl px-6 py-16">
       <Header />
       <Bar className="mt-6 h-11 w-full max-w-xl" />
       <CardGrid count={3} />
-    </main>
+    </Skeleton>
   )
 }
 
 /** The account and partner pages: a heading and a stack of booking cards. */
-export function RecordsSkeleton() {
+export function RecordsSkeleton({ embedded = false }: { embedded?: boolean } = {}) {
   return (
-    <main aria-hidden aria-busy className="mx-auto max-w-3xl animate-pulse px-6 py-16">
+    <Skeleton embedded={embedded} className={embedded ? 'py-8' : 'mx-auto max-w-3xl px-6 py-16'}>
       <Header />
       <div className="mt-12 flex flex-col gap-4">
         {Array.from({ length: 3 }, (_, i) => (
@@ -106,6 +135,6 @@ export function RecordsSkeleton() {
           </div>
         ))}
       </div>
-    </main>
+    </Skeleton>
   )
 }

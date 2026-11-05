@@ -5,10 +5,12 @@ mobile app, and QR layer over one content spine.
 
 ## Quick start
 
-Requires **Node 20.9 or newer** and **pnpm 9**. The database is hosted (Supabase) - nothing to
+Requires **Node 20.16 or newer** and **pnpm 9**. The database is hosted (Supabase) - nothing to
 install locally, and nothing else needs installing globally: `turbo`, `typescript` and the
 Payload CLI all come from `pnpm install`. A globally installed `turbo` of a different major
 version will shadow the one this repo pins, so if you have one, it is worth removing.
+
+The PDF reader requires Node 20.16 or newer; CI and production use Node 22.
 
 The pinned pnpm version is in `packageManager`, so the simplest way to get the right one is:
 

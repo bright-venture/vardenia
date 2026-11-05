@@ -1,5 +1,6 @@
+import { GOVERNORATES } from '@vardenia/core'
 import { describe, expect, it } from 'vitest'
-import { filterHref, parseFilterState, type FilterState } from './ListingFilters'
+import { filterHref, parseFilterState, inlineRegions, type FilterState } from './ListingFilters'
 
 /**
  * Every filtered view is a URL, so this builder is what makes them shareable,
@@ -198,5 +199,22 @@ describe('parseFilterState', () => {
     for (const open of ['0', 'true', 'yes', '', undefined]) {
       expect(parseFilterState({ open }, children).openNow).toBe(false)
     }
+  })
+})
+
+describe('compact region row', () => {
+  it('keeps a selected zero-count region visible beyond the five-chip cap', () => {
+    const selected = GOVERNORATES[GOVERNORATES.length - 1]!
+    const counts = Object.fromEntries(
+      GOVERNORATES.map((region) => [region.slug, region === selected ? 0 : 10]),
+    )
+    const shown = inlineRegions(counts, selected.slug)
+    expect(shown).toHaveLength(5)
+    expect(shown).toContain(selected)
+    expect(shown).toEqual(GOVERNORATES.filter((region) => shown.includes(region)))
+  })
+  it('hides empty unselected regions and preserves the no-count fallback', () => {
+    expect(inlineRegions({})).toEqual([])
+    expect(inlineRegions(undefined)).toEqual(GOVERNORATES)
   })
 })

@@ -81,6 +81,8 @@ export interface SearchQuery {
   locale: Locale
   q: string
   limit?: number
+  listingsPage?: number
+  articlesPage?: number
 }
 
 /**
@@ -113,13 +115,22 @@ function rankByScore<T>(
   query: string,
   fields: (doc: T) => (string | null | undefined)[],
   limit: number,
-): { docs: T[]; totalDocs: number } {
+  requestedPage: number,
+) {
   const scored = docs
     .map((doc) => ({ doc, score: bestFieldScore(query, fields(doc)) }))
     .filter((entry) => entry.score >= SIMILARITY_THRESHOLD)
     .sort((a, b) => b.score - a.score)
 
-  return { docs: scored.slice(0, limit).map((entry) => entry.doc), totalDocs: scored.length }
+  const totalPages = Math.ceil(scored.length / limit)
+  const page = Math.min(normaliseSearchPage(requestedPage), Math.max(1, totalPages))
+  const offset = (page - 1) * limit
+  return {
+    docs: scored.slice(offset, offset + limit).map((entry) => entry.doc),
+    totalDocs: scored.length,
+    page,
+    totalPages,
+  }
 }
 
 /** Listings ranked by how well the query matches the name or tagline. */
@@ -183,11 +194,11 @@ const listingCandidates = (locale: Locale) =>
     { revalidate: 60 * 60, tags: ['businesses'] },
   )()
 
-async function searchListings(locale: Locale, q: string, limit: number) {
+async function searchListings(locale: Locale, q: string, limit: number, page: number) {
   const payload = await client()
   const candidates = await listingCandidates(locale)
 
-  const ranked = rankByScore(candidates, q, (doc) => [doc.name, doc.tagline], limit)
+  const ranked = rankByScore(candidates, q, (doc) => [doc.name, doc.tagline], limit, page)
 
   const docs = await findByIdsInOrder<Business>(
     payload,
@@ -195,7 +206,7 @@ async function searchListings(locale: Locale, q: string, limit: number) {
     { collection: 'businesses', locale: dataLocale(locale), depth: 1, overrideAccess: false },
   )
 
-  return { docs, totalDocs: ranked.totalDocs }
+  return { ...ranked, docs }
 }
 
 /**
@@ -212,7 +223,7 @@ async function searchListings(locale: Locale, q: string, limit: number) {
  * up to an hour. It is also the cheap half: production had no articles when the
  * listings side was cached. Add the hook first if this ever needs caching.
  */
-async function searchArticles(locale: Locale, q: string, limit: number) {
+async function searchArticles(locale: Locale, q: string, limit: number, page: number) {
   const payload = await client()
   const candidates = await findEvery<Pick<Article, 'id' | 'title' | 'excerpt'>>(payload, {
     collection: 'articles',
@@ -225,7 +236,7 @@ async function searchArticles(locale: Locale, q: string, limit: number) {
 
   if (!candidates.complete) await reportIncomplete('articles')
 
-  const ranked = rankByScore(candidates.docs, q, (doc) => [doc.title, doc.excerpt], limit)
+  const ranked = rankByScore(candidates.docs, q, (doc) => [doc.title, doc.excerpt], limit, page)
 
   const docs = await findByIdsInOrder<Article>(
     payload,
@@ -233,7 +244,7 @@ async function searchArticles(locale: Locale, q: string, limit: number) {
     { collection: 'articles', locale: dataLocale(locale), depth: 1, overrideAccess: false },
   )
 
-  return { docs, totalDocs: ranked.totalDocs }
+  return { ...ranked, docs }
 }
 
 export interface SearchResults {
@@ -244,14 +255,28 @@ export interface SearchResults {
   total: number
 }
 
-export async function search({ locale, q, limit = 12 }: SearchQuery): Promise<SearchResults> {
+/** Reject malformed page numbers rather than treating "2junk" as page two. */
+export function normaliseSearchPage(raw: unknown): number {
+  if (typeof raw !== 'number' && (typeof raw !== 'string' || !/^\d+$/.test(raw))) return 1
+  const page = Number(raw)
+  return Number.isSafeInteger(page) && page > 0 ? page : 1
+}
+
+export async function search({
+  locale,
+  q,
+  limit = 12,
+  listingsPage = 1,
+  articlesPage = 1,
+}: SearchQuery): Promise<SearchResults> {
   const query = normaliseQuery(q)
+  const pageSize = Number.isSafeInteger(limit) && limit > 0 ? limit : 12
 
   if (!query) {
     return {
       query: null,
-      listings: { docs: [], totalDocs: 0 },
-      articles: { docs: [], totalDocs: 0 },
+      listings: { docs: [], totalDocs: 0, page: 1, totalPages: 0 },
+      articles: { docs: [], totalDocs: 0, page: 1, totalPages: 0 },
       total: 0,
     }
   }
@@ -259,8 +284,8 @@ export async function search({ locale, q, limit = 12 }: SearchQuery): Promise<Se
   // Both at once: they are independent queries and the page needs both before
   // it can render anything.
   const [listings, articles] = await Promise.all([
-    searchListings(locale, query, limit),
-    searchArticles(locale, query, limit),
+    searchListings(locale, query, pageSize, listingsPage),
+    searchArticles(locale, query, pageSize, articlesPage),
   ])
 
   return {

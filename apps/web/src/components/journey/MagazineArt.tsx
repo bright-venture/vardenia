@@ -1,3 +1,4 @@
+import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { Link } from '../../i18n/routing'
 export function MagazineArt({
@@ -28,7 +29,7 @@ export function MagazineArt({
       </Link>
       <p dir="auto">{title}</p>
       <Link href={href} className="vd-text-link">
-        {openLabel} ↗
+        {openLabel} <LinkArrow />
       </Link>
     </div>
   )

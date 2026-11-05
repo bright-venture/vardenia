@@ -1,13 +1,12 @@
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, formatDate, isLocale, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../../lib/seo'
+import { buildMetadata } from '../../../../../lib/seo'
 import { Link } from '../../../../../i18n/routing'
 import { findIssues } from '../../../../../lib/issues'
-import { resolveImage } from '../../../../../lib/media'
+import { MagazineCover } from '../../../../../components/magazine/MagazineCover'
 
 /**
  * The archive. Every printed edition, newest first.
@@ -26,11 +25,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale })
-  return {
+  return buildMetadata({
+    seo: undefined,
     title: t('magazine.issues'),
     description: t('magazine.printArchive'),
-    alternates: alternatesFor('/magazine/issues', isLocale(locale) ? locale : DEFAULT_LOCALE),
-  }
+    path: '/magazine/issues',
+    locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }
 
 export default async function IssuesPage({ params }: Props) {
@@ -59,21 +60,13 @@ export default async function IssuesPage({ params }: Props) {
         ) : (
           <div className="vd-issue-grid mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {result.docs.map((issue) => {
-              const cover = resolveImage(issue.cover as never, 'portrait')
               return (
                 <article className="vd-issue-card" key={issue.id} data-vd-reveal>
                   <Link href={`/magazine/issues/${issue.slug}`} className="group block">
-                    <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
-                      {cover ? (
-                        <Image
-                          src={cover.src}
-                          alt={cover.alt}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : null}
-                    </div>
+                    <MagazineCover
+                      media={issue.cover as never}
+                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                    />
                     <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">
                       {t('magazine.issueNumber', { number: issue.issueNumber })}
                     </p>

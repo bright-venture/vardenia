@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
@@ -88,8 +88,8 @@ function Toggle({
       onClick={onClick}
       className={
         active
-          ? 'bg-cedar-900 text-surface-base inline-flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm transition-transform active:scale-[0.97]'
-          : 'border-ink-100 text-ink-700 hover:border-ink-300 inline-flex items-center gap-2 whitespace-nowrap border px-4 py-2 text-sm transition-[border-color,transform] active:scale-[0.97]'
+          ? 'bg-cedar-900 text-surface-base inline-flex max-w-full items-center gap-2 whitespace-normal px-4 py-2 text-start text-sm transition-transform active:scale-[0.97]'
+          : 'border-ink-100 text-ink-700 hover:border-ink-300 inline-flex max-w-full items-center gap-2 whitespace-normal border px-4 py-2 text-start text-sm transition-[border-color,transform] active:scale-[0.97]'
       }
     >
       {children}
@@ -121,7 +121,14 @@ export function FilterSheet({
   const t = useTranslations('filters')
   const router = useRouter()
   const ref = useRef<HTMLDialogElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const dialogId = useId()
   const [open, setOpen] = useState(false)
+  const appliedKey = `${locale}:${filterHref(base, state, {})}`
+  const [openedFor, setOpenedFor] = useState<string | null>(null)
+  // A history navigation supersedes the pending edits rather than letting an
+  // older dialog overwrite the newer URL. Reopening always starts from state.
+  const visibleOpen = open && openedFor === appliedKey
 
   /**
    * Pending state, seeded from the URL every time the sheet opens.
@@ -139,6 +146,7 @@ export function FilterSheet({
 
   const openSheet = () => {
     setDraft(state)
+    setOpenedFor(appliedKey)
     setOpen(true)
   }
 
@@ -146,26 +154,27 @@ export function FilterSheet({
     const dialog = ref.current
     if (!dialog) return
 
-    if (open) {
-      if (!dialog.open) dialog.showModal()
-      // The page behind must not scroll while a sheet covers it, or a phone
-      // scrolls the list instead of the sheet's own overflowing content.
-      document.body.style.overflow = 'hidden'
-    } else {
+    if (!visibleOpen) {
       if (dialog.open) dialog.close()
-      document.body.style.overflow = ''
+      return
     }
 
+    const previousOverflow = document.body.style.overflow
+    if (!dialog.open) dialog.showModal()
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = previousOverflow
     }
-  }, [open])
+  }, [visibleOpen])
 
-  /** Escape and the backdrop close the dialog natively; keep React in step. */
+  /** Escape and close controls dismiss the native dialog; keep React in step. */
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
-    const onClose = () => setOpen(false)
+    const onClose = () => {
+      setOpen(false)
+      trigger.current?.focus({ preventScroll: true })
+    }
     dialog.addEventListener('close', onClose)
     return () => dialog.removeEventListener('close', onClose)
   }, [])
@@ -207,23 +216,35 @@ export function FilterSheet({
 
   const apply = () => {
     setOpen(false)
+    if (openedFor !== appliedKey) return
     router.push(filterHref(base, draft, {}))
   }
 
   /**
    * Clears what this sheet holds, and only that.
    *
-   * The subcategory survives. It is no longer one of the sheet's facets, and a
-   * button that cleared something it never showed would drop the reader back
-   * to the tile row without having said so. The bar's own "clear filters" link
-   * is the full reset, and that one is labelled as such.
+   * Subcategory, open-now, bookable and trip selections survive: none belongs
+   * to this sheet. Clearing an unseen setting would change the reader's plans
+   * or chosen kind of place without saying so. The bar's "clear filters" link
+   * is the full filter reset (and still keeps the trip).
    */
-  const clear = () => setDraft({ subcategory: draft.subcategory, amenities: [] })
+  const clear = () =>
+    setDraft((current) => ({
+      ...current,
+      governorate: undefined,
+      district: undefined,
+      priceRange: undefined,
+      amenities: [],
+    }))
 
   return (
     <>
       <button
         type="button"
+        ref={trigger}
+        aria-haspopup="dialog"
+        aria-expanded={visibleOpen}
+        aria-controls={dialogId}
         onClick={openSheet}
         className="bg-cedar-900 text-surface-base hover:bg-cedar-700 inline-flex h-11 shrink-0 items-center gap-2 px-5 text-sm font-medium transition-[background-color,transform] active:scale-[0.97]"
       >
@@ -255,6 +276,7 @@ export function FilterSheet({
       */}
       <dialog
         ref={ref}
+        id={dialogId}
         aria-label={t('filters')}
         /*
           The margins do the positioning, and they have to be classes.
@@ -271,7 +293,7 @@ export function FilterSheet({
         */
         className="vd-filter-dialog bg-surface-base text-ink-900 backdrop:bg-ink-950/50 mx-0 mb-0 mt-auto max-h-[88vh] w-full max-w-none p-0 shadow-2xl sm:mx-auto sm:mb-auto sm:mt-auto sm:max-w-xl"
       >
-        <div className="flex max-h-[88vh] flex-col sm:max-h-[80vh]">
+        <div className="flex max-h-[88vh] min-w-0 flex-col sm:max-h-[80vh]">
           {/* The grab handle is a phone affordance and noise on a laptop. */}
           <span
             aria-hidden
@@ -284,7 +306,7 @@ export function FilterSheet({
               type="button"
               onClick={() => setOpen(false)}
               aria-label={t('close')}
-              className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 grid size-9 place-items-center transition-colors"
+              className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 grid size-11 shrink-0 place-items-center transition-colors"
             >
               <svg
                 aria-hidden
@@ -300,7 +322,7 @@ export function FilterSheet({
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain px-6">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6">
             {/*
               Region, first and complete.
 

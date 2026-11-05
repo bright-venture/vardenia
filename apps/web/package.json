@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/dev-preflight.mjs && next dev",
-    "build": "next build",
+    "dev": "node scripts/dev-preflight.mjs && node scripts/prepare-reader.mjs && next dev",
+    "build": "node scripts/prepare-reader.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -51,6 +51,7 @@
     "next": "~16.4.2",
     "next-intl": "^4.14.9",
     "payload": "^3.90.2",
+    "pdfjs-dist": "5.4.624",
     "pg": "8.23.1",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

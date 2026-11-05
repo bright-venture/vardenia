@@ -26,7 +26,7 @@ export function MenuLink({
   return (
     <Link
       href={href}
-      className="hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-start gap-3 p-2.5 transition-colors focus-visible:outline-none"
+      className="vd-menu-link hover:bg-surface-sunken focus-visible:bg-surface-sunken flex items-start gap-3 p-2.5 transition-colors focus-visible:outline-none"
     >
       <span
         aria-hidden

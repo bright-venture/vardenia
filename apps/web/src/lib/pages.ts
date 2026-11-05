@@ -349,43 +349,43 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
         body: pick(locale, {
           en: [
             'Quote the reference from your confirmation email. It looks like **5N9DA470** and it is the fastest way for us to find the reservation.',
-            'A booking is held by the venue rather than by us, so if the date is close it is worth calling them directly. Their number is on their listing page.',
+            'A booking is held by the venue rather than by us.',
           ],
           ar: [
             'اذكر الرقم المرجعي الموجود في رسالة التأكيد. شكله مثل **5N9DA470**، وهو أسرع طريقة نجد بها الحجز.',
-            'الحجز يحتفظ به المكان لا نحن، فإذا كان الموعد قريباً فالأفضل الاتصال بهم مباشرة. رقمهم موجود على صفحتهم.',
+            'الحجز يحتفظ به المكان لا نحن.',
           ],
           fr: [
             "Indiquez la référence figurant dans votre e-mail de confirmation. Elle ressemble à **5N9DA470**, et c'est le moyen le plus rapide pour nous de retrouver la réservation.",
-            "Une réservation est tenue par l'établissement et non par nous : si la date approche, mieux vaut l'appeler directement. Son numéro figure sur sa fiche.",
+            "Une réservation est tenue par l'établissement et non par nous.",
           ],
           es: [
             'Indica la referencia de tu correo de confirmación. Tiene este aspecto: **5N9DA470**, y es la forma más rápida de que encontremos la reserva.',
-            'La reserva la gestiona el local, no nosotros, así que si la fecha está cerca conviene llamarlos directamente. Su número está en su ficha.',
+            'La reserva la gestiona el local, no nosotros.',
           ],
           pt: [
             'Informe a referência do seu e-mail de confirmação. Ela se parece com **5N9DA470** e é o jeito mais rápido de encontrarmos a reserva.',
-            'A reserva fica com o estabelecimento, não conosco; então, se a data estiver próxima, vale a pena ligar direto para eles. O número está na ficha deles.',
+            'A reserva fica com o estabelecimento, não conosco.',
           ],
           ru: [
             'Укажите номер из письма с подтверждением. Он выглядит так: **5N9DA470** — по нему мы быстрее всего найдём бронирование.',
-            'Бронирование держит заведение, а не мы, поэтому, если дата близко, лучше позвонить им напрямую. Их номер есть на странице заведения.',
+            'Бронирование держит заведение, а не мы.',
           ],
           zh: [
             '请提供确认邮件中的预订编号，格式类似 **5N9DA470**，这是我们找到预订最快的方式。',
-            '预订由商户保留，而不是由我们保留，所以如果日期临近，最好直接致电商户。他们的电话在其商户页面上。',
+            '预订由商户保留，而不是由我们保留。',
           ],
           hi: [
             'अपने पुष्टि ईमेल में दिया गया रेफ़रेंस नंबर बताएँ। यह **5N9DA470** जैसा दिखता है, और बुकिंग ढूँढने का यही हमारे लिए सबसे तेज़ तरीका है।',
-            'बुकिंग उस जगह के पास रहती है, हमारे पास नहीं, इसलिए अगर तारीख़ नज़दीक है तो सीधे उन्हें फ़ोन करना बेहतर है। उनका नंबर उनके लिस्टिंग पेज पर है।',
+            'बुकिंग उस जगह के पास रहती है, हमारे पास नहीं।',
           ],
           bn: [
             'আপনার কনফার্মেশন ইমেলে থাকা রেফারেন্সটি উল্লেখ করুন। দেখতে **5N9DA470**-এর মতো, আর বুকিং খুঁজে পাওয়ার জন্য এটাই আমাদের সবচেয়ে দ্রুত উপায়।',
-            'বুকিং থাকে জায়গাটির কাছে, আমাদের কাছে নয়, তাই তারিখ কাছে এলে সরাসরি ওদের ফোন করাই ভালো। ওদের নম্বর লিস্টিং পেজে আছে।',
+            'বুকিং থাকে জায়গাটির কাছে, আমাদের কাছে নয়।',
           ],
           ur: [
             'اپنی تصدیقی ای میل میں دیا گیا ریفرنس بتائیں۔ یہ **5N9DA470** جیسا دکھتا ہے، اور بکنگ ڈھونڈنے کا یہ ہمارے لیے سب سے تیز طریقہ ہے۔',
-            'بکنگ مقام کے پاس ہوتی ہے، ہمارے پاس نہیں، اس لیے اگر تاریخ قریب ہو تو براہِ راست انہیں فون کرنا بہتر ہے۔ ان کا نمبر ان کے لسٹنگ صفحے پر موجود ہے۔',
+            'بکنگ مقام کے پاس ہوتی ہے، ہمارے پاس نہیں۔',
           ],
         }),
       },

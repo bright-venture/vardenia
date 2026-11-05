@@ -5,7 +5,7 @@
   "description": "Lebanon tourism & lifestyle discovery platform",
   "packageManager": "pnpm@9.15.0",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=20.16.0"
   },
   "scripts": {
     "dev": "turbo run dev --filter=@vardenia/web",

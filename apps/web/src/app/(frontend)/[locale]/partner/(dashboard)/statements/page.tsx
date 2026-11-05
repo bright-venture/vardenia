@@ -1,3 +1,4 @@
+import { AccountEmptyState } from '../../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -57,55 +58,71 @@ export default async function PartnerStatementsPage({ params }: Props) {
       </p>
 
       {statements.length === 0 ? (
-        <p className="border-ink-100 text-ink-500 mt-8 border-s-2 ps-4 text-sm">
-          {t('statementsNone')}
-        </p>
+        <AccountEmptyState kind="receipts" message={t('statementsNone')} />
       ) : (
-        <table className="mt-8 w-full text-sm">
-          <thead>
-            <tr className="border-ink-100 text-ink-500 border-b text-start text-xs uppercase tracking-wider">
-              <th className="py-2 text-start font-medium">{t('statementMonth')}</th>
-              <th className="py-2 text-start font-medium">{t('statementNumber')}</th>
-              <th className="py-2 text-end font-medium">{t('statementTotal')}</th>
-              <th className="py-2 ps-4 text-start font-medium">{t('statementDue')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {statements.map((statement) => (
-              <tr key={statement.id} className="border-ink-100 border-b">
-                <td className="py-3">
-                  <Link
-                    href={`/partner/statements/${statement.id}`}
-                    className="text-ink-900 hover:text-gold-700 underline underline-offset-4"
-                  >
-                    {monthLabel(statement.period, locale)}
-                  </Link>
-                  {statement.venue ? (
-                    <span className="text-ink-500 block text-xs">{statement.venue}</span>
-                  ) : null}
-                </td>
-                <td className="text-ink-700 py-3 font-mono text-xs">{statement.number}</td>
-                <td className="text-ink-900 py-3 text-end">{money(statement.total, locale)}</td>
-                <td className="py-3 ps-4">
-                  {statement.state === 'draft' ? null : (
-                    <span
-                      className={
-                        statement.state === 'overdue' ? 'text-state-danger' : 'text-ink-700'
-                      }
-                    >
-                      {t(STATE_KEY[statement.state])}
-                    </span>
-                  )}
-                  {statement.state === 'open' || statement.state === 'overdue' ? (
-                    <span className="text-ink-500 block text-xs">
-                      {statement.dueAt ? dayLabel(statement.dueAt, locale) : ''}
-                    </span>
-                  ) : null}
-                </td>
+        <div
+          className="border-ink-100 focus-visible:outline-gold-500 mt-8 overflow-x-auto border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          role="region"
+          aria-label={t('tabStatements')}
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[36rem] text-sm">
+            <caption className="sr-only">{t('tabStatements')}</caption>
+            <thead>
+              <tr className="border-ink-100 text-ink-500 border-b text-start text-xs uppercase tracking-wider">
+                <th scope="col" className="px-4 py-3 text-start font-medium">
+                  {t('statementMonth')}
+                </th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">
+                  {t('statementNumber')}
+                </th>
+                <th scope="col" className="px-4 py-3 text-end font-medium">
+                  {t('statementTotal')}
+                </th>
+                <th scope="col" className="px-4 py-3 text-start font-medium">
+                  {t('statementDue')}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {statements.map((statement) => (
+                <tr key={statement.id} className="border-ink-100 border-b">
+                  <td className="px-4 py-4">
+                    <Link
+                      href={`/partner/statements/${statement.id}`}
+                      className="text-ink-900 hover:text-gold-700 underline underline-offset-4"
+                    >
+                      {monthLabel(statement.period, locale)}
+                    </Link>
+                    {statement.venue ? (
+                      <span className="text-ink-500 block text-xs">{statement.venue}</span>
+                    ) : null}
+                  </td>
+                  <td className="text-ink-700 px-4 py-4 font-mono text-xs">{statement.number}</td>
+                  <td className="text-ink-900 whitespace-nowrap px-4 py-4 text-end">
+                    {money(statement.total, locale)}
+                  </td>
+                  <td className="px-4 py-4">
+                    {statement.state === 'draft' ? null : (
+                      <span
+                        className={
+                          statement.state === 'overdue' ? 'text-state-danger' : 'text-ink-700'
+                        }
+                      >
+                        {t(STATE_KEY[statement.state])}
+                      </span>
+                    )}
+                    {statement.state === 'open' || statement.state === 'overdue' ? (
+                      <span className="text-ink-500 block text-xs">
+                        {statement.dueAt ? dayLabel(statement.dueAt, locale) : ''}
+                      </span>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </>
   )

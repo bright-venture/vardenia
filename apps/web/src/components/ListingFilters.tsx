@@ -204,6 +204,16 @@ export const displayAmenities = [
   ...AMENITIES.filter((a) => a.slug !== FIRST),
 ]
 
+/** Keep an applied region visible even when it falls beyond the compact row's cap. */
+export function inlineRegions(counts: Record<string, number> | undefined, selected?: string) {
+  if (!counts) return GOVERNORATES
+  const chosen = GOVERNORATES.find((region) => region.slug === selected)
+  const others = GOVERNORATES.filter(
+    (region) => region !== chosen && (counts[region.slug] ?? 0) > 0,
+  ).slice(0, chosen ? 4 : 5)
+  return GOVERNORATES.filter((region) => region === chosen || others.includes(region))
+}
+
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <nav className="flex flex-wrap gap-2" aria-label={label}>
@@ -254,13 +264,7 @@ export async function ListingFilters({
    * same counts. Nothing is unreachable, and every governorate URL still
    * resolves whether or not it has a chip.
    */
-  const INLINE_REGIONS = 5
-  const shown = counts
-    ? GOVERNORATES.filter((g) => (counts[g.slug] ?? 0) > 0 || state.governorate === g.slug).slice(
-        0,
-        INLINE_REGIONS,
-      )
-    : GOVERNORATES
+  const shown = inlineRegions(counts, state.governorate)
 
   const narrowed =
     Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)

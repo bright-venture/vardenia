@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
@@ -55,6 +55,17 @@ export function SignupForm({ locale }: { locale: Locale }) {
   const [problem, setProblem] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [sent, setSent] = useState<string | null>(null)
+  const submitting = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const successRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (sent) successRef.current?.focus()
+  }, [sent])
+
+  useEffect(() => {
+    formRef.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus()
+  }, [errors])
 
   /**
    * Null until the widget solves, and null again after a refusal.
@@ -71,6 +82,8 @@ export function SignupForm({ locale }: { locale: Locale }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
+    submitting.current = true
     setProblem(null)
     setErrors({})
     setBusy(true)
@@ -125,13 +138,19 @@ export function SignupForm({ locale }: { locale: Locale }) {
     } catch {
       setProblem(common('error'))
     } finally {
+      submitting.current = false
       setBusy(false)
     }
   }
 
   if (sent) {
     return (
-      <div className={NOTICE_SUCCESS} role="status">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        className={`${NOTICE_SUCCESS} focus-visible:outline-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+        role="status"
+      >
         <p>{sent}</p>
         <p className="mt-4">
           <Link href="/account/login" className={LINK}>
@@ -143,7 +162,13 @@ export function SignupForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form
+      ref={formRef}
+      onSubmit={submit}
+      aria-busy={busy}
+      className="flex flex-col gap-5"
+      noValidate
+    >
       {problem ? (
         <p className={NOTICE_ERROR} role="alert">
           {problem}
@@ -160,6 +185,8 @@ export function SignupForm({ locale }: { locale: Locale }) {
           </span>
           <input
             id={`${ids}-name`}
+            disabled={busy}
+            aria-invalid={Boolean(errors.name)}
             type="text"
             required
             autoComplete="name"
@@ -170,7 +197,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
           />
         </div>
         {errors.name ? (
-          <p id={`${ids}-name-error`} className={ERROR_TEXT}>
+          <p id={`${ids}-name-error`} className={ERROR_TEXT} role="alert">
             {errors.name}
           </p>
         ) : null}
@@ -186,6 +213,8 @@ export function SignupForm({ locale }: { locale: Locale }) {
           </span>
           <input
             id={`${ids}-email`}
+            disabled={busy}
+            aria-invalid={Boolean(errors.email)}
             type="email"
             required
             autoComplete="email"
@@ -196,7 +225,7 @@ export function SignupForm({ locale }: { locale: Locale }) {
           />
         </div>
         {errors.email ? (
-          <p id={`${ids}-email-error`} className={ERROR_TEXT}>
+          <p id={`${ids}-email-error`} className={ERROR_TEXT} role="alert">
             {errors.email}
           </p>
         ) : null}
@@ -212,6 +241,8 @@ export function SignupForm({ locale }: { locale: Locale }) {
           </span>
           <input
             id={`${ids}-password`}
+            disabled={busy}
+            aria-invalid={Boolean(errors.password)}
             type="password"
             required
             minLength={10}
@@ -219,12 +250,12 @@ export function SignupForm({ locale }: { locale: Locale }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={field('password')}
-            aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
+            aria-describedby={`${ids}-password-hint${errors.password ? ` ${ids}-password-error` : ''}`}
           />
         </div>
 
         {errors.password ? (
-          <p id={`${ids}-password-error`} className={ERROR_TEXT}>
+          <p id={`${ids}-password-error`} className={ERROR_TEXT} role="alert">
             {errors.password}
           </p>
         ) : null}
@@ -263,14 +294,21 @@ export function SignupForm({ locale }: { locale: Locale }) {
           </span>
           <input
             id={`${ids}-phone`}
+            disabled={busy}
+            aria-invalid={Boolean(errors.phone)}
             type="tel"
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className={INPUT_ICON}
-            aria-describedby={`${ids}-phone-hint`}
+            className={field('phone')}
+            aria-describedby={`${ids}-phone-hint${errors.phone ? ` ${ids}-phone-error` : ''}`}
           />
         </div>
+        {errors.phone ? (
+          <p id={`${ids}-phone-error`} className={ERROR_TEXT} role="alert">
+            {errors.phone}
+          </p>
+        ) : null}
         <p id={`${ids}-phone-hint`} className={HINT}>
           {t('phoneOptional')}
         </p>

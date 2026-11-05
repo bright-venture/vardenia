@@ -1199,7 +1199,7 @@
 .vd-directory nav[aria-label] {
   border: 0;
 }
-.vd-listing > header {
+.vd-listing > header[data-has-photograph='true'] {
   min-height: 65svh;
 }
 .vd-listing > header::after {
@@ -1962,7 +1962,7 @@
   .vd-listing > header h1 {
     font-size: clamp(40px, 10vw, 62px);
   }
-  .vd-listing > header {
+  .vd-listing > header[data-has-photograph='true'] {
     min-height: 600px;
   }
   .vd-listing > header::after {

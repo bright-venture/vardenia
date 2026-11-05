@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../lib/seo'
+import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { findArticles } from '../../../../lib/articles'
 import { findIssues } from '../../../../lib/issues'
@@ -69,11 +69,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale })
-  return {
+  return buildMetadata({
+    seo: undefined,
     title: t('magazine.title'),
     description: t('magazine.metaDescription'),
-    alternates: alternatesFor('/magazine', isLocale(locale) ? locale : DEFAULT_LOCALE),
-  }
+    path: '/magazine',
+    locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }
 
 export default async function MagazinePage({ params }: Props) {

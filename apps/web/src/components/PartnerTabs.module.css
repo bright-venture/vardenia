@@ -1,0 +1,21 @@
+.navigation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* More specific than the shared .vd-partner-tabs > a rule: long translated
+   labels must wrap inside their cells instead of widening the page. */
+.navigation > a[href] {
+  min-width: 0;
+  justify-content: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

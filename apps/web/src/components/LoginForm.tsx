@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Lock, Mail } from 'lucide-react'
 import { Link, useRouter } from '../i18n/routing'
@@ -50,11 +50,55 @@ export function LoginForm({ next }: { next?: string }) {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
-  const [unverified, setUnverified] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [resent, setResent] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
+  const [resendProblem, setResendProblem] = useState<string | null>(null)
+  const submitting = useRef(false)
+  const resendingRequest = useRef(false)
+
+  function changeEmail(value: string) {
+    setEmail(value)
+    setProblem(null)
+    setUnverifiedEmail(null)
+    setResent(null)
+    setResendProblem(null)
+  }
+
+  async function resendVerification() {
+    if (!unverifiedEmail || resendingRequest.current || submitting.current) return
+    resendingRequest.current = true
+    setResending(true)
+    setResendProblem(null)
+    try {
+      const response = await fetch('/auth/verify/resend', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        // Resend only for the address from the refused sign-in, never a later edit.
+        body: JSON.stringify({ email: unverifiedEmail }),
+      })
+      const body = (await response.json().catch(() => null)) as { message?: string } | null
+      if (response.ok) {
+        setResent(body?.message ?? t('checkEmail'))
+      } else {
+        setResendProblem(body?.message ?? common('error'))
+      }
+    } catch {
+      setResendProblem(common('error'))
+    } finally {
+      resendingRequest.current = false
+      setResending(false)
+    }
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current || resendingRequest.current) return
+    submitting.current = true
+    setUnverifiedEmail(null)
+    setResent(null)
+    setResendProblem(null)
     setProblem(null)
     setBusy(true)
 
@@ -91,7 +135,7 @@ export function LoginForm({ next }: { next?: string }) {
        * credential they have.
        */
       if (response.status === 403) {
-        setUnverified(true)
+        setUnverifiedEmail(email)
         setProblem(t('unverified'))
         return
       }
@@ -100,39 +144,42 @@ export function LoginForm({ next }: { next?: string }) {
     } catch {
       setProblem(common('error'))
     } finally {
+      submitting.current = false
       setBusy(false)
     }
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form
+      onSubmit={submit}
+      aria-busy={busy || resending}
+      className="flex flex-col gap-5"
+      noValidate
+    >
       {problem ? (
-        <div className={NOTICE_ERROR} role="alert">
-          <p>{problem}</p>
-
-          {/* The only way out of this refusal.
-              Payload will not authenticate an unverified customer at all, so
-              there is no session to prove anything with and no signed-in page
-              to offer this from. The address typed above is the credential. */}
-          {unverified ? (
+        <div className={NOTICE_ERROR}>
+          <p role="alert">{problem}</p>
+          {unverifiedEmail ? (
             resent ? (
-              <p className="mt-2 text-sm">{resent}</p>
+              <p className="mt-2 text-sm" role="status">
+                {resent}
+              </p>
             ) : (
-              <button
-                type="button"
-                className={`${LINK} mt-2 block text-sm`}
-                onClick={async () => {
-                  const r = await fetch('/auth/verify/resend', {
-                    method: 'POST',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                  }).catch(() => null)
-                  const b = (await r?.json().catch(() => null)) as { message?: string } | null
-                  setResent(b?.message ?? common('error'))
-                }}
-              >
-                {t('resendVerification')}
-              </button>
+              <>
+                {resendProblem ? (
+                  <p className="mt-2 text-sm" role="alert">
+                    {resendProblem}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={resending}
+                  className={`${LINK} focus-visible:outline-gold-500 mt-2 block min-h-11 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60`}
+                  onClick={resendVerification}
+                >
+                  {resending ? t('working') : t('resendVerification')}
+                </button>
+              </>
             )
           ) : null}
         </div>
@@ -156,9 +203,10 @@ export function LoginForm({ next }: { next?: string }) {
             id={`${ids}-email`}
             type="email"
             required
+            disabled={busy || resending}
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => changeEmail(e.target.value)}
             className={INPUT_ICON}
           />
         </div>
@@ -176,6 +224,7 @@ export function LoginForm({ next }: { next?: string }) {
             id={`${ids}-password`}
             type="password"
             required
+            disabled={busy || resending}
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -195,7 +244,7 @@ export function LoginForm({ next }: { next?: string }) {
         </p>
       </div>
 
-      <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
+      <button type="submit" disabled={busy || resending} className={PRIMARY_BUTTON}>
         {busy ? t('working') : t('submitSignIn')}
       </button>
 

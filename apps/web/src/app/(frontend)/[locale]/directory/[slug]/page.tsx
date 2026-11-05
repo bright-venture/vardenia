@@ -1,3 +1,4 @@
+import { ResilientPhoto } from '../../../../../components/ui/ResilientPhoto'
 import { Suspense, type ReactNode } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
@@ -259,7 +260,10 @@ export default async function ListingPage({ params }: Params) {
         {/* Invisible to readers, read by search engines. See lib/structured-data. */}
         <JsonLd data={listingSchema(listing as never, locale as Locale)} />
 
-        <header className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden">
+        <header
+          data-has-photograph={Boolean(hero)}
+          className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden"
+        >
           {/*
           `alt=""` and aria-hidden together: this is the ground the name sits on
           rather than content, and a description of it read out before the
@@ -666,11 +670,9 @@ export default async function ListingPage({ params }: Params) {
                 <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
                   {gallery.map((image) => (
                     <div key={image.src} className="bg-surface-sunken relative aspect-[4/3]">
-                      <Image
-                        data-vd-photo
+                      <ResilientPhoto
                         src={image.src}
                         alt={image.alt}
-                        fill
                         sizes="(max-width: 768px) 50vw, 33vw"
                         className="object-cover"
                       />

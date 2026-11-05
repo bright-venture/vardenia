@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
@@ -11,6 +10,8 @@ import {
 } from '../../../../../../lib/issues'
 import { resolveImage } from '../../../../../../lib/media'
 import { buildMetadata } from '../../../../../../lib/seo'
+import { MagazineCover } from '../../../../../../components/magazine/MagazineCover'
+import { MagazineReader } from '../../../../../../components/magazine/MagazineReader'
 import { ArticleCard } from '../../../../../../components/ArticleCard'
 
 /**
@@ -74,9 +75,13 @@ export default async function IssuePage({ params }: Params) {
   if (!issue) notFound()
 
   const t = await getTranslations()
-  const cover = resolveImage(issue.cover as never, 'portrait')
   const articles = await findArticlesInIssue(issue.id, locale)
   const edition = resolveImage(issue.digitalEdition as never, 'card')
+  const hasPdf = Boolean(
+    issue.digitalEdition &&
+    typeof issue.digitalEdition === 'object' &&
+    issue.digitalEdition.mimeType === 'application/pdf',
+  )
 
   return (
     <main className="vd-issue-page mx-auto max-w-6xl px-6 py-16">
@@ -85,18 +90,11 @@ export default async function IssuePage({ params }: Params) {
       </Link>
 
       <div className="vd-issue-header mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
-        <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
-          {cover ? (
-            <Image
-              src={cover.src}
-              alt={cover.alt}
-              fill
-              priority
-              sizes="(max-width:700px) 100vw, 40vw"
-              className="object-cover"
-            />
-          ) : null}
-        </div>
+        <MagazineCover
+          media={issue.cover as never}
+          sizes="(max-width:700px) 100vw, 260px"
+          priority
+        />
 
         <div>
           <p className="text-ink-500 text-xs uppercase tabular-nums tracking-widest">
@@ -130,9 +128,7 @@ export default async function IssuePage({ params }: Params) {
 
           {edition ? (
             <a
-              href={edition.src}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={hasPdf ? '#digital-edition' : edition.src}
               className="bg-cedar-900 text-surface-base hover:bg-cedar-700 mt-8 inline-block px-5 py-3 text-sm font-semibold transition-colors"
             >
               {t('magazine.readDigital')}
@@ -140,6 +136,15 @@ export default async function IssuePage({ params }: Params) {
           ) : null}
         </div>
       </div>
+
+      {edition && hasPdf ? (
+        <MagazineReader
+          src={`/read/issue/${encodeURIComponent(slug)}`}
+          originalSrc={edition.src}
+          title={issue.title}
+          locale={locale}
+        />
+      ) : null}
 
       <section className="mt-16">
         <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">

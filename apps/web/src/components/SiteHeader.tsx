@@ -50,7 +50,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   )
 
   const aboutMenu = (
-    <div className="grid w-[22rem] gap-1">
+    <div className="vd-editorial-menu">
+      <h2>{t('nav.about')}</h2>
       <MenuLink
         href="/about"
         title={t('nav.aboutVardenia')}
@@ -80,7 +81,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     </div>
   )
   const magazineMenu = (
-    <div className="grid w-[22rem] gap-1">
+    <div className="vd-editorial-menu">
+      <h2>{t('nav.magazine')}</h2>
       <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
       <MenuLink href="/magazine/issues" title={t('footer.issues')} icon={MAGAZINE_ICON} />
       <MenuLink
@@ -108,7 +110,10 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             Vardenia
           </Link>
 
-          <nav aria-label={t('nav.directory')} className="vd-desktop-nav">
+          <nav
+            aria-label={t('nav.directory')}
+            className="vd-desktop-nav items-stretch self-stretch"
+          >
             <DropdownNav label={t('nav.discover')} wide>
               {sectionMenu}
             </DropdownNav>
@@ -159,6 +164,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <span className="border-ink-100 my-2 block border-t" />
 
             <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
+            <MenuLink href="/magazine/issues" title={t('footer.issues')} icon={MAGAZINE_ICON} />
             <MenuLink href="/magazine/articles" title={t('footer.articles')} icon={MAGAZINE_ICON} />
             <MenuLink href="/search" title={t('nav.search')} icon={SEARCH_ICON} />
             {/* Always listed here as a destination: on a phone the menu is the

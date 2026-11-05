@@ -43,7 +43,11 @@ export async function ActionBar({ coordinates, name, address, place }: Props) {
   const directions = mapsLink({ name, address, place, coordinates })
 
   return (
-    <div className="flex flex-wrap gap-3" aria-label={`Actions for ${name}`}>
+    <div
+      role="group"
+      className="flex flex-wrap gap-3"
+      aria-label={`${t('getDirections')}: ${name}`}
+    >
       <a href={directions} className={PRIMARY} target="_blank" rel="noopener noreferrer">
         {t('getDirections')}
       </a>

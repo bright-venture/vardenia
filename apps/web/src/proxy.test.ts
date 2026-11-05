@@ -48,6 +48,7 @@ describe('locale routing leaves alone', () => {
     ['/g/AB12CD3', 'a printed short link must stay short'],
     ['/qr/AB12CD3', 'serves an SVG; a rewrite returns HTML with an .svg name'],
     ['/qr/sheet', 'the print sheet'],
+    ['/read/issue/summer-2026', 'magazine PDFs must not receive locale routing'],
     ['/reports/scans', 'a CSV that would open in Excel as a column of markup'],
     ['/billing', 'the staff page for monthly statements'],
     ['/billing/dispute', 'JSON, where a venue questions a line'],
@@ -78,6 +79,7 @@ describe('a prefix is not a segment', () => {
     '/administrators',
     '/mediterranean',
     '/reportage',
+    '/readers',
     '/qrcodes',
     '/authors',
   ])('%s is a page, not an excluded prefix', (path) => {

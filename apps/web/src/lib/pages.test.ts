@@ -338,3 +338,31 @@ describe('the standing pages in every language', () => {
     expect(last.body).toHaveLength(3)
   })
 })
+
+describe('booking help matches the available contact flow', () => {
+  const responsibility: Record<Locale, string> = {
+    en: 'A booking is held by the venue rather than by us.',
+    ar: 'الحجز يحتفظ به المكان لا نحن.',
+    fr: "Une réservation est tenue par l'établissement et non par nous.",
+    es: 'La reserva la gestiona el local, no nosotros.',
+    pt: 'A reserva fica com o estabelecimento, não conosco.',
+    ru: 'Бронирование держит заведение, а не мы.',
+    zh: '预订由商户保留，而不是由我们保留。',
+    hi: 'बुकिंग उस जगह के पास रहती है, हमारे पास नहीं।',
+    bn: 'বুকিং থাকে জায়গাটির কাছে, আমাদের কাছে নয়।',
+    ur: 'بکنگ مقام کے پاس ہوتی ہے، ہمارے پاس نہیں۔',
+  }
+
+  for (const locale of LOCALES) {
+    it(`keeps reference guidance without obsolete venue-phone instructions in ${locale}`, () => {
+      const page = contentPage('contact', locale)!
+      const booking = page.sections[0]!
+      // No listing phone action exists. Keep the established localized
+      // reference and responsibility clauses without inventing a contact route.
+      expect(booking.body).toHaveLength(2)
+      expect(booking.body[1]).toBe(responsibility[locale])
+      expect(booking.body[0]).toContain('**5N9DA470**')
+      expect(page.sections.length).toBeGreaterThan(1)
+    })
+  }
+})

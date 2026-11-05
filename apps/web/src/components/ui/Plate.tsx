@@ -1,5 +1,6 @@
 import { colors } from '@vardenia/tokens'
-import Image from 'next/image'
+import { ResilientPhoto } from './ResilientPhoto'
+import { PhotoPlaceholder } from './PhotoPlaceholder'
 import { resolvePhotograph, type MediaField } from '../../lib/media'
 
 /**
@@ -127,10 +128,9 @@ export function Plate({
       }
     >
       {resolved ? (
-        <Image
+        <ResilientPhoto
           src={resolved.src}
           alt={alt ?? resolved.alt}
-          fill
           sizes={sizes}
           priority={priority}
           className={
@@ -142,20 +142,7 @@ export function Plate({
       ) : (
         /* Decorative. A reader who cannot see it is told nothing useful by
            "placeholder", and the heading beside it already names the subject. */
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.25}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-ink-300 group-hover:text-gold-500 absolute inset-0 m-auto size-7 transition-colors duration-500"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="9" cy="9" r="2" />
-          <path d="m21 15-4.6-4.6a2 2 0 0 0-2.8 0L3 21" />
-        </svg>
+        <PhotoPlaceholder />
       )}
     </div>
   )

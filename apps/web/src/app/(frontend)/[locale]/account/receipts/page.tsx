@@ -1,3 +1,4 @@
+import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -123,12 +124,11 @@ export default async function ReceiptsPage({ params }: { params: Promise<{ local
           ))}
         </ul>
       ) : (
-        <div className="mt-12">
-          <p className="text-ink-500">{t('noReceipts')}</p>
-          <Link href="/account" className={`${LINK} mt-3 inline-block`}>
-            {t('receiptsGoToBookings')}
-          </Link>
-        </div>
+        <AccountEmptyState
+          kind="receipts"
+          message={t('noReceipts')}
+          action={{ href: '/account', label: t('receiptsGoToBookings') }}
+        />
       )}
     </main>
   )

@@ -1,4 +1,5 @@
 'use client'
+import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
@@ -45,8 +46,13 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
                   (phase === 0 ? 0 : phase === 3 ? 2 : 1) === index ? 'step' : undefined
                 }
               >
-                <h3>{step.title}</h3>
-                <p>{step.sub}</p>
+                <span className="vd-print-step-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.sub}</p>
+                </div>
               </li>
             ))}
           </ol>
@@ -66,7 +72,10 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
             </div>
             <figcaption dir="auto">{target.title}</figcaption>
             <a className="vd-button vd-button-navy" href={target.href}>
-              {t('scanAction')} <span aria-hidden>↗</span>
+              {t('scanAction')}{' '}
+              <span aria-hidden>
+                <LinkArrow />
+              </span>
             </a>
           </figure>
           <div className="vd-print-phone" id="vd-print-page">
@@ -147,7 +156,10 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
                   <p>{t('onlineLabel')}</p>
                   <h3 dir="auto">{target.title}</h3>
                   <a className="vd-text-link" href={target.href}>
-                    {t('openPage')} <span aria-hidden>↗</span>
+                    {t('openPage')}{' '}
+                    <span aria-hidden>
+                      <LinkArrow />
+                    </span>
                   </a>
                 </div>
               </div>

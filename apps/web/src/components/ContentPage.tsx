@@ -1,3 +1,6 @@
+import { StoryIndex } from './editorial/StoryIndex'
+import './editorial/standing-pages.css'
+import { LinkArrow } from './LinkArrow'
 import type { ContentPage, ContentPageSlug } from '../lib/pages'
 import type { Locale } from '@vardenia/i18n'
 import { getTranslations } from 'next-intl/server'
@@ -125,20 +128,21 @@ export async function ContentPageView({
       </PageHero>
       <div className="vd-story-layout" id="page-story">
         <aside className="vd-story-index">
-          <nav aria-label={page.title}>
-            {page.sections.map((section, i) => (
-              <a key={section.heading} href={`#story-${i}`}>
-                {section.heading}
-                <span aria-hidden>↗</span>
-              </a>
-            ))}
-          </nav>
+          <StoryIndex
+            title={page.title}
+            sections={page.sections.map((section, i) => ({
+              id: `story-${i}`,
+              heading: section.heading,
+            }))}
+          />
           <Link
             href={slug === 'about' || slug === 'contact' || faq ? '/directory' : '/contact'}
             className="vd-button"
           >
             {t(slug === 'about' || slug === 'contact' || faq ? 'nav.directory' : 'nav.contact')}{' '}
-            <span aria-hidden>↗</span>
+            <span aria-hidden>
+              <LinkArrow />
+            </span>
           </Link>
         </aside>
         <div className="vd-content-sections">
@@ -159,7 +163,15 @@ export async function ContentPageView({
                 <div className="vd-story-body">{body(section, i)}</div>
               </details>
             ) : (
-              <section className="vd-story-section" key={section.heading} id={`story-${i}`}>
+              <section
+                className="vd-story-section"
+                key={section.heading}
+                id={`story-${i}`}
+                tabIndex={-1}
+              >
+                <span className="vd-section-number" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <h2>{section.heading}</h2>
                 <div className="vd-story-body">{body(section, i)}</div>
                 {slug === 'about' && i === 0 ? (
@@ -179,6 +191,19 @@ export async function ContentPageView({
               </section>
             ),
           )}
+          <nav className="vd-story-next" aria-label={page.title}>
+            <Link
+              href={slug === 'about' || slug === 'contact' || faq ? '/directory' : '/contact'}
+              className="vd-button"
+            >
+              {t(slug === 'about' || slug === 'contact' || faq ? 'nav.directory' : 'nav.contact')}
+              <LinkArrow />
+            </Link>
+            <Link href={faq ? '/about' : '/faq'} className="vd-text-link">
+              {t(faq ? 'nav.about' : 'nav.questions')}
+              <LinkArrow />
+            </Link>
+          </nav>
         </div>
       </div>
     </main>

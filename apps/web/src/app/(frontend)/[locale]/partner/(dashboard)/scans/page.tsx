@@ -1,3 +1,4 @@
+import { AccountEmptyState } from '../../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -74,7 +75,7 @@ export default async function PartnerScansPage({ params }: Props) {
     return (
       <>
         <p className="text-ink-700 mt-8 text-sm leading-relaxed">{t('scansIntro')}</p>
-        <p className="border-ink-100 text-ink-500 mt-8 border-s-2 ps-4 text-sm">{t('scansNone')}</p>
+        <AccountEmptyState kind="scans" message={t('scansNone')} />
       </>
     )
   }

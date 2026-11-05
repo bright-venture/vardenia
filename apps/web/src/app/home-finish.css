@@ -1598,3 +1598,172 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 1000px;
 }
+
+/* Edition-led browsing and a calmer paper-to-place composition. */
+.vd-edition-regions {
+  padding-inline: var(--vd-gutter);
+  margin-block: 24px 36px;
+  border-block: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
+  padding-block: 20px;
+}
+.vd-edition-regions > p {
+  font-size: 13px;
+  margin: 0 0 14px;
+}
+.vd-edition-regions ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.vd-edition-regions a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--vd-ink) 25%, transparent);
+  border-radius: 999px;
+  font-size: 14px;
+  text-decoration: none;
+}
+.vd-edition-regions a:is(:hover, :focus-visible) {
+  background: var(--vd-ink);
+  color: var(--vd-paper);
+}
+.vd-editorial-menu {
+  width: min(24rem, calc(100vw - 32px));
+  padding: 18px;
+}
+.vd-editorial-menu > h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  padding: 0 10px 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--vd-ink) 15%, transparent);
+  margin-bottom: 10px;
+}
+.vd-editorial-menu .vd-menu-link {
+  min-height: 64px;
+  padding-block: 14px;
+}
+.vd-menu-link:focus-visible {
+  outline: 2px solid var(--vd-ink);
+  outline-offset: -2px;
+}
+.vd-home .vd-button {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+.vd-home .vd-button:not(:disabled):is(:hover, :focus-visible) {
+  transform: none;
+  background: var(--vd-gold, #c6a36b);
+  color: var(--vd-ink);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.vd-home .vd-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+.vd-home .vd-button:focus-visible,
+.vd-edition-regions a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.vd-scan-process .vd-print-sticky {
+  gap: clamp(28px, 4vw, 72px);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+.vd-scan-process .vd-print-stage {
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 24px;
+  align-items: center;
+}
+.vd-scan-process .vd-print-card {
+  transform: none;
+  padding: clamp(18px, 2vw, 30px);
+  border: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
+  box-shadow: 0 14px 40px #101e3114;
+  min-width: 0;
+}
+.vd-scan-process .vd-print-card figcaption {
+  overflow-wrap: anywhere;
+}
+.vd-scan-process .vd-print-card .vd-button {
+  width: 100%;
+}
+.vd-scan-process .vd-print-steps li {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 14px;
+  padding-block: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
+}
+.vd-print-step-number {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding-top: 5px;
+}
+.vd-scan-process .vd-print-steps {
+  gap: 0;
+}
+.vd-scan-process .vd-scan-actions {
+  grid-column: 1 / -1;
+}
+@media (max-width: 1050px) {
+  .vd-scan-process .vd-print-sticky {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vd-scan-process .vd-print-stage {
+    width: min(100%, 680px);
+    justify-self: center;
+  }
+}
+@media (max-width: 480px) {
+  .vd-scan-process .vd-print-stage {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .vd-scan-process .vd-print-card {
+    width: min(100%, 300px);
+    justify-self: center;
+  }
+  .vd-edition-regions li {
+    flex: 1 1 140px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-home .vd-button {
+    transition: none;
+  }
+}
+html[data-vd-motion='off'] .vd-home .vd-button {
+  transition: none;
+}
+.vd-editorial-panel {
+  background: var(--vd-paper);
+  box-shadow: 0 18px 40px rgb(17 29 45 / 0.12);
+  max-height: calc(100svh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.vd-editorial-menu > h2 {
+  font-size: 36px;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.vd-featured-destinations-title {
+  padding-inline: var(--vd-gutter);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 400;
+  margin-block: 24px 18px;
+}

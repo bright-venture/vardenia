@@ -79,6 +79,8 @@ export const UNMATCHED_PREFIXES = [
   // The save/unsave endpoint, an action rather than a page. Excluded from the
   // matcher alongside auth and booking, so it is never rewritten into a locale.
   'save',
+  // Same-origin magazine PDF delivery, not a localized page.
+  'read',
   'g',
   'qr',
   'reports',

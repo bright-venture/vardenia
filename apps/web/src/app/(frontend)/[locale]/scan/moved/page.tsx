@@ -13,9 +13,18 @@ import { Link } from '../../../../../i18n/routing'
  * somewhere useful to go rather than treating it as an error.
  */
 
-export const metadata: Metadata = {
-  title: 'This listing has moved',
-  robots: { index: false, follow: false },
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  if (!isLocale(locale)) notFound()
+  const t = await getTranslations({ locale, namespace: 'scan' })
+  return {
+    title: t('moved'),
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function ScanMovedPage({

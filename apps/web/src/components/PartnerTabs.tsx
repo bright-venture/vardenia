@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { Link } from '../i18n/routing'
+import styles from './PartnerTabs.module.css'
 
 /**
  * The sections of the dashboard.
@@ -13,11 +14,10 @@ import { Link } from '../i18n/routing'
  * has to remember to, which is the kind of thing that gets forgotten and shows
  * up as no tab looking selected.
  *
- * # Underlined, not boxed
- *
- * The page already carries chips for the booking filters and buttons for the
- * actions. A third boxed control would compete with both. An underline says
- * "you are here" without adding a fourth shape.
+ * On narrow screens all four destinations stay visible in a two-column grid.
+ * A horizontally scrolling row hid the current section when arriving directly
+ * on Statements. Desktop keeps the familiar single row without moving focus
+ * or scrolling the page on hydration.
  */
 
 export function PartnerTabs({
@@ -39,13 +39,16 @@ export function PartnerTabs({
    * `/ar/partner/listing` in Arabic. Comparing whole paths would leave the
    * Arabic dashboard with nothing highlighted.
    */
-  const onListing = pathname.endsWith('/partner/listing')
-  const onScans = pathname.endsWith('/partner/scans')
+  const onListing = /\/partner\/listing(\/|$)/.test(pathname)
+  const onScans = /\/partner\/scans(\/|$)/.test(pathname)
   // Includes a single statement, /partner/statements/12, so the tab stays lit there.
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
 
   return (
-    <nav className="vd-partner-tabs border-ink-100 mt-8 flex gap-6 border-b" aria-label={bookings}>
+    <nav
+      className={`${styles.navigation} vd-partner-tabs border-ink-100 mt-8 gap-6 border-b`}
+      aria-label={bookings}
+    >
       <Tab href="/partner" active={!onListing && !onScans && !onStatements}>
         {bookings}
       </Tab>
@@ -77,7 +80,7 @@ function Tab({
       aria-current={active ? 'page' : undefined}
       // `-mb-px` pulls the underline onto the nav's own border so the two are one
       // line rather than two a pixel apart.
-      className={`-mb-px border-b-2 pb-3 text-sm transition-colors ${
+      className={`focus-visible:outline-gold-500 -mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 pb-3 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 ${
         active
           ? 'border-cedar-900 text-ink-900'
           : 'text-ink-500 hover:text-ink-900 border-transparent'

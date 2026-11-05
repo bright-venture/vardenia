@@ -1,3 +1,4 @@
+import { LinkArrow } from '../LinkArrow'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import type { ListingSummary } from '../../lib/listings'
@@ -29,7 +30,10 @@ export async function HomePlaces({
           <p data-vd-reveal>{featured ? h('featuredNote') : t('placesBody')}</p>
         </div>
         <Link className="vd-text-link" href="/directory">
-          {h('seeAllListings')} <span aria-hidden>↗</span>
+          {h('seeAllListings')}{' '}
+          <span aria-hidden>
+            <LinkArrow />
+          </span>
         </Link>
       </header>
       {listings.length ? (
@@ -62,7 +66,7 @@ export async function HomePlaces({
         <div className="vd-home-empty">
           <p>{t('emptyPlaces')}</p>
           <Link href="/magazine" className="vd-text-link">
-            {h('read')} ↗
+            {h('read')} <LinkArrow />
           </Link>
         </div>
       )}

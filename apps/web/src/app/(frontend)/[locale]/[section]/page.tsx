@@ -12,11 +12,12 @@ import {
   type SubCategory,
 } from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../lib/seo'
+import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import { sectionName, sectionSummary } from '../../../../lib/labels'
+import { sectionSeoCopy } from '../../../../lib/section-seo'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { SubcategoryTiles } from '../../../../components/SubcategoryTiles'
 import { LINK } from '../../../../components/formStyles'
@@ -78,20 +79,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const section = sectionForPath(path)
   if (!section) return {}
 
-  return {
-    title: nameFor(section, locale),
-    // The one-line summary the section menu already shows, so a search result
-    // says what is behind "Lifestyle" rather than the site-wide sentence.
-    description: sectionSummary(section, isLocale(locale) ? locale : DEFAULT_LOCALE),
-    /**
-     * Built from `section.path`, not from the `path` off the URL. They are equal
-     * here because `sectionForPath` matches exactly, but the canonical URL of a
-     * page should come from our own table rather than from the request - that is
-     * the habit that stops a future looser lookup putting request text into a
-     * tag whose whole job is to be authoritative.
-     */
-    alternates: alternatesFor(`/${section.path}`, isLocale(locale) ? locale : DEFAULT_LOCALE),
-  }
+  const resolvedLocale = isLocale(locale) ? locale : DEFAULT_LOCALE
+  return buildMetadata({
+    seo: undefined,
+    ...sectionSeoCopy(section, resolvedLocale),
+    path: `/${section.path}`,
+    locale: resolvedLocale,
+  })
 }
 
 export default async function SectionPage({ params, searchParams }: Props) {

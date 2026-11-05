@@ -47,6 +47,7 @@ export default async function PartnerResetPage({
         token={token}
         endpoint="/api/business-users/reset-password"
         signInHref="/partner/login"
+        forgotHref="/partner/forgot"
       />
     </AuthCard>
   )

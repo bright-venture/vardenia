@@ -1,3 +1,4 @@
+import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -156,22 +157,23 @@ export default async function PartnerPage({ params, searchParams }: Props) {
       ) : null}
 
       {docs.length === 0 ? (
-        <p className="text-ink-500 mt-12 text-center">
-          {/* Nothing ahead is not the same as nothing ever: a venue with a
-              quiet week was told "No bookings yet" over months of history. */}
-          {filter.window === 'upcoming' && filter.status === 'all' && !filter.search ? (
-            <>
-              {t('noUpcoming')}{' '}
-              <Link href="/partner?window=past" className={LINK}>
-                {t('windowPast')}
-              </Link>
-            </>
-          ) : isFiltered(filter) ? (
-            t('noMatches')
-          ) : (
-            t('noBookings')
-          )}
-        </p>
+        <AccountEmptyState
+          kind="bookings"
+          message={
+            filter.window === 'upcoming' && filter.status === 'all' && !filter.search
+              ? t('noUpcoming')
+              : isFiltered(filter)
+                ? t('noMatches')
+                : t('noBookings')
+          }
+          action={
+            filter.window === 'upcoming' && filter.status === 'all' && !filter.search
+              ? { href: '/partner?window=past', label: t('windowPast') }
+              : isFiltered(filter)
+                ? { href: '/partner', label: t('clearFilters') }
+                : undefined
+          }
+        />
       ) : (
         <BookingList bookings={docs} locale={locale as Locale} showBusiness={listings.length > 1} />
       )}

@@ -5,10 +5,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { useTranslations } from 'next-intl'
 import { isLocale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
-import { search } from '../../../../lib/search'
+import { normaliseSearchPage, search } from '../../../../lib/search'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { ArticleCard } from '../../../../components/ArticleCard'
 import { SearchForm } from '../../../../components/SearchForm'
+import { SearchPagination, type SearchParams } from './SearchPagination'
 
 /**
  * Search across listings and editorial.
@@ -31,7 +32,7 @@ export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<SearchParams>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,9 +49,15 @@ export default async function SearchPage({ params, searchParams }: Props) {
   if (!isLocale(locale)) notFound()
   setRequestLocale(locale)
 
-  const { q } = await searchParams
+  const queryParams = await searchParams
+  const q = typeof queryParams.q === 'string' ? queryParams.q : ''
   const t = await getTranslations()
-  const results = await search({ locale, q: q ?? '' })
+  const results = await search({
+    locale,
+    q,
+    listingsPage: normaliseSearchPage(queryParams.listingsPage),
+    articlesPage: normaliseSearchPage(queryParams.articlesPage),
+  })
 
   return (
     <main className="vd-search-page">
@@ -79,7 +86,9 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
             {results.listings.totalDocs > 0 ? (
               <section className="mt-8">
-                <h2 className="text-ink-900 text-3xl">{t('search.places')}</h2>
+                <h2 id="search-places" className="text-ink-900 text-3xl">
+                  {t('search.places')}
+                </h2>
                 <div className="mt-8">
                   <ListingGrid
                     listings={results.listings.docs}
@@ -89,12 +98,21 @@ export default async function SearchPage({ params, searchParams }: Props) {
                     empty={t('search.nothing')}
                   />
                 </div>
+                <SearchPagination
+                  page={results.listings.page}
+                  totalPages={results.listings.totalPages}
+                  pageKey="listingsPage"
+                  searchParams={queryParams}
+                  labelledBy="search-places"
+                />
               </section>
             ) : null}
 
             {results.articles.totalDocs > 0 ? (
               <section className="border-ink-100 mt-16 border-t pt-10">
-                <h2 className="text-ink-900 text-3xl">{t('search.reading')}</h2>
+                <h2 id="search-reading" className="text-ink-900 text-3xl">
+                  {t('search.reading')}
+                </h2>
                 <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {results.articles.docs.map((article) => (
                     <ArticleCard
@@ -109,6 +127,13 @@ export default async function SearchPage({ params, searchParams }: Props) {
                     />
                   ))}
                 </div>
+                <SearchPagination
+                  page={results.articles.page}
+                  totalPages={results.articles.totalPages}
+                  pageKey="articlesPage"
+                  searchParams={queryParams}
+                  labelledBy="search-reading"
+                />
               </section>
             ) : null}
           </>

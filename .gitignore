@@ -199,3 +199,6 @@ apps/web/.billing-demo-manifest.json
 # spreadsheets it loads are business data and are not. No CSV belongs in here at all -
 # the test fixture is a TypeScript module, apps/web/src/import/sample-listings.ts.
 *.csv
+
+# Generated, version-matched PDF.js reader assets (prepare-reader.mjs).
+/apps/web/public/pdfjs-assets/

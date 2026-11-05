@@ -15,9 +15,18 @@ import { Link } from '../../../../../i18n/routing'
  * Deliberately excluded from search engines. It is a fallback, not content.
  */
 
-export const metadata: Metadata = {
-  title: 'Code not recognised',
-  robots: { index: false, follow: false },
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  if (!isLocale(locale)) notFound()
+  const t = await getTranslations({ locale, namespace: 'scan' })
+  return {
+    title: t('notFound'),
+    robots: { index: false, follow: false },
+  }
 }
 
 export default async function ScanNotFoundPage({

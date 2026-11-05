@@ -5,6 +5,7 @@ import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { findListings, findFeaturedListings, printedCodes } from '../../../lib/listings'
+import { findHomeListings } from '../../../lib/home-listings'
 import { findIssues } from '../../../lib/issues'
 import { resolveImage, resolvePhotograph } from '../../../lib/media'
 import { getPathname } from '../../../i18n/routing'
@@ -12,6 +13,7 @@ import { QR_LIGHT } from '../../../lib/qr-image'
 import { CinematicJourney } from '../../../components/journey/CinematicJourney'
 import { MagazineArt } from '../../../components/journey/MagazineArt'
 import { HomePlaces } from '../../../components/home/HomePlaces'
+import { HomeSelection } from '../../../components/home/HomeSelection'
 import { Manifesto } from '../../../components/home/Manifesto'
 import { PrintConnection } from '../../../components/home/PrintConnection'
 
@@ -36,6 +38,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     findFeaturedListings({ locale }),
     findIssues(locale),
   ])
+  // The automatic selection, never repeating a gold listing already in the band above.
+  const selected = await findHomeListings({ locale, excludedIds: featured.map((doc) => doc.id) })
   const issue = issues.docs[0]
   const cover = issue ? resolveImage(issue.cover as never, 'portrait') : null
   const pictured = [...featured, ...listings.docs].filter((doc) =>
@@ -76,7 +80,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <main className="vd-main-home">
       <CinematicJourney
         locale={locale}
-        directory={<HomePlaces listings={featured} locale={locale} featured />}
+        directory={
+          <>
+            <HomePlaces listings={featured} locale={locale} featured />
+            <HomeSelection listings={selected} locale={locale} />
+          </>
+        }
         connection={
           <>
             <Manifesto />

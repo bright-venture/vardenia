@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '../i18n/routing'
 import {
@@ -41,9 +41,17 @@ export function ForgotPasswordForm({
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+  const successRef = useRef<HTMLDivElement>(null)
+  const submitting = useRef(false)
+
+  useEffect(() => {
+    if (sent) successRef.current?.focus()
+  }, [sent])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
+    submitting.current = true
     setProblem(null)
     setBusy(true)
 
@@ -64,16 +72,25 @@ export function ForgotPasswordForm({
     } catch {
       setProblem(common('error'))
     } finally {
+      submitting.current = false
       setBusy(false)
     }
   }
 
   if (sent) {
     return (
-      <div className={NOTICE_SUCCESS} role="status">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        className={`${NOTICE_SUCCESS} focus-visible:outline-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+        role="status"
+      >
         <p>{t('forgotSent')}</p>
         <p className="mt-4">
-          <Link href={signInHref} className={LINK}>
+          <Link
+            href={signInHref}
+            className={`${LINK} focus-visible:outline-gold-500 inline-flex min-h-11 items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+          >
             {t('signIn')}
           </Link>
         </p>
@@ -82,7 +99,7 @@ export function ForgotPasswordForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={submit} aria-busy={busy} className="flex flex-col gap-5" noValidate>
       {problem ? (
         <p className={NOTICE_ERROR} role="alert">
           {problem}
@@ -109,7 +126,10 @@ export function ForgotPasswordForm({
       </button>
 
       <p className={HINT}>
-        <Link href={signInHref} className={LINK}>
+        <Link
+          href={signInHref}
+          className={`${LINK} focus-visible:outline-gold-500 inline-flex min-h-11 items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+        >
           {t('signIn')}
         </Link>
       </p>

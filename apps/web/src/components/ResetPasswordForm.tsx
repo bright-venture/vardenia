@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Lock } from 'lucide-react'
 import { Link } from '../i18n/routing'
@@ -32,6 +32,7 @@ export function ResetPasswordForm({
   token,
   endpoint = '/auth/reset',
   signInHref = '/account/login',
+  forgotHref = '/account/forgot',
 }: {
   token: string
   /**
@@ -42,6 +43,7 @@ export function ResetPasswordForm({
    */
   endpoint?: string
   signInHref?: string
+  forgotHref?: string
 }) {
   const t = useTranslations('account')
   const common = useTranslations('common')
@@ -52,9 +54,17 @@ export function ResetPasswordForm({
   const [problem, setProblem] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [done, setDone] = useState(false)
+  const successRef = useRef<HTMLDivElement>(null)
+  const submitting = useRef(false)
+
+  useEffect(() => {
+    if (done) successRef.current?.focus()
+  }, [done])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (submitting.current) return
+    submitting.current = true
     setProblem(null)
     setErrors({})
     setBusy(true)
@@ -91,6 +101,14 @@ export function ResetPasswordForm({
       // Ours: a map of field to message, rendered under the input it belongs to.
       if (body?.errors && !Array.isArray(body.errors)) {
         setErrors(body.errors)
+        // Token/form errors have no visible field. Keep them discoverable above
+        // the password rather than silently dropping a rejected reset.
+        const otherErrors = Object.entries(body.errors)
+          .filter(([field]) => field !== 'password')
+          .map(([, message]) => message)
+          .filter(Boolean)
+        if (otherErrors.length) setProblem(otherErrors.join(' '))
+        else if (!body.errors.password) setProblem(body.message ?? common('error'))
         return
       }
 
@@ -102,16 +120,25 @@ export function ResetPasswordForm({
     } catch {
       setProblem(common('error'))
     } finally {
+      submitting.current = false
       setBusy(false)
     }
   }
 
   if (done) {
     return (
-      <div className={NOTICE_SUCCESS} role="status">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        className={`${NOTICE_SUCCESS} focus-visible:outline-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+        role="status"
+      >
         <p>{t('resetDone')}</p>
         <p className="mt-4">
-          <Link href={signInHref} className={LINK}>
+          <Link
+            href={signInHref}
+            className={`${LINK} focus-visible:outline-gold-500 inline-flex min-h-11 items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+          >
             {t('signIn')}
           </Link>
         </p>
@@ -120,11 +147,17 @@ export function ResetPasswordForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
+    <form onSubmit={submit} aria-busy={busy} className="flex flex-col gap-5" noValidate>
       {problem ? (
-        <p className={NOTICE_ERROR} role="alert">
-          {problem}
-        </p>
+        <div className={NOTICE_ERROR} role="alert">
+          <p>{problem}</p>
+          <Link
+            href={forgotHref}
+            className={`${LINK} focus-visible:outline-gold-500 mt-2 inline-flex min-h-11 items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
+          >
+            {t('sendResetLink')}
+          </Link>
+        </div>
       ) : null}
 
       <div>
@@ -144,12 +177,17 @@ export function ResetPasswordForm({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={errors.password ? `${INPUT_ICON} ${INPUT_ERROR}` : INPUT_ICON}
-            aria-describedby={errors.password ? `${ids}-password-error` : `${ids}-password-hint`}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={
+              errors.password
+                ? `${ids}-password-hint ${ids}-password-error`
+                : `${ids}-password-hint`
+            }
           />
         </div>
 
         {errors.password ? (
-          <p id={`${ids}-password-error`} className={ERROR_TEXT}>
+          <p id={`${ids}-password-error`} role="alert" className={ERROR_TEXT}>
             {errors.password}
           </p>
         ) : null}

@@ -317,7 +317,7 @@ export default function proxy(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

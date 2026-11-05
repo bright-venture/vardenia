@@ -1,3 +1,4 @@
+import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -73,12 +74,11 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
           <ListingGrid listings={listings} locale={locale as Locale} empty={t('noSaved')} />
         </div>
       ) : (
-        <div className="mt-12">
-          <p className="text-ink-500">{t('noSaved')}</p>
-          <Link href="/directory" className={`${LINK} mt-3 inline-block`}>
-            {t('browse')}
-          </Link>
-        </div>
+        <AccountEmptyState
+          kind="saved"
+          message={t('noSaved')}
+          action={{ href: '/directory', label: t('browse') }}
+        />
       )}
     </main>
   )

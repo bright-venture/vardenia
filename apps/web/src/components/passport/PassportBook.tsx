@@ -52,16 +52,16 @@ export async function PassportBook({
       {/* The cover. Dark, gold and the monogram, like the printed issue. */}
       <section className="bg-cedar-900 text-surface-base relative mt-6 overflow-hidden p-8 sm:p-12">
         <div className="flex flex-wrap items-start justify-between gap-8">
-          <div>
+          <div className="min-w-0 max-w-full">
             <Image src="/brand/monogram-ivory.png" alt="" width={51} height={56} />
             <p className="text-gold-300 mt-6 text-xs uppercase tracking-[0.3em]">
               {t('coverLabel')}
             </p>
-            <p className="font-display mt-2 text-3xl sm:text-4xl" dir="auto">
+            <p className="font-display mt-2 break-words text-3xl sm:text-4xl" dir="auto">
               {holder}
             </p>
           </div>
-          <dl className="flex gap-10">
+          <dl className="flex flex-wrap gap-6 sm:gap-10">
             <div>
               <dt className="text-surface-base/70 text-xs uppercase tracking-widest">
                 {t('points')}
@@ -97,7 +97,7 @@ export async function PassportBook({
         </div>
       ) : null}
 
-      <ul className="border-ink-100 bg-surface-raised mt-6 grid grid-cols-2 gap-x-4 gap-y-10 border p-6 sm:grid-cols-3 sm:p-10">
+      <ul className="border-ink-100 bg-surface-raised mt-6 grid grid-cols-1 gap-x-4 gap-y-10 border p-6 min-[480px]:grid-cols-2 sm:grid-cols-3 sm:p-10">
         {passport.stamps.map((stamp) => {
           const where = placeLabel(stamp.place.governorate, stamp.place.district, locale)
           const name = stamp.place.slug ? (
@@ -213,7 +213,7 @@ export async function PassportBook({
               milestone.reached ? 'border-gold-300 bg-gold-100/40' : 'border-ink-100',
             ].join(' ')}
           >
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
               <p className="text-ink-900 font-semibold">{t(`milestone.${milestone.key}`)}</p>
               <p className="text-ink-500 text-xs tabular-nums">
                 {milestone.reached

@@ -4,11 +4,11 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../../lib/seo'
+import { buildMetadata } from '../../../../../lib/seo'
 import { Link } from '../../../../../i18n/routing'
 import { findArticles } from '../../../../../lib/articles'
 import { ArticleCard } from '../../../../../components/ArticleCard'
-import { ListingsSkeleton } from '../../../../../components/PageSkeleton'
+import { ResultsSkeleton } from '../../../../../components/ResultsSkeleton'
 
 /**
  * Every article, newest first, regardless of which edition it ran in.
@@ -43,11 +43,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale })
-  return {
+  return buildMetadata({
+    seo: undefined,
     title: t('magazine.articles'),
     description: t('magazine.articlesMetaDescription'),
-    alternates: alternatesFor('/magazine/articles', isLocale(locale) ? locale : DEFAULT_LOCALE),
-  }
+    path: '/magazine/articles',
+    locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
+  })
 }
 
 export default async function ArticlesPage({ params, searchParams }: Props) {
@@ -72,7 +74,7 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
       <div className="vd-editorial-results">
         {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it, matching the directory page. */}
-        <Suspense fallback={<ListingsSkeleton />}>
+        <Suspense fallback={<ResultsSkeleton kind="editorial" />}>
           <ArticleResults locale={locale} searchParams={searchParams} />
         </Suspense>
       </div>

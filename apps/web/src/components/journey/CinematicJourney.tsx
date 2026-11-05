@@ -1,4 +1,7 @@
 'use client'
+import { EditionRegions, editionLabel } from './EditionRegions'
+import { GOVERNORATES } from '@vardenia/core'
+import { LinkArrow } from '../LinkArrow'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
@@ -40,8 +43,7 @@ export function CinematicJourney({
     [playing, setPlaying] = useState(false),
     [failed, setFailed] = useState(false)
   const [feeling, setFeeling] = useState<Feeling>('all'),
-    [active, setActive] = useState<string>('byblos'),
-    [selection, setSelection] = useState('all')
+    [active, setActive] = useState<string>('byblos')
   const [cityIndex, setCityIndex] = useState(3)
   const cityRoot = useRef<HTMLElement>(null)
   const [cityHover, setCityHover] = useState(false)
@@ -56,10 +58,15 @@ export function CinematicJourney({
     [pointerMotion, setPointerMotion] = useState(true)
   const ar = locale === 'ar',
     name = (p: Destination) => (ar ? p.ar : p.name),
-    region = (p: Destination) => (ar ? p.regionAr : p.region)
+    region = (p: Destination) => {
+      const edition = GOVERNORATES.find(
+        (g) => g.slug === p.where || g.districts.some((d) => d.slug === p.where),
+      )
+      return edition ? editionLabel(edition, ar) : ar ? p.regionAr : p.region
+    }
   const body = (p: Destination) => t(`${p.id}Body` as 'byblosBody')
   const shown = DESTINATIONS.filter((p) => matchesFeeling(p, feeling))
-  const available = shown.filter((p) => selection === 'all' || p.where === selection)
+  const available = shown
   const place = available.find((p) => p.id === active) || available[0]
   /**
    * The film waits for the page. It is 8 MB, and started with the page it
@@ -428,7 +435,10 @@ export function CinematicJourney({
             </h1>
             <p>{t('heroBody')}</p>
             <a className="vd-button vd-button-light" href="#ways">
-              {t('begin')} <span aria-hidden>↗</span>
+              {t('begin')}{' '}
+              <span aria-hidden>
+                <LinkArrow />
+              </span>
             </a>
           </div>
           <div className="vd-hero-bridge" aria-hidden>
@@ -440,7 +450,7 @@ export function CinematicJourney({
             <div>
               <p>{t('bridgeBody')}</p>
               <a className="vd-button vd-button-light" href="#ways">
-                {t('bridgeLink')} ↗
+                {t('bridgeLink')} <LinkArrow />
               </a>
             </div>
           </div>
@@ -509,10 +519,9 @@ export function CinematicJourney({
               href="#destinations"
               onClick={() => {
                 setFeeling('coast')
-                setSelection('all')
               }}
             >
-              {t('coastLink')} ↗
+              {t('coastLink')} <LinkArrow />
             </a>
           </div>
           {scenePhoto('beirut', 'vd-photo-city', -12)}
@@ -530,10 +539,9 @@ export function CinematicJourney({
               href="#destinations"
               onClick={() => {
                 setFeeling('mountain')
-                setSelection('all')
               }}
             >
-              {t('mountainLink')} ↗
+              {t('mountainLink')} <LinkArrow />
             </a>
           </div>
           {scenePhoto('bsharri', 'vd-photo-mountain', 20)}
@@ -588,7 +596,7 @@ export function CinematicJourney({
             }}
             onPointerLeave={() => setCityHover(false)}
           >
-            {t('explore')} ↗
+            {t('explore')} <LinkArrow />
           </Link>
         </div>
         <Coordinates
@@ -608,7 +616,15 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('atlasBody')}</p>
         </div>
-        <div className="vd-destination-stage">
+        <EditionRegions title={t('editionRegions')} arabic={ar} />
+        <h3 className="vd-featured-destinations-title" id="vd-featured-destinations-title">
+          {t('featuredDestinations')}
+        </h3>
+        <div
+          className="vd-destination-stage"
+          role="group"
+          aria-labelledby="vd-featured-destinations-title"
+        >
           <div className="vd-destination-images" aria-hidden>
             {DESTINATIONS.map((p) => (
               <img
@@ -632,30 +648,12 @@ export function CinematicJourney({
                   onClick={(e) => {
                     setPointerMotion(e.detail > 0)
                     setFeeling(key)
-                    setSelection('all')
                   }}
                 >
                   {label}
                 </button>
               ))}
             </div>
-            <label>
-              {t('region')}
-              <select
-                value={selection}
-                onChange={(e) => {
-                  setSelection(e.target.value)
-                  setPointerMotion(false)
-                }}
-              >
-                <option value="all">{t('allRegions')}</option>
-                {shown.map((p) => (
-                  <option key={p.id} value={p.where}>
-                    {region(p)}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
           <div className="vd-destination-map">
             <div
@@ -672,7 +670,6 @@ export function CinematicJourney({
                 })[0]!
                 setPointerMotion(true)
                 setFeeling('all')
-                setSelection('all')
                 setActive(nearest.id)
               }}
             >
@@ -689,7 +686,6 @@ export function CinematicJourney({
                   onClick={(e) => {
                     setPointerMotion(e.detail > 0)
                     setFeeling('all')
-                    setSelection('all')
                     setActive(p.id)
                   }}
                 >
@@ -700,7 +696,7 @@ export function CinematicJourney({
             </div>
             <p>{t('mapCaption')}</p>
             <a href="#discovery-route">
-              {t('routeTitle')} · {trip.length} ↗
+              {t('routeTitle')} · {trip.length} <LinkArrow />
             </a>
           </div>
           {place && (
@@ -715,7 +711,7 @@ export function CinematicJourney({
               <p className="vd-destination-description">{body(place)}</p>
               <div className="vd-destination-actions">
                 <Link className="vd-button vd-button-light" href={directoryFor(place)}>
-                  {t('explore')} ↗
+                  {t('explore')} <LinkArrow />
                 </Link>
                 <button
                   className="vd-button vd-button-paper"
@@ -893,7 +889,9 @@ export function CinematicJourney({
                     <div className="vd-postcard-back" inert={!back}>
                       <span>Vardenia</span>
                       <p>{body(p)}</p>
-                      <Link href={directoryFor(p)}>{t('readRegion')} ↗</Link>
+                      <Link href={directoryFor(p)}>
+                        {t('readRegion')} <LinkArrow />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -928,7 +926,7 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('magazineBody')}</p>
           <Link className="vd-button vd-button-light" href="/magazine">
-            {t('readMagazine')} ↗
+            {t('readMagazine')} <LinkArrow />
           </Link>
         </div>
         {magazine}

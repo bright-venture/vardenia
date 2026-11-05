@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { anyone, isStaff } from '../access/index'
 import { blockMediaInUse } from '../hooks/blockMediaInUse'
 import { unguessableFilename } from '../hooks/unguessableFilename'
+import { revalidateMediaAfterChange, revalidateMediaAfterDelete } from '../hooks/revalidateMedia'
 
 /**
  * Photography is the product for a luxury title, so the image sizes here are
@@ -26,6 +27,8 @@ export const Media: CollectionConfig = {
     // guessing its name. See hooks/unguessableFilename.
     beforeOperation: [unguessableFilename],
     beforeDelete: [blockMediaInUse],
+    afterChange: [revalidateMediaAfterChange],
+    afterDelete: [revalidateMediaAfterDelete],
   },
 
   upload: {
