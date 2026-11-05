@@ -21,6 +21,12 @@
  *   k6 run load-tests/site.js                  # climbs to 50 visitors, about 7 minutes
  *   k6 run -e PEAK=100 load-tests/site.js      # climb to another peak
  *
+ * From many machines at once (Grafana Cloud k6, free account):
+ *
+ *   k6 cloud login --token <your Grafana Cloud k6 token>
+ *   k6 cloud run load-tests/site.js            # from Frankfurt (the free plan's one city)
+ *   k6 cloud run -e ZONES=5 load-tests/site.js # five cities, on a paid plan only
+ *
  * If the coming-soon gate is ever up again, set $env:PREVIEW_TOKEN to the value
  * of COMING_SOON_PREVIEW_TOKEN first. It is read from the environment and never
  * written in this file. The gate serves its splash at the same address, so the
@@ -35,6 +41,11 @@
  * one address for a short while. That is a limit on one address, which a real
  * crowd on many phones does not hit. To measure past it, run from several
  * addresses (for example Grafana Cloud k6).
+ *
+ * Then 50 from two addresses at once, the full 7 minutes: 25 from Grafana in
+ * Frankfurt and 25 from a computer in Lebanon. No page failed (1,650 from the
+ * computer alone), 95% in under 0.42 s, and every goal passed on both halves.
+ * So Netlify's per-address limit sits between 25 and 50 visitors' worth.
  */
 
 import http from 'k6/http'
@@ -123,6 +134,31 @@ export const options = SMOKE
         'http_req_duration{page:section}': ['p(95)<2000'],
         'http_req_duration{page:directory}': ['p(95)<2000'],
         'http_req_duration{page:listing}': ['p(95)<2000'],
+      },
+      // Read only by `k6 cloud run`; ignored by a plain `k6 run`. The free
+      // Grafana plan allows one city per test, so Frankfurt, where the site
+      // runs. A paid plan can split the visitors over several cities (each
+      // with its own addresses, as a real crowd is): -e ZONES=5.
+      cloud: {
+        name: 'Vardenia public site',
+        distribution: Object.fromEntries(
+          [
+            ['frankfurt', 'amazon:de:frankfurt'],
+            ['paris', 'amazon:fr:paris'],
+            ['london', 'amazon:gb:london'],
+            ['dublin', 'amazon:ie:dublin'],
+            ['milan', 'amazon:it:milan'],
+          ]
+            .slice(0, Math.max(1, Math.min(5, Number(__ENV.ZONES || 1))))
+            .map(([name, loadZone], _, all) => [
+              name,
+              {
+                loadZone,
+                percent:
+                  Math.floor(100 / all.length) + (name === 'frankfurt' ? 100 % all.length : 0),
+              },
+            ]),
+        ),
       },
     }
 
