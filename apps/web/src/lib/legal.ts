@@ -237,18 +237,15 @@ export function termsOfService(): LegalDocument {
       {
         heading: 'What Vardenia is, and is not',
         body: [
-          'We are a guide, and we write about the places here ourselves. A business cannot edit what we say about it.',
+          'We are a guide. We choose every place that appears here, and we write about them ourselves. A business cannot edit what we say about it.',
           'We are not the hotel, the restaurant, or the venue. We do not own them, run them, or supervise them, and we cannot guarantee your experience of them.',
-          TBD(
-            'whether every place is chosen or visited by Vardenia before it appears, or only those marked Verified by Vardenia - the directory now includes places that pay to be listed',
-          ),
         ],
       },
 
       {
         heading: 'How places are listed and ordered',
         body: [
-          'Places pay Vardenia to be listed, at one of three levels: bronze, a listing on the website; silver, which adds a page in the printed magazine; and gold, which adds first place in every list and a place on the home page.',
+          'Every place here is one we chose. Paying does not get a place in: a place we have chosen then pays Vardenia to be listed, at one of three levels: bronze, a listing on the website; silver, which adds a page in the printed magazine; and gold, which adds first place in every list and a place on the home page.',
           '- **The order of a list reflects that level.** Gold places come first, then silver, then bronze, and places at the same level are in alphabetical order. A place higher in a list has paid for a higher level; it is not ranked as better.',
           '- **The band at the top of the home page** shows gold places. It is paid placement, and is labelled as chosen by the places who back this guide.',
           "- **A place marked 'Verified by Vardenia'** has been visited and checked by us in person.",
