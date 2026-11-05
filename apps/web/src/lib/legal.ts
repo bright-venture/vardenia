@@ -294,10 +294,8 @@ export function termsOfService(): LegalDocument {
           'You can review a place once a visit you booked through Vardenia is complete.',
           '- **We read every review before it is published**, and may decline one that is not about a real visit, is abusive, or reveals personal information.',
           '- **It is shown with your first name and initial.**',
-          '- **By sending it, you allow us** to publish it on Vardenia, and to show it with the place it is about, for as long as it is published. You can ask us to take it down.',
-          TBD(
-            'whether reviews may also appear in the printed magazine or in promotion of Vardenia',
-          ),
+          '- **By sending it, you allow us** to publish it on the Vardenia website, with the place it is about, for as long as it is published. You can ask us to take it down.',
+          '- **It appears on the website only.** We do not print reviews in the magazine or use them in advertising.',
         ],
       },
 
