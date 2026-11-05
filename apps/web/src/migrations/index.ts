@@ -49,6 +49,7 @@ import * as migration_20261029_074210_receipts_object_key from './20261029_07421
 import * as migration_20261105_072426_receipt_amount_first from './20261105_072426_receipt_amount_first'
 import * as migration_20261105_085430_receipt_reading from './20261105_085430_receipt_reading'
 import * as migration_20261105_112151_tiers_bronze_silver_gold from './20261105_112151_tiers_bronze_silver_gold'
+import * as migration_20261105_140000_drop_featured_column from './20261105_140000_drop_featured_column'
 
 export const migrations = [
   {
@@ -305,5 +306,10 @@ export const migrations = [
     up: migration_20261105_112151_tiers_bronze_silver_gold.up,
     down: migration_20261105_112151_tiers_bronze_silver_gold.down,
     name: '20261105_112151_tiers_bronze_silver_gold',
+  },
+  {
+    up: migration_20261105_140000_drop_featured_column.up,
+    down: migration_20261105_140000_drop_featured_column.down,
+    name: '20261105_140000_drop_featured_column',
   },
 ]
