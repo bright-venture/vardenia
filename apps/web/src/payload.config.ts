@@ -140,6 +140,13 @@ export default buildConfig({
     dateFormat: 'd MMM yyyy, HH:mm',
     meta: {
       titleSuffix: ' - Vardenia',
+      // The site's own V (app/icon.svg, app/favicon.ico), instead of Payload's
+      // mark, so an admin tab reads as Vardenia among the site's own tabs.
+      icons: [
+        { rel: 'icon', type: 'image/svg+xml', url: '/icon.svg' },
+        { rel: 'icon', type: 'image/x-icon', sizes: '48x48', url: '/favicon.ico' },
+        { rel: 'apple-touch-icon', type: 'image/png', sizes: '180x180', url: '/apple-icon.png' },
+      ],
     },
     // Custom admin components are referenced by path, resolved from here. Pinned
     // to src so those paths read as '/components/...' rather than '/src/...'.
