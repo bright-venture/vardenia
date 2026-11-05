@@ -31,7 +31,8 @@
     "translate:taglines": "tsx src/import/translate-taglines.ts",
     "translate:descriptions": "tsx src/import/translate-descriptions.ts",
     "backup:export": "tsx src/backup/export-cli.ts",
-    "backup:restore": "tsx src/backup/restore-cli.ts"
+    "backup:restore": "tsx src/backup/restore-cli.ts",
+    "backup:weekly": "tsx src/backup/weekly-cli.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.90.2",

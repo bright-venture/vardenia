@@ -7,8 +7,8 @@ the designer's sheet; a scan count starts again from the log. The one thing that
 cannot be recreated is the map from a printed code to what it opens, because that
 code was random and is now on paper.
 
-The free Supabase plan takes no database backups, so this is the backup for that
-one irreplaceable thing.
+It was the only backup while Supabase was on the free plan, and it is still the
+one that keeps the history of the codes in git. See "The other backups" below.
 
 ## What is in the file
 
@@ -94,9 +94,70 @@ This is left as a deliberate, eyes-open step rather than something the restore
 does on its own, because deleting a QR code row is the one action the whole
 system is otherwise built to prevent.
 
-## When to stop relying on this
+## The other backups
 
-This covers the pre-launch state, where the only irreplaceable data is the codes.
-Once real bookings and customers accrue, upgrade Supabase to a plan with
-scheduled backups and point-in-time recovery: that data is personal, cannot live
-here, and this file was never meant to hold it.
+This file covers the codes, every night, in public. Everything else is personal
+data and lives elsewhere:
+
+- **Supabase's daily backups.** Production is on the Pro plan (since 4 Nov 2026),
+  which backs the database up every night and keeps seven days, under Database,
+  Backups in the dashboard. They do not include Storage, and they live in the
+  same account as the database.
+- **The weekly full backup**, below, for what those leave out.
+
+## Weekly full backup
+
+`backup:weekly` copies production's `payload` schema and both Storage buckets
+(listing photos and guests' receipts) to a disk outside Supabase. It is read-only
+on both sides. Run it once a week from the repo root:
+
+```bash
+pnpm --filter @vardenia/web backup:weekly
+```
+
+It reads `.env.prod` and writes to `Desktop\Vardenia\backups\weekly`, next to the
+repo and never inside it: it refuses a folder inside the repository, because this
+folder is committed and the copy holds guests, bookings and receipts.
+
+```
+backups/weekly/
+  2026-11-09/                 one folder per run, never changed afterwards
+    manifest.json             row counts and checksums, last migration, files
+    database/<table>.jsonl    one row per line, as row_to_json wrote it
+    database/_schema.json     columns, enums, sequences, migrations applied
+    files/media.json          every object each bucket held that day
+    files/receipts.json
+  files/media/...             one shared copy of the objects, only added to
+  files/receipts/...
+```
+
+The first run copies every photo (about 800 MB) and takes a few minutes. Later
+runs fetch only new objects. Nothing is ever deleted from `files/`, so a photo
+removed from Supabase is still here. A run that stops halfway leaves a folder
+ending in `.partial` and simply carries on next time.
+
+Options:
+
+- `--limit 500`: fetch at most 500 new files this run, for a slow connection.
+- `--skip-files`: the database only.
+- `--list-files`: the database, plus the list of objects, without copying them.
+- `--out D:/vardenia-backups`: another folder, such as an external disk.
+- `--env <file>`: another env file (default `.env.prod`).
+
+Keep the folder private: an external disk or the company drive, not a shared
+folder. Keep about three months of run folders and delete older ones by hand;
+each is about 30 MB.
+
+### Restoring from it
+
+Not scripted yet: it comes with the restore test. The steps are:
+
+1. On an empty Postgres, run the migrations up to `lastMigration` in the
+   manifest, which recreates every table, enum and index.
+2. For each `database/<table>.jsonl`, insert every line with
+   `INSERT INTO payload."<table>" SELECT * FROM json_populate_record(null::payload."<table>", $1::json)`,
+   with foreign key checks deferred (`SET session_replication_role = replica`).
+3. Set each sequence to its `last_value` from `_schema.json`.
+4. Upload `files/<bucket>/` back to each bucket.
+
+Every table's rows were checked to load back this way on 5 Nov 2026.
