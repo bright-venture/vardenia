@@ -1,20 +1,19 @@
 /**
- * The listing tier, the featured add-on, and the rule that keeps featured to
- * the places there are.
+ * The listing tier, and the rule that keeps gold to the places there are.
  *
  * The tiers and what each buys are declared in packages/core/src/tiers. This
  * file is the admin's side of them: the labels staff choose from, and the check
- * that stops a seventh featured listing being sold into a home page band that
+ * that stops a seventh gold listing being sold into a home page band that
  * shows six.
  *
- * Tier and featured are two fields because they are two questions. The tier
- * says whether the venue is in print; featured says whether it is on the home
- * page. Either tier can be featured.
+ * Home page placement used to be a separate Featured box either tier could
+ * tick. It is the gold tier now, so a website-only listing can no longer be
+ * bought above the magazine ones (see the note in packages/core/src/tiers).
  */
 
-import type { CheckboxField, CheckboxFieldValidation, SelectField } from 'payload'
-import { checkbox } from 'payload/shared'
-import { FEATURED_PLACES, LISTING_TIERS, type ListingTier } from '@vardenia/core'
+import type { SelectField, SelectFieldSingleValidation } from 'payload'
+import { select } from 'payload/shared'
+import { HOME_PAGE_PLACES, LISTING_TIERS, type ListingTier } from '@vardenia/core'
 import { isAdminFieldLevel } from '../access/index'
 
 /**
@@ -23,51 +22,52 @@ import { isAdminFieldLevel } from '../access/index'
  * the magazine page.
  */
 export const TIER_LABELS: Record<ListingTier, string> = {
-  basic: 'Basic (website only, no magazine page, no QR code)',
+  bronze: 'Bronze (website only, no magazine page, no QR code)',
   silver: 'Silver (magazine page, website included)',
+  gold: 'Gold (silver, plus first in every list and the home page)',
 }
 
 /**
- * Whether one more featured listing fits, given how many others hold a place.
+ * Whether one more gold listing fits, given how many others hold a place.
  *
  * Separate from the validator so the arithmetic can be tested without a
  * database, and so the message is written once.
  */
-export function featuredPlaceCheck(
-  othersFeatured: number,
-  places: number = FEATURED_PLACES,
+export function goldPlaceCheck(
+  othersGold: number,
+  places: number = HOME_PAGE_PLACES,
 ): string | true {
-  if (othersFeatured < places) return true
-  return `The home page shows ${places} featured listings and all ${places} places are taken. Untick featured on one of them first.`
+  if (othersGold < places) return true
+  return `The home page shows ${places} gold listings and all ${places} places are taken. Move one of them to silver first.`
 }
 
 /**
- * Payload's own checkbox validation first, then the place count.
+ * Payload's own select validation first, then the place count.
  *
- * Only ticking the box takes a place. A listing that is already featured keeps
- * its place on every later save, even if the count has somehow gone over -
+ * Only choosing gold takes a place. A listing that is already gold keeps its
+ * place on every later save, even if the count has somehow gone over -
  * refusing an unrelated edit to a paying listing would be the wrong way to
  * surface that.
  *
- * Drafts count. A featured listing saved as a draft has been sold the place,
- * and publishing it must not be the moment the band turns out to be full.
+ * Drafts count. A gold listing saved as a draft has been sold the place, and
+ * publishing it must not be the moment the band turns out to be full.
  */
-export const validateFeatured: CheckboxFieldValidation = async (value, options) => {
-  const valid = await checkbox(value, options)
+export const validateTier: SelectFieldSingleValidation = async (value, options) => {
+  const valid = await select(value, options)
   if (valid !== true) return valid
-  if (value !== true || options.previousValue === true) return true
+  if (value !== 'gold' || options.previousValue === 'gold') return true
 
   const { req, id } = options
   const { totalDocs } = await req.payload.count({
     collection: 'businesses',
     where: {
-      and: [{ featured: { equals: true } }, ...(id == null ? [] : [{ id: { not_equals: id } }])],
+      and: [{ tier: { equals: 'gold' } }, ...(id == null ? [] : [{ id: { not_equals: id } }])],
     },
     overrideAccess: true,
     req,
   })
 
-  return featuredPlaceCheck(totalDocs)
+  return goldPlaceCheck(totalDocs)
 }
 
 export const tierField: SelectField = {
@@ -82,22 +82,9 @@ export const tierField: SelectField = {
   // the value falls back to the default above. The importer overrides access.
   access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
   options: LISTING_TIERS.map((tier) => ({ label: TIER_LABELS[tier], value: tier })),
+  validate: validateTier,
   admin: {
     components: { Cell: '/components/admin/ListCells#TierCell' },
-    description:
-      'Basic: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Home page placement is the Featured box below, which either tier can have.',
-  },
-}
-
-export const featuredField: CheckboxField = {
-  name: 'featured',
-  type: 'checkbox',
-  defaultValue: false,
-  index: true,
-  // As tier: a new listing made by staff starts unfeatured.
-  access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
-  validate: validateFeatured,
-  admin: {
-    description: `An add-on to either tier: a place at the top of the home page, and first place in every listing grid. The home page has ${FEATURED_PLACES} places, and the box cannot be ticked on a seventh listing.`,
+    description: `Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, which has ${HOME_PAGE_PLACES}. Every silver listing comes before every bronze one.`,
   },
 }

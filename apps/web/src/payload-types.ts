@@ -407,13 +407,9 @@ export interface Business {
     cancellationPolicy?: string | null
   }
   /**
-   * Basic: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Home page placement is the Featured box below, which either tier can have.
+   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, which has 6. Every silver listing comes before every bronze one.
    */
-  tier: 'basic' | 'silver'
-  /**
-   * An add-on to either tier: a place at the top of the home page, and first place in every listing grid. The home page has 6 places, and the box cannot be ticked on a seventh listing.
-   */
-  featured?: boolean | null
+  tier: 'bronze' | 'silver' | 'gold'
   /**
    * A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the default on the Commissions page. No-shows and cancellations are never charged.
    */
@@ -550,7 +546,7 @@ export interface User {
   id: number
   name: string
   /**
-   * Staff create and edit all content, make and edit QR codes, and run bookings and billing. Admin additionally manages the team, changes the sign-in of partner and customer accounts, sets tier, featured, verified and booking fees, deletes what cannot be undone, and switches printed QR codes off. Venue owners sign in with a partner account, not here.
+   * Staff create and edit all content, make and edit QR codes, and run bookings and billing. Admin additionally manages the team, changes the sign-in of partner and customer accounts, sets tier, verified and booking fees, deletes what cannot be undone, and switches printed QR codes off. Venue owners sign in with a partner account, not here.
    */
   roles: ('admin' | 'staff')[]
   phone?: string | null
@@ -1347,7 +1343,6 @@ export interface BusinessesSelect<T extends boolean = true> {
         cancellationPolicy?: T
       }
   tier?: T
-  featured?: T
   commission?:
     | T
     | {

@@ -37,9 +37,8 @@ export interface BusinessFixture {
   district: string
   address: { en: string; ar: string }
   location: [number, number]
+  /** Gold carries the home page place. */
   tier: ListingTier
-  /** The home page add-on. Either tier can carry it. */
-  featured?: boolean
   verified: boolean
   priceRange: '1' | '2' | '3' | '4'
   amenities: string[]
@@ -81,8 +80,7 @@ export const BUSINESSES: BusinessFixture[] = [
       ar: 'شارع عبد الوهاب الإنكليزي، الأشرفية',
     },
     location: [35.5199, 33.8886],
-    tier: 'silver',
-    featured: true,
+    tier: 'gold',
     verified: true,
     priceRange: '4',
     amenities: [
@@ -114,8 +112,7 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'beirut',
     address: { en: 'Monot Street, Achrafieh', ar: 'شارع مونو، الأشرفية' },
     location: [35.5145, 33.8894],
-    tier: 'silver',
-    featured: true,
+    tier: 'gold',
     verified: true,
     priceRange: '4',
     amenities: ['valet-parking', 'alcohol', 'outdoor-seating', 'air-conditioning'],
@@ -139,8 +136,7 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'zahle',
     address: { en: 'Ksara, Zahle', ar: 'كسارة، زحلة' },
     location: [35.8903, 33.8225],
-    tier: 'silver',
-    featured: true,
+    tier: 'gold',
     verified: true,
     priceRange: '2',
     amenities: ['free-parking', 'alcohol', 'family-friendly', 'outdoor-seating'],
@@ -166,9 +162,8 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'keserwan',
     address: { en: 'Kfardebian, Keserwan', ar: 'كفردبيان، كسروان' },
     location: [35.8422, 34.0086],
-    // Website only, and featured: the add-on works on either tier.
-    tier: 'basic',
-    featured: true,
+    // Website only: a bronze listing, which can never be bought onto the home page.
+    tier: 'bronze',
     verified: false,
     priceRange: '3',
     amenities: ['free-parking', 'family-friendly', 'mountain-view'],
@@ -212,8 +207,8 @@ export const BUSINESSES: BusinessFixture[] = [
     district: 'batroun',
     address: { en: 'Douma, Batroun', ar: 'دوما، البترون' },
     location: [35.8339, 34.2172],
-    // Website only, no magazine page: the basic tier needs an example too.
-    tier: 'basic',
+    // Website only, no magazine page: the bronze tier needs an example too.
+    tier: 'bronze',
     verified: false,
     priceRange: '2',
     amenities: ['mountain-view', 'free-parking', 'pet-friendly'],

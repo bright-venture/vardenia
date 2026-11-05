@@ -38,7 +38,6 @@ export interface BusinessPerformance {
   district: string | null
   category: string | null
   tier: string
-  featured: boolean
   bookingsOn: boolean
   hasPartner: boolean
   hasCode: boolean
@@ -222,8 +221,8 @@ export function suggestionsFor(b: Facts, flags: Flag[]): Suggestion[] {
   if (b.missing.description) add('Add a short description of what makes the place worth the trip.')
   if (b.missing.arabicName) add('Give us your name in Arabic, for Arabic readers.')
   if (b.missing.location) add('Send us your exact location, so the map and directions work.')
-  if ((flags.includes('low-scans') || flags.includes('looked-not-booked')) && !b.featured) {
-    add('Offer Featured for a month: a place on the home page and first in every list.', true)
+  if ((flags.includes('low-scans') || flags.includes('looked-not-booked')) && b.tier !== 'gold') {
+    add('Offer Gold: first place in every list and a place on the home page.', true)
   }
   return out
 }
@@ -284,7 +283,7 @@ export async function performanceReport(
 
   const [listings, scans, places, bookings, gaps] = await Promise.all([
     q(`
-      select b.id, b.slug, b.governorate, b.district, b.category, b.tier, b.featured,
+      select b.id, b.slug, b.governorate, b.district, b.category, b.tier,
              b.booking_enabled, b.qr_code_id,
              (select name from {schema}.businesses_locales where _parent_id = b.id and _locale = 'en') as name,
              exists (select 1 from {schema}.business_users_rels r where r.businesses_id = b.id) as has_partner
@@ -358,7 +357,6 @@ export async function performanceReport(
       district: str(l.district),
       category: str(l.category),
       tier: String(l.tier ?? ''),
-      featured: l.featured === true,
       bookingsOn: l.booking_enabled === true,
       hasPartner: l.has_partner === true,
       hasCode: l.qr_code_id != null,

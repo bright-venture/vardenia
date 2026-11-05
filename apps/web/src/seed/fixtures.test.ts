@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  FEATURED_PLACES,
+  HOME_PAGE_PLACES,
   GOVERNORATES,
   LISTING_TIERS,
   TAXONOMY,
@@ -100,14 +100,14 @@ describe('business fixtures', () => {
   })
 
   /**
-   * Featured is a flag either tier can carry, so the fixtures show it on both.
-   * And no more of them than the home page shows, or the seed would build a
-   * state the admin refuses.
+   * Every tier has an example, so each rung can be seen on a fresh database.
+   * And no more gold listings than the home page shows, or the seed would build
+   * a state the admin refuses.
    */
-  it('features listings on both tiers, within the home page places', () => {
-    const featured = BUSINESSES.filter((b) => b.featured)
-    expect(new Set(featured.map((b) => b.tier))).toEqual(new Set(LISTING_TIERS))
-    expect(featured.length).toBeLessThanOrEqual(FEATURED_PLACES)
+  it('has a listing on every tier, and gold within the home page places', () => {
+    expect(new Set(BUSINESSES.map((b) => b.tier))).toEqual(new Set(LISTING_TIERS))
+    const gold = BUSINESSES.filter((b) => b.tier === 'gold')
+    expect(gold.length).toBeLessThanOrEqual(HOME_PAGE_PLACES)
   })
 })
 

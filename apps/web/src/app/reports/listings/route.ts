@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
     'Category',
     'Governorate',
     'Tier',
-    'Featured',
     // Every column asks what the listing has, so a cell reads "Photograph: no"
     // rather than "No photograph: no". `toCsv` writes a boolean as yes or no.
     'Photograph',
@@ -62,7 +61,6 @@ export async function GET(request: NextRequest) {
     g.category,
     g.governorate,
     g.tier,
-    g.featured,
     g.hasPhotograph,
     g.hasGallery,
     g.hasHours,

@@ -79,7 +79,7 @@ describe('relatedId', () => {
 })
 
 /**
- * Basic is the website-only tier and gets no QR code. A code it already has -
+ * Bronze is the website-only tier and gets no QR code. A code it already has -
  * from before it moved down - stays active, but is not printed again.
  */
 describe('goesToPrint', () => {
@@ -90,7 +90,7 @@ describe('goesToPrint', () => {
   })
 
   it('leaves out the code of a basic listing', () => {
-    expect(goesToPrint(code({ id: 2, tier: 'basic' }))).toBe(false)
+    expect(goesToPrint(code({ id: 2, tier: 'bronze' }))).toBe(false)
   })
 
   it('keeps what it cannot judge rather than dropping a card from the proof', () => {

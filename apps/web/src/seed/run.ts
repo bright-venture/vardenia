@@ -207,7 +207,6 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     amenities: fixture.amenities,
     priceRange: fixture.priceRange,
     tier: fixture.tier,
-    featured: fixture.featured ?? false,
     verified: fixture.verified,
     contractStartsAt: fixture.contractStartsAt,
     contractEndsAt: fixture.contractEndsAt,
@@ -262,9 +261,7 @@ async function seedBusinesses(payload: Payload, manifest: Manifest) {
     })
     for (const code of minted.docs) record(manifest, 'qr-codes', code.id)
 
-    payload.logger.info(
-      `Business: ${fixture.name.en} (${fixture.tier}${fixture.featured ? ', featured' : ''})`,
-    )
+    payload.logger.info(`Business: ${fixture.name.en} (${fixture.tier})`)
   }
 }
 

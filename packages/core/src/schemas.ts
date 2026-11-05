@@ -52,10 +52,9 @@ export const businessSummarySchema = z.object({
   district: z.string().nullable(),
   coordinates: coordinatesSchema.nullable(),
   heroImage: z.string().url().nullable(),
-  tier: z.enum(LISTING_TIERS),
-  // The home page add-on, which either tier can carry. Defaulted, so a response
-  // from before the flag existed still parses.
-  featured: z.boolean().default(false),
+  // `basic` is the old name of `bronze`, read as it so a response from before
+  // the rename still parses. Home page placement is the `gold` tier.
+  tier: z.preprocess((value) => (value === 'basic' ? 'bronze' : value), z.enum(LISTING_TIERS)),
   verified: z.boolean(),
   priceRange: z.number().int().min(1).max(4).nullable(),
   qrCode: z.string().nullable(),
@@ -86,7 +85,7 @@ export type BusinessDetail = z.infer<typeof businessDetailSchema>
 
 /**
  * Directory search. `near` + `radiusKm` drive the PostGIS query behind
- * "attractions near me"; without `near`, results fall back to featured, then tier rank.
+ * "attractions near me"; without `near`, results fall back to tier rank (gold, silver, bronze).
  */
 export const businessQuerySchema = z.object({
   q: z.string().trim().min(1).max(120).optional(),

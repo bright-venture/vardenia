@@ -62,8 +62,8 @@ function fieldNamed(fields: Field[], name: string): Field {
 /**
  * The one that matters most.
  *
- * Anything in this tab is commercial. Three fields are deliberately public - the
- * site renders a tier badge and a verified tick, and `featured` is what the home
+ * Anything in this tab is commercial. Two fields are deliberately public - the
+ * site renders a tier badge and a verified tick, and the tier is what the home
  * page band queries and every listing grid sorts on, as an anonymous visitor -
  * and everything else must carry
  * field-level read access. Adding a field here without one is the exact mistake
@@ -71,7 +71,7 @@ function fieldNamed(fields: Field[], name: string): Field {
  * test until someone decides, in writing, which side it belongs on.
  */
 describe('Businesses: the Commercial tab', () => {
-  const PUBLICLY_READABLE = new Set(['tier', 'featured', 'verified'])
+  const PUBLICLY_READABLE = new Set(['tier', 'verified'])
 
   const fields = tabFields(Businesses, 'Commercial')
 
@@ -107,8 +107,8 @@ describe('Businesses: the Commercial tab', () => {
     expect(read!(fieldCtx(null))).toBe(false)
   })
 
-  it('lets only an admin change tier, featured and verified', () => {
-    for (const name of ['tier', 'featured', 'verified']) {
+  it('lets only an admin change tier and verified', () => {
+    for (const name of ['tier', 'verified']) {
       const field = fieldNamed(fields, name)
       const update = 'access' in field ? field.access?.update : undefined
 
@@ -121,13 +121,13 @@ describe('Businesses: the Commercial tab', () => {
 
 /**
  * Locked on edit and not on create was a way round the lock: a staff member
- * could make a listing that started out featured, verified or on a booking fee,
+ * could make a listing that started out gold, verified or on a booking fee,
  * or duplicate one that was. Denied on create, each falls back to its default.
  */
 describe('Businesses: commercial values on a new listing', () => {
   const fields = tabFields(Businesses, 'Commercial')
 
-  it.each(['tier', 'featured', 'verified', 'commission'])('%s is admin-only on create', (name) => {
+  it.each(['tier', 'verified', 'commission'])('%s is admin-only on create', (name) => {
     const field = fieldNamed(fields, name)
     const create = 'access' in field ? field.access?.create : undefined
 

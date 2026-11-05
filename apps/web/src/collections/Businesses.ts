@@ -14,7 +14,7 @@ import {
 } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
-import { featuredField, tierField } from '../fields/tier'
+import { tierField } from '../fields/tier'
 import { commissionField } from '../fields/commission'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
@@ -92,7 +92,7 @@ export const Businesses: CollectionConfig = {
      * field whose values are correctly hidden. See hooks/guardSort.
      */
     beforeOperation: [guardSort],
-    // Every listing on a printed tier gets a QR code automatically; basic, the
+    // Every listing on a printed tier gets a QR code automatically; bronze, the
     // website-only tier, gets none. Sales should never have to remember to press
     // a button before a print deadline.
     // The cached directory is keyed per filter, so publishing has to clear all
@@ -399,7 +399,6 @@ export const Businesses: CollectionConfig = {
           admin: { condition: (_, __, { user }) => hasStaffRole(user) },
           fields: [
             tierField,
-            featuredField,
             commissionField,
             {
               name: 'verified',

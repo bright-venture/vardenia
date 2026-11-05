@@ -56,7 +56,7 @@ export interface QrDoc {
 /**
  * Whether a code belongs on a print sheet.
  *
- * A code whose listing is on a tier without one - basic, the website-only tier
+ * A code whose listing is on a tier without one - bronze, the website-only tier
  * - is left off. It stays active, because it may be on paper from an earlier
  * issue and a printed code has to keep working; it is just not printed again.
  *

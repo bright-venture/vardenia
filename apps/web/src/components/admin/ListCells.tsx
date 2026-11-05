@@ -13,17 +13,20 @@ import type { DefaultCellComponentProps } from 'payload'
 
 type Props = DefaultCellComponentProps
 
-/** "Silver", plus "Featured" when the listing has a home-page place. */
-export function TierCell({ cellData, rowData }: Props) {
+/** "Gold", "Silver" or "Bronze", the higher rungs marked out. */
+export function TierCell({ cellData }: Props) {
   const tier = String(cellData ?? '')
   if (!tier) return null
   const name = tier.charAt(0).toUpperCase() + tier.slice(1)
+  const pill =
+    tier === 'gold'
+      ? 'vd-pill vd-pill--warn'
+      : tier === 'silver'
+        ? 'vd-pill vd-pill--ok'
+        : 'vd-pill'
   return (
     <span className="vd-cell-pills">
-      <span className={tier === 'silver' ? 'vd-pill vd-pill--ok' : 'vd-pill'}>{name}</span>
-      {(rowData as { featured?: boolean })?.featured ? (
-        <span className="vd-pill vd-pill--warn">Featured</span>
-      ) : null}
+      <span className={pill}>{name}</span>
     </span>
   )
 }

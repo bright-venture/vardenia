@@ -137,14 +137,14 @@ describe('ensureQrCode', () => {
   })
 
   /**
-   * Basic is the website-only tier. The code is printed beside the magazine
+   * Bronze is the website-only tier. The code is printed beside the magazine
    * page, so a basic listing has nowhere for one to appear, and a minted code
    * is permanent.
    */
-  describe('on the basic tier', () => {
+  describe('on the bronze tier', () => {
     it('mints no code', async () => {
       const h = harness()
-      await h.run({ id: 1, tier: 'basic' })
+      await h.run({ id: 1, tier: 'bronze' })
 
       expect(h.created).toHaveLength(0)
       expect(h.updated).toHaveLength(0)
@@ -152,7 +152,7 @@ describe('ensureQrCode', () => {
 
     it('still re-links a code already made for the listing, which may be printed', async () => {
       const h = harness({ codesForBusiness: [{ id: 7, code: 'AASBVQR' }] })
-      const result = (await h.run({ id: 1, tier: 'basic' })) as { qrCode?: number }
+      const result = (await h.run({ id: 1, tier: 'bronze' })) as { qrCode?: number }
 
       expect(h.created).toHaveLength(0)
       expect(result.qrCode).toBe(7)
@@ -160,13 +160,13 @@ describe('ensureQrCode', () => {
 
     it('keeps a code the listing already has', async () => {
       const h = harness()
-      const result = (await h.run({ id: 1, tier: 'basic', qrCode: 42 })) as { qrCode?: number }
+      const result = (await h.run({ id: 1, tier: 'bronze', qrCode: 42 })) as { qrCode?: number }
 
       expect(h.created).toHaveLength(0)
       expect(result.qrCode).toBe(42)
     })
 
-    it('treats an unknown tier as basic rather than minting', async () => {
+    it('treats an unknown tier as bronze rather than minting', async () => {
       const h = harness()
       await h.run({ id: 1 })
 

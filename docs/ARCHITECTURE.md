@@ -147,7 +147,7 @@ panel.
 
 - **staff** (`users`) - creates and edits all content: listings, articles, issues, media.
 - **admin** (`users`) - all of that, plus identity (accounts), the permanence layer (QR
-  codes, scan events) and commercial flags (`tier`, `featured`, `verified`).
+  codes, scan events) and commercial flags (`tier`, `verified`).
 - **customers** - the public who signed up. They book and keep a shortlist, and see their
   own bookings and saves, nothing else.
 - **partners** (`business-users`) - a venue signing in to a light dashboard to see the
@@ -181,8 +181,8 @@ are the substance of the file, and `SavedListings.ts` and `Customers.ts` for the
 On the `Commercial` tab, contract dates, sales owner and internal notes carry field-level
 `read: isStaffFieldLevel` and are stripped from every unauthenticated response.
 
-`tier`, `featured` and `verified` are deliberately public: tier and featured drive result
-ranking and the home page band, and `verified` is a trust badge shown to readers. All three appear in
+`tier` and `verified` are deliberately public: the tier drives result ranking and the home
+page band, and `verified` is a trust badge shown to readers. Both appear in
 `packages/core/src/schemas.ts`, which defines what may leave the building separately from
 what the database holds.
 
@@ -204,12 +204,16 @@ what the database holds.
 `if (tier === 'premium')` scattered through components. When sales invents a package, it is
 added there and the UI follows automatically.
 
-There are two tiers, and every one is paid: `basic` is the website listing alone, and
-`silver` is a page in the printed magazine with the website listing included. Only `silver`
-gets a QR code, because the code is printed beside the magazine page; a listing that moves
-down to `basic` keeps the code it has, which stays live but leaves the print sheet. Home page placement is not a tier but a separate `featured` flag,
-because either tier can buy it; the admin refuses it beyond `FEATURED_PLACES`, the number
-the home page band shows. Listing grids sort featured first, then silver above basic.
+There are three tiers, a ladder, and every one is paid: `bronze` is the website listing
+alone, `silver` is a page in the printed magazine with the website listing included, and
+`gold` is silver plus first place in every listing grid and a place in the home page band.
+Silver and gold get a QR code, because the code is printed beside the magazine page; a
+listing that moves down to `bronze` keeps the code it has, which stays live but leaves the
+print sheet. The admin refuses gold beyond `HOME_PAGE_PLACES`, the number the home page band
+shows. Listing grids sort on the tier alone, so every silver listing comes before every
+bronze one. Until 5 November 2026 `bronze` was called `basic`, and home page placement was a
+separate `featured` flag either tier could buy; it became the gold tier so a website-only
+listing could not be bought above the magazine ones.
 
 Nothing expires automatically. A lapsed contract keeps its tier until someone changes it,
 and the admin dashboard lists every lapsed contract so that someone notices.

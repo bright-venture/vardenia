@@ -1,35 +1,35 @@
 import { describe, expect, it } from 'vitest'
-import { FEATURED_PLACES, LISTING_TIERS } from '@vardenia/core'
-import { TIER_LABELS, featuredPlaceCheck } from './tier'
+import { HOME_PAGE_PLACES, LISTING_TIERS } from '@vardenia/core'
+import { TIER_LABELS, goldPlaceCheck } from './tier'
 
 /**
- * The home page band shows FEATURED_PLACES listings, sorted by name. A featured
+ * The home page band shows HOME_PAGE_PLACES listings, the gold ones. A gold
  * listing beyond that number would be paid for and never shown, so the admin
  * refuses it instead.
  */
-describe('featured places', () => {
+describe('gold places', () => {
   it('lets a listing in while a place is free', () => {
-    expect(featuredPlaceCheck(0)).toBe(true)
-    expect(featuredPlaceCheck(FEATURED_PLACES - 1)).toBe(true)
+    expect(goldPlaceCheck(0)).toBe(true)
+    expect(goldPlaceCheck(HOME_PAGE_PLACES - 1)).toBe(true)
   })
 
   it('refuses one more once every place is taken', () => {
-    const refusal = featuredPlaceCheck(FEATURED_PLACES)
+    const refusal = goldPlaceCheck(HOME_PAGE_PLACES)
     expect(refusal).not.toBe(true)
-    expect(refusal).toContain(String(FEATURED_PLACES))
+    expect(refusal).toContain(String(HOME_PAGE_PLACES))
   })
 
   it('refuses when the count has somehow gone over', () => {
-    expect(featuredPlaceCheck(FEATURED_PLACES + 3)).not.toBe(true)
+    expect(goldPlaceCheck(HOME_PAGE_PLACES + 3)).not.toBe(true)
   })
 
   it('names the way out in its refusal', () => {
-    expect(featuredPlaceCheck(FEATURED_PLACES)).toContain('Untick featured')
+    expect(goldPlaceCheck(HOME_PAGE_PLACES)).toContain('Move one of them to silver')
   })
 
   it('follows a different number of places', () => {
-    expect(featuredPlaceCheck(2, 3)).toBe(true)
-    expect(featuredPlaceCheck(3, 3)).not.toBe(true)
+    expect(goldPlaceCheck(2, 3)).toBe(true)
+    expect(goldPlaceCheck(3, 3)).not.toBe(true)
   })
 })
 
@@ -43,6 +43,7 @@ describe('tier labels', () => {
       expect(TIER_LABELS[tier], tier).toMatch(/\(.+\)/)
     }
     expect(TIER_LABELS.silver).toContain('magazine')
-    expect(TIER_LABELS.basic).toContain('no magazine')
+    expect(TIER_LABELS.bronze).toContain('no magazine')
+    expect(TIER_LABELS.gold).toContain('home page')
   })
 })

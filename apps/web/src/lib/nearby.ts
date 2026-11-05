@@ -11,7 +11,7 @@
  * # The order
  *
  * 1. Places with coordinates within NEARBY_RADIUS_KM, closest first.
- * 2. The same district, in the directory's own order (featured, tier, name).
+ * 2. The same district, in the directory's own order (tier, then name).
  * 3. The same governorate, likewise.
  * 4. Anything else in the category, so a listing with no neighbours still
  *    offers somewhere to go next. These are marked not near, and the page

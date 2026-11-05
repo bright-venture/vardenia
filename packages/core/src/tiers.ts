@@ -8,56 +8,60 @@
  */
 
 /**
- * Two tiers, in enum order, answering one question: is the venue in print?
+ * Three tiers, in enum order, a ladder where each rung is above the last:
  *
- * - `basic`: the listing on the website, and nothing in print. For a venue
+ * - `bronze`: the listing on the website, and nothing in print. For a venue
  *   that wants to be found online but does not buy a magazine page.
  * - `silver`: a page in the printed magazine, with the website listing
  *   included. Every listing imported from the magazine lands here, so it is
  *   also the default.
+ * - `gold`: silver, plus first place in every listing grid and one of the
+ *   places in the band at the top of the home page ({@link HOME_PAGE_PLACES}).
  *
- * Named as a ladder (basic, silver) rather than for what they contain, because
- * those are the names sales uses with a venue, and a third rung - gold - has
- * somewhere obvious to go. The names were `online` and `free` for a day;
- * `free` meant "the website comes free with the magazine page", which read to
- * everyone as "costs nothing".
+ * # Every silver listing comes before every bronze one
  *
- * # Featured is not a tier
+ * That is the rule the ladder exists for. Until 5 November 2026 home page
+ * placement was a separate `featured` flag either tier could buy, and the
+ * directory sorted on it first, so a website-only listing that bought it rose
+ * above every magazine listing. Sorting on the tier first instead would have
+ * left a featured bronze listing behind a thousand silver ones, sold something
+ * it could never show. So the flag became the top rung: only a magazine
+ * listing can buy the top of the list, and every rung outranks the one below.
  *
- * It is a separate `featured` flag on the listing, because it answers a
- * different question - is the venue on the home page? - and a website-only venue
- * can buy it as well as a magazine one. As a third tier it could only sit above
- * `silver`, which would have made "basic, but featured" impossible to
- * record without a fourth value, and every further add-on would have doubled
- * the list again. See {@link FEATURED_PLACES}.
+ * The tiers were called `basic` and `silver` before that; `basic` became
+ * `bronze` with the same meaning, and `tierOf` still reads the old name.
  *
  * Every tier is paid. Before this there were two, free and featured, and free
  * meant unpaid inventory; that changed when the website listing became what a
  * magazine page includes, and the website on its own something a venue can buy.
  *
- * The order matters beyond readability: the directory sorts on `-featured`,
- * then `-tier`, and `-tier` is the Postgres enum's own declaration order, so a
- * magazine listing rises above a website-only one. `basic` is declared first
- * in the enum for that reason.
+ * The order matters beyond readability: every listing grid sorts on `-tier`,
+ * and `-tier` is the Postgres enum's own declaration order, so gold comes
+ * first, then silver, then bronze. Declare a new rung in its place on the
+ * ladder, never at the end.
  */
-export const LISTING_TIERS = ['basic', 'silver'] as const
+export const LISTING_TIERS = ['bronze', 'silver', 'gold'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
- * How many listings can be featured, which is how many the home page shows.
+ * How many gold listings there can be, which is how many the home page band
+ * shows.
  *
- * Featured is an add-on either tier can buy: a place in the band at the top of
- * the home page, and first place in every listing grid. A featured listing that
- * never appears in the band has been sold something it does not get - the band
- * is sorted and cut at this number, so the seventh would silently lose out to
- * whichever six come first. The admin refuses the seventh instead. Raise this
- * and the band grows with it.
+ * A gold listing that never appears in the band has been sold something it
+ * does not get - the band is sorted and cut at this number, so the seventh
+ * would silently lose out to whichever six come first. The admin refuses a
+ * seventh gold listing instead. Raise this and the band grows with it.
  */
-export const FEATURED_PLACES = 6
+export const HOME_PAGE_PLACES = 6
 
 export interface TierCapabilities {
   /** Sort weight in directory results. Higher floats to the top within a category. */
   rank: number
+  /**
+   * A place in the band at the top of the home page. Gold only, and limited to
+   * {@link HOME_PAGE_PLACES} listings.
+   */
+  homePage: boolean
   /** Max images in the public gallery. */
   galleryLimit: number
   /** Gets a long-form editorial feature written by the Vardenia team. */
@@ -90,18 +94,15 @@ export interface TierCapabilities {
   pushCampaigns: boolean
 }
 
-/**
- * Home page placement is not in here: it belongs to the `featured` flag, which
- * either tier can carry, rather than to a tier.
- */
 export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   /**
    * The website listing on its own. It is a paid tier, so the listing page is
    * the full one, gallery included. What it lacks is print, which is what the
    * tier above sells, and with print the QR code and its scan report.
    */
-  basic: {
+  bronze: {
     rank: 0,
+    homePage: false,
     galleryLimit: 15,
     editorialFeature: false,
     qrCode: false,
@@ -115,6 +116,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
    */
   silver: {
     rank: 5,
+    homePage: false,
     galleryLimit: 15,
     editorialFeature: true,
     qrCode: true,
@@ -123,16 +125,32 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     // Not until the app has users. See the note on the field.
     pushCampaigns: false,
   },
+  /**
+   * Everything silver has, plus the top of every list and the home page band.
+   * It includes the magazine page, so a website-only venue cannot buy the top
+   * of the list without being in print.
+   */
+  gold: {
+    rank: 10,
+    homePage: true,
+    galleryLimit: 15,
+    editorialFeature: true,
+    qrCode: true,
+    analyticsAccess: true,
+    printInclusion: true,
+    pushCampaigns: false,
+  },
 }
 
 /**
  * Coerce whatever the database hands back into a tier.
  *
- * Unknown or missing values fall to the lowest tier, `basic`, rather than
- * throwing. Failing closed matters: the alternative is a listing with a corrupt
+ * `basic` is the old name of `bronze` and is read as it. Anything else unknown
+ * or missing falls to the lowest tier, `bronze`, rather than throwing. Failing closed matters: the alternative is a listing with a corrupt
  * tier quietly receiving print, which is what the tier above is paid for.
  */
 export function tierOf(value: unknown): ListingTier {
+  if (value === 'basic') return 'bronze'
   return LISTING_TIERS.includes(value as ListingTier) ? (value as ListingTier) : LISTING_TIERS[0]
 }
 

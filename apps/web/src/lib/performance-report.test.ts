@@ -16,7 +16,6 @@ const business = (over: Partial<Facts> = {}): Facts => ({
   district: 'beirut',
   category: 'food-and-beverage',
   tier: 'silver',
-  featured: false,
   bookingsOn: true,
   hasPartner: true,
   hasCode: true,

@@ -1,7 +1,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
-import { FEATURED_PLACES } from '@vardenia/core'
+import { HOME_PAGE_PLACES } from '@vardenia/core'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import type { Business } from '../payload-types'
@@ -355,7 +355,7 @@ async function readOpenNowCandidates(
     where,
     locale: dataLocale(locale),
     depth: 0,
-    sort: ['-featured', '-tier', 'name'],
+    sort: ['-tier', 'name'],
     overrideAccess: false,
     select: { openingHours: true },
   })
@@ -510,10 +510,11 @@ export async function findListings({
       depth: 1,
       page,
       limit: perPage,
-      // Featured first, then magazine listings above online-only ones, then
-      // alphabetical. Tier ranking lives in packages/core; this is the crude
-      // version until the list page grows real relevance sorting.
-      sort: ['-featured', '-tier', 'name'],
+      // Gold, then silver, then bronze, then alphabetical: every magazine
+      // listing above every website-only one. Tier ranking lives in
+      // packages/core; this is the crude version until the list page grows
+      // real relevance sorting.
+      sort: ['-tier', 'name'],
       overrideAccess: false,
     })
   }
@@ -704,11 +705,11 @@ export async function countByGovernorate({
 /**
  * The listings a venue has paid to have shown.
  *
- * This is the visible half of what the `featured` add-on buys - the home page
- * draws a band of these above everything else. The other half needs no query
- * at all: every listing grid sorts on `-featured` first, so a featured listing
- * rises to the top of its section without anything here. Either tier can be
- * featured, so the band can hold online-only listings as well as magazine ones.
+ * This is the visible half of what the gold tier buys - the home page draws a
+ * band of these above everything else. The other half needs no query at all:
+ * every listing grid sorts on `-tier` first, so a gold listing rises to the top
+ * of its section without anything here. Gold includes the magazine page, so
+ * the band only ever holds magazine listings.
  *
  * # Why it is its own query rather than a filter on the homepage grid
  *
@@ -721,7 +722,7 @@ export async function countByGovernorate({
  */
 export async function findFeaturedListings({
   locale,
-  limit = FEATURED_PLACES,
+  limit = HOME_PAGE_PLACES,
 }: {
   locale: Locale
   limit?: number
@@ -731,15 +732,15 @@ export async function findFeaturedListings({
 
     const result = await payload.find({
       collection: 'businesses',
-      where: { featured: { equals: true } },
+      where: { tier: { equals: 'gold' } },
       locale: dataLocale(locale),
       depth: 1,
       limit,
       pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
-      // All featured, so this orders the band by tier and then name.
-      sort: ['-featured', '-tier', 'name'],
+      // All gold, so this orders the band by name.
+      sort: ['name'],
     })
 
     return result.docs as ListingSummary[]
@@ -941,7 +942,7 @@ async function categoryPlaces(category: string): Promise<Placed[]> {
       collection: 'businesses',
       where: { category: { equals: category } },
       depth: 0,
-      sort: ['-featured', '-tier', 'name'],
+      sort: ['-tier', 'name'],
       overrideAccess: false,
       select: { location: true, district: true, governorate: true },
     })
@@ -1016,7 +1017,7 @@ async function categoryPool(category: string, locale: Locale): Promise<ListingSu
       locale: dataLocale(locale),
       depth: 1,
       limit: POOL_SIZE,
-      sort: ['-featured', '-tier', 'name'],
+      sort: ['-tier', 'name'],
       overrideAccess: false,
     })
 

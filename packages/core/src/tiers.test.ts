@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FEATURED_PLACES, LISTING_TIERS, TIER_CAPABILITIES, can, tierOf } from './tiers'
+import { HOME_PAGE_PLACES, LISTING_TIERS, TIER_CAPABILITIES, can, tierOf } from './tiers'
 
 /**
  * The commercial model, asserted rather than assumed.
@@ -49,6 +49,7 @@ describe('the ladder holds its shape', () => {
         'analyticsAccess',
         'printInclusion',
         'pushCampaigns',
+        'homePage',
       ] as const) {
         if (below[flag]) {
           expect(above[flag], `${LISTING_TIERS[i]} lost ${flag}`).toBe(true)
@@ -58,39 +59,42 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * The two tiers differ in one thing, print, which is how they are sold: the
-   * website, or a magazine page with the website included. The QR code and its
+   * Bronze and silver differ in one thing, print, which is how they are sold:
+   * the website, or a magazine page with the website included. The QR code and its
    * scan report come with print, because the code is printed beside the page.
    * A difference the sales sheet cannot name in one line is one a customer
    * cannot be asked to pay for.
    */
   it('adds print, and the QR code that goes with it, for the magazine tier', () => {
-    const { basic, silver } = TIER_CAPABILITIES
+    const { bronze, silver } = TIER_CAPABILITIES
 
-    expect(basic.printInclusion).toBe(false)
+    expect(bronze.printInclusion).toBe(false)
     expect(silver.printInclusion).toBe(true)
-    expect(basic.qrCode).toBe(false)
+    expect(bronze.qrCode).toBe(false)
     expect(silver.qrCode).toBe(true)
 
     // The website listing itself is the same on both.
-    expect(basic.galleryLimit).toBe(silver.galleryLimit)
+    expect(bronze.galleryLimit).toBe(silver.galleryLimit)
   })
 
   /**
-   * Featured is a flag either tier can carry, not a tier. If it ever comes back
-   * as one, "basic, but featured" stops being something the admin can
-   * record - which is the reason it was taken out.
+   * Gold is silver with the top of the list and the home page band. Only a
+   * magazine listing can buy it, which is the point: every silver listing must
+   * come before every bronze one, so a website-only listing bought to the top
+   * of the list is something that cannot be sold.
    */
-  it('keeps featured out of the tiers', () => {
-    expect(LISTING_TIERS).not.toContain('featured')
-    for (const tier of LISTING_TIERS) {
-      expect(Object.keys(TIER_CAPABILITIES[tier]), tier).not.toContain('heroPlacement')
-    }
+  it('puts the home page band on gold alone, on top of everything silver has', () => {
+    const { bronze, silver, gold } = TIER_CAPABILITIES
+    expect(gold.homePage).toBe(true)
+    expect(silver.homePage).toBe(false)
+    expect(bronze.homePage).toBe(false)
+    expect(gold.printInclusion).toBe(true)
+    expect(gold.qrCode).toBe(true)
   })
 
   /**
    * The scan report counts scans of the listing's QR code, so a tier without a
-   * code has nothing to report. Promising it to a basic listing would be
+   * code has nothing to report. Promising it to a bronze listing would be
    * selling an empty page.
    */
   it('gives the scan report exactly where there is a code to scan', () => {
@@ -100,7 +104,7 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * An unrecognised tier falls to basic, so it must not be handed a code: a
+   * An unrecognised tier falls to bronze, so it must not be handed a code: a
    * minted code is permanent, and one minted by mistake could end up on paper.
    */
   it('mints no code for an unrecognised tier', () => {
@@ -113,12 +117,17 @@ describe('the ladder holds its shape', () => {
    * bury the magazine listings underneath the website-only ones.
    */
   it('declares the tiers cheapest first, which is what sorts the dearest first', () => {
-    expect(LISTING_TIERS).toEqual(['basic', 'silver'])
+    expect(LISTING_TIERS).toEqual(['bronze', 'silver', 'gold'])
   })
 
-  it('has room on the home page for as many featured listings as it shows', () => {
-    expect(FEATURED_PLACES).toBeGreaterThan(0)
-    expect(Number.isInteger(FEATURED_PLACES)).toBe(true)
+  it('has room on the home page for as many gold listings as it shows', () => {
+    expect(HOME_PAGE_PLACES).toBeGreaterThan(0)
+    expect(Number.isInteger(HOME_PAGE_PLACES)).toBe(true)
+  })
+
+  /** `basic` was renamed `bronze` on 5 November 2026, with the same meaning. */
+  it('reads the old name of bronze as bronze', () => {
+    expect(tierOf('basic')).toBe('bronze')
   })
 
   /**
@@ -128,7 +137,7 @@ describe('the ladder holds its shape', () => {
    */
   it('treats a retired tier as the lowest rather than as something it no longer is', () => {
     for (const retired of ['listed', 'partner', 'featured', 'online', 'free']) {
-      expect(tierOf(retired)).toBe('basic')
+      expect(tierOf(retired)).toBe('bronze')
       expect(can(tierOf(retired), 'printInclusion')).toBe(false)
     }
   })
@@ -142,7 +151,7 @@ describe('an unrecognised tier', () => {
    */
   it('falls to the lowest tier rather than throwing or granting print', () => {
     for (const value of [undefined, null, '', 'premium', 'featured', 'PARTNER', 42, {}]) {
-      expect(tierOf(value), String(value)).toBe('basic')
+      expect(tierOf(value), String(value)).toBe('bronze')
     }
 
     expect(can(tierOf('premium'), 'printInclusion')).toBe(false)

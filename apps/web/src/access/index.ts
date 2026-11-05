@@ -31,7 +31,7 @@
  *    verification) of partner and customer accounts - hooks/guardAccountIdentity.
  *    Admin owns what cannot be undone: deleting accounts, issues, bookings,
  *    statements and QR codes, and switching a printed code off. And the
- *    commercial flags - tier, featured, verified, booking fee - on create as
+ *    commercial flags - tier, verified, booking fee - on create as
  *    well as on update.
  *  - business-users own nothing yet; they read their own listings.
  */
