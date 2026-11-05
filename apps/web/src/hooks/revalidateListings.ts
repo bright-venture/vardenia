@@ -31,7 +31,7 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook } from 'paylo
  * genuinely nothing to report.
  */
 
-const clear = async () => {
+export const clearListingsCache = async () => {
   try {
     const { revalidateTag } = await import('next/cache')
     // Expire now, as the one-argument call did before Next 16: a publish should
@@ -43,11 +43,11 @@ const clear = async () => {
 }
 
 export const revalidateListingsAfterChange: CollectionAfterChangeHook = async ({ doc }) => {
-  await clear()
+  await clearListingsCache()
   return doc
 }
 
 export const revalidateListingsAfterDelete: CollectionAfterDeleteHook = async ({ doc }) => {
-  await clear()
+  await clearListingsCache()
   return doc
 }

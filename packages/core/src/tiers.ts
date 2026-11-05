@@ -45,12 +45,13 @@ export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
  * How many gold listings there can be, which is how many the home page band
- * shows.
+ * shows, until an admin sets another number on the Tiers page in the admin
+ * (apps/web/src/globals/TierSettings). This is the default.
  *
  * A gold listing that never appears in the band has been sold something it
- * does not get - the band is sorted and cut at this number, so the seventh
- * would silently lose out to whichever six come first. The admin refuses a
- * seventh gold listing instead. Raise this and the band grows with it.
+ * does not get - the band is sorted and cut at the number of places, so one
+ * more would silently lose out to whichever come first. The admin refuses it
+ * instead, and refuses lowering the places below the gold listings sold.
  */
 export const HOME_PAGE_PLACES = 6
 

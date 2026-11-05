@@ -3,8 +3,8 @@
  *
  * The tiers and what each buys are declared in packages/core/src/tiers. This
  * file is the admin's side of them: the labels staff choose from, and the check
- * that stops a seventh gold listing being sold into a home page band that
- * shows six.
+ * that stops one more gold listing being sold than the home page band shows
+ * (the number on the admin's Tiers page, globals/TierSettings).
  *
  * Home page placement used to be a separate Featured box either tier could
  * tick. It is the gold tier now, so a website-only listing can no longer be
@@ -15,6 +15,7 @@ import type { SelectField, SelectFieldSingleValidation } from 'payload'
 import { select } from 'payload/shared'
 import { HOME_PAGE_PLACES, LISTING_TIERS, type ListingTier } from '@vardenia/core'
 import { isAdminFieldLevel } from '../access/index'
+import { goldPlaces } from '../lib/gold-places'
 
 /**
  * Spelled out, because a ladder name says where a tier sits but not what it
@@ -38,7 +39,7 @@ export function goldPlaceCheck(
   places: number = HOME_PAGE_PLACES,
 ): string | true {
   if (othersGold < places) return true
-  return `The home page shows ${places} gold listings and all ${places} places are taken. Move one of them to silver first.`
+  return `The home page shows ${places} gold listings and all ${places} places are taken. Move one of them to silver first, or add places on the Tiers page.`
 }
 
 /**
@@ -67,7 +68,7 @@ export const validateTier: SelectFieldSingleValidation = async (value, options) 
     req,
   })
 
-  return goldPlaceCheck(totalDocs)
+  return goldPlaceCheck(totalDocs, await goldPlaces(req.payload, req))
 }
 
 export const tierField: SelectField = {
@@ -85,6 +86,7 @@ export const tierField: SelectField = {
   validate: validateTier,
   admin: {
     components: { Cell: '/components/admin/ListCells#TierCell' },
-    description: `Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, which has ${HOME_PAGE_PLACES}. Every silver listing comes before every bronze one.`,
+    description:
+      'Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set on the Tiers page. Every silver listing comes before every bronze one.',
   },
 }

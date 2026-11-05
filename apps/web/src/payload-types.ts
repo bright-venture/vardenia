@@ -127,9 +127,11 @@ export interface Config {
     | ('en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur')[]
   globals: {
     'commission-settings': CommissionSetting
+    'tier-settings': TierSetting
   }
   globalsSelect: {
     'commission-settings': CommissionSettingsSelect<false> | CommissionSettingsSelect<true>
+    'tier-settings': TierSettingsSelect<false> | TierSettingsSelect<true>
   }
   locale: 'en' | 'ar' | 'fr' | 'es' | 'pt' | 'ru' | 'zh' | 'hi' | 'bn' | 'ur'
   widgets: {
@@ -407,7 +409,7 @@ export interface Business {
     cancellationPolicy?: string | null
   }
   /**
-   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, which has 6. Every silver listing comes before every bronze one.
+   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set on the Tiers page. Every silver listing comes before every bronze one.
    */
   tier: 'bronze' | 'silver' | 'gold'
   /**
@@ -1840,12 +1842,37 @@ export interface CommissionSetting {
   createdAt?: string | null
 }
 /**
+ * Bronze is the website only, silver adds a page in the magazine, and gold adds first place in every list and a place in the band at the top of the home page. Every silver listing comes before every bronze one.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tier-settings".
+ */
+export interface TierSetting {
+  id: number
+  /**
+   * How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: 6.
+   */
+  goldPlaces?: number | null
+  updatedAt?: string | null
+  createdAt?: string | null
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "commission-settings_select".
  */
 export interface CommissionSettingsSelect<T extends boolean = true> {
   defaultRate?: T
   poundsPerDollar?: T
+  updatedAt?: T
+  createdAt?: T
+  globalType?: T
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tier-settings_select".
+ */
+export interface TierSettingsSelect<T extends boolean = true> {
+  goldPlaces?: T
   updatedAt?: T
   createdAt?: T
   globalType?: T

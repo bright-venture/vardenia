@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import QRCode from 'qrcode'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
-import { HOME_PAGE_PLACES } from '@vardenia/core'
 import { alternatesFor } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { findListings, findFeaturedListings, printedCodes } from '../../../lib/listings'
@@ -34,7 +33,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations('homeFinish')
   const [listings, featured, issues] = await Promise.all([
     findListings({ locale, perPage: 6 }),
-    findFeaturedListings({ locale, limit: HOME_PAGE_PLACES }),
+    findFeaturedListings({ locale }),
     findIssues(locale),
   ])
   const issue = issues.docs[0]

@@ -1,9 +1,9 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
-import { HOME_PAGE_PLACES } from '@vardenia/core'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
+import { goldPlaces } from './gold-places'
 import type { Business } from '../payload-types'
 import { PUBLISHED_SQL } from '../access'
 import { rawDb } from './db'
@@ -722,13 +722,14 @@ export async function countByGovernorate({
  */
 export async function findFeaturedListings({
   locale,
-  limit = HOME_PAGE_PLACES,
 }: {
   locale: Locale
-  limit?: number
 }): Promise<ListingSummary[]> {
   const run = async (): Promise<ListingSummary[]> => {
     const payload = await client()
+    // As many places as the admin's Tiers page sets. Saving that page clears
+    // this cache (globals/TierSettings), so a new number shows straight away.
+    const limit = await goldPlaces(payload)
 
     const result = await payload.find({
       collection: 'businesses',
@@ -743,10 +744,12 @@ export async function findFeaturedListings({
       sort: ['name'],
     })
 
-    return result.docs as ListingSummary[]
+    // `pagination: false` returns every match whatever the limit, so cut it
+    // here: if the places were lowered, the band still shows only that many.
+    return (result.docs as ListingSummary[]).slice(0, limit)
   }
 
-  return unstable_cache(run, ['featured-listings', locale, String(limit)], {
+  return unstable_cache(run, ['featured-listings', locale], {
     revalidate: LISTINGS_TTL,
     tags: ['businesses'],
   })()
