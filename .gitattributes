@@ -6,6 +6,10 @@
 # your editor expects locally.
 * text=auto eol=lf
 
+# Except Windows batch files, which cmd.exe can misread with LF endings. Still
+# LF in the repository; CRLF only in the checkout.
+*.cmd text eol=crlf
+
 # Binary files must never be line-ending converted.
 *.png binary
 *.jpg binary

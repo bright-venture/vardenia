@@ -148,6 +148,33 @@ Keep the folder private: an external disk or the company drive, not a shared
 folder. Keep about three months of run folders and delete older ones by hand;
 each is about 30 MB.
 
+### Running it every week
+
+On the office PC it runs by itself, as the Windows scheduled task **Vardenia
+weekly backup**: every Monday at 12:30, or as soon as the PC is next on and
+signed in if it was off then. It needs the internet and runs on battery too.
+The task calls `scripts/weekly-backup.cmd`, which:
+
+- writes the whole output of each run to `backups\weekly\logs\<date>.log`;
+- on a failure, leaves `LAST RUN FAILED.txt` in `backups\weekly` and shows a
+  message on screen. The next good run removes the file.
+
+To see it, change the day or run it now: open **Task Scheduler**, then **Task
+Scheduler Library**, then **Vardenia weekly backup**. To register it again, on a
+new PC for example, run this in PowerShell from the repo root:
+
+```powershell
+$script = (Resolve-Path scripts\weekly-backup.cmd).Path
+Register-ScheduledTask -TaskName 'Vardenia weekly backup' `
+  -Action (New-ScheduledTaskAction -Execute 'conhost.exe' -Argument "--headless cmd.exe /c `"$script`"") `
+  -Trigger (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At '12:30') `
+  -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 2)) `
+  -Principal (New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive)
+```
+
+It runs only while the PC is on and someone is signed in, and only from the
+copy of the repo on that PC, so moving the repo means registering it again.
+
 ### Restoring from it
 
 Not scripted yet: it comes with the restore test. The steps are:
