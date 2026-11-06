@@ -40,8 +40,12 @@ export const Issues: CollectionConfig = {
       name: 'digitalEdition',
       label: 'Digital edition (PDF)',
       type: 'upload',
-      relationTo: 'media',
-      admin: { description: 'PDF flipbook of the full issue.' },
+      // Its own library, where PDFs may be up to 200 MB (collections/Editions).
+      relationTo: 'editions',
+      admin: {
+        description:
+          'The full issue as a PDF, read on the issue page like a book. Upload it here or pick one from Magazine PDFs (up to 200 MB).',
+      },
     },
   ],
 }

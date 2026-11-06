@@ -8,7 +8,6 @@ import {
   findIssueBySlug,
   findAllIssueSlugs,
 } from '../../../../../../lib/issues'
-import { resolveImage } from '../../../../../../lib/media'
 import { buildMetadata } from '../../../../../../lib/seo'
 import { MagazineCover } from '../../../../../../components/magazine/MagazineCover'
 import { MagazineReader } from '../../../../../../components/magazine/MagazineReader'
@@ -76,12 +75,12 @@ export default async function IssuePage({ params }: Params) {
 
   const t = await getTranslations()
   const articles = await findArticlesInIssue(issue.id, locale)
-  const edition = resolveImage(issue.digitalEdition as never, 'card')
-  const hasPdf = Boolean(
-    issue.digitalEdition &&
-    typeof issue.digitalEdition === 'object' &&
-    issue.digitalEdition.mimeType === 'application/pdf',
-  )
+  // A file in Magazine PDFs (collections/Editions): a PDF, so its own address
+  // rather than an image size.
+  const pdf =
+    issue.digitalEdition && typeof issue.digitalEdition === 'object' ? issue.digitalEdition : null
+  const edition = pdf?.url ? { src: pdf.url } : null
+  const hasPdf = pdf?.mimeType === 'application/pdf'
 
   return (
     <main className="vd-issue-page mx-auto max-w-6xl px-6 py-16">

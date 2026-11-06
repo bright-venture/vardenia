@@ -1,26 +1,33 @@
-/** Only the configured public media bucket may supply reader PDFs. Never use
- * a visitor-supplied URL, follow redirects, or attach storage credentials. */
+import { editionsPublicBase, mediaPublicBase } from './storage-base'
+/**
+ * Only the configured public buckets may supply reader PDFs: the magazine PDFs
+ * bucket (collections/Editions), and the media bucket for anything uploaded
+ * before that existed. Never use a visitor-supplied URL, follow redirects, or
+ * attach storage credentials.
+ */
 export function publicPdfUrl(value: string, env: Record<string, string | undefined>): URL | null {
-  const endpoint = (env.S3_ENDPOINT ?? '').replace(/\/$/, '')
-  const base =
-    (env.S3_PUBLIC_BASE_URL ?? '').replace(/\/$/, '') ||
-    (endpoint && env.S3_BUCKET
-      ? `${endpoint.replace(/\/storage\/v1\/s3$/, '/storage/v1/object/public')}/${env.S3_BUCKET}`
-      : '')
-  if (!base) return null
+  const bases = [editionsPublicBase(env), mediaPublicBase(env)]
+  let url: URL
   try {
-    const allowed = new URL(`${base}/`)
-    const url = new URL(value)
-    if (/%(?:2e|2f|5c|25)/i.test(url.pathname) || url.pathname.includes('\\')) return null
-    if (allowed.protocol !== 'https:' || url.protocol !== 'https:' || url.username || url.password)
-      return null
-    // Compare origin AND bucket boundary: a different bucket is not public media.
-    if (url.origin !== allowed.origin || !url.pathname.startsWith(allowed.pathname)) return null
-    if (/^(localhost|127\.|0\.|169\.254\.|10\.|192\.168\.|\[)/i.test(url.hostname)) return null
-    return url
+    url = new URL(value)
   } catch {
     return null
   }
+  if (/%(?:2e|2f|5c|25)/i.test(url.pathname) || url.pathname.includes('\\')) return null
+  if (url.protocol !== 'https:' || url.username || url.password) return null
+  if (/^(localhost|127\.|0\.|169\.254\.|10\.|192\.168\.|\[)/i.test(url.hostname)) return null
+  for (const base of bases) {
+    if (!base) continue
+    try {
+      const allowed = new URL(`${base}/`)
+      if (allowed.protocol !== 'https:') continue
+      // Compare origin AND bucket boundary: another bucket is not one of these.
+      if (url.origin === allowed.origin && url.pathname.startsWith(allowed.pathname)) return url
+    } catch {
+      // A malformed base allows nothing.
+    }
+  }
+  return null
 }
 
 // Read-only delivery limit. This does not change the CMS upload policy.

@@ -27,6 +27,16 @@ describe('magazine PDF storage boundary', () => {
     ])
       expect(publicPdfUrl(url, env)).toBeNull()
   })
+  it('serves magazine PDFs from their own bucket, and no other bucket', () => {
+    const env = { S3_ENDPOINT: 'https://a.supabase.co/storage/v1/s3', S3_BUCKET: 'media' }
+    const base = 'https://a.supabase.co/storage/v1/object/public'
+    expect(publicPdfUrl(`${base}/editions/keserwan.pdf`, env)?.pathname).toBe(
+      '/storage/v1/object/public/editions/keserwan.pdf',
+    )
+    expect(publicPdfUrl(`${base}/media/old.pdf`, env)).not.toBeNull()
+    expect(publicPdfUrl(`${base}/receipts/a.pdf`, env)).toBeNull()
+    expect(publicPdfUrl(`${base}/editions-evil/a.pdf`, env)).toBeNull()
+  })
   it('derives the public bucket address and fails closed without config', () => {
     expect(
       publicPdfUrl('https://a.supabase.co/storage/v1/object/public/media/a.pdf', {

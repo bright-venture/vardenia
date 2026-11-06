@@ -131,7 +131,7 @@ async function deliver(
     } else {
       if (!safePdfFilename(media.filename)) return unavailable(404)
       const root = await withPdfAbort(
-        () => realpath(path.resolve(process.cwd(), 'public/media')),
+        () => realpath(path.resolve(process.cwd(), 'public/editions')),
         signal,
       )
       const filename = media.filename

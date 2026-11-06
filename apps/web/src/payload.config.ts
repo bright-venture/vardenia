@@ -28,6 +28,8 @@ import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
 import { Settings } from './globals/Settings'
+import { Editions } from './collections/Editions'
+import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/storage-base'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
 import { allowedOrigins } from './lib/origins'
@@ -99,19 +101,10 @@ const POOL_MAX = isServerlessHost && !isBuildPhase ? 3 : 10
  * `S3_PUBLIC_BASE_URL` overrides the derivation when the guess is wrong. Set it
  * and this whole block is skipped.
  */
-const publicStorageBase = (() => {
-  const override = (process.env.S3_PUBLIC_BASE_URL ?? '').replace(/\/$/, '')
-  if (override) return override
+const publicStorageBase = mediaPublicBase()
 
-  const endpoint = (process.env.S3_ENDPOINT ?? '').replace(/\/$/, '')
-  const bucket = process.env.S3_BUCKET ?? ''
-  if (!endpoint || !bucket) return ''
-
-  const base = endpoint.endsWith('/storage/v1/s3')
-    ? endpoint.replace(/\/storage\/v1\/s3$/, '/storage/v1/object/public')
-    : endpoint
-  return `${base}/${bucket}`
-})()
+/** The public bucket for magazine PDFs; see the third storage plugin below. */
+const editionsStorageBase = editionsPublicBase()
 
 /** One S3 client setup for both buckets. */
 const s3Client = {
@@ -203,6 +196,7 @@ export default buildConfig({
     Closures,
     Articles,
     Issues,
+    Editions,
     Media,
     BusinessUsers,
     Customers,
@@ -454,6 +448,27 @@ export default buildConfig({
               }),
             ]
           : []),
+        /**
+         * Magazine PDFs, in a public bucket of their own (collections/Editions).
+         *
+         * The only collection that uploads straight from the browser to
+         * storage: an issue is around 80 MB and Netlify refuses a request body
+         * over about 6 MB, so it cannot pass through the server the way a
+         * photo does. The browser gets a signed upload address for this one
+         * file and the server records it afterwards. Read publicly, as media.
+         */
+        s3Storage({
+          collections: {
+            editions: {
+              disablePayloadAccessControl: true,
+              generateFileURL: ({ filename, prefix }) =>
+                [editionsStorageBase, prefix, filename].filter(Boolean).join('/'),
+            },
+          },
+          bucket: editionsBucket(),
+          config: s3Client,
+          clientUploads: true,
+        }),
       ]
     : [],
 

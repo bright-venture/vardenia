@@ -176,6 +176,8 @@ vite.config.ts.timestamp-*
 # type-checking against types that did not exist. Regenerate it with
 # `pnpm --filter @vardenia/web generate:types` after changing a collection.
 apps/web/public/media/
+# Magazine PDFs uploaded on a machine with no storage bucket (collections/Editions).
+apps/web/public/editions/
 apps/web/media/
 
 # Expo / React Native

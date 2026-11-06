@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { editionsBucket } from '../lib/storage-base'
 import {
   existsSync,
   mkdirSync,
@@ -31,7 +32,7 @@ import {
 } from './weekly'
 
 /**
- * Copies production's database and both Storage buckets to a disk outside
+ * Copies production's database and its Storage buckets to a disk outside
  * Supabase. See weekly.ts for why and for the layout.
  *
  *   pnpm --filter @vardenia/web backup:weekly
@@ -294,7 +295,8 @@ async function exportBuckets(
   mode: Options['files'],
   limit: number,
 ): Promise<Record<string, BucketSummary>> {
-  const buckets = [env.S3_BUCKET, env.S3_RECEIPTS_BUCKET]
+  // Photos, receipts, and the magazine PDFs (collections/Editions).
+  const buckets = [env.S3_BUCKET, env.S3_RECEIPTS_BUCKET, editionsBucket(env)]
     .map((name) => name?.trim())
     .filter((name): name is string => Boolean(name))
   if (mode === 'none') return {}
