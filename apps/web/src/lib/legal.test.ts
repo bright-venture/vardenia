@@ -120,8 +120,25 @@ describe('what the policy claims about the code', () => {
   })
 
   it('does not name the suppliers, as the owner decided', () => {
-    for (const name of ['supabase', 'netlify', 'resend', 'umami', 'anthropic'])
+    const terms = termsOfService()
+      .sections.flatMap((section) => section.body)
+      .join('\n')
+      .toLowerCase()
+    for (const name of ['cloudflare', 'supabase', 'netlify', 'resend', 'umami', 'anthropic']) {
       expect(lines).not.toContain(name)
+      expect(terms).not.toContain(name)
+    }
+  })
+
+  /**
+   * The network provider's page-speed beacon is on for visitors outside the
+   * EU (kept by the owner on 6 November 2026), so the policy has to say so,
+   * and say it sets no cookie, which is why there is still no banner.
+   */
+  it('says the network also measures page speed, outside the EU, without a cookie', () => {
+    expect(lines).toContain('how fast pages load')
+    expect(lines).toContain('for visitors outside the european union')
+    expect(lines).toContain('measures how fast it loads')
   })
 
   /** Owners see the guest's name and phone. They never see the email. */

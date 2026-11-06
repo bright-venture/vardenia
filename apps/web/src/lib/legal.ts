@@ -125,7 +125,15 @@ export function privacyPolicy(): LegalDocument {
           '- **If you scan a printed code**: the code, the time, your city and country, and whether you were on a phone or a computer. We do not record your precise location, and we do not store your IP address at all - it is hashed in memory to spot repeated scans and never written down.',
           '- **If something breaks**: a record of the error, with email addresses, passwords and access tokens automatically removed before it is stored.',
           '- **When you read any page**: which pages were visited, which site the visit came from, the country it came from, and whether it was a phone or a computer. This is measured for us by an analytics provider, it sets no cookie, and it is counted rather than tied to you.',
-          '- **Every visit** passes through Cloudflare, which protects the site from attacks and, like any network, sees the address you connect from. When you open an account, Cloudflare also checks that you are a person rather than a program.',
+          '- **Every visit** passes through the network that protects the site from attacks, which, like any network, sees the address you connect from. When you open an account, it also checks that you are a person rather than a program.',
+          /**
+           * The network provider's own page-speed measurement (Cloudflare Web
+           * Analytics, "Real User Measurements"), which the owner chose on 6
+           * November 2026 to keep for its speed figures. It is set in the
+           * Cloudflare dashboard to leave out visitors in the EU, and it sets
+           * no cookie. If that setting changes, so must this line.
+           */
+          '- **How fast pages load**: for visitors outside the European Union, the network that carries the site also measures how quickly each page loads and responds, which page it was, and the browser and country, and counts the visit. It sets no cookie and is not tied to you.',
           'We use no advertising trackers, we do not build a profile of you, and nothing here follows you to another site.',
         ],
       },
@@ -178,7 +186,7 @@ export function privacyPolicy(): LegalDocument {
            * sign-up check), Resend (email), Umami (page visits) and Anthropic
            * (reading receipts).
            */
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site, the service that sends our email, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site and measures how fast it loads, the service that sends our email, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
