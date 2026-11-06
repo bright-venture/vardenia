@@ -27,6 +27,7 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
+import { SHOW_LOCATION } from '../../../../../lib/location-display'
 import { mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
@@ -160,6 +161,9 @@ export default async function ListingPage({ params }: Params) {
     can(tierOf(listing.tier), 'galleryLimit'),
   )
   const place = placeLabel(listing.governorate, listing.district, locale as Locale)
+  // The area, the address and both map links are hidden for now; see
+  // lib/location-display. `place` is still computed for the related listings.
+  const address = SHOW_LOCATION ? listing.address : null
   const price = priceLabel(listing.priceRange as string | null)
   const open = isOpenNow(listing.openingHours as never)
 
@@ -195,7 +199,7 @@ export default async function ListingPage({ params }: Params) {
   const hours = Array.isArray(listing.openingHours) ? listing.openingHours : []
 
   /** Whether the ruled fact table has any rows, and whether it exists at all. */
-  const hasRows = Boolean(listing.address) || subcategories.length > 0 || Boolean(price)
+  const hasRows = Boolean(address) || subcategories.length > 0 || Boolean(price)
   const hasFacts = hasRows || hours.length > 0
 
   /**
@@ -335,7 +339,7 @@ export default async function ListingPage({ params }: Params) {
             </Suspense>
 
             <Eyebrow inverse>
-              {[categoryLabel(listing.category, locale as Locale), place]
+              {[categoryLabel(listing.category, locale as Locale), SHOW_LOCATION ? place : null]
                 .filter(Boolean)
                 .join(' · ')}
             </Eyebrow>
@@ -448,12 +452,14 @@ export default async function ListingPage({ params }: Params) {
             {/* Directions (only with coordinates) sits beside Save (always). A
               listing with no location still offers the heart. */}
             <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-              <ActionBar
-                name={listing.name ?? ''}
-                address={listing.address}
-                place={place}
-                coordinates={point}
-              />
+              {SHOW_LOCATION ? (
+                <ActionBar
+                  name={listing.name ?? ''}
+                  address={listing.address}
+                  place={place}
+                  coordinates={point}
+                />
+              ) : null}
               <SaveButton slug={slug} variant="button" />
             </div>
 
@@ -512,14 +518,14 @@ export default async function ListingPage({ params }: Params) {
             <div className={hasFacts ? 'border-ink-100 mt-12 border-t' : undefined}>
               {hasRows ? (
                 <dl>
-                  {listing.address ? (
+                  {address ? (
                     <Row label={t('address')}>
-                      <p className="whitespace-pre-line">{listing.address}</p>
+                      <p className="whitespace-pre-line">{address}</p>
                       <a
                         className="text-gold-700 hover:text-ink-900 mt-2 inline-block underline underline-offset-4"
                         href={mapsLink({
                           name: listing.name ?? '',
-                          address: listing.address,
+                          address,
                           place,
                           coordinates: point,
                         })}

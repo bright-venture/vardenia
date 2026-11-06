@@ -1,8 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@vardenia/i18n/messages'
 import { ListingCard } from './ListingCard'
+
+/**
+ * The switch that hides every listing's location (lib/location-display), made
+ * settable here so the card is tested both ways: the place tests below still
+ * guard how an area reads once it is shown again, and the last one guards that
+ * nothing leaks while it is off.
+ */
+const display = vi.hoisted(() => ({ SHOW_LOCATION: true }))
+vi.mock('../lib/location-display', () => display)
+beforeEach(() => {
+  display.SHOW_LOCATION = true
+})
 
 /**
  * The card every directory result is rendered as, and the first thing a reader
@@ -72,6 +84,14 @@ describe('ListingCard', () => {
     const html = text(render({ governorate: 'beirut', district: 'beirut' }))
     expect(html).not.toContain('Beirut, Beirut')
     expect(html).toContain('Beirut')
+  })
+
+  it('shows no area at all while locations are hidden', () => {
+    display.SHOW_LOCATION = false
+    const html = text(render({ governorate: 'keserwan', district: 'jbeil' }))
+    expect(html).not.toContain('Jbeil')
+    expect(html).not.toContain('Keserwan')
+    expect(render({ governorate: 'keserwan', district: 'jbeil' })).not.toContain('vd-card-place')
   })
 
   it('renders the price band as currency marks', () => {
