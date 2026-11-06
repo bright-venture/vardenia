@@ -1,4 +1,5 @@
 'use client'
+import { filmSources } from '../../lib/film'
 import { EditionRegions, editionLabel } from './EditionRegions'
 import { GOVERNORATES } from '@vardenia/core'
 import { LinkArrow } from '../LinkArrow'
@@ -21,6 +22,8 @@ import {
 } from './destinations'
 const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n))
 const assets = '/journey/'
+// The film from the media bucket when storage is configured; see lib/film.
+const FILM_SOURCES = filmSources(process.env.NEXT_PUBLIC_FILM_BASE)
 export function CinematicJourney({
   locale,
   directory,
@@ -417,12 +420,8 @@ export function CinematicJourney({
                 }}
                 aria-label="Vardenia brand film"
               >
-                <source
-                  src={assets + 'hero-film-mobile.mp4'}
-                  type="video/mp4"
-                  media="(max-width:700px)"
-                />
-                <source src="/hero/hero-film.mp4" type="video/mp4" />
+                <source src={FILM_SOURCES.mobile} type="video/mp4" media="(max-width:700px)" />
+                <source src={FILM_SOURCES.desktop} type="video/mp4" />
               </video>
             )}
           </div>

@@ -43,6 +43,17 @@
   command = "bash scripts/deploy-migrate.sh && NODE_ENV=production pnpm --filter @vardenia/web generate:types && pnpm turbo run build --filter=@vardenia/web"
   publish = "apps/web/.next"
 
+  # Skips the deploy when a push changes nothing the site is built from.
+  #
+  # Every production deploy is billed, and pushes that only touch documents,
+  # load tests, the backup scripts, tests or the mobile app deployed the same
+  # site again. Netlify runs this first: exit 0 skips the build, anything else
+  # builds. `git diff --quiet` exits 1 when one of these paths changed since
+  # the last deploy, so the site is built; and it fails (so builds) whenever
+  # it cannot tell, such as a first deploy with no previous commit to compare.
+  # `:/` makes every path relative to the repository root.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ':/apps/web' ':/packages' ':/package.json' ':/pnpm-lock.yaml' ':/pnpm-workspace.yaml' ':/turbo.json' ':/netlify.toml' ':/netlify' ':/scripts/deploy-migrate.sh' ':(exclude,top)apps/web/src/backup' ':(exclude,top,glob)**/*.test.ts' ':(exclude,top,glob)**/*.test.tsx' ':(exclude,top,glob)**/*.md'"
+
 [build.environment]
   # Matches engines (>=20.9.0) and the version CI runs on, so a build that
   # passes in Actions is running the same runtime here.

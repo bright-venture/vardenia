@@ -3,6 +3,8 @@ import { withPayload } from '@payloadcms/next/withPayload'
 import createNextIntlPlugin from 'next-intl/plugin'
 import { config as loadEnv } from 'dotenv'
 import { securityHeaders } from './src/lib/security-headers'
+import { cdnCacheHeaders } from './src/lib/cdn-cache'
+import { filmBase } from './src/lib/film'
 
 // Next only reads .env from the app directory, but the canonical one lives at
 // the monorepo root so web, seeds, and migrations all share a single file.
@@ -12,6 +14,13 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  // Where the home page film is served from: the media bucket, when storage
+  // is configured, so its megabytes do not count against the host's bandwidth.
+  // See src/lib/film.
+  env: {
+    NEXT_PUBLIC_FILM_BASE: filmBase(),
+  },
 
   /**
    * The site's 404 is a global-not-found, and it has to be.
@@ -117,7 +126,9 @@ const nextConfig: NextConfig = {
    * how the two stop agreeing.
    */
   async headers() {
-    return securityHeaders()
+    // The directory and section pages are also kept by the CDN for a few
+    // minutes; see src/lib/cdn-cache.
+    return [...securityHeaders(), ...cdnCacheHeaders()]
   },
   images: {
     /**

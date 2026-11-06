@@ -1,3 +1,4 @@
+import { filmOrigin } from './film'
 /**
  * The response headers, and the Content-Security-Policy that used to be missing.
  *
@@ -159,6 +160,10 @@ export function publicCsp(
     // narrower control on which hosts an image may actually come from.
     'img-src': ["'self'", 'data:', 'blob:', 'https:'],
     'font-src': ["'self'", 'data:'],
+    // The home page film, from the media bucket when storage is configured
+    // (lib/film). Without this, media-src falls back to 'self' and the film
+    // is refused.
+    'media-src': ["'self'", ...filmOrigin()],
     // Where a script may send data. Named explicitly, because this is what turns
     // a successful injection into a failed exfiltration.
     'connect-src': ["'self'", ...analytics.connect, ...turnstile],
