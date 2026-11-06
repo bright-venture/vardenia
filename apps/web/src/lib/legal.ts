@@ -225,9 +225,15 @@ export function privacyPolicy(): LegalDocument {
           'Two small cookies, and only once you sign in. One keeps you signed in; the other only tells the page to show your account link instead of Sign in. Neither is used to track you, neither is shared, and there is no advertising or analytics cookie on this site.',
           'That last part is deliberate. We do count page visits, and we chose a provider that needs no cookie to do it, so measuring how the site is read costs you nothing and asks you nothing.',
           'Because both are strictly necessary to provide something you asked for, there is no consent banner. If we ever add anything that is not strictly necessary, there will be.',
-          TBD(
-            'that Cloudflare, which carries every visit and checks the sign-up form, sets no cookie of its own; if it does, this section has to name it',
-          ),
+          /**
+           * Checked on 6 November 2026 against the live site: no page sent a
+           * Set-Cookie header, document.cookie stayed empty on the sign-up page
+           * with its check drawn, and neither Cloudflare's check script nor its
+           * frame set one. It holds while Bot Fight Mode stays off (it sets
+           * `__cf_bm`); turning that, or a challenge rule, back on means naming
+           * Cloudflare's cookie here.
+           */
+          'The network that carries every visit, and runs the check on the sign-up form, sets no cookie on this site either.',
         ],
       },
 
