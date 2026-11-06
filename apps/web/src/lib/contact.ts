@@ -16,13 +16,15 @@
  * silently goes nowhere is worse than an honest gap: it costs a lead and it
  * looks like being ignored, and nothing bounces to tell us.
  *
- * `contact@vardenia.com` is an alias on the Google Workspace mailbox, so it
- * lands in the same inbox as admin@ and needed no DNS change. Delivery was
- * confirmed before it was set here.
+ * `contact@vardenia.com` is meant to be an alias on the Google Workspace
+ * mailbox, landing in the same inbox as admin@. On 6 November 2026 the owner
+ * said the alias is still to be made, and asked for this address to be
+ * published anyway, because it is the one that will last. Until the alias
+ * exists, mail to it may not arrive: create it, then send a test message to it.
  *
- * The postal address and phone are still unset, and every page that needs them
- * says so rather than inventing one. The privacy policy is the one that most
- * needs the postal address.
+ * The postal address is the registered address the owner gave on 6 November
+ * 2026. The phone is still unset, and every page that would show it leaves the
+ * line out rather than inventing one.
  */
 
 export interface ContactDetails {
@@ -37,7 +39,7 @@ export interface ContactDetails {
 export const CONTACT: ContactDetails = {
   email: 'contact@vardenia.com',
   phone: null,
-  postalAddress: null,
+  postalAddress: 'Office 01, Qubic Center, Sin El Fil, Lebanon',
 }
 
 /** True once there is any way at all to reach us. */

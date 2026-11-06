@@ -138,7 +138,9 @@
     "phone": "Phone",
     "phoneHint": "Optional. The business calls this number if anything changes.",
     "notes": "Anything we should pass on",
-    "notesHint": "Optional. A dietary need, an anniversary, a wheelchair.",
+    "notesHint": "Optional, and your booking is the same without it. A dietary need, an anniversary, a wheelchair. It goes only to the place and to Vardenia, to arrange your visit.",
+    "notesConsent": "I agree that the place and Vardenia may use what I write here, including any health details such as an allergy or a wheelchair, only to arrange this visit.",
+    "notesConsentRequired": "Tick the box to send your notes, or leave them blank.",
     "submit": "Request booking",
     "submitting": "Sending...",
     "invalidDate": "Please choose a date and time.",
@@ -742,6 +744,7 @@
     "receiptNoFile": "Choose a photo or PDF of the receipt.",
     "receiptNoAmount": "Enter the total shown on the receipt.",
     "receiptAlready": "A receipt was already sent for this visit.",
+    "receiptDuplicate": "This receipt has already been sent for another visit, so it cannot be sent again. If this is a mistake, write to us.",
     "receiptClosed": "Receipts can no longer be sent for this visit.",
     "receiptError": "We could not save your receipt. Please try again.",
     "receiptLink": "Add your receipt"

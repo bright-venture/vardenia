@@ -147,6 +147,8 @@ function BookingFormFields({
   const [partySize, setPartySize] = useState(initial.partySize)
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
+  // Never ticked for the guest: see notesConsent in @vardenia/core.
+  const [notesConsent, setNotesConsent] = useState(false)
 
   const [busy, setBusy] = useState(false)
   const attempt = useRef<{ key: string; id: string } | null>(null)
@@ -205,6 +207,17 @@ function BookingFormFields({
       return
     }
 
+    /**
+     * Notes need the tick (Law 81/2018, Article 91: health information only
+     * with explicit agreement). Stopped here, in the guest's language, rather
+     * than sent and refused by the server in English. Never dropped silently:
+     * a guest who wrote an allergy must not think the place was told.
+     */
+    if (notes.trim() && !notesConsent) {
+      setErrors({ notesConsent: t('notesConsentRequired') })
+      return
+    }
+
     setBusy(true)
 
     const details = {
@@ -215,7 +228,7 @@ function BookingFormFields({
       // Only a stay sends one, and only when the listing offers a choice.
       ...(model.mode === 'nights' && roomType ? { roomType } : {}),
       ...(phone.trim() ? { phone } : {}),
-      ...(notes.trim() ? { notes } : {}),
+      ...(notes.trim() ? { notes, notesConsent } : {}),
       locale,
     }
 
@@ -520,6 +533,30 @@ function BookingFormFields({
         <p id={`${ids}-notes-hint`} className={HINT}>
           {t('notesHint')}
         </p>
+
+        {/*
+          The explicit agreement Law 81/2018 asks for before health information
+          (an allergy, a wheelchair) is handled. Unticked by default and only
+          required once something is written. The hint above carries the rest
+          of what Article 88 asks a form to say: optional, who receives it.
+        */}
+        <label className="mt-3 flex items-start gap-2.5 text-sm" htmlFor={`${ids}-notes-consent`}>
+          <input
+            id={`${ids}-notes-consent`}
+            type="checkbox"
+            checked={notesConsent}
+            onChange={(e) => setNotesConsent(e.target.checked)}
+            className="accent-gold-700 mt-0.5 h-4 w-4 shrink-0"
+            aria-describedby={errors.notesConsent ? `${ids}-notesConsent-error` : undefined}
+            aria-invalid={errors.notesConsent ? true : undefined}
+          />
+          <span>{t('notesConsent')}</span>
+        </label>
+        {errors.notesConsent ? (
+          <p id={`${ids}-notesConsent-error`} className={ERROR_TEXT} role="alert">
+            {errors.notesConsent}
+          </p>
+        ) : null}
       </div>
 
       {/*

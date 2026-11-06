@@ -93,6 +93,37 @@ describe('what the policy claims about the code', () => {
     expect(lines).toContain('health information')
   })
 
+  /**
+   * Law 81/2018, Article 91 allows health data only with explicit agreement,
+   * and Article 88 asks the form to say why, whether it is optional, and who
+   * receives it. BookingForm asks for the tick; this pins the policy to it.
+   */
+  it('says the notes need an explicit tick, are optional, and who gets them', () => {
+    expect(lines).toContain('article 91')
+    expect(lines).toContain('tick a box to agree')
+    expect(lines).toContain('it is optional')
+    expect(lines).toContain('the place you are booking with, and the vardenia team')
+  })
+
+  it('says each receipt counts once, which saveReceipt enforces', () => {
+    expect(lines).toContain('receipt number')
+    expect(lines).toContain('cannot be sent twice')
+  })
+
+  it('states a period for each kind of data', () => {
+    for (const kept of [
+      '12 months after the visit',
+      'error records**: 90 days',
+      'until you close it',
+    ])
+      expect(lines).toContain(kept)
+  })
+
+  it('does not name the suppliers, as the owner decided', () => {
+    for (const name of ['supabase', 'netlify', 'resend', 'umami', 'anthropic'])
+      expect(lines).not.toContain(name)
+  })
+
   /** Owners see the guest's name and phone. They never see the email. */
   it('is accurate about what the business receives', () => {
     expect(lines).toContain('they do not see your email address')
@@ -146,9 +177,23 @@ describe('pendingDecisions', () => {
 
   it('includes the ones that cannot be guessed', () => {
     const all = pendingDecisions().join(' ').toLowerCase()
-    expect(all).toContain('registered legal entity')
-    expect(all).toContain('retention')
-    expect(all).toContain('governing law')
+    expect(all).toContain('commercial registration number')
+    expect(all).toContain('transfer mechanism')
+    expect(all).toContain('accounting law')
+  })
+
+  /** Answered by the owner on 6 November 2026; none of these may come back as open. */
+  it('no longer lists what has been settled', () => {
+    const all = pendingDecisions().join(' ').toLowerCase()
+    for (const settled of [
+      'no-show',
+      'consent tick',
+      'governing law',
+      'limitation of liability',
+      'naming those suppliers',
+      'where the business terms live',
+    ])
+      expect(all).not.toContain(settled)
   })
 })
 

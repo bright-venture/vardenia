@@ -49,70 +49,97 @@ const emailAddress = z
     return domain.includes('.') && !/\s/.test(value)
   }, 'must be an email address')
 
-export const bookingRequestSchema = z.object({
-  /** Which listing. Numeric id as a string or a number, since a form sends text. */
-  business: z.union([z.string().min(1), z.number()]),
+export const bookingRequestSchema = z
+  .object({
+    /** Which listing. Numeric id as a string or a number, since a form sends text. */
+    business: z.union([z.string().min(1), z.number()]),
 
-  start: isoDateTime,
-  end: isoDateTime,
+    start: isoDateTime,
+    end: isoDateTime,
 
-  partySize: z.coerce.number().int().min(1, 'at least one person').max(500, 'too many'),
+    partySize: z.coerce.number().int().min(1, 'at least one person').max(500, 'too many'),
 
-  /**
-   * Neither is sent any more, and neither is trusted if it is.
-   *
-   * Booking requires a signed-in customer with a verified address, so the
-   * server takes the name and the email from the session and ignores whatever
-   * arrives here - see /booking/request. They stay in the schema as optional
-   * rather than being deleted so that an older client, or a request replayed
-   * from a log, is still parsed rather than rejected with a confusing field
-   * error about a field it was right to send.
-   *
-   * The listing page is prerendered, so the form has no way to know who is
-   * reading it and could not fill these in even if they were still wanted.
-   */
-  name: z.string().trim().max(120, 'too long').optional(),
-  email: emailAddress.optional(),
+    /**
+     * Neither is sent any more, and neither is trusted if it is.
+     *
+     * Booking requires a signed-in customer with a verified address, so the
+     * server takes the name and the email from the session and ignores whatever
+     * arrives here - see /booking/request. They stay in the schema as optional
+     * rather than being deleted so that an older client, or a request replayed
+     * from a log, is still parsed rather than rejected with a confusing field
+     * error about a field it was right to send.
+     *
+     * The listing page is prerendered, so the form has no way to know who is
+     * reading it and could not fill these in even if they were still wanted.
+     */
+    name: z.string().trim().max(120, 'too long').optional(),
+    email: emailAddress.optional(),
 
-  /**
-   * Optional, and not validated as a phone number.
-   *
-   * Lebanese numbers are written half a dozen ways - +961, 00961, 03, 70 - and a
-   * regex strict enough to be useful rejects a third of them. The business rings
-   * whatever is written here; a machine never parses it.
-   */
-  phone: z.string().trim().max(40).optional(),
+    /**
+     * Optional, and not validated as a phone number.
+     *
+     * Lebanese numbers are written half a dozen ways - +961, 00961, 03, 70 - and a
+     * regex strict enough to be useful rejects a third of them. The business rings
+     * whatever is written here; a machine never parses it.
+     */
+    phone: z.string().trim().max(40).optional(),
 
-  /**
-   * For a stay, which room or unit type the guest asked for (Standard, Deluxe).
-   * Free text here; the booking service keeps it only if it matches one of the
-   * listing's configured types, so a stale or crafted value is dropped rather
-   * than stored. Absent for a table booking, which has no room type.
-   */
-  roomType: z.string().trim().max(120, 'too long').optional(),
+    /**
+     * For a stay, which room or unit type the guest asked for (Standard, Deluxe).
+     * Free text here; the booking service keeps it only if it matches one of the
+     * listing's configured types, so a stale or crafted value is dropped rather
+     * than stored. Absent for a table booking, which has no room type.
+     */
+    roomType: z.string().trim().max(120, 'too long').optional(),
 
-  /** What the customer wants us to pass on: a dietary need, an anniversary. */
-  notes: z.string().trim().max(1000, 'too long').optional(),
+    /** What the customer wants us to pass on: a dietary need, an anniversary. */
+    notes: z.string().trim().max(1000, 'too long').optional(),
 
-  /** Which language to write the confirmation in. */
-  locale: z.enum(LOCALE_CODES).optional(),
+    /**
+     * The guest's explicit agreement to the notes being used, which notes need.
+     *
+     * The field invites "a dietary need, a wheelchair", which is health
+     * information, and Lebanese Law No. 81 of 2018, Article 91 forbids
+     * collecting it unless the person "has explicitly agreed". So the form shows
+     * an unticked box under the notes, and a request with notes but without the
+     * tick is refused below rather than stored. The box is the only way to set
+     * this: the form never sends `true` on its own.
+     *
+     * Not stored separately: notes are only ever saved with it, so a booking that
+     * has notes is a booking whose guest agreed.
+     */
+    notesConsent: z.boolean().optional(),
 
-  /**
-   * One booking attempt, chosen by the form and sent again on a retry.
-   *
-   * On a weak connection the booking can be made while the answer never reaches
-   * the phone, and the guest presses "book" again. With the same id, the second
-   * request returns the booking the first one made instead of making another.
-   * Optional, so an older form still books.
-   */
-  requestId: z
-    .string()
-    .trim()
-    .min(16, 'too short')
-    .max(64, 'too long')
-    .regex(/^[A-Za-z0-9-]+$/, 'letters, digits and dashes only')
-    .optional(),
-})
+    /** Which language to write the confirmation in. */
+    locale: z.enum(LOCALE_CODES).optional(),
+
+    /**
+     * One booking attempt, chosen by the form and sent again on a retry.
+     *
+     * On a weak connection the booking can be made while the answer never reaches
+     * the phone, and the guest presses "book" again. With the same id, the second
+     * request returns the booking the first one made instead of making another.
+     * Optional, so an older form still books.
+     */
+    requestId: z
+      .string()
+      .trim()
+      .min(16, 'too short')
+      .max(64, 'too long')
+      .regex(/^[A-Za-z0-9-]+$/, 'letters, digits and dashes only')
+      .optional(),
+  })
+  .superRefine((request, ctx) => {
+    // Notes without the tick are refused, never quietly dropped: a guest who
+    // wrote "nut allergy" must not believe the place was told. See notesConsent.
+    if (request.notes && request.notesConsent !== true) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['notesConsent'],
+        message: 'tick the box to send your notes, or leave them blank',
+      })
+    }
+  })
 
 export type BookingRequest = z.infer<typeof bookingRequestSchema>
 

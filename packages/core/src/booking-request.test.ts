@@ -25,6 +25,42 @@ const VALID = {
   email: 'sami@example.com',
 }
 
+/**
+ * Notes can hold health information (an allergy, a wheelchair), which Law
+ * 81/2018, Article 91 allows only with explicit agreement. A request with notes
+ * has to carry the tick, and is refused rather than stored without it.
+ */
+describe('booking notes and the consent tick', () => {
+  it('refuses notes sent without the tick', () => {
+    const parsed = bookingRequestSchema.safeParse({ ...VALID, notes: 'Nut allergy' })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) expect(fieldErrors(parsed.error)).toHaveProperty('notesConsent')
+  })
+
+  it('refuses notes when the tick is false', () => {
+    const parsed = bookingRequestSchema.safeParse({
+      ...VALID,
+      notes: 'Wheelchair',
+      notesConsent: false,
+    })
+    expect(parsed.success).toBe(false)
+  })
+
+  it('accepts notes with the tick', () => {
+    const parsed = bookingRequestSchema.safeParse({
+      ...VALID,
+      notes: 'Nut allergy',
+      notesConsent: true,
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('needs no tick when there are no notes, or only spaces', () => {
+    expect(bookingRequestSchema.safeParse(VALID).success).toBe(true)
+    expect(bookingRequestSchema.safeParse({ ...VALID, notes: '   ' }).success).toBe(true)
+  })
+})
+
 describe('bookingRequestSchema', () => {
   it('accepts a complete request', () => {
     expect(bookingRequestSchema.safeParse(VALID).success).toBe(true)
@@ -126,7 +162,10 @@ describe('bookingRequestSchema', () => {
     expect(bookingRequestSchema.safeParse({ ...VALID, notes: 'x'.repeat(1001) }).success).toBe(
       false,
     )
-    expect(bookingRequestSchema.safeParse({ ...VALID, notes: 'Window table' }).success).toBe(true)
+    expect(
+      bookingRequestSchema.safeParse({ ...VALID, notes: 'Window table', notesConsent: true })
+        .success,
+    ).toBe(true)
   })
 
   /**
@@ -204,6 +243,7 @@ describe('fieldErrors', () => {
       ...VALID,
       partySize: 0,
       notes: 'x'.repeat(2000),
+      notesConsent: true,
     })
     expect(result.success).toBe(false)
     if (result.success) return

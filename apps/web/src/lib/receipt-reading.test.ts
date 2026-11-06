@@ -17,14 +17,20 @@ vi.mock('@anthropic-ai/sdk', () => ({
   },
 }))
 
-const { cleanReading, openReading, readReceipt, readingConcerns, sealReading } =
+const { cleanReading, openReading, readReceipt, readingConcerns, receiptNumber, sealReading } =
   await import('./receipt-reading')
 
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])
 const OTHER = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 9, 9, 9])
 const PDF = new TextEncoder().encode('%PDF-1.7 rest')
 
-const READ = { total: 84.5, currency: 'USD', date: '2026-11-03', place: 'yes' } as const
+const READ = {
+  total: 84.5,
+  currency: 'USD',
+  date: '2026-11-03',
+  place: 'yes',
+  number: '004512',
+} as const
 
 describe('what is kept of a reading', () => {
   it('keeps a total only with its currency, rounded as that currency is written', () => {
@@ -89,8 +95,42 @@ describe('what the team is asked to check', () => {
     expect(readingConcerns({ ...READ, place: 'no' }, sent, visit)).toEqual(['place'])
     expect(readingConcerns({ ...READ, place: 'unclear' }, sent, visit)).toEqual([])
     expect(
-      readingConcerns({ total: null, currency: null, date: null, place: 'unclear' }, sent, visit),
-    ).toEqual(['unreadable'])
+      readingConcerns(
+        { total: null, currency: null, date: null, place: 'unclear', number: null },
+        sent,
+        visit,
+      ),
+    ).toEqual(['unreadable', 'number'])
+  })
+})
+
+/**
+ * The receipt number is what stops one receipt being sent for two visits
+ * (lib/receipts), so the same receipt has to read the same way every time.
+ */
+describe('the receipt number', () => {
+  it('drops spacing and punctuation, and upper-cases letters', () => {
+    expect(receiptNumber('#0045-12')).toBe('004512')
+    expect(receiptNumber(' inv 77/a ')).toBe('INV77A')
+  })
+
+  it('reads Arabic-Indic and Persian digits as the same number', () => {
+    expect(receiptNumber('٠٠٤٥')).toBe('0045')
+    expect(receiptNumber('۱۲')).toBe('12')
+  })
+
+  it('keeps nothing that has no digit, is empty, or is absurdly long', () => {
+    expect(receiptNumber('TOTAL')).toBeNull()
+    expect(receiptNumber('  ')).toBeNull()
+    expect(receiptNumber('1'.repeat(41))).toBeNull()
+    expect(receiptNumber(45)).toBeNull()
+  })
+
+  it('is kept in a reading, and asked to be checked when it is missing', () => {
+    expect(cleanReading({ ...READ, number: 'No. 45' })?.number).toBe('NO45')
+    const visit = new Date('2026-11-03T18:00:00Z')
+    const sent = { amount: 84.5, currency: 'USD' }
+    expect(readingConcerns({ ...READ, number: null }, sent, visit)).toEqual(['number'])
   })
 })
 
@@ -111,7 +151,14 @@ describe('asking Claude', () => {
 
   it('sends the photo with the place, and keeps what comes back', async () => {
     sdk.parse.mockResolvedValue(
-      answer({ legible: true, total: 84.5, currency: 'USD', date: '2026-11-03', fromPlace: 'yes' }),
+      answer({
+        legible: true,
+        total: 84.5,
+        currency: 'USD',
+        date: '2026-11-03',
+        fromPlace: 'yes',
+        number: '#0045-12',
+      }),
     )
     await expect(readReceipt(JPEG, 'image/jpeg', 'Em Sherif')).resolves.toEqual(READ)
 

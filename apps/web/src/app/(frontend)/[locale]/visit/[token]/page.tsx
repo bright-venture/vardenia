@@ -33,6 +33,8 @@ const RECEIPT_MESSAGE: Record<string, string> = {
   'no-file': 'receiptNoFile',
   'no-amount': 'receiptNoAmount',
   already: 'receiptAlready',
+  // The same receipt number at the same place was sent before (lib/receipts).
+  duplicate: 'receiptDuplicate',
   closed: 'receiptClosed',
   'not-found': 'receiptError',
   error: 'receiptError',

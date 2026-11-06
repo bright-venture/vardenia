@@ -138,7 +138,9 @@
     "phone": "电话",
     "phoneHint": "选填。如有变动，商户会拨打此号码。",
     "notes": "需要转达的事项",
-    "notesHint": "选填。饮食需求、纪念日、轮椅需求等。",
+    "notesHint": "选填，不填不影响预订。饮食需求、纪念日、轮椅需求等。仅发送给商家和 Vardenia，用于安排您的到访。",
+    "notesConsent": "我同意商家和 Vardenia 使用我在此填写的内容（包括过敏、轮椅等健康信息），且仅用于安排本次到访。",
+    "notesConsentRequired": "请勾选此框以发送备注，或将备注留空。",
     "submit": "提交预订",
     "submitting": "发送中……",
     "invalidDate": "请选择日期和时间。",
@@ -742,6 +744,7 @@
     "receiptNoFile": "请选择收据的照片或 PDF。",
     "receiptNoAmount": "请填写收据上的总额。",
     "receiptAlready": "此次到访的收据已经发送过。",
+    "receiptDuplicate": "这张收据已用于另一次到访，不能再次发送。如有误，请联系我们。",
     "receiptClosed": "此次到访已无法再发送收据。",
     "receiptError": "无法保存您的收据，请重试。",
     "receiptLink": "添加您的收据"

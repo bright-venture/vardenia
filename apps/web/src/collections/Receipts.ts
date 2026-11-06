@@ -223,6 +223,18 @@ export const Receipts: CollectionConfig = {
           admin: { readOnly: true },
         },
         {
+          /**
+           * The receipt number as read, normalised (lib/receipt-reading). A
+           * second receipt with the same number at the same place is refused
+           * (lib/receipts isRepeatedReceipt), which is what this index serves.
+           */
+          name: 'number',
+          label: 'Receipt number',
+          type: 'text',
+          index: true,
+          admin: { readOnly: true },
+        },
+        {
           name: 'concerns',
           label: 'To check',
           type: 'select',

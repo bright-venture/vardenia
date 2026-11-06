@@ -13,8 +13,8 @@ import { CONTENT_PAGE_SLUGS, contentPage } from './pages'
  * to, so the test that matters is the one counting how many gaps the address
  * closes rather than the one checking the constant.
  *
- * The postal address is still unset, which is what keeps the placeholder
- * machinery under test now that the mailbox exists.
+ * Both the mailbox and the postal address are set now, so the placeholder
+ * machinery is kept under test by clearing them inside `restore`.
  */
 
 const restore = (fn: () => void) => {
@@ -52,8 +52,16 @@ describe('contact details', () => {
     })
   })
 
-  it('marks the postal address, which the privacy policy also needs', () => {
-    expect(contactPostal()).toContain(PLACEHOLDER)
+  it('publishes the postal address, which the privacy policy also needs', () => {
+    expect(contactPostal()).not.toContain(PLACEHOLDER)
+    expect(contactPostal()).toContain('Qubic Center, Sin El Fil')
+  })
+
+  it('goes back to a marked gap if the postal address is taken away', () => {
+    restore(() => {
+      CONTACT.postalAddress = null
+      expect(contactPostal()).toContain(PLACEHOLDER)
+    })
   })
 
   /**

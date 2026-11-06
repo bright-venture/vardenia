@@ -65,15 +65,62 @@ export const readReceiptAmount = (raw: unknown, currency: ReceiptCurrency) =>
   readSpent(raw, CEILING[currency])
 
 export type ReceiptOutcome =
-  'saved' | 'already' | 'closed' | 'not-found' | 'no-file' | 'bad-file' | 'too-big' | 'no-amount'
+  | 'saved'
+  | 'already'
+  | 'duplicate'
+  | 'closed'
+  | 'not-found'
+  | 'no-file'
+  | 'bad-file'
+  | 'too-big'
+  | 'no-amount'
 
 interface BookingRow {
   id: number
   status: BookingStatus
   start: string
   end: string
+  business?: number | { id: number } | null
   guestAnswer?: GuestAnswer | null
   receipt?: unknown
+}
+
+/**
+ * Whether this receipt was already sent, for another visit to the same place.
+ *
+ * Asked for by the owner on 6 November 2026: one receipt must count once, so
+ * that two guests (or one guest twice) cannot claim the same bill. The receipt
+ * number read from the photo is the key, within one place, because two places
+ * can each print a receipt 0045.
+ *
+ * Some tills start their numbering again every day, so when both receipts have
+ * a printed date and the dates differ, they are two receipts. Only the same
+ * number with the same date, or with a date missing on either, is a repeat.
+ * Without a number nothing can be compared; that receipt is let through and
+ * flagged for the team instead (the `number` concern).
+ */
+export async function isRepeatedReceipt(
+  payload: Payload,
+  businessId: number,
+  reading: { number: string | null; date: string | null },
+): Promise<boolean> {
+  if (!reading.number) return false
+  const found = await payload.find({
+    collection: 'receipts',
+    where: {
+      and: [
+        { 'reading.number': { equals: reading.number } },
+        { 'booking.business': { equals: businessId } },
+      ],
+    },
+    depth: 0,
+    limit: 50,
+    overrideAccess: true,
+  })
+  return (found.docs as { reading?: { date?: string | null } | null }[]).some((other) => {
+    const printed = other.reading?.date ?? null
+    return !printed || !reading.date || printed === reading.date
+  })
 }
 
 interface LinkedBooking extends BookingRow {
@@ -125,6 +172,13 @@ export async function saveReceipt(
   if (!type) return 'bad-file'
   if (input.amount === null) return 'no-amount'
 
+  // Before anything is recorded, so a repeated receipt changes nothing.
+  const read = input.reading ? openReading(input.reading, bookingId, input.bytes) : null
+  const businessId = typeof doc.business === 'object' ? doc.business?.id : doc.business
+  if (read && businessId && (await isRepeatedReceipt(payload, Number(businessId), read))) {
+    return 'duplicate'
+  }
+
   // A receipt is an answer: the guest came. Their typed total doubles as their
   // figure when it is in dollars, the currency the commission is billed in.
   if (!doc.guestAnswer) {
@@ -137,7 +191,6 @@ export async function saveReceipt(
     )
   }
 
-  const read = input.reading ? openReading(input.reading, bookingId, input.bytes) : null
   const reading = read
     ? {
         ...read,

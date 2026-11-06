@@ -138,7 +138,9 @@
     "phone": "Téléphone",
     "phoneHint": "Facultatif. L'établissement appelle ce numéro en cas de changement.",
     "notes": "Un message à transmettre",
-    "notesHint": "Facultatif. Un régime particulier, un anniversaire, un fauteuil roulant.",
+    "notesHint": "Facultatif, et votre réservation est la même sans. Un régime particulier, un anniversaire, un fauteuil roulant. Transmis uniquement à l'établissement et à Vardenia, pour organiser votre visite.",
+    "notesConsent": "J'accepte que l'établissement et Vardenia utilisent ce que j'écris ici, y compris toute information de santé comme une allergie ou un fauteuil roulant, uniquement pour organiser cette visite.",
+    "notesConsentRequired": "Cochez la case pour envoyer votre message, ou laissez le champ vide.",
     "submit": "Demander la réservation",
     "submitting": "Envoi...",
     "invalidDate": "Veuillez choisir une date et une heure.",
@@ -742,6 +744,7 @@
     "receiptNoFile": "Choisissez une photo ou un PDF du reçu.",
     "receiptNoAmount": "Indiquez le total figurant sur le reçu.",
     "receiptAlready": "Un reçu a déjà été envoyé pour cette visite.",
+    "receiptDuplicate": "Ce reçu a déjà été envoyé pour une autre visite, il ne peut donc pas être envoyé à nouveau. S'il s'agit d'une erreur, écrivez-nous.",
     "receiptClosed": "Il n'est plus possible d'envoyer un reçu pour cette visite.",
     "receiptError": "Nous n'avons pas pu enregistrer votre reçu. Veuillez réessayer.",
     "receiptLink": "Ajoutez votre reçu"

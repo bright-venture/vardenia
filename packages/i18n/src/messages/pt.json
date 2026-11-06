@@ -138,7 +138,9 @@
     "phone": "Telefone",
     "phoneHint": "Opcional. O estabelecimento liga para este número se algo mudar.",
     "notes": "Algo que devamos avisar",
-    "notesHint": "Opcional. Uma restrição alimentar, um aniversário, uma cadeira de rodas.",
+    "notesHint": "Opcional, e a sua reserva é a mesma sem isso. Uma restrição alimentar, um aniversário, uma cadeira de rodas. Só o recebem o estabelecimento e a Vardenia, para organizar a sua visita.",
+    "notesConsent": "Aceito que o estabelecimento e a Vardenia usem o que escrevo aqui, incluindo qualquer informação de saúde como uma alergia ou uma cadeira de rodas, apenas para organizar esta visita.",
+    "notesConsentRequired": "Marque a caixa para enviar as suas notas, ou deixe-as em branco.",
     "submit": "Solicitar reserva",
     "submitting": "Enviando...",
     "invalidDate": "Escolha uma data e um horário.",
@@ -742,6 +744,7 @@
     "receiptNoFile": "Escolha uma foto ou um PDF do recibo.",
     "receiptNoAmount": "Informe o total que aparece no recibo.",
     "receiptAlready": "Um recibo já foi enviado para esta visita.",
+    "receiptDuplicate": "Este recibo já foi enviado para outra visita, por isso não pode ser enviado de novo. Se for um engano, escreva-nos.",
     "receiptClosed": "Não é mais possível enviar um recibo para esta visita.",
     "receiptError": "Não conseguimos salvar seu recibo. Tente novamente.",
     "receiptLink": "Adicione seu recibo"

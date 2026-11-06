@@ -27,10 +27,20 @@ const booking = (over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
-function fakePayload(doc: unknown, linked = 1) {
-  const calls = { creates: [] as unknown[], deletes: [] as unknown[], updates: [] as unknown[] }
+function fakePayload(doc: unknown, linked = 1, earlier: unknown[] = []) {
+  const calls = {
+    creates: [] as unknown[],
+    deletes: [] as unknown[],
+    updates: [] as unknown[],
+    finds: [] as unknown[],
+  }
   const payload = {
     findByID: vi.fn(async () => doc),
+    // The receipts already sent with the same number at the same place.
+    find: vi.fn(async (args: unknown) => {
+      calls.finds.push(args)
+      return { docs: earlier }
+    }),
     create: vi.fn(async (args: unknown) => {
       calls.creates.push(args)
       return { id: 77 }
@@ -47,8 +57,13 @@ function fakePayload(doc: unknown, linked = 1) {
   return { payload: payload as never, calls }
 }
 
-const send = (doc: unknown, input: Partial<Parameters<typeof saveReceipt>[2]> = {}, linked = 1) => {
-  const fake = fakePayload(doc, linked)
+const send = (
+  doc: unknown,
+  input: Partial<Parameters<typeof saveReceipt>[2]> = {},
+  linked = 1,
+  earlier: unknown[] = [],
+) => {
+  const fake = fakePayload(doc, linked, earlier)
   const run = saveReceipt(
     fake.payload,
     9,
@@ -102,7 +117,13 @@ describe('saving a receipt', () => {
   })
 
   it('keeps what was read from the photo, with what the team should check', async () => {
-    const read = { total: 84.5, currency: 'USD', date: '2026-11-03', place: 'yes' } as const
+    const read = {
+      total: 84.5,
+      currency: 'USD',
+      date: '2026-11-03',
+      place: 'yes',
+      number: '004512',
+    } as const
     const reading = sealReading(read, 9, JPEG)
     const same = send(booking(), { reading })
     await same.run
@@ -114,10 +135,70 @@ describe('saving a receipt', () => {
   })
 
   it('ignores a reading sealed for another photo or booking, and still saves', async () => {
-    const reading = sealReading({ total: 9, currency: 'USD', date: null, place: 'yes' }, 10, JPEG)
+    const reading = sealReading(
+      { total: 9, currency: 'USD', date: null, place: 'yes', number: '1' },
+      10,
+      JPEG,
+    )
     const { run, calls } = send(booking(), { reading })
     await expect(run).resolves.toBe('saved')
     expect((calls.creates[0] as { data: { reading?: unknown } }).data.reading).toBeUndefined()
+  })
+
+  /**
+   * One receipt counts once (asked for on 6 November 2026): the same receipt
+   * number at the same place is refused, before anything is recorded. Tills
+   * that restart their numbering daily are allowed for by the printed date.
+   */
+  describe('a receipt sent twice', () => {
+    const read = {
+      total: 84.5,
+      currency: 'USD',
+      date: '2026-11-03',
+      place: 'yes',
+      number: '004512',
+    } as const
+    const reading = sealReading(read, 9, JPEG)
+    const atPlace = booking({ business: 5 })
+
+    it('is refused when the same number was sent at the same place', async () => {
+      // A guest who had not answered: a refused receipt must not count as "I came".
+      recordGuestAnswer.mockClear()
+      const unanswered = booking({ business: 5, guestAnswer: null })
+      const { run, calls } = send(unanswered, { reading }, 1, [{ reading: { date: '2026-11-03' } }])
+      await expect(run).resolves.toBe('duplicate')
+      expect(calls.creates).toHaveLength(0)
+      expect(recordGuestAnswer).not.toHaveBeenCalled()
+      expect(calls.finds[0]).toMatchObject({
+        collection: 'receipts',
+        where: {
+          and: [{ 'reading.number': { equals: '004512' } }, { 'booking.business': { equals: 5 } }],
+        },
+      })
+    })
+
+    it('is refused when either receipt has no printed date to tell them apart', async () => {
+      const { run } = send(atPlace, { reading }, 1, [{ reading: { date: null } }])
+      await expect(run).resolves.toBe('duplicate')
+    })
+
+    it('is accepted when the same number was printed on another day', async () => {
+      const { run } = send(atPlace, { reading }, 1, [{ reading: { date: '2026-10-20' } }])
+      await expect(run).resolves.toBe('saved')
+    })
+
+    it('is accepted when nothing else has that number', async () => {
+      const { run } = send(atPlace, { reading })
+      await expect(run).resolves.toBe('saved')
+    })
+
+    it('is not checked without a number, and is flagged for the team instead', async () => {
+      const unnumbered = sealReading({ ...read, number: null }, 9, JPEG)
+      const { run, calls } = send(atPlace, { reading: unnumbered }, 1, [{}])
+      await expect(run).resolves.toBe('saved')
+      expect(calls.finds).toHaveLength(0)
+      expect(calls.creates[0]).toMatchObject({ data: { reading: { concerns: ['number'] } } })
+    })
   })
 
   it('keeps the first receipt of a booking', async () => {

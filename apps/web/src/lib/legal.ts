@@ -1,4 +1,5 @@
 import { PLACEHOLDER, TBD, contactEmail } from './placeholder'
+import { CONTACT } from './contact'
 
 /**
  * The privacy policy and terms, as content rather than markup.
@@ -49,7 +50,23 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-05'
+export const LEGAL_LAST_UPDATED = '2026-11-06'
+
+/**
+ * Who runs the site, as both documents state it.
+ *
+ * Two lines, the settled one and the open one, for the reason given at the top
+ * of the privacy policy's first section. The legal name and registered office
+ * were given by the owner on 6 November 2026. The registration number was
+ * answered as "Office number 01", which is the office unit and is already in
+ * the address, so the commercial registration number is still open.
+ */
+const whoRunsIt = (): string[] => [
+  CONTACT.postalAddress
+    ? `The site is run by Vardenia, whose registered office is at ${CONTACT.postalAddress}.`
+    : TBD('the registered office address of Vardenia, which runs the site'),
+  TBD('the commercial registration number of Vardenia'),
+]
 
 /**
  * The marker and the contact details both live in lib/placeholder now, so the
@@ -89,7 +106,7 @@ export function privacyPolicy(): LegalDocument {
            * settled half in body text and the open question in its own block.
            */
           'Vardenia is a printed magazine and an online directory of places in Lebanon.',
-          `${TBD('the registered legal entity, its company number and its registered address')}.`,
+          ...whoRunsIt(),
           'If you want to ask about anything in this policy, get in touch.',
           contactEmail(),
         ],
@@ -102,7 +119,7 @@ export function privacyPolicy(): LegalDocument {
           '- **If you open an account**: your name, your email address, and a phone number if you choose to give one. Your password is stored only as a hash and cannot be read by us or recovered.',
           '- **If you make a booking**: the date and time, how many people, and anything you write in the notes field. We also keep a reference number so you and the business can identify the booking later.',
           '- **After your visit**: we email you to ask whether you went, and roughly what you spent. We keep your answer and the amount with the booking.',
-          '- **If you send a receipt**: the photo or PDF of the bill, the total and currency you confirm, and what was read from it automatically (the total, the date printed on it, and whether the name of the place appears). A receipt can show more than the total, such as what you ordered, a name, or the last digits of a card, so please cover anything you would rather we did not see before you send it.',
+          '- **If you send a receipt**: the photo or PDF of the bill, the total and currency you confirm, and what was read from it automatically (the total, the receipt number, the date printed on it, and whether the name of the place appears). A receipt can show more than the total, such as what you ordered, a name, or the last digits of a card, so please cover anything you would rather we did not see before you send it.',
           '- **If you write a review**: what you wrote, your rating, and the first name and initial it is shown with.',
           '- **Your passport and saved places**: the places you have visited through a booking, which earn a stamp, and the places you have saved.',
           '- **If you scan a printed code**: the code, the time, your city and country, and whether you were on a phone or a computer. We do not record your precise location, and we do not store your IP address at all - it is hashed in memory to spot repeated scans and never written down.',
@@ -116,11 +133,13 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'A note about the booking notes field',
         body: [
-          'The notes box on a booking form invites you to tell the business about a dietary requirement, an anniversary, or an accessibility need. Some of that is health information, which the law treats as more sensitive than the rest.',
-          'We pass whatever you write to the business you are booking with, because that is the point of the field, and we keep it with the booking. Please only write what you are comfortable sharing with that business, and leave it blank if you would rather tell them in person.',
-          TBD(
-            'whether an explicit consent tick is needed on the booking form for health-related notes, or whether the field should be relabelled to discourage them - a question for a lawyer, since this is special category data under GDPR Article 9',
-          ),
+          'The notes box on a booking form is where you can tell the place about a dietary need, an anniversary, or an accessibility need such as a wheelchair. Some of that is health information, which Lebanese law (Law No. 81 of 2018 on electronic transactions and personal data, Article 91) lets us handle only with your explicit agreement.',
+          '- **It is optional.** Leave it blank and your booking request is exactly the same. You can always tell the place in person instead.',
+          '- **If you write in it, you tick a box to agree** that Vardenia and the place may use what you wrote, including any health information, only to arrange that visit. The box is never ticked for you, and notes are not sent without it.',
+          '- **Who receives it.** The place you are booking with, and the Vardenia team. Nobody else.',
+          '- **How long it is kept.** With the booking, for 12 months after the visit.',
+          '- **Your rights.** You can ask us to show you what you wrote, to correct it, or to delete it.',
+          'Please only write what you are comfortable sharing with that place.',
         ],
       },
 
@@ -130,11 +149,10 @@ export function privacyPolicy(): LegalDocument {
           'Businesses listed on Vardenia pay us a commission on what their guests spend on visits booked through the site. Your visit costs you nothing extra: you pay the business as usual, and Vardenia charges you nothing.',
           'That is why we ask whether you went, and roughly what you spent, and why you can send us the receipt. They let us check that a business is billed fairly, and settle it when the business and you remember the visit differently. Answering is up to you, and so is sending a receipt.',
           '- **Who sees the receipt.** You, and the Vardenia team. The business never sees the photo. It sees only the amount it was billed on, and that it came from a receipt.',
-          '- **Reading it automatically.** When you choose the photo, the total, the date and the name of the place can be read from it by an automated service, so you only have to check the figure. You can always correct it before sending, and nothing is decided about you from it.',
+          '- **Reading it automatically.** When you choose the photo, the total, the receipt number, the date and the name of the place can be read from it by an automated service, so you only have to check the figure. You can always correct the total before sending, and nothing is decided about you from it.',
+          '- **Each receipt counts once.** The receipt number is read so that the same receipt cannot be sent twice for the same place. A receipt that has already been sent is refused.',
           '- **Who sees your answer.** The Vardenia team. If it disagrees with what the business recorded, we may tell the business that the visit is disputed while we look into it.',
-          TBD(
-            'how long receipts are kept - the original plan was to delete them 12 months after the visit - and whether sending one should need its own consent, since a receipt can carry more than the total',
-          ),
+          '- **How long it is kept.** The receipt, what was read from it, and your answer are kept for 12 months after the visit.',
         ],
       },
 
@@ -152,8 +170,15 @@ export function privacyPolicy(): LegalDocument {
         body: [
           '- **The business you book with** sees your name, your phone number if you gave one, the details of the booking and your notes. They need those to hold your table and to call you if something changes. They do not see your email address, your receipt or your answer after the visit.',
           '- **Everyone who reads the site** sees a review once we publish it, with your first name and initial, never your full name or anything else about you.',
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site, the service that sends our email, the service that counts page visits, and the service that reads receipts.',
-          `- ${TBD('naming those suppliers explicitly, which is generally expected - currently Supabase for the database and the receipt files, Netlify for hosting, Cloudflare for the network and the sign-up check, Resend for email, Umami for analytics, and Anthropic for reading receipts')}.`,
+          /**
+           * Described by what they do, not named. The owner decided on 6
+           * November 2026 that the pages do not name the suppliers. The list of
+           * names is kept in this comment so a request for it can be answered:
+           * Supabase (database, files), Netlify (hosting), Cloudflare (network,
+           * sign-up check), Resend (email), Umami (page visits) and Anthropic
+           * (reading receipts).
+           */
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site, the service that sends our email, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
@@ -172,11 +197,15 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'How long we keep it',
         body: [
-          'Bookings are kept as a record of what was agreed, because that is what a disagreement about a missed reservation is settled from.',
-          'Monthly bills to businesses are kept as long as accounting records have to be, and the bookings, answers and receipt totals they were drawn up from are kept with them.',
-          TBD(
-            'actual retention periods - a proposal to review: bookings for 24 months after the date, receipts for 12 months after the visit, accounts until you close them, reviews while they are published, scan records for 24 months, error records for 90 days, bills for as long as accounting law requires. None of these is enforced in the software yet',
-          ),
+          'Only as long as it is needed for the reason we hold it.',
+          '- **Bookings**, including your notes: 12 months after the visit.',
+          '- **Receipts**, what was read from them, and your answer after a visit: 12 months after the visit.',
+          '- **Records of printed-code scans**: 12 months.',
+          '- **Error records**: 90 days.',
+          '- **Your account**: until you close it.',
+          '- **Reviews**: while they are published, or until you ask us to take one down.',
+          '- **Monthly bills to businesses**: as long as Lebanese accounting law requires.',
+          TBD('the exact period Lebanese accounting law requires bills to be kept'),
         ],
       },
 
@@ -229,8 +258,8 @@ export function termsOfService(): LegalDocument {
       {
         heading: 'Who we are',
         body: [
-          `${TBD('the registered legal entity, its company number and its registered address')}.`,
           'Vardenia publishes a printed magazine and an online directory of places in Lebanon.',
+          ...whoRunsIt(),
         ],
       },
 
@@ -261,10 +290,8 @@ export function termsOfService(): LegalDocument {
           '- **Your booking is with the business, not with us.** We pass your request on and tell you what they say. The arrangement to hold a table is between the two of you.',
           '- **A request is not a reservation.** Some places confirm immediately and some answer by hand. Nothing is held until you receive a confirmation saying so, and a request can be declined.',
           '- **Cancelling.** You can cancel from your account at any time, and the business is told. If you cancel, the business may have its own policy about late cancellations; that is between you and them.',
+          "- **Fees for a late cancellation or a missed booking** depend on the place. Some places have one and some do not. A fee like that is the place's own policy, between you and them.",
           '- We do not take payment for bookings and do not hold any card details.',
-          TBD(
-            'whether a no-show or late-cancellation fee will ever be charged through Vardenia, which would change this section and the privacy policy substantially',
-          ),
         ],
       },
 
@@ -319,10 +346,7 @@ export function termsOfService(): LegalDocument {
       {
         heading: 'If you run a listed business',
         body: [
-          'These terms are for readers and guests. A business listed on Vardenia has its own agreement with us, covering its level, the commission, the monthly bill, the time it has to question a visit on it, and the time it has to pay.',
-          TBD(
-            'where the business terms live - in each signed agreement and the rate card, or on a partner terms page on this site - and that the partner dashboard links to them',
-          ),
+          'These terms are for readers and guests. A business listed on Vardenia has its own agreement with us, signed on paper or agreed by email, covering its level, the commission, the monthly bill, the time it has to question a visit on it, and the time it has to pay. These terms do not change that agreement.',
         ],
       },
 
@@ -338,18 +362,25 @@ export function termsOfService(): LegalDocument {
         heading: 'When things go wrong',
         body: [
           'We take reasonable care that the information here is accurate, but opening hours change, kitchens close, and businesses move. We cannot promise the site is always correct or always available.',
-          TBD(
-            'the limitation of liability clause, which should be drafted rather than adapted from a template',
-          ),
+          /**
+           * Drafted on 6 November 2026 for Lebanese law, which the owner chose.
+           * The first line is there because the Lebanese Code of Obligations
+           * and Contracts does not let a clause exclude liability for fraud or
+           * serious fault, and a clause that tried would be void. The exact
+           * article was not checked: worth a lawyer's read before it is relied on.
+           */
+          '- **What we are responsible for.** Nothing in these terms limits our responsibility for fraud or for serious fault on our part.',
+          '- **What we are not responsible for.** What a listed place does or fails to do, including a booking it does not honour; a place that has closed, moved or changed its hours since we wrote about it; and the site being unavailable for a time.',
+          '- **Where we are responsible**, it is for the direct loss you suffered that could reasonably have been foreseen, and not for indirect loss such as a lost opportunity.',
         ],
       },
 
       {
         heading: 'Which law applies',
         body: [
-          TBD(
-            'the governing law and the courts that would hear a dispute - Lebanon is the obvious answer, but it interacts with the European audience the site is aimed at and should be checked',
-          ),
+          'These terms are governed by Lebanese law, and the Lebanese courts hear any dispute about them.',
+          'Before going to court, please write to us. Most disagreements are settled by a message.',
+          contactEmail(),
         ],
       },
 

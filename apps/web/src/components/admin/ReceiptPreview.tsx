@@ -15,6 +15,8 @@ export interface ReceiptReadingSummary {
   total: number | null
   currency: string | null
   date: string | null
+  /** The receipt number read from it, which is checked for repeats. */
+  number: string | null
   concerns: string[]
 }
 
@@ -43,11 +45,12 @@ function toReading(value: unknown): ReceiptReadingSummary | null {
     ? r.concerns.filter((c): c is string => typeof c === 'string')
     : []
   // A group always comes back, empty when nothing was read.
-  if (total === null && !r.date && !r.place && concerns.length === 0) return null
+  if (total === null && !r.date && !r.place && !r.number && concerns.length === 0) return null
   return {
     total,
     currency: typeof r.currency === 'string' ? r.currency : null,
     date: typeof r.date === 'string' && r.date ? r.date : null,
+    number: typeof r.number === 'string' && r.number ? r.number : null,
     concerns,
   }
 }
@@ -166,6 +169,7 @@ const CONCERN_TEXT: Record<string, string> = {
   date: 'The printed date is not the visit.',
   place: 'Another business name is on it.',
   unreadable: 'No total could be read from it.',
+  number: 'No receipt number could be read, so it was not checked for a repeat.',
 }
 
 /** What was read from the photo, and anything in it that does not fit. */
@@ -173,6 +177,7 @@ function ReadingLine({ reading }: { reading: ReceiptReadingSummary }) {
   const read = [
     reading.total !== null ? receiptTotal(reading.total, reading.currency ?? 'USD') : null,
     reading.date ? `dated ${printedOn(reading.date)}` : null,
+    reading.number ? `receipt no. ${reading.number}` : null,
   ]
     .filter(Boolean)
     .join(', ')

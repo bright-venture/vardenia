@@ -148,6 +148,21 @@ describe('BookingForm', () => {
     }
   })
 
+  /**
+   * Law 81/2018, Article 91: health details in the notes need explicit
+   * agreement, so the box is there, labelled, and never ticked for the guest.
+   * Article 88: the hint says it is optional and who receives it.
+   */
+  it('offers an unticked consent box for the notes, and says who gets them', () => {
+    const html = render(restaurant)
+    const box = /<input[^>]*type="checkbox"[^>]*>/.exec(html)?.[0] ?? ''
+    expect(box).not.toBe('')
+    expect(box).not.toContain('checked')
+    expect(text(html)).toContain('only to arrange this visit')
+    expect(text(html)).toContain('Optional, and your booking is the same without it')
+    expect(text(html)).toContain('only to the place and to Vardenia')
+  })
+
   it('renders in Arabic without leaking English', () => {
     const html = text(render(restaurant, 'ar'))
     // The account prompt is what a signed-out reader sees, so that is the
