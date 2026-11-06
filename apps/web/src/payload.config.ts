@@ -28,7 +28,7 @@ import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
 import { Settings } from './globals/Settings'
-import { Editions } from './collections/Editions'
+import { EDITION_MAX_BYTES, Editions } from './collections/Editions'
 import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/storage-base'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
@@ -522,9 +522,11 @@ export default buildConfig({
    * limit the failure is the whole function running out of memory, because
    * `useTempFiles` is off and every byte is buffered in RAM.
    *
-   * 25 MB is sized against what actually arrives: a hero frame out of
-   * Lightroom is a few megabytes, and every image here is re-encoded to WebP
-   * afterwards anyway. It is a guard rail, not a quota.
+   * Photos are held to 25 MB, sized against what actually arrives: a hero
+   * frame out of Lightroom is a few megabytes, and every image here is
+   * re-encoded to WebP afterwards anyway. It is a guard rail, not a quota. That
+   * limit now lives on the collections (hooks/limitUploadSize), because this
+   * one is the magazine PDFs' 200 MB; see below.
    *
    * # abortOnLimit is the half that matters
    *
@@ -542,15 +544,22 @@ export default buildConfig({
    * between a readable error and a crash, and it is the only limit that
    * survives a move off Netlify.
    *
-   * The practical consequence is that a full issue PDF cannot be pushed
-   * through the admin panel in production and has to be put in the storage
-   * bucket directly. That was already true; it is written down here because
-   * nothing else says so.
+   * That is why a full issue PDF does not pass through the server at all: the
+   * Magazine PDFs library uploads straight from the browser to its bucket
+   * (collections/Editions), and only that upload uses the 200 MB here.
    */
   upload: {
-    limits: { fileSize: 25 * 1024 * 1024 },
+    /*
+     * The largest upload of any collection: a magazine PDF (collections/Editions).
+     * Payload has one limit for the whole site, and the PDFs' direct-to-storage
+     * upload reads this same one, so it is theirs. Every other upload
+     * collection holds its own, smaller limit (hooks/limitUploadSize): photos
+     * and receipts stay at 25 MB. On Netlify a request through the server is
+     * capped near 6 MB before any of this is reached.
+     */
+    limits: { fileSize: EDITION_MAX_BYTES },
     abortOnLimit: true,
-    responseOnLimit: 'That file is larger than 25 MB. Export a smaller version and try again.',
+    responseOnLimit: 'That file is larger than 200 MB. Export a smaller version and try again.',
   },
 
   /**

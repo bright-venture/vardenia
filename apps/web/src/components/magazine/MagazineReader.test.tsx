@@ -236,7 +236,7 @@ describe('built-in magazine reader', () => {
     expect(host.querySelector('[data-reader-turn]')?.getAttribute('data-reader-turn')).toBe(
       'dragging',
     )
-    expect(host.querySelectorAll('[data-paper-strip]')).toHaveLength(28)
+    expect(host.querySelector('[data-paper-canvas]')).not.toBeNull()
     expect(
       Number(host.querySelector('[data-paper-progress]')?.getAttribute('data-paper-progress')),
     ).toBeGreaterThan(0.4)

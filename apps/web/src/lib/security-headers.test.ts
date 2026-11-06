@@ -240,3 +240,25 @@ describe('what next.config serves', () => {
     }
   })
 })
+
+describe('the admin policy and direct uploads', () => {
+  /**
+   * Magazine PDFs upload straight from the browser to the storage API, so the
+   * admin may connect to that one origin. The public site may not.
+   */
+  it('lets the admin reach the storage API origin, and nothing else new', () => {
+    const env = { S3_ENDPOINT: 'https://abc.storage.supabase.co/storage/v1/s3' }
+    const connect = directive(adminCsp(env), 'connect-src')
+    expect(connect).toContain("'self'")
+    expect(connect).toContain('https://abc.storage.supabase.co')
+    expect(connect?.join(' ')).not.toMatch(/storage\/v1/)
+    expect(directive(publicCsp(), 'connect-src')?.join(' ')).not.toMatch(/supabase/)
+  })
+
+  it('stays self-only without storage, or over plain HTTP', () => {
+    expect(directive(adminCsp({}), 'connect-src')).toEqual(["'self'"])
+    expect(directive(adminCsp({ S3_ENDPOINT: 'http://localhost:9000' }), 'connect-src')).toEqual([
+      "'self'",
+    ])
+  })
+})

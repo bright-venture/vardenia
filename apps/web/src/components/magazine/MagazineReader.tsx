@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -30,6 +31,7 @@ import { nextPage, spreadPages } from './reader-model'
 import styles from './MagazineReader.module.css'
 import { PaperCurl, type PaperSnapshot as Snapshot, type PaperTurn as Turn } from './PaperCurl'
 import { dragProgress, shouldCommitTurn } from './reader-curl'
+import { PageCache, type DrawnPage } from './page-cache'
 
 type Copy = ReturnType<typeof readerCopy>
 interface Props {
@@ -236,6 +238,8 @@ function ReaderBook({
   const turnRef = useRef<Turn | null>(null)
   const waiting = useRef<Set<number> | null>(null)
   const turnId = useRef(0)
+  // Every drawn page goes through here: kept, shared, and drawn ahead.
+  const cache = useMemo(() => new PageCache(pdfDrawer(document)), [document])
   const gesture = useRef<PageGesture | null>(null)
   const returned = useRef(false)
   const touch = useRef<{ x: number; y: number } | null>(null)
@@ -250,6 +254,29 @@ function ReaderBook({
   const shownFirst = shownPages[0]!
   const shownLast = shownPages[shownPages.length - 1]!
   const pageStatus = `${copy.page} ${shownPages.join('–')} / ${document.numPages}`
+  // While the reader rests on a spread, draw the spreads either side of it,
+  // the next one first: a turn then finds its pages already in the cache.
+  // Not while zoomed, where pages are drawn far larger than a turn needs.
+  useEffect(() => {
+    if (activeTurn || zoom !== 1) return
+    const total = document.numPages
+    const ahead = [
+      ...spreadPages(nextPage(firstPage, total, spreads, 1), total, spreads),
+      ...spreadPages(nextPage(firstPage, total, spreads, -1), total, spreads),
+    ].filter((number) => number < firstPage || number > lastPage)
+    const timer = window.setTimeout(() => void cache.prepare(ahead, pageWidth, pageHeight), 120)
+    return () => window.clearTimeout(timer)
+  }, [
+    activeTurn,
+    zoom,
+    cache,
+    document.numPages,
+    firstPage,
+    lastPage,
+    spreads,
+    pageWidth,
+    pageHeight,
+  ])
   const cancelTurn = useCallback(() => {
     if (turnRef.current)
       setDraft(
@@ -636,6 +663,7 @@ function ReaderBook({
                 <ReaderPage
                   key={number}
                   document={document}
+                  cache={cache}
                   page={number}
                   width={pageWidth}
                   height={pageHeight}
@@ -836,8 +864,38 @@ function ReaderBook({
   )
 }
 
+/**
+ * Draws one PDF page offscreen at the size it is shown, sharp on a high
+ * density screen but bounded, so a full-bleed photograph cannot blow the
+ * memory of a phone. Used through the page cache (page-cache.ts).
+ */
+function pdfDrawer(document: PDFDocumentProxy) {
+  return async (page: number, width: number, height: number): Promise<DrawnPage> => {
+    const pdfPage = await document.getPage(page)
+    const target = window.document.createElement('canvas')
+    const natural = pdfPage.getViewport({ scale: 1 })
+    const view = pdfPage.getViewport({
+      scale: Math.min(width / natural.width, height / natural.height),
+    })
+    const ratio = Math.min(
+      window.devicePixelRatio || 1,
+      2,
+      Math.sqrt(8_000_000 / (view.width * view.height)),
+    )
+    target.width = Math.max(1, Math.floor(view.width * ratio))
+    target.height = Math.max(1, Math.floor(view.height * ratio))
+    await pdfPage.render({
+      canvas: target,
+      viewport: view,
+      transform: [ratio, 0, 0, ratio, 0, 0],
+    }).promise
+    return { canvas: target, width: view.width, height: view.height }
+  }
+}
+
 function ReaderPage({
   document,
+  cache,
   page,
   width,
   height,
@@ -846,6 +904,7 @@ function ReaderPage({
   onSettled,
 }: {
   document: PDFDocumentProxy
+  cache: PageCache
   page: number
   width: number
   height: number
@@ -856,52 +915,44 @@ function ReaderPage({
   const canvas = useRef<HTMLCanvasElement>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [attempt, setAttempt] = useState(0)
-  useEffect(() => {
+  // Layout effect: a page the cache already holds is on screen in the same
+  // frame, so a turn to a prepared spread never shows its loading state.
+  useLayoutEffect(() => {
     let cancelled = false
-    let render: ReturnType<Awaited<ReturnType<PDFDocumentProxy['getPage']>>['render']> | undefined
-    void document
-      .getPage(page)
-      .then(async (pdfPage) => {
-        if (cancelled || !canvas.current) return
-        // Render offscreen, then replace the visible raster atomically. Resize/zoom never clears it.
-        const target = window.document.createElement('canvas')
-        const natural = pdfPage.getViewport({ scale: 1 })
-        const view = pdfPage.getViewport({
-          scale: Math.min(width / natural.width, height / natural.height),
-        })
-        const ratio = Math.min(
-          window.devicePixelRatio || 1,
-          2,
-          Math.sqrt(8_000_000 / (view.width * view.height)),
-        )
-        target.width = Math.max(1, Math.floor(view.width * ratio))
-        target.height = Math.max(1, Math.floor(view.height * ratio))
-        render = pdfPage.render({
-          canvas: target,
-          viewport: view,
-          transform: [ratio, 0, 0, ratio, 0, 0],
-        })
-        await render.promise
-        if (cancelled || !canvas.current) return
-        const visible = canvas.current
-        visible.width = target.width
-        visible.height = target.height
-        visible.style.width = `${view.width}px`
-        visible.style.height = `${view.height}px`
-        visible.getContext('2d')?.drawImage(target, 0, 0)
-        visible.dataset.ready = 'true'
-        setStatus('ready')
-        onSettled(page)
-        const content = await pdfPage.getTextContent().catch(() => ({ items: [] }))
-        if (!cancelled)
-          onText(
-            page,
-            content.items
-              .map((item) => ('str' in item ? item.str + (item.hasEOL ? '\n' : '') : ''))
-              .join(' ') || copy.noText,
-          )
+    const show = (drawn: DrawnPage) => {
+      const visible = canvas.current
+      if (cancelled || !visible) return
+      // Replace the visible raster atomically. Resize/zoom never clears it.
+      visible.width = drawn.canvas.width
+      visible.height = drawn.canvas.height
+      visible.style.width = `${drawn.width}px`
+      visible.style.height = `${drawn.height}px`
+      visible.getContext('2d')?.drawImage(drawn.canvas, 0, 0)
+      visible.dataset.ready = 'true'
+      setStatus('ready')
+      // After the current commit, not inside it: a kept page is ready in the
+      // same frame it mounts, before the turn's overlay can take a paint.
+      queueMicrotask(() => {
+        if (!cancelled) onSettled(page)
       })
-      .catch((error: unknown) => {
+      void document
+        .getPage(page)
+        .then((pdfPage) => pdfPage.getTextContent())
+        .catch(() => ({ items: [] }))
+        .then((content) => {
+          if (!cancelled)
+            onText(
+              page,
+              content.items
+                .map((item) => ('str' in item ? item.str + (item.hasEOL ? '\n' : '') : ''))
+                .join(' ') || copy.noText,
+            )
+        })
+    }
+    const kept = cache.peek(page, width, height)
+    if (kept) show(kept)
+    else
+      cache.get(page, width, height).then(show, (error: unknown) => {
         if (
           !cancelled &&
           !(error instanceof Error && error.name === 'RenderingCancelledException')
@@ -911,11 +962,12 @@ function ReaderPage({
           onSettled(page)
         }
       })
+    // A drawing in progress is shared with the cache, so it is left to finish
+    // there rather than cancelled: the page is usually a neighbour, wanted soon.
     return () => {
       cancelled = true
-      render?.cancel()
     }
-  }, [document, page, width, height, attempt, copy.noText, onSettled, onText])
+  }, [cache, document, page, width, height, attempt, copy.noText, onSettled, onText])
   return (
     <div className={styles.page} style={{ width, height }} aria-busy={status === 'loading'}>
       {status !== 'ready' && (

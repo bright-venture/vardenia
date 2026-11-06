@@ -14,6 +14,7 @@ import {
   fixedOnceCreated,
 } from '../access/index'
 import { unguessableFilename } from '../hooks/unguessableFilename'
+import { PHOTO_MAX_BYTES, limitUploadSize } from '../hooks/limitUploadSize'
 import {
   CONCERN_LABELS,
   READING_CONCERNS,
@@ -118,7 +119,11 @@ export const Receipts: CollectionConfig = {
     delete: isAdmin,
   },
   hooks: {
-    beforeOperation: [requireReceiptStorage, unguessableFilename],
+    beforeOperation: [
+      requireReceiptStorage,
+      limitUploadSize(PHOTO_MAX_BYTES, 'Receipts'),
+      unguessableFilename,
+    ],
     beforeChange: [copyBookingCustomer],
     // The booking keeps a copy of the total, which billing reads first.
     afterChange: [refreshBookingFromReceipt],

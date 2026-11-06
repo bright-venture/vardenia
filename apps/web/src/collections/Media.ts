@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { anyone, isStaff } from '../access/index'
 import { blockMediaInUse } from '../hooks/blockMediaInUse'
 import { unguessableFilename } from '../hooks/unguessableFilename'
+import { PHOTO_MAX_BYTES, limitUploadSize } from '../hooks/limitUploadSize'
 import { revalidateMediaAfterChange, revalidateMediaAfterDelete } from '../hooks/revalidateMedia'
 
 /**
@@ -25,7 +26,8 @@ export const Media: CollectionConfig = {
   hooks: {
     // Renames every upload before it is stored, so a file cannot be reached by
     // guessing its name. See hooks/unguessableFilename.
-    beforeOperation: [unguessableFilename],
+    // 25 MB, as before: the site-wide limit is now magazine PDFs' 200 MB.
+    beforeOperation: [limitUploadSize(PHOTO_MAX_BYTES, 'Photos and videos'), unguessableFilename],
     beforeDelete: [blockMediaInUse],
     afterChange: [revalidateMediaAfterChange],
     afterDelete: [revalidateMediaAfterDelete],

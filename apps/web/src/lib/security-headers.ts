@@ -186,7 +186,7 @@ export function publicCsp(
  * panel cannot be framed, cannot post a form off-origin, and cannot load a
  * plugin object.
  */
-export function adminCsp(): string {
+export function adminCsp(env: Record<string, string | undefined> = process.env): string {
   return policy({
     'default-src': ["'self'"],
     // The beacon Cloudflare injects on every page of the zone, admin included;
@@ -195,12 +195,31 @@ export function adminCsp(): string {
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:', 'https:'],
     'font-src': ["'self'", 'data:'],
-    'connect-src': ["'self'"],
+    // Storage, for the one upload that goes straight from the browser to the
+    // bucket: magazine PDFs (collections/Editions), too large for the server.
+    'connect-src': ["'self'", ...storageOrigin(env)],
     'frame-ancestors': ["'none'"],
     'form-action': ["'self'"],
     'base-uri': ["'self'"],
     'object-src': ["'none'"],
   })
+}
+
+/**
+ * The storage API's origin, which the admin may send a signed upload to.
+ *
+ * Only the origin of `S3_ENDPOINT`, and only over HTTPS: the browser can then
+ * reach the bucket API it was handed a signed address for, and nothing else.
+ * Nothing when storage is not configured (local disk), so the policy stays
+ * `'self'` there.
+ */
+export function storageOrigin(env: Record<string, string | undefined>): string[] {
+  try {
+    const url = new URL(env.S3_ENDPOINT ?? '')
+    return url.protocol === 'https:' ? [url.origin] : []
+  } catch {
+    return []
+  }
 }
 
 /**
