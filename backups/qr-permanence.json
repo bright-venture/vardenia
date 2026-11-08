@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 1347,
+  "count": 1351,
   "codes": [
     {
       "code": "003T5D1",
@@ -3587,6 +3587,13 @@
       "businessSlug": "tawlet-samke"
     },
     {
+      "code": "CJQZ0TW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beihouse"
+    },
+    {
       "code": "CK2KGB4",
       "targetType": "business",
       "placement": "magazine-page",
@@ -4215,6 +4222,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "khan-falougha"
+    },
+    {
+      "code": "EN54FSV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "em-sherif-au-musee"
     },
     {
       "code": "ENGJD3M",
@@ -5545,6 +5559,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "mshawi-el-diwan"
+    },
+    {
+      "code": "JSVF3ZE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "saifi-village"
     },
     {
       "code": "JVX86EH",
@@ -7288,6 +7309,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "qasr-el-rayyan"
+    },
+    {
+      "code": "RT04R99",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zaitunay-bay"
     },
     {
       "code": "RT19JF0",
