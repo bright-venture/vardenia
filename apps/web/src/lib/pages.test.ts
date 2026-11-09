@@ -90,14 +90,27 @@ describe('content pages', () => {
 
   /**
    * A price or a deadline is not mine to invent, and a plausible wrong number on
-   * a page a business is reading is a commitment somebody has to honour. Both
-   * pages that quote terms must say plainly that they are not settled.
+   * a page a business is reading is a commitment somebody has to honour. The
+   * advertise page still says plainly that its terms are not settled.
    */
-  it('marks the commercial terms as unsettled rather than inventing them', () => {
-    for (const slug of ['partner-with-us', 'advertise'] as const) {
-      const text = JSON.stringify(contentPage(slug))
-      expect(text, slug).toContain(PLACEHOLDER)
+  it('marks the advertising terms as unsettled rather than inventing them', () => {
+    expect(JSON.stringify(contentPage('advertise'))).toContain(PLACEHOLDER)
+  })
+
+  /**
+   * The partner page's terms were settled by the owner on 9 November 2026:
+   * the levels, the commission, contract length agreed per venue with renewal,
+   * and a new issue every year. Prices stay in the rate card, never here.
+   */
+  it('states the partner terms it has, and never a price', () => {
+    for (const locale of ['en', 'ar'] as const) {
+      const page = JSON.stringify(contentPage('partner-with-us', locale))
+      expect(page).not.toContain(PLACEHOLDER)
+      expect(page).not.toMatch(/\$\s?\d|\d\s?\$|USD|LBP/)
     }
+    const en = JSON.stringify(contentPage('partner-with-us', 'en'))
+    expect(en).toContain('Contract length varies')
+    expect(en).toContain('printed every year')
   })
 
   it('uses url-safe slugs', () => {

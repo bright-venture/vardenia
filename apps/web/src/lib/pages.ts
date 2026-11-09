@@ -1258,8 +1258,53 @@ export function partnerWithUsPage(locale: Locale = 'en'): ContentPage {
               'قیمتیں ہمارے ریٹ کارڈ میں ہیں۔ ہمیں لکھیں، ہم آپ کو بھیج دیں گے۔',
             ],
           }),
-          TBD('the contract length, and what happens at renewal'),
-          TBD('the print deadline for the next issue'),
+          /**
+           * Answered by the owner on 9 November 2026: the length varies by
+           * venue, a venue may renew, and a new issue is printed every year.
+           * No deadline is published, because each issue sets its own.
+           */
+          ...pick(locale, {
+            en: [
+              'Contract length varies, and is agreed with each venue. When it ends, the venue can renew.',
+              'A new issue of the magazine is printed every year, and we will give you the deadline for the next one.',
+            ],
+            ar: [
+              'تختلف مدة العقد ويُتّفق عليها مع كل مكان. وعند انتهائها، يمكن للمكان أن يجدّده.',
+              'يُطبع عدد جديد من المجلة كل عام، وسنعطيك الموعد النهائي للعدد التالي.',
+            ],
+            fr: [
+              "La durée du contrat varie et se convient avec chaque établissement. À son terme, l'établissement peut le renouveler.",
+              'Un nouveau numéro du magazine est imprimé chaque année, et nous vous donnerons la date limite pour le prochain.',
+            ],
+            es: [
+              'La duración del contrato varía y se acuerda con cada local. Cuando termina, el local puede renovarlo.',
+              'Cada año se imprime un nuevo número de la revista, y te daremos la fecha límite del siguiente.',
+            ],
+            pt: [
+              'A duração do contrato varia e é combinada com cada estabelecimento. Quando termina, o estabelecimento pode renová-lo.',
+              'Todos os anos é impressa uma nova edição da revista, e daremos a você o prazo da próxima.',
+            ],
+            ru: [
+              'Срок договора бывает разным и согласуется с каждым заведением. Когда он заканчивается, заведение может его продлить.',
+              'Новый номер журнала выходит каждый год, и мы сообщим вам крайний срок для следующего.',
+            ],
+            zh: [
+              '合同期限不一，与每家商户单独商定。到期后，商户可以续约。',
+              '杂志每年印刷一期新刊，我们会告诉您下一期的截稿日期。',
+            ],
+            hi: [
+              'अनुबंध की अवधि अलग-अलग होती है और हर व्यवसाय के साथ तय की जाती है। अवधि पूरी होने पर व्यवसाय उसे नवीनीकृत कर सकता है।',
+              'पत्रिका का नया अंक हर साल छपता है, और हम आपको अगले अंक की अंतिम तिथि बता देंगे।',
+            ],
+            bn: [
+              'চুক্তির মেয়াদ ভিন্ন হতে পারে এবং প্রতিটি ব্যবসার সঙ্গে ঠিক করা হয়। মেয়াদ শেষ হলে ব্যবসাটি তা নবায়ন করতে পারে।',
+              'প্রতি বছর ম্যাগাজিনের একটি নতুন সংখ্যা ছাপা হয়, আর আমরা আপনাকে পরের সংখ্যার শেষ তারিখ জানিয়ে দেব।',
+            ],
+            ur: [
+              'معاہدے کی مدت مختلف ہوتی ہے اور ہر کاروبار کے ساتھ طے کی جاتی ہے۔ مدت ختم ہونے پر کاروبار اس کی تجدید کر سکتا ہے۔',
+              'میگزین کا نیا شمارہ ہر سال چھپتا ہے، اور ہم آپ کو اگلے شمارے کی آخری تاریخ بتا دیں گے۔',
+            ],
+          }),
         ],
       },
       {
