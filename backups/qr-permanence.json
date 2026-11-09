@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 1351,
+  "count": 1353,
   "codes": [
     {
       "code": "003T5D1",
@@ -1375,6 +1375,13 @@
       "businessSlug": "sofret-jad"
     },
     {
+      "code": "4XK2HZ5",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beirut-kelna-sawa"
+    },
+    {
       "code": "4XPKBPG",
       "targetType": "business",
       "placement": "magazine-page",
@@ -1611,6 +1618,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "habbet-barakeh"
+    },
+    {
+      "code": "5NRDYV2",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "the-old-souk"
     },
     {
       "code": "5P27R9G",
