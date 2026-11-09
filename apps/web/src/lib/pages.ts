@@ -1176,20 +1176,87 @@ export function partnerWithUsPage(locale: Locale = 'en'): ContentPage {
         }),
       },
       {
+        /**
+         * What each level includes, and no prices: prices are only in the rate
+         * card PDF, never on the site (owner's rule). Matches core/tiers and the
+         * terms: bronze is the website, silver adds the magazine page and its
+         * QR code, gold adds first place and the home page band.
+         */
         heading: pick(locale, {
-          en: 'What it costs',
-          ar: 'التكلفة',
-          fr: 'Combien ça coûte',
-          es: 'Cuánto cuesta',
-          pt: 'Quanto custa',
-          ru: 'Сколько это стоит',
-          zh: '费用',
-          hi: 'इसकी क़ीमत',
-          bn: 'খরচ কত',
-          ur: 'قیمت',
+          en: 'What each level includes',
+          ar: 'ما يشمله كل مستوى',
+          fr: 'Ce que comprend chaque niveau',
+          es: 'Qué incluye cada nivel',
+          pt: 'O que inclui cada nível',
+          ru: 'Что входит в каждый уровень',
+          zh: '各级别包含的内容',
+          hi: 'हर स्तर में क्या शामिल है',
+          bn: 'প্রতিটি স্তরে কী থাকে',
+          ur: 'ہر سطح میں کیا شامل ہے',
         }),
         body: [
-          TBD('the tiers, what each includes, and the price of each'),
+          ...pick(locale, {
+            en: [
+              '- **Bronze**: a listing on the website, in its section and in search.',
+              '- **Silver**: everything in bronze, plus a page in the printed magazine with its own QR code, and a place above every bronze listing.',
+              '- **Gold**: everything in silver, plus first place in every list and a place in the band at the top of the home page. Gold places are limited.',
+              'Prices are in our rate card. Write to us and we will send it.',
+            ],
+            ar: [
+              '- **البرونزي**: إدراج على الموقع، في قسمه وفي البحث.',
+              '- **الفضي**: كل ما في البرونزي، مع صفحة في المجلة المطبوعة برمز QR خاص بها، ومكان قبل كل الإدراجات البرونزية.',
+              '- **الذهبي**: كل ما في الفضي، مع المرتبة الأولى في كل قائمة ومكان في الشريط أعلى الصفحة الرئيسية. الأماكن الذهبية محدودة.',
+              'الأسعار في لائحة الأسعار لدينا. راسلنا وسنرسلها إليك.',
+            ],
+            fr: [
+              '- **Bronze** : une fiche sur le site, dans sa rubrique et dans la recherche.',
+              '- **Argent** : tout ce que comprend le bronze, plus une page dans le magazine imprimé avec son propre code QR, et une place devant toutes les fiches bronze.',
+              "- **Or** : tout ce que comprend l'argent, plus la première place dans chaque liste et une place dans le bandeau en haut de la page d'accueil. Les places or sont limitées.",
+              'Les prix figurent dans notre grille tarifaire. Écrivez-nous et nous vous l’enverrons.',
+            ],
+            es: [
+              '- **Bronce**: una ficha en el sitio web, en su sección y en la búsqueda.',
+              '- **Plata**: todo lo del bronce, más una página en la revista impresa con su propio código QR, y un lugar por delante de todas las fichas de bronce.',
+              '- **Oro**: todo lo de la plata, más el primer lugar en cada lista y un lugar en la franja de la parte superior de la página de inicio. Las plazas de oro son limitadas.',
+              'Los precios están en nuestra tarifa. Escríbenos y te la enviamos.',
+            ],
+            pt: [
+              '- **Bronze**: uma ficha no site, na sua secção e na pesquisa.',
+              '- **Prata**: tudo o que o bronze inclui, mais uma página na revista impressa com o seu próprio código QR, e um lugar à frente de todas as fichas bronze.',
+              '- **Ouro**: tudo o que a prata inclui, mais o primeiro lugar em cada lista e um lugar na faixa no topo da página inicial. Os lugares ouro são limitados.',
+              'Os preços estão na nossa tabela de preços. Escreva-nos e enviamo-la.',
+            ],
+            ru: [
+              '- **Бронза**: карточка на сайте, в своём разделе и в поиске.',
+              '- **Серебро**: всё, что входит в бронзу, плюс страница в печатном журнале со своим QR-кодом и место выше всех бронзовых карточек.',
+              '- **Золото**: всё, что входит в серебро, плюс первое место в каждом списке и место в полосе вверху главной страницы. Число золотых мест ограничено.',
+              'Цены указаны в нашем прайс-листе. Напишите нам, и мы его пришлём.',
+            ],
+            zh: [
+              '- **铜级**：网站上的收录条目，出现在所属栏目和搜索中。',
+              '- **银级**：包含铜级的全部内容，另加印刷版杂志中的一页及其专属二维码，并排在所有铜级条目之前。',
+              '- **金级**：包含银级的全部内容，另加每个列表中的首位，以及首页顶部横幅中的一个位置。金级名额有限。',
+              '价格见我们的价目表。写信给我们，我们会发给您。',
+            ],
+            hi: [
+              '- **ब्रॉन्ज़**: वेबसाइट पर एक लिस्टिंग, अपने सेक्शन में और खोज में।',
+              '- **सिल्वर**: ब्रॉन्ज़ की हर चीज़, साथ में छपी पत्रिका में एक पेज और उसका अपना QR कोड, और हर ब्रॉन्ज़ लिस्टिंग से ऊपर जगह।',
+              '- **गोल्ड**: सिल्वर की हर चीज़, साथ में हर सूची में पहला स्थान और होम पेज के ऊपर की पट्टी में जगह। गोल्ड जगहें सीमित हैं।',
+              'क़ीमतें हमारे रेट कार्ड में हैं। हमें लिखें, हम उसे भेज देंगे।',
+            ],
+            bn: [
+              '- **ব্রোঞ্জ**: ওয়েবসাইটে একটি লিস্টিং, নিজের বিভাগে ও সার্চে।',
+              '- **সিলভার**: ব্রোঞ্জের সবকিছু, সঙ্গে ছাপা ম্যাগাজিনে একটি পাতা ও তার নিজস্ব QR কোড, আর সব ব্রোঞ্জ লিস্টিংয়ের আগে জায়গা।',
+              '- **গোল্ড**: সিলভারের সবকিছু, সঙ্গে প্রতিটি তালিকায় প্রথম স্থান আর হোম পেজের ওপরের ব্যান্ডে একটি জায়গা। গোল্ড জায়গা সীমিত।',
+              'দাম আমাদের রেট কার্ডে আছে। আমাদের লিখুন, আমরা পাঠিয়ে দেব।',
+            ],
+            ur: [
+              '- **برونز**: ویب سائٹ پر ایک لسٹنگ، اپنے سیکشن اور تلاش میں۔',
+              '- **سلور**: برونز کی ہر چیز، ساتھ میں چھپے ہوئے میگزین میں ایک صفحہ اور اس کا اپنا QR کوڈ، اور ہر برونز لسٹنگ سے اوپر جگہ۔',
+              '- **گولڈ**: سلور کی ہر چیز، ساتھ میں ہر فہرست میں پہلا مقام اور ہوم پیج کے اوپر والی پٹی میں جگہ۔ گولڈ جگہیں محدود ہیں۔',
+              'قیمتیں ہمارے ریٹ کارڈ میں ہیں۔ ہمیں لکھیں، ہم آپ کو بھیج دیں گے۔',
+            ],
+          }),
           TBD('the contract length, and what happens at renewal'),
           TBD('the print deadline for the next issue'),
         ],
