@@ -46,8 +46,7 @@ export default async function SignupPage({ params }: { params: Promise<{ locale:
   if (await signupsPaused(await getPayload({ config }))) {
     return (
       <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpPaused')}>
-        <p className="text-ink-700 text-sm">{t('signUpPausedBody')}</p>
-        <p className="mt-4 text-sm">
+        <p className="text-sm">
           <Link href="/account/login" className="vd-text-link">
             {t('signIn')}
           </Link>
