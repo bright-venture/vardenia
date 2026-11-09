@@ -32,7 +32,8 @@
     "translate:descriptions": "tsx src/import/translate-descriptions.ts",
     "backup:export": "tsx src/backup/export-cli.ts",
     "backup:restore": "tsx src/backup/restore-cli.ts",
-    "backup:weekly": "tsx src/backup/weekly-cli.ts"
+    "backup:weekly": "tsx src/backup/weekly-cli.ts",
+    "backup:keys": "tsx src/backup/keys-cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

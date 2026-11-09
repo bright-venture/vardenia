@@ -119,16 +119,38 @@ It reads `.env.prod` and writes to `Desktop\Vardenia\backups\weekly`, next to th
 repo and never inside it: it refuses a folder inside the repository, because this
 folder is committed and the copy holds guests, bookings and receipts.
 
+### Encrypted, with the key kept elsewhere
+
+Since 9 November 2026 every table and every file is encrypted as it is written
+(`apps/web/src/backup/crypto.ts`). The backup computer holds only the **public
+key**, `BACKUP_PUBLIC_KEY` in `.env.prod`, which can lock files and cannot open
+them. The **private key** opens them, and it is kept off this computer: on a USB
+stick and in a password manager, two copies, never beside the backup. A stolen
+or hacked backup computer then gives away nothing readable.
+
+**Lose the private key and no encrypted backup can be opened.** Keep both copies.
+
+The backup refuses to run without `BACKUP_PUBLIC_KEY`. The keys were made once with:
+
+```bash
+pnpm --filter @vardenia/web backup:keys keygen --private <file outside the repo>
+```
+
+It will not replace a key already set, because older backups open only with the
+private key they were made with. The copies made before encryption were locked
+with `backup:keys encrypt-existing --key <private key file>`, which opens each
+locked file again and compares it before deleting the plain one.
+
 ```
 backups/weekly/
   2026-11-09/                 one folder per run, never changed afterwards
-    manifest.json             row counts and checksums, last migration, files
-    database/<table>.jsonl    one row per line, as row_to_json wrote it
-    database/_schema.json     columns, enums, sequences, migrations applied
-    files/media.json          every object each bucket held that day
+    manifest.json               row counts and checksums, last migration (plain)
+    database/<table>.jsonl.enc  one row per line, as row_to_json wrote it (encrypted)
+    database/_schema.json       columns, enums, sequences, migrations (plain)
+    files/media.json            every object each bucket held that day (plain, names only)
     files/receipts.json
-  files/media/...             one shared copy of the objects, only added to
-  files/receipts/...
+  files/media/<key>.enc         one shared copy of the objects, only added to (encrypted)
+  files/receipts/<key>.enc
 ```
 
 The first run copies every photo (about 800 MB) and takes a few minutes. Later
@@ -177,7 +199,17 @@ copy of the repo on that PC, so moving the repo means registering it again.
 
 ### Restoring from it
 
-Not scripted yet: it comes with the restore test. The steps are:
+First open the week you need, with the private key, into an empty folder
+outside the repo:
+
+```bash
+pnpm --filter @vardenia/web backup:keys decrypt --key <private key file> --run 2026-11-09 --to <empty folder>
+```
+
+It checks every table against the checksum in the manifest and writes that
+week's files under `files/<bucket>/`. The folder then holds personal data in
+plain: delete it once the restore is done. From that folder the steps are not
+scripted yet (they come with the restore test):
 
 1. On an empty Postgres, run the migrations up to `lastMigration` in the
    manifest, which recreates every table, enum and index.

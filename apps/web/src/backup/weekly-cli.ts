@@ -14,7 +14,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseEnv } from 'dotenv'
 import { Client } from 'pg'
+import type { KeyObject } from 'node:crypto'
 import { DB_SCHEMA } from '../lib/db'
+import { ENCRYPTED_SUFFIX, encryptBytes, readPublicKey } from './crypto'
 import { databaseSsl } from '../lib/db-ssl'
 import { databaseIdentity } from '../seed/guard'
 import {
@@ -84,6 +86,7 @@ function readOptions(argv: string[]): Options {
 async function exportDatabase(
   env: Record<string, string>,
   folder: string,
+  publicKey: KeyObject,
 ): Promise<Pick<Manifest, 'source' | 'postgres' | 'lastMigration' | 'tables'>> {
   const connectionString = env.DATABASE_URL
   if (!connectionString) throw new Error('DATABASE_URL is not set in the env file.')
@@ -131,7 +134,12 @@ async function exportDatabase(
       await client.query('CLOSE dump')
       const body = lines.length > 0 ? `${lines.join('\n')}\n` : ''
       hash.update(body)
-      writeFileSync(path.join(dir, `${name}.jsonl`), body)
+      // Locked as it is written: the rows never touch the disk in plain.
+      // The checksum is of the plain rows, so a restore can check them once opened.
+      writeFileSync(
+        path.join(dir, `${name}.jsonl${ENCRYPTED_SUFFIX}`),
+        encryptBytes(Buffer.from(body), publicKey),
+      )
       tables[name] = { rows: lines.length, sha256: hash.digest('hex') }
     }
 
@@ -247,6 +255,7 @@ async function copyBucket(
   objects: RemoteObject[],
   bucketRoot: string,
   limit: number,
+  publicKey: KeyObject,
 ): Promise<{ downloaded: number; skipped: string[]; remaining: number }> {
   const skipped: string[] = []
   const todo: { object: RemoteObject; target: string }[] = []
@@ -256,6 +265,10 @@ async function copyBucket(
       skipped.push(object.key)
       continue
     }
+    // Locked copies are written aside and renamed, so one that exists is
+    // whole. A plain copy from before encryption still counts until
+    // `backup:keys encrypt-existing` locks it.
+    if (existsSync(`${target}${ENCRYPTED_SUFFIX}`)) continue
     const localSize = existsSync(target) ? statSync(target).size : null
     if (needsDownload(localSize, object.size)) todo.push({ object, target })
   }
@@ -276,10 +289,11 @@ async function copyBucket(
       if (!reply.Body) throw new Error(`${bucket}/${object.key}: empty reply`)
       const bytes = await reply.Body.transformToByteArray()
       mkdirSync(path.dirname(target), { recursive: true })
-      // Written aside and renamed, so a file cut off mid-download is never
-      // mistaken for a finished one by the size check next time.
-      writeFileSync(`${target}.part`, bytes)
-      renameSync(`${target}.part`, target)
+      // Locked before it is written, then written aside and renamed, so a file
+      // cut off mid-write is never mistaken for a finished one next time.
+      const locked = `${target}${ENCRYPTED_SUFFIX}`
+      writeFileSync(`${locked}.part`, encryptBytes(bytes, publicKey))
+      renameSync(`${locked}.part`, locked)
       done += 1
       if (done % 250 === 0) console.log(`    ${done} / ${todo.length}`)
     }
@@ -294,6 +308,7 @@ async function exportBuckets(
   folder: string,
   mode: Options['files'],
   limit: number,
+  publicKey: KeyObject,
 ): Promise<Record<string, BucketSummary>> {
   // Photos, receipts, and the magazine PDFs (collections/Editions).
   const buckets = [env.S3_BUCKET, env.S3_RECEIPTS_BUCKET, editionsBucket(env)]
@@ -326,7 +341,15 @@ async function exportBuckets(
     const bytes = objects.reduce((sum, object) => sum + object.size, 0)
     const copied =
       mode === 'all'
-        ? await copyBucket(s3, mod, bucket, objects, path.join(out, 'files', bucket), limit)
+        ? await copyBucket(
+            s3,
+            mod,
+            bucket,
+            objects,
+            path.join(out, 'files', bucket),
+            limit,
+            publicKey,
+          )
         : { downloaded: 0, skipped: [], remaining: 0 }
     summary[bucket] = {
       files: objects.length,
@@ -356,6 +379,20 @@ async function main(): Promise<void> {
   if (!existsSync(options.envFile)) throw new Error(`No env file at ${options.envFile}.`)
   const env = parseEnv(readFileSync(options.envFile))
 
+  /**
+   * Nothing is written without the public key: the backup holds guests'
+   * personal data and receipts, and a plain copy on a disk is what encryption
+   * was added to stop (9 November 2026). Make the keys with
+   * `backup:keys keygen` and put the public one in the env file.
+   */
+  if (!env.BACKUP_PUBLIC_KEY?.trim()) {
+    throw new Error(
+      'BACKUP_PUBLIC_KEY is not set in the env file, so the backup cannot be encrypted. ' +
+        'Create the keys with: pnpm --filter @vardenia/web backup:keys keygen --private <file>',
+    )
+  }
+  const publicKey = readPublicKey(env.BACKUP_PUBLIC_KEY)
+
   const now = new Date()
   let name = runFolderName(now)
   for (let n = 2; existsSync(path.join(options.out, name)); n += 1) {
@@ -365,13 +402,20 @@ async function main(): Promise<void> {
   mkdirSync(partial, { recursive: true })
 
   console.log(`Weekly backup into ${path.join(options.out, name)}`)
-  const database = await exportDatabase(env, partial)
+  const database = await exportDatabase(env, partial, publicKey)
   const rows = Object.values(database.tables).reduce((sum, table) => sum + table.rows, 0)
   console.log(`  database: ${Object.keys(database.tables).length} tables, ${rows} rows`)
   console.log(`  last migration: ${database.lastMigration ?? 'none'}`)
 
   if (options.files !== 'none') console.log('Files')
-  const buckets = await exportBuckets(env, options.out, partial, options.files, options.limit)
+  const buckets = await exportBuckets(
+    env,
+    options.out,
+    partial,
+    options.files,
+    options.limit,
+    publicKey,
+  )
 
   const manifest: Manifest = {
     backupFormat: BACKUP_SCHEMA_VERSION,
@@ -392,7 +436,7 @@ async function main(): Promise<void> {
       console.log(`    ${b.skipped.length} with a key that cannot be stored`)
   }
   console.log(`Done: ${path.join(options.out, name)}`)
-  console.log('It holds guests\u2019 personal data and receipts. Keep it on a private disk.')
+  console.log('Encrypted: it opens only with the private key, which is kept off this computer.')
 }
 
 main()
