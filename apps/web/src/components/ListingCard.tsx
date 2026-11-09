@@ -78,11 +78,12 @@ interface Props {
  * The reference code is set in mono at the bottom because every listing here has
  * a printed twin, and a catalogue number is the cue that says so.
  *
- * # Verified is a tick, not a colour
+ * # No Verified badge
  *
- * The old version marked verification with a gold tick character beside the
- * name. That is invisible to anyone who cannot distinguish it and ambiguous to
- * everyone else. It is now a labelled badge with its own text.
+ * Every listing is visited and checked by Vardenia before it appears (the
+ * owner's rule since 9 November 2026), so a badge on some cards would suggest
+ * the others are not. The `verified` prop is still accepted from the callers
+ * and is not shown.
  */
 export function ListingCard({
   slug,
@@ -92,7 +93,6 @@ export function ListingCard({
   governorate,
   district,
   priceRange,
-  verified,
   signature,
   heroImage,
   reference,
@@ -154,10 +154,9 @@ export function ListingCard({
             {categoryLabel(category, locale)}
           </span>
 
-          {signature || verified ? (
+          {signature ? (
             <div className="ms-auto flex shrink-0 gap-1.5">
-              {signature ? <Tier kind="signature" /> : null}
-              {verified ? <Tier kind="verified" /> : null}
+              <Tier kind="signature" />
             </div>
           ) : null}
         </div>

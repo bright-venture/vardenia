@@ -387,19 +387,10 @@ export default async function ListingPage({ params }: Params) {
               ) : null}
 
               {/*
-              The word, not the badge component.
-
-              ui/Tier paints itself `bg-cedar-900` so it reads as a mark on a
-              photograph in a grid - which on this navy ground would be a navy
-              badge on navy. The badge exists because a card is 150px wide and
-              has to abbreviate; there is room here for the full phrase, and
-              "Verified by Vardenia" says who verified it, which is the part
-              that matters and the part the short badge has to put in an
-              aria-label to keep.
+              No "Verified by Vardenia" here: every listing is visited and
+              checked before it appears (the owner's rule since 9 November
+              2026), so marking one would suggest the others are not.
             */}
-              {listing.verified ? (
-                <span className="text-gold-300 font-medium">{t('verified')}</span>
-              ) : null}
 
               {/*
               The reviews, as a link down to them. The average only once there

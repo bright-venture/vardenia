@@ -291,7 +291,7 @@ export function termsOfService(): LegalDocument {
           'Every place here is one we chose. Paying does not get a place in: a place we have chosen then pays Vardenia to be listed, at one of three levels: bronze, a listing on the website; silver, which adds a page in the printed magazine; and gold, which adds first place in every list and a place on the home page.',
           '- **The order of a list reflects that level.** Gold places come first, then silver, then bronze, and places at the same level are in alphabetical order. A place higher in a list has paid for a higher level; it is not ranked as better.',
           '- **The band at the top of the home page** shows gold places. It is paid placement, and is labelled as chosen by the places who back this guide.',
-          "- **A place marked 'Verified by Vardenia'** has been visited and checked by us in person.",
+          '- **Every place here has been visited and checked by us in person** before it appears.',
           '- **Places also pay a commission** on what guests spend on visits booked through Vardenia. It does not change what you pay.',
           'The places suggested at the foot of a listing are the nearest ones first, whatever their level.',
         ],

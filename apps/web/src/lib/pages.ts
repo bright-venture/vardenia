@@ -214,70 +214,70 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
           en: [
             'Nobody can add themselves to Vardenia. Every listing is entered by our team, and businesses cannot publish or edit their own pages.',
             'That is slower and it is the point. A directory anybody can write themselves into is a directory of whoever is most persistent, and it is worth nothing to a reader deciding where to spend an evening.',
-            '- **Verified** listings have had their details confirmed with the business directly.',
+            '- Every listing is visited and checked by our team before it appears.',
             '- Bookings are answered by the venue, not by us. We pass the request on and tell you what they said.',
             '- A venue pays Vardenia a commission on what each guest who books through us and comes spends. You pay the venue its usual price and nothing more, and a business cannot pay to be ranked above another in a way that is hidden from you.',
           ],
           ar: [
             'لا يستطيع أحد أن يضيف نفسه إلى فاردينيا. كل مكان يدخله فريقنا بنفسه، ولا يستطيع أصحاب الأعمال نشر صفحاتهم أو تعديلها.',
             'هذا أبطأ، وهذا هو المقصود. الدليل الذي يكتب فيه كل من أراد هو دليل لأكثر الناس إلحاحاً، ولا قيمة له عند قارئ يقرر أين يقضي سهرته.',
-            '- الأماكن **الموثّقة** زرناها بأنفسنا وتحققنا من تفاصيلها مع صاحب المكان مباشرة.',
+            '- كل مكان يزوره فريقنا ويتحقق منه قبل أن يظهر.',
             '- الحجوزات يردّ عليها المكان نفسه، لا نحن. ننقل الطلب ونخبرك بما قالوه.',
             '- يدفع المكان لفاردينيا عمولة على ما ينفقه كل ضيف يحجز عبرنا ويحضر. أنت تدفع للمكان سعره المعتاد لا أكثر، ولا يستطيع مكان أن يدفع ليظهر فوق غيره بطريقة مخفية عنك.',
           ],
           fr: [
             "Personne ne peut s'ajouter soi-même à Vardenia. Chaque fiche est saisie par notre équipe, et les établissements ne peuvent ni publier ni modifier leur propre page.",
             "C'est plus lent, et c'est voulu. Un annuaire où chacun peut s'inscrire est l'annuaire des plus insistants, et il ne vaut rien pour un lecteur qui cherche où passer sa soirée.",
-            "- Les fiches marquées **Vérifié** ont vu leurs informations confirmées directement auprès de l'établissement.",
+            "- Chaque fiche est visitée et vérifiée par notre équipe avant d'apparaître.",
             "- Les réservations reçoivent leur réponse de l'établissement, pas de nous. Nous transmettons la demande et vous disons ce qu'il a répondu.",
             "- Un établissement verse à Vardenia une commission sur ce que dépense chaque client qui réserve par notre intermédiaire et se présente. Vous payez à l'établissement son prix habituel, rien de plus, et un établissement ne peut pas payer pour être classé devant un autre d'une manière qui vous serait cachée.",
           ],
           es: [
             'Nadie puede añadirse a sí mismo a Vardenia. Cada ficha la introduce nuestro equipo, y los negocios no pueden publicar ni editar sus propias páginas.',
             'Es más lento, y de eso se trata. Un directorio en el que cualquiera puede apuntarse es un directorio de los más insistentes, y no le vale de nada a quien decide dónde pasar la noche.',
-            '- Las fichas marcadas como **Verificado** tienen sus datos confirmados directamente con el negocio.',
+            '- Nuestro equipo visita y comprueba cada ficha antes de que aparezca.',
             '- Las reservas las responde el local, no nosotros. Transmitimos la solicitud y te contamos lo que han dicho.',
             '- Cada local paga a Vardenia una comisión sobre lo que gasta cada cliente que reserva a través de nosotros y acude. Tú pagas al local su precio habitual y nada más, y un negocio no puede pagar para aparecer por encima de otro de una forma que se te oculte.',
           ],
           pt: [
             'Ninguém pode se adicionar à Vardenia. Cada ficha é inserida pela nossa equipe, e os negócios não podem publicar nem editar as próprias páginas.',
             'Isso é mais lento, e é essa a ideia. Um diretório em que qualquer um se inscreve é um diretório dos mais insistentes, e não vale nada para quem está decidindo onde passar a noite.',
-            '- As fichas marcadas como **Verificado** tiveram seus dados confirmados diretamente com o negócio.',
+            '- A nossa equipe visita e verifica cada ficha antes de ela aparecer.',
             '- As reservas são respondidas pelo estabelecimento, não por nós. Repassamos o pedido e contamos o que responderam.',
             '- Cada estabelecimento paga à Vardenia uma comissão sobre o que gasta cada cliente que reserva através de nós e comparece. Você paga ao estabelecimento o preço de sempre e nada mais, e um negócio não pode pagar para aparecer acima de outro de um jeito que fique escondido de você.',
           ],
           ru: [
             'В Vardenia нельзя добавить себя самому. Каждую карточку вносит наша команда, а заведения не могут публиковать или редактировать свои страницы.',
             'Это медленнее, и в этом весь смысл. Справочник, куда может вписать себя кто угодно, — это справочник самых настойчивых, и он ничего не стоит для читателя, который решает, где провести вечер.',
-            '- У карточек с отметкой **Проверено** данные подтверждены непосредственно с заведением.',
+            '- Каждую карточку наша команда посещает и проверяет до публикации.',
             '- На бронирования отвечает само заведение, а не мы. Мы передаём запрос и сообщаем вам его ответ.',
             '- Заведение платит Vardenia комиссию с суммы, которую потратил каждый гость, забронировавший через нас и пришедший. Вы платите заведению его обычную цену и ничего сверх неё, а заведение не может заплатить, чтобы скрыто от вас оказаться выше другого.',
           ],
           zh: [
             '没有人能自行加入 Vardenia。每个商户都由我们的团队录入，商户无法自行发布或编辑自己的页面。',
             '这样更慢，而这正是用意所在。人人都能把自己写进去的指南，只是最执着者的名单，对一个正在决定今晚去哪儿的读者毫无价值。',
-            '- 标有**已核实**的商户，其信息已直接与商户本人确认。',
+            '- 每个商户在上线前都经过我们团队的实地走访和核实。',
             '- 预订由商户本身答复，而不是我们。我们转达请求，并告诉您他们的答复。',
             '- 每位通过我们预订并实际到店的客人，商户会按其消费金额向 Vardenia 支付佣金。您向商户支付的仍是其正常价格，不多付一分，商户也无法以对您隐瞒的方式付费排到别人前面。',
           ],
           hi: [
             'Vardenia में कोई भी ख़ुद को नहीं जोड़ सकता। हर लिस्टिंग हमारी टीम दर्ज करती है, और व्यवसाय अपने पेज न प्रकाशित कर सकते हैं, न बदल सकते हैं।',
             'यह धीमा है, और यही मक़सद है। जिस निर्देशिका में कोई भी ख़ुद को लिख सके, वह सबसे ज़्यादा ज़िद करने वालों की सूची बन जाती है, और शाम कहाँ बितानी है यह तय कर रहे पाठक के लिए उसका कोई मोल नहीं।',
-            '- **सत्यापित** लिस्टिंग की जानकारी की पुष्टि सीधे व्यवसाय से की गई है।',
+            '- हर लिस्टिंग दिखने से पहले हमारी टीम वहाँ जाकर उसकी जाँच करती है।',
             '- बुकिंग का जवाब वह जगह ख़ुद देती है, हम नहीं। हम अनुरोध आगे भेजते हैं और आपको बताते हैं कि उन्होंने क्या कहा।',
             '- हमारे ज़रिए बुक करके आने वाले हर मेहमान के ख़र्च पर व्यवसाय Vardenia को कमीशन देता है। आप व्यवसाय को उसकी सामान्य क़ीमत ही देते हैं, उससे ज़्यादा कुछ नहीं, और कोई व्यवसाय आपसे छिपाकर पैसे देकर किसी दूसरे से ऊपर नहीं आ सकता।',
           ],
           bn: [
             'কেউ নিজে নিজেকে Vardenia-তে যোগ করতে পারেন না। প্রতিটি লিস্টিং আমাদের দল নিজে যোগ করে, আর ব্যবসাগুলো নিজেদের পেজ প্রকাশ বা সম্পাদনা করতে পারে না।',
             'এতে সময় বেশি লাগে, আর সেটাই উদ্দেশ্য। যে ডিরেক্টরিতে যে কেউ নিজের নাম লিখতে পারে, তা আসলে সবচেয়ে নাছোড়বান্দাদের তালিকা, আর সন্ধ্যাটা কোথায় কাটাবেন ভাবছেন এমন পাঠকের কাছে তার কোনো মূল্য নেই।',
-            '- **যাচাইকৃত** লিস্টিংয়ের তথ্য সরাসরি ব্যবসার সঙ্গে নিশ্চিত করা হয়েছে।',
+            '- প্রতিটি লিস্টিং প্রকাশের আগে আমাদের দল সেখানে গিয়ে যাচাই করে।',
             '- বুকিংয়ের উত্তর দেয় জায়গাটি নিজেই, আমরা নই। আমরা অনুরোধটি পৌঁছে দিই এবং তাঁরা কী বলেছেন তা আপনাকে জানাই।',
             '- আমাদের মাধ্যমে বুক করে যে অতিথি আসেন, তাঁদের প্রত্যেকের খরচের ওপর ব্যবসাটি Vardenia-কে একটি কমিশন দেয়। আপনি ব্যবসাটিকে তার স্বাভাবিক দামই দেন, এর বেশি কিছু নয়, আর কোনো ব্যবসা আপনার অগোচরে টাকা দিয়ে অন্যদের ওপরে উঠতে পারে না।',
           ],
           ur: [
             'Vardenia میں کوئی خود کو شامل نہیں کر سکتا۔ ہر لسٹنگ ہماری ٹیم درج کرتی ہے، اور کاروبار اپنے صفحات نہ شائع کر سکتے ہیں نہ ان میں ترمیم کر سکتے ہیں۔',
             'یہ سست ہے، اور مقصد یہی ہے۔ جس ڈائریکٹری میں کوئی بھی خود کو لکھ دے، وہ سب سے زیادہ اصرار کرنے والوں کی فہرست بن جاتی ہے، اور جو قاری شام گزارنے کی جگہ چن رہا ہو اس کے لیے اس کی کوئی قدر نہیں۔',
-            '- **تصدیق شدہ** لسٹنگز کی تفصیلات کی تصدیق براہِ راست کاروبار سے کی گئی ہے۔',
+            '- ہر لسٹنگ ظاہر ہونے سے پہلے ہماری ٹیم وہاں جا کر اس کی جانچ کرتی ہے۔',
             '- بکنگ کا جواب مقام خود دیتا ہے، ہم نہیں۔ ہم درخواست آگے بھیجتے ہیں اور آپ کو بتاتے ہیں کہ انہوں نے کیا کہا۔',
             '- ہمارے ذریعے بکنگ کر کے آنے والے ہر مہمان کے خرچ پر کاروبار Vardenia کو کمیشن دیتا ہے۔ آپ کاروبار کو اس کی معمول کی قیمت ہی دیتے ہیں، اس سے زیادہ کچھ نہیں، اور کوئی کاروبار آپ سے چھپا کر پیسے دے کر دوسرے سے اوپر نہیں آ سکتا۔',
           ],
@@ -498,16 +498,17 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
  * It used to be "Is the site available in Arabic?" everywhere, which was the
  * right question for the only other language there was. A French reader should
  * be told about French. Every answer keeps the same two admissions, because
- * both are true in every language: the legal documents are English, and so are
- * listing descriptions until they have been translated.
+ * both are true in every language: the legal documents are English, and listing
+ * descriptions are mostly Lebanese Arabic in Latin letters, the same in every
+ * language for now.
  */
 const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
   en: {
     heading: 'Is the site available in Arabic?',
     body: [
-      'Yes. The site, your account, booking and these pages are all in Arabic, and the language switcher is in the header.',
+      'Yes. The site, your account, booking and these pages are in Arabic and eight other languages besides English, and the language switcher is in the header.',
       'The legal documents are in English only for now: a machine translation of a contract reads as authoritative and is not.',
-      'Listings are written in English at the moment, so an Arabic page shows you the English description of a place until we have translated it.',
+      'Listing descriptions are mostly written in Lebanese Arabic in Latin letters, the way people text here, and for now they read the same in every language.',
     ],
   },
   ar: {
@@ -515,7 +516,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'نعم. الموقع وحسابك والحجز وهذه الصفحات كلها بالعربية، ومبدّل اللغة في أعلى الصفحة.',
       'الوثائق القانونية بالإنجليزية وحدها في الوقت الحالي: الترجمة الآلية لعقد تبدو ذات حجية وهي ليست كذلك.',
-      'وصفحات الأماكن مكتوبة بالإنجليزية حتى الآن، فالصفحة العربية تعرض لك الوصف الإنجليزي إلى أن نترجمه.',
+      'وأوصاف الأماكن مكتوبة في الغالب باللهجة اللبنانية بأحرف لاتينية، كما يُكتب في الرسائل هنا، وتظهر كما هي في كل اللغات حالياً.',
     ],
   },
   fr: {
@@ -523,7 +524,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       "Oui. Le site, votre compte, la réservation et ces pages sont en français, et le sélecteur de langue se trouve dans l'en-tête.",
       "Les documents juridiques ne sont pour l'instant qu'en anglais : la traduction automatique d'un contrat semble faire foi, et ce n'est pas le cas.",
-      "Les fiches sont pour l'instant rédigées en anglais : une page en français vous montre donc la description anglaise d'un lieu tant qu'elle n'a pas été traduite.",
+      "Les descriptions des lieux sont en grande partie écrites en arabe libanais en lettres latines, comme on l'écrit dans les messages ici, et s'affichent pour l'instant telles quelles dans toutes les langues.",
     ],
   },
   es: {
@@ -531,7 +532,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'Sí. El sitio, tu cuenta, las reservas y estas páginas están en español, y el selector de idioma está en la cabecera.',
       'Los documentos legales están solo en inglés por ahora: la traducción automática de un contrato parece tener valor oficial, y no lo tiene.',
-      'Las fichas están escritas en inglés por el momento, así que una página en español te muestra la descripción en inglés de un lugar hasta que la traduzcamos.',
+      'Las descripciones de los lugares están escritas, en su mayoría, en árabe libanés con letras latinas, como se escribe en los mensajes aquí, y por ahora se muestran igual en todos los idiomas.',
     ],
   },
   pt: {
@@ -539,7 +540,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'Sim. O site, sua conta, as reservas e estas páginas estão em português, e o seletor de idioma fica no cabeçalho.',
       'Os documentos jurídicos estão apenas em inglês por enquanto: a tradução automática de um contrato parece ter valor oficial, e não tem.',
-      'As fichas estão escritas em inglês no momento, então uma página em português mostra a descrição em inglês de um lugar até que ela seja traduzida.',
+      'As descrições dos lugares estão escritas, na maior parte, em árabe libanês com letras latinas, como se escreve nas mensagens aqui, e por enquanto aparecem iguais em todos os idiomas.',
     ],
   },
   ru: {
@@ -547,7 +548,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'Да. Сайт, ваш аккаунт, бронирование и эти страницы доступны на русском, а переключатель языка находится в шапке сайта.',
       'Юридические документы пока только на английском: машинный перевод договора выглядит как имеющий силу, но ею не обладает.',
-      'Карточки заведений пока написаны на английском, поэтому русская страница показывает английское описание места, пока мы его не переведём.',
+      'Описания мест в основном написаны на ливанском арабском латинскими буквами, как здесь пишут в сообщениях, и пока одинаковы на всех языках.',
     ],
   },
   zh: {
@@ -555,7 +556,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       '有。网站、您的账户、预订流程和这些页面都有中文版，语言切换按钮在页面顶部。',
       '法律文件目前只有英文版：合同的机器翻译看起来具有效力，但实际上并没有。',
-      '商户页面目前用英文撰写，所以在翻译完成之前，中文页面会显示该地点的英文介绍。',
+      '商户介绍大多用拉丁字母书写的黎巴嫩阿拉伯语撰写，就像当地人发消息时那样，目前在所有语言版本中都显示相同的文字。',
     ],
   },
   hi: {
@@ -563,7 +564,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'हाँ। साइट, आपका खाता, बुकिंग और ये पेज हिंदी में हैं, और भाषा बदलने का विकल्प ऊपर हेडर में है।',
       'क़ानूनी दस्तावेज़ फ़िलहाल सिर्फ़ अंग्रेज़ी में हैं: किसी अनुबंध का मशीनी अनुवाद आधिकारिक लगता है, पर होता नहीं।',
-      'लिस्टिंग अभी अंग्रेज़ी में लिखी जाती हैं, इसलिए जब तक अनुवाद न हो जाए, हिंदी पेज पर किसी जगह का अंग्रेज़ी विवरण दिखता है।',
+      'जगहों के विवरण ज़्यादातर लेबनानी अरबी में लैटिन अक्षरों में लिखे गए हैं, जैसे यहाँ संदेशों में लिखा जाता है, और फ़िलहाल हर भाषा में वैसे ही दिखते हैं।',
     ],
   },
   bn: {
@@ -571,7 +572,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'হ্যাঁ। সাইট, আপনার অ্যাকাউন্ট, বুকিং আর এই পেজগুলো বাংলায় আছে, আর ভাষা বদলানোর বোতাম ওপরের হেডারে।',
       'আইনি নথিগুলো আপাতত শুধু ইংরেজিতে: কোনো চুক্তির যন্ত্র-অনুবাদ দেখতে কর্তৃত্বপূর্ণ মনে হয়, কিন্তু তা নয়।',
-      'লিস্টিংগুলো এখন ইংরেজিতে লেখা, তাই অনুবাদ না হওয়া পর্যন্ত বাংলা পেজে একটি জায়গার ইংরেজি বিবরণ দেখায়।',
+      'জায়গাগুলোর বিবরণ বেশিরভাগই লাতিন অক্ষরে লেবানিজ আরবিতে লেখা, যেভাবে এখানে মেসেজে লেখা হয়, আর আপাতত প্রতিটি ভাষায় একই রকম দেখায়।',
     ],
   },
   ur: {
@@ -579,7 +580,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     body: [
       'جی ہاں۔ سائٹ، آپ کا اکاؤنٹ، بکنگ اور یہ صفحات اردو میں ہیں، اور زبان بدلنے کا بٹن اوپر ہیڈر میں ہے۔',
       'قانونی دستاویزات فی الحال صرف انگریزی میں ہیں: کسی معاہدے کا مشینی ترجمہ مستند لگتا ہے، مگر ہوتا نہیں۔',
-      'لسٹنگز ابھی انگریزی میں لکھی جاتی ہیں، اس لیے ترجمہ ہونے تک اردو صفحے پر کسی مقام کی انگریزی تفصیل دکھائی دیتی ہے۔',
+      'مقامات کی تفصیل زیادہ تر لاطینی حروف میں لبنانی عربی میں لکھی گئی ہے، جیسے یہاں پیغامات میں لکھی جاتی ہے، اور فی الحال ہر زبان میں ویسی ہی دکھائی دیتی ہے۔',
     ],
   },
 }
@@ -1048,63 +1049,63 @@ export function partnerWithUsPage(locale: Locale = 'en'): ContentPage {
         }),
         body: pick(locale, {
           en: [
-            '- A page on the site with photographs, hours, location, and everything a visitor needs before they decide.',
-            '- A printed entry in the magazine, carrying a code that opens that page.',
-            '- A code that never expires. It keeps working for the life of the issue and beyond, and it follows the listing if anything about the business changes.',
+            '- A page on the site with photographs, hours, and everything a visitor needs before they decide.',
+            '- At silver and gold, a printed page in the magazine, carrying a code that opens that page.',
+            '- That code never expires. It keeps working for the life of the issue and beyond, and it follows the listing if anything about the business changes.',
             '- Bookings, if the business takes them, answered from a dashboard rather than from a phone that rings during service.',
           ],
           ar: [
-            '- صفحة على الموقع فيها الصور ومواعيد العمل والموقع وكل ما يحتاجه الزائر قبل أن يقرر.',
-            '- إدراج مطبوع في المجلة يحمل رمزاً يفتح تلك الصفحة.',
-            '- رمز لا ينتهي. يبقى يعمل طوال عمر العدد وبعده، ويتبع الإدراج مهما تغيّر في العمل.',
+            '- صفحة على الموقع فيها الصور ومواعيد العمل وكل ما يحتاجه الزائر قبل أن يقرر.',
+            '- في المستويين الفضي والذهبي، صفحة مطبوعة في المجلة تحمل رمزاً يفتح تلك الصفحة.',
+            '- هذا الرمز لا ينتهي. يبقى يعمل طوال عمر العدد وبعده، ويتبع الإدراج مهما تغيّر في العمل.',
             '- الحجوزات، إن كان المكان يقبلها، يردّ عليها من لوحة تحكم بدل هاتف يرن في وسط الخدمة.',
           ],
           fr: [
-            '- Une page sur le site, avec photos, horaires, adresse et tout ce dont un visiteur a besoin avant de se décider.',
-            '- Une entrée imprimée dans le magazine, avec un code qui ouvre cette page.',
-            "- Un code qui n'expire jamais. Il fonctionne pendant toute la vie du numéro et au-delà, et il suit la fiche si quoi que ce soit change dans l'établissement.",
+            '- Une page sur le site, avec photos, horaires et tout ce dont un visiteur a besoin avant de se décider.',
+            '- En argent et en or, une page imprimée dans le magazine, avec un code qui ouvre cette page.',
+            "- Ce code n'expire jamais. Il fonctionne pendant toute la vie du numéro et au-delà, et il suit la fiche si quoi que ce soit change dans l'établissement.",
             "- Les réservations, si l'établissement en prend, gérées depuis un tableau de bord plutôt qu'au téléphone qui sonne en plein service.",
           ],
           es: [
-            '- Una página en el sitio con fotos, horario, ubicación y todo lo que un visitante necesita antes de decidirse.',
-            '- Una entrada impresa en la revista, con un código que abre esa página.',
-            '- Un código que nunca caduca. Funciona durante toda la vida del número y después, y sigue a la ficha si algo del negocio cambia.',
+            '- Una página en el sitio con fotos, horario y todo lo que un visitante necesita antes de decidirse.',
+            '- En plata y oro, una página impresa en la revista, con un código que abre esa página.',
+            '- Ese código nunca caduca. Funciona durante toda la vida del número y después, y sigue a la ficha si algo del negocio cambia.',
             '- Las reservas, si el negocio las acepta, se responden desde un panel y no desde un teléfono que suena en pleno servicio.',
           ],
           pt: [
-            '- Uma página no site com fotos, horários, localização e tudo o que um visitante precisa antes de decidir.',
-            '- Uma entrada impressa na revista, com um código que abre essa página.',
-            '- Um código que nunca expira. Ele funciona durante toda a vida da edição e depois dela, e acompanha a ficha se algo no negócio mudar.',
+            '- Uma página no site com fotos, horários e tudo o que um visitante precisa antes de decidir.',
+            '- Em prata e ouro, uma página impressa na revista, com um código que abre essa página.',
+            '- Esse código nunca expira. Ele funciona durante toda a vida da edição e depois dela, e acompanha a ficha se algo no negócio mudar.',
             '- Reservas, se o negócio aceitar, respondidas por um painel e não por um telefone que toca no meio do serviço.',
           ],
           ru: [
-            '- Страница на сайте с фотографиями, часами работы, адресом и всем, что нужно гостю, прежде чем решить.',
-            '- Печатная запись в журнале с кодом, который открывает эту страницу.',
-            '- Код, срок действия которого никогда не истекает. Он работает всё время жизни номера и дольше и следует за карточкой, если в заведении что-то меняется.',
+            '- Страница на сайте с фотографиями, часами работы и всем, что нужно гостю, прежде чем решить.',
+            '- На уровнях «серебро» и «золото»: печатная страница в журнале с кодом, который открывает эту страницу.',
+            '- Срок действия этого кода никогда не истекает. Он работает всё время жизни номера и дольше и следует за карточкой, если в заведении что-то меняется.',
             '- Бронирования, если заведение их принимает, — через панель управления, а не по телефону, который звонит посреди смены.',
           ],
           zh: [
-            '- 网站上的一个页面，包含照片、营业时间、位置，以及访客在做决定前需要的一切信息。',
-            '- 杂志上的一条印刷条目，附有可打开该页面的二维码。',
-            '- 一个永不过期的二维码。在整期杂志的生命周期内乃至之后都有效，商户有任何变化，它都会跟着页面走。',
+            '- 网站上的一个页面，包含照片、营业时间，以及访客在做决定前需要的一切信息。',
+            '- 银级和金级另有杂志上的一页印刷版面，附有可打开该页面的二维码。',
+            '- 这个二维码永不过期。在整期杂志的生命周期内乃至之后都有效，商户有任何变化，它都会跟着页面走。',
             '- 如果商户接受预订，可以在管理后台处理，而不必在营业高峰时接听响个不停的电话。',
           ],
           hi: [
-            '- साइट पर एक पेज, जिसमें तस्वीरें, समय, लोकेशन और वह सब कुछ हो जो किसी आगंतुक को फ़ैसला करने से पहले चाहिए।',
-            '- पत्रिका में एक छपी हुई प्रविष्टि, जिस पर वह पेज खोलने वाला कोड हो।',
-            '- एक कोड जो कभी एक्सपायर नहीं होता। वह अंक के पूरे जीवनकाल में और उसके बाद भी काम करता है, और व्यवसाय में कुछ भी बदले तो लिस्टिंग के साथ चलता है।',
+            '- साइट पर एक पेज, जिसमें तस्वीरें, समय और वह सब कुछ हो जो किसी आगंतुक को फ़ैसला करने से पहले चाहिए।',
+            '- सिल्वर और गोल्ड में, पत्रिका में एक छपा हुआ पेज, जिस पर वह पेज खोलने वाला कोड हो।',
+            '- वह कोड कभी एक्सपायर नहीं होता। वह अंक के पूरे जीवनकाल में और उसके बाद भी काम करता है, और व्यवसाय में कुछ भी बदले तो लिस्टिंग के साथ चलता है।',
             '- बुकिंग, अगर व्यवसाय लेता है, तो उनका जवाब सर्विस के बीच बजते फ़ोन के बजाय एक डैशबोर्ड से दिया जाता है।',
           ],
           bn: [
-            '- সাইটে একটি পেজ, যেখানে ছবি, সময়সূচি, অবস্থান আর সিদ্ধান্ত নেওয়ার আগে একজন অতিথির যা যা দরকার সব থাকে।',
-            '- ম্যাগাজিনে একটি ছাপা এন্ট্রি, যাতে সেই পেজ খোলার কোড থাকে।',
-            '- এমন একটি কোড যার মেয়াদ কখনো ফুরায় না। সংখ্যাটির পুরো আয়ুষ্কাল জুড়ে এবং তার পরেও এটি কাজ করে, আর ব্যবসার কিছু বদলালে লিস্টিংকে অনুসরণ করে।',
+            '- সাইটে একটি পেজ, যেখানে ছবি, সময়সূচি আর সিদ্ধান্ত নেওয়ার আগে একজন অতিথির যা যা দরকার সব থাকে।',
+            '- সিলভার ও গোল্ডে, ম্যাগাজিনে একটি ছাপা পাতা, যাতে সেই পেজ খোলার কোড থাকে।',
+            '- সেই কোডের মেয়াদ কখনো ফুরায় না। সংখ্যাটির পুরো আয়ুষ্কাল জুড়ে এবং তার পরেও এটি কাজ করে, আর ব্যবসার কিছু বদলালে লিস্টিংকে অনুসরণ করে।',
             '- বুকিং, যদি ব্যবসাটি নেয়, তাহলে সেগুলোর উত্তর দেওয়া হয় একটি ড্যাশবোর্ড থেকে, ব্যস্ত সময়ে বেজে চলা ফোন থেকে নয়।',
           ],
           ur: [
-            '- سائٹ پر ایک صفحہ جس میں تصاویر، اوقات، مقام اور وہ سب کچھ ہو جو کسی مہمان کو فیصلہ کرنے سے پہلے چاہیے۔',
-            '- میگزین میں ایک چھپا ہوا اندراج، جس پر وہ صفحہ کھولنے والا کوڈ ہو۔',
-            '- ایک ایسا کوڈ جو کبھی ختم نہیں ہوتا۔ یہ شمارے کی پوری عمر اور اس کے بعد بھی کام کرتا ہے، اور کاروبار میں کچھ بھی بدلے تو لسٹنگ کے ساتھ رہتا ہے۔',
+            '- سائٹ پر ایک صفحہ جس میں تصاویر، اوقات اور وہ سب کچھ ہو جو کسی مہمان کو فیصلہ کرنے سے پہلے چاہیے۔',
+            '- سلور اور گولڈ میں، میگزین میں ایک چھپا ہوا صفحہ، جس پر وہ صفحہ کھولنے والا کوڈ ہو۔',
+            '- وہ کوڈ کبھی ختم نہیں ہوتا۔ یہ شمارے کی پوری عمر اور اس کے بعد بھی کام کرتا ہے، اور کاروبار میں کچھ بھی بدلے تو لسٹنگ کے ساتھ رہتا ہے۔',
             '- بکنگ، اگر کاروبار لیتا ہے، تو ان کا جواب سروس کے دوران بجتے فون کے بجائے ایک ڈیش بورڈ سے دیا جاتا ہے۔',
           ],
         }),
@@ -1633,7 +1634,6 @@ export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
               'اگر نہیں، تو ہم آپ کو انتظار کروانے کے بجائے صاف بتا دیں گے۔ ڈائریکٹری قاری کے لیے تبھی قیمتی ہے جب کچھ چیزیں اس سے باہر رہیں۔',
             ],
           }),
-          TBD('how long we aim to take to reply'),
         ],
       },
       {

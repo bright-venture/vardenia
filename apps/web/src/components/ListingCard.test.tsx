@@ -105,23 +105,24 @@ describe('ListingCard', () => {
   })
 
   /**
-   * The badge used to be a bare tick character, whose accessible label was the
-   * only thing a screen reader could announce - and it was hardcoded English on
-   * a bilingual site. It is now a labelled badge with visible text, but the
-   * guarantee is the same one and worth keeping: the mark is announced in the
-   * reader's language, and it appears only when the listing is actually
-   * verified. See components/ui/Tier.
+   * Every listing is visited and checked before it appears (the owner's rule
+   * since 9 November 2026), so no card carries a Verified badge: one on some
+   * cards would suggest the others are not. The admin's verified flag is still
+   * passed in and must not leak onto the card.
    */
-  it('labels the verified badge, and only when verified', () => {
-    expect(render({ verified: true })).toContain('Verified by Vardenia')
-    expect(render({ verified: false })).not.toContain('Verified')
-    expect(render({})).not.toContain('Verified')
+  it('shows no Verified badge, whatever the flag says', () => {
+    for (const verified of [true, false, undefined]) {
+      const html = render({ verified })
+      expect(html).not.toContain('Verified')
+      expect(html).not.toContain('aria-label="Verified by Vardenia"')
+    }
   })
 
-  it('gives the badge an accessible label rather than leaving it a stray glyph', () => {
-    const html = render({ verified: true })
+  /** The badge that remains, the gold one, is announced rather than a stray glyph. */
+  it('gives the remaining badge an accessible label', () => {
+    const html = render({ signature: true })
     expect(html).toContain('role="img"')
-    expect(html).toContain('aria-label="Verified by Vardenia"')
+    expect(html).toContain('aria-label="A Vardenia Signature listing"')
   })
 
   /**
@@ -153,10 +154,9 @@ describe('ListingCard', () => {
       expect(html).toMatch(/[؀-ۿ]/)
     })
 
-    it('translates the verified badge', () => {
+    it('shows no Verified badge in Arabic either', () => {
       const html = render({ verified: true, locale: 'ar' })
-      expect(html).toContain('موثّق من فاردينيا')
-      expect(html).not.toContain('Verified by Vardenia')
+      expect(html).not.toContain('موثّق من فاردينيا')
     })
 
     /**
