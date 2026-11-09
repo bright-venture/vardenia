@@ -202,9 +202,13 @@ export function privacyPolicy(): LegalDocument {
            */
           'Our database and the receipt files are hosted in the European Union, in Frankfurt. Our website host, our network provider, our email provider and the service that counts page visits may process data outside it, and a receipt read automatically is read in the United States.',
           'Our database host keeps a daily backup for seven days. Each week we also keep a full copy of the database and of every photo and receipt on a computer we control, outside the European Union, so that nothing is lost if a supplier fails.',
-          TBD(
-            'the transfer mechanism relied on for suppliers outside the EU and for our own weekly copy, how that copy is secured (for example encrypted, and who can reach it), and whether a full record of processing activities is needed',
-          ),
+          /**
+           * Settled with the owner on 9 November 2026. The weekly copy is
+           * encrypted as it is written (backup/crypto.ts) and the private key
+           * that opens it is held by Vardenia alone, off the backup computer.
+           */
+          "When data leaves the European Union, we rely on the EU-US Data Privacy Framework where the supplier is certified under it, and otherwise on the European Commission's standard contractual clauses in our agreement with that supplier.",
+          'Our weekly copy is encrypted before it is stored, and only Vardenia holds the key that opens it.',
         ],
       },
 

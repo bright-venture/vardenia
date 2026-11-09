@@ -194,14 +194,21 @@ describe('what the policy claims about the code', () => {
 
 describe('pendingDecisions', () => {
   it('lists every unsettled point across both documents', () => {
-    const pending = pendingDecisions()
-    expect(pending.length).toBeGreaterThan(0)
-    for (const item of pending) expect(item).toContain(PLACEHOLDER)
+    for (const item of pendingDecisions()) expect(item).toContain(PLACEHOLDER)
   })
 
-  it('includes the ones that cannot be guessed', () => {
-    const all = pendingDecisions().join(' ').toLowerCase()
-    expect(all).toContain('transfer mechanism')
+  /** The last open point, settled 9 November 2026: nothing is left open. */
+  it('has nothing left open', () => {
+    expect(pendingDecisions()).toEqual([])
+  })
+
+  it('states how data leaving the EU is covered, and who can open the weekly copy', () => {
+    const text = privacyPolicy()
+      .sections.flatMap((section) => section.body)
+      .join(' ')
+    expect(text).toContain('EU-US Data Privacy Framework')
+    expect(text).toContain('standard contractual clauses')
+    expect(text).toContain('only Vardenia holds the key that opens it')
   })
 
   /** Given by the owner on 9 November 2026. */
