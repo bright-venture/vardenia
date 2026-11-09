@@ -180,8 +180,15 @@ describe('what the policy claims about the code', () => {
     expect(lines).toContain('no consent banner')
   })
 
-  it('says where the analytics data is held', () => {
-    expect(lines).toContain('european union')
+  /**
+   * The visit counter runs on Umami's general cloud, which may store data in
+   * the US, so the policy must not promise the figures stay in the EU, and
+   * must list that service among those that may process data outside it.
+   */
+  it('does not promise the page-visit figures stay in the EU', () => {
+    expect(lines).not.toContain('page-visit figures are held in the european union')
+    expect(lines).toContain('the service that counts page visits may process data outside it')
+    expect(lines).toContain('hosted in the european union, in frankfurt')
   })
 })
 

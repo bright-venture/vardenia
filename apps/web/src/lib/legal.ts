@@ -194,7 +194,14 @@ export function privacyPolicy(): LegalDocument {
       {
         heading: 'Where it is kept',
         body: [
-          'Our database and the receipt files are hosted in the European Union, in Frankfurt, and our page-visit figures are held in the European Union too. Our website host, our network provider and our email provider may process data outside it, and a receipt read automatically is read in the United States.',
+          /**
+           * The visit counter is Umami's general cloud (cloud.umami.is), not its
+           * EU region, and Umami lists its analytics database as "USA/EU"
+           * without saying which. Checked with the owner on 9 November 2026, so
+           * the figures are no longer said to stay in the EU. If the site moves
+           * to an EU-only address, this can say so again.
+           */
+          'Our database and the receipt files are hosted in the European Union, in Frankfurt. Our website host, our network provider, our email provider and the service that counts page visits may process data outside it, and a receipt read automatically is read in the United States.',
           'Our database host keeps a daily backup for seven days. Each week we also keep a full copy of the database and of every photo and receipt on a computer we control, outside the European Union, so that nothing is lost if a supplier fails.',
           TBD(
             'the transfer mechanism relied on for suppliers outside the EU and for our own weekly copy, how that copy is secured (for example encrypted, and who can reach it), and whether a full record of processing activities is needed',
