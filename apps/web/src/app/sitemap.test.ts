@@ -4,6 +4,7 @@ vi.mock('../lib/listings', () => ({ findAllListingSlugs: vi.fn(async () => ['che
 vi.mock('../lib/articles', () => ({ findAllArticleSlugs: vi.fn(async () => []) }))
 vi.mock('../lib/issues', () => ({ findAllIssueSlugs: async () => [] }))
 vi.mock('../lib/pages', () => ({ CONTENT_PAGE_SLUGS: [] }))
+vi.mock('../lib/hidden-pages', () => ({ hiddenPages: async () => [] }))
 
 const { findAllListingSlugs } = await import('../lib/listings')
 const { findAllArticleSlugs } = await import('../lib/articles')

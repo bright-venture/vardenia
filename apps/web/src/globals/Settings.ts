@@ -3,6 +3,7 @@ import { number } from 'payload/shared'
 import { HOME_PAGE_PLACES } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { clearListingsCache } from '../hooks/revalidateListings'
+import { CONTENT_PAGE_SLUGS, type ContentPageSlug } from '../lib/pages'
 
 /**
  * Settings, in the admin: every number the team sets for the business, on one
@@ -12,6 +13,7 @@ import { clearListingsCache } from '../hooks/revalidateListings'
  *   the rate for reading a receipt in pounds as dollars (core/booking-fees).
  * - Tiers: how many gold listings the home page shows, and so how many can be
  *   sold (core/tiers).
+ * - Pages: standing pages hidden from the site while not ready (lib/hidden-pages).
  * - Accounts: a switch that pauses new customer sign-ups (lib/signups).
  *
  * These were two pages of one or two boxes each, one of them called
@@ -52,21 +54,55 @@ const validatePlaces: NumberFieldSingleValidation = async (value, options) => {
   return placesFloorCheck(value, totalDocs)
 }
 
+/** The six standing pages, as the admin names them. Keyed by lib/pages so none can be missed. */
+const PAGE_LABELS: Record<ContentPageSlug, string> = {
+  about: 'About',
+  contact: 'Contact',
+  faq: 'Questions',
+  'partner-with-us': 'Partner with us',
+  advertise: 'Advertise with us',
+  'add-your-business': 'Add your business',
+}
+
+/** Whether the list of hidden pages is different after a save, in any order. */
+export function hiddenPagesChanged(before: unknown, after: unknown): boolean {
+  const list = (value: unknown) => (Array.isArray(value) ? value.map(String) : []).sort().join(',')
+  return list(before) !== list(after)
+}
+
+/**
+ * Makes a change to the hidden pages show on the next view: drops the cached
+ * list (lib/hidden-pages, tag "hidden-pages") and rebuilds every page, because
+ * the header and footer on every page link to them. Only on that change, so
+ * an ordinary save of a rate does not rebuild the whole site. Outside a Next
+ * request (scripts, migrations) there is nothing cached, so a failure is fine.
+ */
+async function showHiddenPages() {
+  try {
+    const { revalidatePath, revalidateTag } = await import('next/cache')
+    revalidateTag('hidden-pages', { expire: 0 })
+    revalidatePath('/', 'layout')
+  } catch {
+    // Outside a Next request. Nothing is cached, so nothing needs clearing.
+  }
+}
+
 export const Settings: GlobalConfig = {
   slug: 'settings',
-  label: 'Commission, tiers and accounts',
+  label: 'Site settings',
   admin: {
     group: 'Settings',
     description:
-      'The numbers the business runs on, and whether new accounts are open. Only an admin can change them; the team can read them.',
+      'The numbers the business runs on, which pages are shown, and whether new accounts are open. Only an admin can change them; the team can read them.',
   },
   access: { read: isStaff, update: isAdmin },
   hooks: {
     // The gold places decide the home page band, which is cached with the
     // listings: clear it so a new number shows on the next view.
     afterChange: [
-      async ({ doc }) => {
+      async ({ doc, previousDoc }) => {
         await clearListingsCache()
+        if (hiddenPagesChanged(previousDoc?.hiddenPages, doc?.hiddenPages)) await showHiddenPages()
         return doc
       },
     ],
@@ -129,6 +165,26 @@ export const Settings: GlobalConfig = {
                 description: `How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: ${HOME_PAGE_PLACES}.`,
               },
               validate: validatePlaces,
+            },
+          ],
+        },
+        {
+          label: 'Pages',
+          description:
+            'Take a standing page off the site while it is not ready. A hidden page shows "not found", and its links disappear from the menu, the footer and the other pages. The legal pages cannot be hidden.',
+          fields: [
+            {
+              // Read by lib/hidden-pages, for the page routes, the header,
+              // the footer and the sitemap.
+              name: 'hiddenPages',
+              label: 'Hidden pages',
+              type: 'select',
+              hasMany: true,
+              options: CONTENT_PAGE_SLUGS.map((value) => ({ label: PAGE_LABELS[value], value })),
+              admin: {
+                description:
+                  'Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.',
+              },
             },
           ],
         },

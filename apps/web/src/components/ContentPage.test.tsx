@@ -58,3 +58,39 @@ for (const locale of ['en', 'ar'] as const) {
     }
   })
 }
+
+/**
+ * A page hidden from the admin's Settings page (lib/hidden-pages) is never
+ * linked to from the foot of another standing page.
+ */
+describe('standing pages and the pages an admin has hidden', () => {
+  const links = async (
+    slug: 'about' | 'faq' | 'advertise',
+    hidden: ('faq' | 'about' | 'contact')[],
+  ) => {
+    const view = await ContentPageView({
+      page: contentPage(slug, 'en')!,
+      slug,
+      locale: 'en',
+      hidden,
+    })
+    const root = document.createElement('div')
+    root.innerHTML = renderToStaticMarkup(
+      <NextIntlClientProvider locale="en" messages={getMessages('en')} timeZone="Asia/Beirut">
+        {view}
+      </NextIntlClientProvider>,
+    )
+    return [...root.querySelectorAll('.vd-story-next a')].map((a) => a.getAttribute('href'))
+  }
+
+  it('leaves out the link to a hidden page', async () => {
+    expect((await links('about', [])).some((href) => href?.endsWith('/faq'))).toBe(true)
+    expect((await links('about', ['faq'])).some((href) => href?.endsWith('/faq'))).toBe(false)
+  })
+
+  it('sends readers to the directory when Contact is hidden', async () => {
+    const hrefs = await links('advertise', ['contact'])
+    expect(hrefs.some((href) => href?.endsWith('/contact'))).toBe(false)
+    expect(hrefs.some((href) => href?.endsWith('/directory'))).toBe(true)
+  })
+})

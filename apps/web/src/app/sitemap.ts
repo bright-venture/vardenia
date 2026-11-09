@@ -3,6 +3,7 @@ import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { alternatesFor } from '../lib/seo'
 import { CONTENT_PAGE_SLUGS } from '../lib/pages'
+import { hiddenPages } from '../lib/hidden-pages'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
 import { findAllIssueSlugs } from '../lib/issues'
@@ -122,7 +123,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * here: "add your business" is a page somebody searches for by name, and it
    * is the only route into the directory for a business that is not in it yet.
    */
-  for (const slug of CONTENT_PAGE_SLUGS) push(`/${slug}`, CHANGE_FREQUENCY.article, 0.5)
+  // Not the ones an admin has hidden (lib/hidden-pages): they answer "not found".
+  const hidden = await hiddenPages()
+  for (const slug of CONTENT_PAGE_SLUGS) {
+    if (!hidden.includes(slug)) push(`/${slug}`, CHANGE_FREQUENCY.article, 0.5)
+  }
 
   for (const slug of listings) push(`/directory/${slug}`, CHANGE_FREQUENCY.listing, 0.8)
   for (const slug of articles) push(`/magazine/articles/${slug}`, CHANGE_FREQUENCY.article, 0.6)

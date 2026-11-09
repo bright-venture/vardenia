@@ -21,10 +21,14 @@ import {
   SECTION_ICONS,
 } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
+import { hiddenPages } from '../lib/hidden-pages'
 
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
+  // Pages an admin has hidden (lib/hidden-pages) are left out of the menus.
+  const hidden = await hiddenPages()
+  const shown = (slug: (typeof hidden)[number]) => !hidden.includes(slug)
   const categoryPhotos: Record<string, number> = {
     stay: 1,
     'eat-and-drink': 0,
@@ -52,32 +56,40 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const aboutMenu = (
     <div className="vd-editorial-menu">
       <h2>{t('nav.about')}</h2>
-      <MenuLink
-        href="/about"
-        title={t('nav.aboutVardenia')}
-        description={t('nav.aboutVardeniaNote')}
-        icon={MAGAZINE_ICON}
-      />
-      <MenuLink
-        href="/add-your-business"
-        title={t('home.addBusiness')}
-        description={t('nav.addBusinessNote')}
-        icon={BUSINESS_ICON}
-      />
+      {shown('about') ? (
+        <MenuLink
+          href="/about"
+          title={t('nav.aboutVardenia')}
+          description={t('nav.aboutVardeniaNote')}
+          icon={MAGAZINE_ICON}
+        />
+      ) : null}
+      {shown('add-your-business') ? (
+        <MenuLink
+          href="/add-your-business"
+          title={t('home.addBusiness')}
+          description={t('nav.addBusinessNote')}
+          icon={BUSINESS_ICON}
+        />
+      ) : null}
       {/* Each with its line, like the two above, and its own icon: both were
           envelopes with no description, so the menu read as two copies of Contact. */}
-      <MenuLink
-        href="/faq"
-        title={t('nav.questions')}
-        description={t('nav.questionsNote')}
-        icon={HELP_ICON}
-      />
-      <MenuLink
-        href="/contact"
-        title={t('nav.contact')}
-        description={t('nav.contactNote')}
-        icon={CONTACT_ICON}
-      />
+      {shown('faq') ? (
+        <MenuLink
+          href="/faq"
+          title={t('nav.questions')}
+          description={t('nav.questionsNote')}
+          icon={HELP_ICON}
+        />
+      ) : null}
+      {shown('contact') ? (
+        <MenuLink
+          href="/contact"
+          title={t('nav.contact')}
+          description={t('nav.contactNote')}
+          icon={CONTACT_ICON}
+        />
+      ) : null}
     </div>
   )
   const magazineMenu = (
@@ -170,11 +182,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             {/* Always listed here as a destination: on a phone the menu is the
                 way around, and a signed-out tap lands on the sign-in prompt. */}
             <MenuLink href="/account/saved" title={t('nav.saved')} icon={Heart} />
-            <MenuLink
-              href="/add-your-business"
-              title={t('home.addBusiness')}
-              icon={BUSINESS_ICON}
-            />
+            {shown('add-your-business') ? (
+              <MenuLink
+                href="/add-your-business"
+                title={t('home.addBusiness')}
+                icon={BUSINESS_ICON}
+              />
+            ) : null}
 
             <span className="border-ink-100 my-2 block border-t" />
 

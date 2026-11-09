@@ -55,6 +55,7 @@ import * as migration_20261105_140000_drop_featured_column from './20261105_1400
 import * as migration_20261106_071004_magazine_pdfs from './20261106_071004_magazine_pdfs'
 import * as migration_20261106_131048_receipt_number from './20261106_131048_receipt_number'
 import * as migration_20261106_165517_signups_pause from './20261106_165517_signups_pause'
+import * as migration_20261109_072535_hidden_pages from './20261109_072535_hidden_pages'
 
 export const migrations = [
   {
@@ -341,5 +342,10 @@ export const migrations = [
     up: migration_20261106_165517_signups_pause.up,
     down: migration_20261106_165517_signups_pause.down,
     name: '20261106_165517_signups_pause',
+  },
+  {
+    up: migration_20261109_072535_hidden_pages.up,
+    down: migration_20261109_072535_hidden_pages.down,
+    name: '20261109_072535_hidden_pages',
   },
 ]

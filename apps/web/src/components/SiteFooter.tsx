@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { sectionName } from '../lib/labels'
+import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 import {
   ABOUT_ICON,
   ADVERTISE_ICON,
@@ -90,6 +91,7 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations()
   const j = await getTranslations('journey')
+  const hidden = await hiddenPages()
 
   const discover: FooterLink[] = SECTIONS.map((section) => ({
     href: `/${section.path}`,
@@ -137,8 +139,9 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
       <nav className="vd-footer-links" aria-label={t('footer.discover')}>
         <FooterColumn title={t('footer.discover')} links={discover} />
         <FooterColumn title={t('footer.read')} links={read} />
-        <FooterColumn title={t('footer.company')} links={company} />
-        <FooterColumn title={t('footer.business')} links={business} />
+        {/* Without the pages an admin has hidden (lib/hidden-pages). */}
+        <FooterColumn title={t('footer.company')} links={withoutHidden(company, hidden)} />
+        <FooterColumn title={t('footer.business')} links={withoutHidden(business, hidden)} />
       </nav>
       <p className="vd-footer-word">Vardenia</p>
       <div className="vd-footer-bottom">

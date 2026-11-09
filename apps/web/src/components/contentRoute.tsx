@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { contentPage, type ContentPageSlug } from '../lib/pages'
 import { alternatesFor } from '../lib/seo'
+import { hiddenPages } from '../lib/hidden-pages'
 import { ContentPageView } from './ContentPage'
 
 /**
@@ -66,7 +67,12 @@ export function contentRoute(slug: ContentPageSlug) {
     const page = contentPage(slug, locale)
     if (!page) notFound()
 
-    return <ContentPageView page={page} slug={slug} locale={locale} />
+    // Hidden from the admin's Settings page (lib/hidden-pages): not found, as
+    // if the page did not exist, until it is shown again.
+    const hidden = await hiddenPages()
+    if (hidden.includes(slug)) notFound()
+
+    return <ContentPageView page={page} slug={slug} locale={locale} hidden={hidden} />
   }
 
   return { generateMetadata, Page }

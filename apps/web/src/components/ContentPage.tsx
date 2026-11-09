@@ -85,13 +85,25 @@ export async function ContentPageView({
   page,
   slug = 'about',
   locale = 'en',
+  hidden = [],
 }: {
   page: ContentPage
   slug?: ContentPageSlug
   locale?: Locale
+  /** Standing pages hidden from the admin (lib/hidden-pages): never linked to. */
+  hidden?: readonly ContentPageSlug[]
 }) {
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
+  // The buttons at the foot point at the directory when Contact is hidden, and
+  // the second link is left out when the page it names is hidden.
+  const toDirectory = slug === 'about' || slug === 'contact' || faq || hidden.includes('contact')
+  const next = {
+    href: toDirectory ? '/directory' : '/contact',
+    label: t(toDirectory ? 'nav.directory' : 'nav.contact'),
+  }
+  const other: ContentPageSlug = faq ? 'about' : 'faq'
+  const showOther = !hidden.includes(other)
   const place = {
     about: 1,
     contact: 2,
@@ -135,11 +147,8 @@ export async function ContentPageView({
               heading: section.heading,
             }))}
           />
-          <Link
-            href={slug === 'about' || slug === 'contact' || faq ? '/directory' : '/contact'}
-            className="vd-button"
-          >
-            {t(slug === 'about' || slug === 'contact' || faq ? 'nav.directory' : 'nav.contact')}{' '}
+          <Link href={next.href} className="vd-button">
+            {next.label}{' '}
             <span aria-hidden>
               <LinkArrow />
             </span>
@@ -192,17 +201,16 @@ export async function ContentPageView({
             ),
           )}
           <nav className="vd-story-next" aria-label={page.title}>
-            <Link
-              href={slug === 'about' || slug === 'contact' || faq ? '/directory' : '/contact'}
-              className="vd-button"
-            >
-              {t(slug === 'about' || slug === 'contact' || faq ? 'nav.directory' : 'nav.contact')}
+            <Link href={next.href} className="vd-button">
+              {next.label}
               <LinkArrow />
             </Link>
-            <Link href={faq ? '/about' : '/faq'} className="vd-text-link">
-              {t(faq ? 'nav.about' : 'nav.questions')}
-              <LinkArrow />
-            </Link>
+            {showOther ? (
+              <Link href={`/${other}`} className="vd-text-link">
+                {t(faq ? 'nav.about' : 'nav.questions')}
+                <LinkArrow />
+              </Link>
+            ) : null}
           </nav>
         </div>
       </div>
