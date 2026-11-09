@@ -303,7 +303,7 @@ export function termsOfService(): LegalDocument {
           'This is the part worth reading twice.',
           '- **Your booking is with the business, not with us.** We pass your request on and tell you what they say. The arrangement to hold a table is between the two of you.',
           '- **A request is not a reservation.** Some places confirm immediately and some answer by hand. Nothing is held until you receive a confirmation saying so, and a request can be declined.',
-          '- **Cancelling.** You can cancel from your account at any time, and the business is told. If you cancel, the business may have its own policy about late cancellations; that is between you and them.',
+          '- **Cancelling.** You can cancel from your account at any time, and the business is told.',
           "- **Fees for a late cancellation or a missed booking** depend on the place. Some places have one and some do not. A fee like that is the place's own policy, between you and them.",
           '- We do not take payment for bookings and do not hold any card details.',
         ],
