@@ -1,6 +1,7 @@
 import type { Locale } from '@vardenia/i18n'
 import type { LegalDocument } from './legal'
 import { TBD, contactEmail, contactPostal } from './placeholder'
+import { CONTACT } from './contact'
 
 /**
  * The standing pages: About, Contact, FAQ, and the three that sell a listing.
@@ -295,13 +296,33 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
           bn: 'আমরা কারা',
           ur: 'ہم کون ہیں',
         }),
-        body: [
-          TBD('the registered legal entity, its company number and its registered address'),
-          TBD('who runs Vardenia, and a sentence about why they started it'),
-        ],
+        /**
+         * Only where Vardenia is, from lib/contact. On 9 November 2026 the owner
+         * asked for the line about who runs it and why to be left out for now;
+         * the registration number is on the legal pages, not here.
+         */
+        body: [aboutWhere(locale)],
       },
     ],
   }
+}
+
+/** Where Vardenia is based, in the reader's language, or the marked gap if unset. */
+function aboutWhere(locale: Locale): string {
+  const address = CONTACT.postalAddress
+  if (!address) return TBD('where Vardenia is based')
+  return pick(locale, {
+    en: `Vardenia is based at ${address}.`,
+    ar: `مقرّ فاردينيا: ${address}.`,
+    fr: `Le siège de Vardenia : ${address}.`,
+    es: `Vardenia tiene su sede en ${address}.`,
+    pt: `A Vardenia tem sede em ${address}.`,
+    ru: `Vardenia находится по адресу: ${address}.`,
+    zh: `Vardenia 位于：${address}。`,
+    hi: `Vardenia का पता: ${address}।`,
+    bn: `Vardenia-র ঠিকানা: ${address}।`,
+    ur: `Vardenia کا پتا: ${address}۔`,
+  })
 }
 
 // ------------------------------------------------------------------- contact
@@ -461,7 +482,8 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
         body: [
           contactEmail(locale),
           contactPostal(locale),
-          TBD('the hours somebody is reading this, and how quickly we aim to reply'),
+          // No hours or reply time are promised: the owner chose on 9 November
+          // 2026 to show only the two ways to reach us.
         ],
       },
     ],
