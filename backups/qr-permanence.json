@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "count": 1347,
+  "count": 1351,
   "codes": [
     {
       "code": "003T5D1",
@@ -1057,7 +1057,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nos-el-nhar"
+      "businessSlug": "nos-el-balad"
     },
     {
       "code": "3YSCN3N",
@@ -1778,7 +1778,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-el-7ay"
+      "businessSlug": "le2met-el-7ay"
     },
     {
       "code": "6CBR3AC",
@@ -2051,14 +2051,14 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rehwet-bal"
+      "businessSlug": "rakwet-bal"
     },
     {
       "code": "79D0S8H",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rashshet-may"
+      "businessSlug": "rashet-may"
     },
     {
       "code": "7BZXBMS",
@@ -2996,7 +2996,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-late-majlis"
+      "businessSlug": "the-late-dance"
     },
     {
       "code": "AA3T02D",
@@ -3115,7 +3115,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2me-society"
+      "businessSlug": "le2me-society"
     },
     {
       "code": "ARZ0K5A",
@@ -3276,7 +3276,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-sittna"
+      "businessSlug": "le2met-sittna"
     },
     {
       "code": "BEZXE30",
@@ -3585,6 +3585,13 @@
       "placement": "magazine-page",
       "active": true,
       "businessSlug": "tawlet-samke"
+    },
+    {
+      "code": "CJQZ0TW",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "beihouse"
     },
     {
       "code": "CK2KGB4",
@@ -4011,7 +4018,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "desk-w-finjan"
+      "businessSlug": "desk-w-finjen"
     },
     {
       "code": "E15V56X",
@@ -4217,6 +4224,13 @@
       "businessSlug": "khan-falougha"
     },
     {
+      "code": "EN54FSV",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "em-sherif-au-musee"
+    },
+    {
       "code": "ENGJD3M",
       "targetType": "business",
       "placement": "magazine-page",
@@ -4263,7 +4277,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-ghazieh"
+      "businessSlug": "le2met-ghazieh"
     },
     {
       "code": "EWS683E",
@@ -5547,6 +5561,13 @@
       "businessSlug": "mshawi-el-diwan"
     },
     {
+      "code": "JSVF3ZE",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "saifi-village"
+    },
+    {
       "code": "JVX86EH",
       "targetType": "business",
       "placement": "magazine-page",
@@ -6083,7 +6104,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "matam-amar"
+      "businessSlug": "mataam-amar"
     },
     {
       "code": "MWAN5HF",
@@ -6713,7 +6734,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-lo2me"
+      "businessSlug": "bayt-el-le2me"
     },
     {
       "code": "PQV5P84",
@@ -7290,6 +7311,13 @@
       "businessSlug": "qasr-el-rayyan"
     },
     {
+      "code": "RT04R99",
+      "targetType": "business",
+      "placement": "magazine-page",
+      "active": true,
+      "businessSlug": "zaitunay-bay"
+    },
+    {
       "code": "RT19JF0",
       "targetType": "business",
       "placement": "magazine-page",
@@ -7665,7 +7693,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ba3d-el-dars"
+      "businessSlug": "ba3d-el-dares"
     },
     {
       "code": "T0968Y8",
@@ -8091,7 +8119,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khoukh-snoubar"
+      "businessSlug": "koukh-snoubar"
     },
     {
       "code": "V8RGZ3Z",
@@ -8287,7 +8315,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "marsa-lo2me"
+      "businessSlug": "marsa-le2me"
     },
     {
       "code": "VW5A88E",
@@ -8350,7 +8378,7 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sama-el-deir"
+      "businessSlug": "sobh-w-leil"
     },
     {
       "code": "W3RSFTA",
@@ -9295,14 +9323,14 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "layl-el-dar-2"
+      "businessSlug": "layl-el-dar"
     },
     {
       "code": "ZQ4T73G",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sob7-w-khobez"
+      "businessSlug": "sob7-w-khobz"
     },
     {
       "code": "ZQSBXEG",
