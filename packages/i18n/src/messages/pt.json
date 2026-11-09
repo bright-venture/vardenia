@@ -184,6 +184,8 @@
     "passwordHint": "Pelo menos 10 caracteres. O comprimento vale mais que a pontuação.",
     "signInSubtitle": "Para ver suas reservas e os lugares que você salvou.",
     "signUpSubtitle": "Reserve uma mesa ou um quarto, e mantenha suas reservas num só lugar.",
+    "signUpPaused": "Neste momento não estamos a abrir novas contas.",
+    "signUpPausedBody": "Volte em breve. Se já tem uma conta, pode iniciar sessão como de costume.",
     "strengthLabel": "Força da senha",
     "strengthEmpty": "Nada ainda",
     "strengthWeak": "Fraca",

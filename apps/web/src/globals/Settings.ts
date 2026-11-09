@@ -6,12 +6,13 @@ import { clearListingsCache } from '../hooks/revalidateListings'
 
 /**
  * Settings, in the admin: every number the team sets for the business, on one
- * page, in two sections.
+ * page, in three sections.
  *
  * - Commission: the default rate venues pay on what their guests spent, and
  *   the rate for reading a receipt in pounds as dollars (core/booking-fees).
  * - Tiers: how many gold listings the home page shows, and so how many can be
  *   sold (core/tiers).
+ * - Accounts: a switch that pauses new customer sign-ups (lib/signups).
  *
  * These were two pages of one or two boxes each, one of them called
  * "Commissions" beside the billing screen of the same name, so the sidebar had
@@ -53,11 +54,11 @@ const validatePlaces: NumberFieldSingleValidation = async (value, options) => {
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
-  label: 'Commission and tiers',
+  label: 'Commission, tiers and accounts',
   admin: {
     group: 'Settings',
     description:
-      'The numbers the business runs on. Only an admin can change them; the team can read them.',
+      'The numbers the business runs on, and whether new accounts are open. Only an admin can change them; the team can read them.',
   },
   access: { read: isStaff, update: isAdmin },
   hooks: {
@@ -128,6 +129,24 @@ export const Settings: GlobalConfig = {
                 description: `How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: ${HOME_PAGE_PLACES}.`,
               },
               validate: validatePlaces,
+            },
+          ],
+        },
+        {
+          label: 'Accounts',
+          description:
+            'Whether readers can open a new account on the site. Everyone who already has one can still sign in, book and reset a password.',
+          fields: [
+            {
+              // Read by lib/signups, for /auth/signup and the sign-up page.
+              name: 'signupsPaused',
+              label: 'Pause new accounts',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                description:
+                  'Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.',
+              },
             },
           ],
         },

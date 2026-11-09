@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
-import { redirect } from '../../../../../i18n/routing'
+import { getPayload } from 'payload'
+import config from '../../../../../payload.config'
+import { Link, redirect } from '../../../../../i18n/routing'
+import { signupsPaused } from '../../../../../lib/signups'
 import { UserPlus } from 'lucide-react'
 import { SignupForm } from '../../../../../components/SignupForm'
 import { AuthCard } from '../../../../../components/auth/AuthCard'
@@ -37,6 +40,21 @@ export default async function SignupPage({ params }: { params: Promise<{ locale:
   if (await currentCustomer()) redirect({ href: '/account', locale })
 
   const t = await getTranslations('account')
+
+  // Paused from the admin's Settings page (lib/signups): a note in place of a
+  // form that would only be refused. Signing in stays one click away.
+  if (await signupsPaused(await getPayload({ config }))) {
+    return (
+      <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpPaused')}>
+        <p className="text-ink-700 text-sm">{t('signUpPausedBody')}</p>
+        <p className="mt-4 text-sm">
+          <Link href="/account/login" className="vd-text-link">
+            {t('signIn')}
+          </Link>
+        </p>
+      </AuthCard>
+    )
+  }
 
   return (
     <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpSubtitle')}>

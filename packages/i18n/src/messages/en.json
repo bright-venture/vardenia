@@ -184,6 +184,8 @@
     "passwordHint": "At least 10 characters. Length beats punctuation.",
     "signInSubtitle": "To see your bookings and the places you have saved.",
     "signUpSubtitle": "Book a table or a room, and keep your bookings in one place.",
+    "signUpPaused": "We are not opening new accounts right now.",
+    "signUpPausedBody": "Please come back soon. If you already have an account, you can sign in as usual.",
     "strengthLabel": "Password strength",
     "strengthEmpty": "Nothing yet",
     "strengthWeak": "Weak",

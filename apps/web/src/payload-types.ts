@@ -1873,7 +1873,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T
 }
 /**
- * The numbers the business runs on. Only an admin can change them; the team can read them.
+ * The numbers the business runs on, and whether new accounts are open. Only an admin can change them; the team can read them.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "settings".
@@ -1892,6 +1892,10 @@ export interface Setting {
    * How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: 6.
    */
   goldPlaces?: number | null
+  /**
+   * Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.
+   */
+  signupsPaused?: boolean | null
   updatedAt?: string | null
   createdAt?: string | null
 }
@@ -1903,6 +1907,7 @@ export interface SettingsSelect<T extends boolean = true> {
   defaultRate?: T
   poundsPerDollar?: T
   goldPlaces?: T
+  signupsPaused?: T
   updatedAt?: T
   createdAt?: T
   globalType?: T

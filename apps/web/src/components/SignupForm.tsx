@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { Turnstile, type TurnstileHandle } from './Turnstile'
+import { SIGNUPS_PAUSED_CODE } from '../lib/signups'
 import { Lock, Mail, Phone, User } from 'lucide-react'
 import { PasswordStrength } from './ui/PasswordStrength'
 import {
@@ -129,6 +130,12 @@ export function SignupForm({ locale }: { locale: Locale }) {
        * refused again for a reason the reader cannot see.
        */
       if (response.status === 403) {
+        // Paused from the admin after this page was opened (lib/signups): said
+        // in the reader's language rather than the endpoint's English.
+        if (body?.code === SIGNUPS_PAUSED_CODE) {
+          setProblem(t('signUpPaused'))
+          return
+        }
         turnstile.current?.reset()
         setProblem(body?.message ?? common('error'))
         return

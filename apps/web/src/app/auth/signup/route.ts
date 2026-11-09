@@ -5,6 +5,7 @@ import { RATE_LIMIT, withRateLimit } from '../../../lib/rate-limit'
 import { clientIp } from '../../../lib/scan-guard'
 import { verifyTurnstile } from '../../../lib/turnstile'
 import { reportError } from '../../../lib/report'
+import { SIGNUPS_PAUSED_CODE, signupsPaused } from '../../../lib/signups'
 
 /**
  * Opening a customer account from the site.
@@ -64,6 +65,23 @@ export const POST = withRateLimit(
       return json({ ok: false, message: 'Expected a JSON body.' }, 400)
     }
 
+    /**
+     * Sign-ups paused from the admin's Settings page (lib/signups). First, so
+     * nothing is checked, looked up or sent while the door is shut. 403 with a
+     * code of its own, so the form can say why rather than show a generic error.
+     */
+    const payload = await getPayload({ config })
+    if (await signupsPaused(payload)) {
+      return json(
+        {
+          ok: false,
+          code: SIGNUPS_PAUSED_CODE,
+          message: 'We are not opening new accounts right now. Please come back soon.',
+        },
+        403,
+      )
+    }
+
     const parsed = signupSchema.safeParse(body)
     if (!parsed.success) {
       return json({ ok: false, errors: fieldErrors(parsed.error) }, 400)
@@ -100,7 +118,6 @@ export const POST = withRateLimit(
     }
 
     const { email, name, password, phone } = parsed.data
-    const payload = await getPayload({ config })
 
     const existing = await payload.find({
       collection: 'customers',

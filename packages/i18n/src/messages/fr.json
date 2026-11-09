@@ -184,6 +184,8 @@
     "passwordHint": "Au moins 10 caractères. La longueur vaut mieux que la ponctuation.",
     "signInSubtitle": "Pour voir vos réservations et les lieux que vous avez enregistrés.",
     "signUpSubtitle": "Réservez une table ou une chambre, et gardez vos réservations au même endroit.",
+    "signUpPaused": "Nous n'ouvrons pas de nouveaux comptes pour le moment.",
+    "signUpPausedBody": "Revenez bientôt. Si vous avez déjà un compte, vous pouvez vous connecter comme d’habitude.",
     "strengthLabel": "Robustesse du mot de passe",
     "strengthEmpty": "Rien pour l'instant",
     "strengthWeak": "Faible",
