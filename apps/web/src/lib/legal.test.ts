@@ -201,8 +201,16 @@ describe('pendingDecisions', () => {
 
   it('includes the ones that cannot be guessed', () => {
     const all = pendingDecisions().join(' ').toLowerCase()
-    expect(all).toContain('commercial registration number')
     expect(all).toContain('transfer mechanism')
+  })
+
+  /** Given by the owner on 9 November 2026. */
+  it('states the commercial registration number on both documents', () => {
+    for (const doc of [privacyPolicy(), termsOfService()]) {
+      const text = doc.sections.flatMap((section) => section.body).join(' ')
+      expect(text).toContain("Vardenia's commercial registration number is 1036217.")
+    }
+    expect(pendingDecisions().join(' ').toLowerCase()).not.toContain('registration number')
   })
 
   /**

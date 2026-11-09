@@ -50,22 +50,21 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-06'
+export const LEGAL_LAST_UPDATED = '2026-11-09'
 
 /**
  * Who runs the site, as both documents state it.
  *
- * Two lines, the settled one and the open one, for the reason given at the top
- * of the privacy policy's first section. The legal name and registered office
- * were given by the owner on 6 November 2026. The registration number was
- * answered as "Office number 01", which is the office unit and is already in
- * the address, so the commercial registration number is still open.
+ * The legal name and registered office were given by the owner on 6 November
+ * 2026, and the commercial registration number on 9 November 2026.
  */
+export const COMMERCIAL_REGISTRATION_NUMBER = '1036217'
+
 const whoRunsIt = (): string[] => [
   CONTACT.postalAddress
     ? `The site is run by Vardenia, whose registered office is at ${CONTACT.postalAddress}.`
     : TBD('the registered office address of Vardenia, which runs the site'),
-  TBD('the commercial registration number of Vardenia'),
+  `Vardenia's commercial registration number is ${COMMERCIAL_REGISTRATION_NUMBER}.`,
 ]
 
 /**
