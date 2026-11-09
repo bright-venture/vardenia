@@ -212,8 +212,15 @@ export function privacyPolicy(): LegalDocument {
           '- **Error records**: 90 days.',
           '- **Your account**: until you close it.',
           '- **Reviews**: while they are published, or until you ask us to take one down.',
-          '- **Monthly bills to businesses**: as long as Lebanese accounting law requires.',
-          TBD('the exact period Lebanese accounting law requires bills to be kept'),
+          /**
+           * Ten years: the period Lebanese commercial and tax law sets for a
+           * business's accounting records, settled by the owner on 9 November
+           * 2026. A bill line holds the booking reference, the day and the
+           * amounts (collections/Statements), never a guest's name, so keeping
+           * bills this long keeps nothing personal beyond the booking's own
+           * 12 months.
+           */
+          "- **Monthly bills to businesses**: ten years, as Lebanese law requires for a business's accounting records. A bill lists each visit by its booking reference, date and amount, never by a guest's name.",
         ],
       },
 

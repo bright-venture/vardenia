@@ -196,7 +196,21 @@ describe('pendingDecisions', () => {
     const all = pendingDecisions().join(' ').toLowerCase()
     expect(all).toContain('commercial registration number')
     expect(all).toContain('transfer mechanism')
-    expect(all).toContain('accounting law')
+  })
+
+  /**
+   * Bills are kept ten years, the period Lebanese law sets for accounting
+   * records (settled 9 November 2026), and a bill names no guest, so that
+   * length keeps nothing personal past a booking's 12 months.
+   */
+  it('keeps bills ten years, without guest names', () => {
+    const lines = privacyPolicy()
+      .sections.flatMap((section) => section.body)
+      .join(' ')
+      .toLowerCase()
+    expect(lines).toContain('monthly bills to businesses**: ten years')
+    expect(lines).toContain("never by a guest's name")
+    expect(pendingDecisions().join(' ').toLowerCase()).not.toContain('accounting law')
   })
 
   /** Answered by the owner on 6 November 2026; none of these may come back as open. */
@@ -209,6 +223,7 @@ describe('pendingDecisions', () => {
       'limitation of liability',
       'naming those suppliers',
       'where the business terms live',
+      'accounting law',
     ])
       expect(all).not.toContain(settled)
   })
