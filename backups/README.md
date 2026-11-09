@@ -119,16 +119,22 @@ It reads `.env.prod` and writes to `Desktop\Vardenia\backups\weekly`, next to th
 repo and never inside it: it refuses a folder inside the repository, because this
 folder is committed and the copy holds guests, bookings and receipts.
 
-### Encrypted, with the key kept elsewhere
+### Encrypted, with the key in its own folder
 
 Since 9 November 2026 every table and every file is encrypted as it is written
-(`apps/web/src/backup/crypto.ts`). The backup computer holds only the **public
-key**, `BACKUP_PUBLIC_KEY` in `.env.prod`, which can lock files and cannot open
-them. The **private key** opens them, and it is kept off this computer: on a USB
-stick and in a password manager, two copies, never beside the backup. A stolen
-or hacked backup computer then gives away nothing readable.
+(`apps/web/src/backup/crypto.ts`). The backup job uses only the **public key**,
+`BACKUP_PUBLIC_KEY` in `.env.prod`, which can lock files and cannot open them.
+The **private key** opens them. Vardenia keeps it on this computer, in its own
+folder, `Desktop\Vardenia\backup-key\vardenia-backup-private.pem`, apart from
+`Desktop\Vardenia\backups` (the owner's decision, 9 November 2026).
 
-**Lose the private key and no encrypted backup can be opened.** Keep both copies.
+What that protects: a copy of the backup folder on its own, or the backup disk
+on its own, is unreadable. What it does not: anyone with the whole computer has
+the key as well. Moving the key to a USB stick later changes nothing in the
+code; only `--key` points somewhere else.
+
+**Lose the private key and no encrypted backup can be opened.** Keep a second
+copy somewhere safe, away from this computer.
 
 The backup refuses to run without `BACKUP_PUBLIC_KEY`. The keys were made once with:
 

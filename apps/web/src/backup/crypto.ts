@@ -17,12 +17,13 @@ import {
  *
  * # Locked with one key, opened with another
  *
- * The computer that makes the backup keeps only the PUBLIC key, which can lock
- * a file and cannot open one. The PRIVATE key, the only thing that opens them,
- * lives somewhere else: a USB stick and a password manager. So a stolen or
- * compromised backup computer gives away nothing readable, which is the point
- * the lawyer made on 9 November 2026: a key kept beside the data it protects
- * protects nothing.
+ * The backup job uses only the PUBLIC key, which can lock a file and cannot
+ * open one. The PRIVATE key, the only thing that opens them, is a separate
+ * file. On 9 November 2026 the owner chose to keep it on the backup computer,
+ * in its own folder (Desktop\Vardenia\backup-key), rather than on a USB stick.
+ * So a copy of the backup folder alone, or the backup disk on its own, gives
+ * away nothing readable; the computer as a whole, key included, does. Moving
+ * the key elsewhere later needs no change here.
  *
  * # How a file is locked
  *
@@ -61,7 +62,7 @@ export function readPublicKey(value: string): KeyObject {
     : createPublicKey({ key: Buffer.from(text, 'base64'), format: 'der', type: 'spki' })
 }
 
-/** The private key from its PEM file, the one kept off the backup computer. */
+/** The private key from its PEM file, kept apart from the backups themselves. */
 export function readPrivateKey(pem: string): KeyObject {
   return createPrivateKey(pem)
 }
@@ -110,7 +111,7 @@ export function decryptBytes(locked: Uint8Array, privateKey: KeyObject): Buffer 
 
 /**
  * A new key pair: the public key as the one line `.env.prod` takes, and the
- * private key as a PEM file to keep off the backup computer.
+ * private key as a PEM file kept apart from the backups.
  */
 export function generateBackupKeys(): { publicKeyLine: string; privateKeyPem: string } {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: RSA_BITS })

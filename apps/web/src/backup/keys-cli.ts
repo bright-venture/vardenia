@@ -31,8 +31,9 @@ import { isInside, localObjectPath, type Manifest, type RemoteObject } from './w
  *   pnpm --filter @vardenia/web backup:keys encrypt-existing --key <private key file>
  *   pnpm --filter @vardenia/web backup:keys decrypt --key <private key file> --run 2026-11-09 --to <folder>
  *
- * keygen makes a new pair: the private key goes to the file named, which should
- * then leave this computer for a USB stick and a password manager; the public
+ * keygen makes a new pair: the private key goes to the file named, outside the
+ * repo and outside the backup folder (Vardenia keeps it in
+ * Desktop\Vardenia\backup-key, decided 9 November 2026); the public
  * key goes into the env file as BACKUP_PUBLIC_KEY, which is all the weekly
  * backup needs. It refuses to replace a key that is already set, because older
  * backups open only with the private key they were made with.
@@ -96,7 +97,7 @@ function keygen(argv: string[]) {
   const line = [
     '',
     '# The weekly backup is encrypted with this public key (apps/web/src/backup/crypto.ts).',
-    '# It can only lock files. The private key that opens them is kept off this computer.',
+    '# It can only lock files. The private key that opens them is a separate file, kept apart from the backups.',
     `BACKUP_PUBLIC_KEY=${keys.publicKeyLine}`,
     '',
   ].join('\n')
@@ -105,7 +106,7 @@ function keygen(argv: string[]) {
   const fingerprint = createHash('sha256').update(keys.publicKeyLine).digest('hex').slice(0, 16)
   console.log(`Private key written to ${target}`)
   console.log(`Public key added to ${env} (fingerprint ${fingerprint})`)
-  console.log('Copy the private key to a USB stick and a password manager, then delete it here.')
+  console.log('Keep the private key apart from the backups, and keep a second copy somewhere safe.')
   console.log('Without it, no backup made from now on can be opened.')
 }
 

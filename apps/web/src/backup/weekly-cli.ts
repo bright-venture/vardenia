@@ -436,7 +436,7 @@ async function main(): Promise<void> {
       console.log(`    ${b.skipped.length} with a key that cannot be stored`)
   }
   console.log(`Done: ${path.join(options.out, name)}`)
-  console.log('Encrypted: it opens only with the private key, which is kept off this computer.')
+  console.log('Encrypted: it opens only with the private key (Desktop\\Vardenia\\backup-key).')
 }
 
 main()

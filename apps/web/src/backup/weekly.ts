@@ -24,7 +24,7 @@ import path from 'node:path'
  *
  * Since 9 November 2026 every table and every object is locked with the public
  * key in BACKUP_PUBLIC_KEY as it is written, and carries `.enc`; only the
- * private key, kept off the backup computer, opens them (crypto.ts,
+ * private key, a separate file kept apart from the backups, opens them (crypto.ts,
  * keys-cli.ts). The manifest, the schema and the bucket listings stay plain:
  * they hold counts, column names and random file names, nothing personal.
  *

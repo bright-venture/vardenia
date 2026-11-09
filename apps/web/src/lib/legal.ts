@@ -205,7 +205,9 @@ export function privacyPolicy(): LegalDocument {
           /**
            * Settled with the owner on 9 November 2026. The weekly copy is
            * encrypted as it is written (backup/crypto.ts) and the private key
-           * that opens it is held by Vardenia alone, off the backup computer.
+           * that opens it is held by Vardenia alone. The sentence says who holds
+           * the key, not where: the owner chose to keep it on the backup
+           * computer, in its own folder (backups/README.md).
            */
           "When data leaves the European Union, we rely on the EU-US Data Privacy Framework where the supplier is certified under it, and otherwise on the European Commission's standard contractual clauses in our agreement with that supplier.",
           'Our weekly copy is encrypted before it is stored, and only Vardenia holds the key that opens it.',
