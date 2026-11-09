@@ -20,10 +20,14 @@ export const ScanEvents: CollectionConfig = {
   labels: { singular: 'QR scan', plural: 'QR scans' },
   admin: {
     useAsTitle: 'code',
-    defaultColumns: ['code', 'scannedAt', 'placement', 'city', 'platform'],
+    // The listing first: a code on its own means nothing to the team reading
+    // this (9 November 2026). Newest scan at the top.
+    defaultColumns: ['business', 'code', 'scannedAt', 'city', 'country', 'platform'],
     group: 'Reports',
-    description: 'Read-only. Written by the QR redirect endpoint.',
+    description:
+      'Every scan of a printed code, one by one, newest first. To see one listing only, use Filters, then Listing. For totals per listing: the Scans column in QR codes, the QR scans count on each listing (Activity tab), or the Scan report on the admin home page.',
   },
+  defaultSort: '-scannedAt',
   access: {
     read: isStaff,
     // Only the redirect route writes here, using local (server-side) API access.

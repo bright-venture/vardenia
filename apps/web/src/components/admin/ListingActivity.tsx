@@ -30,6 +30,7 @@ const KINDS: Kind[] = [
   { collection: 'statements', label: 'Bills', hint: 'Monthly commission bills' },
   { collection: 'closures', label: 'Closed dates', hint: 'When it is shut' },
   { collection: 'qr-codes', label: 'QR codes', hint: 'Its printed codes' },
+  { collection: 'scan-events', label: 'QR scans', hint: 'Every scan of its codes, and from where' },
 ]
 
 const listHref = (collection: string, id: string | number) =>
