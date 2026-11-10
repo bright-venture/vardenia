@@ -21,6 +21,21 @@ const subscribeReady = () => () => {}
 const clientReady = () => true
 const serverReady = () => false
 
+/**
+ * Phones get the still sentence, as with motion off. The words start invisible
+ * and fill in over a screen and a half of scrolling, which on a phone opened
+ * with a whole screen of empty navy that read as a broken page (10 November
+ * 2026). Same breakpoint as the rest of the home page.
+ */
+const PHONE = '(max-width: 700px)'
+const subscribePhone = (change: () => void) => {
+  const query = window.matchMedia(PHONE)
+  query.addEventListener('change', change)
+  return () => query.removeEventListener('change', change)
+}
+const clientPhone = () => window.matchMedia(PHONE).matches
+const serverPhone = () => false
+
 interface Segment {
   text: string
   /** Position among the words only, or -1 for spaces and punctuation. */
@@ -65,7 +80,8 @@ export function KineticType({
 }) {
   const [motion] = useJourneyMotion()
   const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady)
-  const disabled = !motion || !ready
+  const phone = useSyncExternalStore(subscribePhone, clientPhone, serverPhone)
+  const disabled = !motion || !ready || phone
   const ref = useRef<HTMLDivElement>(null)
   const progress = usePinProgress(ref, disabled)
 

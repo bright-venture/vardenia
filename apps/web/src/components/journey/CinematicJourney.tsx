@@ -899,13 +899,17 @@ export function CinematicJourney({
                   >
                     <div className="vd-postcard-front" inert={back}>
                       <Link href={directoryFor(p)} aria-label={name(p)}>
+                        {/*
+                          The picture from the start, held back by the browser's
+                          own lazy loading: the postcards are far below the first
+                          screen. Waiting for `pageReady` as the photographs above
+                          do left these blank grey on phones: in some browser
+                          states the picture never arrived, or arrived while the
+                          row was off screen and was never drawn (10 November 2026).
+                        */}
                         <img
-                          src={pageReady ? assets + p.image : undefined}
-                          srcSet={
-                            pageReady
-                              ? `${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`
-                              : undefined
-                          }
+                          src={assets + p.image}
+                          srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
                           sizes="(max-width:700px) calc(100vw - 72px), 31vw"
                           alt={p.alt}
                           width="1600"

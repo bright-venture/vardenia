@@ -293,7 +293,13 @@ export async function ListingFilters({
         only the regions that have listings keeps it short enough to wrap
         harmlessly, which is a bound on the content rather than on the box.
       */}
-      <div className="flex items-start gap-3">
+      {/*
+        Wraps on a phone: the regions take the first line, Open now and
+        Filters the second. On one line the regions box got about 100px at
+        375px, and "All of Lebanon" spilled over the Open now chip beside it
+        (10 November 2026).
+      */}
+      <div className="flex flex-wrap items-start gap-3 sm:flex-nowrap">
         {/*
           Two changes here, and it took a control run to tell which mattered.
 
@@ -312,7 +318,7 @@ export async function ListingFilters({
           control run kept the wrapping row and passed, which is what caught an
           earlier version of this comment being wrong about the cause.
         */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 basis-full sm:flex-1 sm:basis-0">
           <Row label={t('directory.governorate')}>
             {/*
               "All of Lebanon" carries the total, so the row adds up: the sum of

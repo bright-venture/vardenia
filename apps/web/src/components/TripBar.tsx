@@ -134,7 +134,9 @@ export async function TripBar({
           <input key={name} type="hidden" name={name} value={value} />
         ))}
 
-        <div>
+        {/* A line of its own on a phone: at half of 375px the date picker cut
+            its own format off ("mm/dd/yyy"). The button gets a full line too. */}
+        <div className="col-span-2 sm:col-span-1">
           <label className={LABEL} htmlFor="trip-date">
             {t(`directory.trip.${words.date}`)}
           </label>
@@ -199,7 +201,7 @@ export async function TripBar({
           />
         </div>
 
-        <button type="submit" className={`${PRIMARY_BUTTON} h-11 py-0`}>
+        <button type="submit" className={`${PRIMARY_BUTTON} col-span-2 h-11 py-0 sm:col-span-1`}>
           {t(`directory.trip.${words.apply}`)}
         </button>
       </form>

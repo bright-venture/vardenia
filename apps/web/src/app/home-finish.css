@@ -1767,3 +1767,30 @@ html[data-vd-motion='off'] .vd-home .vd-button {
   font-weight: 400;
   margin-block: 24px 18px;
 }
+
+/*
+ * Phone fixes, 10 November 2026.
+ *
+ * The journey's gold route and its pin run down a single phone column straight
+ * through the headings, the text and the buttons (the pin sat on "Stay by the
+ * sea"), so on phones they are hidden; the scroll code still measures them, so
+ * `visibility`, not `display`. The map outline behind the text is quieter. Each
+ * scene photograph takes the full column instead of a half-width collage, and
+ * loses the place name printed over it, which the caption underneath repeats.
+ */
+@media (max-width: 700px) {
+  .vd-home .vd-route,
+  .vd-home .vd-journey-pin {
+    visibility: hidden;
+  }
+  .vd-home .vd-landscape-map > svg {
+    opacity: 0.28;
+  }
+  .vd-home .vd-photo-city,
+  .vd-home .vd-photo-village {
+    grid-column: 1 / 7;
+  }
+  .vd-home .vd-scene-image .vd-coordinate-place {
+    display: none;
+  }
+}
