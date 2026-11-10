@@ -3,9 +3,7 @@ import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { useId, useState } from 'react'
 import { Link } from '../../i18n/routing'
-import { Coordinates } from '../journey/Coordinates'
 import { DESTINATIONS } from '../journey/destinations'
-import { useJourneyMotion } from '../journey/browser-state'
 
 /**
  * One row of a large header menu: a name in the display face, a line saying
@@ -13,8 +11,9 @@ import { useJourneyMotion } from '../journey/browser-state'
  * pointed at or focused.
  *
  * The photograph is either one of the journey's destinations, by index into
- * DESTINATIONS, shown with its coordinates, or a photograph of the row's own
- * (the magazine's spread), shown plain.
+ * DESTINATIONS, or a photograph of the row's own (the magazine's spread). Both
+ * are shown plain: the coordinates card the destinations used to carry was
+ * taken off on 10 November 2026.
  */
 export interface DiscoveryCategory {
   href: string
@@ -41,18 +40,15 @@ export function DiscoveryMenu({
   title,
   body,
   items,
-  arabic,
   footer,
 }: {
   title: string
   body: string
   items: DiscoveryCategory[]
-  arabic: boolean
   /** A link under the list, such as the whole directory. */
   footer?: { href: string; label: string }
 }) {
   const [active, setActive] = useState(0)
-  const [motion] = useJourneyMotion()
   // Three of these sit in the header at once, so the heading id is per menu.
   const headingId = useId()
   const item = items[active] ?? items[0]
@@ -97,14 +93,6 @@ export function DiscoveryMenu({
             data-whole={'whole' in photo && photo.whole ? 'true' : undefined}
           >
             <Image key={photo.src} src={photo.src} alt={photo.alt} fill sizes="520px" />
-            {place ? (
-              <Coordinates
-                key={place.id + '-coordinates'}
-                place={place}
-                enabled={motion}
-                label={arabic ? place.ar : place.name}
-              />
-            ) : null}
           </figure>
         ) : null}
       </div>

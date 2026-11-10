@@ -35,7 +35,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <DiscoveryMenu
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
-      arabic={locale === 'ar'}
       footer={{ href: '/directory', label: t('home.wholeDirectory') }}
       items={SECTIONS.map((section) => ({
         href: `/${section.path}`,
@@ -61,7 +60,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <DiscoveryMenu
       title={t('nav.magazineMenuTitle')}
       body={t('nav.magazineMenuBody')}
-      arabic={locale === 'ar'}
       items={[
         {
           href: '/magazine',
@@ -124,7 +122,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <DiscoveryMenu
       title={t('nav.aboutMenuTitle')}
       body={t('nav.aboutMenuBody')}
-      arabic={locale === 'ar'}
       items={aboutItems}
     />
   )
