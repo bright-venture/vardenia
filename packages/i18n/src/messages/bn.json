@@ -20,7 +20,13 @@
     "questions": "প্রশ্ন",
     "contact": "যোগাযোগ",
     "questionsNote": "সাধারণ প্রশ্ন, সোজা উত্তর",
-    "contactNote": "Vardenia টিমকে লিখুন"
+    "contactNote": "Vardenia টিমকে লিখুন",
+    "magazineMenuTitle": "লেবানন পড়ুন।",
+    "magazineMenuBody": "প্রতি বছর একটি ছাপা সংখ্যা, আর তার মাঝে অনলাইনে পড়ার গল্প।",
+    "magazineNote": "লেবাননের ছাপা গাইড",
+    "issuesNote": "সব সংখ্যা, অনলাইনে উল্টে দেখার জন্য",
+    "aboutMenuTitle": "Vardenia-র সঙ্গে পরিচিত হন।",
+    "aboutMenuBody": "গাইডটি কারা তৈরি করে, জায়গাগুলো কীভাবে বাছাই হয়, আর কীভাবে আমাদের সঙ্গে যোগাযোগ করবেন।"
   },
   "home": {
     "eyebrow": "লেবানন আবিষ্কার করুন",

@@ -20,7 +20,13 @@
     "questions": "Вопросы",
     "contact": "Контакты",
     "questionsNote": "Частые вопросы и простые ответы",
-    "contactNote": "Напишите команде Vardenia"
+    "contactNote": "Напишите команде Vardenia",
+    "magazineMenuTitle": "Читайте Ливан.",
+    "magazineMenuBody": "Печатный выпуск раз в год и истории на сайте между выпусками.",
+    "magazineNote": "Печатный путеводитель по Ливану",
+    "issuesNote": "Все выпуски, чтобы листать онлайн",
+    "aboutMenuTitle": "Знакомьтесь: Vardenia.",
+    "aboutMenuBody": "Кто делает путеводитель, как выбираются места и как с нами связаться."
   },
   "home": {
     "eyebrow": "Откройте Ливан",

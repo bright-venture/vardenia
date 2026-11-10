@@ -20,7 +20,13 @@
     "questions": "सवाल",
     "contact": "संपर्क",
     "questionsNote": "आम सवाल, सीधे जवाब",
-    "contactNote": "Vardenia टीम को लिखें"
+    "contactNote": "Vardenia टीम को लिखें",
+    "magazineMenuTitle": "लेबनान को पढ़ें।",
+    "magazineMenuBody": "हर साल एक छपा हुआ अंक, और बीच में ऑनलाइन पढ़ने के लिए कहानियाँ।",
+    "magazineNote": "लेबनान की छपी हुई गाइड",
+    "issuesNote": "सभी अंक, ऑनलाइन पलटने के लिए",
+    "aboutMenuTitle": "Vardenia से मिलिए।",
+    "aboutMenuBody": "गाइड कौन बनाता है, जगहें कैसे चुनी जाती हैं, और हमसे कैसे संपर्क करें।"
   },
   "home": {
     "eyebrow": "लेबनान खोजें",

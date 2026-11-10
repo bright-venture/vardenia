@@ -20,7 +20,13 @@
     "questions": "Preguntas",
     "contact": "Contacto",
     "questionsNote": "Las preguntas frecuentes, con respuestas claras",
-    "contactNote": "Escribe al equipo de Vardenia"
+    "contactNote": "Escribe al equipo de Vardenia",
+    "magazineMenuTitle": "Leer el Líbano.",
+    "magazineMenuBody": "Un número impreso cada año, e historias para leer en línea mientras tanto.",
+    "magazineNote": "La guía impresa del Líbano",
+    "issuesNote": "Todos los números, para hojear en línea",
+    "aboutMenuTitle": "Conoce Vardenia.",
+    "aboutMenuBody": "Quién hace la guía, cómo se eligen los lugares y cómo contactarnos."
   },
   "home": {
     "eyebrow": "Descubre el Líbano",

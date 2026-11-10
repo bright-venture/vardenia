@@ -20,7 +20,13 @@
     "questions": "Questions",
     "contact": "Contact",
     "questionsNote": "Common questions, answered plainly",
-    "contactNote": "Write to the Vardenia team"
+    "contactNote": "Write to the Vardenia team",
+    "magazineMenuTitle": "Read Lebanon.",
+    "magazineMenuBody": "A printed issue every year, and stories to read online in between.",
+    "magazineNote": "The printed guide to Lebanon",
+    "issuesNote": "Every edition, to page through online",
+    "aboutMenuTitle": "Meet Vardenia.",
+    "aboutMenuBody": "Who makes the guide, how places are chosen, and how to reach us."
   },
   "home": {
     "eyebrow": "Discover Lebanon",

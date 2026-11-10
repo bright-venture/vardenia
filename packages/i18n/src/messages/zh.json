@@ -20,7 +20,13 @@
     "questions": "常见问题",
     "contact": "联系",
     "questionsNote": "常见问题，直接解答",
-    "contactNote": "联系 Vardenia 团队"
+    "contactNote": "联系 Vardenia 团队",
+    "magazineMenuTitle": "阅读黎巴嫩。",
+    "magazineMenuBody": "每年一期印刷版，其间还有可在线阅读的故事。",
+    "magazineNote": "黎巴嫩印刷版指南",
+    "issuesNote": "历期杂志，可在线翻阅",
+    "aboutMenuTitle": "认识 Vardenia。",
+    "aboutMenuBody": "谁在制作这份指南、地点如何挑选，以及如何联系我们。"
   },
   "home": {
     "eyebrow": "发现黎巴嫩",
