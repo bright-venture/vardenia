@@ -1,4 +1,5 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { colors } from '@vardenia/tokens'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -11,6 +12,7 @@ import { WhatsAppButton } from '../../../components/WhatsAppButton'
 import { SavedProvider } from '../../../components/SavedProvider'
 import { getPathname } from '../../../i18n/routing'
 import { Analytics } from '../../../components/Analytics'
+import { ServiceWorker } from '../../../components/ServiceWorker'
 import { JsonLd } from '../../../components/JsonLd'
 import { isIndexingAllowed } from '../../../lib/indexing'
 import { organizationSchema } from '../../../lib/structured-data'
@@ -96,6 +98,13 @@ export async function generateMetadata({
   }
 }
 
+/**
+ * The colour a phone's browser paints its address bar, the same paper ground
+ * as the page and the home screen icon (app/manifest). Without it Chrome used
+ * its own grey bar above an ivory page.
+ */
+export const viewport: Viewport = { themeColor: colors.surface.base }
+
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))
 }
@@ -139,6 +148,7 @@ export default async function FrontendLayout({
         {/* Renders nothing unless the analytics variables are set, so local
             and preview builds stay out of the numbers. See lib/analytics. */}
         <Analytics />
+        <ServiceWorker />
 
         {/* Messages are inherited, not passed.
 

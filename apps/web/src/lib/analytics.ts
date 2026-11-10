@@ -143,3 +143,29 @@ export function beforeSendScript(): string {
     `return payload};`
   )
 }
+
+/**
+ * The tracker's own script tag, added when the window has loaded rather than
+ * written into the page, so it is fetched after the first screen's images
+ * instead of alongside them. The attributes are the ones the tag used to carry:
+ * Plausible reads data-domain, Umami data-website-id, and whichever is absent
+ * is left off. Values are JSON-encoded, so nothing in them can break out of the
+ * script.
+ */
+export function lazyTrackerScript(config: AnalyticsConfig): string {
+  const attributes: [string, string][] = [['data-before-send', BEFORE_SEND]]
+  if (config.domain) attributes.push(['data-domain', config.domain])
+  if (config.websiteId) attributes.push(['data-website-id', config.websiteId])
+  const sets = attributes
+    .map(([name, value]) => `s.setAttribute(${JSON.stringify(name)},${json(value)});`)
+    .join('')
+  return (
+    `addEventListener('load',function(){` +
+    `var s=document.createElement('script');s.defer=true;s.src=${json(config.src)};` +
+    sets +
+    `document.head.appendChild(s)},{once:true});`
+  )
+}
+
+/** JSON for inside a <script>: also escapes "<", so "</script>" cannot end it. */
+const json = (value: string) => JSON.stringify(value).replace(/</g, '\\u003c')

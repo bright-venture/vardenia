@@ -3,6 +3,7 @@ import {
   analyticsConfig,
   BEFORE_SEND,
   beforeSendScript,
+  lazyTrackerScript,
   isSecretUrl,
   redactSecretUrl,
 } from './analytics'
@@ -97,5 +98,23 @@ describe('pages whose address is a secret', () => {
       hook('event', { url: '/stay', referrer: 'https://vardenia.com/account/verify/abc123' }),
     ).toEqual({ url: '/stay', referrer: 'https://vardenia.com/account/verify/[token]' })
     expect(hook('event', { url: '/stay' })).toEqual({ url: '/stay' })
+  })
+})
+
+describe('lazyTrackerScript', () => {
+  const config = { src: 'https://cloud.umami.is/script.js', domain: null, websiteId: 'abc-123' }
+
+  it('adds the tracker only once the window has loaded, with its attributes', () => {
+    const code = lazyTrackerScript(config)
+    expect(code.startsWith("addEventListener('load',")).toBe(true)
+    expect(code).toContain('s.src="https://cloud.umami.is/script.js"')
+    expect(code).toContain(`s.setAttribute("data-before-send","${BEFORE_SEND}")`)
+    expect(code).toContain('s.setAttribute("data-website-id","abc-123")')
+    expect(code).not.toContain('data-domain')
+  })
+
+  it('cannot be broken out of by a value', () => {
+    const code = lazyTrackerScript({ ...config, websiteId: '</script><script>alert(1)' })
+    expect(code).not.toContain('</script>')
   })
 })

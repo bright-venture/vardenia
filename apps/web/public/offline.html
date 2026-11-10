@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#faf8f3" />
+    <meta name="robots" content="noindex" />
+    <title>Offline - Vardenia</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #faf8f3;
+        color: #111d2d;
+        font-family: Georgia, 'Times New Roman', serif;
+        text-align: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      main { max-width: 28rem; }
+      .mark { letter-spacing: 0.3em; font-size: 0.85rem; margin-bottom: 2rem; }
+      h1 { font-weight: 500; font-size: 1.6rem; margin: 0 0 0.75rem; }
+      p { margin: 0 0 1.5rem; line-height: 1.5; color: #4a5160; }
+      [lang='ar'] { font-family: Tahoma, Arial, sans-serif; }
+      button {
+        font: inherit;
+        background: #111d2d;
+        color: #faf8f3;
+        border: 0;
+        padding: 0.7rem 1.4rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark">VARDENIA</div>
+      <h1>You are offline</h1>
+      <p>This page needs a connection. Check your signal or Wi-Fi, then try again.</p>
+      <div lang="ar" dir="rtl">
+        <h1>أنت غير متصل بالإنترنت</h1>
+        <p>تحتاج هذه الصفحة إلى اتصال. تحقّق من الشبكة أو الواي فاي، ثم حاول مجدداً.</p>
+      </div>
+      <button type="button" onclick="location.reload()">Try again · حاول مجدداً</button>
+    </main>
+  </body>
+</html>

@@ -179,6 +179,13 @@
 # `stale-while-revalidate` lets the browser paint the old file immediately and
 # fetch the new one behind it, so the day the cache does expire costs nobody a
 # blank masthead.
+# The service worker must be re-checked on every visit, or a fix to it could
+# wait days to reach a phone that has the old one (apps/web/public/sw.js).
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
 [[headers]]
   for = "/_next/image*"
 

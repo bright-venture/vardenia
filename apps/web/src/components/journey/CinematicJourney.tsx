@@ -276,7 +276,12 @@ export function CinematicJourney({
     const observerSize = new ResizeObserver(resize)
     observerSize.observe(landscape)
     void document.fonts.ready.then(resize)
-    update()
+    // In the next frame rather than now: measuring forces a full layout, and
+    // doing it here put that layout inside the page's start-up work, the time
+    // a phone cannot respond to a tap. One frame later is soon enough: the page
+    // was already painted from the server, and at the top nothing this sets has
+    // moved yet.
+    schedule()
     return () => {
       cancelAnimationFrame(frame)
       observer.disconnect()
@@ -376,6 +381,27 @@ export function CinematicJourney({
              * largest thing on its first screen. The crop is that middle, 720x1200,
              * at half the weight. Same breakpoint as the phone cut of the film.
              */}
+            {/*
+             * Asked for at the very top of the page, before the stylesheets and
+             * fonts, each crop only where its <source> would choose it. React
+             * moves these links into <head>. The photograph is the largest
+             * thing on the first screen, and without this a phone started it
+             * almost two seconds in (Lighthouse, 10 November 2026).
+             */}
+            <link
+              rel="preload"
+              as="image"
+              href={assets + 'byblos-hero-m.webp'}
+              media="(max-width:700px)"
+              fetchPriority="high"
+            />
+            <link
+              rel="preload"
+              as="image"
+              href={assets + 'byblos-hero.webp'}
+              media="(min-width:701px)"
+              fetchPriority="high"
+            />
             <picture>
               <source media="(max-width:700px)" srcSet={assets + 'byblos-hero-m.webp'} />
               <img
