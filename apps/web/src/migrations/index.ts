@@ -56,6 +56,7 @@ import * as migration_20261106_071004_magazine_pdfs from './20261106_071004_maga
 import * as migration_20261106_131048_receipt_number from './20261106_131048_receipt_number'
 import * as migration_20261106_165517_signups_pause from './20261106_165517_signups_pause'
 import * as migration_20261109_072535_hidden_pages from './20261109_072535_hidden_pages'
+import * as migration_20261110_090000_drop_old_settings_tables from './20261110_090000_drop_old_settings_tables'
 
 export const migrations = [
   {
@@ -347,5 +348,10 @@ export const migrations = [
     up: migration_20261109_072535_hidden_pages.up,
     down: migration_20261109_072535_hidden_pages.down,
     name: '20261109_072535_hidden_pages',
+  },
+  {
+    up: migration_20261110_090000_drop_old_settings_tables.up,
+    down: migration_20261110_090000_drop_old_settings_tables.down,
+    name: '20261110_090000_drop_old_settings_tables',
   },
 ]
