@@ -1826,18 +1826,65 @@ html[data-vd-motion='off'] .vd-home .vd-button {
   html.vd-menu-open {
     overflow: hidden;
   }
-  /* The three lines become a cross while open. */
-  .vd-mobile-menu > summary > span[aria-hidden] > span {
-    transition: transform 250ms, opacity 150ms;
+  /*
+   * The phone header: the wordmark and the menu mark share one centre line.
+   * A touch screen gives every link a 44px minimum height (globals.css), and
+   * the wordmark, a block, sat at the top of that box, about 10px above the
+   * menu mark. Centred in it now.
+   */
+  .vd-header .vd-brand {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    /* Playfair's capitals sit a touch low in their line; this lifts their
+       middle onto the box's. */
+    padding-bottom: 2px;
   }
-  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(1) {
-    transform: translateY(4.5px) rotate(45deg);
+  /* In Arabic the wordmark is set in Amiri, whose capitals sit high. */
+  :lang(ar) .vd-header .vd-brand {
+    padding-top: 4.5px;
+    padding-bottom: 0;
   }
-  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(2) {
-    opacity: 0;
+  .vd-mobile-menu > summary {
+    margin-inline-end: -10px;
   }
-  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(3) {
-    transform: translateY(-4.5px) rotate(-45deg);
+  /* Two fine lines, the lower one shorter, ending flush at the inline end. */
+  .vd-menu-icon {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 9px;
+  }
+  .vd-menu-icon > span {
+    position: absolute;
+    inset-inline-end: 0;
+    display: block;
+    height: 2px;
+    background: currentColor;
+    transition:
+      transform 250ms var(--vd-ease, ease-out),
+      width 250ms var(--vd-ease, ease-out),
+      top 250ms var(--vd-ease, ease-out);
+  }
+  .vd-menu-icon > span:nth-child(1) {
+    top: 0;
+    width: 24px;
+  }
+  .vd-menu-icon > span:nth-child(2) {
+    top: 7px;
+    width: 15px;
+  }
+  /* Open: both lines meet in the middle at full width and cross. */
+  .vd-mobile-menu[open] .vd-menu-icon > span {
+    top: 3.5px;
+    width: 22px;
+    inset-inline-end: 1px;
+  }
+  .vd-mobile-menu[open] .vd-menu-icon > span:nth-child(1) {
+    transform: rotate(45deg);
+  }
+  .vd-mobile-menu[open] .vd-menu-icon > span:nth-child(2) {
+    transform: rotate(-45deg);
   }
 
   .vd-mobile-search {
@@ -1977,5 +2024,8 @@ html[data-vd-motion='off'] .vd-home .vd-button {
 @media (prefers-reduced-motion: reduce) {
   .vd-mobile-menu > nav.vd-mobile-sheet {
     animation: none;
+  }
+  .vd-menu-icon > span {
+    transition: none;
   }
 }

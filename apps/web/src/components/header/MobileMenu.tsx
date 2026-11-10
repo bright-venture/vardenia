@@ -45,12 +45,14 @@ export function MobileMenu({ label, children }: { label: string; children: React
     >
       <summary
         aria-label={label}
-        className="text-ink-700 flex cursor-pointer list-none items-center gap-2 text-sm"
+        className="text-ink-900 flex cursor-pointer list-none items-center text-sm"
       >
-        <span className="flex flex-col gap-[3px]" aria-hidden>
-          <span className="bg-ink-700 block h-[1.5px] w-5" />
-          <span className="bg-ink-700 block h-[1.5px] w-5" />
-          <span className="bg-ink-700 block h-[1.5px] w-5" />
+        {/* Two fine lines, the lower one shorter and set to the inline end,
+            drawn in the wordmark's ink; they cross into a close mark while the
+            menu is open (home-finish.css, .vd-menu-icon). */}
+        <span className="vd-menu-icon" aria-hidden>
+          <span />
+          <span />
         </span>
         <span className="sr-only">{label}</span>
       </summary>
