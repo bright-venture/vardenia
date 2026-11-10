@@ -151,7 +151,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
         <nav aria-label={t('footer.legal')}>
           <Link href="/legal/privacy">{t('footer.privacy')}</Link>
           <Link href="/legal/terms">{t('footer.terms')}</Link>
-          <Link href="/credits">{j('credits')}</Link>
+          <Link href="/credits">{j('creditsShort')}</Link>
         </nav>
       </div>
       <div className="vd-footer-settings">
