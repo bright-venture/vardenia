@@ -1,5 +1,7 @@
+import type { Locale } from '@vardenia/i18n'
 import { PLACEHOLDER, TBD, contactEmail } from './placeholder'
-import { CONTACT } from './contact'
+import { CONTACT, COMMERCIAL_REGISTRATION_NUMBER } from './contact'
+import { LEGAL_TRANSLATIONS } from './legal-translations'
 
 /**
  * The privacy policy and terms, as content rather than markup.
@@ -24,12 +26,20 @@ import { CONTACT } from './contact'
  * on a given day is then recoverable from git, which is the question that
  * actually gets asked when somebody disputes what they agreed to.
  *
- * # English governs
+ * # Translated, and English governs
  *
- * The site is bilingual and these are not, yet. A machine translation of a legal
- * document reads as authoritative and is not, and an Arabic reader is better
- * served by a clear note than by text nobody has checked. The Arabic pages say
- * so and link here.
+ * This file is the English original. Since 9 November 2026 both documents are
+ * also in the site's nine other languages (lib/legal-translations, one file per
+ * language), at the owner's request: an Arabic reader saw the terms in English
+ * with nothing saying why. Every translation opens with a note that it is a
+ * translation, that the English applies if the two ever differ, and a link to
+ * this text. They were written without a sworn translator and are worth a
+ * fluent reader's look, Arabic first.
+ *
+ * A change here must be made in every translation too. legal.test.ts compares
+ * each one with this file, section by section and line by line, so a line
+ * added or removed in English alone fails the build rather than leaving nine
+ * pages quietly out of date.
  */
 
 export interface LegalSection {
@@ -56,9 +66,10 @@ export const LEGAL_LAST_UPDATED = '2026-11-09'
  * Who runs the site, as both documents state it.
  *
  * The legal name and registered office were given by the owner on 6 November
- * 2026, and the commercial registration number on 9 November 2026.
+ * 2026, and the commercial registration number on 9 November 2026 (kept in
+ * lib/contact, so the translations can name it too).
  */
-export const COMMERCIAL_REGISTRATION_NUMBER = '1036217'
+export { COMMERCIAL_REGISTRATION_NUMBER } from './contact'
 
 const whoRunsIt = (): string[] => [
   CONTACT.postalAddress
@@ -85,7 +96,58 @@ export function pendingDecisions(): string[] {
     .map((line) => line.replace(/^- /, '').trim())
 }
 
-export function privacyPolicy(): LegalDocument {
+/**
+ * One language's edition of both documents, and the few words around them.
+ *
+ * English has one too, so the pages ask for a locale and never branch on it.
+ */
+export interface LegalEdition {
+  privacy: LegalDocument
+  terms: LegalDocument
+  /** For search results and link previews. */
+  privacyDescription: string
+  termsDescription: string
+  /** Before the date at the top: "Last updated". */
+  lastUpdated: string
+  /**
+   * Said once at the top of a translation: that it is one, and that the
+   * English applies if they differ. Null for English itself.
+   */
+  translationNote: string | null
+  /** The link to the English original under that note. */
+  readInEnglish: string | null
+}
+
+const ENGLISH: LegalEdition = {
+  get privacy() {
+    return englishPrivacyPolicy()
+  },
+  get terms() {
+    return englishTermsOfService()
+  },
+  privacyDescription: 'How Vardenia handles your information.',
+  termsDescription: 'The terms you agree to by using Vardenia.',
+  lastUpdated: 'Last updated',
+  translationNote: null,
+  readInEnglish: null,
+}
+
+/** Both documents and their surroundings, in the reader's language. */
+export function legalEdition(locale: Locale = 'en'): LegalEdition {
+  return locale === 'en' ? ENGLISH : LEGAL_TRANSLATIONS[locale]
+}
+
+/** The privacy policy in `locale`; English when none is given. */
+export function privacyPolicy(locale: Locale = 'en'): LegalDocument {
+  return legalEdition(locale).privacy
+}
+
+/** The terms of use in `locale`; English when none is given. */
+export function termsOfService(locale: Locale = 'en'): LegalDocument {
+  return legalEdition(locale).terms
+}
+
+function englishPrivacyPolicy(): LegalDocument {
   return {
     title: 'Privacy Policy',
     intro:
@@ -281,7 +343,7 @@ export function privacyPolicy(): LegalDocument {
   }
 }
 
-export function termsOfService(): LegalDocument {
+function englishTermsOfService(): LegalDocument {
   return {
     title: 'Terms of Use',
     intro:

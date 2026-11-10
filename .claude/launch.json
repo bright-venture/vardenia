@@ -7,6 +7,14 @@
       "runtimeArgs": ["--filter", "@vardenia/web", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "web-ungated",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@vardenia/web", "dev"],
+      "port": 3000,
+      "autoPort": true,
+      "env": { "COMING_SOON": "" }
     }
   ]
 }

@@ -1,10 +1,11 @@
+import NextLink from 'next/link'
 import { dirFor, type Locale } from '@vardenia/i18n'
-import { PLACEHOLDER, LEGAL_LAST_UPDATED, type LegalDocument } from '../lib/legal'
+import { PLACEHOLDER, LEGAL_LAST_UPDATED, legalEdition, type LegalDocument } from '../lib/legal'
 import { withEmphasis } from './emphasis'
 
 /**
- * The draft warning, in the reader's own language even though the document is
- * English: it is the one sentence on the page they most need to understand.
+ * The draft warning, in the reader's own language: it is the one sentence on
+ * the page they most need to understand.
  *
  * Arabic had it; the eight languages added later showed the English sentence.
  * Like the Arabic, these leave out the count the English gives, which would need
@@ -34,10 +35,13 @@ const DRAFT_NOTICE: Record<Exclude<Locale, 'en'>, string> = {
  * A banner at the top says the same thing once, plainly, so nobody has to scroll
  * to discover it.
  *
- * # Not localized
+ * # Translated, with the English governing
  *
- * See lib/legal. The English text governs; the Arabic pages say so and link
- * here. Machine-translated legal wording reads as authoritative and is not.
+ * Since 9 November 2026 each language has its own text (lib/legal-translations)
+ * and the page is laid out in that language's direction. A translation opens
+ * with a note that it is one, that the English applies if they differ, and a
+ * link to the English page. Until then every language showed the English text,
+ * which an Arabic reader took for a page nobody had translated.
  */
 
 /** `lines` is never empty - groupLines always seeds a group with one line. */
@@ -99,50 +103,50 @@ export function LegalDocumentView({
   document,
   locale,
   unresolved,
+  englishHref,
 }: {
   document: LegalDocument
   locale: Locale
   /** How many clauses are still marked TO CONFIRM. */
   unresolved: number
+  /** The English original of this document, linked from a translation. */
+  englishHref: string
 }) {
+  const edition = legalEdition(locale)
   /*
-   * Every language but English, not just Arabic. The document is English in all
-   * of them, so on each it is marked as English and laid out left to right. It
-   * was keyed on `=== 'ar'`, which left Urdu - also right to left - rendering the
-   * terms with every full stop on the wrong edge, and told a French screen reader
-   * to read English in a French voice.
+   * The page carries its own language and direction, so Arabic and Urdu read
+   * right to left and a screen reader uses the right voice. The layout sets
+   * them too; they are repeated here because this component used to force
+   * English, and a stale override is the kind of thing that survives a move.
    */
-  const foreign = locale !== 'en'
+  const translated = locale !== 'en'
 
   return (
-    /**
-     * Laid out left to right on every page but the English one, because the
-     * document itself is English. See ContentPage for the full reasoning: an
-     * English sentence in an RTL paragraph has its full stop moved to the left
-     * edge, which reads as a rendering fault rather than as an untranslated page.
-     *
-     * It matters more here than on the standing pages. These are the terms
-     * somebody accepts, and a clause that looks garbled is a clause they cannot
-     * be said to have read.
-     */
     <main
-      dir={foreign ? 'ltr' : undefined}
-      lang={foreign ? 'en' : undefined}
+      dir={translated ? dirFor(locale) : undefined}
+      lang={translated ? locale : undefined}
       className="vd-legal-page mx-auto max-w-2xl px-6 py-16"
     >
       <h1 className="font-display text-ink-900 text-4xl">{document.title}</h1>
       <p className="text-ink-500 mt-3 text-xs uppercase tracking-widest">
-        Last updated {LEGAL_LAST_UPDATED}
+        {edition.lastUpdated} <bdi dir="ltr">{LEGAL_LAST_UPDATED}</bdi>
       </p>
+
+      {/* Said once, before the text: this is a translation, the English
+          governs, and here it is. */}
+      {edition.translationNote ? (
+        <p className="border-ink-100 bg-surface-raised text-ink-700 mt-8 border px-4 py-3 text-sm">
+          {edition.translationNote}{' '}
+          <NextLink href={englishHref} hrefLang="en" className="text-ink-900 underline">
+            {edition.readInEnglish}
+          </NextLink>
+        </p>
+      ) : null}
 
       {/* Said once, at the top, in plain words. A reader deciding whether to
           trust the site with an address deserves to know this is a draft. */}
       {unresolved > 0 ? (
-        <p
-          dir={foreign ? dirFor(locale) : undefined}
-          lang={foreign ? locale : undefined}
-          className="border-state-warning bg-gold-100 text-ink-900 mt-8 border px-4 py-3 text-sm"
-        >
+        <p className="border-state-warning bg-gold-100 text-ink-900 mt-8 border px-4 py-3 text-sm">
           {locale !== 'en'
             ? DRAFT_NOTICE[locale]
             : `This is a draft awaiting legal review. ${unresolved} point${unresolved === 1 ? '' : 's'} below ${unresolved === 1 ? 'is' : 'are'} not settled yet, and are marked where they appear.`}

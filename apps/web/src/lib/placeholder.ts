@@ -36,9 +36,9 @@ export const TBD = (what: string) => `${PLACEHOLDER} ${what}`
 /**
  * The locale these lines are being written into.
  *
- * Optional, and English when omitted, because the legal documents are still
- * English in both editions and call these without one. Only the standing pages
- * pass a locale.
+ * Optional, and English when omitted, which is what the English legal
+ * documents use. The standing pages and the translated legal documents pass a
+ * locale.
  *
  * The `TO CONFIRM` marker itself is deliberately NOT translated. It is a
  * signal to us rather than copy for a reader, `lib/legal` counts unresolved

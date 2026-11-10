@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { PLACEHOLDER, pendingDecisions, privacyPolicy, termsOfService } from './legal'
+import { LOCALES, type Locale } from '@vardenia/i18n'
+import {
+  COMMERCIAL_REGISTRATION_NUMBER,
+  PLACEHOLDER,
+  legalEdition,
+  pendingDecisions,
+  privacyPolicy,
+  termsOfService,
+  type LegalDocument,
+} from './legal'
+import { CONTACT } from './contact'
 import { groupLines } from '../components/LegalDocument'
 
 /**
@@ -282,5 +292,74 @@ describe('groupLines', () => {
   it('loses nothing, whatever the shape', () => {
     const body = ['a', '- b', `- ${PLACEHOLDER} c`, '- d', 'e', `${PLACEHOLDER} f`]
     expect(groupLines(body).flatMap((g) => g.lines)).toEqual(body)
+  })
+})
+
+/**
+ * Both documents in the nine other languages (9 November 2026).
+ *
+ * The English is the original and governs, so the failure worth catching is a
+ * translation that has drifted from it: a line added or removed in English
+ * alone, a list item that became a paragraph, an unsettled clause that is
+ * flagged in one language and silently settled in another, or the address,
+ * number or email missing where the English has them. Compared shape by shape,
+ * since nobody here can check the prose of nine languages in a test.
+ */
+describe('translated legal documents', () => {
+  const TRANSLATED = LOCALES.filter((locale): locale is Exclude<Locale, 'en'> => locale !== 'en')
+  const kinds: [string, (locale?: Locale) => LegalDocument][] = [
+    ['privacy policy', privacyPolicy],
+    ['terms', termsOfService],
+  ]
+  const text = (doc: LegalDocument) =>
+    [doc.title, doc.intro, ...doc.sections.flatMap((s) => [s.heading, ...s.body])].join(' | ')
+  const count = (haystack: string, needle: string) => haystack.split(needle).length - 1
+
+  for (const [name, build] of kinds) {
+    const english = build('en')
+
+    it.each(TRANSLATED)(`has the ${name} in %s, line for line with the English`, (locale) => {
+      const translated = build(locale)
+      expect(translated.title).not.toBe(english.title)
+      expect(translated.sections).toHaveLength(english.sections.length)
+
+      english.sections.forEach((section, i) => {
+        const other = translated.sections[i]!
+        expect(other.body, `section ${i} (${section.heading})`).toHaveLength(section.body.length)
+        section.body.forEach((line, j) => {
+          const theirs = other.body[j]!
+          const where = `section ${i} line ${j}`
+          expect(theirs.startsWith('- '), `${where}: list item`).toBe(line.startsWith('- '))
+          expect(theirs.includes(PLACEHOLDER), `${where}: unsettled`).toBe(
+            line.includes(PLACEHOLDER),
+          )
+          expect(count(theirs, '**'), `${where}: emphasis`).toBe(count(line, '**'))
+        })
+      })
+    })
+
+    it.each(TRANSLATED)(`names the same contact details in the %s ${name}`, (locale) => {
+      const translated = text(build(locale))
+      const original = text(english)
+      for (const detail of [
+        CONTACT.email!,
+        CONTACT.postalAddress!,
+        COMMERCIAL_REGISTRATION_NUMBER,
+      ]) {
+        expect(count(translated, detail), detail).toBe(count(original, detail))
+      }
+    })
+  }
+
+  it.each(TRANSLATED)('says in %s that the English governs, and links to it', (locale) => {
+    const edition = legalEdition(locale)
+    expect(edition.translationNote).toBeTruthy()
+    expect(edition.readInEnglish).toBeTruthy()
+    expect(edition.lastUpdated).not.toBe('Last updated')
+  })
+
+  it('needs no such note on the English original', () => {
+    expect(legalEdition('en').translationNote).toBeNull()
+    expect(privacyPolicy()).toEqual(privacyPolicy('en'))
   })
 })

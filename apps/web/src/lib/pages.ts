@@ -64,9 +64,8 @@ import { CONTACT } from './contact'
  * launch: these pages carry commercial commitments, and a mistranslated promise
  * is still a promise.
  *
- * The legal documents remain English in every edition, deliberately. See
- * lib/legal - an unreviewed translation of a contract reads as authoritative
- * and is not.
+ * The legal documents are translated too since 9 November 2026, in
+ * lib/legal-translations, each saying that the English governs. See lib/legal.
  */
 
 export type ContentPage = LegalDocument
@@ -497,17 +496,17 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
  *
  * It used to be "Is the site available in Arabic?" everywhere, which was the
  * right question for the only other language there was. A French reader should
- * be told about French. Every answer keeps the same two admissions, because
- * both are true in every language: the legal documents are English, and listing
- * descriptions are mostly Lebanese Arabic in Latin letters, the same in every
- * language for now.
+ * be told about French. Every answer says the same two things, because both
+ * are true in every language: the legal documents are translated but the
+ * English governs (since 9 November 2026), and listing descriptions are mostly
+ * Lebanese Arabic in Latin letters, the same in every language for now.
  */
 const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
   en: {
     heading: 'Is the site available in Arabic?',
     body: [
       'Yes. The site, your account, booking and these pages are in Arabic and eight other languages besides English, and the language switcher is in the header.',
-      'The legal documents are in English only for now: a machine translation of a contract reads as authoritative and is not.',
+      'The privacy policy and terms are in every language too. If a translation ever differs from the English, the English applies.',
       'Listing descriptions are mostly written in Lebanese Arabic in Latin letters, the way people text here, and for now they read the same in every language.',
     ],
   },
@@ -515,7 +514,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'هل الموقع متوفر بالعربية؟',
     body: [
       'نعم. الموقع وحسابك والحجز وهذه الصفحات كلها بالعربية، ومبدّل اللغة في أعلى الصفحة.',
-      'الوثائق القانونية بالإنجليزية وحدها في الوقت الحالي: الترجمة الآلية لعقد تبدو ذات حجية وهي ليست كذلك.',
+      'سياسة الخصوصية وشروط الاستخدام متوفرة أيضاً بكل اللغات. وإذا اختلفت الترجمة يوماً عن النص الإنجليزي، يُعتمد النص الإنجليزي.',
       'وأوصاف الأماكن مكتوبة في الغالب باللهجة اللبنانية بأحرف لاتينية، كما يُكتب في الرسائل هنا، وتظهر كما هي في كل اللغات حالياً.',
     ],
   },
@@ -523,7 +522,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'Le site est-il disponible en français ?',
     body: [
       "Oui. Le site, votre compte, la réservation et ces pages sont en français, et le sélecteur de langue se trouve dans l'en-tête.",
-      "Les documents juridiques ne sont pour l'instant qu'en anglais : la traduction automatique d'un contrat semble faire foi, et ce n'est pas le cas.",
+      "La politique de confidentialité et les conditions d'utilisation existent aussi dans toutes les langues. Si une traduction diffère un jour de l'anglais, c'est l'anglais qui s'applique.",
       "Les descriptions des lieux sont en grande partie écrites en arabe libanais en lettres latines, comme on l'écrit dans les messages ici, et s'affichent pour l'instant telles quelles dans toutes les langues.",
     ],
   },
@@ -531,7 +530,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: '¿El sitio está disponible en español?',
     body: [
       'Sí. El sitio, tu cuenta, las reservas y estas páginas están en español, y el selector de idioma está en la cabecera.',
-      'Los documentos legales están solo en inglés por ahora: la traducción automática de un contrato parece tener valor oficial, y no lo tiene.',
+      'La política de privacidad y las condiciones de uso también están en todos los idiomas. Si alguna traducción difiere del inglés, se aplica el inglés.',
       'Las descripciones de los lugares están escritas, en su mayoría, en árabe libanés con letras latinas, como se escribe en los mensajes aquí, y por ahora se muestran igual en todos los idiomas.',
     ],
   },
@@ -539,7 +538,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'O site está disponível em português?',
     body: [
       'Sim. O site, sua conta, as reservas e estas páginas estão em português, e o seletor de idioma fica no cabeçalho.',
-      'Os documentos jurídicos estão apenas em inglês por enquanto: a tradução automática de um contrato parece ter valor oficial, e não tem.',
+      'A política de privacidade e os termos de uso também estão em todos os idiomas. Se alguma tradução for diferente do inglês, vale o inglês.',
       'As descrições dos lugares estão escritas, na maior parte, em árabe libanês com letras latinas, como se escreve nas mensagens aqui, e por enquanto aparecem iguais em todos os idiomas.',
     ],
   },
@@ -547,7 +546,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'Есть ли сайт на русском?',
     body: [
       'Да. Сайт, ваш аккаунт, бронирование и эти страницы доступны на русском, а переключатель языка находится в шапке сайта.',
-      'Юридические документы пока только на английском: машинный перевод договора выглядит как имеющий силу, но ею не обладает.',
+      'Политика конфиденциальности и условия использования тоже есть на всех языках. Если перевод когда-либо расходится с английским текстом, применяется английский.',
       'Описания мест в основном написаны на ливанском арабском латинскими буквами, как здесь пишут в сообщениях, и пока одинаковы на всех языках.',
     ],
   },
@@ -555,7 +554,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: '网站有中文版吗？',
     body: [
       '有。网站、您的账户、预订流程和这些页面都有中文版，语言切换按钮在页面顶部。',
-      '法律文件目前只有英文版：合同的机器翻译看起来具有效力，但实际上并没有。',
+      '隐私政策和使用条款也有各语言版本。如译本与英文有任何不一致，以英文为准。',
       '商户介绍大多用拉丁字母书写的黎巴嫩阿拉伯语撰写，就像当地人发消息时那样，目前在所有语言版本中都显示相同的文字。',
     ],
   },
@@ -563,7 +562,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'क्या साइट हिंदी में उपलब्ध है?',
     body: [
       'हाँ। साइट, आपका खाता, बुकिंग और ये पेज हिंदी में हैं, और भाषा बदलने का विकल्प ऊपर हेडर में है।',
-      'क़ानूनी दस्तावेज़ फ़िलहाल सिर्फ़ अंग्रेज़ी में हैं: किसी अनुबंध का मशीनी अनुवाद आधिकारिक लगता है, पर होता नहीं।',
+      'गोपनीयता नीति और उपयोग की शर्तें भी हर भाषा में हैं। अगर कभी कोई अनुवाद अंग्रेज़ी से अलग हो, तो अंग्रेज़ी ही मान्य होगी।',
       'जगहों के विवरण ज़्यादातर लेबनानी अरबी में लैटिन अक्षरों में लिखे गए हैं, जैसे यहाँ संदेशों में लिखा जाता है, और फ़िलहाल हर भाषा में वैसे ही दिखते हैं।',
     ],
   },
@@ -571,7 +570,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'সাইটটি কি বাংলায় পাওয়া যায়?',
     body: [
       'হ্যাঁ। সাইট, আপনার অ্যাকাউন্ট, বুকিং আর এই পেজগুলো বাংলায় আছে, আর ভাষা বদলানোর বোতাম ওপরের হেডারে।',
-      'আইনি নথিগুলো আপাতত শুধু ইংরেজিতে: কোনো চুক্তির যন্ত্র-অনুবাদ দেখতে কর্তৃত্বপূর্ণ মনে হয়, কিন্তু তা নয়।',
+      'গোপনীয়তা নীতি ও ব্যবহারের শর্তাবলিও প্রতিটি ভাষায় আছে। কোনো অনুবাদ কখনো ইংরেজি থেকে আলাদা হলে, ইংরেজিটিই প্রযোজ্য।',
       'জায়গাগুলোর বিবরণ বেশিরভাগই লাতিন অক্ষরে লেবানিজ আরবিতে লেখা, যেভাবে এখানে মেসেজে লেখা হয়, আর আপাতত প্রতিটি ভাষায় একই রকম দেখায়।',
     ],
   },
@@ -579,7 +578,7 @@ const LANGUAGE_QUESTION: Record<Locale, { heading: string; body: string[] }> = {
     heading: 'کیا سائٹ اردو میں دستیاب ہے؟',
     body: [
       'جی ہاں۔ سائٹ، آپ کا اکاؤنٹ، بکنگ اور یہ صفحات اردو میں ہیں، اور زبان بدلنے کا بٹن اوپر ہیڈر میں ہے۔',
-      'قانونی دستاویزات فی الحال صرف انگریزی میں ہیں: کسی معاہدے کا مشینی ترجمہ مستند لگتا ہے، مگر ہوتا نہیں۔',
+      'رازداری کی پالیسی اور استعمال کی شرائط بھی ہر زبان میں موجود ہیں۔ اگر کبھی کوئی ترجمہ انگریزی سے مختلف ہو تو انگریزی ہی معتبر ہوگی۔',
       'مقامات کی تفصیل زیادہ تر لاطینی حروف میں لبنانی عربی میں لکھی گئی ہے، جیسے یہاں پیغامات میں لکھی جاتی ہے، اور فی الحال ہر زبان میں ویسی ہی دکھائی دیتی ہے۔',
     ],
   },

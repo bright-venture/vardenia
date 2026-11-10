@@ -42,6 +42,13 @@ export const CONTACT: ContactDetails = {
   postalAddress: 'Office 01, Qubic Center, Sin El Fil, Lebanon',
 }
 
+/**
+ * Vardenia's commercial registration number, given by the owner on 9 November
+ * 2026. Here rather than in lib/legal so the translated legal documents
+ * (lib/legal-translations) can name it without importing the English one.
+ */
+export const COMMERCIAL_REGISTRATION_NUMBER = '1036217'
+
 /** True once there is any way at all to reach us. */
 export const hasContactDetails = (): boolean =>
   Boolean(CONTACT.email || CONTACT.phone || CONTACT.postalAddress)

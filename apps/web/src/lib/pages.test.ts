@@ -165,16 +165,16 @@ describe('the FAQ against what booking really requires', () => {
    * had no locale parameter at all, so the promise rendered in English on
    * /ar/faq and refuted itself to precisely the reader who would check.
    *
-   * These pages are translated now, so the claim is narrower rather than gone:
-   * the legal documents are still English, and so are listing descriptions.
-   * Pinned as claims, not as wording.
+   * These pages are translated now, and so are the legal documents (9 November
+   * 2026), with the English governing. Listing descriptions are still mostly
+   * the same in every language. Pinned as claims, not as wording.
    */
   it('does not promise more than is translated', () => {
     expect(text()).not.toMatch(/every page has an arabic version/)
   })
 
-  it('still admits the legal documents are English', () => {
-    expect(text()).toMatch(/legal documents are in english/)
+  it('says the English legal text governs over a translation', () => {
+    expect(text()).toMatch(/if a translation ever differs from the english, the english applies/)
   })
 })
 
@@ -346,7 +346,7 @@ describe('the standing pages in every language', () => {
   })
 
   /** Still true in every language, and worth still saying in every language. */
-  it.each(OTHER_LOCALES)('still admits in %s that the legal documents are English', (locale) => {
+  it.each(OTHER_LOCALES)('still says in %s which legal text governs', (locale) => {
     const last = faqPage(locale).sections.at(-1)!
     expect(last.body).toHaveLength(3)
   })
