@@ -7,7 +7,7 @@ import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LinkArrow } from './LinkArrow'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
-import { AccountIconLink, AccountLink } from './AccountLink'
+import { AccountIconLink, AccountLink, AccountSheetLinks } from './AccountLink'
 import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
@@ -273,18 +273,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               </details>
             ) : null}
 
-            {/* The utilities together at the foot. Saved is always listed: on a
-                phone the menu is the way around, and a signed-out tap lands on
-                the sign-in prompt. Every link is padded to a thumb's size. */}
+            {/* The utilities together at the foot: Saved places and Language
+                as matching full-width rows, then the account. Saved is always
+                listed: on a phone the menu is the way around, and a signed-out
+                tap lands on the sign-in prompt. */}
             <div className="vd-mobile-foot">
-              <Link href="/account/saved" className="vd-mobile-saved">
-                <Heart aria-hidden className="size-4" strokeWidth={1.5} />
-                {t('nav.saved')}
+              <Link href="/account/saved" className="vd-sheet-row">
+                <Heart aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
+                <span className="vd-sheet-row-label">{t('nav.saved')}</span>
+                <LinkArrow />
               </Link>
-              <div className="vd-mobile-actions flex items-center justify-between gap-3 [&_a]:py-2.5">
-                <AccountLink />
-              </div>
               {languageSheet}
+              <AccountSheetLinks />
             </div>
           </nav>
         </MobileMenu>

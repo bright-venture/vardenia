@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import { CircleUserRound } from 'lucide-react'
+import { LinkArrow } from './LinkArrow'
 import { Link } from '../i18n/routing'
 import { sessionAudience } from '../lib/session-hint'
 
@@ -100,6 +101,42 @@ export function AccountIconLink() {
       <CircleUserRound aria-hidden className="size-6" strokeWidth={1.5} />
       {audience ? <span className="vd-header-account-dot" aria-hidden /> : null}
     </Link>
+  )
+}
+
+/**
+ * The account part of the phone menu's foot (10 November 2026). Signed out:
+ * Sign in and Create an account as two equal buttons, the second solid.
+ * Signed in: one row to the account or the partner pages, drawn like the
+ * Saved places and Language rows above it. Styled in home-finish.css.
+ */
+export function AccountSheetLinks() {
+  const t = useTranslations()
+  const audience = useSyncExternalStore(subscribe, sessionAudience, () => null)
+
+  if (audience) {
+    const target =
+      audience === 'customer'
+        ? { href: '/account', label: t('account.title') }
+        : { href: '/partner', label: t('account.bookings') }
+    return (
+      <Link href={target.href} className="vd-sheet-row">
+        <CircleUserRound aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
+        <span className="vd-sheet-row-label">{target.label}</span>
+        <LinkArrow />
+      </Link>
+    )
+  }
+
+  return (
+    <div className="vd-sheet-account">
+      <Link href="/account/login" className="vd-sheet-button">
+        {t('account.signIn')}
+      </Link>
+      <Link href="/account/signup" className="vd-sheet-button vd-sheet-button-solid">
+        {t('account.signUp')}
+      </Link>
+    </div>
   )
 }
 
