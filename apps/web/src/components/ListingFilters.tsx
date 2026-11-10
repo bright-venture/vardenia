@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server'
-import { AMENITIES, AMENITY_SLUGS, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core/attributes'
+import { AMENITIES, AMENITY_SLUGS } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
@@ -59,7 +59,6 @@ export interface FilterState {
   subcategory?: string
   governorate?: string
   district?: string
-  priceRange?: string
   amenities: string[]
   /** Show only places open right now, in Beirut time. Evaluated live, not cached. */
   openNow?: boolean
@@ -84,7 +83,6 @@ export function anyFilterApplied(state: FilterState): boolean {
     Boolean(state.subcategory) ||
     Boolean(state.governorate) ||
     Boolean(state.district) ||
-    Boolean(state.priceRange) ||
     state.amenities.length > 0 ||
     Boolean(state.openNow) ||
     Boolean(state.bookable)
@@ -111,7 +109,6 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
   if (next.subcategory) params.set('filter', next.subcategory)
   if (next.governorate) params.set('where', next.governorate)
   if (next.district) params.set('district', next.district)
-  if (next.priceRange) params.set('price', next.priceRange)
   if (next.amenities.length > 0) params.set('has', [...next.amenities].sort().join(','))
   if (next.openNow) params.set('open', '1')
   if (next.bookable) params.set('book', '1')
@@ -135,6 +132,7 @@ export interface RawFilterParams {
   filter?: string
   where?: string
   district?: string
+  /** An old price filter link: read and ignored, listings show no prices. */
   price?: string
   has?: string
   open?: string
@@ -171,7 +169,6 @@ export function parseFilterState(
     subcategory: subcategories.some((c) => c.slug === raw.filter) ? raw.filter : undefined,
     governorate,
     district: districts.some((d) => d.slug === raw.district) ? raw.district : undefined,
-    priceRange: PRICE_SLUGS.includes(raw.price ?? '') ? raw.price : undefined,
     amenities: (raw.has ?? '')
       .split(',')
       .filter((slug) => AMENITY_SLUGS.includes(slug))
@@ -267,8 +264,7 @@ export async function ListingFilters({
    */
   const shown = inlineRegions(counts, state.governorate)
 
-  const narrowed =
-    Boolean(state.priceRange) || state.amenities.length > 0 || Boolean(state.district)
+  const narrowed = state.amenities.length > 0 || Boolean(state.district)
 
   const anyFilter =
     Boolean(state.subcategory) ||
@@ -357,7 +353,7 @@ export async function ListingFilters({
           </FilterChip>
         </div>
 
-        {/* Region, district, price and the sixteen amenities live in here. The
+        {/* Region, district and the sixteen amenities live in here. The
             kind of place does not: it is the section page's own tile row. */}
         <FilterSheet base={base} state={state} locale={locale} counts={counts} />
       </div>
@@ -383,13 +379,6 @@ export async function ListingFilters({
           {state.district ? (
             <FilterChip href={href({ district: undefined })} active>
               {districtLabel(state.district, locale)}
-              <Cross />
-            </FilterChip>
-          ) : null}
-
-          {state.priceRange ? (
-            <FilterChip href={href({ priceRange: undefined })} active>
-              {PRICE_RANGES.find((p) => p.slug === state.priceRange)?.marks ?? state.priceRange}
               <Cross />
             </FilterChip>
           ) : null}

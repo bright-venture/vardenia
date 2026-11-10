@@ -25,7 +25,6 @@ describe('filterHref', () => {
     expect(filterHref(base, empty, { subcategory: 'boutique-hotels' })).toBe(
       '/stay?filter=boutique-hotels',
     )
-    expect(filterHref(base, empty, { priceRange: '3' })).toBe('/stay?price=3')
   })
 
   it('keeps the facets already chosen', () => {
@@ -52,8 +51,8 @@ describe('filterHref', () => {
 
   it('keeps the district when the governorate is unchanged', () => {
     const current = state({ governorate: 'keserwan', district: 'keserwan' })
-    expect(filterHref(base, current, { priceRange: '2' })).toBe(
-      '/stay?where=keserwan&district=keserwan&price=2',
+    expect(filterHref(base, current, { amenities: ['pool'] })).toBe(
+      '/stay?where=keserwan&district=keserwan&has=pool',
     )
   })
 
@@ -79,12 +78,11 @@ describe('filterHref', () => {
       subcategory: 'boutique-hotels',
       governorate: 'keserwan',
       district: 'keserwan',
-      priceRange: '4',
       amenities: ['pool'],
     })
 
     expect(filterHref(base, full, {})).toBe(
-      '/stay?filter=boutique-hotels&where=keserwan&district=keserwan&price=4&has=pool',
+      '/stay?filter=boutique-hotels&where=keserwan&district=keserwan&has=pool',
     )
   })
 
@@ -141,7 +139,6 @@ describe('parseFilterState', () => {
       subcategory: 'boutique-hotels',
       governorate: 'keserwan',
       district: 'keserwan',
-      priceRange: '3',
       amenities: ['pool', 'wifi'],
       openNow: false,
       bookable: false,
@@ -169,7 +166,8 @@ describe('parseFilterState', () => {
       children,
     )
     expect(state.governorate).toBeUndefined()
-    expect(state.priceRange).toBeUndefined()
+    // An old price link is ignored: listings show no prices.
+    expect(filterHref('/stay', state, {})).not.toContain('price')
     expect(state.amenities).toEqual(['pool'])
   })
 

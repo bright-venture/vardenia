@@ -53,7 +53,6 @@ export async function HomePlaces({
                 category={listing.category}
                 governorate={listing.governorate}
                 district={listing.district}
-                priceRange={listing.priceRange}
                 verified={listing.verified}
                 heroImage={listing.heroImage as never}
                 openingHours={listing.openingHours}

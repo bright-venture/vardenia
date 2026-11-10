@@ -15,7 +15,6 @@ const initial: FilterState = {
   subcategory: 'boutique-hotels',
   governorate: 'mount-lebanon',
   district: 'keserwan',
-  priceRange: '3',
   amenities: ['wifi'],
   openNow: true,
   bookable: true,
@@ -94,7 +93,7 @@ describe('directory filter sheet', () => {
     click(trigger())
     click(button(getMessages('en').filters.showResults))
     expect(push.mock.calls[0]![0]).toContain('where=mount-lebanon')
-    expect(push.mock.calls[0]![0]).toContain('price=3')
+    expect(push.mock.calls[0]![0]).not.toContain('price')
   })
 
   it('preserves the prior scroll lock when opening and closing', () => {
@@ -126,7 +125,6 @@ describe('directory filter sheet', () => {
       ...initial,
       governorate: 'beirut',
       district: undefined,
-      priceRange: '2',
       trip: { date: '2026-12-05', time: '18:00', nights: 4, party: 5 },
     }
     render('en', newer)
@@ -137,7 +135,7 @@ describe('directory filter sheet', () => {
     click(button(getMessages('en').filters.showResults))
     const params = new URL(push.mock.calls[0]![0], 'https://example.test').searchParams
     expect(params.get('where')).toBe('beirut')
-    expect(params.get('price')).toBe('2')
+    expect(params.get('price')).toBeNull()
     expect(params.get('date')).toBe('2026-12-05')
     expect(params.get('time')).toBe('18:00')
     expect(params.get('party')).toBe('5')

@@ -2,11 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { PRICE_RANGES, type Labelled } from '@vardenia/core/attributes'
+import { type Labelled } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import { amenityLabel, districtLabel, governorateLabel, priceBandLabel } from '../lib/labels'
+import { amenityLabel, districtLabel, governorateLabel } from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -14,8 +14,7 @@ import { displayAmenities, filterHref, type FilterState } from './ListingFilters
  *
  * # Why a sheet and not more rows
  *
- * There are eight governorates, twenty-eight districts, four price bands and
- * sixteen amenities. Laid out as rows of chips they were four wrapping lines
+ * There are eight governorates, twenty-eight districts and sixteen amenities. Laid out as rows of chips they were four wrapping lines
  * that pushed the actual listings off the screen, and on a 375px phone the
  * amenities row alone was six lines.
  *
@@ -53,7 +52,7 @@ import { displayAmenities, filterHref, type FilterState } from './ListingFilters
  *
  * The button does nothing, and the inline chips in the bar are still links, so
  * filtering by governorate keeps working - as does choosing a kind of place,
- * which is a row of links on the section page. Price and amenities become
+ * which is a row of links on the section page. Amenities become
  * unreachable, which is a degradation rather than a break. Making the full set
  * work without JavaScript means going back to the wrapping rows this replaced.
  */
@@ -190,11 +189,7 @@ export function FilterSheet({
    * own tile row rather than in here, so counting it would put a badge on a
    * button that cannot show the reader what it is counting.
    */
-  const count =
-    (state.governorate ? 1 : 0) +
-    (state.district ? 1 : 0) +
-    (state.priceRange ? 1 : 0) +
-    state.amenities.length
+  const count = (state.governorate ? 1 : 0) + (state.district ? 1 : 0) + state.amenities.length
 
   const set = (change: Partial<FilterState>) =>
     setDraft((current) => {
@@ -234,7 +229,6 @@ export function FilterSheet({
       ...current,
       governorate: undefined,
       district: undefined,
-      priceRange: undefined,
       amenities: [],
     }))
 
@@ -380,35 +374,6 @@ export function FilterSheet({
                 ))}
               </Group>
             ) : null}
-
-            {/* A segmented control rather than chips: the four bands are one
-                scale, and chips would imply they can be combined. */}
-            <Group title={t('price')}>
-              <div
-                className="border-ink-100 flex overflow-hidden border"
-                role="group"
-                aria-label={t('price')}
-              >
-                {PRICE_RANGES.map((p) => (
-                  <button
-                    key={p.slug}
-                    type="button"
-                    aria-pressed={draft.priceRange === p.slug}
-                    onClick={() =>
-                      set({ priceRange: draft.priceRange === p.slug ? undefined : p.slug })
-                    }
-                    className={`border-ink-100 border-e px-4 py-2 font-mono text-sm transition-colors last:border-e-0 ${
-                      draft.priceRange === p.slug
-                        ? 'bg-cedar-900 text-gold-300'
-                        : 'text-ink-700 hover:bg-surface-sunken'
-                    }`}
-                    title={priceBandLabel(p.slug, locale)}
-                  >
-                    {p.marks}
-                  </button>
-                ))}
-              </div>
-            </Group>
 
             <Group title={t('features')}>
               {displayAmenities.map((a) => (

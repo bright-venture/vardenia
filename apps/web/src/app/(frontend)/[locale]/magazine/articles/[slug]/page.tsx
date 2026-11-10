@@ -159,7 +159,6 @@ export default async function ArticlePage({ params }: Params) {
                   category={business.category as string | null}
                   governorate={business.governorate as string | null}
                   district={business.district as string | null}
-                  priceRange={business.priceRange as string | null}
                   verified={business.verified as boolean | null}
                   heroImage={business.heroImage as never}
                   locale={locale}

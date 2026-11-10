@@ -28,11 +28,9 @@ import { addDays, beirutDate, beirutInstant, dateLocale } from './beirut'
 
 export type BookingMode = 'nights' | 'sitting'
 
-/** One room type a stay can request: a stored label and an optional "from" price. */
+/** One room type a stay can request: the label stored on the booking. */
 export interface RoomTypeOption {
   label: string
-  /** Nightly "from" price in USD, or null when the listing set none. */
-  price: number | null
 }
 
 export interface BookingFormModel {
@@ -51,8 +49,7 @@ export interface BookingFormModel {
   /**
    * Room or unit types a stay may request. Nights mode only, and empty when the
    * listing configured none - the form then asks for no room type at all rather
-   * than showing a dropdown of one. `price` is the optional nightly "from" in
-   * USD; the label is what is stored on the booking.
+   * than showing a dropdown of one. The label is what is stored on the booking.
    */
   roomTypes: RoomTypeOption[]
   /** Minimum notice in minutes, for wording rather than for validation. */
@@ -155,11 +152,8 @@ export function bookingFormModel(
         ? (rules?.roomTypes ?? []).flatMap((entry) => {
             const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
             if (!label) return []
-            const price =
-              typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0
-                ? entry.price
-                : null
-            return [{ label, price }]
+            // No nightly rate: listings show no prices (decided 10 November 2026).
+            return [{ label }]
           })
         : [],
     leadTimeMinutes: config.leadTimeMinutes,

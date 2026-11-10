@@ -46,8 +46,9 @@ describe('listingSchema', () => {
     expect(geo.longitude).toBeCloseTo(35.593)
   })
 
-  it('renders the price band as currency marks', () => {
-    expect(listingSchema(LISTING, 'en').priceRange).toBe('$$$$')
+  /** Listings show no prices (decided 10 November 2026), not even to search engines. */
+  it('gives search engines no price band', () => {
+    expect(listingSchema(LISTING, 'en')).not.toHaveProperty('priceRange')
   })
 
   it('expresses a closed day rather than omitting it', () => {

@@ -124,15 +124,15 @@ describe('bookingFormModel', () => {
     expect(bookingFormModel(hotel, NOW).durationOptions).toEqual([])
   })
 
-  it('exposes room types with their price for a stay, and none for a sitting', () => {
+  it('exposes room types, without any price, for a stay, and none for a sitting', () => {
     const withRooms = {
       ...hotel,
       roomTypes: [{ label: 'Standard', price: 120 }, { label: 'Suite' }],
     }
+    // A nightly rate stored in the admin is never shown: listings show no prices.
     expect(bookingFormModel(withRooms, NOW).roomTypes).toEqual([
-      { label: 'Standard', price: 120 },
-      // No price set falls back to null rather than 0 or undefined.
-      { label: 'Suite', price: null },
+      { label: 'Standard' },
+      { label: 'Suite' },
     ])
     // A restaurant never asks for a room type, even if the field somehow carries one.
     expect(
@@ -140,12 +140,12 @@ describe('bookingFormModel', () => {
     ).toEqual([])
   })
 
-  it('drops blank labels and treats a non-positive price as none', () => {
+  it('drops blank labels', () => {
     const rules = {
       ...hotel,
       roomTypes: [{ label: '  Deluxe  ', price: 0 }, { label: '' }, { label: null }, {}],
     }
-    expect(bookingFormModel(rules, NOW).roomTypes).toEqual([{ label: 'Deluxe', price: null }])
+    expect(bookingFormModel(rules, NOW).roomTypes).toEqual([{ label: 'Deluxe' }])
   })
 })
 

@@ -466,9 +466,7 @@ function BookingFormFields({
             >
               {model.roomTypes.map((room) => (
                 <option key={room.label} value={room.label}>
-                  {room.price != null
-                    ? `${room.label} · $${room.price.toLocaleString('en-US')} / ${common('perNight')}`
-                    : room.label}
+                  {room.label}
                 </option>
               ))}
             </select>

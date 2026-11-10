@@ -64,8 +64,6 @@ export interface ListingQuery {
   governorate?: string
   /** One of the selected governorate's own districts. */
   district?: string
-  /** A stored band, '1' to '4'. */
-  priceRange?: string
   /** Every one of these, not any. See the query below. */
   amenities?: string[]
   /**
@@ -172,18 +170,11 @@ async function buildListingWhere(
     subcategory,
     governorate,
     district,
-    priceRange,
     amenities,
     bookable,
   }: Pick<
     ListingQuery,
-    | 'category'
-    | 'subcategory'
-    | 'governorate'
-    | 'district'
-    | 'priceRange'
-    | 'amenities'
-    | 'bookable'
+    'category' | 'subcategory' | 'governorate' | 'district' | 'amenities' | 'bookable'
   >,
 ): Promise<Where> {
   const where: Where = {}
@@ -201,7 +192,6 @@ async function buildListingWhere(
   if (subcategory) where.subcategories = { in: [subcategory] }
   if (governorate) where.governorate = { equals: governorate }
   if (district) where.district = { equals: district }
-  if (priceRange) where.priceRange = { equals: priceRange }
   // The same switch the Book panel reads; public, like the rest of the rules.
   if (bookable) where['booking.enabled'] = { equals: true }
 
@@ -393,7 +383,7 @@ async function readOpenNowCandidates(
  * # The same key space as the grid
  *
  * Category, kind and region only - the filters findListings already caches -
- * because those are bounded. District, price and amenities multiply the keys
+ * because those are bounded. District and amenities multiply the keys
  * past usefulness, and those views read directly, as the grid does.
  *
  * Keyed on locale, though no hours are translated: the set is in page order,
@@ -432,7 +422,6 @@ export async function findListings({
   subcategory,
   governorate,
   district,
-  priceRange,
   amenities,
   openNow,
   bookable,
@@ -447,7 +436,6 @@ export async function findListings({
       subcategory,
       governorate,
       district,
-      priceRange,
       amenities,
       bookable,
     })
@@ -466,7 +454,7 @@ export async function findListings({
        */
       const filters = { category, subcategory, governorate }
       const candidates =
-        !district && !priceRange && !amenities?.length && !bookable
+        !district && !amenities?.length && !bookable
           ? await openNowCandidates({ locale, ...filters })
           : await readOpenNowCandidates(payload, where, locale, filters)
 
@@ -528,7 +516,7 @@ export async function findListings({
    *
    * Past that the arithmetic turns: seven categories times fifty-one
    * subcategories times eight governorates times twenty-eight districts times
-   * four price bands times any combination of sixteen amenities is not a bounded
+   * any combination of sixteen amenities is not a bounded
    * set in any useful sense. Caching it would fill the store with entries nobody
    * asks for twice, and evict the ones everybody asks for constantly.
    *
@@ -537,7 +525,7 @@ export async function findListings({
    */
   // openNow is excluded too: its answer changes by the minute, so caching it for
   // an hour would show a closed place as open for most of that hour.
-  const cacheable = !district && !priceRange && !amenities?.length && !openNow
+  const cacheable = !district && !amenities?.length && !openNow
 
   if (!cacheable) return run()
 
@@ -625,8 +613,8 @@ async function countPublished(
  * # Scoped to the section, deliberately not to every filter
  *
  * The count answers "how many Stay listings are in Beirut", not "how many
- * survive all five of your current filters". That is a real limitation: with a
- * price band applied, a chip reading 12 can still yield 3.
+ * survive all of your current filters". That is a real limitation: with an
+ * amenity applied, a chip reading 12 can still yield 3.
  *
  * It is the right trade anyway. A zero is never wrong - a governorate with no
  * listings in this section has none under any additional filter either - so the

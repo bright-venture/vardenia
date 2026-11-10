@@ -7,7 +7,7 @@
  * a data problem visible on the page instead of silently blank.
  */
 
-import { AMENITIES, PRICE_RANGES } from '@vardenia/core/attributes'
+import { AMENITIES } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import { type SiteSection } from '@vardenia/core/sections'
 import { TAXONOMY } from '@vardenia/core/taxonomy'
@@ -16,7 +16,7 @@ import { sectionDescription, sectionLabel, taxonomyLabel, type Locale } from '@v
 /**
  * Regions keep English and Arabic only: a governorate or district is a proper
  * noun, so every other language falls back to the English label (Beirut stays
- * Beirut). Categories, subcategories, amenities and price bands go through
+ * Beirut). Categories, subcategories and amenities go through
  * `localize`, which additionally consults the taxonomy translations in
  * @vardenia/i18n for the other eight UI languages, falling back to core's
  * English when there is no override.
@@ -76,25 +76,6 @@ export function placeLabel(
 export function amenityLabel(slug: string, locale: Locale): string {
   const found = AMENITIES.find((a) => a.slug === slug)
   return found ? localize(found, locale) : slug
-}
-
-/** The word for a price band, e.g. "Upscale", in the reader's language. */
-export function priceBandLabel(slug: string | null | undefined, locale: Locale): string {
-  if (!slug) return ''
-  const found = PRICE_RANGES.find((p) => p.slug === String(slug))
-  return found ? localize(found, locale) : String(slug)
-}
-
-/** "$$$" for a stored band. Marks are not translated. */
-export function priceMarks(slug: string | null | undefined): string | null {
-  return PRICE_RANGES.find((p) => p.slug === String(slug))?.marks ?? null
-}
-
-/** Price band as repeated currency marks, e.g. 3 becomes "$$$". */
-export function priceLabel(range: string | number | null | undefined): string | null {
-  const value = typeof range === 'string' ? Number(range) : range
-  if (!value || Number.isNaN(value) || value < 1 || value > 4) return null
-  return '$'.repeat(value)
 }
 
 /**

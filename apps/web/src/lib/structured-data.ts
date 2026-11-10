@@ -1,5 +1,5 @@
 import type { Locale } from '@vardenia/i18n'
-import { districtLabel, governorateLabel, priceLabel } from './labels'
+import { districtLabel, governorateLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
 import { localizedPath } from './seo'
 import { listingSummary } from './plain-text'
@@ -12,8 +12,9 @@ const SITE_NAME = 'Vardenia'
  *
  * A crawler reading a listing page sees prose. This tells it, in a format it
  * parses directly, that the page is about a *hotel*, at *these coordinates*,
- * open *these hours*, in *this price band*. That is what produces the rich
- * results - hours, map pin, price - that make a directory listing worth having.
+ * open *these hours*. That is what produces the rich results - hours, map
+ * pin - that make a directory listing worth having. No price band: listings
+ * show no prices (decided 10 November 2026).
  *
  * Everything here is built from fields that already exist. Nothing is inferred
  * or invented: a listing with no address produces no `address` block rather than
@@ -122,7 +123,6 @@ export interface ListingForSchema {
   district?: string | null
   address?: string | null
   location?: unknown
-  priceRange?: string | number | null
   heroImage?: MediaField
   openingHours?: OpeningHour[] | null
 }
@@ -180,7 +180,6 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
     description: listingSummary(listing),
     url: listing.slug ? absolute(`/directory/${listing.slug}`, locale) : undefined,
     image: image?.src,
-    priceRange: priceLabel(listing.priceRange) ?? undefined,
     address: hasAddress ? address : undefined,
     geo:
       typeof lat === 'number' && typeof lng === 'number'

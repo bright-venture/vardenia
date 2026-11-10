@@ -21,7 +21,6 @@ import {
   amenityLabel,
   categoryLabel,
   placeLabel,
-  priceLabel,
   subcategoryLabel,
 } from '../../../../../lib/labels'
 import { isOpenNow } from '../../../../../lib/hours'
@@ -140,7 +139,6 @@ export default async function ListingPage({ params }: Params) {
   if (!listing) notFound()
 
   const t = await getTranslations('directory')
-  const tCommon = await getTranslations('common')
   const tReview = await getTranslations('review')
   /**
    * A real photograph, or nothing.
@@ -164,7 +162,6 @@ export default async function ListingPage({ params }: Params) {
   // The area, the address and both map links are hidden for now; see
   // lib/location-display. `place` is still computed for the related listings.
   const address = SHOW_LOCATION ? listing.address : null
-  const price = priceLabel(listing.priceRange as string | null)
   const open = isOpenNow(listing.openingHours as never)
 
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
@@ -199,7 +196,7 @@ export default async function ListingPage({ params }: Params) {
   const hours = Array.isArray(listing.openingHours) ? listing.openingHours : []
 
   /** Whether the ruled fact table has any rows, and whether it exists at all. */
-  const hasRows = Boolean(address) || subcategories.length > 0 || Boolean(price)
+  const hasRows = Boolean(address) || subcategories.length > 0
   const hasFacts = hasRows || hours.length > 0
 
   /**
@@ -220,18 +217,14 @@ export default async function ListingPage({ params }: Params) {
    * Blank labels a half-filled CMS row might carry are dropped.
    */
   const bookingGroup = (listing.booking ?? {}) as {
-    roomTypes?:
-      ({ label?: string | null; price?: number | null; note?: string | null } | null)[] | null
+    roomTypes?: ({ label?: string | null; note?: string | null } | null)[] | null
   }
   const roomTypes = (bookingGroup.roomTypes ?? []).flatMap((entry) => {
     const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
     if (!label) return []
     const note = typeof entry?.note === 'string' ? entry.note.trim() : ''
-    const price =
-      typeof entry?.price === 'number' && Number.isFinite(entry.price) && entry.price > 0
-        ? entry.price
-        : null
-    return [{ label, note, price }]
+    // No nightly rate: listings show no prices (decided 10 November 2026).
+    return [{ label, note }]
   })
 
   const reviews = await listingReviews(listing.id)
@@ -364,8 +357,6 @@ export default async function ListingPage({ params }: Params) {
             {point && <Coordinates place={{ lat: point[1], lon: point[0] }} enabled />}
 
             <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-              {price ? <span className="font-mono tabular-nums">{price}</span> : null}
-
               {/*
               A dot and a word, per the design. `state.success` rather than a
               brand colour: "open" is a status, and it should stay green if the
@@ -503,7 +494,7 @@ export default async function ListingPage({ params }: Params) {
             {/*
             The rule at the top belongs to the block, not to the first row, so
             it is only drawn when there is something under it. A listing with no
-            address, type or price - and there are some - would otherwise get a
+            address or type - and there are some - would otherwise get a
             stray line across the page.
           */}
             <div className={hasFacts ? 'border-ink-100 mt-12 border-t' : undefined}>
@@ -533,12 +524,6 @@ export default async function ListingPage({ params }: Params) {
                       {subcategories
                         .map((sub) => subcategoryLabel(sub, locale as Locale))
                         .join(' · ')}
-                    </Row>
-                  ) : null}
-
-                  {price ? (
-                    <Row label={t('price')}>
-                      <span className="font-mono tabular-nums">{price}</span>
                     </Row>
                   ) : null}
                 </dl>
@@ -625,13 +610,6 @@ export default async function ListingPage({ params }: Params) {
                     >
                       <span className="text-ink-900">{room.label}</span>
                       <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
-                        {room.price != null ? (
-                          // A starting nightly rate. The number is pinned dir=ltr so
-                          // the "$120 / night" does not reorder on an Arabic page.
-                          <span dir="ltr" className="text-ink-700 font-mono tabular-nums">
-                            ${room.price.toLocaleString('en-US')} / {tCommon('perNight')}
-                          </span>
-                        ) : null}
                         {room.note ? <span>{room.note}</span> : null}
                       </span>
                     </li>

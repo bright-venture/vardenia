@@ -2,7 +2,7 @@ import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
-import { categoryLabel, placeLabel, priceLabel } from '../lib/labels'
+import { categoryLabel, placeLabel } from '../lib/labels'
 import { SHOW_LOCATION } from '../lib/location-display'
 import { isOpenNow } from '../lib/hours'
 import { tripDayLabel, tripQuery, TRIP_DEFAULT_TIME, type Trip } from '../lib/trip'
@@ -28,7 +28,6 @@ interface Props {
   category?: string | null
   governorate?: string | null
   district?: string | null
-  priceRange?: string | number | null
   verified?: boolean | null
   /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
   signature?: boolean | null
@@ -71,9 +70,10 @@ interface Props {
  *
  * # What is on it, and why in this order
  *
- * Category, then name, then place, then price, then the marks. That is the
- * order somebody scanning a grid actually reads: what kind of thing, what it is
- * called, whether it is near them, whether they can afford it. The tier badges
+ * Category, then name, then place, then the marks. That is the order somebody
+ * scanning a grid actually reads: what kind of thing, what it is called,
+ * whether it is near them. No price: listings show none (decided 10 November
+ * 2026). The tier badges
  * sit on the image because they qualify the listing as a whole rather than any
  * one line of it.
  *
@@ -94,7 +94,6 @@ export function ListingCard({
   category,
   governorate,
   district,
-  priceRange,
   signature,
   heroImage,
   reference,
@@ -109,7 +108,6 @@ export function ListingCard({
 }: Props) {
   const t = useTranslations('directory')
   const booking = useTranslations('booking')
-  const price = priceLabel(priceRange)
   // Hidden for now; see lib/location-display.
   const place = SHOW_LOCATION ? placeLabel(governorate, district, locale) : null
   // Only ever shown when confidently open. `null` (no hours) and `false`
@@ -222,7 +220,6 @@ export function ListingCard({
         </h3>
 
         <div className="text-ink-500 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          {price ? <span className="font-mono tabular-nums">{price}</span> : null}
           {/* A status, so it takes the semantic green rather than a brand
               colour - the same call the listing page makes. */}
           {open ? (

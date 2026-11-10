@@ -94,14 +94,9 @@ describe('ListingCard', () => {
     expect(render({ governorate: 'keserwan', district: 'jbeil' })).not.toContain('vd-card-place')
   })
 
-  it('renders the price band as currency marks', () => {
-    expect(text(render({ priceRange: 3 }))).toContain('$$$')
-    expect(text(render({ priceRange: '4' }))).toContain('$$$$')
-  })
-
-  it('omits the price band rather than showing an empty one', () => {
-    expect(text(render({ priceRange: null }))).not.toContain('$')
-    expect(text(render({ priceRange: 0 }))).not.toContain('$')
+  /** Listings show no prices (decided 10 November 2026). */
+  it('shows no price on a card', () => {
+    expect(text(render({}))).not.toContain('$')
   })
 
   /**
