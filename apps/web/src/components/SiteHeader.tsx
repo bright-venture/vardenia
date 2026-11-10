@@ -7,7 +7,7 @@ import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LinkArrow } from './LinkArrow'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
-import { AccountLink } from './AccountLink'
+import { AccountIconLink, AccountLink } from './AccountLink'
 import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
@@ -182,6 +182,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         {/* Narrow: one disclosure holding the same links. Both navigations are
             in the markup and one is `display: none` at any width, which keeps it
             out of the accessibility tree as well as off the screen. */}
+        {/* Phone only: the account button beside the menu (home-finish.css). */}
+        <AccountIconLink />
         <MobileMenu label={t('nav.menu')}>
           {/*
            * The phone menu, rebuilt on 10 November 2026 after the pattern the

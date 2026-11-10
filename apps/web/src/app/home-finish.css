@@ -1801,6 +1801,11 @@ html[data-vd-motion='off'] .vd-home .vd-button {
   }
 }
 
+/* The account button is the phone header's; wider screens have the tools. */
+.vd-header .vd-header-account {
+  display: none;
+}
+
 /*
  * The phone menu, 10 November 2026: a full-screen sheet under the 70px phone
  * header, in the editorial pattern (see SiteHeader). Overrides the floating
@@ -1845,45 +1850,77 @@ html[data-vd-motion='off'] .vd-home .vd-button {
     padding-top: 4.5px;
     padding-bottom: 0;
   }
-  .vd-mobile-menu > summary {
-    margin-inline-end: -10px;
+  /*
+   * The right of the phone header, after the big booking sites: the account
+   * button, then the menu, both 44px targets drawn at the same 1.5px line.
+   */
+  .vd-header-inner {
+    grid-template-columns: 1fr auto auto;
+    column-gap: 4px;
   }
-  /* Two fine lines, the lower one shorter, ending flush at the inline end. */
+  .vd-header .vd-header-account {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    grid-column: 2;
+    grid-row: 1;
+    color: var(--vd-ink);
+  }
+  .vd-header-account-dot {
+    position: absolute;
+    top: 9px;
+    inset-inline-end: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--vd-gold);
+    box-shadow: 0 0 0 2px var(--vd-paper);
+  }
+  .vd-mobile-menu {
+    grid-column: 3;
+  }
+  .vd-mobile-menu > summary {
+    margin-inline-end: -12px;
+  }
+  /* Three even lines on whole-pixel rows, so all three render alike. */
   .vd-menu-icon {
     position: relative;
     display: block;
-    width: 24px;
-    height: 9px;
+    width: 20px;
+    height: 14px;
   }
   .vd-menu-icon > span {
     position: absolute;
-    inset-inline-end: 0;
+    inset-inline: 0;
     display: block;
-    height: 2px;
+    height: 1.5px;
     background: currentColor;
     transition:
       transform 250ms var(--vd-ease, ease-out),
-      width 250ms var(--vd-ease, ease-out),
+      opacity 150ms,
       top 250ms var(--vd-ease, ease-out);
   }
   .vd-menu-icon > span:nth-child(1) {
     top: 0;
-    width: 24px;
   }
   .vd-menu-icon > span:nth-child(2) {
-    top: 7px;
-    width: 15px;
+    top: 6px;
   }
-  /* Open: both lines meet in the middle at full width and cross. */
-  .vd-mobile-menu[open] .vd-menu-icon > span {
-    top: 3.5px;
-    width: 22px;
-    inset-inline-end: 1px;
+  .vd-menu-icon > span:nth-child(3) {
+    top: 12px;
   }
+  /* Open: the outer lines meet in the middle and cross; the middle one goes. */
   .vd-mobile-menu[open] .vd-menu-icon > span:nth-child(1) {
+    top: 6.25px;
     transform: rotate(45deg);
   }
   .vd-mobile-menu[open] .vd-menu-icon > span:nth-child(2) {
+    opacity: 0;
+  }
+  .vd-mobile-menu[open] .vd-menu-icon > span:nth-child(3) {
+    top: 6.25px;
     transform: rotate(-45deg);
   }
 
@@ -2027,5 +2064,28 @@ html[data-vd-motion='off'] .vd-home .vd-button {
   }
   .vd-menu-icon > span {
     transition: none;
+  }
+}
+
+/*
+ * The home page ends on the magazine, navy, and the footer is navy too. The
+ * magazine's lower torn edge opened onto paper and the footer's top margin
+ * showed that paper, so a pale band sat between two navy grounds (reported
+ * 10 November 2026). On the home page the two now run as one dark field; the
+ * tear stays wherever a paper section follows.
+ */
+.vd-home .vd-magazine::after {
+  display: none;
+}
+body:has(.vd-home .vd-magazine) .vd-footer {
+  margin-top: 0;
+}
+/* The tear's room is no longer needed under the issue link. */
+.vd-home .vd-magazine {
+  padding-bottom: 40px;
+}
+@media (max-width: 700px) {
+  .vd-home .vd-magazine {
+    padding-bottom: 64px;
   }
 }

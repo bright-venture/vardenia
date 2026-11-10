@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
+import { CircleUserRound } from 'lucide-react'
 import { Link } from '../i18n/routing'
 import { sessionAudience } from '../lib/session-hint'
 
@@ -75,6 +76,35 @@ export function AccountLink() {
     )
   }
 
+  return <SignedOutLinks />
+}
+
+/**
+ * The phone header's account button (10 November 2026, after the pattern of the
+ * big booking sites): a person in a circle beside the menu, so a way in is one
+ * tap away without opening the menu. It goes where AccountLink would, and
+ * names that place for a screen reader. A signed-in reader sees a small gold
+ * dot on it, the one sign the header gives that it knows them.
+ */
+export function AccountIconLink() {
+  const t = useTranslations()
+  const audience = useSyncExternalStore(subscribe, sessionAudience, () => null)
+  const target =
+    audience === 'customer'
+      ? { href: '/account', label: t('account.title') }
+      : audience === 'partner'
+        ? { href: '/partner', label: t('account.bookings') }
+        : { href: '/account/login', label: t('account.signIn') }
+  return (
+    <Link href={target.href} aria-label={target.label} className="vd-header-account">
+      <CircleUserRound aria-hidden className="size-6" strokeWidth={1.5} />
+      {audience ? <span className="vd-header-account-dot" aria-hidden /> : null}
+    </Link>
+  )
+}
+
+function SignedOutLinks() {
+  const t = useTranslations()
   return (
     <span className="flex items-center gap-3">
       <Link href="/account/login" className="text-ink-700 hover:text-ink-900 transition-colors">

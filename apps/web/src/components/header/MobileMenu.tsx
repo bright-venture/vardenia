@@ -47,10 +47,10 @@ export function MobileMenu({ label, children }: { label: string; children: React
         aria-label={label}
         className="text-ink-900 flex cursor-pointer list-none items-center text-sm"
       >
-        {/* Two fine lines, the lower one shorter and set to the inline end,
-            drawn in the wordmark's ink; they cross into a close mark while the
-            menu is open (home-finish.css, .vd-menu-icon). */}
+        {/* Three even lines in the wordmark's ink; the outer two cross into a
+            close mark while the menu is open (home-finish.css, .vd-menu-icon). */}
         <span className="vd-menu-icon" aria-hidden>
+          <span />
           <span />
           <span />
         </span>
