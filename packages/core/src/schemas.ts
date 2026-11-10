@@ -16,7 +16,7 @@
  * real anonymous requests. Not this file.
  */
 
-import { z } from 'zod'
+import { z } from './zod'
 import { LISTING_TIERS } from './tiers'
 import { QR_PLACEMENTS, QR_TARGET_TYPES } from './qr'
 

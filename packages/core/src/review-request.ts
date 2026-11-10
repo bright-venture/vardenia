@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from './zod'
 
 /**
  * What a customer sends to leave a review.

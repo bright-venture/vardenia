@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from './zod'
 import { LOCALE_CODES } from './locales'
 
 /**
