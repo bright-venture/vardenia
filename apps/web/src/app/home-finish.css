@@ -1527,13 +1527,56 @@
 .vd-home .vd-scan-actions .vd-print-hint {
   margin: 0 auto 12px;
 }
+/*
+ * Replay is a quiet outlined button in the shape of the page's buttons, the
+ * arrow turning back once on hover (10 November 2026; it was an underlined
+ * link with a separately underlined ↻ glyph).
+ */
 .vd-scan-replay {
-  font-size: 14px;
-  min-height: 44px;
-  padding-block: 10px;
   display: inline-flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid rgb(17 29 45 / 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--vd-ink);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--vd-ease),
+    background-color 160ms var(--vd-ease);
+}
+.vd-scan-replay:hover {
+  border-color: var(--vd-ink);
+  background: rgb(17 29 45 / 0.04);
+}
+.vd-scan-replay:focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: 3px;
+}
+.vd-scan-replay svg {
+  transition: transform 400ms var(--vd-ease);
+}
+.vd-scan-replay:hover svg {
+  transform: rotate(-360deg);
+}
+/*
+ * The section's content was pushed 80px down, out of the section and onto the
+ * magazine's torn edge, by the `top: 80px` of the sticky layout it no longer
+ * uses (it is position: relative here). Back in place, its own 72px padding
+ * now stands between the button and the navy.
+ */
+.vd-scan-process .vd-print-sticky {
+  top: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-scan-replay svg {
+    transition: none;
+  }
 }
 .vd-print-still .vd-print-steps li {
   opacity: 1;

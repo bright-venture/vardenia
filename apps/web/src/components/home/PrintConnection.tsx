@@ -3,6 +3,7 @@ import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { RotateCcw } from 'lucide-react'
 import { useJourneyMotion } from '../journey/browser-state'
 import { usePrintScan } from './usePrintScan'
 
@@ -179,7 +180,7 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
             {motion && (
               <button
                 type="button"
-                className="vd-text-link vd-scan-replay"
+                className="vd-scan-replay"
                 onClick={(event) => {
                   replay()
                   root.current?.querySelector('#vd-print-page')?.scrollIntoView({
@@ -188,7 +189,8 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
                   })
                 }}
               >
-                {t('scanReplay')} <span aria-hidden>↻</span>
+                <RotateCcw aria-hidden className="size-4" strokeWidth={1.5} />
+                {t('scanReplay')}
               </button>
             )}
           </div>
