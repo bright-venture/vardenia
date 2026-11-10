@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { availableActions, type BookingStatus } from '@vardenia/core'
+import { availableActions, type BookingStatus } from '@vardenia/core/booking'
 import { useRouter } from '../i18n/routing'
 import { NOTICE_ERROR, SECONDARY_BUTTON } from './formStyles'
 

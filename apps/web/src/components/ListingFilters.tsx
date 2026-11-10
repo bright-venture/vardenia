@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
-import { AMENITIES, AMENITY_SLUGS, GOVERNORATES, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core'
+import { AMENITIES, AMENITY_SLUGS, PRICE_RANGES, PRICE_SLUGS } from '@vardenia/core/attributes'
+import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'

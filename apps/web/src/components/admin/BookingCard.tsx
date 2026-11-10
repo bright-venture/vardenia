@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useField, useFormFields } from '@payloadcms/ui'
-import { availableActions, type BookingStatus } from '@vardenia/core'
+import { availableActions, type BookingStatus } from '@vardenia/core/booking'
 
 /**
  * A booking as staff need to read it, and the moves it can make next.

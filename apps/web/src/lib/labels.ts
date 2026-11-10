@@ -7,7 +7,10 @@
  * a data problem visible on the page instead of silently blank.
  */
 
-import { AMENITIES, GOVERNORATES, PRICE_RANGES, TAXONOMY, type SiteSection } from '@vardenia/core'
+import { AMENITIES, PRICE_RANGES } from '@vardenia/core/attributes'
+import { GOVERNORATES } from '@vardenia/core/regions'
+import { type SiteSection } from '@vardenia/core/sections'
+import { TAXONOMY } from '@vardenia/core/taxonomy'
 import { sectionDescription, sectionLabel, taxonomyLabel, type Locale } from '@vardenia/i18n'
 
 /**

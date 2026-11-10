@@ -1,4 +1,4 @@
-import { GOVERNORATES } from '@vardenia/core'
+import { GOVERNORATES } from '@vardenia/core/regions'
 export type Feeling =
   'all' | 'coast' | 'mountain' | 'heritage' | 'nature' | 'villages' | 'harbours' | 'sunsets'
 export const DESTINATIONS = [

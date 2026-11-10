@@ -15,7 +15,9 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: url('/journey/natural-paper-grain.webp') center/1450px;
+  /* A 15 KB copy of the grain, not the 82 KB one: at 5.5% opacity nobody can
+     tell them apart, and this overlay is on every page from the first byte. */
+  background: url('/journey/natural-paper-grain-soft.webp') center/1450px;
   opacity: 0.055;
   mix-blend-mode: multiply;
 }
@@ -312,7 +314,7 @@
   z-index: 7;
   pointer-events: none;
   background: var(--vd-paper) url('/journey/natural-paper-grain.webp') center/1450px;
-  mask-image: url('/journey/photographed-torn-edge.jpg');
+  mask-image: url('/journey/photographed-torn-edge.webp');
   mask-mode: luminance;
   mask-size: 100% 260%;
   mask-position: 50% 40%;
@@ -1211,7 +1213,7 @@
   height: 75px;
   pointer-events: none;
   background: var(--vd-paper);
-  mask-image: url('/journey/photographed-torn-edge.jpg');
+  mask-image: url('/journey/photographed-torn-edge.webp');
   mask-mode: luminance;
   mask-size: 100% 260%;
   mask-position: 50% 40%;

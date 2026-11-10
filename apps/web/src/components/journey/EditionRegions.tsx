@@ -1,4 +1,4 @@
-import { GOVERNORATES } from '@vardenia/core'
+import { GOVERNORATES } from '@vardenia/core/regions'
 import { Link } from '../../i18n/routing'
 import { LinkArrow } from '../LinkArrow'
 

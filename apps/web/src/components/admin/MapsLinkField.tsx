@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useField } from '@payloadcms/ui'
-import { isWithinLebanon } from '@vardenia/core'
+import { isWithinLebanon } from '@vardenia/core/regions'
 import { parseMapsLink } from '../../lib/maps-paste'
 
 /**

@@ -5,7 +5,7 @@ import {
   overlaps,
   type BookingStatus,
   type Interval,
-} from '@vardenia/core'
+} from '@vardenia/core/booking'
 import { isOpenNow, type OpeningHour } from './hours'
 import { addDays, beirutDate } from './beirut'
 import type { Locale } from '@vardenia/i18n'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useField, useFormFields } from '@payloadcms/ui'
-import { DISPUTE_DAYS, PAYMENT_DAYS } from '@vardenia/core'
+import { DISPUTE_DAYS, PAYMENT_DAYS } from '@vardenia/core/booking-fees'
 import { STATEMENT_MOVES } from '../../lib/statement-moves'
 
 /**

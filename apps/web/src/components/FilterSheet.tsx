@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { GOVERNORATES, PRICE_RANGES, type Labelled } from '@vardenia/core'
+import { PRICE_RANGES, type Labelled } from '@vardenia/core/attributes'
+import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
 import { amenityLabel, districtLabel, governorateLabel, priceBandLabel } from '../lib/labels'

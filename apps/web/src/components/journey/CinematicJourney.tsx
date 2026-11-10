@@ -1,9 +1,9 @@
 'use client'
 import { filmSources } from '../../lib/film'
 import { EditionRegions, editionLabel } from './EditionRegions'
-import { GOVERNORATES } from '@vardenia/core'
+import { GOVERNORATES } from '@vardenia/core/regions'
 import { LinkArrow } from '../LinkArrow'
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { startTransition, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../../i18n/routing'
@@ -85,13 +85,17 @@ export function CinematicJourney({
       const idle = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 200))
       idle(() => {
         if (cancelled) return
-        setPageReady(true)
-        setPoster(
-          assets +
-            (window.matchMedia('(max-width:700px)').matches
-              ? 'byblos-hero-m.webp'
-              : 'byblos-hero.webp'),
-        )
+        // A transition, so React may pause this re-render of the whole page
+        // to answer a tap: it switches on photographs, not anything urgent.
+        startTransition(() => {
+          setPageReady(true)
+          setPoster(
+            assets +
+              (window.matchMedia('(max-width:700px)').matches
+                ? 'byblos-hero-m.webp'
+                : 'byblos-hero.webp'),
+          )
+        })
       })
     }
     if (document.readyState === 'complete') ready()

@@ -3,13 +3,12 @@
 import { useField, useFormFields } from '@payloadcms/ui'
 import {
   attendanceMismatch,
-  billableAmount,
-  type BaseSource,
   type AttendanceMismatch,
   type AttendanceVerdict,
-  type BookingStatus,
   type GuestAnswer,
-} from '@vardenia/core'
+} from '@vardenia/core/attendance'
+import { type BookingStatus } from '@vardenia/core/booking'
+import { billableAmount, type BaseSource } from '@vardenia/core/booking-fees'
 import { ReceiptPreview, useReceipt } from './ReceiptPreview'
 
 /**

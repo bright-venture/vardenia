@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { signupSchema } from '@vardenia/core'
+import { signupSchema } from '@vardenia/core/booking-request'
 
 /**
  * How strong the password somebody is typing actually is.
