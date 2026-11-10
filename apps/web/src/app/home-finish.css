@@ -858,6 +858,12 @@
 .vd-discovery-photo img {
   object-fit: cover;
 }
+/* A cut-out object, the magazine spread: whole and centred on the paper. The
+   file carries its own soft shadow, so none is added here. */
+.vd-discovery-photo[data-whole='true'] img {
+  object-fit: contain;
+  padding: 8px 4px 20px;
+}
 .vd-discovery-photo .vd-coordinates {
   z-index: 1;
   background: rgb(17 29 45 / 0.85);
@@ -1792,5 +1798,184 @@ html[data-vd-motion='off'] .vd-home .vd-button {
   }
   .vd-home .vd-scene-image .vd-coordinate-place {
     display: none;
+  }
+}
+
+/*
+ * The phone menu, 10 November 2026: a full-screen sheet under the 70px phone
+ * header, in the editorial pattern (see SiteHeader). Overrides the floating
+ * panel it replaces.
+ */
+@media (max-width: 700px) {
+  .vd-mobile-menu > nav.vd-mobile-sheet {
+    position: fixed;
+    top: 70px;
+    inset-inline: 0;
+    bottom: 0;
+    max-height: none;
+    margin: 0;
+    padding: 8px 24px calc(28px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--vd-paper);
+    border-top: 1px solid rgb(17 29 45 / 0.08);
+    box-shadow: none;
+    animation: vd-sheet-in 250ms var(--vd-ease, ease-out);
+  }
+  /* The page behind stays put while the menu is open (set by MobileMenu). */
+  html.vd-menu-open {
+    overflow: hidden;
+  }
+  /* The three lines become a cross while open. */
+  .vd-mobile-menu > summary > span[aria-hidden] > span {
+    transition: transform 250ms, opacity 150ms;
+  }
+  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(1) {
+    transform: translateY(4.5px) rotate(45deg);
+  }
+  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(2) {
+    opacity: 0;
+  }
+  .vd-mobile-menu[open] > summary > span[aria-hidden] > span:nth-child(3) {
+    transform: translateY(-4.5px) rotate(-45deg);
+  }
+
+  .vd-mobile-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    margin: 12px 0 28px;
+    padding: 0 16px;
+    background: #eeeae2;
+    color: var(--vd-ink);
+    font-size: 15px;
+  }
+  .vd-mobile-search > span {
+    color: rgb(17 29 45 / 0.68);
+  }
+  .vd-mobile-eyebrow {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgb(17 29 45 / 0.68);
+    margin: 0 0 4px;
+  }
+  .vd-mobile-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .vd-mobile-list > li + li {
+    border-top: 1px solid rgb(17 29 45 / 0.08);
+  }
+  .vd-mobile-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 0;
+    color: var(--vd-ink);
+  }
+  .vd-mobile-link strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .vd-mobile-link strong + span {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: rgb(17 29 45 / 0.7);
+  }
+  .vd-mobile-link-small strong {
+    font-size: 21px;
+  }
+  .vd-mobile-link > svg,
+  .vd-mobile-link > span:last-child:not(:first-child) {
+    flex-shrink: 0;
+  }
+  .vd-mobile-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 6px;
+    font-size: 15px;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+  .vd-mobile-fold {
+    border-top: 1px solid rgb(17 29 45 / 0.14);
+  }
+  .vd-mobile-group + .vd-mobile-fold {
+    margin-top: 20px;
+  }
+  .vd-mobile-fold > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    color: var(--vd-ink);
+  }
+  .vd-mobile-fold > summary::-webkit-details-marker {
+    display: none;
+  }
+  .vd-mobile-chevron {
+    width: 20px;
+    height: 20px;
+    transition: transform 250ms;
+  }
+  .vd-mobile-fold[open] .vd-mobile-chevron {
+    transform: rotate(180deg);
+  }
+  .vd-mobile-fold > .vd-mobile-list {
+    padding-bottom: 12px;
+  }
+  .vd-mobile-foot {
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid rgb(17 29 45 / 0.14);
+  }
+  .vd-mobile-saved {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    font-size: 15px;
+    color: var(--vd-ink);
+  }
+  .vd-mobile-foot .vd-mobile-actions {
+    padding: 4px 0 0;
+  }
+  :lang(ar) .vd-mobile-link strong,
+  :lang(ar) .vd-mobile-fold > summary,
+  :lang(ur) .vd-mobile-link strong,
+  :lang(ur) .vd-mobile-fold > summary {
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+}
+@keyframes vd-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-mobile-menu > nav.vd-mobile-sheet {
+    animation: none;
   }
 }

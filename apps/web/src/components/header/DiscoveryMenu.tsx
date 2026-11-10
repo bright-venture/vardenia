@@ -21,7 +21,12 @@ export interface DiscoveryCategory {
   name: string
   description: string
   destination?: number
-  photo?: { src: string; alt: string }
+  /**
+   * `whole` shows the picture uncropped on the panel's paper, for a cut-out
+   * object such as the magazine spread, whose page edges and text the
+   * photograph crop cut off.
+   */
+  photo?: { src: string; alt: string; whole?: boolean }
 }
 
 /**
@@ -87,8 +92,11 @@ export function DiscoveryMenu({
           ) : null}
         </nav>
         {photo ? (
-          <figure className="vd-discovery-photo">
-            <Image key={photo.src} src={photo.src} alt={photo.alt} fill sizes="420px" />
+          <figure
+            className="vd-discovery-photo"
+            data-whole={'whole' in photo && photo.whole ? 'true' : undefined}
+          >
+            <Image key={photo.src} src={photo.src} alt={photo.alt} fill sizes="520px" />
             {place ? (
               <Coordinates
                 key={place.id + '-coordinates'}

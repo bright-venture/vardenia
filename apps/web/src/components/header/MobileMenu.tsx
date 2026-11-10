@@ -24,12 +24,19 @@ export function MobileMenu({ label, children }: { label: string; children: React
     return () => {
       document.removeEventListener('pointerdown', outside)
       document.removeEventListener('keydown', escape)
+      document.documentElement.classList.remove('vd-menu-open')
     }
   }, [])
   return (
     <details
       ref={root}
       className="vd-mobile-menu"
+      // The menu is a full-screen sheet on a phone: the page behind it must not
+      // scroll under the reader's thumb. Cleared on every close, including the
+      // one that follows a navigation.
+      onToggle={(event) => {
+        document.documentElement.classList.toggle('vd-menu-open', event.currentTarget.open)
+      }}
       onClick={(event) => {
         if ((event.target as Element).closest('a')) {
           if (root.current) root.current.open = false

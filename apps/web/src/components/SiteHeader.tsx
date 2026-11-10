@@ -1,18 +1,18 @@
 import { MobileMenu } from './header/MobileMenu'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
-import { Heart } from 'lucide-react'
+import { ChevronDown, Heart } from 'lucide-react'
 import { SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
+import { LinkArrow } from './LinkArrow'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
 import { AccountLink } from './AccountLink'
 import { SavedNavLink } from './SavedNavLink'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
-import { MenuLink } from './header/MenuLink'
 import { DiscoveryMenu } from './header/DiscoveryMenu'
-import { BUSINESS_ICON, MAGAZINE_ICON, SEARCH_ICON, SECTION_ICONS } from './navIcons'
+import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 import { hiddenPages } from '../lib/hidden-pages'
 
@@ -55,6 +55,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const magazineSpread = {
     src: '/journey/vardenia-magazine-open-v1.webp',
     alt: 'The Vardenia magazine, open on a spread',
+    whole: true,
   }
   const magazineMenu = (
     <DiscoveryMenu
@@ -182,52 +183,101 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             in the markup and one is `display: none` at any width, which keeps it
             out of the accessibility tree as well as off the screen. */}
         <MobileMenu label={t('nav.menu')}>
-          <nav
-            aria-label={t('nav.directory')}
-            className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-4 max-h-[80vh] w-[19rem] overflow-y-auto border p-2 shadow-xl"
-          >
-            <div className="vd-mobile-discovery-heading">
-              <h2>{t('homeFinish.browseTitle')}</h2>
-              <p>{t('homeFinish.browseBody')}</p>
-            </div>
-            {SECTIONS.map((section) => (
-              <MenuLink
-                key={section.path}
-                href={`/${section.path}`}
-                title={sectionName(section, locale)}
-                description={sectionSummary(section, locale)}
-                icon={SECTION_ICONS[section.category]}
-              />
-            ))}
-            <MenuLink href="/directory" title={t('home.wholeDirectory')} icon={SEARCH_ICON} />
+          {/*
+           * The phone menu, rebuilt on 10 November 2026 after the pattern the
+           * editorial and luxury travel sites share: a full-screen sheet, the
+           * search first, the places as large serif names with a line each, the
+           * magazine and the company folded away until asked for, and the small
+           * utilities (saved, account, language) together at the foot. It used
+           * to be one long list of icon tiles, a different language from the
+           * desktop panels.
+           */}
+          <nav aria-label={t('nav.directory')} className="vd-mobile-sheet">
+            <Link href="/search" className="vd-mobile-search">
+              <SEARCH_ICON aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
+              <span>{t('home.searchPlaceholder')}</span>
+            </Link>
 
-            <span className="border-ink-100 my-2 block border-t" />
+            <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
+              <h2 id="vd-mobile-discover" className="vd-mobile-eyebrow">
+                {t('nav.discover')}
+              </h2>
+              <ul className="vd-mobile-list">
+                {SECTIONS.map((section) => (
+                  <li key={section.path}>
+                    <Link href={`/${section.path}`} className="vd-mobile-link">
+                      <span>
+                        <strong>{sectionName(section, locale)}</strong>
+                        <span>{sectionSummary(section, locale)}</span>
+                      </span>
+                      <LinkArrow />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/directory" className="vd-mobile-all">
+                {t('home.wholeDirectory')} <LinkArrow />
+              </Link>
+            </section>
 
-            <MenuLink href="/magazine" title={t('nav.magazine')} icon={MAGAZINE_ICON} />
-            <MenuLink href="/magazine/issues" title={t('footer.issues')} icon={MAGAZINE_ICON} />
-            <MenuLink href="/magazine/articles" title={t('footer.articles')} icon={MAGAZINE_ICON} />
-            <MenuLink href="/search" title={t('nav.search')} icon={SEARCH_ICON} />
-            {/* Always listed here as a destination: on a phone the menu is the
-                way around, and a signed-out tap lands on the sign-in prompt. */}
-            <MenuLink href="/account/saved" title={t('nav.saved')} icon={Heart} />
-            {shown('add-your-business') ? (
-              <MenuLink
-                href="/add-your-business"
-                title={t('home.addBusiness')}
-                icon={BUSINESS_ICON}
-              />
+            <details className="vd-mobile-fold">
+              <summary>
+                {t('nav.magazine')}
+                <ChevronDown aria-hidden className="vd-mobile-chevron" strokeWidth={1.5} />
+              </summary>
+              <ul className="vd-mobile-list">
+                {[
+                  ['/magazine', t('nav.magazine'), t('nav.magazineNote')],
+                  ['/magazine/issues', t('footer.issues'), t('nav.issuesNote')],
+                  ['/magazine/articles', t('footer.articles'), t('homeFinish.storiesBody')],
+                ].map(([href, name, note]) => (
+                  <li key={href}>
+                    <Link href={href!} className="vd-mobile-link vd-mobile-link-small">
+                      <span>
+                        <strong>{name}</strong>
+                        <span>{note}</span>
+                      </span>
+                      <LinkArrow />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </details>
+
+            {aboutItems.length > 0 ? (
+              <details className="vd-mobile-fold">
+                <summary>
+                  {t('nav.about')}
+                  <ChevronDown aria-hidden className="vd-mobile-chevron" strokeWidth={1.5} />
+                </summary>
+                <ul className="vd-mobile-list">
+                  {aboutItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="vd-mobile-link vd-mobile-link-small">
+                        <span>
+                          <strong>{item.name}</strong>
+                          <span>{item.description}</span>
+                        </span>
+                        <LinkArrow />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             ) : null}
 
-            <span className="border-ink-100 my-2 block border-t" />
-
-            {/* The account and language links are inline text elsewhere, which
-                on a phone gives a 24px target for something people press with a
-                thumb. `[&_a]` pads every anchor inside this row up to a size a
-                thumb can actually hit without enlarging them on desktop, where
-                they sit in a tight bar and a pointer is precise. */}
-            <div className="vd-mobile-actions flex items-center justify-between gap-3 p-2 [&_a]:px-2 [&_a]:py-2.5">
-              <AccountLink />
-              {language}
+            {/* The utilities together at the foot. Saved is always listed: on a
+                phone the menu is the way around, and a signed-out tap lands on
+                the sign-in prompt. Every link is padded to a thumb's size. */}
+            <div className="vd-mobile-foot">
+              <Link href="/account/saved" className="vd-mobile-saved">
+                <Heart aria-hidden className="size-4" strokeWidth={1.5} />
+                {t('nav.saved')}
+              </Link>
+              <div className="vd-mobile-actions flex items-center justify-between gap-3 [&_a]:py-2.5">
+                <AccountLink />
+                {language}
+              </div>
             </div>
           </nav>
         </MobileMenu>
