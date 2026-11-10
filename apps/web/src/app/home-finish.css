@@ -2154,13 +2154,30 @@ html[data-vd-motion='off'] .vd-home .vd-button {
 body:has(.vd-home .vd-magazine) .vd-footer {
   margin-top: 0;
 }
-/* The tear's room is no longer needed under the issue link. */
+/*
+ * One hairline marks where the magazine ends and the footer begins, inset to
+ * the gutters like the rule over the footer's last lines, with even room on
+ * either side of it.
+ */
 .vd-home .vd-magazine {
-  padding-bottom: 40px;
+  padding-bottom: 96px;
+}
+body:has(.vd-home .vd-magazine) .vd-footer {
+  padding-top: 0;
+}
+body:has(.vd-home .vd-magazine) .vd-footer::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-bottom: 96px;
+  background: rgb(250 248 243 / 0.16);
 }
 @media (max-width: 700px) {
   .vd-home .vd-magazine {
     padding-bottom: 64px;
+  }
+  body:has(.vd-home .vd-magazine) .vd-footer::before {
+    margin-bottom: 64px;
   }
 }
 
