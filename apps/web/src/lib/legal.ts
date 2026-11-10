@@ -60,7 +60,7 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-09'
+export const LEGAL_LAST_UPDATED = '2026-11-10'
 
 /**
  * Who runs the site, as both documents state it.
@@ -184,6 +184,7 @@ function englishPrivacyPolicy(): LegalDocument {
           '- **If you write a review**: what you wrote, your rating, and the first name and initial it is shown with.',
           '- **Your passport and saved places**: the places you have visited through a booking, which earn a stamp, and the places you have saved.',
           '- **If you scan a printed code**: the code, the time, your city and country, and whether you were on a phone or a computer. We do not record your precise location, and we do not store your IP address at all - it is hashed in memory to spot repeated scans and never written down.',
+          '- **If you write to us**, by email or through the WhatsApp button: your message, the address or number it came from, and our reply.',
           '- **If something breaks**: a record of the error, with email addresses, passwords and access tokens automatically removed before it is stored.',
           '- **When you read any page**: which pages were visited, which site the visit came from, the country it came from, and whether it was a phone or a computer. This is measured for us by an analytics provider, it sets no cookie, and it is counted rather than tied to you.',
           '- **Every visit** passes through the network that protects the site from attacks, which, like any network, sees the address you connect from. When you open an account, it also checks that you are a person rather than a program.',
@@ -221,7 +222,7 @@ function englishPrivacyPolicy(): LegalDocument {
           '- **Reading it automatically.** When you choose the photo, the total, the receipt number, the date and the name of the place can be read from it by an automated service, so you only have to check the figure. You can always correct the total before sending, and nothing is decided about you from it.',
           '- **Each receipt counts once.** The receipt number is read so that the same receipt cannot be sent twice for the same place. A receipt that has already been sent is refused.',
           '- **Who sees your answer.** The Vardenia team. If it disagrees with what the business recorded, we may tell the business that the visit is disputed while we look into it.',
-          '- **How long it is kept.** The receipt, what was read from it, and your answer are kept for 12 months after the visit.',
+          '- **How long it is kept.** The receipt, what was read from it, and the amount you gave are kept for 12 months after the visit. That you came stays with the visit, for your passport.',
         ],
       },
 
@@ -244,10 +245,13 @@ function englishPrivacyPolicy(): LegalDocument {
            * November 2026 that the pages do not name the suppliers. The list of
            * names is kept in this comment so a request for it can be answered:
            * Supabase (database, files), Netlify (hosting), Cloudflare (network,
-           * sign-up check), Resend (email), Umami (page visits) and Anthropic
-           * (reading receipts).
+           * sign-up check), Resend (email), Google Workspace (the contact@
+           * inbox, added 10 November 2026), Umami (page visits) and Anthropic
+           * (reading receipts). WhatsApp has its own line below: it is not our
+           * processor, it runs the conversation under its own policy.
            */
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site and measures how fast it loads, the service that sends our email, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site and measures how fast it loads, the service that sends our email, the service that holds our email inbox, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
+          '- **WhatsApp**, if you write to us through the WhatsApp button. The conversation passes through WhatsApp, which handles it under its own privacy policy.',
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],
       },
@@ -262,7 +266,7 @@ function englishPrivacyPolicy(): LegalDocument {
            * the figures are no longer said to stay in the EU. If the site moves
            * to an EU-only address, this can say so again.
            */
-          'Our database and the receipt files are hosted in the European Union, in Frankfurt. Our website host, our network provider, our email provider and the service that counts page visits may process data outside it, and a receipt read automatically is read in the United States.',
+          'Our database and the receipt files are hosted in the European Union, in Frankfurt. Our website host, our network provider, our email providers, the service that counts page visits and WhatsApp may process data outside it, and a receipt read automatically is read in the United States.',
           'Our database host keeps a daily backup for seven days. Each week we also keep a full copy of the database and of every photo and receipt on a computer we control, outside the European Union, so that nothing is lost if a supplier fails.',
           /**
            * Settled with the owner on 9 November 2026. The weekly copy is
@@ -280,8 +284,8 @@ function englishPrivacyPolicy(): LegalDocument {
         heading: 'How long we keep it',
         body: [
           'Only as long as it is needed for the reason we hold it.',
-          '- **Bookings**, including your notes: 12 months after the visit.',
-          '- **Receipts**, what was read from them, and your answer after a visit: 12 months after the visit.',
+          '- **Bookings**, including your notes: 12 months after the visit. A booking that became a visit is then cut down to the place, the date, the size of your party and that you came, so its stamp stays in your passport until you close your account.',
+          '- **Receipts**, what was read from them, and the amount you gave after a visit: 12 months after the visit.',
           '- **Records of printed-code scans**: 12 months.',
           '- **Error records**: 90 days.',
           '- **Your account**: until you close it.',
@@ -294,6 +298,7 @@ function englishPrivacyPolicy(): LegalDocument {
            * bills this long keeps nothing personal beyond the booking's own
            * 12 months.
            */
+          '- **Messages you send us** by email or on WhatsApp: as long as we need them to answer you and follow up.',
           "- **Monthly bills to businesses**: ten years, as Lebanese law requires for a business's accounting records. A bill lists each visit by its booking reference, date and amount, never by a guest's name.",
         ],
       },

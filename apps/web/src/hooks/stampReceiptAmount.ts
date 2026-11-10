@@ -5,6 +5,7 @@ import type {
   PayloadRequest,
 } from 'payload'
 import { receiptInDollars } from '@vardenia/core'
+import { RETENTION_CONTEXT } from '../lib/retention'
 
 /**
  * Keeps a booking's `receiptAmount` equal to its receipt's total, in dollars.
@@ -88,8 +89,19 @@ export const refreshBookingFromReceipt: CollectionAfterChangeHook = async ({
   return doc
 }
 
-/** A receipt removed: the booking stops billing on it. */
-export const refreshBookingAfterReceiptDelete: CollectionAfterDeleteHook = async ({ doc, req }) => {
+/**
+ * A receipt removed: the booking stops billing on it.
+ *
+ * Not when lib/retention removed it: that booking is a year old and is being
+ * cut down or deleted in the same breath, and re-reading it here would run the
+ * booking hooks, which can email the team about a "new" disagreement.
+ */
+export const refreshBookingAfterReceiptDelete: CollectionAfterDeleteHook = async ({
+  doc,
+  req,
+  context,
+}) => {
+  if (context?.[RETENTION_CONTEXT]) return doc
   await refreshBooking(req, (doc as { booking?: unknown }).booking)
   return doc
 }

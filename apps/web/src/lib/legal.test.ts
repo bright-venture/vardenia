@@ -197,7 +197,9 @@ describe('what the policy claims about the code', () => {
    */
   it('does not promise the page-visit figures stay in the EU', () => {
     expect(lines).not.toContain('page-visit figures are held in the european union')
-    expect(lines).toContain('the service that counts page visits may process data outside it')
+    expect(lines).toContain(
+      'the service that counts page visits and whatsapp may process data outside it',
+    )
     expect(lines).toContain('hosted in the european union, in frankfurt')
   })
 })
