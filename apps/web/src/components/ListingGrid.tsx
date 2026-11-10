@@ -76,6 +76,18 @@ const GRIDS: Record<GridKind, string> = {
   editorial: 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4 lg:gap-x-8',
   related: 'grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-3 lg:gap-x-8',
 }
+/**
+ * How wide a card's photo is in each grid, matching GRIDS above, so a phone
+ * downloads a photo for half its screen rather than all of it. Plate's default
+ * assumed one card per row on a phone, but every grid here has two, and a
+ * listing page's six nearby places came in at twice the size they are shown
+ * (Lighthouse, 10 November 2026). The editorial band keeps the default: its
+ * cards span different widths.
+ */
+const PHOTO_SIZES: Partial<Record<GridKind, string>> = {
+  directory: '(max-width: 1279px) 50vw, 33vw',
+  related: '(max-width: 1023px) 50vw, 33vw',
+}
 
 /** What each card contributes to the editorial layout, by position. */
 const EDITORIAL_SPANS: Record<number, string> = {
@@ -138,6 +150,7 @@ export function ListingGrid({
             heroImage={listing.heroImage as never}
             openingHours={listing.openingHours}
             priority={eager && index === 0}
+            sizes={PHOTO_SIZES[kind]}
             trip={trip}
             distanceKm={distances?.get(listing.id) ?? null}
             verdict={verdicts?.get(listing.id)}

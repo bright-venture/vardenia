@@ -39,6 +39,8 @@ interface Props {
   openingHours?: unknown
   /** Set on the first card above the fold so its image preloads. */
   priority?: boolean
+  /** The photo's display width, for the browser to pick a file. See ListingGrid. */
+  sizes?: string
   /** The guest's plans, carried onto the listing's link. See lib/trip. */
   trip?: Trip | null
   /** Whether this place could take those plans; only set for bookable places. */
@@ -98,6 +100,7 @@ export function ListingCard({
   reference,
   openingHours,
   priority = false,
+  sizes,
   trip,
   verdict,
   stay = false,
@@ -128,7 +131,7 @@ export function ListingCard({
     // card, and the anchor drops its own outline below so the two do not stack.
     <article className="vd-listing-card has-[a:focus-visible]:outline-gold-500 group relative has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
       <div className="relative">
-        <Plate image={heroImage} ratio="portrait" interactive priority={priority} />
+        <Plate image={heroImage} ratio="portrait" interactive priority={priority} sizes={sizes} />
 
         {/*
           The category moved onto the plate as a chip, and the tier badges sit
