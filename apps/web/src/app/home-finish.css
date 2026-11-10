@@ -2252,3 +2252,168 @@ body:has(.vd-home .vd-magazine) .vd-footer {
     transition: none;
   }
 }
+
+/*
+ * The language choice, 10 November 2026 (LanguageSwitcher). Desktop: a globe
+ * and the current language opening a two-column panel with the current one
+ * ticked. Phone menu: a full-width fold like the sheet's others, opening onto
+ * a grid of large targets. Square, like the rest of the site.
+ */
+.vd-lang-menu {
+  position: relative;
+}
+.vd-lang-menu > summary,
+.vd-lang-sheet > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.vd-lang-menu > summary::-webkit-details-marker,
+.vd-lang-sheet > summary::-webkit-details-marker {
+  display: none;
+}
+.vd-lang-menu > summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: inherit;
+  transition: opacity 160ms var(--vd-ease);
+}
+.vd-lang-menu > summary:hover {
+  opacity: 0.7;
+}
+.vd-lang-chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 250ms var(--vd-ease);
+}
+details[open] > summary .vd-lang-chevron {
+  transform: rotate(180deg);
+}
+.vd-lang-menu > summary:focus-visible,
+.vd-lang-sheet > summary:focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: 4px;
+}
+.vd-lang-menu > summary:focus:not(:focus-visible),
+.vd-lang-sheet > summary:focus:not(:focus-visible) {
+  outline: none;
+}
+.vd-lang-panel {
+  position: absolute;
+  top: calc(100% + 16px);
+  inset-inline-end: -12px;
+  z-index: 60;
+  width: 300px;
+  padding: 18px 14px 14px;
+  background: var(--vd-paper);
+  border: 1px solid rgb(17 29 45 / 0.1);
+  box-shadow: 0 18px 44px rgb(17 29 45 / 0.14);
+  animation: vd-lang-in 200ms var(--vd-ease);
+}
+.vd-lang-panel-title {
+  margin: 0 10px 10px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(17 29 45 / 0.68);
+}
+:lang(ar) .vd-lang-panel-title,
+:lang(ur) .vd-lang-panel-title {
+  letter-spacing: 0;
+  font-size: 13px;
+}
+.vd-lang-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vd-lang-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--vd-ink);
+  text-decoration: none;
+  transition: background-color 150ms var(--vd-ease);
+}
+a.vd-lang-option:hover {
+  background: rgb(17 29 45 / 0.05);
+}
+a.vd-lang-option:focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: -2px;
+}
+span.vd-lang-option {
+  font-weight: 600;
+  background: rgb(199 174 124 / 0.18);
+}
+.vd-lang-check {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+/* A slide only: a fade left the panel see-through over the hero video while
+   it ran. */
+@keyframes vd-lang-in {
+  from {
+    transform: translateY(-4px);
+  }
+}
+
+/* The phone menu's fold. */
+.vd-lang-sheet {
+  margin-top: 12px;
+  border-top: 1px solid rgb(17 29 45 / 0.14);
+}
+.vd-lang-sheet > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  font-size: 15px;
+  color: var(--vd-ink);
+}
+.vd-lang-sheet-label {
+  flex: 1;
+}
+.vd-lang-current {
+  font-size: 14px;
+  color: rgb(17 29 45 / 0.68);
+}
+.vd-lang-sheet .vd-lang-chevron {
+  width: 18px;
+  height: 18px;
+}
+.vd-lang-sheet .vd-lang-options {
+  gap: 8px;
+  padding: 2px 0 12px;
+}
+.vd-lang-sheet .vd-lang-option {
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: 15px;
+  border: 1px solid rgb(17 29 45 / 0.14);
+}
+.vd-lang-sheet a.vd-lang-option:active {
+  background: rgb(17 29 45 / 0.06);
+}
+.vd-lang-sheet span.vd-lang-option {
+  border-color: var(--vd-ink);
+  background: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-lang-panel {
+    animation: none;
+  }
+  .vd-lang-chevron {
+    transition: none;
+  }
+}

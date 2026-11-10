@@ -2,7 +2,9 @@
 
 import NextLink from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
+import { Check, ChevronDown, Globe } from 'lucide-react'
 import { LOCALES, LOCALE_META, type Locale } from '@vardenia/i18n'
 import { getPathname, usePathname } from '../i18n/routing'
 
@@ -49,46 +51,122 @@ import { getPathname, usePathname } from '../i18n/routing'
  * unbounded one would opt every page out of static rendering. This half has no
  * hooks that care, so it serves as the fallback.
  */
-export function LanguageSwitcherLinks({ current, search }: { current: Locale; search: string }) {
+/**
+ * Two presentations of the same links (10 November 2026):
+ *
+ * - `menu`, the desktop header's dropdown: a globe and the current language,
+ *   opening a panel that lists all ten at once, the current one ticked.
+ * - `sheet`, the phone menu: a full-width "Language" row in the style of the
+ *   sheet's other folds, opening in place onto a two-column grid of 48px
+ *   targets. It used to be the desktop dropdown dropped into the sheet: small
+ *   grey type in a box with its own scroll bar, under the reader's thumb.
+ *
+ * Styled in home-finish.css (.vd-lang-*).
+ */
+export function LanguageSwitcherLinks({
+  current,
+  search,
+  variant = 'menu',
+}: {
+  current: Locale
+  search: string
+  variant?: 'menu' | 'sheet'
+}) {
   const pathname = usePathname()
+  const t = useTranslations('nav')
+  const menu = useRef<HTMLDetailsElement>(null)
 
-  return (
-    <details className="relative text-xs">
-      <summary className="text-ink-700 hover:text-ink-900 flex cursor-pointer list-none items-center gap-1.5 transition-colors [&::-webkit-details-marker]:hidden">
-        <span>{LOCALE_META[current].label}</span>
-        <ChevronDown aria-hidden size={13} />
-      </summary>
+  // The dropdown closes on a tap outside it and on Escape, as the header's
+  // other menus do. The phone fold stays open until it is closed: it is part
+  // of the sheet, not floating over the page.
+  useEffect(() => {
+    if (variant !== 'menu') return
+    const outside = (event: PointerEvent) => {
+      if (menu.current?.open && !menu.current.contains(event.target as Node)) {
+        menu.current.open = false
+      }
+    }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && menu.current?.open) {
+        menu.current.open = false
+        menu.current.querySelector('summary')?.focus()
+      }
+    }
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [variant])
 
-      <ul className="border-ink-100 bg-surface-base absolute end-0 z-50 mt-2 max-h-80 w-44 overflow-auto border py-1 shadow-lg">
-        {LOCALES.map((locale) => {
-          const meta = LOCALE_META[locale]
+  const options = (
+    <ul className="vd-lang-options">
+      {LOCALES.map((locale) => {
+        const meta = LOCALE_META[locale]
 
-          if (locale === current) {
-            return (
-              <li key={locale}>
-                <span aria-current="true" className="text-ink-900 block px-3 py-1.5 font-semibold">
-                  {meta.label}
-                </span>
-              </li>
-            )
-          }
-
+        if (locale === current) {
           return (
             <li key={locale}>
-              <NextLink
-                // Not prefetched: one of these is always the page already open,
-                // and switching language is rare enough to wait for.
-                prefetch={false}
-                href={`${getPathname({ href: pathname, locale })}${search}`}
-                hrefLang={locale}
-                className="text-ink-500 hover:bg-surface-sunken hover:text-ink-900 block px-3 py-1.5 transition-colors"
-              >
+              <span aria-current="true" className="vd-lang-option">
                 {meta.label}
-              </NextLink>
+                <Check aria-hidden className="vd-lang-check" strokeWidth={2} />
+              </span>
             </li>
           )
-        })}
-      </ul>
+        }
+
+        return (
+          <li key={locale}>
+            <NextLink
+              // Not prefetched: one of these is always the page already open,
+              // and switching language is rare enough to wait for.
+              prefetch={false}
+              href={`${getPathname({ href: pathname, locale })}${search}`}
+              hrefLang={locale}
+              className="vd-lang-option"
+            >
+              {meta.label}
+            </NextLink>
+          </li>
+        )
+      })}
+    </ul>
+  )
+
+  if (variant === 'sheet') {
+    return (
+      <details
+        className="vd-lang-sheet"
+        // It opens at the foot of the sheet: bring the choices into view.
+        onToggle={(event) => {
+          if (event.currentTarget.open) {
+            event.currentTarget.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          }
+        }}
+      >
+        <summary>
+          <Globe aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
+          <span className="vd-lang-sheet-label">{t('language')}</span>
+          <span className="vd-lang-current">{LOCALE_META[current].label}</span>
+          <ChevronDown aria-hidden className="vd-lang-chevron" strokeWidth={1.5} />
+        </summary>
+        {options}
+      </details>
+    )
+  }
+
+  return (
+    <details ref={menu} className="vd-lang-menu">
+      <summary aria-label={`${t('language')}: ${LOCALE_META[current].label}`}>
+        <Globe aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
+        <span>{LOCALE_META[current].label}</span>
+        <ChevronDown aria-hidden className="vd-lang-chevron" strokeWidth={1.75} />
+      </summary>
+      <div className="vd-lang-panel">
+        <p className="vd-lang-panel-title">{t('language')}</p>
+        {options}
+      </div>
     </details>
   )
 }
@@ -101,9 +179,17 @@ export function LanguageSwitcherLinks({ current, search }: { current: Locale; se
  * page number. The path was preserved and the state on top of it was not, which
  * is the half of "keeps you where you were" nobody notices until they use it.
  */
-export function LanguageSwitcher({ current }: { current: Locale }) {
+export function LanguageSwitcher({
+  current,
+  variant,
+}: {
+  current: Locale
+  variant?: 'menu' | 'sheet'
+}) {
   const params = useSearchParams()
   const query = params.toString()
 
-  return <LanguageSwitcherLinks current={current} search={query ? `?${query}` : ''} />
+  return (
+    <LanguageSwitcherLinks current={current} search={query ? `?${query}` : ''} variant={variant} />
+  )
 }

@@ -134,6 +134,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       <LanguageSwitcher current={locale} />
     </Suspense>
   )
+  const languageSheet = (
+    <Suspense fallback={<LanguageSwitcherLinks current={locale} search="" variant="sheet" />}>
+      <LanguageSwitcher current={locale} variant="sheet" />
+    </Suspense>
+  )
 
   return (
     <HeaderBar>
@@ -278,8 +283,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               </Link>
               <div className="vd-mobile-actions flex items-center justify-between gap-3 [&_a]:py-2.5">
                 <AccountLink />
-                {language}
               </div>
+              {languageSheet}
             </div>
           </nav>
         </MobileMenu>
