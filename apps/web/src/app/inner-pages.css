@@ -844,16 +844,6 @@
     transform: none;
   }
 }
-.vd-footer-settings {
-  padding: 0 var(--vd-gutter) 28px;
-}
-.vd-footer-motion {
-  min-height: 44px;
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 5px;
-  color: var(--vd-paper);
-}
 .vd-passport-page > section:first-of-type {
   background-image: url('/journey/natural-paper-grain.webp');
   background-blend-mode: soft-light;

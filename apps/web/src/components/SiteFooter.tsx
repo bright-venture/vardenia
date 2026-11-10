@@ -153,8 +153,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           <Link href="/legal/terms">{t('footer.terms')}</Link>
           <Link href="/credits">{j('creditsShort')}</Link>
         </nav>
-      </div>
-      <div className="vd-footer-settings">
+        {/* With the legal links on one line, rather than alone under them. */}
         <MotionControl />
       </div>
     </footer>

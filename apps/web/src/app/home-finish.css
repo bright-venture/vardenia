@@ -2132,3 +2132,123 @@ body:has(.vd-home .vd-magazine) .vd-footer {
     padding-bottom: 64px;
   }
 }
+
+/*
+ * The footer's last lines, 10 November 2026: a hairline, then one ordered bar.
+ * Desktop: the copyright at the start, the legal links and the motion switch
+ * at the end. Phone: the links with the switch across from them, the
+ * copyright under both. The motion setting used to sit alone below
+ * everything, indented twice (its own gutter inside the footer's).
+ */
+.vd-footer .vd-footer-bottom {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas: 'copy legal motion';
+  align-items: center;
+  column-gap: 36px;
+  padding-top: 22px;
+  border-top: 1px solid rgb(250 248 243 / 0.16);
+  font-size: 13px;
+  color: var(--vd-paper);
+}
+.vd-footer .vd-footer-bottom > p {
+  grid-area: copy;
+  margin: 0;
+  color: rgb(250 248 243 / 0.72);
+}
+.vd-footer .vd-footer-bottom > nav {
+  grid-area: legal;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin: 0;
+}
+.vd-footer .vd-footer-bottom > nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--vd-paper);
+  text-decoration: none;
+  transition: opacity 160ms var(--vd-ease);
+}
+.vd-footer .vd-footer-bottom > nav a:hover {
+  opacity: 0.7;
+}
+.vd-footer .vd-footer-motion {
+  grid-area: motion;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 13px;
+  text-decoration: none;
+  color: var(--vd-paper);
+  cursor: pointer;
+}
+.vd-footer .vd-footer-motion:focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: 4px;
+}
+/* The switch: a track and a knob, gold and to the end while motion is on. */
+.vd-footer-switch {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 18px;
+  border: 1px solid rgb(250 248 243 / 0.55);
+  border-radius: 999px;
+  transition:
+    background-color 160ms var(--vd-ease),
+    border-color 160ms var(--vd-ease);
+}
+.vd-footer-switch > span {
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--vd-paper);
+  transition:
+    inset-inline-start 160ms var(--vd-ease),
+    background-color 160ms var(--vd-ease);
+}
+.vd-footer-motion[aria-pressed='true'] .vd-footer-switch {
+  background: var(--vd-gold);
+  border-color: var(--vd-gold);
+}
+.vd-footer-motion[aria-pressed='true'] .vd-footer-switch > span {
+  inset-inline-start: 14px;
+  background: var(--vd-ink);
+}
+@media (max-width: 700px) {
+  /* The switch sits across from the links when they fit on one line (English)
+     and drops under them when they do not (the longer Arabic labels). */
+  .vd-footer .vd-footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0 20px;
+    padding-top: 12px;
+  }
+  .vd-footer .vd-footer-bottom > nav {
+    gap: 0 18px;
+  }
+  .vd-footer .vd-footer-bottom > p {
+    order: 3;
+    flex-basis: 100%;
+    margin-top: 10px;
+  }
+}
+/* Room under the last line for the WhatsApp button, fixed at the corner. */
+.vd-footer {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-footer-switch,
+  .vd-footer-switch > span {
+    transition: none;
+  }
+}
