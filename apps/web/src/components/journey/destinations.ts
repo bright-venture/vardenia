@@ -128,6 +128,16 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     lon: 35.5047,
     alt: 'Sandstone arcades and the clock tower of Nejmeh Square in downtown Beirut',
   },
+  arz: {
+    id: 'arz',
+    name: 'Arz',
+    ar: 'الأرز',
+    image: 'arz.webp',
+    // The Cedars of God, above Bsharri.
+    lat: 34.2436,
+    lon: 36.0489,
+    alt: 'Old cedars in the snow beside a mountain road at Arz, above Bsharri',
+  },
 }
 export const routePath =
   'M640 0 C680 180 210 200 260 430 S850 690 680 980 S170 1130 270 1440 S890 1690 650 1990 S440 2240 500 2400'

@@ -559,7 +559,7 @@ export function CinematicJourney({
               {t('coastLink')} <LinkArrow />
             </a>
           </div>
-          {scenePhoto('beirut', 'vd-photo-city', -12)}
+          {scenePhoto('arz', 'vd-photo-city', -12)}
         </div>
         <div className="vd-trip-scene vd-mountain-scene">
           <div className="vd-scene-copy">
