@@ -101,6 +101,34 @@ export const DESTINATIONS = [
   },
 ] as const
 export type Destination = (typeof DESTINATIONS)[number]
+
+/**
+ * A photograph for the "Take the scenic way" scenes that is not one of the
+ * destinations above (11 November 2026): the scenes are being given their own
+ * pictures, one by one. Same files as a destination: `<image>` at 1600x1200 and
+ * `<image>-m` at 640x480, in public/journey.
+ */
+export interface ScenePhoto {
+  id: string
+  name: string
+  ar: string
+  image: string
+  lat: number
+  lon: number
+  alt: string
+}
+export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
+  'beirut-downtown': {
+    id: 'beirut-downtown',
+    name: 'Downtown Beirut',
+    ar: 'وسط بيروت',
+    image: 'beirut-downtown.webp',
+    // The clock tower, Nejmeh Square.
+    lat: 33.8988,
+    lon: 35.5047,
+    alt: 'Sandstone arcades and the clock tower of Nejmeh Square in downtown Beirut',
+  },
+}
 export const routePath =
   'M640 0 C680 180 210 200 260 430 S850 690 680 980 S170 1130 270 1440 S890 1690 650 1990 S440 2240 500 2400'
 export function coordinates(p: { lat: number; lon: number }) {

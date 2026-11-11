@@ -17,8 +17,10 @@ import {
   directoryFor,
   matchesFeeling,
   routePath,
+  SCENE_PHOTOS,
   type Destination,
   type Feeling,
+  type ScenePhoto,
 } from './destinations'
 const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n))
 const assets = '/journey/'
@@ -60,7 +62,7 @@ export function CinematicJourney({
     [flipped, setFlipped] = useState<string[]>([]),
     [pointerMotion, setPointerMotion] = useState(true)
   const ar = locale === 'ar',
-    name = (p: Destination) => (ar ? p.ar : p.name),
+    name = (p: Pick<Destination, 'name' | 'ar'> | ScenePhoto) => (ar ? p.ar : p.name),
     region = (p: Destination) => {
       const edition = GOVERNORATES.find(
         (g) => g.slug === p.where || g.districts.some((d) => d.slug === p.where),
@@ -335,8 +337,9 @@ export function CinematicJourney({
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 0)
   }
+  // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
-    const p = DESTINATIONS.find((p) => p.id === id)!
+    const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
     return (
       <figure className={`vd-scene-photo ${extra}`} data-vd-parallax={shift} data-vd-reveal>
         <div className="vd-scene-image">
@@ -535,7 +538,7 @@ export function CinematicJourney({
           <p data-vd-reveal>{t('introBody')}</p>
         </div>
         <div className="vd-trip-scene vd-coast-scene">
-          {scenePhoto('byblos', 'vd-photo-coast', 18)}
+          {scenePhoto('beirut-downtown', 'vd-photo-coast', 18)}
           <div className="vd-scene-copy">
             <h3 data-vd-reveal>
               {t('coastA')}
@@ -547,7 +550,10 @@ export function CinematicJourney({
               className="vd-button"
               href="#destinations"
               onClick={() => {
-                setFeeling('coast')
+                // The first scene is Beirut now (its photo is downtown): open
+                // the destinations on Beirut, among the city and heritage ones.
+                setFeeling('heritage')
+                setActive('beirut')
               }}
             >
               {t('coastLink')} <LinkArrow />

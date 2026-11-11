@@ -461,7 +461,9 @@
   line-height: 1.4;
 }
 .vd-photo-coast {
-  grid-column: 1/8;
+  /* Six of the twelve columns, not seven (11 Nov 2026): a little smaller,
+     with more room before the words. */
+  grid-column: 1/7;
   grid-row: 1;
   aspect-ratio: 1.23;
 }
