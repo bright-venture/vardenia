@@ -36,8 +36,9 @@ export const DESTINATIONS = [
   },
   {
     id: 'beirut',
-    name: 'Raouché · Beirut',
-    ar: 'الروشة · بيروت',
+    // The place alone: the region (Beirut) is already the title above it.
+    name: 'Raouché',
+    ar: 'الروشة',
     region: 'Beirut',
     regionAr: 'بيروت',
     where: 'beirut',

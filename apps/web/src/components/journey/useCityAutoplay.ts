@@ -1,7 +1,8 @@
 'use client'
 import { useEffect, type RefObject } from 'react'
 
-export const CITY_SLIDE_DELAY = 6000
+/** How long each city stays before the next (was 6 s; 4.5 s from 11 Nov 2026). */
+export const CITY_SLIDE_DELAY = 4500
 
 /** A new reading interval starts after selection; offscreen/hidden content never advances. */
 export function useCityAutoplay(
