@@ -42,8 +42,8 @@ export async function SiteFooter() {
     ],
     hidden,
   )
-  // The small print. Privacy and Terms cannot be hidden; Credits has no
-  // setting; Partner sign in goes when Settings hides it.
+  // The small print, each of which Settings can take out of the footer (the
+  // pages themselves stay up).
   const legal = withoutHidden(
     [
       { href: '/legal/privacy', label: t('footer.privacy') },

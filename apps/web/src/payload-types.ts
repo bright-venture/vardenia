@@ -1893,6 +1893,9 @@ export interface Setting {
         | 'directory'
         | 'partner-sign-in'
         | 'sign-in'
+        | 'privacy'
+        | 'terms'
+        | 'credits'
       )[]
     | null;
   /**

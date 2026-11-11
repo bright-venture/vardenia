@@ -25,7 +25,7 @@ describe('hideable pages', () => {
   })
 
   it('keeps only real pages from what was stored', () => {
-    expect(cleanHiddenPages(['stay', 'directory', 'privacy', 'magazine-issues', 3])).toEqual([
+    expect(cleanHiddenPages(['stay', 'directory', 'refunds', 'magazine-issues', 3])).toEqual([
       'stay',
       'directory',
       'magazine-issues',
@@ -66,6 +66,7 @@ describe('hideable pages', () => {
       '20261109_072535_hidden_pages.ts',
       '20261111_120000_hidden_pages_more.ts',
       '20261111_160000_hidden_pages_sign_in.ts',
+      '20261111_170000_hidden_pages_legal_links.ts',
     ]
       .map((f) => readFileSync(path.join(dir, f), 'utf8'))
       .join('\n')

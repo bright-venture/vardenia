@@ -56,4 +56,12 @@ describe('the site footer and hidden pages', () => {
     expect(links).not.toContain('Contact')
     expect(links).toEqual(['Vardenia', 'About', 'Magazine', 'Privacy', 'Terms', 'Credits'])
   })
+
+  it('takes Privacy, Terms and Credits out of the small print when hidden', async () => {
+    const links = await footerLinks(['privacy', 'terms', 'credits'])
+    expect(links).not.toContain('Privacy')
+    expect(links).not.toContain('Terms')
+    expect(links).not.toContain('Credits')
+    expect(links).toContain('Partner sign in')
+  })
 })

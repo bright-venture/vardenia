@@ -59,6 +59,7 @@ import * as migration_20261109_072535_hidden_pages from './20261109_072535_hidde
 import * as migration_20261110_090000_drop_old_settings_tables from './20261110_090000_drop_old_settings_tables'
 import * as migration_20261111_120000_hidden_pages_more from './20261111_120000_hidden_pages_more'
 import * as migration_20261111_160000_hidden_pages_sign_in from './20261111_160000_hidden_pages_sign_in'
+import * as migration_20261111_170000_hidden_pages_legal_links from './20261111_170000_hidden_pages_legal_links'
 
 export const migrations = [
   {
@@ -365,5 +366,10 @@ export const migrations = [
     up: migration_20261111_160000_hidden_pages_sign_in.up,
     down: migration_20261111_160000_hidden_pages_sign_in.down,
     name: '20261111_160000_hidden_pages_sign_in',
+  },
+  {
+    up: migration_20261111_170000_hidden_pages_legal_links.up,
+    down: migration_20261111_170000_hidden_pages_legal_links.down,
+    name: '20261111_170000_hidden_pages_legal_links',
   },
 ]

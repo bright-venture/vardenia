@@ -15,6 +15,10 @@ import { CONTENT_PAGE_SLUGS, type ContentPageSlug } from './pages'
  * Sign in (the same afternoon) works the same way for readers: hiding it takes
  * the header's sign-in and account links away, on a computer and in the phone
  * menu, and the sign-in page stays up for anyone who has its address.
+ *
+ * Privacy, Terms and Credits (the same day) are footer links only too: hiding
+ * one takes it out of the footer's small print, and the page stays up. Privacy
+ * and Terms must stay reachable (the sign-up form links to both).
  */
 
 /** The six sections' paths, as in @vardenia/core SECTIONS (a test keeps them in step). */
@@ -37,6 +41,9 @@ export const HIDEABLE_PAGES = [
   'directory',
   'partner-sign-in',
   'sign-in',
+  'privacy',
+  'terms',
+  'credits',
 ] as const
 
 export type HideablePage =
@@ -46,6 +53,9 @@ export type HideablePage =
   | 'directory'
   | 'partner-sign-in'
   | 'sign-in'
+  | 'privacy'
+  | 'terms'
+  | 'credits'
 
 /** Where each one lives. */
 export const HIDEABLE_PATH: Record<HideablePage, string> = {
@@ -67,6 +77,9 @@ export const HIDEABLE_PATH: Record<HideablePage, string> = {
   directory: '/directory',
   'partner-sign-in': '/partner',
   'sign-in': '/account/login',
+  privacy: '/legal/privacy',
+  terms: '/legal/terms',
+  credits: '/credits',
 }
 
 /**
@@ -96,6 +109,9 @@ export const HIDEABLE_LABELS: Record<HideablePage, string> = {
   directory: 'Directory (its listings stay up)',
   'partner-sign-in': 'Partner sign in (footer link only)',
   'sign-in': 'Sign in (header link only)',
+  privacy: 'Privacy (footer link only)',
+  terms: 'Terms (footer link only)',
+  credits: 'Credits (footer link only)',
 }
 
 /** Only real hideable pages, whatever was stored. */
