@@ -706,7 +706,7 @@ export function CinematicJourney({
               {DESTINATIONS.map((p) => (
                 <button
                   key={p.id}
-                  aria-label={name(p)}
+                  aria-label={`${region(p)} · ${name(p)}`}
                   aria-pressed={place?.id === p.id}
                   style={{
                     left: mapPosition(p).x + '%',
@@ -719,7 +719,10 @@ export function CinematicJourney({
                   }}
                 >
                   <span />
-                  <span className="vd-map-city-label">{name(p)}</span>
+                  {/* The region, as the title beside the map says it (11
+                      November 2026): the pin read "Byblos" under a
+                      "Keserwan" heading. The place stays in the details. */}
+                  <span className="vd-map-city-label">{region(p)}</span>
                 </button>
               ))}
             </div>
