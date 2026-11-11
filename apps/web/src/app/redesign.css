@@ -2158,3 +2158,16 @@ html[data-vd-motion='off'] .vd-destination-images img {
     opacity: 0.08;
   }
 }
+/* The magazine's own photograph on /magazine: portrait, shown whole. */
+.vd-page-intro figure.vd-page-intro-portrait {
+  aspect-ratio: 1122 / 1402;
+  width: 100%;
+  max-width: 440px;
+  justify-self: end;
+}
+@media (max-width: 700px) {
+  .vd-page-intro figure.vd-page-intro-portrait {
+    aspect-ratio: 1122 / 1402;
+    max-width: none;
+  }
+}

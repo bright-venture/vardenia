@@ -61,7 +61,12 @@ export function PageMotion({ children }: { children: ReactNode }) {
       ),
     )
     streamed.observe(host, { childList: true, subtree: true })
-    const photos = [...host.querySelectorAll<HTMLElement>('.vd-inner-hero-media img')]
+    const photos = [
+      ...host.querySelectorAll<HTMLElement>(
+        // A portrait photo is shown whole (the magazine's), so it does not drift.
+        '.vd-inner-hero-media:not(.vd-inner-hero-media-portrait) img',
+      ),
+    ]
     const paint = () => {
       frame = 0
       if (keyboard || document.hidden) return

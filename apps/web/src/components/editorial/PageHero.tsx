@@ -26,12 +26,13 @@ export function PageHero({
   intro?: string
   body?: string
   place?: number
-  photo?: { src: string; alt: string }
+  photo?: { src: string; alt: string; width?: number; height?: number }
   locale: Locale
   children?: ReactNode
   immersive?: boolean
 }) {
   const destination = DESTINATIONS[place] ?? DESTINATIONS[0]
+  const portrait = photo?.width && photo.height ? photo.height > photo.width : false
   return (
     <header className={`vd-inner-hero ${immersive ? 'vd-inner-hero-immersive' : ''}`}>
       <div className="vd-inner-hero-copy">
@@ -48,13 +49,16 @@ export function PageHero({
           </div>
         ) : null}
       </div>
-      <figure className="vd-inner-hero-media" data-vd-reveal>
+      <figure
+        className={`vd-inner-hero-media ${portrait ? 'vd-inner-hero-media-portrait' : ''}`}
+        data-vd-reveal
+      >
         {photo ? (
           <Image
             src={photo.src}
             alt={photo.alt}
-            width={1536}
-            height={1024}
+            width={photo.width ?? 1536}
+            height={photo.height ?? 1024}
             sizes="(max-width:700px) 100vw, 60vw"
             priority
           />

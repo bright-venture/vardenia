@@ -1008,3 +1008,20 @@
     font-size: 27px;
   }
 }
+/* A portrait photograph (the magazine's on /magazine/issues): shown whole, at
+   its own shape, never wider than a printed page would look beside the title. */
+.vd-inner-hero-media.vd-inner-hero-media-portrait {
+  aspect-ratio: 1122 / 1402;
+  width: 100%;
+  max-width: 500px;
+  justify-self: center;
+}
+.vd-inner-hero-media.vd-inner-hero-media-portrait img {
+  transform: none;
+}
+@media (max-width: 700px) {
+  .vd-inner-hero-media.vd-inner-hero-media-portrait {
+    aspect-ratio: 1122 / 1402;
+    max-width: none;
+  }
+}

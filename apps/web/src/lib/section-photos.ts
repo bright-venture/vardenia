@@ -38,3 +38,15 @@ export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
     alt: 'A drive along the coast road, a passenger holding a copy of Vardenia',
   },
 }
+
+/**
+ * The magazine's own photograph (11 November 2026): the All Lebanon issue with
+ * the seven regional editions. Header of /magazine and /magazine/issues, where
+ * Baalbek stood before. Portrait, so those two frames are portrait too.
+ */
+export const MAGAZINE_PHOTO = {
+  src: '/magazine/all-lebanon-collection.webp',
+  alt: 'The All Lebanon issue of Vardenia on a stone slab, above the seven regional editions: Metn, Chouf, Beqaa, South, North, Beirut and Keserwan',
+  width: 1122,
+  height: 1402,
+}
