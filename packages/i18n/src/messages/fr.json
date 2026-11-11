@@ -484,7 +484,10 @@
     "issueNumber": "Numéro {number}",
     "pageCount": "{count, plural, one {# page} other {# pages}}",
     "issueMetaDescription": "Numéro {number} de Vardenia.",
-    "noArticlesInIssue": "Aucun article n'a encore été ajouté à ce numéro."
+    "noArticlesInIssue": "Aucun article n'a encore été ajouté à ce numéro.",
+    "placesInIssue": "Les lieux de ce numéro",
+    "placesCount": "{count, plural, one {# lieu} other {# lieux}}",
+    "regionsInIssue": "Les régions de ce numéro"
   },
   "search": {
     "title": "Rechercher",

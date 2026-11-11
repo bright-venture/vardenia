@@ -484,7 +484,10 @@
     "issueNumber": "第 {number} 期",
     "pageCount": "{count} 页",
     "issueMetaDescription": "Vardenia 第 {number} 期。",
-    "noArticlesInIssue": "本期尚未添加文章。"
+    "noArticlesInIssue": "本期尚未添加文章。",
+    "placesInIssue": "本期收录的地点",
+    "placesCount": "{count} 个地点",
+    "regionsInIssue": "本期的地区"
   },
   "search": {
     "title": "搜索",

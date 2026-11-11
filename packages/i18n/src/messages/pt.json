@@ -484,7 +484,10 @@
     "issueNumber": "Edição {number}",
     "pageCount": "{count, plural, one {# página} other {# páginas}}",
     "issueMetaDescription": "Edição {number} da Vardenia.",
-    "noArticlesInIssue": "Ainda não foram adicionados artigos a esta edição."
+    "noArticlesInIssue": "Ainda não foram adicionados artigos a esta edição.",
+    "placesInIssue": "Os lugares desta edição",
+    "placesCount": "{count, plural, one {# lugar} other {# lugares}}",
+    "regionsInIssue": "As regiões desta edição"
   },
   "search": {
     "title": "Buscar",

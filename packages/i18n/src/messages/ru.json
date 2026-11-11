@@ -484,7 +484,10 @@
     "issueNumber": "Выпуск {number}",
     "pageCount": "{count, plural, one {# страница} few {# страницы} many {# страниц} other {# страницы}}",
     "issueMetaDescription": "Выпуск {number} Vardenia.",
-    "noArticlesInIssue": "В этот выпуск ещё не добавлены статьи."
+    "noArticlesInIssue": "В этот выпуск ещё не добавлены статьи.",
+    "placesInIssue": "Места в этом выпуске",
+    "placesCount": "{count, plural, one {# место} few {# места} many {# мест} other {# места}}",
+    "regionsInIssue": "Регионы этого выпуска"
   },
   "search": {
     "title": "Поиск",

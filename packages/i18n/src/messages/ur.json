@@ -484,7 +484,10 @@
     "issueNumber": "شمارہ {number}",
     "pageCount": "{count, plural, one {# صفحہ} other {# صفحات}}",
     "issueMetaDescription": "Vardenia کا شمارہ {number}۔",
-    "noArticlesInIssue": "اس شمارے میں ابھی کوئی مضمون شامل نہیں کیا گیا۔"
+    "noArticlesInIssue": "اس شمارے میں ابھی کوئی مضمون شامل نہیں کیا گیا۔",
+    "placesInIssue": "اس شمارے کی جگہیں",
+    "placesCount": "{count, plural, one {# جگہ} other {# جگہیں}}",
+    "regionsInIssue": "اس شمارے کے علاقے"
   },
   "search": {
     "title": "تلاش کریں",

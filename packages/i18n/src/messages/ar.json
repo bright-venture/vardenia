@@ -484,7 +484,10 @@
     "issueNumber": "العدد {number}",
     "pageCount": "{count} صفحة",
     "issueMetaDescription": "العدد {number} من فاردينيا.",
-    "noArticlesInIssue": "لم تُضف مقالات إلى هذا العدد بعد."
+    "noArticlesInIssue": "لم تُضف مقالات إلى هذا العدد بعد.",
+    "placesInIssue": "أماكن في هذا العدد",
+    "placesCount": "{count, plural, zero {لا أماكن} one {مكان واحد} two {مكانان} few {# أماكن} many {# مكانًا} other {# مكان}}",
+    "regionsInIssue": "مناطق هذا العدد"
   },
   "search": {
     "title": "بحث",

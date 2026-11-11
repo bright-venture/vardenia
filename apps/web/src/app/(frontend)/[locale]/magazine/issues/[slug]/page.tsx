@@ -7,7 +7,11 @@ import {
   findArticlesInIssue,
   findIssueBySlug,
   findAllIssueSlugs,
+  findListingsInIssue,
 } from '../../../../../../lib/issues'
+import { GOVERNORATES } from '@vardenia/core/regions'
+import { governorateLabel } from '../../../../../../lib/labels'
+import { ListingGrid } from '../../../../../../components/ListingGrid'
 import { buildMetadata } from '../../../../../../lib/seo'
 import { MagazineCover } from '../../../../../../components/magazine/MagazineCover'
 import { MagazineReader } from '../../../../../../components/magazine/MagazineReader'
@@ -74,7 +78,25 @@ export default async function IssuePage({ params }: Params) {
   if (!issue) notFound()
 
   const t = await getTranslations()
-  const articles = await findArticlesInIssue(issue.id, locale)
+  const [articles, listings] = await Promise.all([
+    findArticlesInIssue(issue.id, locale),
+    findListingsInIssue(issue.id, locale),
+  ])
+  // The magazine's seven regions in its order, each with its places; a
+  // listing with no region (none today) closes the list rather than vanishing.
+  const known = new Set<string>(GOVERNORATES.map((g) => g.slug))
+  const regions = [
+    ...GOVERNORATES.map((g) => ({
+      slug: g.slug as string,
+      name: governorateLabel(g.slug, locale as Locale),
+      listings: listings.filter((l) => l.governorate === g.slug),
+    })),
+    {
+      slug: 'other',
+      name: t('magazine.placesInIssue'),
+      listings: listings.filter((l) => !l.governorate || !known.has(l.governorate)),
+    },
+  ].filter((region) => region.listings.length > 0)
   // A file in Magazine PDFs (collections/Editions): a PDF, so its own address
   // rather than an image size.
   const pdf =
@@ -149,6 +171,7 @@ export default async function IssuePage({ params }: Params) {
         <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">
           {t('magazine.inThisIssue')}
         </h2>
+        <h3 className="vd-issue-subhead">{t('footer.articles')}</h3>
 
         {articles.length === 0 ? (
           <p className="text-ink-500 mt-4 text-sm">{t('magazine.noArticlesInIssue')}</p>
@@ -182,6 +205,49 @@ export default async function IssuePage({ params }: Params) {
           </div>
         )}
       </section>
+
+      {/*
+        Every place the edition carries, under the articles, region by region
+        in the magazine's own order (11 November 2026). A long list on a
+        phone, so the regions are also a row of links to jump between.
+      */}
+      {regions.length > 0 ? (
+        <section className="vd-issue-places" aria-labelledby="issue-places">
+          <h2 id="issue-places" dir="auto">
+            {t('magazine.placesInIssue')}
+          </h2>
+          <p className="text-ink-500 mt-2 text-sm tabular-nums">
+            {t('magazine.placesCount', { count: listings.length })}
+          </p>
+          <nav aria-label={t('magazine.regionsInIssue')} className="vd-issue-regions">
+            {regions.map((region) => (
+              <a key={region.slug} href={`#region-${region.slug}`}>
+                {region.name}
+                <span className="tabular-nums">{region.listings.length}</span>
+              </a>
+            ))}
+          </nav>
+          {regions.map((region) => (
+            <section
+              key={region.slug}
+              id={`region-${region.slug}`}
+              aria-labelledby={`region-${region.slug}-title`}
+              className="vd-issue-region"
+            >
+              <h3 id={`region-${region.slug}-title`} className="vd-issue-subhead">
+                {region.name}
+                <span className="tabular-nums">{region.listings.length}</span>
+              </h3>
+              <ListingGrid
+                listings={region.listings}
+                locale={locale as Locale}
+                empty=""
+                kind="directory"
+              />
+            </section>
+          ))}
+        </section>
+      ) : null}
     </main>
   )
 }

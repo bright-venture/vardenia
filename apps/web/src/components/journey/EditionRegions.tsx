@@ -2,9 +2,12 @@ import { GOVERNORATES } from '@vardenia/core/regions'
 import { Link } from '../../i18n/routing'
 import { LinkArrow } from '../LinkArrow'
 
-/** Edition geography comes from the supplied magazine entries, not invented map pins. */
+/**
+ * Edition geography comes from the supplied magazine entries, not invented map
+ * pins. Every region goes by its own name; Keserwan is plain "Keserwan" (11
+ * November 2026), no longer "Keserwan–Byblos".
+ */
 export function editionLabel(region: (typeof GOVERNORATES)[number], arabic: boolean) {
-  if (region.slug === 'keserwan') return arabic ? 'كسروان – جبيل' : 'Keserwan–Byblos'
   return arabic ? region.ar : region.en
 }
 

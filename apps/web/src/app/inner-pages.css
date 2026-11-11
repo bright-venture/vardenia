@@ -373,6 +373,71 @@
   font-size: 30px;
   letter-spacing: 0;
 }
+/* The issue's contents: Articles, then the places region by region. */
+.vd-issue-subhead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 28px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--vd-ink);
+}
+.vd-issue-subhead > span {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: rgb(17 29 45 / 0.62);
+}
+.vd-issue-places {
+  margin-top: 80px;
+  padding-top: 48px;
+  border-top: 1px solid rgb(17 29 45 / 0.12);
+}
+.vd-issue-places > h2 {
+  font-family: var(--font-display);
+  color: var(--vd-ink);
+}
+.vd-issue-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.vd-issue-regions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgb(17 29 45 / 0.18);
+  font-size: 14px;
+  color: var(--vd-ink);
+  text-decoration: none;
+  transition:
+    border-color 150ms var(--vd-ease),
+    background-color 150ms var(--vd-ease);
+}
+.vd-issue-regions a:hover {
+  border-color: var(--vd-ink);
+  background: rgb(17 29 45 / 0.04);
+}
+.vd-issue-regions a:focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: 2px;
+}
+.vd-issue-regions a > span {
+  font-size: 13px;
+  color: rgb(17 29 45 / 0.62);
+}
+.vd-issue-region {
+  margin-top: 56px;
+  /* Below the sticky header when reached from a region link. */
+  scroll-margin-top: 100px;
+}
+.vd-issue-region > .vd-issue-subhead {
+  margin: 0 0 24px;
+}
 .vd-issue-header a[target] {
   border-radius: 999px;
 }

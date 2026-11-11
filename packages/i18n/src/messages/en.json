@@ -484,7 +484,10 @@
     "issueNumber": "Issue {number}",
     "pageCount": "{count, plural, one {# page} other {# pages}}",
     "issueMetaDescription": "Issue {number} of Vardenia.",
-    "noArticlesInIssue": "No articles have been added to this issue yet."
+    "noArticlesInIssue": "No articles have been added to this issue yet.",
+    "placesInIssue": "Places in this issue",
+    "placesCount": "{count, plural, one {# place} other {# places}}",
+    "regionsInIssue": "Regions in this issue"
   },
   "search": {
     "title": "Search",

@@ -484,7 +484,10 @@
     "issueNumber": "সংখ্যা {number}",
     "pageCount": "{count, plural, one {# পৃষ্ঠা} other {# পৃষ্ঠা}}",
     "issueMetaDescription": "Vardenia-র সংখ্যা {number}।",
-    "noArticlesInIssue": "এই সংখ্যায় এখনও কোনো প্রবন্ধ যোগ করা হয়নি।"
+    "noArticlesInIssue": "এই সংখ্যায় এখনও কোনো প্রবন্ধ যোগ করা হয়নি।",
+    "placesInIssue": "এই সংখ্যার জায়গাগুলো",
+    "placesCount": "{count}টি জায়গা",
+    "regionsInIssue": "এই সংখ্যার অঞ্চলগুলো"
   },
   "search": {
     "title": "খুঁজুন",

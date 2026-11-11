@@ -35,7 +35,8 @@ for (const locale of ['en', 'ar'] as const) {
         const where = new URL(link.href).searchParams.get('where')!
         expect(parseFilterState({ where }, []).governorate).toBe(where)
       }
-      expect(root.textContent).toContain(locale === 'ar' ? 'كسروان – جبيل' : 'Keserwan–Byblos')
+      expect(root.textContent).toContain(locale === 'ar' ? 'كسروان' : 'Keserwan')
+      expect(root.textContent).not.toContain(locale === 'ar' ? 'جبيل' : 'Byblos')
       expect(root.textContent).toContain(locale === 'ar' ? 'المتن' : 'Matn')
       expect(root.querySelector('img')).toBeNull()
     })
