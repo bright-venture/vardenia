@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { BASE_HEADERS, adminCsp, publicCsp, securityHeaders } from './security-headers'
 
@@ -260,5 +261,20 @@ describe('the admin policy and direct uploads', () => {
     expect(directive(adminCsp({ S3_ENDPOINT: 'http://localhost:9000' }), 'connect-src')).toEqual([
       "'self'",
     ])
+  })
+
+  /**
+   * The policy is fixed when the site is built, and the build runs under
+   * Turborepo, whose strict mode hands a task only the variables turbo.json
+   * names (and NEXT_PUBLIC_ ones). S3_ENDPOINT was left off, so production built
+   * the admin with `connect-src 'self'` and every magazine upload was refused
+   * ("Failed to fetch", 11 November 2026), whatever Netlify's own setting said.
+   */
+  it('gets S3_ENDPOINT into the build', () => {
+    const turbo = JSON.parse(
+      readFileSync(new URL('../../../../turbo.json', import.meta.url), 'utf8'),
+    )
+    const passed = [...(turbo.globalEnv ?? []), ...(turbo.tasks?.build?.env ?? [])]
+    expect(passed).toContain('S3_ENDPOINT')
   })
 })
