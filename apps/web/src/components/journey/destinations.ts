@@ -101,6 +101,24 @@ export const DESTINATIONS = [
     noteAr: 'زقاق مرصوف وقنطرة قديمة ودفء الحجر في إحدى قرى الشوف.',
     source: 'https://commons.wikimedia.org/wiki/Category:Fakhreddine_Mosque',
   },
+  // Matn, the seventh region (11 Nov 2026). Last, so the places that refer to
+  // a destination by its position (About, the header menus) keep theirs.
+  {
+    id: 'broummana',
+    name: 'Broummana',
+    ar: 'برمانا',
+    region: 'Matn',
+    regionAr: 'المتن',
+    where: 'matn',
+    feeling: 'mountain',
+    image: 'broummana.webp',
+    lat: 33.8825,
+    lon: 35.6283,
+    alt: 'Broummana spread across its green hillside above Beirut, seen from Hazmieh',
+    note: 'Pine slopes, cool summer evenings and the lights of Beirut below.',
+    noteAr: 'منحدرات من الصنوبر، وأمسيات صيفية منعشة، وأضواء بيروت في الأسفل.',
+    source: 'https://en.wikipedia.org/wiki/Broummana',
+  },
 ] as const
 export type Destination = (typeof DESTINATIONS)[number]
 
@@ -178,6 +196,7 @@ const THEMES: Record<Destination['id'], readonly Exclude<Feeling, 'all'>[]> = {
   baalbek: ['heritage'],
   tyre: ['coast', 'heritage', 'harbours', 'sunsets'],
   'deir-el-qamar': ['mountain', 'heritage', 'nature', 'villages'],
+  broummana: ['mountain', 'nature', 'sunsets'],
 }
 export function matchesFeeling(place: Pick<Destination, 'id'>, feeling: Feeling) {
   return feeling === 'all' || THEMES[place.id].includes(feeling)
