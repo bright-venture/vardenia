@@ -44,18 +44,110 @@ import { withEmphasis } from './emphasis'
  * override. See LegalDocument.
  */
 
-/** About's first photograph, the magazine with its printed code and a phone. */
-const ABOUT_PHOTO_ALT: Record<Locale, string> = {
-  en: 'The Vardenia magazine, a phone showing the Vardenia site and a printed QR code on a table above the sea at Raouché',
-  ar: 'مجلة فاردينيا وهاتف يعرض موقع فاردينيا ورمز QR مطبوع على طاولة تطلّ على البحر عند الروشة',
-  fr: 'Le magazine Vardenia, un téléphone affichant le site Vardenia et un code QR imprimé sur une table face à la mer, à Raouché',
-  es: 'La revista Vardenia, un teléfono con el sitio de Vardenia y un código QR impreso sobre una mesa frente al mar en Raouché',
-  pt: 'A revista Vardenia, um telemóvel com o site da Vardenia e um código QR impresso numa mesa sobre o mar em Raouché',
-  ru: 'Журнал Vardenia, телефон с сайтом Vardenia и напечатанный QR-код на столе над морем у Рауше',
-  zh: '劳谢海边的桌上，摆着 Vardenia 杂志、显示 Vardenia 网站的手机和一张印刷的二维码',
-  hi: 'रौशे में समुद्र के ऊपर एक मेज़ पर Vardenia पत्रिका, Vardenia साइट दिखाता फ़ोन और छपा हुआ QR कोड',
-  bn: 'রাউশেতে সমুদ্রের ওপরে একটি টেবিলে Vardenia ম্যাগাজিন, Vardenia সাইট দেখানো একটি ফোন আর ছাপা QR কোড',
-  ur: 'روشہ میں سمندر کے اوپر ایک میز پر Vardenia میگزین، Vardenia سائٹ دکھاتا فون اور چھپا ہوا QR کوڈ',
+/** About's header picture: the seven regional editions as doors, the issue in front. */
+const ABOUT_HERO = { src: '/about/seven-doors.webp', width: 999, height: 1280 }
+const ABOUT_HERO_ALT: Record<Locale, string> = {
+  en: 'The All Lebanon issue of Vardenia on a lit plinth, before seven doorways opening onto Beirut, Metn, Keserwan, the North, the Chouf, the Beqaa and the South',
+  ar: 'عدد كلّ لبنان من فاردينيا على منصّة مضاءة، أمام سبعة أبواب تطلّ على بيروت والمتن وكسروان والشمال والشوف والبقاع والجنوب',
+  fr: 'L’édition All Lebanon de Vardenia sur un socle éclairé, devant sept portes ouvertes sur Beyrouth, le Metn, le Kesrouan, le Nord, le Chouf, la Békaa et le Sud',
+  es: 'La edición All Lebanon de Vardenia sobre un pedestal iluminado, ante siete puertas abiertas a Beirut, Metn, Keserwan, el Norte, Chouf, Bekaa y el Sur',
+  pt: 'A edição All Lebanon da Vardenia num pedestal iluminado, diante de sete portas abertas para Beirute, Metn, Keserwan, o Norte, Chouf, Bekaa e o Sul',
+  ru: 'Выпуск All Lebanon журнала Vardenia на освещённом постаменте перед семью дверями в Бейрут, Метн, Кесруан, Север, Шуф, Бекаа и Юг',
+  zh: 'Vardenia All Lebanon 期杂志立在一座亮灯的底座上，身后是通往贝鲁特、迈特恩、凯斯鲁万、北部、舒夫、贝卡和南部的七扇门',
+  hi: 'रोशन चबूतरे पर Vardenia का All Lebanon अंक, पीछे बेरूत, मेत्न, केसरवान, उत्तर, शूफ़, बेक़ा और दक्षिण की ओर खुलते सात दरवाज़े',
+  bn: 'আলোকিত বেদিতে Vardenia-র All Lebanon সংখ্যা, পেছনে বৈরুত, মেতন, কেসরওয়ান, উত্তর, শুফ, বেকা ও দক্ষিণের দিকে খোলা সাতটি দরজা',
+  ur: 'روشن چبوترے پر Vardenia کا All Lebanon شمارہ، پیچھے بیروت، متن، کسروان، شمال، شوف، بقاع اور جنوب کی طرف کھلتے سات دروازے',
+}
+
+/**
+ * The About page's photographs, one per section, by section index (the owner's,
+ * 11 November 2026). `after` places it after the section's own paragraphs
+ * ('body') or after its subsections too ('end'). Wide pictures show at 16:9,
+ * portrait ones whole at their own shape.
+ */
+interface AboutPhoto {
+  src: string
+  width: number
+  height: number
+  after: 'body' | 'end'
+  alt: Record<Locale, string>
+}
+const ABOUT_PHOTOS: Record<number, AboutPhoto> = {
+  // The magazine, a phone and a printed code above Raouché.
+  0: {
+    src: '/about/print-meets-digital.webp',
+    width: 1280,
+    height: 720,
+    after: 'end',
+    alt: {
+      en: 'The Vardenia magazine, a phone showing the Vardenia site and a printed QR code on a table above the sea at Raouché',
+      ar: 'مجلة فاردينيا وهاتف يعرض موقع فاردينيا ورمز QR مطبوع على طاولة تطلّ على البحر عند الروشة',
+      fr: 'Le magazine Vardenia, un téléphone affichant le site Vardenia et un code QR imprimé sur une table face à la mer, à Raouché',
+      es: 'La revista Vardenia, un teléfono con el sitio de Vardenia y un código QR impreso sobre una mesa frente al mar en Raouché',
+      pt: 'A revista Vardenia, um telemóvel com o site da Vardenia e um código QR impresso numa mesa sobre o mar em Raouché',
+      ru: 'Журнал Vardenia, телефон с сайтом Vardenia и напечатанный QR-код на столе над морем у Рауше',
+      zh: '劳谢海边的桌上，摆着 Vardenia 杂志、显示 Vardenia 网站的手机和一张印刷的二维码',
+      hi: 'रौशे में समुद्र के ऊपर एक मेज़ पर Vardenia पत्रिका, Vardenia साइट दिखाता फ़ोन और छपा हुआ QR कोड',
+      bn: 'রাউশেতে সমুদ্রের ওপরে একটি টেবিলে Vardenia ম্যাগাজিন, Vardenia সাইট দেখানো একটি ফোন আর ছাপা QR কোড',
+      ur: 'روشہ میں سمندر کے اوپر ایک میز پر Vardenia میگزین، Vardenia سائٹ دکھاتا فون اور چھپا ہوا QR کوڈ',
+    },
+  },
+  // Postcards of Lebanon, a checklist and the site on a phone, above Byblos.
+  1: {
+    src: '/about/curated-experiences.webp',
+    width: 1280,
+    height: 720,
+    after: 'end',
+    alt: {
+      en: 'Postcards of Baalbek, a Lebanese lane, the cedars, Raouché and a candlelit courtyard on a table above the sea at Byblos, beside a checklist and a phone showing Vardenia',
+      ar: 'بطاقات بريدية لبعلبك وزقاق لبناني والأرز والروشة وباحة مضاءة بالشموع على طاولة تطلّ على البحر في جبيل، إلى جانب قائمة مهامّ وهاتف يعرض فاردينيا',
+      fr: 'Des cartes postales de Baalbek, d’une ruelle libanaise, des cèdres, de Raouché et d’une cour aux chandelles sur une table face à la mer à Byblos, près d’une liste et d’un téléphone affichant Vardenia',
+      es: 'Postales de Baalbek, una calle libanesa, los cedros, Raouché y un patio a la luz de las velas sobre una mesa frente al mar en Biblos, junto a una lista y un teléfono con Vardenia',
+      pt: 'Postais de Baalbek, de uma rua libanesa, dos cedros, de Raouché e de um pátio à luz das velas numa mesa sobre o mar em Biblos, junto a uma lista e a um telemóvel com a Vardenia',
+      ru: 'Открытки с Баальбеком, ливанской улочкой, кедрами, Рауше и двориком при свечах на столе над морем в Библе, рядом со списком дел и телефоном с Vardenia',
+      zh: '比布鲁斯海边的桌上，摆着巴尔贝克、黎巴嫩小巷、雪松、劳谢和烛光庭院的明信片，旁边是一份清单和显示 Vardenia 的手机',
+      hi: 'बिब्लोस में समुद्र के ऊपर एक मेज़ पर बालबेक, एक लेबनानी गली, देवदार, रौशे और मोमबत्तियों से सजे आँगन के पोस्टकार्ड, पास में एक सूची और Vardenia दिखाता फ़ोन',
+      bn: 'বিবলোসে সমুদ্রের ওপরে একটি টেবিলে বালবেক, একটি লেবানিজ গলি, সিডার, রাউশে আর মোমবাতির আলোয় সাজানো উঠোনের পোস্টকার্ড, পাশে একটি তালিকা ও Vardenia দেখানো একটি ফোন',
+      ur: 'جبیل میں سمندر کے اوپر ایک میز پر بعلبک، ایک لبنانی گلی، دیودار، روشہ اور شمعوں سے روشن صحن کے پوسٹ کارڈ، پاس ایک فہرست اور Vardenia دکھاتا فون',
+    },
+  },
+  // The All Lebanon issue, held in the light between two hands.
+  2: {
+    src: '/about/vardenia-story.webp',
+    width: 1122,
+    height: 1402,
+    after: 'body',
+    alt: {
+      en: 'The All Lebanon issue of Vardenia, Discover Lebanon on its cover, held in the light between two open hands',
+      ar: 'عدد كلّ لبنان من فاردينيا، وعلى غلافه «اكتشف لبنان»، معلّقاً في الضوء بين يدين مفتوحتين',
+      fr: 'L’édition All Lebanon de Vardenia, « Discover Lebanon » en couverture, suspendue dans la lumière entre deux mains ouvertes',
+      es: 'La edición All Lebanon de Vardenia, con «Discover Lebanon» en la portada, suspendida en la luz entre dos manos abiertas',
+      pt: 'A edição All Lebanon da Vardenia, com «Discover Lebanon» na capa, suspensa na luz entre duas mãos abertas',
+      ru: 'Выпуск All Lebanon журнала Vardenia с надписью Discover Lebanon на обложке, парящий в луче света между двумя раскрытыми ладонями',
+      zh: '封面写着 Discover Lebanon 的 Vardenia All Lebanon 期杂志，悬在光中，两只张开的手之间',
+      hi: 'Vardenia का All Lebanon अंक, आवरण पर Discover Lebanon, रोशनी में दो खुली हथेलियों के बीच',
+      bn: 'Vardenia-র All Lebanon সংখ্যা, প্রচ্ছদে Discover Lebanon, আলোর মধ্যে দুটি খোলা হাতের মাঝে',
+      ur: 'Vardenia کا All Lebanon شمارہ، سرورق پر Discover Lebanon، روشنی میں دو کھلے ہاتھوں کے درمیان',
+    },
+  },
+}
+
+function aboutPhoto(photo: AboutPhoto, locale: Locale) {
+  const portrait = photo.height > photo.width
+  return (
+    <figure
+      className={`vd-story-photograph ${portrait ? 'vd-story-photograph-portrait' : 'vd-story-photograph-wide'}`}
+      data-vd-reveal
+    >
+      <Image
+        src={photo.src}
+        alt={photo.alt[locale] ?? photo.alt.en}
+        width={photo.width}
+        height={photo.height}
+        sizes={portrait ? '(max-width:700px) 100vw, 480px' : '(max-width:700px) 100vw, 60vw'}
+      />
+    </figure>
+  )
 }
 
 function Line({ text, id }: { text: string; id: string }) {
@@ -85,6 +177,21 @@ function Line({ text, id }: { text: string; id: string }) {
 
   if (isList) {
     return <li className="text-ink-700 mt-2 leading-relaxed">{withEmphasis(body, id)}</li>
+  }
+
+  // A pull quote: a tagline or a line the owner set in italics (About).
+  if (body.startsWith('> ')) {
+    return <p className="vd-story-quote">{withEmphasis(body.slice(2), id)}</p>
+  }
+
+  // The closing signature: the wordmark over a last line (About).
+  if (body.startsWith('~ ')) {
+    return (
+      <p className="vd-story-signoff">
+        <span aria-hidden="true">VARDENIA</span>
+        {body.slice(2)}
+      </p>
+    )
   }
 
   return <p className="text-ink-700 mt-4 leading-relaxed">{withEmphasis(body, id)}</p>
@@ -150,10 +257,13 @@ export async function ContentPageView({
         title={page.title}
         intro={page.intro}
         place={place}
+        // About's own picture since 11 November 2026, the seven regional doors
+        // and the All Lebanon issue. Portrait, so it sits beside the title whole
+        // rather than behind it, where a wide crop would cut it to a strip.
+        photo={slug === 'about' ? { ...ABOUT_HERO, alt: ABOUT_HERO_ALT[locale] } : undefined}
         locale={locale}
-        immersive={slug === 'about'}
       >
-        <a href="#page-story" className={`vd-button ${slug === 'about' ? 'vd-button-paper' : ''}`}>
+        <a href="#page-story" className="vd-button">
           {page.sections[0]?.heading} <span aria-hidden>↓</span>
         </a>
       </PageHero>
@@ -202,25 +312,18 @@ export async function ContentPageView({
                 </span>
                 <h2>{section.heading}</h2>
                 <div className="vd-story-body">{body(section, i)}</div>
+                {slug === 'about' && ABOUT_PHOTOS[i]?.after === 'body'
+                  ? aboutPhoto(ABOUT_PHOTOS[i]!, locale)
+                  : null}
                 {section.subsections?.map((part, partIndex) => (
                   <div className="vd-story-subsection" key={part.heading}>
                     <h3>{part.heading}</h3>
                     <div className="vd-story-body">{body(part, i * 100 + partIndex + 1)}</div>
                   </div>
                 ))}
-                {slug === 'about' && i === 0 ? (
-                  // The magazine, a phone and a printed code on a table above
-                  // Raouché: print meeting digital, the section's subject.
-                  <figure className="vd-story-photograph vd-story-photograph-wide" data-vd-reveal>
-                    <Image
-                      src="/about/print-meets-digital.webp"
-                      alt={ABOUT_PHOTO_ALT[locale] ?? ABOUT_PHOTO_ALT.en}
-                      width={1280}
-                      height={720}
-                      sizes="(max-width:700px) 100vw, 60vw"
-                    />
-                  </figure>
-                ) : null}
+                {slug === 'about' && ABOUT_PHOTOS[i]?.after === 'end'
+                  ? aboutPhoto(ABOUT_PHOTOS[i]!, locale)
+                  : null}
               </section>
             ),
           )}

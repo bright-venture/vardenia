@@ -250,6 +250,48 @@
   height: auto;
   aspect-ratio: 16 / 9;
 }
+.vd-story-photograph.vd-story-photograph-portrait {
+  max-width: 480px;
+}
+.vd-story-photograph.vd-story-photograph-portrait img {
+  height: auto;
+  aspect-ratio: 1122 / 1402;
+}
+/* A pull quote: a tagline, or a line set in italics (About). */
+.vd-story-body > p.vd-story-quote {
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(21px, 1.8vw, 25px);
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--vd-ink);
+}
+.vd-story-body > p.vd-story-quote:first-child {
+  margin-top: 0;
+}
+:lang(ar) .vd-story-body > p.vd-story-quote,
+:lang(ur) .vd-story-body > p.vd-story-quote,
+:lang(zh) .vd-story-body > p.vd-story-quote,
+:lang(hi) .vd-story-body > p.vd-story-quote,
+:lang(bn) .vd-story-body > p.vd-story-quote {
+  font-style: normal;
+}
+/* The closing signature: the wordmark over a last line (About). */
+.vd-story-body > p.vd-story-signoff {
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 1px solid rgb(36 60 50 / 0.18);
+  font-family: var(--font-display);
+  font-size: 19px;
+  color: var(--vd-ink);
+}
+.vd-story-signoff > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  letter-spacing: 0.32em;
+}
+
 /* A headed part under a section's paragraphs (About's first section). */
 .vd-story-subsection {
   margin-top: 40px;
