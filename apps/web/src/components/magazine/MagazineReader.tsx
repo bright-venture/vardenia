@@ -27,6 +27,7 @@ import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { readerCopy } from './reader-copy'
 import { useJourneyMotion } from '../journey/browser-state'
 import { loadPdfJs, PDFJS_ASSET_BASE } from './load-pdfjs'
+import { openByRanges, RANGE_CHUNK } from './pdf-range'
 import { nextPage, spreadPages } from './reader-model'
 import styles from './MagazineReader.module.css'
 import { PaperCurl, type PaperSnapshot as Snapshot, type PaperTurn as Turn } from './PaperCurl'
@@ -131,16 +132,23 @@ function LoadedReader({
   useEffect(() => {
     let disposed = false
     let task: ReturnType<(typeof import('pdfjs-dist'))['getDocument']> | undefined
+    const ranges = new AbortController()
     void loadPdfJs()
-      .then((pdfjs) => {
+      .then(async (pdfjs) => {
+        if (disposed) return
+        // Page by page: see pdf-range.ts for why PDF.js cannot be left to
+        // find out on its own. Falls back to the plain URL if ranges fail.
+        const range = pdfjs.PDFDataRangeTransport
+          ? await openByRanges(pdfjs.PDFDataRangeTransport, src, ranges.signal).catch(() => null)
+          : null
         if (disposed) return
         task = pdfjs.getDocument({
-          url: src,
+          ...(range ? { range } : { url: src }),
           isEvalSupported: false,
           disableAutoFetch: true,
           disableRange: false,
           disableStream: true,
-          rangeChunkSize: 1024 * 1024,
+          rangeChunkSize: RANGE_CHUNK,
           cMapUrl: `${PDFJS_ASSET_BASE}/cmaps/`,
           cMapPacked: true,
           standardFontDataUrl: `${PDFJS_ASSET_BASE}/standard_fonts/`,
@@ -156,6 +164,7 @@ function LoadedReader({
       })
     return () => {
       disposed = true
+      ranges.abort()
       void task?.destroy()
     }
   }, [src])
@@ -877,9 +886,12 @@ function pdfDrawer(document: PDFDocumentProxy) {
     const view = pdfPage.getViewport({
       scale: Math.min(width / natural.width, height / natural.height),
     })
+    // The screen's own density, up to 3: most phones are 3x, and drawing them
+    // at 2x (the old cap) left small type soft. The pixel budget, not the
+    // ratio, is what keeps a page within a phone's memory.
     const ratio = Math.min(
       window.devicePixelRatio || 1,
-      2,
+      3,
       Math.sqrt(8_000_000 / (view.width * view.height)),
     )
     target.width = Math.max(1, Math.floor(view.width * ratio))
