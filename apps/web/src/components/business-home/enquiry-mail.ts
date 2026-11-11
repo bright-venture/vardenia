@@ -1,6 +1,11 @@
 /**
- * The homepage enquiry as a mailto: link, in the reader's language. Pure, so
- * the draft it prepares is tested (enquiry-mail.test.ts).
+ * The homepage enquiry as an email ready to send, in the reader's language.
+ * Pure, so the draft it prepares is tested (enquiry-mail.test.ts).
+ *
+ * The same draft goes three ways (11 November 2026): a mailto: link, which a
+ * phone hands to its mail app, and Gmail's and Outlook's web compose pages,
+ * which a computer opens in a new tab. On a computer with no mail app set up,
+ * a mailto: link does nothing at all, which read as a broken button.
  */
 export interface EnquiryCopy {
   /** "Vardenia magazine enquiry: {business}" */
@@ -25,7 +30,13 @@ export interface Enquiry {
   message: string
 }
 
-export function enquiryMail(to: string, enquiry: Enquiry, copy: EnquiryCopy): string {
+export interface EnquiryDraft {
+  to: string
+  subject: string
+  body: string
+}
+
+export function enquiryDraft(to: string, enquiry: Enquiry, copy: EnquiryCopy): EnquiryDraft {
   const lines = [
     copy.greeting,
     '',
@@ -43,6 +54,25 @@ export function enquiryMail(to: string, enquiry: Enquiry, copy: EnquiryCopy): st
     copy.thanks,
     enquiry.name,
   ]
-  const subject = copy.subject.replace('{business}', enquiry.business)
-  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`
+  return {
+    to,
+    subject: copy.subject.replace('{business}', enquiry.business),
+    body: lines.join('\n'),
+  }
 }
+
+/** For the phone's own mail app. */
+export const mailtoLink = ({ to, subject, body }: EnquiryDraft): string =>
+  `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+/** Gmail's compose page, filled in. */
+export const gmailLink = ({ to, subject, body }: EnquiryDraft): string =>
+  `https://mail.google.com/mail/?${new URLSearchParams({ view: 'cm', fs: '1', to, su: subject, body })}`
+
+/** Outlook on the web's compose page, filled in (personal and work accounts). */
+export const outlookLink = ({ to, subject, body }: EnquiryDraft): string =>
+  `https://outlook.live.com/mail/0/deeplink/compose?${new URLSearchParams({ to, subject, body })}`
+
+/** A phone or tablet, which hands mailto: to its mail app; a computer may not. */
+export const isHandheld = (userAgent: string, coarsePointer: boolean): boolean =>
+  /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent) || coarsePointer

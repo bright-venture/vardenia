@@ -2,12 +2,20 @@
 
 import { useState, type FormEvent } from 'react'
 import { useCategory } from './BusinessCategories'
-import { enquiryMail, type EnquiryCopy } from './enquiry-mail'
+import {
+  enquiryDraft,
+  gmailLink,
+  isHandheld,
+  mailtoLink,
+  outlookLink,
+  type EnquiryCopy,
+} from './enquiry-mail'
 
 /**
- * The homepage enquiry. As the designer built it, it prepares an email draft in
- * the reader's own mail app, addressed to the Vardenia mailbox, and stores and
- * sends nothing itself.
+ * The homepage enquiry. It prepares an email to the Vardenia mailbox and stores
+ * and sends nothing itself: on a phone in the mail app, on a computer in Gmail
+ * in a new tab, with Outlook and the mail app offered beside it (a computer
+ * often has no mail app set up, and there a mailto: link does nothing).
  */
 export function EnquiryForm({
   email,
@@ -33,10 +41,19 @@ export function EnquiryForm({
     ready: string
     openDraft: string
     readyAfter: string
+    openedGmail: string
+    otherMail: string
+    emailApp: string
   }
 }) {
   const { value: category, set: setCategory } = useCategory()
-  const [draft, setDraft] = useState<string | null>(null)
+  const [sent, setSent] = useState<{
+    handheld: boolean
+    opened: boolean
+    mailto: string
+    gmail: string
+    outlook: string
+  } | null>(null)
   if (!email) return null
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -45,7 +62,7 @@ export function EnquiryForm({
     if (!form.reportValidity()) return
     const fields = new FormData(form)
     const field = (name: string) => String(fields.get(name) ?? '').trim()
-    const href = enquiryMail(
+    const draft = enquiryDraft(
       email,
       {
         business: field('business'),
@@ -57,8 +74,23 @@ export function EnquiryForm({
       },
       copy,
     )
-    setDraft(href)
-    window.location.href = href
+    const links = {
+      mailto: mailtoLink(draft),
+      gmail: gmailLink(draft),
+      outlook: outlookLink(draft),
+    }
+    const handheld = isHandheld(navigator.userAgent, matchMedia('(pointer: coarse)').matches)
+    if (handheld) {
+      window.location.href = links.mailto
+      setSent({ handheld, opened: true, ...links })
+    } else {
+      // Inside the submit, so the browser counts it as the reader's own click.
+      // Not 'noopener': with it, window.open returns null even when the tab
+      // opened, and the page could not tell a blocked pop-up from Gmail.
+      const tab = window.open(links.gmail, '_blank')
+      if (tab) tab.opener = null
+      setSent({ handheld, opened: Boolean(tab), ...links })
+    }
   }
 
   return (
@@ -116,9 +148,27 @@ export function EnquiryForm({
       </button>
       <p className="vd-biz-form-note">{copy.note}</p>
       <p className="vd-biz-form-status" aria-live="polite">
-        {draft ? (
+        {sent?.handheld ? (
           <>
-            {copy.ready} <a href={draft}>{copy.openDraft}</a> {copy.readyAfter}
+            {copy.ready} <a href={sent.mailto}>{copy.openDraft}</a> {copy.readyAfter}
+          </>
+        ) : sent ? (
+          <>
+            {copy.ready} {sent.opened ? `${copy.openedGmail} ` : null}
+            {copy.otherMail}{' '}
+            {sent.opened ? null : (
+              <>
+                <a href={sent.gmail} target="_blank" rel="noopener noreferrer">
+                  Gmail
+                </a>
+                {' · '}
+              </>
+            )}
+            <a href={sent.outlook} target="_blank" rel="noopener noreferrer">
+              Outlook
+            </a>
+            {' · '}
+            <a href={sent.mailto}>{copy.emailApp}</a>
           </>
         ) : null}
       </p>

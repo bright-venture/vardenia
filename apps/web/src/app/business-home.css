@@ -447,6 +447,18 @@
   font: inherit;
   font-size: 16px;
 }
+/* The browser's autofill paints filled fields pale blue; keep them green.
+   Two rules, so a browser that knows only one selector still keeps it. */
+.vd-biz-form :is(input, textarea):-webkit-autofill {
+  -webkit-text-fill-color: var(--biz-paper);
+  box-shadow: inset 0 0 0 60px #355146;
+  caret-color: var(--biz-paper);
+}
+.vd-biz-form :is(input, textarea):autofill {
+  -webkit-text-fill-color: var(--biz-paper);
+  box-shadow: inset 0 0 0 60px #355146;
+  caret-color: var(--biz-paper);
+}
 .vd-biz-form :is(input, textarea)::placeholder {
   color: #d0d9cf;
 }
