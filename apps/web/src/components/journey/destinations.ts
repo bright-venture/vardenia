@@ -91,12 +91,14 @@ export const DESTINATIONS = [
     regionAr: 'الشوف',
     where: 'chouf',
     feeling: 'mountain',
-    image: 'deir-el-qamar.webp',
+    // A stone lane and arch (11 Nov 2026; it was the Fakhreddine Mosque). A
+    // new file name, so no cache keeps serving the old picture.
+    image: 'deir-el-qamar-lane.webp',
     lat: 33.698,
     lon: 35.5645,
-    alt: 'Fakhreddine Mosque and the stone architecture of Deir el Qamar',
-    note: 'A square, a minaret and the warm stone of a Chouf village.',
-    noteAr: 'ساحة ومئذنة ودفء الحجر في إحدى قرى الشوف.',
+    alt: 'A cobbled lane between old stone houses, leading to an arched passage in Deir el Qamar',
+    note: 'A cobbled lane, an old arch and the warm stone of a Chouf village.',
+    noteAr: 'زقاق مرصوف وقنطرة قديمة ودفء الحجر في إحدى قرى الشوف.',
     source: 'https://commons.wikimedia.org/wiki/Category:Fakhreddine_Mosque',
   },
 ] as const

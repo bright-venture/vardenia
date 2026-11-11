@@ -27,11 +27,9 @@ const photoCredits = [
     'https://commons.wikimedia.org/wiki/File:Port,_Tyre,_Lebanon.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
-  [
-    'Deir el Qamar',
-    'https://commons.wikimedia.org/wiki/File:Deir_El-Qamar_mosqu%C3%A9e_Fakhreddine.jpg',
-    'Patrice Bon · CC0',
-  ],
+  // Deir el Qamar's Wikimedia photograph (Patrice Bon, CC0) was replaced on
+  // 11 November 2026 with one the team supplied. If that one needs a credit,
+  // it goes here.
 ]
 
 export async function PhotographyCredits({ locale }: { locale: Locale }) {
@@ -51,8 +49,7 @@ export async function PhotographyCredits({ locale }: { locale: Locale }) {
       </ul>
       <p>
         Photographs cropped, resized and colour-graded for display.{' '}
-        <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a> ·{' '}
-        <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.
+        <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </p>
       <p>
         Natural Earth 1:10m · public domain.{' '}

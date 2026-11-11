@@ -186,7 +186,7 @@ export async function ContentPageView({
                 {slug === 'about' && i === 0 ? (
                   <figure className="vd-story-photograph" data-vd-reveal>
                     <Image
-                      src="/journey/deir-el-qamar.webp"
+                      src={`/journey/${DESTINATIONS[5].image}`}
                       alt={DESTINATIONS[5].alt}
                       width={1600}
                       height={1200}
