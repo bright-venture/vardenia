@@ -28,6 +28,13 @@
   max-width: 49ch;
   margin-top: 30px;
 }
+/* A section's description, under its one-line summary (PageHero `body`). */
+.vd-inner-hero-copy > p.vd-inner-hero-body {
+  margin-top: 14px;
+  max-width: 46ch;
+  font-size: 16px;
+  color: rgb(17 29 45 / 0.74);
+}
 .vd-inner-hero-actions {
   display: flex;
   flex-wrap: wrap;

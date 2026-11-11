@@ -127,6 +127,14 @@
       "note": "Cada ficha indica ahora si está libre.",
       "clear": "Borrar fechas",
       "onlineOnly": "Solo reserva online"
+    },
+    "sectionIntro": {
+      "stay": "Casas de huéspedes de piedra, hoteles boutique y habitaciones abiertas a la montaña o al mar. Elija dónde despertar y deje que la vista marque el ritmo del día.",
+      "eat-and-drink": "Mezze compartido sin prisa, una mesa sobre el mar, un café en la plaza del pueblo, una noche larga en la ciudad. El Líbano se entiende mejor a la mesa.",
+      "experiences": "Senderos antiguos y valles, ruinas milenarias, festivales y jornadas guiadas. Maneras de descubrir el país a pie, con alguien que lo conoce bien.",
+      "weddings": "Organizadores que conocen los lugares, las estaciones y la luz del atardecer. Para un día bajo los olivos, junto al mar o en lo alto de la montaña.",
+      "lifestyle": "Calles comerciales, centros comerciales y gimnasios para los días intermedios: una clase por la mañana, una tarde de paseo, la ciudad a su ritmo.",
+      "getting-around": "Recoge un coche, que te esperen en el aeropuerto o quédate con un conductor todo el día, para que la carretera de la costa y hacia la montaña forme parte del viaje."
     }
   },
   "booking": {

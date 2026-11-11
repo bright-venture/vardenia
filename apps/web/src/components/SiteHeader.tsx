@@ -15,6 +15,7 @@ import { DiscoveryMenu } from './header/DiscoveryMenu'
 import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
+import { SECTION_PHOTOS } from '../lib/section-photos'
 
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
@@ -22,14 +23,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   // Pages an admin has hidden (lib/hidden-pages) are left out of the menus.
   const hidden = await hiddenPages()
   const shown = (slug: (typeof hidden)[number]) => !hidden.includes(slug)
-  const categoryPhotos: Record<string, number> = {
-    stay: 1,
-    'eat-and-drink': 0,
-    experiences: 3,
-    weddings: 5,
-    lifestyle: 2,
-    'getting-around': 4,
-  }
 
   // The six sections and the directory, without the ones an admin has hidden.
   const sectionItems = withoutHidden(
@@ -37,7 +30,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       href: `/${section.path}`,
       name: sectionName(section, locale),
       description: sectionSummary(section, locale),
-      destination: categoryPhotos[section.path] ?? 0,
+      // The section's own photograph, as on its page (lib/section-photos).
+      photo: SECTION_PHOTOS[section.path],
     })),
     hidden,
   )

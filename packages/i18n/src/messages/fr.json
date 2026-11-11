@@ -127,6 +127,14 @@
       "note": "Chaque fiche indique maintenant si le lieu est libre.",
       "clear": "Effacer les dates",
       "onlineOnly": "Réservation en ligne uniquement"
+    },
+    "sectionIntro": {
+      "stay": "Maisons d’hôtes en pierre, hôtels de charme et chambres ouvertes sur la montagne ou la mer. Choisissez où vous réveiller, et laissez la vue donner le rythme de la journée.",
+      "eat-and-drink": "Des mezzés partagés sans se presser, une table au-dessus de la mer, un café sur la place du village, une longue soirée en ville. Le Liban se comprend d’abord à table.",
+      "experiences": "Vieux sentiers et vallées, ruines antiques, festivals et journées guidées. Des façons de découvrir le pays à pied, avec quelqu’un qui le connaît bien.",
+      "weddings": "Des organisateurs qui connaissent les lieux, les saisons et la lumière du soir. Pour un jour sous les oliviers, au bord de la mer ou haut dans la montagne.",
+      "lifestyle": "Rues commerçantes, centres commerciaux et salles de sport pour les jours entre deux escapades : un cours le matin, un après-midi de flânerie, la ville à son rythme.",
+      "getting-around": "Prenez une voiture, soyez attendu à l’aéroport ou gardez un chauffeur pour la journée, pour que la route le long de la côte et vers la montagne fasse partie du voyage."
     }
   },
   "booking": {

@@ -16,6 +16,7 @@ import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
+import { SECTION_PHOTOS } from '../../../../lib/section-photos'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import { sectionName, sectionSummary } from '../../../../lib/labels'
 import { sectionSeoCopy } from '../../../../lib/section-seo'
@@ -107,22 +108,14 @@ export default async function SectionPage({ params, searchParams }: Props) {
 
   return (
     <main className="vd-category-page">
+      {/* The section's own photograph and a line about it (lib/section-photos,
+          directory.sectionIntro), since 11 November 2026. */}
       <PageHero
         title={nameFor(section, locale)}
         intro={sectionSummary(section, locale)}
+        body={t(`sectionIntro.${section.path}` as 'sectionIntro.stay')}
+        photo={SECTION_PHOTOS[section.path]}
         locale={locale}
-        place={
-          (
-            {
-              stay: 1,
-              'eat-and-drink': 0,
-              experiences: 3,
-              weddings: 5,
-              lifestyle: 2,
-              'getting-around': 4,
-            } as Record<string, number>
-          )[path] ?? 0
-        }
       >
         <a className="vd-button" href="#section-results">
           {t('chooseType')} <span aria-hidden>↓</span>

@@ -127,6 +127,14 @@
       "note": "Each card now says if it is free then.",
       "clear": "Clear dates",
       "onlineOnly": "Online booking only"
+    },
+    "sectionIntro": {
+      "stay": "Stone guesthouses, boutique hotels and rooms that open onto the mountains or the sea. Choose where you wake up, and let the view set the pace of the day.",
+      "eat-and-drink": "Mezze shared slowly, a table above the sea, coffee in a village square, a late night in the city. Lebanon is best understood at the table.",
+      "experiences": "Old trails and valleys, ancient ruins, festivals and guided days out. Ways to see the country on foot, with someone who knows it well.",
+      "weddings": "Planners who know the venues, the seasons and the evening light. For a day under the olive trees, by the sea or high in the mountains.",
+      "lifestyle": "Shopping streets, malls and gyms for the days in between: a morning class, an afternoon of browsing, the city at its own pace.",
+      "getting-around": "Pick up a car, be met at the airport, or keep a driver for the day, so the road along the coast and up into the mountains becomes part of the trip."
     }
   },
   "booking": {
