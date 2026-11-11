@@ -1347,71 +1347,10 @@
 .vd-public [data-vd-motion='off'] * {
   animation: none !important;
 }
-.vd-footer {
-  margin-top: 50px;
-  background: var(--vd-ink);
-  color: var(--vd-paper);
-  padding: 100px var(--vd-gutter) 35px;
-  overflow: hidden;
-}
-.vd-footer-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 40px;
-  margin-bottom: 70px;
-}
-.vd-footer-top h2 {
-  font-family: var(--font-accent);
-  font-size: clamp(62px, 8vw, 120px);
-  line-height: 0.98;
-  text-transform: uppercase;
-}
-.vd-footer .vd-footer-link {
-  color: var(--vd-paper);
-  font-size: 14px;
-  line-height: 1.6;
-}
-.vd-footer .vd-footer-column h3 {
-  font-family: var(--font-body);
-  font-size: 15px;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--vd-gold);
-}
-.vd-footer .vd-footer-links {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 35px;
-}
-.vd-footer .vd-footer-links li {
-  margin-top: 12px;
-}
-.vd-footer-word {
-  font-family: var(--font-display);
-  font-size: 17.3vw;
-  letter-spacing: -0.05em;
-  line-height: 0.9;
-  text-transform: uppercase;
-  margin: 80px 0 45px;
-}
-.vd-footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 25px;
-  flex-wrap: wrap;
-  font-size: 13px;
-  color: #fff;
-}
-.vd-footer-bottom nav {
-  display: flex;
-  gap: 20px;
-}
 :lang(ar) .vd-home h1,
 :lang(ar) .vd-home h2,
 :lang(ar) .vd-home h3,
-:lang(ar) .vd-page-intro h1,
-:lang(ar) .vd-footer h2 {
+:lang(ar) .vd-page-intro h1 {
   letter-spacing: 0;
   line-height: 1.14;
   text-transform: none;
@@ -2005,37 +1944,6 @@
   }
   .vd-auth-card h1 {
     font-size: 36px;
-  }
-  .vd-footer {
-    padding: 80px 24px 30px;
-    margin-top: 35px;
-  }
-  .vd-footer-top {
-    display: block;
-    margin-bottom: 50px;
-  }
-  .vd-footer-top h2 {
-    font-size: clamp(52px, 13vw, 76px);
-  }
-  .vd-footer-top > a {
-    margin-top: 30px;
-  }
-  .vd-footer .vd-footer-links {
-    grid-template-columns: 1fr 1fr;
-    gap: 35px 25px;
-  }
-  .vd-footer-word {
-    font-size: 17vw;
-    margin: 60px 0 35px;
-  }
-  .vd-footer-bottom {
-    display: block;
-    font-size: 13px;
-  }
-  .vd-footer-bottom nav {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    gap: 16px;
   }
   :lang(ar) .vd-hero h1 {
     font-size: clamp(46px, 12vw, 72px);

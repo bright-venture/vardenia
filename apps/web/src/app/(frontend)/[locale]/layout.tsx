@@ -169,7 +169,7 @@ export default async function FrontendLayout({
             <div id="vd-content" className="flex-1" tabIndex={-1}>
               <PageMotion>{children}</PageMotion>
             </div>
-            <SiteFooter locale={locale as Locale} />
+            <SiteFooter />
             {/* Renders nothing until NEXT_PUBLIC_WHATSAPP_NUMBER is set. */}
             <WhatsAppButton />
           </SavedProvider>
