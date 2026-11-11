@@ -246,6 +246,26 @@
   aspect-ratio: 4/3;
   object-fit: cover;
 }
+.vd-story-photograph.vd-story-photograph-wide img {
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+/* A headed part under a section's paragraphs (About's first section). */
+.vd-story-subsection {
+  margin-top: 40px;
+}
+.vd-story-subsection h3 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+[dir='rtl'] .vd-story-subsection h3 {
+  letter-spacing: 0;
+  line-height: 1.4;
+}
 .vd-story-photograph figcaption {
   margin-top: 12px;
   font-size: 15px;

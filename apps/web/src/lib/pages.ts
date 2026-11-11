@@ -132,69 +132,183 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
     sections: [
       {
         heading: pick(locale, {
-          en: 'Why print, in 2026',
-          ar: 'لماذا الطباعة، في 2026',
-          fr: "Pourquoi l'imprimé, en 2026",
-          es: 'Por qué en papel, en 2026',
-          pt: 'Por que impresso, em 2026',
-          ru: 'Зачем печать в 2026 году',
-          zh: '为什么在 2026 年还做印刷',
-          hi: '2026 में छपाई क्यों',
-          bn: '2026 সালে ছাপা কেন',
-          ur: '2026 میں چھپائی کیوں',
+          en: 'Why Print in a Digital World?',
+          ar: 'لماذا المطبوع في عالم رقمي؟',
+          fr: 'Pourquoi l’imprimé dans un monde numérique ?',
+          es: '¿Por qué el papel en un mundo digital?',
+          pt: 'Porquê o impresso num mundo digital?',
+          ru: 'Зачем печать в цифровом мире?',
+          zh: '为什么在数字时代坚持印刷？',
+          hi: 'डिजिटल दुनिया में छपाई क्यों?',
+          bn: 'ডিজিটাল দুনিয়ায় ছাপা কেন?',
+          ur: 'ڈیجیٹل دنیا میں چھپائی کیوں؟',
         }),
         body: pick(locale, {
           en: [
-            'Because a magazine sits on a hotel reception desk for a year, and a search result lasts as long as the next scroll. A visitor who has just landed, has no local recommendations and does not know what to search for is better served by something they can pick up.',
-            'The code on each listing closes the gap. Point a phone at it and the page opens, current, with the hours as they are today rather than as they were when the issue printed.',
-            'That is also why a code, once printed, is permanent. A listing can change everything about itself and the code still resolves. If a business leaves us, the code explains what happened rather than failing.',
+            'Because meaningful experiences deserve more than a fleeting moment on a screen.',
+            'In an increasingly digital world, Vardenia believes in the lasting value of print. A beautifully curated magazine offers something unique: a tangible source of inspiration that travelers can discover, explore, and return to throughout their journey.',
+            'Placed in hotels, guesthouses, and selected destinations across Lebanon, Vardenia connects visitors with exceptional places, authentic experiences, and carefully selected businesses.',
           ],
           ar: [
-            'لأن المجلة تبقى على مكتب استقبال الفندق سنة كاملة، أما نتيجة البحث فتبقى إلى حين التمرير التالي. الزائر الذي وصل للتو، ولا يعرف أحداً يوصي له بمكان، ولا يعرف حتى عمّ يبحث، تخدمه أكثر صفحة يستطيع أن يمسكها بيده.',
-            'والرمز المطبوع على كل مكان يسدّ الفجوة. وجّه هاتفك إليه فتُفتح الصفحة، محدّثة، بمواعيد العمل كما هي اليوم لا كما كانت يوم الطباعة.',
-            'ولهذا السبب نفسه يبقى الرمز دائماً بعد طباعته. يمكن للمكان أن يغيّر كل شيء عن نفسه ويظل الرمز يعمل. وإذا غادرنا صاحب المكان، يشرح الرمز ما حدث بدل أن يتعطّل.',
+            'لأن التجارب ذات المعنى تستحقّ أكثر من لحظة عابرة على شاشة.',
+            'في عالم يزداد رقمية، تؤمن فاردينيا بالقيمة الدائمة للمطبوع. فالمجلة المختارة بعناية تقدّم شيئاً فريداً: مصدر إلهام ملموساً يكتشفه المسافر ويستكشفه ويعود إليه طوال رحلته.',
+            'توضع فاردينيا في الفنادق وبيوت الضيافة ووجهات مختارة في أنحاء لبنان، فتصل الزوّار بأماكن استثنائية وتجارب أصيلة وأعمال منتقاة بعناية.',
           ],
           fr: [
-            "Parce qu'un magazine reste un an sur le comptoir d'une réception d'hôtel, alors qu'un résultat de recherche ne dure que jusqu'au prochain défilement. Un visiteur qui vient d'arriver, sans recommandations locales et sans savoir quoi chercher, est mieux servi par quelque chose qu'il peut prendre en main.",
-            "Le code de chaque fiche comble l'écart. Pointez un téléphone dessus et la page s'ouvre, à jour, avec les horaires d'aujourd'hui plutôt que ceux du jour de l'impression.",
-            "C'est aussi pourquoi un code, une fois imprimé, est permanent. Une fiche peut tout changer d'elle-même, le code continue de fonctionner. Si un établissement nous quitte, le code explique ce qui s'est passé au lieu de tomber en erreur.",
+            'Parce que les expériences qui comptent méritent plus qu’un instant fugace sur un écran.',
+            'Dans un monde de plus en plus numérique, Vardenia croit à la valeur durable de l’imprimé. Un magazine soigneusement composé offre quelque chose d’unique : une source d’inspiration tangible que les voyageurs découvrent, explorent et retrouvent tout au long de leur séjour.',
+            'Présent dans les hôtels, les maisons d’hôtes et des lieux choisis à travers le Liban, Vardenia relie les visiteurs à des lieux d’exception, à des expériences authentiques et à des établissements soigneusement sélectionnés.',
           ],
           es: [
-            'Porque una revista se queda un año en el mostrador de recepción de un hotel, y un resultado de búsqueda dura lo que tarda el siguiente desplazamiento. Un visitante que acaba de llegar, sin recomendaciones locales y sin saber qué buscar, está mejor servido por algo que puede tomar en la mano.',
-            'El código de cada ficha cierra esa brecha. Apunta el móvil hacia él y se abre la página, actualizada, con el horario de hoy y no con el del día en que se imprimió el número.',
-            'Por eso también un código, una vez impreso, es permanente. Una ficha puede cambiarlo todo y el código sigue funcionando. Si un negocio se va, el código explica lo que pasó en lugar de fallar.',
+            'Porque las experiencias que importan merecen algo más que un instante fugaz en una pantalla.',
+            'En un mundo cada vez más digital, Vardenia cree en el valor duradero del papel. Una revista cuidadosamente elaborada ofrece algo único: una fuente de inspiración tangible que los viajeros pueden descubrir, explorar y volver a consultar durante todo su viaje.',
+            'Presente en hoteles, casas de huéspedes y destinos seleccionados de todo el Líbano, Vardenia conecta a los visitantes con lugares excepcionales, experiencias auténticas y negocios cuidadosamente seleccionados.',
           ],
           pt: [
-            'Porque uma revista fica um ano no balcão da recepção de um hotel, e um resultado de busca dura até a próxima rolagem. Um visitante que acabou de chegar, sem indicações locais e sem saber o que procurar, é mais bem servido por algo que pode pegar na mão.',
-            'O código em cada ficha fecha essa lacuna. Aponte o celular para ele e a página abre, atualizada, com o horário de hoje e não o do dia em que a edição foi impressa.',
-            'É também por isso que um código, depois de impresso, é permanente. Uma ficha pode mudar tudo sobre si e o código continua funcionando. Se um negócio nos deixa, o código explica o que aconteceu em vez de falhar.',
+            'Porque as experiências que importam merecem mais do que um momento fugaz num ecrã.',
+            'Num mundo cada vez mais digital, a Vardenia acredita no valor duradouro do impresso. Uma revista cuidadosamente feita oferece algo único: uma fonte de inspiração tangível que os viajantes podem descobrir, explorar e voltar a consultar ao longo de toda a viagem.',
+            'Presente em hotéis, casas de hóspedes e destinos selecionados por todo o Líbano, a Vardenia liga os visitantes a lugares excecionais, experiências autênticas e negócios cuidadosamente escolhidos.',
           ],
           ru: [
-            'Потому что журнал год лежит на стойке регистрации в отеле, а результат поиска живёт до следующей прокрутки. Гостю, который только что прилетел, у которого нет местных рекомендаций и который не знает, что искать, больше поможет то, что можно взять в руки.',
-            'Код на каждой карточке закрывает этот разрыв. Наведите на него телефон, и откроется страница — актуальная, с сегодняшними часами работы, а не с теми, что были на момент печати номера.',
-            'Поэтому же напечатанный код остаётся навсегда. Заведение может изменить о себе всё, а код продолжит работать. Если заведение уходит от нас, код объясняет, что произошло, вместо того чтобы выдать ошибку.',
+            'Потому что настоящие впечатления заслуживают большего, чем мимолётный миг на экране.',
+            'В мире, который становится всё более цифровым, Vardenia верит в долговечную ценность печати. Тщательно собранный журнал даёт нечто особенное: осязаемый источник вдохновения, который путешественник может открыть, изучить и к которому может возвращаться на протяжении всей поездки.',
+            'Vardenia лежит в отелях, гостевых домах и избранных местах по всему Ливану и связывает гостей с исключительными местами, подлинными впечатлениями и тщательно отобранными заведениями.',
           ],
           zh: [
-            '因为一本杂志会在酒店前台摆上一整年，而一条搜索结果只能留到下一次滑动。一位刚下飞机、没有当地人推荐、也不知道该搜什么的旅客，更需要一样可以拿在手里的东西。',
-            '每个商户旁的二维码弥合了这道差距。用手机一扫，页面随即打开，内容是最新的，营业时间是今天的，而不是杂志印刷那天的。',
-            '这也是二维码一经印刷便永久有效的原因。商户的一切都可以改变，二维码依然能用。如果某个商户离开了我们，二维码会说明发生了什么，而不是直接失效。',
+            '因为有意义的体验，值得的不只是屏幕上转瞬即逝的一刻。',
+            '在日益数字化的世界里，Vardenia 相信印刷的持久价值。一本精心策划的杂志能带来独特的东西：一份可以握在手中的灵感来源，让旅行者在整个旅程中发现、探索并反复翻阅。',
+            'Vardenia 摆放在黎巴嫩各地的酒店、民宿和精选目的地，把旅行者与非凡的地方、真实的体验和精心挑选的商家联系起来。',
           ],
           hi: [
-            'क्योंकि एक पत्रिका होटल के रिसेप्शन पर पूरे साल रखी रहती है, और एक सर्च रिज़ल्ट बस अगली स्क्रॉल तक टिकता है। जो यात्री अभी-अभी पहुँचा है, जिसके पास कोई स्थानीय सुझाव नहीं है और जिसे यह भी नहीं पता कि क्या खोजना है, उसके लिए ऐसी चीज़ बेहतर है जिसे वह हाथ में उठा सके।',
-            'हर लिस्टिंग पर छपा कोड यह दूरी मिटा देता है। फ़ोन उसकी ओर करें और पेज खुल जाता है, ताज़ा जानकारी के साथ, आज के समय के साथ, न कि उस दिन के जब अंक छपा था।',
-            'इसीलिए छपने के बाद कोड स्थायी होता है। कोई लिस्टिंग अपने बारे में सब कुछ बदल सकती है, फिर भी कोड काम करता रहता है। अगर कोई व्यवसाय हमसे अलग हो जाता है, तो कोड बंद होने के बजाय बताता है कि क्या हुआ।',
+            'क्योंकि सार्थक अनुभव स्क्रीन पर एक क्षणिक पल से कहीं ज़्यादा के हक़दार हैं।',
+            'लगातार डिजिटल होती दुनिया में Vardenia छपे हुए शब्द के स्थायी मूल्य में विश्वास करती है। ध्यान से तैयार की गई एक पत्रिका कुछ अनोखा देती है: प्रेरणा का एक ठोस स्रोत, जिसे यात्री पूरी यात्रा के दौरान खोज सकते हैं, पढ़ सकते हैं और बार-बार लौटकर देख सकते हैं।',
+            'लेबनान भर के होटलों, गेस्टहाउसों और चुनी हुई जगहों पर रखी गई Vardenia मेहमानों को असाधारण जगहों, सच्चे अनुभवों और ध्यान से चुने गए व्यवसायों से जोड़ती है।',
           ],
           bn: [
-            'কারণ একটি ম্যাগাজিন হোটেলের রিসেপশন ডেস্কে পুরো এক বছর থাকে, আর একটি সার্চ রেজাল্ট থাকে পরের স্ক্রল পর্যন্ত। যে অতিথি সবে এসে পৌঁছেছেন, যাঁর কাছে স্থানীয় কোনো পরামর্শ নেই এবং যিনি জানেনই না কী খুঁজবেন, তাঁর জন্য হাতে তুলে নেওয়ার মতো কিছু বেশি কাজের।',
-            'প্রতিটি লিস্টিংয়ের কোড এই ফাঁকটা পূরণ করে। ফোন তাক করলেই পেজ খুলে যায়, হালনাগাদ তথ্যসহ, আজকের সময়সূচিসহ, সংখ্যাটি ছাপার দিনের নয়।',
-            'এ কারণেই একবার ছাপা হলে কোড স্থায়ী। একটি লিস্টিং নিজের সবকিছু বদলে ফেলতে পারে, তবু কোড কাজ করে যায়। কোনো ব্যবসা আমাদের ছেড়ে গেলে কোড অচল হয়ে যাওয়ার বদলে জানিয়ে দেয় কী ঘটেছে।',
+            'কারণ অর্থপূর্ণ অভিজ্ঞতা পর্দায় এক ঝলক মুহূর্তের চেয়ে বেশি কিছু পাওয়ার যোগ্য।',
+            'ক্রমশ ডিজিটাল হয়ে ওঠা পৃথিবীতে Vardenia ছাপা মাধ্যমের স্থায়ী মূল্যে বিশ্বাস করে। যত্ন করে সাজানো একটি ম্যাগাজিন অনন্য কিছু দেয়: অনুপ্রেরণার একটি হাতে ধরা উৎস, যা ভ্রমণকারীরা পুরো যাত্রায় আবিষ্কার করতে, ঘুরে দেখতে আর বারবার ফিরে পড়তে পারেন।',
+            'লেবানন জুড়ে হোটেল, গেস্টহাউস ও বাছাই করা গন্তব্যে রাখা Vardenia অতিথিদের অসাধারণ জায়গা, খাঁটি অভিজ্ঞতা আর যত্ন করে বাছাই করা ব্যবসার সঙ্গে যুক্ত করে।',
           ],
           ur: [
-            'کیونکہ میگزین ہوٹل کے استقبالیہ پر پورا سال پڑا رہتا ہے، جبکہ سرچ کا نتیجہ بس اگلی اسکرول تک رہتا ہے۔ جو مہمان ابھی پہنچا ہے، جس کے پاس کوئی مقامی مشورہ نہیں اور جسے یہ بھی معلوم نہیں کہ کیا تلاش کرے، اس کے لیے وہ چیز بہتر ہے جسے وہ ہاتھ میں اٹھا سکے۔',
-            'ہر لسٹنگ پر چھپا کوڈ یہ فاصلہ ختم کر دیتا ہے۔ فون اس کی طرف کریں اور صفحہ کھل جاتا ہے، تازہ معلومات کے ساتھ، آج کے اوقات کے ساتھ، نہ کہ اُس دن کے جب شمارہ چھپا تھا۔',
-            'اسی لیے چھپنے کے بعد کوڈ مستقل رہتا ہے۔ کوئی لسٹنگ اپنے بارے میں سب کچھ بدل سکتی ہے، پھر بھی کوڈ کام کرتا رہتا ہے۔ اگر کوئی کاروبار ہمیں چھوڑ دے تو کوڈ ناکام ہونے کے بجائے بتاتا ہے کہ کیا ہوا۔',
+            'کیونکہ بامعنی تجربات اسکرین پر ایک گزرتے لمحے سے کہیں زیادہ کے حق دار ہیں۔',
+            'تیزی سے ڈیجیٹل ہوتی دنیا میں Vardenia چھپے ہوئے لفظ کی دیرپا قدر پر یقین رکھتا ہے۔ سلیقے سے ترتیب دیا گیا میگزین کچھ منفرد پیش کرتا ہے: تحریک کا ایک ٹھوس ذریعہ، جسے مسافر پورے سفر میں دریافت کر سکتے ہیں، کھوج سکتے ہیں اور بار بار پلٹ کر دیکھ سکتے ہیں۔',
+            'لبنان بھر کے ہوٹلوں، گیسٹ ہاؤسز اور منتخب مقامات پر رکھا گیا Vardenia مہمانوں کو غیر معمولی جگہوں، حقیقی تجربات اور احتیاط سے چنے گئے کاروباروں سے جوڑتا ہے۔',
           ],
         }),
+        subsections: [
+          {
+            heading: pick(locale, {
+              en: 'Where Print Meets Digital',
+              ar: 'حيث يلتقي المطبوع بالرقمي',
+              fr: 'Là où l’imprimé rencontre le numérique',
+              es: 'Donde el papel se encuentra con lo digital',
+              pt: 'Onde o impresso encontra o digital',
+              ru: 'Где печать встречается с цифрой',
+              zh: '印刷与数字的交汇',
+              hi: 'जहाँ छपाई डिजिटल से मिलती है',
+              bn: 'যেখানে ছাপা মেলে ডিজিটালের সঙ্গে',
+              ur: 'جہاں چھپائی ڈیجیٹل سے ملتی ہے',
+            }),
+            body: pick(locale, {
+              en: [
+                'Vardenia combines the elegance of a printed publication with the convenience of a modern digital platform.',
+                'Through integrated QR codes, readers can instantly access updated business information, explore services, discover locations, and connect directly with featured destinations.',
+                'Our magazine creates the first impression. Our digital platform keeps the connection alive.',
+              ],
+              ar: [
+                'تجمع فاردينيا بين أناقة المطبوعة وسهولة منصّة رقمية حديثة.',
+                'بفضل رموز QR المدمجة، يصل القرّاء فوراً إلى معلومات محدّثة عن الأعمال، ويستكشفون الخدمات، ويكتشفون المواقع، ويتواصلون مباشرة مع الوجهات المعروضة.',
+                'مجلتنا تصنع الانطباع الأول. ومنصّتنا الرقمية تُبقي الصلة حيّة.',
+              ],
+              fr: [
+                'Vardenia allie l’élégance d’une publication imprimée à la commodité d’une plateforme numérique moderne.',
+                'Grâce aux codes QR intégrés, les lecteurs accèdent instantanément à des informations à jour sur les établissements, découvrent leurs services et leur emplacement, et contactent directement les lieux présentés.',
+                'Notre magazine crée la première impression. Notre plateforme numérique fait vivre le lien.',
+              ],
+              es: [
+                'Vardenia combina la elegancia de una publicación impresa con la comodidad de una plataforma digital moderna.',
+                'Gracias a los códigos QR integrados, los lectores acceden al instante a información actualizada de los negocios, exploran sus servicios, descubren su ubicación y contactan directamente con los destinos destacados.',
+                'Nuestra revista crea la primera impresión. Nuestra plataforma digital mantiene viva la conexión.',
+              ],
+              pt: [
+                'A Vardenia junta a elegância de uma publicação impressa à conveniência de uma plataforma digital moderna.',
+                'Através dos códigos QR integrados, os leitores acedem de imediato a informação atualizada sobre os negócios, exploram os serviços, descobrem a localização e contactam diretamente os destinos apresentados.',
+                'A nossa revista cria a primeira impressão. A nossa plataforma digital mantém a ligação viva.',
+              ],
+              ru: [
+                'Vardenia сочетает элегантность печатного издания с удобством современной цифровой платформы.',
+                'Благодаря встроенным QR-кодам читатели сразу получают актуальную информацию о заведениях, узнают об услугах, находят адреса и напрямую связываются с представленными местами.',
+                'Наш журнал создаёт первое впечатление. Наша цифровая платформа поддерживает связь.',
+              ],
+              zh: [
+                'Vardenia 将印刷出版物的优雅与现代数字平台的便捷结合在一起。',
+                '通过嵌入的二维码，读者可以即时获取最新的商家信息、了解服务、找到位置，并直接联系杂志介绍的目的地。',
+                '我们的杂志留下第一印象，我们的数字平台让这份联系延续下去。',
+              ],
+              hi: [
+                'Vardenia एक छपे हुए प्रकाशन की सुंदरता को आधुनिक डिजिटल प्लेटफ़ॉर्म की सुविधा के साथ जोड़ती है।',
+                'पत्रिका में जुड़े QR कोड के ज़रिए पाठक तुरंत व्यवसायों की ताज़ा जानकारी देख सकते हैं, सेवाएँ जान सकते हैं, जगहें खोज सकते हैं और प्रस्तुत जगहों से सीधे जुड़ सकते हैं।',
+                'हमारी पत्रिका पहली छाप छोड़ती है। हमारा डिजिटल प्लेटफ़ॉर्म इस जुड़ाव को बनाए रखता है।',
+              ],
+              bn: [
+                'Vardenia ছাপা প্রকাশনার সৌন্দর্যকে আধুনিক ডিজিটাল প্ল্যাটফর্মের সুবিধার সঙ্গে মিলিয়েছে।',
+                'ম্যাগাজিনে থাকা QR কোডের মাধ্যমে পাঠকেরা সঙ্গে সঙ্গে ব্যবসার হালনাগাদ তথ্য দেখতে, সেবাগুলো জানতে, অবস্থান খুঁজে পেতে আর উপস্থাপিত গন্তব্যের সঙ্গে সরাসরি যোগাযোগ করতে পারেন।',
+                'আমাদের ম্যাগাজিন প্রথম ছাপটা তৈরি করে। আমাদের ডিজিটাল প্ল্যাটফর্ম সেই সংযোগ বাঁচিয়ে রাখে।',
+              ],
+              ur: [
+                'Vardenia ایک چھپی ہوئی اشاعت کی نفاست کو ایک جدید ڈیجیٹل پلیٹ فارم کی سہولت کے ساتھ جوڑتا ہے۔',
+                'میگزین میں شامل QR کوڈز کے ذریعے قارئین فوراً کاروبار کی تازہ معلومات دیکھ سکتے ہیں، خدمات جان سکتے ہیں، مقامات تلاش کر سکتے ہیں اور پیش کی گئی منزلوں سے براہِ راست رابطہ کر سکتے ہیں۔',
+                'ہمارا میگزین پہلا تاثر بناتا ہے۔ ہمارا ڈیجیٹل پلیٹ فارم اس تعلق کو قائم رکھتا ہے۔',
+              ],
+            }),
+          },
+          {
+            heading: pick(locale, {
+              en: 'More Than a Magazine',
+              ar: 'أكثر من مجلة',
+              fr: 'Plus qu’un magazine',
+              es: 'Más que una revista',
+              pt: 'Mais do que uma revista',
+              ru: 'Больше, чем журнал',
+              zh: '不只是一本杂志',
+              hi: 'एक पत्रिका से कहीं बढ़कर',
+              bn: 'একটি ম্যাগাজিনের চেয়েও বেশি',
+              ur: 'ایک میگزین سے بڑھ کر',
+            }),
+            body: pick(locale, {
+              en: [
+                "Vardenia is a bridge between travelers and Lebanon's tourism industry, offering businesses meaningful visibility while inspiring visitors to discover the country with confidence.",
+              ],
+              ar: [
+                'فاردينيا جسر بين المسافرين وقطاع السياحة في لبنان، تمنح الأعمال حضوراً ذا معنى، وتُلهم الزوّار لاكتشاف البلد بثقة.',
+              ],
+              fr: [
+                'Vardenia est un pont entre les voyageurs et le secteur du tourisme au Liban : il offre aux établissements une visibilité qui compte, tout en donnant aux visiteurs l’envie de découvrir le pays en toute confiance.',
+              ],
+              es: [
+                'Vardenia es un puente entre los viajeros y el sector turístico del Líbano: ofrece a los negocios una visibilidad que cuenta e inspira a los visitantes a descubrir el país con confianza.',
+              ],
+              pt: [
+                'A Vardenia é uma ponte entre os viajantes e o setor do turismo do Líbano: dá aos negócios uma visibilidade que conta e inspira os visitantes a descobrir o país com confiança.',
+              ],
+              ru: [
+                'Vardenia становится мостом между путешественниками и туристической отраслью Ливана: даёт заведениям заметность, которая имеет значение, и вдохновляет гостей открывать страну с уверенностью.',
+              ],
+              zh: [
+                'Vardenia 是旅行者与黎巴嫩旅游业之间的桥梁，为商家带来有意义的曝光，也激励旅行者满怀信心地探索这个国家。',
+              ],
+              hi: [
+                'Vardenia यात्रियों और लेबनान के पर्यटन उद्योग के बीच एक पुल है, जो व्यवसायों को सार्थक पहचान देती है और मेहमानों को भरोसे के साथ देश खोजने की प्रेरणा देती है।',
+              ],
+              bn: [
+                'Vardenia ভ্রমণকারী আর লেবাননের পর্যটন শিল্পের মধ্যে একটি সেতু, যা ব্যবসাগুলোকে অর্থপূর্ণ পরিচিতি দেয় এবং অতিথিদের আত্মবিশ্বাসের সঙ্গে দেশটি আবিষ্কারে অনুপ্রাণিত করে।',
+              ],
+              ur: [
+                'Vardenia مسافروں اور لبنان کی سیاحتی صنعت کے درمیان ایک پل ہے، جو کاروباروں کو بامعنی پہچان دیتا ہے اور مہمانوں کو اعتماد کے ساتھ ملک دریافت کرنے کی ترغیب دیتا ہے۔',
+              ],
+            }),
+          },
+        ],
       },
       {
         heading: pick(locale, {

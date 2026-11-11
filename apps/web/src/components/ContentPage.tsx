@@ -8,7 +8,6 @@ import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { PageHero } from './editorial/PageHero'
 import { Link } from '../i18n/routing'
-import { DESTINATIONS } from './journey/destinations'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
 import { withEmphasis } from './emphasis'
@@ -44,6 +43,20 @@ import { withEmphasis } from './emphasis'
  * The legal documents are still English in both editions and still carry the
  * override. See LegalDocument.
  */
+
+/** About's first photograph, the magazine with its printed code and a phone. */
+const ABOUT_PHOTO_ALT: Record<Locale, string> = {
+  en: 'The Vardenia magazine, a phone showing the Vardenia site and a printed QR code on a table above the sea at Raouché',
+  ar: 'مجلة فاردينيا وهاتف يعرض موقع فاردينيا ورمز QR مطبوع على طاولة تطلّ على البحر عند الروشة',
+  fr: 'Le magazine Vardenia, un téléphone affichant le site Vardenia et un code QR imprimé sur une table face à la mer, à Raouché',
+  es: 'La revista Vardenia, un teléfono con el sitio de Vardenia y un código QR impreso sobre una mesa frente al mar en Raouché',
+  pt: 'A revista Vardenia, um telemóvel com o site da Vardenia e um código QR impresso numa mesa sobre o mar em Raouché',
+  ru: 'Журнал Vardenia, телефон с сайтом Vardenia и напечатанный QR-код на столе над морем у Рауше',
+  zh: '劳谢海边的桌上，摆着 Vardenia 杂志、显示 Vardenia 网站的手机和一张印刷的二维码',
+  hi: 'रौशे में समुद्र के ऊपर एक मेज़ पर Vardenia पत्रिका, Vardenia साइट दिखाता फ़ोन और छपा हुआ QR कोड',
+  bn: 'রাউশেতে সমুদ্রের ওপরে একটি টেবিলে Vardenia ম্যাগাজিন, Vardenia সাইট দেখানো একটি ফোন আর ছাপা QR কোড',
+  ur: 'روشہ میں سمندر کے اوپر ایک میز پر Vardenia میگزین، Vardenia سائٹ دکھاتا فون اور چھپا ہوا QR کوڈ',
+}
 
 function Line({ text, id }: { text: string; id: string }) {
   const isList = text.startsWith('- ')
@@ -189,18 +202,23 @@ export async function ContentPageView({
                 </span>
                 <h2>{section.heading}</h2>
                 <div className="vd-story-body">{body(section, i)}</div>
+                {section.subsections?.map((part, partIndex) => (
+                  <div className="vd-story-subsection" key={part.heading}>
+                    <h3>{part.heading}</h3>
+                    <div className="vd-story-body">{body(part, i * 100 + partIndex + 1)}</div>
+                  </div>
+                ))}
                 {slug === 'about' && i === 0 ? (
-                  <figure className="vd-story-photograph" data-vd-reveal>
+                  // The magazine, a phone and a printed code on a table above
+                  // Raouché: print meeting digital, the section's subject.
+                  <figure className="vd-story-photograph vd-story-photograph-wide" data-vd-reveal>
                     <Image
-                      src={`/journey/${DESTINATIONS[5].image}`}
-                      alt={DESTINATIONS[5].alt}
-                      width={1600}
-                      height={1200}
+                      src="/about/print-meets-digital.webp"
+                      alt={ABOUT_PHOTO_ALT[locale] ?? ABOUT_PHOTO_ALT.en}
+                      width={1280}
+                      height={720}
                       sizes="(max-width:700px) 100vw, 60vw"
                     />
-                    <figcaption>
-                      {locale === 'ar' ? DESTINATIONS[5].ar : DESTINATIONS[5].name}
-                    </figcaption>
                   </figure>
                 ) : null}
               </section>
