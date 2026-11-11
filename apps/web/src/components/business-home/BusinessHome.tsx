@@ -78,13 +78,23 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           </figure>
         </section>
 
-        <div className="vd-biz-themes" aria-label={t('themesLabel')}>
-          <span>{t('themeCulture')}</span>
-          <span>{t('themeHospitality')}</span>
-          <span>{t('themeFood')}</span>
-          <span>{t('themeGetaways')}</span>
-          <span>{t('themeDiscovery')}</span>
-        </div>
+        {/* The designer's editorial strip (11 November 2026): four numbered
+            themes, a Bordeaux star between neighbours, decorative only. */}
+        <ul className="vd-biz-themes" aria-label={t('themesLabel')}>
+          {([1, 2, 3, 4] as const).map((n) => (
+            <li key={n} className="vd-biz-theme">
+              {n > 1 ? (
+                <span className="vd-biz-theme-star" aria-hidden="true">
+                  ✦
+                </span>
+              ) : null}
+              <span className="vd-biz-theme-number" aria-hidden="true">
+                {String(n).padStart(2, '0')}
+              </span>
+              <span className="vd-biz-theme-title">{rich(`themeStrip${n}`)}</span>
+            </li>
+          ))}
+        </ul>
 
         <section className="vd-biz-section vd-biz-axis vd-biz-about" aria-labelledby="biz-about">
           <div>

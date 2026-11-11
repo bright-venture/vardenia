@@ -163,14 +163,58 @@
   font-size: 14px;
   letter-spacing: 0.03em;
 }
+/* The editorial strip under the hero (Vardenia-Editorial-Strip.html, 11
+   November 2026): four numbered themes, a Bordeaux star centred on the gap
+   between neighbours, no dividing lines. Two columns on narrow screens, where
+   only items in the same row get a star. */
 .vd-biz-themes {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  gap: 25px;
-  padding: 25px var(--biz-gutter);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  min-height: 180px;
+  margin: 0;
+  padding: 38px 5%;
+  list-style: none;
   border-block: 1px solid var(--biz-line);
-  font-size: 14px;
+}
+.vd-biz-theme {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  padding-inline: 24px;
+}
+.vd-biz-theme:first-child {
+  padding-inline-start: 0;
+}
+.vd-biz-theme-star {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--biz-wine);
+}
+[dir='rtl'] .vd-biz-theme-star {
+  transform: translate(50%, -50%);
+}
+.vd-biz-theme-number {
+  font:
+    10px/1 Arial,
+    sans-serif;
+  letter-spacing: 2px;
+  color: var(--biz-wine);
+}
+.vd-biz-theme-title {
+  font: clamp(19px, 2.1vw, 30px) / 1.15 var(--font-display);
+  letter-spacing: -0.6px;
+  overflow-wrap: break-word;
+}
+.vd-biz-theme-title em {
+  font-weight: 400;
+  color: var(--biz-wine);
 }
 
 /* Sections */
@@ -591,11 +635,21 @@ body:has(.vd-biz) .vd-footer {
     font-size: 13px;
   }
   .vd-biz-themes {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px 23px;
-    padding: 20px 6%;
-    font-size: 13px;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px 0;
+    padding: 28px 6%;
+  }
+  .vd-biz-theme {
+    padding-inline: 18px;
+  }
+  .vd-biz-theme:nth-child(3) {
+    padding-inline-start: 0;
+  }
+  .vd-biz-theme:nth-child(3) .vd-biz-theme-star {
+    display: none;
+  }
+  .vd-biz-theme-title {
+    font-size: 21px;
   }
   .vd-biz-section {
     padding: 60px 7%;
