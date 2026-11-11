@@ -29,6 +29,10 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
   })
   const pdf = issue && typeof issue.digitalEdition === 'object' ? issue.digitalEdition : null
 
+  // Headings set a word or a line in italics (<em>), and some break a line (<br>).
+  const rich = (key: Parameters<typeof t.rich>[0]) =>
+    t.rich(key, { em: (chunks) => <em>{chunks}</em>, br: () => <br /> })
+
   const categories = (['Hotels', 'Restaurants', 'Destinations', 'Experiences'] as const).map(
     (key) => ({
       key,
@@ -45,7 +49,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <div className="vd-biz-hero-copy">
             <h1 id="biz-hero-title">
               {t('heroA')}
-              <br /> {t.rich('heroLine', { em: (chunks) => <em>{chunks}</em> })}
+              <br /> {rich('heroLine')}
             </h1>
             <p className="vd-biz-lead">{t('heroLead')}</p>
             <div className="vd-biz-actions">
@@ -86,7 +90,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <div>
             <h2 id="biz-about" data-vd-reveal>
               {t('aboutA')}
-              <br /> {t('aboutB')}
+              <br /> {rich('aboutB')}
             </h2>
           </div>
           <div>
@@ -114,7 +118,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <div>
             <h2 id="biz-regions" data-vd-reveal>
               {t('regionsA')}
-              <br /> {t('regionsB')}
+              <br /> {rich('regionsB')}
             </h2>
             <p className="vd-biz-regions-body">{t('regionsBody')}</p>
           </div>
@@ -209,10 +213,9 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
             <div>
               <h2 id="biz-beyond" data-vd-reveal>
                 {t('beyondA')}
-                <br /> {t('beyondB')}
+                <br /> {rich('beyondB')}
               </h2>
               <p className="vd-biz-beyond-statement">{t('beyondStatement')}</p>
-              <p>{t('beyondBody')}</p>
               <ol className="vd-biz-steps">
                 <li>
                   <h3 data-vd-reveal>{t('stepPrintTitle')}</h3>
@@ -235,10 +238,10 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
         <section className="vd-biz-section vd-biz-axis vd-biz-story" aria-labelledby="biz-story">
           <div>
             <Image
-              src="/journey/bsharri.webp"
+              src="/business/byblos-harbour.webp"
               width={1600}
-              height={1200}
-              alt={t('bsharriAlt')}
+              height={1039}
+              alt={t('harbourAlt')}
               sizes="(max-width:700px) 100vw, 40vw"
               data-vd-reveal
             />
@@ -246,7 +249,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <div>
             <h2 id="biz-story" data-vd-reveal>
               {t('storyA')}
-              <br /> {t('storyB')}
+              <br /> {rich('storyB')}
             </h2>
             <p className="vd-biz-statement">{t('storyStatement')}</p>
             <p>{t('storyBody')}</p>
@@ -274,6 +277,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <h2 id="biz-join" data-vd-reveal>
             {t('joinA')}
             <br /> {t('joinB')}
+            <br /> {rich('joinC')}
           </h2>
           <div className="vd-biz-pair vd-biz-join">
             {(['Introduce', 'Region', 'Formats', 'Releases'] as const).map((key) => (
@@ -307,9 +311,9 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           <div>
             <h2 id="biz-contact" data-vd-reveal>
               {t('contactA')}
-              <br /> {t('contactB')}
+              <br /> {rich('contactB')}
             </h2>
-            <p>{t('contactBody')}</p>
+            <p>{rich('contactBody')}</p>
             <div className="vd-biz-reach">
               {CONTACT.email ? (
                 <a className="vd-biz-mail" href={`mailto:${CONTACT.email}`}>
