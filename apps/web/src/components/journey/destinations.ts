@@ -11,8 +11,8 @@ export const DESTINATIONS = [
     where: 'jbeil',
     feeling: 'coast',
     image: 'byblos.webp',
-    lat: 34.1217,
-    lon: 35.6434,
+    lat: 34.1222,
+    lon: 35.6424,
     alt: 'Fishing boats in the old harbour of Byblos',
     note: 'Follow the harbour into the old town, past stone façades and narrow lanes.',
     noteAr: 'من المرفأ إلى البلدة القديمة، بين الواجهات الحجرية والأزقة الضيقة.',
@@ -125,9 +125,9 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     name: 'Downtown Beirut',
     ar: 'وسط بيروت',
     image: 'beirut-downtown.webp',
-    // The clock tower, Nejmeh Square.
-    lat: 33.8988,
-    lon: 35.5047,
+    // Nejmeh Square and its clock tower (Wikipedia and OpenStreetMap agree).
+    lat: 33.8967,
+    lon: 35.5046,
     alt: 'Sandstone arcades and the clock tower of Nejmeh Square in downtown Beirut',
   },
   arz: {
@@ -135,9 +135,9 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     name: 'Arz',
     ar: 'الأرز',
     image: 'arz.webp',
-    // The Cedars of God, above Bsharri.
-    lat: 34.2436,
-    lon: 36.0489,
+    // The Cedars of God, above Bsharri (Wikipedia).
+    lat: 34.245,
+    lon: 36.0481,
     alt: 'Old cedars in the snow beside a mountain road at Arz, above Bsharri',
   },
   'byblos-harbour': {
@@ -145,8 +145,8 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     name: 'Byblos',
     ar: 'جبيل',
     image: 'byblos-harbour.webp',
-    lat: 34.1217,
-    lon: 35.6434,
+    lat: 34.1222,
+    lon: 35.6424,
     alt: 'Fishing boats in the old harbour of Byblos, below stone houses and the old castle',
   },
 }
