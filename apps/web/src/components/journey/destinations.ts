@@ -140,6 +140,15 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     lon: 36.0489,
     alt: 'Old cedars in the snow beside a mountain road at Arz, above Bsharri',
   },
+  'byblos-harbour': {
+    id: 'byblos-harbour',
+    name: 'Byblos',
+    ar: 'جبيل',
+    image: 'byblos-harbour.webp',
+    lat: 34.1217,
+    lon: 35.6434,
+    alt: 'Fishing boats in the old harbour of Byblos, below stone houses and the crusader castle',
+  },
 }
 export const routePath =
   'M640 0 C680 180 210 200 260 430 S850 690 680 980 S170 1130 270 1440 S890 1690 650 1990 S440 2240 500 2400'

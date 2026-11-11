@@ -573,13 +573,16 @@ export function CinematicJourney({
               className="vd-button"
               href="#destinations"
               onClick={() => {
-                setFeeling('mountain')
+                // This scene is Byblos now (11 Nov 2026): open the
+                // destinations on Byblos, among the coastal ones.
+                setFeeling('coast')
+                setActive('byblos')
               }}
             >
               {t('mountainLink')} <LinkArrow />
             </a>
           </div>
-          {scenePhoto('bsharri', 'vd-photo-mountain', 20)}
+          {scenePhoto('byblos-harbour', 'vd-photo-mountain', 20)}
           {scenePhoto('deir-el-qamar', 'vd-photo-village', -10)}
         </div>
         <p className="vd-journey-outro" data-vd-reveal>
