@@ -147,7 +147,7 @@ export const SCENE_PHOTOS: Record<string, ScenePhoto> = {
     image: 'byblos-harbour.webp',
     lat: 34.1217,
     lon: 35.6434,
-    alt: 'Fishing boats in the old harbour of Byblos, below stone houses and the crusader castle',
+    alt: 'Fishing boats in the old harbour of Byblos, below stone houses and the old castle',
   },
 }
 export const routePath =

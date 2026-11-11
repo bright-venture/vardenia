@@ -495,13 +495,18 @@
   padding-top: 30px;
   padding-bottom: 30px;
 }
+/*
+ * Byblos (11 Nov 2026): the photograph takes six columns, not seven, and the
+ * words the six beside it, so "the harbour." holds one line and the heading
+ * reads in two, as "First, the city." does.
+ */
 .vd-mountain-scene .vd-scene-copy {
-  grid-column: 1/5;
+  grid-column: 1/7;
   grid-row: 1;
   margin-top: 90px;
 }
 .vd-photo-mountain {
-  grid-column: 6/13;
+  grid-column: 7/13;
   grid-row: 1;
   aspect-ratio: 0.99;
 }

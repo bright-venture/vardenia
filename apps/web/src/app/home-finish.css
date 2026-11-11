@@ -2465,3 +2465,52 @@ span.vd-lang-option {
     transition: none;
   }
 }
+
+/*
+ * The captions under the scenic photographs (11 November 2026): a small
+ * label, a short gold rule and the place in small capitals, on the page
+ * itself rather than on a strip of plain paper that read as a box against the
+ * textured page. The place is named once, here; the photograph keeps only its
+ * coordinates (it used to carry the name as well).
+ */
+.vd-scene-image {
+  height: calc(100% - 44px);
+}
+.vd-scene-photo figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding-top: 16px;
+  background: transparent;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: rgb(17 29 45 / 0.72);
+}
+.vd-scene-photo figcaption::before {
+  content: '';
+  flex-shrink: 0;
+  width: 24px;
+  height: 1px;
+  background: var(--vd-gold);
+}
+:lang(ar) .vd-scene-photo figcaption,
+:lang(ur) .vd-scene-photo figcaption {
+  font-size: 14px;
+  letter-spacing: 0;
+}
+.vd-home .vd-scene-image .vd-coordinate-place {
+  display: none;
+}
+/* The first scene's words get the column the smaller photograph freed, so a
+   longer heading ("Сначала — город.") keeps to two lines. */
+.vd-coast-scene .vd-scene-copy {
+  grid-column: 8/13;
+}
+@media (max-width: 700px) {
+  .vd-coast-scene .vd-scene-copy {
+    grid-column: 1/6;
+  }
+}
