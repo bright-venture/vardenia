@@ -2467,42 +2467,54 @@ span.vd-lang-option {
 }
 
 /*
- * The captions under the scenic photographs (11 November 2026): a small
- * label, a short gold rule and the place in small capitals, on the page
- * itself rather than on a strip of plain paper that read as a box against the
- * textured page. The place is named once, here; the photograph keeps only its
- * coordinates (it used to carry the name as well).
+ * The place names of the scenic photographs (11 November 2026): inside the
+ * photograph, bottom left, on its own dark gradient, level with the
+ * coordinates at the bottom right, the way a magazine labels a picture.
+ *
+ * Below the photograph they read badly twice over: on a strip of plain paper
+ * they were a box against the textured page, and without it they floated on
+ * the map with the dotted route running through them. The coordinates keep
+ * only their numbers; the name is said once, here. Physical `left`, as the
+ * coordinates use physical `right`, so the two never meet in Arabic.
  */
 .vd-scene-image {
-  height: calc(100% - 44px);
+  height: 100%;
 }
 .vd-scene-photo figcaption {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  padding-top: 16px;
-  background: transparent;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  line-height: 1;
+  position: absolute;
+  left: 26px;
+  bottom: 26px;
+  z-index: 2;
+  height: auto;
+  padding: 0;
+  background: none;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(17 29 45 / 0.72);
-}
-.vd-scene-photo figcaption::before {
-  content: '';
-  flex-shrink: 0;
-  width: 24px;
-  height: 1px;
-  background: var(--vd-gold);
+  text-shadow: 0 1px 12px #0009;
+  pointer-events: none;
 }
 :lang(ar) .vd-scene-photo figcaption,
 :lang(ur) .vd-scene-photo figcaption {
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: 0;
 }
 .vd-home .vd-scene-image .vd-coordinate-place {
   display: none;
+}
+/* A phone's photograph is too narrow for both: the name stays, at the side the
+   language starts from (the right in Arabic and Urdu). */
+@media (max-width: 700px) {
+  .vd-scene-photo figcaption {
+    left: auto;
+    inset-inline-start: 18px;
+    bottom: 18px;
+  }
+  .vd-home .vd-scene-image .vd-coordinates {
+    display: none;
+  }
 }
 /* The first scene's words get the column the smaller photograph freed, so a
    longer heading ("Сначала — город.") keeps to two lines. */
