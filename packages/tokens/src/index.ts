@@ -1,14 +1,20 @@
 /** Approved Vardenia website direction. Keys are retained for web and mobile compatibility. */
 
 export const colors = {
+  /*
+   * The green direction (11 November 2026), from the designer's Vardenia for
+   * Business package: dark green #243c32 for text and dark grounds, paper
+   * #f7f4ed, burgundy #762e39 for the one accent, warm neutral surfaces.
+   * Keys are unchanged from the navy direction it replaces.
+   */
   ink: {
-    50: '#efe7d9',
-    100: '#cec7bc',
+    50: '#efeee7',
+    100: '#d9dbce',
     300: '#b7a58d',
-    500: '#5e6267',
-    700: '#34414d',
-    900: '#111d2d',
-    950: '#1a1410',
+    500: '#5f665b',
+    700: '#3c574b',
+    900: '#243c32',
+    950: '#1b2e26',
   },
   gold: {
     100: '#f3e7d2',
@@ -18,17 +24,20 @@ export const colors = {
     900: '#543810',
   },
   cedar: {
-    100: '#e6e2d6',
-    300: '#6f7fae',
-    500: '#24356b',
-    700: '#25354a',
-    900: '#111d2d',
+    100: '#e1e5dc',
+    300: '#718272',
+    500: '#3c574b',
+    700: '#355146',
+    900: '#243c32',
+  },
+  wine: {
+    700: '#762e39',
   },
   surface: {
-    base: '#faf8f3',
-    raised: '#f3efe7',
-    sunken: '#eee9df',
-    inverse: '#111d2d',
+    base: '#f7f4ed',
+    raised: '#efeee7',
+    sunken: '#ece7db',
+    inverse: '#243c32',
   },
   state: {
     success: '#3e714f',

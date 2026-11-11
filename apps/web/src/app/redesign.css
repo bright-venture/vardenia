@@ -1,7 +1,7 @@
 /* The approved cinematic direction, scoped to the public website. */
 .vd-public {
-  --vd-paper: #faf8f3;
-  --vd-ink: #111d2d;
+  --vd-paper: #f7f4ed;
+  --vd-ink: #243c32;
   --vd-gold: #c7ae7c;
   --vd-gutter: 4vw;
   --vd-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -120,7 +120,7 @@
   padding: 24px;
   max-height: 80svh;
   overflow: auto;
-  box-shadow: 0 12px 24px #111d2d12;
+  box-shadow: 0 12px 24px #243c3212;
 }
 .vd-mobile-menu > summary {
   list-style: none;
@@ -230,7 +230,7 @@
 }
 .vd-hero-shade {
   z-index: -2;
-  background: linear-gradient(90deg, #09152166, #09152126);
+  background: linear-gradient(90deg, #13231c66, #13231c26);
 }
 .vd-hero-copy {
   position: absolute;
@@ -577,7 +577,7 @@
   inset: 45% 0 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(transparent, #07121988);
+  background: linear-gradient(transparent, #101e1888);
 }
 .vd-stone {
   position: relative;
@@ -608,7 +608,7 @@
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: linear-gradient(90deg, #0d1b2dcc, #0d1b2d19);
+  background: linear-gradient(90deg, #192c24cc, #192c2419);
 }
 .vd-stone-map {
   position: absolute;
@@ -617,7 +617,7 @@
   width: 65%;
   height: 95%;
   opacity: 0.35;
-  stroke: #faf8f3;
+  stroke: #f7f4ed;
   stroke-width: 1;
   z-index: -1;
   transform: rotate(12deg);
@@ -697,8 +697,8 @@
 .vd-destination-shade {
   z-index: -2;
   background:
-    linear-gradient(90deg, #0b1a2b33, #0b1a2b26 42%, #0b1a2b9e),
-    linear-gradient(0deg, #0b1a2b99, transparent 65%);
+    linear-gradient(90deg, #172a2233, #172a2226 42%, #172a229e),
+    linear-gradient(0deg, #172a2299, transparent 65%);
 }
 .vd-destination-toolbar {
   position: absolute;
@@ -718,7 +718,7 @@
 .vd-feelings > button {
   font-size: 14px;
   padding: 12px 18px;
-  background: #111d2d7d;
+  background: #243c327d;
   border-radius: 999px;
   min-height: 44px;
 }
@@ -863,7 +863,7 @@
 .vd-trip-panel {
   margin: 65px var(--vd-gutter) 0;
   padding: 45px;
-  background: #eee9df;
+  background: #ece7db;
   position: relative;
 }
 .vd-trip-heading {
@@ -976,7 +976,7 @@
 }
 .vd-postcard-back {
   transform: rotateY(180deg);
-  background: #eee9df;
+  background: #ece7db;
   padding: 35px;
   display: flex;
   flex-direction: column;
@@ -1266,7 +1266,7 @@
 }
 .vd-public .vd-ui-empty {
   border: 0;
-  background: #eee9df;
+  background: #ece7db;
   align-items: flex-start;
   text-align: start;
   padding: 40px;
@@ -1302,7 +1302,7 @@
   letter-spacing: -0.03em;
 }
 .vd-auth-card {
-  background: #eee9df;
+  background: #ece7db;
   border: 0;
   width: 100%;
   max-width: none;
@@ -1353,6 +1353,7 @@
   margin-bottom: 70px;
 }
 .vd-footer-top h2 {
+  font-family: var(--font-accent);
   font-size: clamp(62px, 8vw, 120px);
   line-height: 0.98;
   text-transform: uppercase;
@@ -2079,7 +2080,7 @@ html[data-vd-motion='off'] .vd-destination-images img {
 .vd-filter-chip {
   border: 0 !important;
   border-radius: 999px;
-  background: #eee9df;
+  background: #ece7db;
   min-height: 44px;
   font-size: 14px !important;
   font-family: var(--font-body) !important;

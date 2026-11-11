@@ -13,7 +13,9 @@ export function PageMotion({ children }: { children: ReactNode }) {
     const host = root.current
     if (
       !host ||
-      pathname === '/' ||
+      // The journey homepage runs its own motion; the business homepage that
+      // replaced it on 11 November 2026 uses this one.
+      (pathname === '/' && host.querySelector('.vd-main-home')) ||
       !motion ||
       document.hidden ||
       matchMedia('(prefers-reduced-motion: reduce)').matches

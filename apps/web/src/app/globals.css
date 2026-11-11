@@ -7,7 +7,13 @@
      <html> in the layout. See src/app/fonts.ts for why they are self-hosted
      rather than named in a stack and hoped for. */
   :root {
-    --font-display: var(--font-fraunces), 'Times New Roman', Georgia, serif;
+    /* Georgia for headings, as the designer's green direction (11 November
+       2026) sets them. Android has no Georgia, so Gelasio, drawn to Georgia's
+       metrics, stands in there; it is not preloaded and nothing downloads it
+       where Georgia is installed. Playfair stays as the accent face of the
+       menus and the footer call to action. */
+    --font-display: Georgia, var(--font-gelasio), 'Times New Roman', serif;
+    --font-accent: var(--font-fraunces), Georgia, serif;
     --font-body: var(--font-manrope), system-ui, -apple-system, sans-serif;
     --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   }
@@ -55,6 +61,17 @@
   :root:lang(bn) {
     --font-display: var(--font-noto-bengali), 'Nirmala UI', serif;
     --font-body: var(--font-noto-bengali), 'Nirmala UI', sans-serif;
+  }
+
+  /* Outside the Latin scripts the accent face is the language's display face:
+     Playfair has no Arabic, Cyrillic, Chinese, Devanagari or Bengali. */
+  :root:lang(ar),
+  :root:lang(ur),
+  :root:lang(ru),
+  :root:lang(zh),
+  :root:lang(hi),
+  :root:lang(bn) {
+    --font-accent: var(--font-display);
   }
 
   body {

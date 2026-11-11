@@ -33,7 +33,7 @@
   margin-top: 14px;
   max-width: 46ch;
   font-size: 16px;
-  color: rgb(17 29 45 / 0.74);
+  color: rgb(36 60 50 / 0.74);
 }
 .vd-inner-hero-actions {
   display: flex;
@@ -59,7 +59,7 @@
   position: absolute;
   inset: auto 25px 25px auto;
   color: var(--vd-paper);
-  background: #111d2d99;
+  background: #243c3299;
   padding: 12px 16px;
   z-index: 1;
 }
@@ -92,7 +92,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: #111d2d66;
+  background: #243c3266;
 }
 .vd-inner-hero-immersive .vd-inner-hero-media .vd-coordinates {
   z-index: 2;
@@ -145,7 +145,7 @@
 .vd-subcategories li > a,
 .vd-subcategories li > div {
   border: 0;
-  background: #eeeae2;
+  background: #ece7db;
   padding: 24px;
   margin-bottom: 8px;
   min-height: 86px;
@@ -262,7 +262,7 @@
   scroll-margin-top: 120px;
   margin-bottom: 14px;
   padding: 25px 30px;
-  background: #eeeae2;
+  background: #ece7db;
 }
 .vd-question summary {
   display: flex;
@@ -335,7 +335,7 @@
 }
 .vd-issue-card .relative {
   padding: 22px;
-  background: #eae5da;
+  background: #e6e1d4;
 }
 .vd-issue-card h2 {
   font-size: 30px;
@@ -350,7 +350,7 @@
 .vd-archive-empty {
   padding: 35px;
   margin-top: 0;
-  background: #eeeae2;
+  background: #ece7db;
   font-size: 20px;
 }
 .vd-issue-page {
@@ -394,12 +394,12 @@
 .vd-issue-subhead > span {
   font-family: var(--font-body);
   font-size: 14px;
-  color: rgb(17 29 45 / 0.62);
+  color: rgb(36 60 50 / 0.62);
 }
 .vd-issue-places {
   margin-top: 80px;
   padding-top: 48px;
-  border-top: 1px solid rgb(17 29 45 / 0.12);
+  border-top: 1px solid rgb(36 60 50 / 0.12);
 }
 .vd-issue-places > h2 {
   font-family: var(--font-display);
@@ -417,7 +417,7 @@
   gap: 10px;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid rgb(17 29 45 / 0.18);
+  border: 1px solid rgb(36 60 50 / 0.18);
   font-size: 14px;
   color: var(--vd-ink);
   text-decoration: none;
@@ -427,7 +427,7 @@
 }
 .vd-issue-regions a:hover {
   border-color: var(--vd-ink);
-  background: rgb(17 29 45 / 0.04);
+  background: rgb(36 60 50 / 0.04);
 }
 .vd-issue-regions a:focus-visible {
   outline: 2px solid var(--vd-gold);
@@ -435,7 +435,7 @@
 }
 .vd-issue-regions a > span {
   font-size: 13px;
-  color: rgb(17 29 45 / 0.62);
+  color: rgb(36 60 50 / 0.62);
 }
 .vd-issue-region {
   margin-top: 56px;
@@ -528,7 +528,7 @@
   margin-top: 60px;
 }
 .vd-account-page > div:has(details) {
-  background: #eeeae2;
+  background: #ece7db;
   padding: 10px 25px;
 }
 .vd-account-page details > summary {
@@ -583,7 +583,7 @@
   border: 0;
   padding: 14px 22px;
   font-size: 16px;
-  background: #eeeae2;
+  background: #ece7db;
 }
 .vd-partner-tabs > a[aria-current='page'] {
   background: var(--vd-ink);
@@ -601,7 +601,7 @@
 }
 .vd-booking-panel {
   border: 0;
-  background: #eeeae2;
+  background: #ece7db;
   padding: 35px;
   scroll-margin-top: 110px;
 }
@@ -620,7 +620,7 @@
 .vd-task-page {
   margin-block: 70px;
   padding: 45px;
-  background: #eeeae2;
+  background: #ece7db;
   max-width: 760px;
   width: calc(100% - 48px);
 }
@@ -795,7 +795,7 @@
     flex: 0 0 auto;
     max-width: 260px;
     padding: 14px 18px;
-    background: #eeeae2;
+    background: #ece7db;
   }
   .vd-story-index .vd-button {
     margin-top: 15px;
@@ -961,7 +961,7 @@
 .vd-trip-bar {
   border: 0;
   padding: 30px;
-  background: #eeeae2;
+  background: #ece7db;
 }
 .vd-trip-bar h2 {
   font-size: 30px;

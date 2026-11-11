@@ -1,7 +1,7 @@
 .vd-recovery-body {
   margin: 0;
-  background: #faf8f3;
-  color: #111d2d;
+  background: #f7f4ed;
+  color: #243c32;
   font-family: var(--font-manrope), system-ui, sans-serif;
 }
 .vd-recovery-body .vd-colour-grade {
@@ -25,7 +25,7 @@
   flex-direction: column;
   justify-content: center;
   padding: 70px 9%;
-  background: #faf8f3 url('/journey/natural-paper-grain.webp') center/220% 270%;
+  background: #f7f4ed url('/journey/natural-paper-grain.webp') center/220% 270%;
   background-blend-mode: soft-light;
 }
 .vd-recovery-brand {
@@ -70,8 +70,8 @@
   padding: 14px 24px;
   border: 0;
   border-radius: 999px;
-  background: #111d2d;
-  color: #faf8f3;
+  background: #243c32;
+  color: #f7f4ed;
   font-size: 16px;
   text-decoration: none;
   cursor: pointer;
@@ -79,7 +79,7 @@
 .vd-recovery-actions a + a {
   padding-inline: 0;
   background: transparent;
-  color: #111d2d;
+  color: #243c32;
   text-decoration: underline;
   text-underline-offset: 5px;
 }
