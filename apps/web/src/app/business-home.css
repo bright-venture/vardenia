@@ -366,11 +366,12 @@
   color: var(--biz-muted);
 }
 
-/* A story worth sharing */
+/* Make room for something memorable: the seven regional editions, a wide
+   photograph shown whole (11 November 2026), so no cover is cropped. */
 .vd-biz-story img {
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 5.2;
+  aspect-ratio: 3 / 2;
   object-fit: cover;
 }
 .vd-biz-story h2 {
@@ -663,9 +664,6 @@ body:has(.vd-biz) .vd-footer {
   }
   .vd-biz-beyond-statement {
     font-size: 17px;
-  }
-  .vd-biz-story img {
-    aspect-ratio: 4 / 3;
   }
   .vd-biz-answers {
     columns: 1;

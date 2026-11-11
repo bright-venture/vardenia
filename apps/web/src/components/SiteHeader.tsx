@@ -58,9 +58,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
    * Discover does; the magazine shows its own open spread.
    */
   const magazineSpread = {
-    src: '/journey/vardenia-magazine-open-v1.webp',
-    alt: 'The Vardenia magazine, open on a spread',
-    whole: true,
+    src: '/journey/all-lebanon-box.webp',
+    alt: t('nav.magazineMenuPhotoAlt'),
   }
   const magazineItems = withoutHidden(
     [

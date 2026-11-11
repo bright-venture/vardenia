@@ -238,10 +238,10 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
         <section className="vd-biz-section vd-biz-axis vd-biz-story" aria-labelledby="biz-story">
           <div>
             <Image
-              src="/business/byblos-harbour.webp"
-              width={1600}
-              height={1039}
-              alt={t('harbourAlt')}
+              src="/business/regional-editions.webp"
+              width={1536}
+              height={1024}
+              alt={t('editionsAlt')}
               sizes="(max-width:700px) 100vw, 40vw"
               data-vd-reveal
             />

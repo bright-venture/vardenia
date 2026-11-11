@@ -18,11 +18,26 @@ export async function EditorialIntro({
     <header className="vd-page-intro">
       <div>
         <h1>
-          {t(magazine ? 'magazineA' : 'directoryTitle')}
+          {t(magazine ? 'magazinePageA' : 'directoryTitle')}
           <br />
-          {t(magazine ? 'magazineB' : 'directoryEmphasis')}
+          {t(magazine ? 'magazinePageB' : 'directoryEmphasis')}
         </h1>
-        <p>{t(magazine ? 'magazineBody' : 'directoryBody')}</p>
+        {magazine ? (
+          // The owner's text of 11 November 2026: a line under the title, four
+          // paragraphs and a closing line in italics. The journey homepage keeps
+          // its own shorter magazineA/B/Body.
+          <>
+            <p className="vd-page-intro-lead">{t('magazinePageLead')}</p>
+            {([1, 2, 3, 4] as const).map((n) => (
+              <p key={n}>{t(`magazinePageBody${n}`)}</p>
+            ))}
+            <p>
+              <em>{t('magazinePageClosing')}</em>
+            </p>
+          </>
+        ) : (
+          <p>{t('directoryBody')}</p>
+        )}
       </div>
       {magazine ? (
         // The magazine itself, not a place: no coordinates.
