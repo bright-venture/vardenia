@@ -3,6 +3,7 @@
   --vd-paper: #f7f4ed;
   --vd-ink: #243c32;
   --vd-gold: #c7ae7c;
+  --vd-wine: #762e39;
   --vd-gutter: 4vw;
   --vd-ease: cubic-bezier(0.23, 1, 0.32, 1);
   background: var(--vd-paper);
@@ -83,6 +84,44 @@
   display: flex;
   gap: 12px;
   font-size: 14px;
+}
+/* "Homepage", the desktop nav's first item (header/HomepageLink, 11 November
+   2026), set like the Discover, Magazine and About buttons beside it. */
+.vd-header .vd-homepage-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 8px;
+  color: var(--vd-ink);
+  font-size: 14px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.vd-header .vd-homepage-link:hover,
+.vd-header .vd-homepage-link[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.vd-header .vd-homepage-link:focus-visible,
+.vd-mobile-sheet .vd-mobile-homepage-link:focus-visible {
+  outline: 2px solid var(--vd-wine);
+  outline-offset: 4px;
+}
+/* The same, as the phone menu's first row after the search. */
+.vd-mobile-sheet .vd-mobile-homepage-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -12px 0 16px;
+  padding: 12px 0;
+  color: var(--vd-ink);
+  font-size: 16px;
+  text-decoration: none;
+}
+.vd-mobile-sheet .vd-mobile-homepage-link:hover,
+.vd-mobile-sheet .vd-mobile-homepage-link[aria-current='page'] {
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 .vd-header-tools {
   grid-column: 3;

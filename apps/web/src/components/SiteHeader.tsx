@@ -1,4 +1,5 @@
 import { MobileMenu } from './header/MobileMenu'
+import { HomepageLink } from './header/HomepageLink'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ChevronDown, Heart } from 'lucide-react'
@@ -164,6 +165,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             aria-label={t('nav.directory')}
             className="vd-desktop-nav items-stretch self-stretch"
           >
+            <HomepageLink label={t('nav.homepage')} className="vd-homepage-link" />
             {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
             {sectionItems.length > 0 ? (
               <DropdownNav label={t('nav.discover')} wide>
@@ -222,6 +224,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <SEARCH_ICON aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
               <span>{t('home.searchPlaceholder')}</span>
             </Link>
+            <HomepageLink label={t('nav.homepage')} className="vd-mobile-homepage-link" />
 
             {sectionItems.length > 0 || directoryShown ? (
               <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
