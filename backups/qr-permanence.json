@@ -56,14 +56,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "chez-jad"
+      "businessSlug": "chez-jad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "07RKRRJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "el-saraya"
+      "businessSlug": "el-saraya",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0A6G6JP",
@@ -77,7 +79,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daw-el-masa"
+      "businessSlug": "daw-el-masa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0BFS7N4",
@@ -119,7 +122,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "la-flanerie"
+      "businessSlug": "la-flanerie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0G4ZZ3S",
@@ -175,14 +179,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "benn-el-jabal"
+      "businessSlug": "benn-el-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0RZ38DF",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dandane"
+      "businessSlug": "dandane",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0S4PZWR",
@@ -196,21 +202,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aqua-loulou"
+      "businessSlug": "blue-aqua",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0SK6F6K",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "wasleh"
+      "businessSlug": "tourath",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0SP397H",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bab-el-shams"
+      "businessSlug": "bab-el-shams",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0T94PF2",
@@ -231,14 +240,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le2met-hala"
+      "businessSlug": "le2met-hala",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0WX35Q3",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mishwar"
+      "businessSlug": "mishwar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "0WYW9WF",
@@ -259,14 +270,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mafraq-bann"
+      "businessSlug": "mafraq-bann",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "11MXF7A",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "darb-el-hayakel"
+      "businessSlug": "darb-el-hayakel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "12W452S",
@@ -280,7 +293,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-qamar"
+      "businessSlug": "bayt-jeddeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "14YN9ZS",
@@ -315,7 +329,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "madame-le2me"
+      "businessSlug": "madame-le2me",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1B7ZCYH",
@@ -329,7 +344,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "naghmet-saida"
+      "businessSlug": "nagham",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1BJPZTZ",
@@ -371,21 +387,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tabkhet-zaman"
+      "businessSlug": "tabkhet-zaman",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1FVAE79",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "diwan-el-may"
+      "businessSlug": "ribal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1K23RV2",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "cafe-ziad"
+      "businessSlug": "cafe-ziad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1KHQB90",
@@ -427,7 +446,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "3ajin-w-7aba2"
+      "businessSlug": "3ajin-w-7aba2",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1NER7A0",
@@ -448,7 +468,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "cafe-mira"
+      "businessSlug": "beach-cafe",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1R4F52F",
@@ -469,7 +490,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjen-loz"
+      "businessSlug": "c-views",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1X90FB9",
@@ -490,14 +512,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daymet-el-ezz"
+      "businessSlug": "daymet-el-ezz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "1ZQMV0N",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mina-blue"
+      "businessSlug": "mina-blue",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "21XYSBA",
@@ -518,7 +542,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rashfe-2"
+      "businessSlug": "sips",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "24VZQJN",
@@ -574,7 +599,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khabiyet-el-jabal"
+      "businessSlug": "khabiyet-el-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "28Y4BK4",
@@ -616,7 +642,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dahshe"
+      "businessSlug": "burger-low",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "2F5TAVB",
@@ -658,7 +685,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "el-dayaa"
+      "businessSlug": "el-dayaa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "2JY6WVD",
@@ -686,7 +714,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "samar"
+      "businessSlug": "samar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "2R19JXV",
@@ -728,14 +757,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahran"
+      "businessSlug": "sahran",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "2X30DPA",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arze-adventures"
+      "businessSlug": "adventures-hub",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "2Y94TJH",
@@ -763,7 +794,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjen-ward"
+      "businessSlug": "fenjen-ward",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "32NTDZQ",
@@ -791,14 +823,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayn-ghaym"
+      "businessSlug": "teleferique",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "349060B",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "laylet-zahle"
+      "businessSlug": "laylet-zahle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "35D167K",
@@ -819,7 +853,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aaliya-hotel"
+      "businessSlug": "restart-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "37FYS24",
@@ -861,7 +896,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hajar-w-khashab"
+      "businessSlug": "hajar-w-khashab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3DHRHVF",
@@ -875,7 +911,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "benn-el-jemmayz"
+      "businessSlug": "benn-el-jemmayz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3FP4WPV",
@@ -987,7 +1024,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nasma-halat"
+      "businessSlug": "nasmet-halat",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3S4XJS1",
@@ -1008,7 +1046,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "diwan-aley"
+      "businessSlug": "diwan-aley",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3VCTA6J",
@@ -1029,7 +1068,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-daily-cup"
+      "businessSlug": "the-daily-cup",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3WBA71T",
@@ -1043,7 +1083,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "shra3-sour"
+      "businessSlug": "shra3-sour",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3Y262P3",
@@ -1064,14 +1105,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjen-el-maydan"
+      "businessSlug": "maydan",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3ZDBJQ8",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rechmaya-darb"
+      "businessSlug": "darb",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "3ZZF35K",
@@ -1113,7 +1156,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-roz"
+      "businessSlug": "the-one",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "43VPG76",
@@ -1127,7 +1171,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-nadine"
+      "businessSlug": "bayt-nadine",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "45MJ0ZM",
@@ -1148,7 +1193,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sakbet-may"
+      "businessSlug": "lagoon",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "47EC9HN",
@@ -1162,14 +1208,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabd-el-banet"
+      "businessSlug": "spot-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4A6NC7V",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dallat-el-ons"
+      "businessSlug": "fairuz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4A8MJ3H",
@@ -1190,7 +1238,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lheure-calme"
+      "businessSlug": "lheure-calme",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4BHYKMZ",
@@ -1232,7 +1281,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabed-el-7ay"
+      "businessSlug": "fight-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4E5Y8HN",
@@ -1246,7 +1296,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-karam"
+      "businessSlug": "bayt-l-karam",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4FQ67KC",
@@ -1260,7 +1311,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "may-el-mina"
+      "businessSlug": "may-l-mina",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4HQWPB8",
@@ -1281,21 +1333,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mawjet-loz"
+      "businessSlug": "beach-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4MPKV9M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zarqa"
+      "businessSlug": "zarqa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4N9DVYS",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nos-sob7iyye"
+      "businessSlug": "nos-sob7iyye",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4NH1PT9",
@@ -1337,7 +1392,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-amber-table"
+      "businessSlug": "the-amber-table",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4RX1G06",
@@ -1372,14 +1428,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofret-jad"
+      "businessSlug": "sofret-jad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4XK2HZ5",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "beirut-kelna-sawa"
+      "businessSlug": "beirut-kelna-sawa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4XPKBPG",
@@ -1393,7 +1451,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-hamra"
+      "businessSlug": "dar-hamra",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "4ZKH5HY",
@@ -1407,28 +1466,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "city-nest"
+      "businessSlug": "city-nest",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "500M66G",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rania-rooftop"
+      "businessSlug": "musika",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "50H9D90",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "cafe-sonia"
+      "businessSlug": "cafe-sonia",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "51A0Q39",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-nasma"
+      "businessSlug": "bet-nasma",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "51VZ34A",
@@ -1456,7 +1519,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "laylet-dbayeh"
+      "businessSlug": "laylet-dbayeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "53MMXZ5",
@@ -1470,28 +1534,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "talle-hotel"
+      "businessSlug": "talle-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "54MQREW",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-dahab"
+      "businessSlug": "tawlet-dahab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "55XCYKB",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hazmieh-markaz"
+      "businessSlug": "hazmieh-markaz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "57DENYT",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sama-el-3ayn"
+      "businessSlug": "sama-el-3ayn",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "57VBSNQ",
@@ -1547,7 +1615,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bonjour-finjen"
+      "businessSlug": "shots",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5F8B728",
@@ -1561,7 +1630,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bharat"
+      "businessSlug": "bharat",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5HQAVXM",
@@ -1582,7 +1652,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-bahr"
+      "businessSlug": "dar-bahr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5MMJDMM",
@@ -1596,7 +1667,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zaarour-snow"
+      "businessSlug": "zaarour-snow",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5N285Y0",
@@ -1617,14 +1689,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "habbet-barakeh"
+      "businessSlug": "habbet-barakeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5NRDYV2",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-old-souk"
+      "businessSlug": "the-old-souk",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "5P27R9G",
@@ -1750,21 +1824,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-layl"
+      "businessSlug": "bayt-layl",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6631G3C",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aaliya-pool"
+      "businessSlug": "aaliya-pool",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "66JT2NN",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rawa2-l-may"
+      "businessSlug": "poolie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "692C7D8",
@@ -1792,35 +1869,40 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le2met-el-7ay"
+      "businessSlug": "sardina",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6CBR3AC",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-nour"
+      "businessSlug": "beit-el-kel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6DHMQ13",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kfar-blue"
+      "businessSlug": "kfar-blue",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6EWGMXS",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "miette-partagee"
+      "businessSlug": "miette-partagee",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6G6SNQZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sbehet-hala"
+      "businessSlug": "sabhet-hala",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6GEZFSS",
@@ -1855,7 +1937,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jal-residence"
+      "businessSlug": "jal-residence",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6JFWT8P",
@@ -1869,7 +1952,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahra"
+      "businessSlug": "sahra",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6M7VDRT",
@@ -1953,7 +2037,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "chir-al-assi"
+      "businessSlug": "chir-al-assi",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "6ZR3QCX",
@@ -1967,14 +2052,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daret-l-sawsan"
+      "businessSlug": "sawwan",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "702RGSQ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kas-w-lo2me"
+      "businessSlug": "ekher-rawa2",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "70CHZ03",
@@ -1988,7 +2075,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rawdet-dbayeh"
+      "businessSlug": "rawdet-dbayeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "729BS6V",
@@ -2030,14 +2118,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souk-villa"
+      "businessSlug": "souk-villa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7859R2X",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hosh-el-rihane"
+      "businessSlug": "remal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7878FNS",
@@ -2065,14 +2155,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rakwet-bal"
+      "businessSlug": "rakwet-bal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "79D0S8H",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rashet-may"
+      "businessSlug": "el-assi",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7BZXBMS",
@@ -2086,7 +2178,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lemmet-hbab"
+      "businessSlug": "lemmet-hbab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7CE16VT",
@@ -2100,7 +2193,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "blue-interval"
+      "businessSlug": "blue-interval",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7D14YYB",
@@ -2163,28 +2257,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tlete"
+      "businessSlug": "trio",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7JHAXJQ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mayet-el-hermel"
+      "businessSlug": "aqua-blue",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7JQCBG1",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arz-palace"
+      "businessSlug": "arz-palace",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7K6Z1Z1",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-fattoush"
+      "businessSlug": "ahwet-trabosh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7KNQH10",
@@ -2198,7 +2296,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "m3ajjanet-misk"
+      "businessSlug": "m3ajjanet-misk",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7NQPCMV",
@@ -2226,7 +2325,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sarj-laymoun"
+      "businessSlug": "sarj-laymoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7XQ1MMT",
@@ -2240,7 +2340,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "cle-de-lune"
+      "businessSlug": "cle-de-lune",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "7Z4X2BT",
@@ -2324,7 +2425,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "3id-el-3enab"
+      "businessSlug": "3id-el-3enab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "841R1XR",
@@ -2338,7 +2440,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-saba"
+      "businessSlug": "al-captain",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "87KQZMK",
@@ -2380,7 +2483,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tannourna"
+      "businessSlug": "tannourna",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8C69JZW",
@@ -2478,21 +2582,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saifi-reverie"
+      "businessSlug": "saifi-reverie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8NG6CAY",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-saba"
+      "businessSlug": "ahwet-saba",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8NGQFJM",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "marjan-pool-club"
+      "businessSlug": "marjan-pool-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8R5V09S",
@@ -2506,7 +2613,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "baabda-splash"
+      "businessSlug": "baabda-splash",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8S5A7F5",
@@ -2534,7 +2642,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le-coin-bleu"
+      "businessSlug": "le-coin-bleu",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "8XP9K5Q",
@@ -2569,7 +2678,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khalwet-el-wadi"
+      "businessSlug": "khalwet-el-wadi",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "91QKZPB",
@@ -2583,7 +2693,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "la-sahra-resort"
+      "businessSlug": "la-sahra-resort",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "95JWRJM",
@@ -2604,14 +2715,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-rih"
+      "businessSlug": "dar-el-rih",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "96FT0SB",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofret-l-shallal"
+      "businessSlug": "sofret-l-shallal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "970VG10",
@@ -2632,21 +2745,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "minuit-w-nos"
+      "businessSlug": "minuit-w-nos",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "98B2HR9",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "shashet-l-sahl"
+      "businessSlug": "cascada-cinema",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "98FSRP4",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ras-bistro"
+      "businessSlug": "ras-bistro",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "98NTCF9",
@@ -2688,7 +2804,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-l-jiran"
+      "businessSlug": "lo2met-l-jiran",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9D4V9W1",
@@ -2730,21 +2847,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zanjabil"
+      "businessSlug": "zanjabil",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9J2Q7CB",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjen-hermel"
+      "businessSlug": "cups-and-more",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9KR2ESC",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-l-2al3a"
+      "businessSlug": "2al3a-food",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9MSSV7J",
@@ -2758,7 +2878,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahret-el-bal"
+      "businessSlug": "sahret-el-bal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9NFAV5P",
@@ -2793,7 +2914,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khan-el-7ay"
+      "businessSlug": "boutique-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9T36XKP",
@@ -2821,21 +2943,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-sour"
+      "businessSlug": "tawlet-sour",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9VAS6DH",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souq-dbayeh"
+      "businessSlug": "dbayeh-mall",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9W4RAB3",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "marsa-table"
+      "businessSlug": "marsa-table",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9W6JP65",
@@ -2877,14 +3002,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "baabda-noon"
+      "businessSlug": "baabda-noon",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "9YGNR66",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sakan-zalka"
+      "businessSlug": "sakan-zalka",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A10G2TQ",
@@ -2898,7 +3025,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kerm-btekhnay"
+      "businessSlug": "karam-getaway",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A1P99W5",
@@ -2912,7 +3040,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "3azm-douris"
+      "businessSlug": "douris-fitness",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A1WA3WB",
@@ -2933,7 +3062,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofra-w-7aki"
+      "businessSlug": "sofra-w-7aki",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A4H577J",
@@ -2947,7 +3077,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "table-croisee"
+      "businessSlug": "table-croisee",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A57TKA6",
@@ -2961,14 +3092,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souk-el-nour"
+      "businessSlug": "new-center",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A682K9E",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "selim-gym"
+      "businessSlug": "slim-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A6K3A3H",
@@ -2982,7 +3115,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kharroube"
+      "businessSlug": "kharroube",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "A89FZDS",
@@ -3010,7 +3144,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-late-dance"
+      "businessSlug": "the-late-dance",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "AA3T02D",
@@ -3031,7 +3166,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dawra-w-strike"
+      "businessSlug": "dawra-w-strike",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ABYH69J",
@@ -3045,7 +3181,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "pascal-pub"
+      "businessSlug": "pascal-pub",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ADSDJBT",
@@ -3059,7 +3196,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zill-w-may"
+      "businessSlug": "nasma",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "AE4GAK3",
@@ -3073,14 +3211,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saksakiyeh-dar"
+      "businessSlug": "saksakiyeh-dar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "AFC8NWG",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mezza-3al-nahr"
+      "businessSlug": "mezza-3al-nahr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "AGM92FX",
@@ -3129,7 +3269,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le2me-society"
+      "businessSlug": "le2me-society",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ARZ0K5A",
@@ -3227,14 +3368,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-zayt"
+      "businessSlug": "beit-l-zeit",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "BA767JQ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-anbar"
+      "businessSlug": "bayt-anbar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "BAXK9P7",
@@ -3318,7 +3461,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tante-salma"
+      "businessSlug": "tante-salma",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "BMXM5PC",
@@ -3367,14 +3511,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zill-el-nakhl"
+      "businessSlug": "zill-el-nakhl",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "BR6FBSH",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daily-finjen"
+      "businessSlug": "daily-finjen",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "BRQD5SS",
@@ -3423,7 +3569,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "laylet-sofra"
+      "businessSlug": "laylet-sofra",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "C20WADX",
@@ -3486,7 +3633,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "shams-club"
+      "businessSlug": "sunset-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "C9ZMV02",
@@ -3500,7 +3648,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabd-abra"
+      "businessSlug": "abra-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CA9SFH7",
@@ -3521,7 +3670,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "qarmid"
+      "businessSlug": "qarmid",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CB9MBT8",
@@ -3542,7 +3692,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-dahab"
+      "businessSlug": "sweetie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CCKWSP5",
@@ -3563,70 +3714,80 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-7ajar"
+      "businessSlug": "dar-el-7ajar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CDYCQ93",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "entre-deux"
+      "businessSlug": "entre-deux",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CG8E7D1",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "midnight-salon"
+      "businessSlug": "midnight-salon",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CGV23VJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-loz"
+      "businessSlug": "bayt-l-loz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CH69514",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "layl-hotel"
+      "businessSlug": "layl-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CHQ08EB",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-samke"
+      "businessSlug": "tawlet-samke",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CJQZ0TW",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "beihouse"
+      "businessSlug": "pasteur-palace",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CK2KGB4",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jdeideh-souq"
+      "businessSlug": "jdeideh-souq",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CNA8VEZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "droub-zahle"
+      "businessSlug": "tare2-zahle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CNW40M2",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "darb-el-zireh"
+      "businessSlug": "darb-el-zireh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CP0E2P4",
@@ -3675,7 +3836,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ya-farha"
+      "businessSlug": "ya-farha",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CRPP896",
@@ -3696,7 +3858,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rashwet-jezzine"
+      "businessSlug": "coffee-brew",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CS8SRS3",
@@ -3710,7 +3873,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sonia-lounge"
+      "businessSlug": "palm-lounge",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CV5D58G",
@@ -3759,7 +3923,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saydet-el-darb"
+      "businessSlug": "houmam",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "CYDEVJ8",
@@ -3829,7 +3994,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-laymoun"
+      "businessSlug": "lebneneh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "D9G5TCN",
@@ -3864,7 +4030,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dbayeh-le3be"
+      "businessSlug": "dbayeh-le3be",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DF1YACF",
@@ -3927,14 +4094,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "matal-baissour"
+      "businessSlug": "mattal-el-matn",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DPPBZ1N",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zad"
+      "businessSlug": "zad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DQ6S4TP",
@@ -3955,7 +4124,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bramiyeh-cup"
+      "businessSlug": "cups",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DRB8M6G",
@@ -3969,14 +4139,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sbeha"
+      "businessSlug": "water-park",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DT18AVP",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ain-vista"
+      "businessSlug": "ain-vista",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "DT1MD6K",
@@ -4018,7 +4190,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daret-aankoun"
+      "businessSlug": "dar-aankoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "E0VCXCF",
@@ -4032,7 +4205,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "desk-w-finjen"
+      "businessSlug": "desk-w-finjen",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "E15V56X",
@@ -4060,7 +4234,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-lamme"
+      "businessSlug": "latte",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "E353Q46",
@@ -4102,14 +4277,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khashab-eight"
+      "businessSlug": "khashab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "E8MMCKW",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "eid-el-sanabel"
+      "businessSlug": "eid-el-sanabel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "E8QEVN7",
@@ -4123,14 +4300,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-bahar-hotel"
+      "businessSlug": "dar-bahar-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EADD2PC",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tallet-el-karam"
+      "businessSlug": "tallet-el-karam",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EAXCS3G",
@@ -4144,7 +4323,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bhamdoun-grill"
+      "businessSlug": "bhamdoun-grill",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EC2GBY6",
@@ -4186,7 +4366,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-qasr"
+      "businessSlug": "bayt-qasr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EHVREQZ",
@@ -4207,7 +4388,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aley-far7a"
+      "businessSlug": "far7et-aley",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EKXEB0F",
@@ -4242,7 +4424,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "em-sherif-au-musee"
+      "businessSlug": "esplanade",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ENGJD3M",
@@ -4256,14 +4439,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mawjet-rim"
+      "businessSlug": "seaways",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ER9NGEK",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aqua-hour"
+      "businessSlug": "aqua-hour",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EV5C3V6",
@@ -4291,7 +4476,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le2met-ghazieh"
+      "businessSlug": "le2met-ghazieh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EWS683E",
@@ -4305,28 +4491,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dawret-el-wadi"
+      "businessSlug": "dawret-el-wadi",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EXJMB0M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "meza-dahab"
+      "businessSlug": "meza-dahab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EXPMBR5",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mejmar"
+      "businessSlug": "mejmar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EYCPCCH",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-zeitoun"
+      "businessSlug": "zeitoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "EYST3D1",
@@ -4361,7 +4551,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rue-des-reves"
+      "businessSlug": "rue-des-reves",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "F1Z5SH3",
@@ -4410,7 +4601,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hazmieh-move"
+      "businessSlug": "hazmieh-move",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "F6AF1Z8",
@@ -4424,7 +4616,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-rassieh"
+      "businessSlug": "dar-rassieh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "F7M366J",
@@ -4452,7 +4645,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabd-jezzine"
+      "businessSlug": "jezzine-fitness",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "F93BS45",
@@ -4466,7 +4660,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "wadi-el-maghamra"
+      "businessSlug": "road-runner",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FA3PX50",
@@ -4529,7 +4724,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "3ajin-ksara"
+      "businessSlug": "cold-brew",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FGRHFJB",
@@ -4543,14 +4739,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sha2fe"
+      "businessSlug": "sha2fe",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FK2F7TE",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zouwadeh"
+      "businessSlug": "zouwadeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FKAMWYB",
@@ -4571,7 +4769,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofret-qanafar"
+      "businessSlug": "tawlet-qanafar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FKMT4ZX",
@@ -4599,7 +4798,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-meza"
+      "businessSlug": "bayt-meza",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FP54HG7",
@@ -4613,7 +4813,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "no2tet-bann"
+      "businessSlug": "no2tet-bann",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "FQGS286",
@@ -4676,7 +4877,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "la-sofra-rose"
+      "businessSlug": "la-sofra-rose",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "G1P74M3",
@@ -4718,7 +4920,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "masar-el-qimam"
+      "businessSlug": "hajar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "G4YQWZC",
@@ -4746,7 +4949,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "raml-w-layl"
+      "businessSlug": "tyre-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "G6VFQ12",
@@ -4760,7 +4964,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-zaytoun"
+      "businessSlug": "bayt-zaytoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "G7ZM6PX",
@@ -4809,21 +5014,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "parlons-2ahwe"
+      "businessSlug": "parlons-2ahwe",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GBZ9HS3",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "talje"
+      "businessSlug": "talje",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GCQF80Q",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "satr-el-sahl"
+      "businessSlug": "chalet-el-sahl",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GDD7ADR",
@@ -4837,21 +5045,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "doux-detour"
+      "businessSlug": "doux-detour",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GFC40A4",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arze-beach-club"
+      "businessSlug": "arze-beach-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GFNTKRN",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souq-saida"
+      "businessSlug": "saida-souks",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GG9ZY2S",
@@ -4879,7 +5090,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saha-w-sa7n"
+      "businessSlug": "saha-w-sa7n",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GKC849S",
@@ -4921,7 +5133,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zaatar-bar"
+      "businessSlug": "old-bar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GR8D63S",
@@ -4984,7 +5197,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mademoiselle-z"
+      "businessSlug": "mademoiselle-z",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "GYG0GKF",
@@ -5012,7 +5226,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "laylet-aana"
+      "businessSlug": "laylet-aana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H1SBB21",
@@ -5026,7 +5241,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tannour-ziad"
+      "businessSlug": "tannour-ziad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H373V07",
@@ -5040,14 +5256,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-promenade"
+      "businessSlug": "the-promenade",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H4DTE3M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "azm"
+      "businessSlug": "gym-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H4N2435",
@@ -5082,14 +5300,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mawj-hotel"
+      "businessSlug": "c-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H6QSMX0",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-nour"
+      "businessSlug": "juicy",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "H708J4H",
@@ -5173,7 +5393,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "pascal-bar"
+      "businessSlug": "pascal-bar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "HCEYWQZ",
@@ -5250,14 +5471,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-wadi-2"
+      "businessSlug": "dar-el-wadi-2",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "HMRQANR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "drink-and-sing"
+      "businessSlug": "drink-and-sing",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "HNED3YV",
@@ -5271,7 +5494,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souk-el-sama"
+      "businessSlug": "shopping-point",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "HR83570",
@@ -5334,7 +5558,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jisr-el-mayy"
+      "businessSlug": "jisr-el-mayy",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "J02Y0W7",
@@ -5369,7 +5594,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "manazel-el-wafaa"
+      "businessSlug": "oceana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "J3HXPRE",
@@ -5383,7 +5609,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "janayen-el-dar"
+      "businessSlug": "janayen-el-dar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "J46X0PS",
@@ -5418,7 +5645,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khan-el-amber"
+      "businessSlug": "khan-el-amber",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "J8PTF79",
@@ -5460,7 +5688,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mtein-attic"
+      "businessSlug": "mtein-attic",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "JCY4M0J",
@@ -5537,7 +5766,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bleu-monot"
+      "businessSlug": "monot",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "JP4XHX1",
@@ -5558,7 +5788,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofret-l-dhour"
+      "businessSlug": "sofret-l-dhour",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "JQJCSGC",
@@ -5572,7 +5803,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mshawi-el-diwan"
+      "businessSlug": "mshawi-el-diwan",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "JSVF3ZE",
@@ -5586,7 +5818,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mayy-lodge"
+      "businessSlug": "new-lodge",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "JXEE0F8",
@@ -5614,7 +5847,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "gharbet-roum"
+      "businessSlug": "gharbet-roum",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "K14EZTF",
@@ -5684,7 +5918,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mayet-jdita"
+      "businessSlug": "mayet-jdita",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "KAC4QCY",
@@ -5712,7 +5947,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sabhet-farah"
+      "businessSlug": "splash",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "KC8Q721",
@@ -5726,7 +5962,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "diyafet-chtaura"
+      "businessSlug": "diyafet-chtaura",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "KDDNJAY",
@@ -5761,7 +5998,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "risala-cup"
+      "businessSlug": "risala-cup",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "KJGAJKN",
@@ -5831,7 +6069,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-el-boust"
+      "businessSlug": "yummy",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "KV8XABB",
@@ -5873,7 +6112,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "deir-tania"
+      "businessSlug": "deir-tania",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M047VYX",
@@ -5894,14 +6134,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hors-routine"
+      "businessSlug": "beit-beirut",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M1H0HHX",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "qamar-suites"
+      "businessSlug": "qamar-suites",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M20KK0B",
@@ -5922,7 +6164,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jwar-caravan"
+      "businessSlug": "jewar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M3824GB",
@@ -5936,7 +6179,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "daffet-el-sayf"
+      "businessSlug": "daffet-el-sayf",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M5CYH3V",
@@ -5950,7 +6194,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aaliyit-el-haneen"
+      "businessSlug": "qasr-al-sanawbar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M6YMXQW",
@@ -5964,14 +6209,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "naghme"
+      "businessSlug": "naghme",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M8BQT34",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mayy-beach-club"
+      "businessSlug": "mayy-beach-club",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "M8JAGC9",
@@ -6013,7 +6260,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "souq-el-7ay"
+      "businessSlug": "the-big-mall",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MFSAM9N",
@@ -6027,21 +6275,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le-petit-festin"
+      "businessSlug": "le-petit-festin",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MGV7KMF",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ta7t-el-2al3a"
+      "businessSlug": "ta7t-el-2al3a",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MH4X4N8",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rakwet-may"
+      "businessSlug": "rakwet-chay",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MHMSHY1",
@@ -6055,7 +6306,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "atlal"
+      "businessSlug": "atlal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MK4EGWS",
@@ -6069,7 +6321,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bann-el-deyr"
+      "businessSlug": "ban-l-deyr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MPETVN2",
@@ -6083,7 +6336,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le-rumman-hotel"
+      "businessSlug": "le-rumman-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MQKNJNX",
@@ -6118,7 +6372,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mataam-amar"
+      "businessSlug": "amaren",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MWAN5HF",
@@ -6139,7 +6394,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nasma-hobb"
+      "businessSlug": "nasma-hobb",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "MYKR2MH",
@@ -6153,7 +6409,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-mery"
+      "businessSlug": "tawlet-mery",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "N035YQD",
@@ -6195,7 +6452,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-dalal"
+      "businessSlug": "tawletna",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "N1FYWXR",
@@ -6223,7 +6481,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-el-balad"
+      "businessSlug": "tawlet-el-balad",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "N3TK2X0",
@@ -6237,7 +6496,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sindiane"
+      "businessSlug": "sindiane",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "N4YPSSQ",
@@ -6251,7 +6511,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahret-ward"
+      "businessSlug": "sahret-ward",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "N5ZFH7X",
@@ -6321,7 +6582,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rashet-dibs"
+      "businessSlug": "rashet-dibs",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NCWCTK8",
@@ -6342,7 +6604,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "en-forme"
+      "businessSlug": "en-forme",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NDZDERC",
@@ -6398,7 +6661,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "barra"
+      "businessSlug": "slides",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NHN20D5",
@@ -6412,14 +6676,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bann-el-hayy"
+      "businessSlug": "ban",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NK3DB1V",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahret-joud"
+      "businessSlug": "sahret-joud",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NK8GNYE",
@@ -6447,7 +6713,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nafas-el-ba7er"
+      "businessSlug": "nafas-el-ba7er",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NM9F5C0",
@@ -6475,7 +6742,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kess-w-hake"
+      "businessSlug": "drinkio",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NRBQM46",
@@ -6503,7 +6771,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sahret-el-ghar"
+      "businessSlug": "sahret-el-ghar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NVB8XF4",
@@ -6552,7 +6821,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mouvement"
+      "businessSlug": "mouvement",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "NZPSMKA",
@@ -6587,7 +6857,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "pause-velours"
+      "businessSlug": "pause-velours",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P26QQK5",
@@ -6608,7 +6879,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjein"
+      "businessSlug": "fenjein",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P2P5NYM",
@@ -6622,7 +6894,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "darb-el-3ali"
+      "businessSlug": "darb-el-3ali",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P5EEF0H",
@@ -6636,14 +6909,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mansour-layali"
+      "businessSlug": "layali-matn",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P5T50YZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dawret-nabd-2"
+      "businessSlug": "fitness-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P71Q0JG",
@@ -6664,7 +6939,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "cafe-ghinwa"
+      "businessSlug": "cafe-ghinwa",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "P9TPBG8",
@@ -6678,7 +6954,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zalka-bel-souq"
+      "businessSlug": "zalka-bel-souq",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "PAB9ZSP",
@@ -6706,7 +6983,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arz-fitness"
+      "businessSlug": "arz-fitness",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "PG39K7H",
@@ -6748,7 +7026,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-el-le2me"
+      "businessSlug": "bayt-el-le2me",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "PQV5P84",
@@ -6818,7 +7097,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "labne-w-rghif"
+      "businessSlug": "labne-w-rghif",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Q2K24RW",
@@ -6853,7 +7133,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "yalla-laab"
+      "businessSlug": "t-courts",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Q6YXRPV",
@@ -6888,7 +7169,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sindyen-rest"
+      "businessSlug": "sindyen-rest",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Q9HVWTP",
@@ -6902,7 +7184,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "far7et-el-may"
+      "businessSlug": "sun-kissed",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QBCBY1E",
@@ -6923,21 +7206,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "maison-yasmine"
+      "businessSlug": "maison-yasmine",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QFNRRVZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arze-hotel"
+      "businessSlug": "arze-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QFQ0F53",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "laylet-khashab"
+      "businessSlug": "laylet-khashab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QG1Q15N",
@@ -6972,7 +7258,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nuit-en-marge"
+      "businessSlug": "nuit-en-marge",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QMX8BGP",
@@ -7021,7 +7308,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "wadi-hammana"
+      "businessSlug": "wadi-hammana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QSQGJGK",
@@ -7049,7 +7337,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "deyafeh"
+      "businessSlug": "deyafeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QXFQ27H",
@@ -7070,7 +7359,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-laymoun-suites"
+      "businessSlug": "ehden-new-suites",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "QYXV3XF",
@@ -7084,14 +7374,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dawret-nabd"
+      "businessSlug": "dawret-nabd",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "R1HNY7Y",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-el-sobh"
+      "businessSlug": "ahwet-el-sobh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "R1SQ4JN",
@@ -7119,7 +7411,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "belle-parenthese"
+      "businessSlug": "belle-parenthese",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "R5VP3KR",
@@ -7133,7 +7426,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sekkar-w-bann"
+      "businessSlug": "sweet-coffee",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "R8MH468",
@@ -7161,7 +7455,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabd-hazmieh"
+      "businessSlug": "hazmieh-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "R9M32FN",
@@ -7196,28 +7491,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-haneen"
+      "businessSlug": "dar-l-hana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RFMBQQ2",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nuage-neuf"
+      "businessSlug": "nuage-neuf",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RGB2ZCJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mawjet-nour"
+      "businessSlug": "fay-w-may",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RGHZWD9",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "habb-w-zeit"
+      "businessSlug": "zaytoun-w-zeit",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RGTHPFW",
@@ -7245,7 +7544,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-jabal"
+      "businessSlug": "ahwet-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RKKTT4Y",
@@ -7273,14 +7573,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nour-el-talle"
+      "businessSlug": "nour-l-talle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RN1F0FX",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hotel-sabah"
+      "businessSlug": "hotel-sabah",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RN72GFB",
@@ -7301,7 +7603,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "marsa-cruise"
+      "businessSlug": "marsa-cruise",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RQ9BJC2",
@@ -7322,14 +7625,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "qasr-el-rayyan"
+      "businessSlug": "heaven",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RT04R99",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zaitunay-bay"
+      "businessSlug": "yacht-beirut",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RT19JF0",
@@ -7350,7 +7655,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rawa2-suites"
+      "businessSlug": "beqaa-suites",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RTDTQ53",
@@ -7385,7 +7691,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bokra-wok"
+      "businessSlug": "bokra-wok",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "RX83AEH",
@@ -7406,7 +7713,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2metna-2"
+      "businessSlug": "le2metna-2",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "S1YKBJ4",
@@ -7427,7 +7735,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "darb-el-leil"
+      "businessSlug": "darb-l-leil",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "S2G4CW8",
@@ -7455,7 +7764,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jalset-hana"
+      "businessSlug": "jalset-hana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "S6X9GA8",
@@ -7476,7 +7786,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-wissam"
+      "businessSlug": "bayt-wissam",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SAP5A2S",
@@ -7511,21 +7822,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "jaretna"
+      "businessSlug": "jarretna",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SDCNNPJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sfi7a-w-7aba2"
+      "businessSlug": "sfi7a-w-labben",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SEE55CQ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "le2met-hobb"
+      "businessSlug": "le2met-hobb",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SGD3PV4",
@@ -7567,7 +7881,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hemme-w-nafas"
+      "businessSlug": "sporting",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SKCHBX9",
@@ -7595,14 +7910,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "salim-bar"
+      "businessSlug": "batroun-bar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SQA0GBJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fasle"
+      "businessSlug": "cafe-nass",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SQDZ7QX",
@@ -7630,7 +7947,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-karim"
+      "businessSlug": "mezza",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SV5NCK4",
@@ -7658,14 +7976,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-hiba"
+      "businessSlug": "cloudies",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SVSNMWD",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khalwet-nour"
+      "businessSlug": "mesbah",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SW5FPKQ",
@@ -7679,7 +7999,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "the-ivory-key"
+      "businessSlug": "the-ivory-key",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SXE2NHT",
@@ -7693,21 +8014,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bahr-w-dar"
+      "businessSlug": "bahr-w-dar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SXYXTWV",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saydet-bahr"
+      "businessSlug": "saydet-bahr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "SZHDCBT",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ba3d-el-dares"
+      "businessSlug": "ba3d-el-dares",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T0968Y8",
@@ -7756,7 +8080,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "leil-el-dar"
+      "businessSlug": "terrace",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T2MDCE7",
@@ -7777,14 +8102,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "latelier-nini"
+      "businessSlug": "latelier-ni",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T4YWKW1",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "3ayn-el-dar"
+      "businessSlug": "3ayn-el-dar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T53T709",
@@ -7798,7 +8125,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "makhyam-l-darb"
+      "businessSlug": "mokhayam-l-darb",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T87F19X",
@@ -7812,14 +8140,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-baylasan"
+      "businessSlug": "parapluie-hotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "T94BC45",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kammoun"
+      "businessSlug": "kammoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TAFH0XD",
@@ -7861,14 +8191,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mamar-el-souq"
+      "businessSlug": "ze-mall",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TD7C9B1",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mawjet-beirut"
+      "businessSlug": "mawjet-beirut",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TDG185Z",
@@ -7896,7 +8228,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "7elwe-w-fenjen"
+      "businessSlug": "7elwe-w-fenjen",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TFCPTPH",
@@ -7910,21 +8243,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "beirut-afloat"
+      "businessSlug": "beirut-afloat",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TGP6E0M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "markab-el-mina"
+      "businessSlug": "markab-el-mina",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "THS4GWZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nuzul"
+      "businessSlug": "nuzul",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TJXG9VN",
@@ -7938,7 +8274,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nabdet-watar"
+      "businessSlug": "sout-watar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TM7EY42",
@@ -7973,21 +8310,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saray-el-banafsej"
+      "businessSlug": "saray-el-banafsej",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TQVWEMR",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "khan-el-bahr"
+      "businessSlug": "khan-el-bahr",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TSHKQAP",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "beit-el-qindeel"
+      "businessSlug": "beit-el-qindeel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TV0ZV08",
@@ -8014,7 +8354,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ras-roll"
+      "businessSlug": "sushi-roll",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TX5KP3N",
@@ -8028,7 +8369,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zaatarna"
+      "businessSlug": "zaatarna",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "TXSAT0K",
@@ -8070,14 +8412,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-talle"
+      "businessSlug": "dar-l-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "V0N564Y",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "miyah"
+      "businessSlug": "waves",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "V13S5NE",
@@ -8119,7 +8463,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tannour-sami"
+      "businessSlug": "samis-plate",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "V67RF9C",
@@ -8133,7 +8478,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "koukh-snoubar"
+      "businessSlug": "khoukh-snoubar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "V8RGZ3Z",
@@ -8168,7 +8514,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rakwet-rana"
+      "businessSlug": "rakweh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VBHHY48",
@@ -8231,7 +8578,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "saha"
+      "businessSlug": "healthy-foodie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VG3QN4E",
@@ -8259,7 +8607,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lo2met-lido"
+      "businessSlug": "street-foodie",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VK5C1ZH",
@@ -8273,7 +8622,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dawret-bowling"
+      "businessSlug": "dawret-bowling",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VMMGQW3",
@@ -8287,14 +8637,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bhamdoun-3id"
+      "businessSlug": "bhamdoun-fest",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VQ1A67Q",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "elie-gym"
+      "businessSlug": "elie-gym",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VQQF4YA",
@@ -8329,14 +8681,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "marsa-le2me"
+      "businessSlug": "marsa-le2me",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VW5A88E",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "fenjen-w-fasle"
+      "businessSlug": "fenjen-w-fasle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VW7XX6H",
@@ -8357,7 +8711,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "simsom"
+      "businessSlug": "simsom",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "VYS01GZ",
@@ -8385,21 +8740,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nazel-el-7ay"
+      "businessSlug": "nozol-el-7ay",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "W320ZAP",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sobh-w-leil"
+      "businessSlug": "sobh-w-leil",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "W3RSFTA",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-mawj"
+      "businessSlug": "shbebek",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "W4CBPHM",
@@ -8413,7 +8771,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "aaram"
+      "businessSlug": "aaram",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "W6QBY6N",
@@ -8427,7 +8786,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-ghinwa"
+      "businessSlug": "sobheye",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WA4X62Z",
@@ -8441,14 +8801,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "nuzul-el-diyar"
+      "businessSlug": "nuzul-el-diyar",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WAYRG74",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zahr-el-jabal"
+      "businessSlug": "zahr-el-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WBGTYX3",
@@ -8532,7 +8894,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "satin-hours"
+      "businessSlug": "satin-hours",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WNPCJF5",
@@ -8553,7 +8916,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bab-el-2a3de"
+      "businessSlug": "bab-el-2a3de",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WS4KYHA",
@@ -8574,7 +8938,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dhour-wood"
+      "businessSlug": "dhour-wood",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WSJPDJ7",
@@ -8588,14 +8953,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "layali-suites"
+      "businessSlug": "layali-suites",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WVCNGJ4",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "poele"
+      "businessSlug": "poele",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WVV53FG",
@@ -8609,14 +8976,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "ahwet-georges"
+      "businessSlug": "ahwet-georges",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WW5VZTZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "afrah-el-sahat"
+      "businessSlug": "afrah-el-sahat",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "WYHFHNS",
@@ -8651,7 +9020,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-el-mrah"
+      "businessSlug": "tawlet-mrah",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X1G753R",
@@ -8665,7 +9035,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "yalla-later"
+      "businessSlug": "yalla-later",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X2BZDH9",
@@ -8693,28 +9064,32 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "beyt-el-karm"
+      "businessSlug": "ahl-el-karam",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X3ED11B",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mar2ad-ahwe"
+      "businessSlug": "ahwetna",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X4R0TGJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lamme-w-fenjen"
+      "businessSlug": "lamme-w-fenjen",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X58M810",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dbayeh-yachting"
+      "businessSlug": "dbayeh-yachting",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X5N62BV",
@@ -8728,14 +9103,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-diya"
+      "businessSlug": "dar-el-diya",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X7N5QCJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "quwwet-el-jabal"
+      "businessSlug": "quwwet-el-jabal",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "X87CH9W",
@@ -8756,7 +9133,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "remmaneh-play"
+      "businessSlug": "remmaneh-play",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XBDG3XZ",
@@ -8770,7 +9148,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "letincelle"
+      "businessSlug": "letincelle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XCWH7S4",
@@ -8805,7 +9184,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "salt-society"
+      "businessSlug": "salt-society",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XJMCVAM",
@@ -8819,14 +9199,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "zaman-baalbek"
+      "businessSlug": "zaman-baalbek",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XQHC63M",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kas-el-saha"
+      "businessSlug": "mazaj",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XV9ZZ6Q",
@@ -8847,14 +9229,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "mayet-qaraoun"
+      "businessSlug": "mayet-qaraoun",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XWQT3DS",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "diyafet-l-sahl"
+      "businessSlug": "ahl-l-sahl",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "XXCJ14B",
@@ -8875,7 +9259,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sour-el-dar"
+      "businessSlug": "aal-baher",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Y0A6TK0",
@@ -8889,7 +9274,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "tawlet-el-may"
+      "businessSlug": "tawleh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Y0R4DNW",
@@ -8917,14 +9303,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "arze-lounge"
+      "businessSlug": "arze-lounge",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Y3S7P3X",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lara-hotel"
+      "businessSlug": "lehotel",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Y51FHXS",
@@ -8966,7 +9354,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sirr-el-ghabe"
+      "businessSlug": "sirr-el-ghabe",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Y9WRFE1",
@@ -9001,7 +9390,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "la-tablita"
+      "businessSlug": "la-tablita",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YDPA2DC",
@@ -9015,14 +9405,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "manzel-yasmin"
+      "businessSlug": "manzel-yasmin",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YEHP2CJ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "qaws-el-sofra"
+      "businessSlug": "qaws-el-sofra",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YFTR001",
@@ -9071,7 +9463,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bayt-selim"
+      "businessSlug": "grillo",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YN2ZJJ3",
@@ -9085,7 +9478,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sofret-el-bayt"
+      "businessSlug": "sofret-el-bayt",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YNAS3WF",
@@ -9099,7 +9493,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "dar-el-nour"
+      "businessSlug": "resthouse-jbeil",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YSGSH52",
@@ -9113,7 +9508,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "kankeh"
+      "businessSlug": "kankeh",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "YT6WCCT",
@@ -9183,7 +9579,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "rola-paragliding"
+      "businessSlug": "paragliding-arz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Z3RTKKH",
@@ -9232,7 +9629,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hawa-leil"
+      "businessSlug": "hawana",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "Z7Z86NE",
@@ -9246,7 +9644,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "chez-joelle"
+      "businessSlug": "chez-joelle",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZA832G6",
@@ -9309,7 +9708,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "bonsoir-zaza"
+      "businessSlug": "after-party",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZJDNQBZ",
@@ -9337,14 +9737,16 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "layl-el-dar"
+      "businessSlug": "groovy",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZQ4T73G",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sob7-w-khobz"
+      "businessSlug": "sob7-w-khobz",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZQSBXEG",
@@ -9365,7 +9767,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "sab3a-dar"
+      "businessSlug": "kanater",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZRJAVNY",
@@ -9379,7 +9782,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "darb-el-3enab"
+      "businessSlug": "darb-el-3enab",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZRYQSC7",
@@ -9407,21 +9811,24 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "curiosite"
+      "businessSlug": "curiosite",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZWMJ4PZ",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "haush-w-ward"
+      "businessSlug": "haush-w-ward",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZWY6BND",
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "hada"
+      "businessSlug": "hada",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZX4XJN4",
@@ -9456,7 +9863,8 @@
       "targetType": "business",
       "placement": "magazine-page",
       "active": true,
-      "businessSlug": "lamma-naas"
+      "businessSlug": "bikfaya-resthouse",
+      "issueSlug": "all-lebanon"
     },
     {
       "code": "ZYWQ2S6",
