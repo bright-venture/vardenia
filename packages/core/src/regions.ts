@@ -11,7 +11,8 @@
  * Mount Lebanon, Akkar and Baalbek-Hermel are governorates of their own); here
  * each district sits in the region whose edition carries it.
  *
- * The names are the sheet's own (North, Bekaa, Jnoub), as printed. The slugs
+ * The names are the sheet's own (North, Bekaa), as printed, except the south:
+ * the sheet's "Jnoub" reads as "South" on the site (11 November 2026). The slugs
  * stay plain-English and URL-safe, because they are stored values and appear
  * in filter links. The field and the type keep the name `governorate`, because
  * that is the database column. Its options are these seven.
@@ -94,7 +95,7 @@ export const GOVERNORATES = [
   },
   {
     slug: 'south-lebanon',
-    en: 'Jnoub',
+    en: 'South',
     ar: 'الجنوب',
     districts: [
       { slug: 'bint-jbeil', en: 'Bint Jbeil', ar: 'بنت جبيل' },
