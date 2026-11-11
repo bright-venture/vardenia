@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { findIssues } from '../../lib/issues'
 import { CONTACT } from '../../lib/contact'
-import { BusinessCategories, CategoryProvider } from './BusinessCategories'
+import { CategoryProvider } from './BusinessCategories'
 import { BusinessReader } from './BusinessReader'
 import { EnquiryForm } from './EnquiryForm'
 
@@ -37,8 +37,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
     (key) => ({
       key,
       label: t(`category${key}`),
-      body: t(`category${key}Body`),
-      link: t(`category${key}Link`),
     }),
   )
 
@@ -185,27 +183,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           ) : null}
         </section>
 
-        <section className="vd-biz-section vd-biz-audience" aria-labelledby="biz-business">
-          <div className="vd-biz-top">
-            <h2 id="biz-business" data-vd-reveal>
-              {t('businessA')}
-              <br /> {t('businessB')}
-            </h2>
-            <p>{t('businessBody')}</p>
-          </div>
-          <div className="vd-biz-audience-grid">
-            <Image
-              src="/business/beirut-clocktower.webp"
-              width={1400}
-              height={945}
-              alt={t('beirutAlt')}
-              sizes="(max-width:700px) 100vw, 40vw"
-              data-vd-reveal
-            />
-            <BusinessCategories label={t('categoriesLabel')} categories={categories} />
-          </div>
-        </section>
-
         <section className="vd-biz-section vd-biz-beyond" aria-labelledby="biz-beyond">
           <div className="vd-biz-axis">
             <div className="vd-biz-beyond-art">
@@ -299,20 +276,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className="vd-biz-section vd-biz-axis" aria-labelledby="biz-questions">
-          <h2 id="biz-questions" data-vd-reveal>
-            {t('questionsA')}
-            <br /> {t('questionsB')}
-          </h2>
-          <div className="vd-biz-answers">
-            {([1, 2, 3, 4, 5, 6] as const).map((n) => (
-              <p key={n}>
-                <strong>{t(`q${n}`)}</strong> {t(`a${n}`)}
-              </p>
-            ))}
-          </div>
-        </section>
-
         <section
           className="vd-biz-section vd-biz-contact"
           id="contact"
@@ -343,7 +306,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           </div>
           <EnquiryForm
             email={CONTACT.email}
-            categories={categories.map(({ key, label }) => ({ key, label }))}
+            categories={categories}
             copy={{
               business: t('fieldBusiness'),
               businessHint: t('fieldBusinessHint'),

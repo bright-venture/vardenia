@@ -223,7 +223,6 @@
 }
 .vd-biz-axis,
 .vd-biz-top,
-.vd-biz-audience-grid,
 .vd-biz-contact {
   display: grid;
   grid-template-columns: 40% 1fr;
@@ -326,47 +325,6 @@
   font-size: 14px;
 }
 
-/* A place for your business */
-.vd-biz-audience-grid > img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 4.3;
-  object-fit: cover;
-}
-.vd-biz-categories {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 32px;
-}
-.vd-biz-categories button {
-  min-height: 44px;
-  padding: 12px 17px;
-  border: 1px solid var(--biz-line);
-  background: var(--biz-field);
-  font-size: 16px;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    transform 0.2s;
-}
-.vd-biz-categories button:hover {
-  transform: translateY(-2px);
-}
-.vd-biz-categories button[aria-pressed='true'] {
-  border-color: var(--biz-ink);
-  background: var(--biz-ink);
-  color: var(--biz-paper);
-}
-.vd-biz-category-body {
-  max-width: 660px;
-  min-height: 150px;
-  margin-bottom: 28px;
-  font-family: var(--font-display);
-  font-size: 30px;
-  line-height: 1.4 !important;
-}
-
 /* Beyond the page */
 .vd-biz-beyond {
   background: var(--biz-stone);
@@ -434,19 +392,6 @@
 .vd-biz-join {
   gap: 40px;
   margin: 0;
-}
-
-/* Questions */
-.vd-biz-answers {
-  columns: 2;
-  column-gap: 40px;
-}
-.vd-biz-answers p {
-  break-inside: avoid;
-  margin: 0 0 30px !important;
-}
-.vd-biz-answers strong {
-  font-weight: 600;
 }
 
 /* Contact */
@@ -563,16 +508,12 @@ body:has(.vd-biz) .vd-footer {
   }
   .vd-biz-axis,
   .vd-biz-top,
-  .vd-biz-audience-grid,
   .vd-biz-contact {
     grid-template-columns: 38% 1fr;
     gap: 6%;
   }
   .vd-biz-statement {
     font-size: 26px;
-  }
-  .vd-biz-answers {
-    columns: 1;
   }
   .vd-biz-notes {
     grid-template-columns: 1fr;
@@ -656,7 +597,6 @@ body:has(.vd-biz) .vd-footer {
   }
   .vd-biz-axis,
   .vd-biz-top,
-  .vd-biz-audience-grid,
   .vd-biz-contact,
   .vd-biz-beyond .vd-biz-axis {
     grid-template-columns: 1fr;
@@ -697,30 +637,11 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-invitation h3 {
     font-size: 28px;
   }
-  .vd-biz-audience-grid > img {
-    aspect-ratio: 4 / 3;
-  }
-  .vd-biz-categories {
-    gap: 7px;
-    margin-bottom: 24px;
-  }
-  .vd-biz-categories button {
-    padding: 10px 13px;
-    font-size: 15px;
-  }
-  .vd-biz-category-body {
-    min-height: 0;
-    margin-bottom: 22px;
-    font-size: 24px;
-  }
   .vd-biz-beyond-art {
     order: 2;
   }
   .vd-biz-beyond-statement {
     font-size: 17px;
-  }
-  .vd-biz-answers {
-    columns: 1;
   }
   .vd-biz-form-row {
     grid-template-columns: 1fr;
@@ -737,13 +658,9 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-button-light:hover {
     background: var(--biz-paper);
   }
-  .vd-biz-categories button:hover {
-    transform: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vd-biz-button,
-  .vd-biz-categories button {
+  .vd-biz-button {
     transition: none !important;
     transform: none !important;
   }

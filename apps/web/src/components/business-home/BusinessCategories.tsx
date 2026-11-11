@@ -3,9 +3,9 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 
 /**
- * The business category chosen on the homepage, shared by the category buttons
- * ("A place for your business") and the enquiry form's select further down, so
- * choosing one updates the other, as in the designer's page.
+ * The business category chosen in the homepage enquiry form. It was shared with
+ * the category buttons of "A place for your business" until that section was
+ * removed (11 November 2026); the form still reads it from here.
  */
 const Category = createContext<{ value: string; set: (value: string) => void }>({
   value: '',
@@ -18,36 +18,3 @@ export function CategoryProvider({ initial, children }: { initial: string; child
 }
 
 export const useCategory = () => useContext(Category)
-
-export function BusinessCategories({
-  label,
-  categories,
-}: {
-  label: string
-  categories: { key: string; label: string; body: string; link: string }[]
-}) {
-  const { value, set } = useCategory()
-  const active = categories.find((category) => category.key === value) ?? categories[0]!
-  return (
-    <div>
-      <div className="vd-biz-categories" role="group" aria-label={label} data-vd-reveal>
-        {categories.map((category) => (
-          <button
-            key={category.key}
-            type="button"
-            aria-pressed={category.key === active.key}
-            onClick={() => set(category.key)}
-          >
-            {category.label}
-          </button>
-        ))}
-      </div>
-      <p className="vd-biz-category-body" aria-live="polite">
-        {active.body}
-      </p>
-      <a className="vd-biz-link" href="#contact">
-        {active.link}
-      </a>
-    </div>
-  )
-}
