@@ -34,6 +34,7 @@ import styles from './MagazineReader.module.css'
 import { PaperCurl, type PaperSnapshot as Snapshot, type PaperTurn as Turn } from './PaperCurl'
 import { dragProgress, shouldCommitTurn } from './reader-curl'
 import { PageCache, type DrawnPage } from './page-cache'
+import { BatchLoader, batchesFor, savingData } from './page-batches'
 
 type Copy = ReturnType<typeof readerCopy>
 interface Props {
@@ -297,6 +298,28 @@ function ReaderBook({
     pageWidth,
     pageHeight,
   ])
+  // Ten pages at a time, downloaded ahead of the reader (page-batches.ts).
+  // None for a reader whose phone asks to save data.
+  // Made in an effect, not a memo, so the loader a cleanup stops is never the
+  // one used again (React runs effects twice in development).
+  const batches = useRef<BatchLoader | null>(null)
+  useEffect(() => {
+    if (savingData()) return
+    const loader = new BatchLoader(pdfFetcher(document), document.numPages)
+    batches.current = loader
+    return () => {
+      loader.stop()
+      if (batches.current === loader) batches.current = null
+    }
+  }, [document])
+  useEffect(() => {
+    // A moment's wait, so the open page's own download goes first.
+    const timer = window.setTimeout(
+      () => batches.current?.want(batchesFor(firstPage, lastPage, document.numPages)),
+      400,
+    )
+    return () => window.clearTimeout(timer)
+  }, [document, firstPage, lastPage])
   const cancelTurn = useCallback(() => {
     if (turnRef.current)
       setDraft(
@@ -882,6 +905,21 @@ function ReaderBook({
       {content}
     </div>
   )
+}
+
+/**
+ * Downloads one page for a batch (page-batches.ts) without drawing it. Reading
+ * its operator list makes PDF.js fetch the page's content and photographs;
+ * `cleanup` then lets go of the decoded photographs, which a phone cannot keep
+ * ten pages of, while the downloaded bytes stay with the document. PDF.js
+ * defers the cleanup if the page cache is drawing the same page.
+ */
+function pdfFetcher(document: PDFDocumentProxy) {
+  return async (page: number): Promise<void> => {
+    const pdfPage = await document.getPage(page)
+    await pdfPage.getOperatorList()
+    pdfPage.cleanup()
+  }
 }
 
 /**
