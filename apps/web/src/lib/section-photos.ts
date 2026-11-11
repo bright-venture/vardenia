@@ -18,8 +18,9 @@ export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
     alt: 'A stone bedroom opening through green doors onto a terrace and the mountains',
   },
   'eat-and-drink': {
-    src: '/sections/eat-and-drink.webp',
-    alt: 'A table of Lebanese mezze above the sea: hummus, tabbouleh, grilled halloumi and vine leaves',
+    // The team's terrace dinner at sunset, since 11 November 2026.
+    src: '/sections/eat-and-drink-terrace.webp',
+    alt: 'Dinner on a stone terrace above the sea at sunset: hummus, tabbouleh, grilled meat, bread and a glass of white wine under bougainvillea',
   },
   experiences: {
     src: '/sections/experiences.webp',
