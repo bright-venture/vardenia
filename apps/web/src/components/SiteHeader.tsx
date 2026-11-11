@@ -16,6 +16,12 @@ import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 import { SECTION_PHOTOS } from '../lib/section-photos'
+import {
+  ABOUT_HERO,
+  ABOUT_HERO_ALT,
+  ADD_BUSINESS_PHOTO,
+  ADD_BUSINESS_PHOTO_ALT,
+} from './editorial/standingPagePhotos'
 
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
@@ -86,15 +92,16 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       items={magazineItems}
     />
   )
-  // Destinations by index into components/journey/destinations: Byblos,
-  // Beirut, Deir el Qamar, Tyre.
+  // About and Add your business show their pages' own photographs; the others
+  // a destination by index into components/journey/destinations.
   const aboutItems = [
     shown('about')
       ? {
           href: '/about',
           name: t('nav.aboutVardenia'),
           description: t('nav.aboutVardeniaNote'),
-          destination: 0,
+          // The About page's own header picture (editorial/standingPagePhotos).
+          photo: { src: ABOUT_HERO.src, alt: ABOUT_HERO_ALT[locale] },
         }
       : null,
     shown('add-your-business')
@@ -102,7 +109,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           href: '/add-your-business',
           name: t('home.addBusiness'),
           description: t('nav.addBusinessNote'),
-          destination: 2,
+          // The page's own photograph (editorial/standingPagePhotos).
+          photo: { src: ADD_BUSINESS_PHOTO.src, alt: ADD_BUSINESS_PHOTO_ALT[locale] },
         }
       : null,
     shown('faq')

@@ -7,6 +7,12 @@ import type { Locale } from '@vardenia/i18n'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { PageHero } from './editorial/PageHero'
+import {
+  ABOUT_HERO,
+  ABOUT_HERO_ALT,
+  ADD_BUSINESS_PHOTO,
+  ADD_BUSINESS_PHOTO_ALT,
+} from './editorial/standingPagePhotos'
 import { Link } from '../i18n/routing'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
@@ -43,21 +49,6 @@ import { withEmphasis } from './emphasis'
  * The legal documents are still English in both editions and still carry the
  * override. See LegalDocument.
  */
-
-/** About's header picture: the seven regional editions as doors, the issue in front. */
-const ABOUT_HERO = { src: '/about/seven-doors.webp', width: 999, height: 1280 }
-const ABOUT_HERO_ALT: Record<Locale, string> = {
-  en: 'The All Lebanon issue of Vardenia on a lit plinth, before seven doorways opening onto Beirut, Metn, Keserwan, the North, the Chouf, the Beqaa and the South',
-  ar: 'عدد كلّ لبنان من فاردينيا على منصّة مضاءة، أمام سبعة أبواب تطلّ على بيروت والمتن وكسروان والشمال والشوف والبقاع والجنوب',
-  fr: 'L’édition All Lebanon de Vardenia sur un socle éclairé, devant sept portes ouvertes sur Beyrouth, le Metn, le Kesrouan, le Nord, le Chouf, la Békaa et le Sud',
-  es: 'La edición All Lebanon de Vardenia sobre un pedestal iluminado, ante siete puertas abiertas a Beirut, Metn, Keserwan, el Norte, Chouf, Bekaa y el Sur',
-  pt: 'A edição All Lebanon da Vardenia num pedestal iluminado, diante de sete portas abertas para Beirute, Metn, Keserwan, o Norte, Chouf, Bekaa e o Sul',
-  ru: 'Выпуск All Lebanon журнала Vardenia на освещённом постаменте перед семью дверями в Бейрут, Метн, Кесруан, Север, Шуф, Бекаа и Юг',
-  zh: 'Vardenia All Lebanon 期杂志立在一座亮灯的底座上，身后是通往贝鲁特、迈特恩、凯斯鲁万、北部、舒夫、贝卡和南部的七扇门',
-  hi: 'रोशन चबूतरे पर Vardenia का All Lebanon अंक, पीछे बेरूत, मेत्न, केसरवान, उत्तर, शूफ़, बेक़ा और दक्षिण की ओर खुलते सात दरवाज़े',
-  bn: 'আলোকিত বেদিতে Vardenia-র All Lebanon সংখ্যা, পেছনে বৈরুত, মেতন, কেসরওয়ান, উত্তর, শুফ, বেকা ও দক্ষিণের দিকে খোলা সাতটি দরজা',
-  ur: 'روشن چبوترے پر Vardenia کا All Lebanon شمارہ، پیچھے بیروت، متن، کسروان، شمال، شوف، بقاع اور جنوب کی طرف کھلتے سات دروازے',
-}
 
 /**
  * The About page's photographs, one per section, by section index (the owner's,
@@ -260,7 +251,15 @@ export async function ContentPageView({
         // About's own picture since 11 November 2026, the seven regional doors
         // and the All Lebanon issue. Portrait, so it sits beside the title whole
         // rather than behind it, where a wide crop would cut it to a strip.
-        photo={slug === 'about' ? { ...ABOUT_HERO, alt: ABOUT_HERO_ALT[locale] } : undefined}
+        // Add your business has its own too (the owner's, the same day), also
+        // portrait.
+        photo={
+          slug === 'about'
+            ? { ...ABOUT_HERO, alt: ABOUT_HERO_ALT[locale] }
+            : slug === 'add-your-business'
+              ? { ...ADD_BUSINESS_PHOTO, alt: ADD_BUSINESS_PHOTO_ALT[locale] }
+              : undefined
+        }
         locale={locale}
       >
         <a href="#page-story" className="vd-button">

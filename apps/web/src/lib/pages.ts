@@ -1940,123 +1940,377 @@ export function advertisePage(locale: Locale = 'en'): ContentPage {
 
 // ----------------------------------------------------- add your business
 
+/**
+ * The owner's text of 11 November 2026, "Introduce Your Business", replacing
+ * the earlier what-to-send page. The seven things to send are subsections, in
+ * the owner's order. A line starting "> " is a pull quote and "~ " the closing
+ * Vardenia signature (ContentPage). The one line added to the owner's text is
+ * the address to write to, so the page says where to send it all.
+ */
 export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
+  const steps: [string, string][] = pick(locale, {
+    en: [
+      ['Business Name & Location', 'Your business name, region, and full address.'],
+      [
+        'Business Category',
+        'Tell us about your business, whether it is a hotel, guesthouse, restaurant, café, attraction, activity provider, or another tourism-related service.',
+      ],
+      [
+        'About Your Business',
+        'A brief introduction highlighting what makes your destination, services, or experiences unique.',
+      ],
+      [
+        'Website & Social Media',
+        'Share your official website and social media pages, if available.',
+      ],
+      [
+        'Photos & Visual Content',
+        'A selection of high-quality photographs that showcase your property, services, or experiences.',
+      ],
+      [
+        'Contact Information',
+        'Provide the name, phone number, and email address of your business representative.',
+      ],
+      [
+        'Booking Preferences',
+        'Let us know whether you are interested in receiving booking inquiries through Vardenia or prefer customers to contact you directly.',
+      ],
+    ],
+    ar: [
+      ['اسم العمل وموقعه', 'اسم عملك والمنطقة والعنوان الكامل.'],
+      [
+        'فئة العمل',
+        'أخبرنا عن عملك، سواء كان فندقاً أو بيت ضيافة أو مطعماً أو مقهى أو معلماً سياحياً أو مقدّم أنشطة أو خدمة سياحية أخرى.',
+      ],
+      ['نبذة عن عملك', 'تعريف موجز يُبرز ما يميّز وجهتك أو خدماتك أو تجاربك.'],
+      [
+        'الموقع الإلكتروني ومواقع التواصل',
+        'شاركنا موقعك الرسمي وصفحاتك على مواقع التواصل الاجتماعي، إن وُجدت.',
+      ],
+      ['الصور والمحتوى المرئي', 'مجموعة من الصور عالية الجودة تُظهر منشأتك أو خدماتك أو تجاربك.'],
+      ['معلومات الاتصال', 'اسم ممثّل عملك ورقم هاتفه وبريده الإلكتروني.'],
+      [
+        'تفضيلات الحجز',
+        'أخبرنا إن كنت ترغب في تلقّي طلبات الحجز عبر فاردينيا، أو تفضّل أن يتواصل معك العملاء مباشرة.',
+      ],
+    ],
+    fr: [
+      [
+        'Nom et adresse de l’établissement',
+        'Le nom de votre établissement, sa région et son adresse complète.',
+      ],
+      [
+        'Catégorie',
+        'Dites-nous ce qu’est votre établissement : hôtel, maison d’hôtes, restaurant, café, site à visiter, prestataire d’activités ou autre service touristique.',
+      ],
+      [
+        'À propos de votre établissement',
+        'Une courte présentation de ce qui rend votre destination, vos services ou vos expériences uniques.',
+      ],
+      [
+        'Site web et réseaux sociaux',
+        'Votre site officiel et vos pages sur les réseaux sociaux, s’il y en a.',
+      ],
+      [
+        'Photos et contenus visuels',
+        'Une sélection de photographies de grande qualité qui mettent en valeur votre établissement, vos services ou vos expériences.',
+      ],
+      [
+        'Coordonnées',
+        'Le nom, le numéro de téléphone et l’adresse e-mail de la personne qui représente votre établissement.',
+      ],
+      [
+        'Préférences de réservation',
+        'Dites-nous si vous souhaitez recevoir des demandes de réservation via Vardenia ou si vous préférez que les clients vous contactent directement.',
+      ],
+    ],
+    es: [
+      [
+        'Nombre y ubicación del negocio',
+        'El nombre de tu negocio, la región y la dirección completa.',
+      ],
+      [
+        'Categoría del negocio',
+        'Cuéntanos qué es tu negocio: un hotel, una casa de huéspedes, un restaurante, un café, una atracción, un proveedor de actividades u otro servicio turístico.',
+      ],
+      [
+        'Sobre tu negocio',
+        'Una breve presentación que destaque lo que hace único a tu destino, tus servicios o tus experiencias.',
+      ],
+      [
+        'Web y redes sociales',
+        'Comparte tu web oficial y tus perfiles en redes sociales, si los tienes.',
+      ],
+      [
+        'Fotos y contenido visual',
+        'Una selección de fotografías de alta calidad que muestren tu establecimiento, tus servicios o tus experiencias.',
+      ],
+      [
+        'Datos de contacto',
+        'El nombre, el teléfono y el correo electrónico de la persona que representa a tu negocio.',
+      ],
+      [
+        'Preferencias de reserva',
+        'Dinos si te interesa recibir solicitudes de reserva a través de Vardenia o prefieres que los clientes te contacten directamente.',
+      ],
+    ],
+    pt: [
+      ['Nome e localização do negócio', 'O nome do seu negócio, a região e o endereço completo.'],
+      [
+        'Categoria do negócio',
+        'Conte-nos sobre o seu negócio: se é um hotel, uma pousada, um restaurante, um café, uma atração, um prestador de atividades ou outro serviço turístico.',
+      ],
+      [
+        'Sobre o seu negócio',
+        'Uma breve apresentação destacando o que torna únicos o seu destino, os seus serviços ou as suas experiências.',
+      ],
+      [
+        'Site e redes sociais',
+        'Compartilhe seu site oficial e suas páginas nas redes sociais, se houver.',
+      ],
+      [
+        'Fotos e conteúdo visual',
+        'Uma seleção de fotografias de alta qualidade que mostrem seu espaço, seus serviços ou suas experiências.',
+      ],
+      ['Informações de contato', 'O nome, o telefone e o e-mail do representante do seu negócio.'],
+      [
+        'Preferências de reserva',
+        'Diga-nos se você tem interesse em receber pedidos de reserva pela Vardenia ou se prefere que os clientes entrem em contato diretamente com você.',
+      ],
+    ],
+    ru: [
+      ['Название и адрес', 'Название вашего заведения, регион и полный адрес.'],
+      [
+        'Категория',
+        'Расскажите, что у вас за заведение: отель, гостевой дом, ресторан, кафе, достопримечательность, организатор досуга или другая туристическая услуга.',
+      ],
+      [
+        'О вашем заведении',
+        'Краткий рассказ о том, что делает ваше место, услуги или впечатления особенными.',
+      ],
+      [
+        'Сайт и соцсети',
+        'Ссылки на ваш официальный сайт и страницы в социальных сетях, если они есть.',
+      ],
+      [
+        'Фотографии и визуальные материалы',
+        'Подборка качественных фотографий, которые показывают ваше заведение, услуги или впечатления.',
+      ],
+      [
+        'Контактные данные',
+        'Имя, номер телефона и адрес электронной почты представителя вашего заведения.',
+      ],
+      [
+        'Бронирования',
+        'Сообщите, хотите ли вы получать запросы на бронирование через Vardenia или предпочитаете, чтобы клиенты связывались с вами напрямую.',
+      ],
+    ],
+    zh: [
+      ['商户名称与位置', '您的商户名称、所在地区及详细地址。'],
+      [
+        '商户类别',
+        '告诉我们您的商户类型：酒店、民宿、餐厅、咖啡馆、景点、活动服务商，或其他旅游相关服务。',
+      ],
+      ['商户简介', '简要介绍您的目的地、服务或体验有何独特之处。'],
+      ['网站与社交媒体', '如有，请提供您的官方网站和社交媒体主页。'],
+      ['照片与视觉内容', '精选几张高质量照片，展示您的场所、服务或体验。'],
+      ['联系方式', '商户代表的姓名、电话号码和电子邮箱。'],
+      ['预订偏好', '请告诉我们，您希望通过 Vardenia 接收预订咨询，还是更希望客人直接联系您。'],
+    ],
+    hi: [
+      ['व्यवसाय का नाम और स्थान', 'आपके व्यवसाय का नाम, क्षेत्र और पूरा पता।'],
+      [
+        'व्यवसाय की श्रेणी',
+        'हमें अपने व्यवसाय के बारे में बताएँ, चाहे वह होटल हो, गेस्टहाउस, रेस्तराँ, कैफ़े, दर्शनीय स्थल, गतिविधि प्रदाता या कोई और पर्यटन सेवा।',
+      ],
+      [
+        'आपके व्यवसाय के बारे में',
+        'एक छोटा परिचय, जो बताए कि आपकी जगह, सेवाएँ या अनुभव किस बात में अनोखे हैं।',
+      ],
+      ['वेबसाइट और सोशल मीडिया', 'अगर हों, तो अपनी आधिकारिक वेबसाइट और सोशल मीडिया पेज साझा करें।'],
+      [
+        'तस्वीरें और विज़ुअल सामग्री',
+        'उच्च गुणवत्ता वाली कुछ चुनिंदा तस्वीरें, जो आपकी जगह, सेवाएँ या अनुभव दिखाएँ।',
+      ],
+      ['संपर्क जानकारी', 'आपके व्यवसाय के प्रतिनिधि का नाम, फ़ोन नंबर और ईमेल पता।'],
+      [
+        'बुकिंग की पसंद',
+        'हमें बताएँ कि आप Vardenia के ज़रिए बुकिंग अनुरोध पाना चाहते हैं या चाहते हैं कि ग्राहक सीधे आपसे संपर्क करें।',
+      ],
+    ],
+    bn: [
+      ['ব্যবসার নাম ও অবস্থান', 'আপনার ব্যবসার নাম, অঞ্চল ও পূর্ণ ঠিকানা।'],
+      [
+        'ব্যবসার ধরন',
+        'আপনার ব্যবসা সম্পর্কে বলুন: হোটেল, গেস্টহাউস, রেস্তোরাঁ, ক্যাফে, দর্শনীয় স্থান, কার্যক্রম আয়োজক বা পর্যটন-সংক্রান্ত অন্য কোনো সেবা।',
+      ],
+      [
+        'আপনার ব্যবসা সম্পর্কে',
+        'একটি সংক্ষিপ্ত পরিচিতি, যাতে বোঝা যায় আপনার গন্তব্য, সেবা বা অভিজ্ঞতাকে কী অনন্য করে তোলে।',
+      ],
+      ['ওয়েবসাইট ও সোশ্যাল মিডিয়া', 'আপনার অফিসিয়াল ওয়েবসাইট ও সোশ্যাল মিডিয়া পেজ, যদি থাকে।'],
+      [
+        'ছবি ও ভিজ্যুয়াল কনটেন্ট',
+        'উচ্চমানের কিছু বাছাই করা ছবি, যা আপনার প্রতিষ্ঠান, সেবা বা অভিজ্ঞতা তুলে ধরে।',
+      ],
+      ['যোগাযোগের তথ্য', 'আপনার ব্যবসার প্রতিনিধির নাম, ফোন নম্বর ও ইমেল ঠিকানা।'],
+      [
+        'বুকিংয়ের পছন্দ',
+        'আমাদের জানান, আপনি Vardenia-র মাধ্যমে বুকিংয়ের অনুরোধ পেতে চান, নাকি চান অতিথিরা সরাসরি আপনার সঙ্গে যোগাযোগ করুন।',
+      ],
+    ],
+    ur: [
+      ['کاروبار کا نام اور مقام', 'آپ کے کاروبار کا نام، علاقہ اور مکمل پتا۔'],
+      [
+        'کاروبار کی قسم',
+        'ہمیں اپنے کاروبار کے بارے میں بتائیں، چاہے وہ ہوٹل ہو، گیسٹ ہاؤس، ریستوران، کیفے، سیاحتی مقام، سرگرمیوں کا منتظم یا سیاحت سے متعلق کوئی اور خدمت۔',
+      ],
+      [
+        'آپ کے کاروبار کے بارے میں',
+        'ایک مختصر تعارف جو بتائے کہ آپ کی منزل، خدمات یا تجربات کو کیا چیز منفرد بناتی ہے۔',
+      ],
+      [
+        'ویب سائٹ اور سوشل میڈیا',
+        'اگر ہوں تو اپنی سرکاری ویب سائٹ اور سوشل میڈیا صفحات شیئر کریں۔',
+      ],
+      [
+        'تصاویر اور بصری مواد',
+        'اعلیٰ معیار کی چند منتخب تصاویر جو آپ کی جگہ، خدمات یا تجربات دکھائیں۔',
+      ],
+      ['رابطے کی معلومات', 'آپ کے کاروبار کے نمائندے کا نام، فون نمبر اور ای میل پتا۔'],
+      [
+        'بکنگ کی ترجیحات',
+        'ہمیں بتائیں کہ آپ Vardenia کے ذریعے بکنگ کی درخواستیں وصول کرنا چاہتے ہیں یا چاہتے ہیں کہ گاہک براہِ راست آپ سے رابطہ کریں۔',
+      ],
+    ],
+  })
+
   return {
     title: pick(locale, {
-      en: 'Add your business',
-      ar: 'أضف عملك',
-      fr: 'Ajouter votre établissement',
-      es: 'Añade tu negocio',
-      pt: 'Adicione seu negócio',
-      ru: 'Добавить своё заведение',
-      zh: '添加您的商户',
-      hi: 'अपना व्यवसाय जोड़ें',
-      bn: 'আপনার ব্যবসা যোগ করুন',
-      ur: 'اپنا کاروبار شامل کریں',
+      en: 'Introduce Your Business',
+      ar: 'عرّف بعملك',
+      fr: 'Présentez votre établissement',
+      es: 'Presenta tu negocio',
+      pt: 'Apresente seu negócio',
+      ru: 'Расскажите о своём заведении',
+      zh: '介绍您的商户',
+      hi: 'अपने व्यवसाय का परिचय दें',
+      bn: 'আপনার ব্যবসার পরিচয় দিন',
+      ur: 'اپنے کاروبار کا تعارف کروائیں',
     }),
     intro: pick(locale, {
-      en: 'Every listing in Vardenia is entered by our team, so this starts with a conversation rather than a form that publishes itself.',
-      ar: 'كل إدراج في فاردينيا يدخله فريقنا بنفسه، فالبداية محادثة لا استمارة تنشر نفسها.',
-      fr: 'Chaque fiche de Vardenia est saisie par notre équipe : tout commence donc par une conversation, pas par un formulaire qui se publie tout seul.',
-      es: 'Cada ficha de Vardenia la introduce nuestro equipo, así que esto empieza con una conversación y no con un formulario que se publica solo.',
-      pt: 'Cada ficha da Vardenia é inserida pela nossa equipe, então isso começa com uma conversa, e não com um formulário que se publica sozinho.',
-      ru: 'Каждую карточку в Vardenia вносит наша команда, поэтому всё начинается с разговора, а не с формы, которая публикует сама себя.',
-      zh: 'Vardenia 的每个商户都由我们的团队录入，所以这一切从一次沟通开始，而不是一张会自动发布的表单。',
-      hi: 'Vardenia की हर लिस्टिंग हमारी टीम दर्ज करती है, इसलिए शुरुआत एक बातचीत से होती है, किसी ऐसे फ़ॉर्म से नहीं जो ख़ुद प्रकाशित हो जाए।',
-      bn: 'Vardenia-র প্রতিটি লিস্টিং আমাদের দল নিজে যোগ করে, তাই এর শুরু একটি কথোপকথনে, এমন কোনো ফর্মে নয় যা নিজে থেকেই প্রকাশ হয়ে যায়।',
-      ur: 'Vardenia کی ہر لسٹنگ ہماری ٹیم درج کرتی ہے، اس لیے اس کی شروعات ایک گفتگو سے ہوتی ہے، کسی ایسے فارم سے نہیں جو خود بخود شائع ہو جائے۔',
+      en: 'Your Destination. Your Story. A Wider Audience.',
+      ar: 'وجهتك. قصتك. جمهور أوسع.',
+      fr: 'Votre destination. Votre histoire. Un public plus large.',
+      es: 'Tu destino. Tu historia. Un público más amplio.',
+      pt: 'Seu destino. Sua história. Um público maior.',
+      ru: 'Ваше место. Ваша история. Более широкая аудитория.',
+      zh: '您的目的地。您的故事。更广的受众。',
+      hi: 'आपकी मंज़िल। आपकी कहानी। एक बड़ा दर्शक वर्ग।',
+      bn: 'আপনার গন্তব্য। আপনার গল্প। আরও বিস্তৃত পাঠক ও অতিথি।',
+      ur: 'آپ کی منزل۔ آپ کی کہانی۔ ایک وسیع تر حلقہ۔',
     }),
     sections: [
       {
         heading: pick(locale, {
-          en: 'What to send',
-          ar: 'ما ترسله',
-          fr: "Ce qu'il faut envoyer",
-          es: 'Qué enviar',
-          pt: 'O que enviar',
-          ru: 'Что прислать',
-          zh: '需要发送什么',
-          hi: 'क्या भेजें',
-          bn: 'কী পাঠাবেন',
-          ur: 'کیا بھیجیں',
+          en: 'A Story Worth Sharing',
+          ar: 'قصة تستحق أن تُروى',
+          fr: 'Une histoire à partager',
+          es: 'Una historia que contar',
+          pt: 'Uma história para contar',
+          ru: 'История, которой стоит поделиться',
+          zh: '值得分享的故事',
+          hi: 'एक कहानी जो बताने लायक है',
+          bn: 'বলার মতো একটি গল্প',
+          ur: 'سنانے کے لائق ایک کہانی',
         }),
         body: pick(locale, {
           en: [
-            '- The name of the business and where it is.',
-            '- What it is: a hotel, a restaurant, a wedding venue, a tour, a car service.',
-            "- A sentence or two about what makes it worth a visitor's evening.",
-            '- A website or a social account, if there is one.',
-            '- Whether you would want to take bookings through Vardenia.',
+            '> Every exceptional destination has a story worth sharing.',
+            'At Vardenia, we welcome hotels, guesthouses, restaurants, attractions, and tourism service providers who wish to become part of our growing network across Lebanon.',
+            'Whether you represent an established destination or a hidden gem waiting to be discovered, we invite you to introduce your business to our team.',
           ],
           ar: [
-            '- اسم العمل وأين هو.',
-            '- ما هو: فندق، مطعم، قاعة أعراس، جولة سياحية، خدمة سيارات.',
-            '- جملة أو جملتان عمّا يجعله يستحق سهرة زائر.',
-            '- موقع إلكتروني أو حساب على مواقع التواصل، إن وُجد.',
-            '- وهل تريد أن تستقبل الحجوزات عبر فاردينيا.',
+            '> لكلّ وجهة استثنائية قصة تستحق أن تُروى.',
+            'نرحّب في فاردينيا بالفنادق وبيوت الضيافة والمطاعم والمعالم السياحية ومقدّمي الخدمات السياحية الراغبين في الانضمام إلى شبكتنا المتنامية في أنحاء لبنان.',
+            'سواء كنت تمثّل وجهة عريقة أو جوهرة خفيّة تنتظر من يكتشفها، ندعوك إلى التعريف بعملك لدى فريقنا.',
           ],
           fr: [
-            "- Le nom de l'établissement et où il se trouve.",
-            "- Ce que c'est : un hôtel, un restaurant, une salle de mariage, une visite guidée, un service de voitures.",
-            "- Une phrase ou deux sur ce qui vaut à un visiteur d'y passer sa soirée.",
-            "- Un site web ou un compte sur les réseaux sociaux, s'il y en a un.",
-            '- Si vous souhaitez recevoir des réservations via Vardenia.',
+            '> Chaque destination d’exception a une histoire qui mérite d’être partagée.',
+            'Vardenia accueille les hôtels, maisons d’hôtes, restaurants, sites à visiter et prestataires touristiques qui souhaitent rejoindre notre réseau grandissant à travers le Liban.',
+            'Que vous représentiez une adresse reconnue ou une perle cachée qui n’attend que d’être découverte, nous vous invitons à présenter votre établissement à notre équipe.',
           ],
           es: [
-            '- El nombre del negocio y dónde está.',
-            '- Qué es: un hotel, un restaurante, un salón de bodas, un tour, un servicio de coches.',
-            '- Una o dos frases sobre por qué merece la noche de un visitante.',
-            '- Una web o una cuenta en redes sociales, si la hay.',
-            '- Si te gustaría recibir reservas a través de Vardenia.',
+            '> Todo destino excepcional tiene una historia que merece ser contada.',
+            'En Vardenia damos la bienvenida a hoteles, casas de huéspedes, restaurantes, atracciones y proveedores de servicios turísticos que deseen formar parte de nuestra creciente red en todo el Líbano.',
+            'Tanto si representas un destino consolidado como una joya escondida a la espera de ser descubierta, te invitamos a presentar tu negocio a nuestro equipo.',
           ],
           pt: [
-            '- O nome do negócio e onde fica.',
-            '- O que é: um hotel, um restaurante, um espaço para casamentos, um passeio, um serviço de carros.',
-            '- Uma ou duas frases sobre o que faz dele um bom programa para a noite de um visitante.',
-            '- Um site ou perfil em rede social, se houver.',
-            '- Se você gostaria de receber reservas pela Vardenia.',
+            '> Todo destino excepcional tem uma história que merece ser contada.',
+            'Na Vardenia, recebemos hotéis, pousadas, restaurantes, atrações e prestadores de serviços turísticos que desejam fazer parte da nossa rede crescente em todo o Líbano.',
+            'Seja você o representante de um destino consagrado ou de uma joia escondida à espera de ser descoberta, convidamos você a apresentar seu negócio à nossa equipe.',
           ],
           ru: [
-            '- Название заведения и где оно находится.',
-            '- Что это: отель, ресторан, свадебный зал, экскурсия, служба такси.',
-            '- Одно-два предложения о том, почему гостю стоит провести там вечер.',
-            '- Сайт или страница в соцсетях, если есть.',
-            '- Хотите ли вы принимать бронирования через Vardenia.',
+            '> У каждого особенного места есть история, которой стоит поделиться.',
+            'Vardenia приглашает отели, гостевые дома, рестораны, достопримечательности и поставщиков туристических услуг, которые хотят стать частью нашей растущей сети по всему Ливану.',
+            'Представляете ли вы известное место или скрытую жемчужину, которая ждёт, чтобы её открыли, мы приглашаем вас рассказать о своём заведении нашей команде.',
           ],
           zh: [
-            '- 商户名称及所在位置。',
-            '- 它是什么：酒店、餐厅、婚礼场地、旅游团、用车服务。',
-            '- 一两句话，说说为什么值得访客在这里度过一个晚上。',
-            '- 网站或社交媒体账号（如有）。',
-            '- 是否希望通过 Vardenia 接受预订。',
+            '> 每一处非凡的目的地，都有一个值得分享的故事。',
+            'Vardenia 欢迎酒店、民宿、餐厅、景点及旅游服务商加入我们遍布黎巴嫩、不断壮大的网络。',
+            '无论您代表的是久负盛名的目的地，还是一颗等待被发现的遗珠，我们都诚邀您向我们的团队介绍您的商户。',
           ],
           hi: [
-            '- व्यवसाय का नाम और वह कहाँ है।',
-            '- वह क्या है: होटल, रेस्तराँ, शादी का स्थल, टूर, कार सेवा।',
-            '- एक-दो वाक्य कि किसी आगंतुक की शाम के लिए वह क्यों ख़ास है।',
-            '- कोई वेबसाइट या सोशल अकाउंट, अगर हो।',
-            '- क्या आप Vardenia के ज़रिए बुकिंग लेना चाहेंगे।',
+            '> हर असाधारण मंज़िल के पास एक कहानी होती है जो बताने लायक है।',
+            'Vardenia में हम उन होटलों, गेस्टहाउसों, रेस्तराँओं, दर्शनीय स्थलों और पर्यटन सेवा प्रदाताओं का स्वागत करते हैं जो पूरे लेबनान में फैले हमारे बढ़ते नेटवर्क का हिस्सा बनना चाहते हैं।',
+            'चाहे आप किसी जानी-मानी जगह का प्रतिनिधित्व करते हों या किसी छिपे हुए रत्न का जो खोजे जाने की राह देख रहा है, हम आपको अपनी टीम से अपने व्यवसाय का परिचय कराने के लिए आमंत्रित करते हैं।',
           ],
           bn: [
-            '- ব্যবসার নাম এবং সেটি কোথায়।',
-            '- এটি কী: হোটেল, রেস্তোরাঁ, বিয়ের ভেন্যু, ট্যুর, গাড়ি সেবা।',
-            '- একটি বা দুটি বাক্য, কেন সেটি একজন অতিথির সন্ধ্যা কাটানোর মতো জায়গা।',
-            '- ওয়েবসাইট বা সোশ্যাল অ্যাকাউন্ট, যদি থাকে।',
-            '- আপনি Vardenia-র মাধ্যমে বুকিং নিতে চান কি না।',
+            '> প্রতিটি অসাধারণ গন্তব্যের একটি গল্প আছে, যা সবার সঙ্গে ভাগ করে নেওয়ার মতো।',
+            'Vardenia-তে আমরা সেই সব হোটেল, গেস্টহাউস, রেস্তোরাঁ, দর্শনীয় স্থান ও পর্যটন সেবাদাতাকে স্বাগত জানাই, যারা লেবানন জুড়ে আমাদের ক্রমবর্ধমান নেটওয়ার্কের অংশ হতে চান।',
+            'আপনি কোনো সুপ্রতিষ্ঠিত গন্তব্যের প্রতিনিধি হোন বা আবিষ্কারের অপেক্ষায় থাকা কোনো লুকোনো রত্নের, আমাদের দলের কাছে আপনার ব্যবসার পরিচয় দিতে আমরা আপনাকে আমন্ত্রণ জানাই।',
           ],
           ur: [
-            '- کاروبار کا نام اور وہ کہاں ہے۔',
-            '- وہ کیا ہے: ہوٹل، ریستوران، شادی ہال، ٹور، کار سروس۔',
-            '- ایک دو جملے کہ کسی مہمان کی شام کے لیے وہ کیوں خاص ہے۔',
-            '- کوئی ویب سائٹ یا سوشل اکاؤنٹ، اگر ہو۔',
-            '- کیا آپ Vardenia کے ذریعے بکنگ لینا چاہیں گے۔',
+            '> ہر غیر معمولی منزل کے پاس ایک ایسی کہانی ہوتی ہے جو سنانے کے لائق ہے۔',
+            'Vardenia میں ہم ان ہوٹلوں، گیسٹ ہاؤسز، ریستورانوں، سیاحتی مقامات اور سیاحتی خدمات فراہم کرنے والوں کا خیرمقدم کرتے ہیں جو پورے لبنان میں پھیلے ہمارے بڑھتے ہوئے نیٹ ورک کا حصہ بننا چاہتے ہیں۔',
+            'چاہے آپ کسی معروف منزل کی نمائندگی کرتے ہوں یا کسی چھپے ہوئے نگینے کی جو دریافت ہونے کا منتظر ہے، ہم آپ کو دعوت دیتے ہیں کہ اپنے کاروبار کا تعارف ہماری ٹیم سے کروائیں۔',
           ],
         }),
       },
       {
         heading: pick(locale, {
-          en: 'What happens next',
-          ar: 'ماذا يحدث بعدها',
+          en: 'To Get Started',
+          ar: 'للبدء',
+          fr: 'Pour commencer',
+          es: 'Para empezar',
+          pt: 'Para começar',
+          ru: 'С чего начать',
+          zh: '如何开始',
+          hi: 'शुरुआत कैसे करें',
+          bn: 'যেভাবে শুরু করবেন',
+          ur: 'آغاز کیسے کریں',
+        }),
+        body: [
+          contactEmail(locale),
+          pick(locale, {
+            en: 'Simply share the following information:',
+            ar: 'يكفي أن ترسل إلينا المعلومات التالية:',
+            fr: 'Il suffit de nous transmettre les informations suivantes :',
+            es: 'Solo tienes que compartir la siguiente información:',
+            pt: 'Basta compartilhar as seguintes informações:',
+            ru: 'Просто пришлите нам следующую информацию:',
+            zh: '只需提供以下信息：',
+            hi: 'बस नीचे दी गई जानकारी हमें भेजें:',
+            bn: 'শুধু নিচের তথ্যগুলো আমাদের জানান:',
+            ur: 'بس درج ذیل معلومات ہمیں بھیجیں:',
+          }),
+        ],
+        subsections: steps.map(([heading, text]) => ({ heading, body: [text] })),
+      },
+      {
+        heading: pick(locale, {
+          en: 'What Happens Next',
+          ar: 'ماذا يحدث بعد ذلك',
           fr: 'Et ensuite',
           es: 'Qué pasa después',
           pt: 'O que acontece depois',
@@ -2066,105 +2320,46 @@ export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
           bn: 'এরপর কী হয়',
           ur: 'اس کے بعد کیا ہوتا ہے',
         }),
-        body: [
-          contactEmail(locale),
-          ...pick(locale, {
-            en: [
-              'We look at every business that gets in touch. If it is right for the directory we will come back to you with what a listing involves and what it costs.',
-              'If it is not, we will say so plainly rather than leaving you waiting. A directory is only worth something to a reader if some things are left out.',
-            ],
-            ar: [
-              'ننظر في كل عمل يتواصل معنا. إذا كان مناسباً للدليل نعود إليك بما يتضمنه الإدراج وبتكلفته.',
-              'وإذا لم يكن، نقول ذلك بوضوح بدل أن نتركك تنتظر. الدليل لا يساوي شيئاً عند القارئ إلا إذا بقي شيء خارجه.',
-            ],
-            fr: [
-              "Nous examinons chaque établissement qui nous contacte. S'il a sa place dans l'annuaire, nous reviendrons vers vous avec ce qu'implique une fiche et ce qu'elle coûte.",
-              "Sinon, nous vous le dirons clairement plutôt que de vous laisser attendre. Un annuaire n'a de valeur pour un lecteur que si certaines choses en sont exclues.",
-            ],
-            es: [
-              'Revisamos cada negocio que se pone en contacto. Si encaja en el directorio, te responderemos con lo que implica una ficha y lo que cuesta.',
-              'Si no, te lo diremos con claridad en lugar de dejarte esperando. Un directorio solo vale algo para un lector si algunas cosas se quedan fuera.',
-            ],
-            pt: [
-              'Analisamos todo negócio que entra em contato. Se ele combinar com o diretório, voltaremos com o que uma ficha envolve e quanto custa.',
-              'Se não combinar, diremos isso com clareza em vez de deixar você esperando. Um diretório só vale algo para o leitor se algumas coisas ficarem de fora.',
-            ],
-            ru: [
-              'Мы рассматриваем каждое заведение, которое к нам обращается. Если оно подходит для справочника, мы ответим, что включает карточка и сколько она стоит.',
-              'Если нет, мы прямо об этом скажем, а не оставим вас ждать. Справочник чего-то стоит для читателя, только если в него попадает не всё.',
-            ],
-            zh: [
-              '每一家联系我们的商户，我们都会认真查看。如果适合收录，我们会告诉您收录包含什么、需要多少费用。',
-              '如果不适合，我们会直接告诉您，而不是让您一直等。只有有所取舍，一份指南对读者才有价值。',
-            ],
-            hi: [
-              'जो भी व्यवसाय हमसे संपर्क करता है, हम उसे देखते हैं। अगर वह निर्देशिका के लिए ठीक है, तो हम आपको बताएँगे कि लिस्टिंग में क्या शामिल है और उसकी क़ीमत क्या है।',
-              'अगर नहीं है, तो हम आपको इंतज़ार कराने के बजाय साफ़-साफ़ बता देंगे। निर्देशिका पाठक के लिए तभी कुछ मायने रखती है जब कुछ चीज़ें उससे बाहर रहें।',
-            ],
-            bn: [
-              'যে ব্যবসাই যোগাযোগ করে, আমরা সেটি দেখি। ডিরেক্টরির জন্য উপযুক্ত হলে লিস্টিংয়ে কী থাকে আর তার খরচ কত, তা নিয়ে আমরা আপনার কাছে ফিরব।',
-              'উপযুক্ত না হলে আপনাকে অপেক্ষায় না রেখে সোজাসুজি জানিয়ে দেব। কিছু জিনিস বাদ না পড়লে একটি ডিরেক্টরি পাঠকের কাছে মূল্যহীন।',
-            ],
-            ur: [
-              'جو بھی کاروبار ہم سے رابطہ کرتا ہے، ہم اسے دیکھتے ہیں۔ اگر وہ ڈائریکٹری کے لیے موزوں ہو تو ہم آپ کو بتائیں گے کہ لسٹنگ میں کیا شامل ہے اور اس کی قیمت کیا ہے۔',
-              'اگر نہیں، تو ہم آپ کو انتظار کروانے کے بجائے صاف بتا دیں گے۔ ڈائریکٹری قاری کے لیے تبھی قیمتی ہے جب کچھ چیزیں اس سے باہر رہیں۔',
-            ],
-          }),
-        ],
-      },
-      {
-        heading: pick(locale, {
-          en: 'If you are already listed',
-          ar: 'إذا كنت مدرجاً بالفعل',
-          fr: 'Si vous êtes déjà référencé',
-          es: 'Si ya estás en el directorio',
-          pt: 'Se você já está no diretório',
-          ru: 'Если вы уже в справочнике',
-          zh: '如果您已被收录',
-          hi: 'अगर आप पहले से लिस्ट हैं',
-          bn: 'আপনি যদি আগে থেকেই লিস্টিংয়ে থাকেন',
-          ur: 'اگر آپ پہلے سے لسٹ ہیں',
-        }),
         body: pick(locale, {
           en: [
-            'To correct something on an existing listing, or to add photographs, get in touch and we will update it. Businesses cannot edit their own pages.',
-            'To answer bookings, sign in at **For partners**. If you have not been given an account and you want one, say so.',
+            'Once we receive your information, our team will review your submission and contact you to discuss the next steps.',
+            '~ Join Vardenia and become part of a platform dedicated to showcasing the richness of Lebanon.',
           ],
           ar: [
-            'لتصحيح شيء في إدراج قائم أو لإضافة صور، تواصل معنا ونحدّثه. لا يستطيع أصحاب الأعمال تعديل صفحاتهم بأنفسهم.',
-            'وللرد على الحجوزات، سجّل الدخول من **للشركاء**. وإذا لم يُنشأ لك حساب وتريد واحداً، أخبرنا.',
+            'حين تصلنا معلوماتك، يراجع فريقنا طلبك ويتواصل معك لمناقشة الخطوات التالية.',
+            '~ انضمّ إلى فاردينيا وكن جزءاً من منصّة مكرّسة لإبراز غنى لبنان.',
           ],
           fr: [
-            'Pour corriger quelque chose sur une fiche existante ou ajouter des photos, contactez-nous et nous la mettrons à jour. Les établissements ne peuvent pas modifier leurs propres pages.',
-            "Pour répondre aux réservations, connectez-vous via **Pour les partenaires**. Si vous n'avez pas reçu de compte et en voulez un, dites-le-nous.",
+            'Dès réception de vos informations, notre équipe examinera votre demande et vous contactera pour convenir des prochaines étapes.',
+            '~ Rejoignez Vardenia et prenez part à une plateforme consacrée à toute la richesse du Liban.',
           ],
           es: [
-            'Para corregir algo de una ficha existente o añadir fotos, ponte en contacto y la actualizaremos. Los negocios no pueden editar sus propias páginas.',
-            'Para responder a las reservas, inicia sesión en **Para socios**. Si no te han dado una cuenta y quieres una, dínoslo.',
+            'En cuanto recibamos tu información, nuestro equipo revisará tu solicitud y se pondrá en contacto contigo para hablar de los siguientes pasos.',
+            '~ Únete a Vardenia y forma parte de una plataforma dedicada a mostrar la riqueza del Líbano.',
           ],
           pt: [
-            'Para corrigir algo em uma ficha existente ou adicionar fotos, entre em contato e nós atualizamos. Os negócios não podem editar as próprias páginas.',
-            'Para responder às reservas, entre por **Para parceiros**. Se você não recebeu uma conta e quer uma, avise.',
+            'Assim que recebermos suas informações, nossa equipe analisará seu pedido e entrará em contato para conversar sobre os próximos passos.',
+            '~ Junte-se à Vardenia e faça parte de uma plataforma dedicada a mostrar a riqueza do Líbano.',
           ],
           ru: [
-            'Чтобы исправить что-то в существующей карточке или добавить фотографии, свяжитесь с нами, и мы её обновим. Заведения не могут редактировать свои страницы сами.',
-            'Чтобы отвечать на бронирования, войдите через раздел **Для партнёров**. Если у вас нет аккаунта и он вам нужен, сообщите нам.',
+            'Получив вашу информацию, наша команда рассмотрит заявку и свяжется с вами, чтобы обсудить следующие шаги.',
+            '~ Присоединяйтесь к Vardenia и станьте частью платформы, которая показывает всё богатство Ливана.',
           ],
           zh: [
-            '如需修改现有页面上的信息或添加照片，请联系我们，我们会为您更新。商户无法自行编辑页面。',
-            '要处理预订，请通过**面向合作伙伴**登录。如果您还没有账户但需要一个，请告诉我们。',
+            '收到您的信息后，我们的团队会审核您的申请，并与您联系，商讨下一步事宜。',
+            '~ 加入 Vardenia，成为一个致力于展现黎巴嫩丰富魅力的平台的一员。',
           ],
           hi: [
-            'किसी मौजूदा लिस्टिंग में कुछ सुधारना हो या तस्वीरें जोड़नी हों, तो हमसे संपर्क करें और हम उसे अपडेट कर देंगे। व्यवसाय अपने पेज ख़ुद नहीं बदल सकते।',
-            'बुकिंग का जवाब देने के लिए **साझेदारों के लिए** से साइन इन करें। अगर आपको खाता नहीं मिला है और आप चाहते हैं, तो हमें बताइए।',
+            'आपकी जानकारी मिलने के बाद हमारी टीम आपके आवेदन की समीक्षा करेगी और अगले क़दमों पर बात करने के लिए आपसे संपर्क करेगी।',
+            '~ Vardenia से जुड़ें और लेबनान की समृद्धि को दिखाने के लिए समर्पित एक मंच का हिस्सा बनें।',
           ],
           bn: [
-            'বিদ্যমান কোনো লিস্টিংয়ে কিছু সংশোধন করতে বা ছবি যোগ করতে আমাদের সঙ্গে যোগাযোগ করুন, আমরা সেটি হালনাগাদ করে দেব। ব্যবসাগুলো নিজেদের পেজ সম্পাদনা করতে পারে না।',
-            'বুকিংয়ের উত্তর দিতে **অংশীদারদের জন্য** থেকে সাইন ইন করুন। আপনাকে অ্যাকাউন্ট দেওয়া না হয়ে থাকলে এবং আপনি একটি চাইলে, আমাদের জানান।',
+            'আপনার তথ্য পাওয়ার পর আমাদের দল আপনার আবেদন পর্যালোচনা করবে এবং পরবর্তী ধাপ নিয়ে আলোচনা করতে আপনার সঙ্গে যোগাযোগ করবে।',
+            '~ Vardenia-তে যোগ দিন এবং লেবাননের ঐশ্বর্য তুলে ধরতে নিবেদিত একটি প্ল্যাটফর্মের অংশ হয়ে উঠুন।',
           ],
           ur: [
-            'کسی موجودہ لسٹنگ میں کچھ درست کرنا ہو یا تصاویر شامل کرنی ہوں تو ہم سے رابطہ کریں، ہم اسے اپ ڈیٹ کر دیں گے۔ کاروبار اپنے صفحات خود تبدیل نہیں کر سکتے۔',
-            'بکنگز کا جواب دینے کے لیے **شراکت داروں کے لیے** سے سائن اِن کریں۔ اگر آپ کو اکاؤنٹ نہیں دیا گیا اور آپ چاہتے ہیں تو ہمیں بتائیں۔',
+            'آپ کی معلومات موصول ہونے پر ہماری ٹیم آپ کی درخواست کا جائزہ لے گی اور اگلے مراحل پر بات کرنے کے لیے آپ سے رابطہ کرے گی۔',
+            '~ Vardenia میں شامل ہوں اور لبنان کی رنگا رنگی کو دنیا کے سامنے لانے والے پلیٹ فارم کا حصہ بنیں۔',
           ],
         }),
       },
