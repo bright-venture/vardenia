@@ -161,7 +161,7 @@ export const Settings: GlobalConfig = {
         {
           label: 'Pages',
           description:
-            'Take a page off the site while it is not ready: a standing page, the magazine, a section or the directory. A hidden page shows "not found", and its links disappear from the header, the footer, the sitemap and the main buttons that lead to it. Hiding the directory keeps its listings up, and hiding Partner sign in only removes the footer link. The legal pages cannot be hidden.',
+            'Take a page off the site while it is not ready: a standing page, the magazine, a section or the directory. A hidden page shows "not found", and its links disappear from the header, the footer, the sitemap and the main buttons that lead to it. Hiding the directory keeps its listings up, hiding Partner sign in only removes the footer link, and hiding Sign in only removes the sign-in and account links from the header. The legal pages cannot be hidden.',
           fields: [
             {
               // Read by lib/hidden-pages, for the page routes, the header,

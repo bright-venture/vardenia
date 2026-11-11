@@ -28,6 +28,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
   // Pages an admin has hidden (lib/hidden-pages) are left out of the menus.
   const hidden = await hiddenPages()
+  // The header's sign-in and account links, which Settings can hide.
+  const showAccount = !hidden.includes('sign-in')
   const shown = (slug: (typeof hidden)[number]) => !hidden.includes(slug)
 
   // The six sections and the directory, without the ones an admin has hidden.
@@ -191,9 +193,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </Link>
           {/* Shown only to a signed-in reader; see SavedNavLink. */}
           <SavedNavLink label={t('nav.saved')} />
-          <span className="vd-account-link">
-            <AccountLink />
-          </span>
+          {/* Not while the admin has Sign in hidden (lib/hidden-pages). */}
+          {showAccount ? (
+            <span className="vd-account-link">
+              <AccountLink />
+            </span>
+          ) : null}
           {language}
         </div>
 
@@ -201,7 +206,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             in the markup and one is `display: none` at any width, which keeps it
             out of the accessibility tree as well as off the screen. */}
         {/* Phone only: the account button beside the menu (home-finish.css). */}
-        <AccountIconLink />
+        {showAccount ? <AccountIconLink /> : null}
         <MobileMenu label={t('nav.menu')}>
           {/*
            * The phone menu, rebuilt on 10 November 2026 after the pattern the
@@ -301,7 +306,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 <LinkArrow />
               </Link>
               {languageSheet}
-              <AccountSheetLinks />
+              {showAccount ? <AccountSheetLinks /> : null}
             </div>
           </nav>
         </MobileMenu>

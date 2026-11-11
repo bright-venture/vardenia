@@ -1892,6 +1892,7 @@ export interface Setting {
         | 'getting-around'
         | 'directory'
         | 'partner-sign-in'
+        | 'sign-in'
       )[]
     | null;
   /**

@@ -62,7 +62,11 @@ describe('hideable pages', () => {
 
   it('has every value in the database enum, through the migrations', () => {
     const dir = path.join(__dirname, '../migrations')
-    const sql = ['20261109_072535_hidden_pages.ts', '20261111_120000_hidden_pages_more.ts']
+    const sql = [
+      '20261109_072535_hidden_pages.ts',
+      '20261111_120000_hidden_pages_more.ts',
+      '20261111_160000_hidden_pages_sign_in.ts',
+    ]
       .map((f) => readFileSync(path.join(dir, f), 'utf8'))
       .join('\n')
     for (const page of HIDEABLE_PAGES) expect(sql).toContain(`'${page}'`)

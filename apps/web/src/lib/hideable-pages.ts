@@ -11,6 +11,10 @@ import { CONTENT_PAGE_SLUGS, type ContentPageSlug } from './pages'
  * page the footer links to can be: the magazine's three, the six sections and
  * the directory. Partner sign in is the exception: hiding it takes the footer
  * link away but the page stays up, because partners sign in there.
+ *
+ * Sign in (the same afternoon) works the same way for readers: hiding it takes
+ * the header's sign-in and account links away, on a computer and in the phone
+ * menu, and the sign-in page stays up for anyone who has its address.
  */
 
 /** The six sections' paths, as in @vardenia/core SECTIONS (a test keeps them in step). */
@@ -32,6 +36,7 @@ export const HIDEABLE_PAGES = [
   ...SECTION_PAGES,
   'directory',
   'partner-sign-in',
+  'sign-in',
 ] as const
 
 export type HideablePage =
@@ -40,6 +45,7 @@ export type HideablePage =
   | (typeof SECTION_PAGES)[number]
   | 'directory'
   | 'partner-sign-in'
+  | 'sign-in'
 
 /** Where each one lives. */
 export const HIDEABLE_PATH: Record<HideablePage, string> = {
@@ -60,6 +66,7 @@ export const HIDEABLE_PATH: Record<HideablePage, string> = {
   'getting-around': '/getting-around',
   directory: '/directory',
   'partner-sign-in': '/partner',
+  'sign-in': '/account/login',
 }
 
 /**
@@ -88,6 +95,7 @@ export const HIDEABLE_LABELS: Record<HideablePage, string> = {
   'getting-around': 'Section: Getting Around',
   directory: 'Directory (its listings stay up)',
   'partner-sign-in': 'Partner sign in (footer link only)',
+  'sign-in': 'Sign in (header link only)',
 }
 
 /** Only real hideable pages, whatever was stored. */

@@ -28,13 +28,28 @@ export async function SiteFooter() {
   const t = await getTranslations()
   const hidden = await hiddenPages()
 
-  // Without the pages an admin has hidden (lib/hidden-pages).
+  // Without the pages an admin has hidden (lib/hidden-pages). Partner with us
+  // leads to the homepage enquiry rather than its own page, so it is matched
+  // by name: hiding Partner with us in Settings takes this link away too.
   const links = withoutHidden(
     [
       { href: '/about', label: t('footer.about') },
       { href: '/magazine', label: t('nav.magazine') },
-      { href: '/#contact', label: t('footer.partnerWithUs') },
+      ...(hidden.includes('partner-with-us')
+        ? []
+        : [{ href: '/#contact', label: t('footer.partnerWithUs') }]),
       { href: '/contact', label: t('footer.contact') },
+    ],
+    hidden,
+  )
+  // The small print. Privacy and Terms cannot be hidden; Credits has no
+  // setting; Partner sign in goes when Settings hides it.
+  const legal = withoutHidden(
+    [
+      { href: '/legal/privacy', label: t('footer.privacy') },
+      { href: '/legal/terms', label: t('footer.terms') },
+      { href: '/credits', label: t('journey.creditsShort') },
+      { href: '/partner', label: t('footer.partnerSignIn') },
     ],
     hidden,
   )
@@ -60,10 +75,11 @@ export async function SiteFooter() {
           © {new Date().getFullYear()} Vardenia. {t('footer.rights')}
         </p>
         <nav className="vd-footer-legal" aria-label={t('footer.legal')}>
-          <Link href="/legal/privacy">{t('footer.privacy')}</Link>
-          <Link href="/legal/terms">{t('footer.terms')}</Link>
-          <Link href="/credits">{t('journey.creditsShort')}</Link>
-          <Link href="/partner">{t('footer.partnerSignIn')}</Link>
+          {legal.map(({ href, label }) => (
+            <Link key={href} href={href}>
+              {label}
+            </Link>
+          ))}
         </nav>
       </div>
     </footer>
