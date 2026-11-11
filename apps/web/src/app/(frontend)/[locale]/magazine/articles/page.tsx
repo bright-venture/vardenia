@@ -2,6 +2,7 @@ import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
+import { hiddenPages, notFoundIfHidden } from '../../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../../lib/seo'
@@ -55,6 +56,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlesPage({ params, searchParams }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
+  await notFoundIfHidden('magazine-articles')
   setRequestLocale(locale)
 
   const t = await getTranslations()
@@ -67,9 +69,12 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
         place={1}
         locale={locale}
       >
-        <Link href="/magazine" className="vd-text-link">
-          {t('magazine.title')} <span aria-hidden>↗</span>
-        </Link>
+        {/* Back to the magazine, unless the admin has it hidden. */}
+        {(await hiddenPages()).includes('magazine') ? null : (
+          <Link href="/magazine" className="vd-text-link">
+            {t('magazine.title')} <span aria-hidden>↗</span>
+          </Link>
+        )}
       </PageHero>
       <div className="vd-editorial-results">
         {/* `searchParams` is handed over unawaited so this boundary is the only

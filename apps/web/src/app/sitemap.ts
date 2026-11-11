@@ -3,7 +3,7 @@ import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { alternatesFor } from '../lib/seo'
 import { CONTENT_PAGE_SLUGS } from '../lib/pages'
-import { hiddenPages } from '../lib/hidden-pages'
+import { hiddenPages, isHrefHidden } from '../lib/hidden-pages'
 import { findAllListingSlugs } from '../lib/listings'
 import { findAllArticleSlugs } from '../lib/articles'
 import { findAllIssueSlugs } from '../lib/issues'
@@ -73,12 +73,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ])
 
   const entries: MetadataRoute.Sitemap = []
+  // Not the pages an admin has hidden (lib/hidden-pages): they answer "not
+  // found". One check for every address, so a section, the magazine's pages or
+  // the directory leave the sitemap the moment they are hidden.
+  const hidden = await hiddenPages()
 
   const push = (
     path: string,
     changeFrequency: (typeof CHANGE_FREQUENCY)[keyof typeof CHANGE_FREQUENCY],
     priority: number,
   ) => {
+    if (isHrefHidden(path, hidden)) return
     const alternates = alternatesFor(path, DEFAULT_LOCALE)
     entries.push({
       url: `${base}${path}`,
@@ -123,8 +128,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * here: "add your business" is a page somebody searches for by name, and it
    * is the only route into the directory for a business that is not in it yet.
    */
-  // Not the ones an admin has hidden (lib/hidden-pages): they answer "not found".
-  const hidden = await hiddenPages()
   for (const slug of CONTENT_PAGE_SLUGS) {
     if (!hidden.includes(slug)) push(`/${slug}`, CHANGE_FREQUENCY.article, 0.5)
   }

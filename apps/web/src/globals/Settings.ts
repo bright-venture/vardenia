@@ -3,7 +3,7 @@ import { number } from 'payload/shared'
 import { HOME_PAGE_PLACES } from '@vardenia/core'
 import { isAdmin, isStaff } from '../access/index'
 import { clearListingsCache } from '../hooks/revalidateListings'
-import { CONTENT_PAGE_SLUGS, type ContentPageSlug } from '../lib/pages'
+import { HIDEABLE_LABELS, HIDEABLE_PAGES } from '../lib/hideable-pages'
 
 /**
  * Settings, in the admin: every number the team sets for the business, on one
@@ -52,16 +52,6 @@ const validatePlaces: NumberFieldSingleValidation = async (value, options) => {
     req: options.req,
   })
   return placesFloorCheck(value, totalDocs)
-}
-
-/** The six standing pages, as the admin names them. Keyed by lib/pages so none can be missed. */
-const PAGE_LABELS: Record<ContentPageSlug, string> = {
-  about: 'About',
-  contact: 'Contact',
-  faq: 'Questions',
-  'partner-with-us': 'Partner with us',
-  advertise: 'Advertise with us',
-  'add-your-business': 'Add your business',
 }
 
 /** Whether the list of hidden pages is different after a save, in any order. */
@@ -171,7 +161,7 @@ export const Settings: GlobalConfig = {
         {
           label: 'Pages',
           description:
-            'Take a standing page off the site while it is not ready. A hidden page shows "not found", and its links disappear from the menu, the footer and the other pages. The legal pages cannot be hidden.',
+            'Take a page off the site while it is not ready: a standing page, the magazine, a section or the directory. A hidden page shows "not found", and its links disappear from the header, the footer, the sitemap and the main buttons that lead to it. Hiding the directory keeps its listings up, and hiding Partner sign in only removes the footer link. The legal pages cannot be hidden.',
           fields: [
             {
               // Read by lib/hidden-pages, for the page routes, the header,
@@ -180,7 +170,7 @@ export const Settings: GlobalConfig = {
               label: 'Hidden pages',
               type: 'select',
               hasMany: true,
-              options: CONTENT_PAGE_SLUGS.map((value) => ({ label: PAGE_LABELS[value], value })),
+              options: HIDEABLE_PAGES.map((value) => ({ label: HIDEABLE_LABELS[value], value })),
               admin: {
                 description:
                   'Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.',

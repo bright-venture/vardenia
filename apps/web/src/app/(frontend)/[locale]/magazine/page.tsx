@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { hiddenPages, notFoundIfHidden } from '../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
@@ -81,13 +82,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MagazinePage({ params }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
+  await notFoundIfHidden('magazine')
   setRequestLocale(locale)
 
   const t = await getTranslations()
-  const [articles, issues] = await Promise.all([
+  const [articles, issues, hidden] = await Promise.all([
     findArticles({ locale, perPage: 6 }),
     findIssues(locale),
+    hiddenPages(),
   ])
+  // Pages the admin has hidden (lib/hidden-pages): their blocks go with them.
+  const issuesShown = !hidden.includes('magazine-issues')
+  const articlesShown = !hidden.includes('magazine-articles')
 
   const current = issues.docs[0]
   const cover = current ? resolveImage(current.cover as never, 'portrait') : null
@@ -96,7 +102,7 @@ export default async function MagazinePage({ params }: Props) {
     <main className="vd-magazine-index mx-auto max-w-6xl px-6 py-16">
       <EditorialIntro locale={locale} kind="magazine" />
 
-      {current ? (
+      {current && issuesShown ? (
         <section className="border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
           <Link href={`/magazine/issues/${current.slug}`} className="group block">
             <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
@@ -133,38 +139,40 @@ export default async function MagazinePage({ params }: Props) {
         </section>
       ) : null}
 
-      <section className="border-ink-100 mt-16 border-t pt-12">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-ink-500 text-xs uppercase tracking-widest">
-            {t('magazine.latestArticles')}
-          </h2>
-          <Link
-            href="/magazine/articles"
-            className="text-gold-700 text-sm underline underline-offset-4"
-          >
-            {t('magazine.allArticles')}
-          </Link>
-        </div>
-
-        {articles.docs.length === 0 ? (
-          <p className="text-ink-500 mt-6 text-sm">{t('magazine.noArticles')}</p>
-        ) : (
-          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {articles.docs.map((article) => (
-              <ArticleCard
-                key={article.id}
-                slug={article.slug ?? ''}
-                title={article.title ?? ''}
-                excerpt={article.excerpt}
-                kind={article.kind}
-                publishedAt={article.publishedAt}
-                heroImage={article.heroImage as never}
-                locale={locale as Locale}
-              />
-            ))}
+      {articlesShown ? (
+        <section className="border-ink-100 mt-16 border-t pt-12">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-ink-500 text-xs uppercase tracking-widest">
+              {t('magazine.latestArticles')}
+            </h2>
+            <Link
+              href="/magazine/articles"
+              className="text-gold-700 text-sm underline underline-offset-4"
+            >
+              {t('magazine.allArticles')}
+            </Link>
           </div>
-        )}
-      </section>
+
+          {articles.docs.length === 0 ? (
+            <p className="text-ink-500 mt-6 text-sm">{t('magazine.noArticles')}</p>
+          ) : (
+            <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {articles.docs.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  slug={article.slug ?? ''}
+                  title={article.title ?? ''}
+                  excerpt={article.excerpt}
+                  kind={article.kind}
+                  publishedAt={article.publishedAt}
+                  heroImage={article.heroImage as never}
+                  locale={locale as Locale}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
     </main>
   )
 }

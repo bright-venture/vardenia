@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { notFoundIfHidden } from '../../../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
@@ -66,6 +67,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function ArticlePage({ params }: Params) {
   const { locale, slug } = await params
   if (!isLocale(locale)) notFound()
+  // Hiding Articles hides each article too.
+  await notFoundIfHidden('magazine-articles')
   setRequestLocale(locale)
 
   const article = await findArticleBySlug(slug, locale)

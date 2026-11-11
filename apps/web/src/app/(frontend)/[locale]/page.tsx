@@ -16,6 +16,7 @@ import { HomePlaces } from '../../../components/home/HomePlaces'
 import { HomeSelection } from '../../../components/home/HomeSelection'
 import { Manifesto } from '../../../components/home/Manifesto'
 import { PrintConnection } from '../../../components/home/PrintConnection'
+import { hiddenPages } from '../../../lib/hidden-pages'
 
 export const revalidate = 3600
 export async function generateMetadata({
@@ -33,11 +34,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   setRequestLocale(locale)
   const j = await getTranslations('journey')
   const t = await getTranslations('homeFinish')
-  const [listings, featured, issues] = await Promise.all([
+  const [listings, featured, issues, hidden] = await Promise.all([
     findListings({ locale, perPage: 6 }),
     findFeaturedListings({ locale }),
     findIssues(locale),
+    hiddenPages(),
   ])
+  // Pages the admin has hidden (lib/hidden-pages) are never linked to.
+  const directoryShown = !hidden.includes('directory')
+  const magazineShown = !hidden.includes('magazine')
+  const issuesShown = !hidden.includes('magazine-issues')
   // The automatic selection, never repeating a gold listing already in the band above.
   const selected = await findHomeListings({ locale, excludedIds: featured.map((doc) => doc.id) })
   const issue = issues.docs[0]
@@ -80,10 +86,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <main className="vd-main-home">
       <CinematicJourney
         locale={locale}
+        directoryShown={directoryShown}
+        magazineShown={magazineShown}
         directory={
           <>
-            <HomePlaces listings={featured} locale={locale} featured />
-            <HomeSelection listings={selected} locale={locale} />
+            <HomePlaces
+              listings={featured}
+              locale={locale}
+              featured
+              directoryShown={directoryShown}
+              magazineShown={magazineShown}
+            />
+            <HomeSelection listings={selected} locale={locale} directoryShown={directoryShown} />
           </>
         }
         connection={
@@ -95,8 +109,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         magazine={
           <MagazineArt
             title={issue?.title ?? t('magazineName')}
-            href={issue ? `/magazine/issues/${issue.slug}` : '/magazine'}
-            openLabel={issue ? t('openIssue') : j('readMagazine')}
+            // The current issue, else the magazine page, else no link at all.
+            href={
+              issue && issuesShown
+                ? `/magazine/issues/${issue.slug}`
+                : magazineShown
+                  ? '/magazine'
+                  : null
+            }
+            openLabel={issue && issuesShown ? t('openIssue') : j('readMagazine')}
           />
         }
       />

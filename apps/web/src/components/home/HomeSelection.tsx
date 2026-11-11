@@ -10,9 +10,12 @@ import { ListingCard } from '../ListingCard'
 export async function HomeSelection({
   listings,
   locale,
+  directoryShown = true,
 }: {
   listings: HomeListing[]
   locale: Locale
+  /** Whether the directory is shown (lib/hidden-pages); hidden, it is not linked. */
+  directoryShown?: boolean
 }) {
   const places = listings.filter(isHomeCandidate).slice(0, HOME_PLACES_LIMIT)
   if (!places.length) return null
@@ -28,9 +31,11 @@ export async function HomeSelection({
           </h2>
           <p data-vd-reveal>{t('placesBody')}</p>
         </div>
-        <Link className="vd-text-link" href="/directory">
-          {h('seeAllListings')} <LinkArrow />
-        </Link>
+        {directoryShown ? (
+          <Link className="vd-text-link" href="/directory">
+            {h('seeAllListings')} <LinkArrow />
+          </Link>
+        ) : null}
       </header>
       <ul className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
         {places.map((listing) => (

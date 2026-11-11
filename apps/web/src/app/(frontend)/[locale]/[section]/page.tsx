@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { notFoundIfHidden, type HideablePage } from '../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   SECTION_PATHS,
@@ -96,6 +97,11 @@ export default async function SectionPage({ params, searchParams }: Props) {
   // The 404 that stops this route swallowing every mistyped URL on the site.
   const section = sectionForPath(path)
   if (!section) notFound()
+  // An admin can hide a section (Settings, Pages). This route has no
+  // loading.tsx, for the reason magazine/articles/page.tsx gives: one would send
+  // the 200 before this check could make it a 404. The results keep their own
+  // skeleton, inside the page.
+  await notFoundIfHidden(section.path as HideablePage)
 
   const t = await getTranslations('directory')
 

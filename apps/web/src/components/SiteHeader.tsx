@@ -14,7 +14,7 @@ import { DropdownNav } from './header/DropdownNav'
 import { DiscoveryMenu } from './header/DiscoveryMenu'
 import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
-import { hiddenPages } from '../lib/hidden-pages'
+import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
@@ -31,17 +31,23 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     'getting-around': 4,
   }
 
+  // The six sections and the directory, without the ones an admin has hidden.
+  const sectionItems = withoutHidden(
+    SECTIONS.map((section) => ({
+      href: `/${section.path}`,
+      name: sectionName(section, locale),
+      description: sectionSummary(section, locale),
+      destination: categoryPhotos[section.path] ?? 0,
+    })),
+    hidden,
+  )
+  const directoryShown = shown('directory')
   const sectionMenu = (
     <DiscoveryMenu
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
-      footer={{ href: '/directory', label: t('home.wholeDirectory') }}
-      items={SECTIONS.map((section) => ({
-        href: `/${section.path}`,
-        name: sectionName(section, locale),
-        description: sectionSummary(section, locale),
-        destination: categoryPhotos[section.path] ?? 0,
-      }))}
+      footer={directoryShown ? { href: '/directory', label: t('home.wholeDirectory') } : undefined}
+      items={sectionItems}
     />
   )
 
@@ -56,30 +62,34 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     alt: 'The Vardenia magazine, open on a spread',
     whole: true,
   }
+  const magazineItems = withoutHidden(
+    [
+      {
+        href: '/magazine',
+        name: t('nav.magazine'),
+        description: t('nav.magazineNote'),
+        photo: magazineSpread,
+      },
+      {
+        href: '/magazine/issues',
+        name: t('footer.issues'),
+        description: t('nav.issuesNote'),
+        photo: magazineSpread,
+      },
+      {
+        href: '/magazine/articles',
+        name: t('footer.articles'),
+        description: t('homeFinish.storiesBody'),
+        photo: magazineSpread,
+      },
+    ],
+    hidden,
+  )
   const magazineMenu = (
     <DiscoveryMenu
       title={t('nav.magazineMenuTitle')}
       body={t('nav.magazineMenuBody')}
-      items={[
-        {
-          href: '/magazine',
-          name: t('nav.magazine'),
-          description: t('nav.magazineNote'),
-          photo: magazineSpread,
-        },
-        {
-          href: '/magazine/issues',
-          name: t('footer.issues'),
-          description: t('nav.issuesNote'),
-          photo: magazineSpread,
-        },
-        {
-          href: '/magazine/articles',
-          name: t('footer.articles'),
-          description: t('homeFinish.storiesBody'),
-          photo: magazineSpread,
-        },
-      ]}
+      items={magazineItems}
     />
   )
   // Destinations by index into components/journey/destinations: Byblos,
@@ -151,12 +161,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             aria-label={t('nav.directory')}
             className="vd-desktop-nav items-stretch self-stretch"
           >
-            <DropdownNav label={t('nav.discover')} wide>
-              {sectionMenu}
-            </DropdownNav>
-            <DropdownNav label={t('nav.magazine')} wide>
-              {magazineMenu}
-            </DropdownNav>
+            {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
+            {sectionItems.length > 0 ? (
+              <DropdownNav label={t('nav.discover')} wide>
+                {sectionMenu}
+              </DropdownNav>
+            ) : null}
+            {magazineItems.length > 0 ? (
+              <DropdownNav label={t('nav.magazine')} wide>
+                {magazineMenu}
+              </DropdownNav>
+            ) : null}
             {aboutItems.length > 0 ? (
               <DropdownNav label={t('nav.about')} wide>
                 {aboutMenu}
@@ -202,51 +217,55 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <span>{t('home.searchPlaceholder')}</span>
             </Link>
 
-            <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
-              <h2 id="vd-mobile-discover" className="vd-mobile-eyebrow">
-                {t('nav.discover')}
-              </h2>
-              <ul className="vd-mobile-list">
-                {SECTIONS.map((section) => (
-                  <li key={section.path}>
-                    <Link href={`/${section.path}`} className="vd-mobile-link">
-                      <span>
-                        <strong>{sectionName(section, locale)}</strong>
-                        <span>{sectionSummary(section, locale)}</span>
-                      </span>
-                      <LinkArrow />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/directory" className="vd-mobile-all">
-                {t('home.wholeDirectory')} <LinkArrow />
-              </Link>
-            </section>
+            {sectionItems.length > 0 || directoryShown ? (
+              <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
+                <h2 id="vd-mobile-discover" className="vd-mobile-eyebrow">
+                  {t('nav.discover')}
+                </h2>
+                {sectionItems.length > 0 ? (
+                  <ul className="vd-mobile-list">
+                    {sectionItems.map((item) => (
+                      <li key={item.href}>
+                        <Link href={item.href} className="vd-mobile-link">
+                          <span>
+                            <strong>{item.name}</strong>
+                            <span>{item.description}</span>
+                          </span>
+                          <LinkArrow />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {directoryShown ? (
+                  <Link href="/directory" className="vd-mobile-all">
+                    {t('home.wholeDirectory')} <LinkArrow />
+                  </Link>
+                ) : null}
+              </section>
+            ) : null}
 
-            <details className="vd-mobile-fold">
-              <summary>
-                {t('nav.magazine')}
-                <ChevronDown aria-hidden className="vd-mobile-chevron" strokeWidth={1.5} />
-              </summary>
-              <ul className="vd-mobile-list">
-                {[
-                  ['/magazine', t('nav.magazine'), t('nav.magazineNote')],
-                  ['/magazine/issues', t('footer.issues'), t('nav.issuesNote')],
-                  ['/magazine/articles', t('footer.articles'), t('homeFinish.storiesBody')],
-                ].map(([href, name, note]) => (
-                  <li key={href}>
-                    <Link href={href!} className="vd-mobile-link vd-mobile-link-small">
-                      <span>
-                        <strong>{name}</strong>
-                        <span>{note}</span>
-                      </span>
-                      <LinkArrow />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </details>
+            {magazineItems.length > 0 ? (
+              <details className="vd-mobile-fold">
+                <summary>
+                  {t('nav.magazine')}
+                  <ChevronDown aria-hidden className="vd-mobile-chevron" strokeWidth={1.5} />
+                </summary>
+                <ul className="vd-mobile-list">
+                  {magazineItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="vd-mobile-link vd-mobile-link-small">
+                        <span>
+                          <strong>{item.name}</strong>
+                          <span>{item.description}</span>
+                        </span>
+                        <LinkArrow />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
 
             {aboutItems.length > 0 ? (
               <details className="vd-mobile-fold">

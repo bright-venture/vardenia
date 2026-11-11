@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { ResultsSkeleton } from '../../../../components/ResultsSkeleton'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { notFoundIfHidden } from '../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
@@ -61,6 +62,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DirectoryPage({ params, searchParams }: Props) {
   const { locale } = await params
   if (!isLocale(locale)) notFound()
+  // An admin can hide the directory (Settings, Pages); its listings stay up.
+  await notFoundIfHidden('directory')
   setRequestLocale(locale)
 
   return (

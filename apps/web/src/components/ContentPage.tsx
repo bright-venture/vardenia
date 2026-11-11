@@ -2,6 +2,7 @@ import { StoryIndex } from './editorial/StoryIndex'
 import './editorial/standing-pages.css'
 import { LinkArrow } from './LinkArrow'
 import type { ContentPage, ContentPageSlug } from '../lib/pages'
+import type { HideablePage } from '../lib/hideable-pages'
 import type { Locale } from '@vardenia/i18n'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
@@ -90,18 +91,23 @@ export async function ContentPageView({
   page: ContentPage
   slug?: ContentPageSlug
   locale?: Locale
-  /** Standing pages hidden from the admin (lib/hidden-pages): never linked to. */
-  hidden?: readonly ContentPageSlug[]
+  /** Pages hidden from the admin (lib/hidden-pages): never linked to. */
+  hidden?: readonly HideablePage[]
 }) {
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
   // The buttons at the foot point at the directory when Contact is hidden, and
-  // the second link is left out when the page it names is hidden.
+  // the second link is left out when the page it names is hidden. With the
+  // directory hidden as well, the first goes home.
   const toDirectory = slug === 'about' || slug === 'contact' || faq || hidden.includes('contact')
-  const next = {
-    href: toDirectory ? '/directory' : '/contact',
-    label: t(toDirectory ? 'nav.directory' : 'nav.contact'),
-  }
+  const directoryShown = !hidden.includes('directory')
+  const next =
+    toDirectory && !directoryShown
+      ? { href: '/', label: t('common.homepage') }
+      : {
+          href: toDirectory ? '/directory' : '/contact',
+          label: t(toDirectory ? 'nav.directory' : 'nav.contact'),
+        }
   const other: ContentPageSlug = faq ? 'about' : 'faq'
   const showOther = !hidden.includes(other)
   const place = {

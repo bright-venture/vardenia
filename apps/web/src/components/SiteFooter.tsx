@@ -62,6 +62,8 @@ interface FooterLink {
 }
 
 function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
+  // A column whose every page is hidden goes with them, heading and all.
+  if (links.length === 0) return null
   return (
     <div className="vd-footer-column">
       <h3 className="text-ink-900 text-xs font-semibold uppercase tracking-wider">{title}</h3>
@@ -132,14 +134,19 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
           <br />
           {j('footerB')}
         </h2>
-        <Link className="vd-button vd-button-light" href="/directory">
-          {j('footerLink')} <LinkArrow />
-        </Link>
+        {/* Not while the admin has the directory hidden (lib/hidden-pages). */}
+        {hidden.includes('directory') ? null : (
+          <Link className="vd-button vd-button-light" href="/directory">
+            {j('footerLink')} <LinkArrow />
+          </Link>
+        )}
       </div>
       <nav className="vd-footer-links" aria-label={t('footer.discover')}>
-        <FooterColumn title={t('footer.discover')} links={discover} />
-        <FooterColumn title={t('footer.read')} links={read} />
-        {/* Without the pages an admin has hidden (lib/hidden-pages). */}
+        {/* Every column without the pages an admin has hidden (lib/hidden-pages):
+            the sections, the magazine's pages, the directory, the standing
+            pages and the partner sign-in link. */}
+        <FooterColumn title={t('footer.discover')} links={withoutHidden(discover, hidden)} />
+        <FooterColumn title={t('footer.read')} links={withoutHidden(read, hidden)} />
         <FooterColumn title={t('footer.company')} links={withoutHidden(company, hidden)} />
         <FooterColumn title={t('footer.business')} links={withoutHidden(business, hidden)} />
       </nav>

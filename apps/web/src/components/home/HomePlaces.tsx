@@ -9,10 +9,15 @@ export async function HomePlaces({
   listings,
   locale,
   featured = false,
+  directoryShown = true,
+  magazineShown = true,
 }: {
   listings: ListingSummary[]
   locale: Locale
   featured?: boolean
+  /** Whether those pages are shown (lib/hidden-pages); a hidden one is not linked. */
+  directoryShown?: boolean
+  magazineShown?: boolean
 }) {
   const t = await getTranslations('homeFinish')
   const h = await getTranslations('home')
@@ -29,12 +34,14 @@ export async function HomePlaces({
           </h2>
           <p data-vd-reveal>{featured ? h('featuredNote') : t('placesBody')}</p>
         </div>
-        <Link className="vd-text-link" href="/directory">
-          {h('seeAllListings')}{' '}
-          <span aria-hidden>
-            <LinkArrow />
-          </span>
-        </Link>
+        {directoryShown ? (
+          <Link className="vd-text-link" href="/directory">
+            {h('seeAllListings')}{' '}
+            <span aria-hidden>
+              <LinkArrow />
+            </span>
+          </Link>
+        ) : null}
       </header>
       {listings.length ? (
         <div
@@ -64,9 +71,11 @@ export async function HomePlaces({
       ) : (
         <div className="vd-home-empty">
           <p>{t('emptyPlaces')}</p>
-          <Link href="/magazine" className="vd-text-link">
-            {h('read')} <LinkArrow />
-          </Link>
+          {magazineShown ? (
+            <Link href="/magazine" className="vd-text-link">
+              {h('read')} <LinkArrow />
+            </Link>
+          ) : null}
         </div>
       )}
     </section>

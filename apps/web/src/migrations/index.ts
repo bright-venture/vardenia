@@ -57,6 +57,7 @@ import * as migration_20261106_131048_receipt_number from './20261106_131048_rec
 import * as migration_20261106_165517_signups_pause from './20261106_165517_signups_pause'
 import * as migration_20261109_072535_hidden_pages from './20261109_072535_hidden_pages'
 import * as migration_20261110_090000_drop_old_settings_tables from './20261110_090000_drop_old_settings_tables'
+import * as migration_20261111_120000_hidden_pages_more from './20261111_120000_hidden_pages_more'
 
 export const migrations = [
   {
@@ -353,5 +354,10 @@ export const migrations = [
     up: migration_20261110_090000_drop_old_settings_tables.up,
     down: migration_20261110_090000_drop_old_settings_tables.down,
     name: '20261110_090000_drop_old_settings_tables',
+  },
+  {
+    up: migration_20261111_120000_hidden_pages_more.up,
+    down: migration_20261111_120000_hidden_pages_more.down,
+    name: '20261111_120000_hidden_pages_more',
   },
 ]

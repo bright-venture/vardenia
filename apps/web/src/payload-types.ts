@@ -1873,7 +1873,27 @@ export interface Setting {
   /**
    * Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.
    */
-  hiddenPages?: ('about' | 'contact' | 'faq' | 'partner-with-us' | 'advertise' | 'add-your-business')[] | null;
+  hiddenPages?:
+    | (
+        | 'about'
+        | 'contact'
+        | 'faq'
+        | 'partner-with-us'
+        | 'advertise'
+        | 'add-your-business'
+        | 'magazine'
+        | 'magazine-issues'
+        | 'magazine-articles'
+        | 'stay'
+        | 'eat-and-drink'
+        | 'experiences'
+        | 'weddings'
+        | 'lifestyle'
+        | 'getting-around'
+        | 'directory'
+        | 'partner-sign-in'
+      )[]
+    | null;
   /**
    * Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.
    */

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { hiddenPages, notFoundIfHidden } from '../../../../../../lib/hidden-pages'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../../../i18n/routing'
@@ -72,16 +73,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function IssuePage({ params }: Params) {
   const { locale, slug } = await params
   if (!isLocale(locale)) notFound()
+  // Hiding Issues hides each issue too.
+  await notFoundIfHidden('magazine-issues')
   setRequestLocale(locale)
 
   const issue = await findIssueBySlug(slug, locale)
   if (!issue) notFound()
 
   const t = await getTranslations()
-  const [articles, listings] = await Promise.all([
+  const [articles, listings, hidden] = await Promise.all([
     findArticlesInIssue(issue.id, locale),
     findListingsInIssue(issue.id, locale),
+    hiddenPages(),
   ])
+  // With Articles hidden (lib/hidden-pages), their block goes: it links to them.
+  const articlesShown = !hidden.includes('magazine-articles')
   // The magazine's seven regions in its order, each with its places; a
   // listing with no region (none today) closes the list rather than vanishing.
   const known = new Set<string>(GOVERNORATES.map((g) => g.slug))
@@ -167,44 +173,46 @@ export default async function IssuePage({ params }: Params) {
         />
       ) : null}
 
-      <section className="mt-16">
-        <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">
-          {t('magazine.inThisIssue')}
-        </h2>
-        <h3 className="vd-issue-subhead">{t('footer.articles')}</h3>
+      {articlesShown ? (
+        <section className="mt-16">
+          <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">
+            {t('magazine.inThisIssue')}
+          </h2>
+          <h3 className="vd-issue-subhead">{t('footer.articles')}</h3>
 
-        {articles.length === 0 ? (
-          <p className="text-ink-500 mt-4 text-sm">{t('magazine.noArticlesInIssue')}</p>
-        ) : (
-          <div className="vd-editorial-grid mt-6 grid gap-8 sm:grid-cols-2">
-            {articles.map((article) => {
-              const print = article.print as {
-                pageFrom?: number | null
-                pageTo?: number | null
-              } | null
-              const from = print?.pageFrom
-              const to = print?.pageTo
-              const isRange = to != null && to !== from
-              const range = isRange ? `${from}-${to}` : String(from)
-              const pageLabel =
-                from != null ? t('article.pageLabel', { count: isRange ? 2 : 1, range }) : null
+          {articles.length === 0 ? (
+            <p className="text-ink-500 mt-4 text-sm">{t('magazine.noArticlesInIssue')}</p>
+          ) : (
+            <div className="vd-editorial-grid mt-6 grid gap-8 sm:grid-cols-2">
+              {articles.map((article) => {
+                const print = article.print as {
+                  pageFrom?: number | null
+                  pageTo?: number | null
+                } | null
+                const from = print?.pageFrom
+                const to = print?.pageTo
+                const isRange = to != null && to !== from
+                const range = isRange ? `${from}-${to}` : String(from)
+                const pageLabel =
+                  from != null ? t('article.pageLabel', { count: isRange ? 2 : 1, range }) : null
 
-              return (
-                <ArticleCard
-                  key={article.id}
-                  slug={article.slug ?? ''}
-                  title={article.title ?? ''}
-                  excerpt={article.excerpt}
-                  kind={article.kind}
-                  heroImage={article.heroImage as never}
-                  locale={locale as Locale}
-                  pageLabel={pageLabel}
-                />
-              )
-            })}
-          </div>
-        )}
-      </section>
+                return (
+                  <ArticleCard
+                    key={article.id}
+                    slug={article.slug ?? ''}
+                    title={article.title ?? ''}
+                    excerpt={article.excerpt}
+                    kind={article.kind}
+                    heroImage={article.heroImage as never}
+                    locale={locale as Locale}
+                    pageLabel={pageLabel}
+                  />
+                )
+              })}
+            </div>
+          )}
+        </section>
+      ) : null}
 
       {/*
         Every place the edition carries, under the articles, region by region

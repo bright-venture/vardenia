@@ -31,11 +31,20 @@ export function CinematicJourney({
   directory,
   connection,
   magazine,
+  directoryShown = true,
+  magazineShown = true,
 }: {
   locale: Locale
   directory: ReactNode
   connection: ReactNode
   magazine: ReactNode
+  /**
+   * Whether the admin has the directory and the magazine page showing
+   * (lib/hidden-pages). A hidden page is never linked to: its buttons go, and
+   * a place's name stays as plain text.
+   */
+  directoryShown?: boolean
+  magazineShown?: boolean
 }) {
   const t = useTranslations('journey'),
     root = useRef<HTMLDivElement>(null),
@@ -323,8 +332,11 @@ export function CinematicJourney({
         const p = DESTINATIONS.find((p) => p.id === id)!
         return [
           `${i + 1}. ${name(p)}`,
-          // The same filtered link as the page's own buttons (directoryFor).
-          `${location.origin}${locale === 'en' ? '' : '/' + locale}${directoryFor(p)}`,
+          // The same filtered link as the page's own buttons (directoryFor),
+          // unless the directory is hidden.
+          ...(directoryShown
+            ? [`${location.origin}${locale === 'en' ? '' : '/' + locale}${directoryFor(p)}`]
+            : []),
           '',
         ]
       }),
@@ -337,6 +349,25 @@ export function CinematicJourney({
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 0)
   }
+  /*
+   * A postcard's picture from the start, held back by the browser's own lazy
+   * loading: the postcards are far below the first screen. Waiting for
+   * `pageReady` as the photographs above do left these blank grey on phones: in
+   * some browser states the picture never arrived, or arrived while the row was
+   * off screen and was never drawn (10 November 2026). Linked to the directory
+   * by the caller, unless the directory is hidden.
+   */
+  const postcardImage = (p: Destination) => (
+    <img
+      src={assets + p.image}
+      srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
+      sizes="(max-width:700px) calc(100vw - 72px), 31vw"
+      alt={p.alt}
+      width="1600"
+      height="1200"
+      loading="lazy"
+    />
+  )
   // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
     const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
@@ -626,16 +657,18 @@ export function CinematicJourney({
         <div className="vd-stone-copy" aria-live={cityFocus ? 'polite' : 'off'} aria-atomic="true">
           <h2>{name(city)}</h2>
           <p>{city.id === 'baalbek' ? t('stoneBody') : body(city)}</p>
-          <Link
-            className="vd-button vd-button-light"
-            href={directoryFor(city)}
-            onPointerEnter={(event) => {
-              if (event.pointerType !== 'touch') setCityHover(true)
-            }}
-            onPointerLeave={() => setCityHover(false)}
-          >
-            {t('explore')} <LinkArrow />
-          </Link>
+          {directoryShown ? (
+            <Link
+              className="vd-button vd-button-light"
+              href={directoryFor(city)}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== 'touch') setCityHover(true)
+              }}
+              onPointerLeave={() => setCityHover(false)}
+            >
+              {t('explore')} <LinkArrow />
+            </Link>
+          ) : null}
         </div>
         <Coordinates
           key={city.id}
@@ -654,7 +687,7 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('atlasBody')}</p>
         </div>
-        <EditionRegions title={t('editionRegions')} arabic={ar} />
+        {directoryShown ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
         <h3 className="vd-featured-destinations-title" id="vd-featured-destinations-title">
           {t('featuredDestinations')}
         </h3>
@@ -751,9 +784,11 @@ export function CinematicJourney({
               />
               <p className="vd-destination-description">{body(place)}</p>
               <div className="vd-destination-actions">
-                <Link className="vd-button vd-button-light" href={directoryFor(place)}>
-                  {t('explore')} <LinkArrow />
-                </Link>
+                {directoryShown ? (
+                  <Link className="vd-button vd-button-light" href={directoryFor(place)}>
+                    {t('explore')} <LinkArrow />
+                  </Link>
+                ) : null}
                 <button
                   className="vd-button vd-button-paper"
                   disabled={trip.includes(place.id)}
@@ -815,7 +850,11 @@ export function CinematicJourney({
                       loading="lazy"
                       decoding="async"
                     />
-                    <Link href={directoryFor(p)}>{name(p)}</Link>
+                    {directoryShown ? (
+                      <Link href={directoryFor(p)}>{name(p)}</Link>
+                    ) : (
+                      <span>{name(p)}</span>
+                    )}
                     <div>
                       <button
                         aria-label={`${t('earlier')} · ${name(p)}`}
@@ -910,33 +949,23 @@ export function CinematicJourney({
                     style={{ transition: motion && pointerMotion ? undefined : 'none' }}
                   >
                     <div className="vd-postcard-front" inert={back}>
-                      <Link href={directoryFor(p)} aria-label={name(p)}>
-                        {/*
-                          The picture from the start, held back by the browser's
-                          own lazy loading: the postcards are far below the first
-                          screen. Waiting for `pageReady` as the photographs above
-                          do left these blank grey on phones: in some browser
-                          states the picture never arrived, or arrived while the
-                          row was off screen and was never drawn (10 November 2026).
-                        */}
-                        <img
-                          src={assets + p.image}
-                          srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
-                          sizes="(max-width:700px) calc(100vw - 72px), 31vw"
-                          alt={p.alt}
-                          width="1600"
-                          height="1200"
-                          loading="lazy"
-                        />
-                      </Link>
+                      {directoryShown ? (
+                        <Link href={directoryFor(p)} aria-label={name(p)}>
+                          {postcardImage(p)}
+                        </Link>
+                      ) : (
+                        postcardImage(p)
+                      )}
                       <Coordinates place={p} enabled={motion && !back} label={name(p)} />
                     </div>
                     <div className="vd-postcard-back" inert={!back}>
                       <span>Vardenia</span>
                       <p>{body(p)}</p>
-                      <Link href={directoryFor(p)}>
-                        {t('readRegion')} <LinkArrow />
-                      </Link>
+                      {directoryShown ? (
+                        <Link href={directoryFor(p)}>
+                          {t('readRegion')} <LinkArrow />
+                        </Link>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -951,9 +980,7 @@ export function CinematicJourney({
                 >
                   {back ? t('front') : t('turn')} ↶
                 </button>
-                <h3>
-                  <Link href={directoryFor(p)}>{name(p)}</Link>
-                </h3>
+                <h3>{directoryShown ? <Link href={directoryFor(p)}>{name(p)}</Link> : name(p)}</h3>
                 <p>{body(p)}</p>
               </article>
             )
@@ -970,9 +997,11 @@ export function CinematicJourney({
             {t('magazineB')}
           </h2>
           <p data-vd-reveal>{t('magazineBody')}</p>
-          <Link className="vd-button vd-button-light" href="/magazine">
-            {t('readMagazine')} <LinkArrow />
-          </Link>
+          {magazineShown ? (
+            <Link className="vd-button vd-button-light" href="/magazine">
+              {t('readMagazine')} <LinkArrow />
+            </Link>
+          ) : null}
         </div>
         {magazine}
       </section>
