@@ -891,11 +891,6 @@
     "fieldLocation": "الموقع",
     "fieldLocationHint": "البلدة أو المنطقة في لبنان",
     "fieldCategory": "فئة العمل",
-    "fieldInterest": "مهتمّ بـ",
-    "interestAdvertising": "الإعلان في المجلة",
-    "interestRegional": "حضور في المنطقة",
-    "interestPartnership": "شراكة مطبوعة ورقمية",
-    "interestAdvice": "أودّ نصيحتكم",
     "fieldMessage": "قليل عن مكانك",
     "fieldMessageHint": "ما الذي ينبغي أن نعرفه عن عملك؟",
     "prepareEnquiry": "حضّر استفساري",
@@ -911,7 +906,6 @@
     "mailEmail": "البريد الإلكتروني",
     "mailLocation": "الموقع",
     "mailCategory": "الفئة",
-    "mailInterest": "مهتمّ بـ",
     "mailClosing": "أرجو مشاركتي معلومات عن صيغ الإعلان والمساحات المتاحة والطبعات المناطقية القادمة.",
     "mailThanks": "شكراً لكم،"
   }

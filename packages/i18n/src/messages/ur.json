@@ -891,11 +891,6 @@
     "fieldLocation": "مقام",
     "fieldLocationHint": "لبنان میں شہر یا علاقہ",
     "fieldCategory": "کاروبار کا زمرہ",
-    "fieldInterest": "دلچسپی",
-    "interestAdvertising": "میگزین میں اشتہار",
-    "interestRegional": "علاقائی پہچان",
-    "interestPartnership": "چھپی اور ڈیجیٹل شراکت",
-    "interestAdvice": "مجھے آپ کا مشورہ چاہیے",
     "fieldMessage": "اپنی جگہ کے بارے میں تھوڑا سا",
     "fieldMessageHint": "آپ کے کاروبار کے بارے میں ہمیں کیا جاننا چاہیے؟",
     "prepareEnquiry": "میری درخواست تیار کریں",
@@ -911,7 +906,6 @@
     "mailEmail": "ای میل",
     "mailLocation": "مقام",
     "mailCategory": "زمرہ",
-    "mailInterest": "دلچسپی",
     "mailClosing": "براہِ کرم اشتہار کے فارمیٹس، دستیابی اور آنے والے علاقائی ایڈیشنز کے بارے میں معلومات دیں۔",
     "mailThanks": "شکریہ،"
   }

@@ -891,11 +891,6 @@
     "fieldLocation": "所在地",
     "fieldLocationHint": "黎巴嫩的城镇或地区",
     "fieldCategory": "商家类别",
-    "fieldInterest": "感兴趣的是",
-    "interestAdvertising": "杂志广告",
-    "interestRegional": "地区曝光",
-    "interestPartnership": "纸刊与数字合作",
-    "interestAdvice": "希望听听你们的建议",
     "fieldMessage": "简单介绍您的地方",
     "fieldMessageHint": "关于您的商家，我们应该了解什么？",
     "prepareEnquiry": "准备我的咨询",
@@ -911,7 +906,6 @@
     "mailEmail": "电子邮箱",
     "mailLocation": "所在地",
     "mailCategory": "类别",
-    "mailInterest": "感兴趣的是",
     "mailClosing": "请提供广告形式、档期以及即将推出的地区版本的信息。",
     "mailThanks": "谢谢，"
   }

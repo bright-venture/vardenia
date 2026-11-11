@@ -37,12 +37,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
       link: t(`category${key}Link`),
     }),
   )
-  const interests = [
-    t('interestAdvertising'),
-    t('interestRegional'),
-    t('interestPartnership'),
-    t('interestAdvice'),
-  ]
 
   return (
     <main className="vd-biz" id="main-content">
@@ -316,16 +310,26 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               <br /> {t('contactB')}
             </h2>
             <p>{t('contactBody')}</p>
-            {CONTACT.email ? (
-              <a className="vd-biz-mail" href={`mailto:${CONTACT.email}`}>
-                {CONTACT.email}
-              </a>
-            ) : null}
+            <div className="vd-biz-reach">
+              {CONTACT.email ? (
+                <a className="vd-biz-mail" href={`mailto:${CONTACT.email}`}>
+                  {CONTACT.email}
+                </a>
+              ) : null}
+              {CONTACT.phone ? (
+                <a
+                  className="vd-biz-mail"
+                  href={`tel:${CONTACT.phone.replace(/\s/g, '')}`}
+                  dir="ltr"
+                >
+                  {CONTACT.phone}
+                </a>
+              ) : null}
+            </div>
           </div>
           <EnquiryForm
             email={CONTACT.email}
             categories={categories.map(({ key, label }) => ({ key, label }))}
-            interests={interests}
             copy={{
               business: t('fieldBusiness'),
               businessHint: t('fieldBusinessHint'),
@@ -336,7 +340,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               location: t('fieldLocation'),
               locationHint: t('fieldLocationHint'),
               category: t('fieldCategory'),
-              interest: t('fieldInterest'),
               message: t('fieldMessage'),
               messageHint: t('fieldMessageHint'),
               submit: t('prepareEnquiry'),
@@ -352,7 +355,6 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               mailEmail: t('mailEmail'),
               mailLocation: t('mailLocation'),
               mailCategory: t('mailCategory'),
-              mailInterest: t('mailInterest'),
               closing: t('mailClosing'),
               thanks: t('mailThanks'),
             }}

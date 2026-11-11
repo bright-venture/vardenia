@@ -891,11 +891,6 @@
     "fieldLocation": "Localité",
     "fieldLocationHint": "Ville ou région au Liban",
     "fieldCategory": "Catégorie",
-    "fieldInterest": "Intéressé par",
-    "interestAdvertising": "Publicité dans le magazine",
-    "interestRegional": "Visibilité régionale",
-    "interestPartnership": "Partenariat papier et numérique",
-    "interestAdvice": "J’aimerais votre conseil",
     "fieldMessage": "Quelques mots sur votre adresse",
     "fieldMessageHint": "Que devrions-nous savoir sur votre établissement ?",
     "prepareEnquiry": "Préparer ma demande",
@@ -911,7 +906,6 @@
     "mailEmail": "E-mail",
     "mailLocation": "Localité",
     "mailCategory": "Catégorie",
-    "mailInterest": "Intéressé par",
     "mailClosing": "Merci de me communiquer des informations sur les formats publicitaires, les disponibilités et les prochaines éditions régionales.",
     "mailThanks": "Merci,"
   }

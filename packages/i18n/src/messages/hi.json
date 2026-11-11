@@ -891,11 +891,6 @@
     "fieldLocation": "स्थान",
     "fieldLocationHint": "लेबनान में शहर या इलाक़ा",
     "fieldCategory": "व्यवसाय की श्रेणी",
-    "fieldInterest": "रुचि",
-    "interestAdvertising": "पत्रिका में विज्ञापन",
-    "interestRegional": "क्षेत्रीय पहचान",
-    "interestPartnership": "छपी और डिजिटल साझेदारी",
-    "interestAdvice": "मुझे आपकी सलाह चाहिए",
     "fieldMessage": "अपनी जगह के बारे में थोड़ा",
     "fieldMessageHint": "आपके व्यवसाय के बारे में हमें क्या जानना चाहिए?",
     "prepareEnquiry": "मेरी पूछताछ तैयार करें",
@@ -911,7 +906,6 @@
     "mailEmail": "ईमेल",
     "mailLocation": "स्थान",
     "mailCategory": "श्रेणी",
-    "mailInterest": "रुचि",
     "mailClosing": "कृपया विज्ञापन प्रारूपों, उपलब्धता और आने वाले क्षेत्रीय संस्करणों की जानकारी साझा करें।",
     "mailThanks": "धन्यवाद,"
   }

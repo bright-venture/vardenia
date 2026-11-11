@@ -891,11 +891,6 @@
     "fieldLocation": "Location",
     "fieldLocationHint": "Town or area in Lebanon",
     "fieldCategory": "Business category",
-    "fieldInterest": "Interested in",
-    "interestAdvertising": "Magazine advertising",
-    "interestRegional": "Regional visibility",
-    "interestPartnership": "Print & digital partnership",
-    "interestAdvice": "I’d like your advice",
     "fieldMessage": "A little about your place",
     "fieldMessageHint": "What should we know about your business?",
     "prepareEnquiry": "Prepare my enquiry",
@@ -911,7 +906,6 @@
     "mailEmail": "Email",
     "mailLocation": "Location",
     "mailCategory": "Category",
-    "mailInterest": "Interested in",
     "mailClosing": "Please share information about advertising formats, availability and the upcoming regional editions.",
     "mailThanks": "Thank you,"
   }

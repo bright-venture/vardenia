@@ -12,12 +12,10 @@ import { enquiryMail, type EnquiryCopy } from './enquiry-mail'
 export function EnquiryForm({
   email,
   categories,
-  interests,
   copy,
 }: {
   email: string | null
   categories: { key: string; label: string }[]
-  interests: string[]
   copy: EnquiryCopy & {
     business: string
     businessHint: string
@@ -28,7 +26,6 @@ export function EnquiryForm({
     location: string
     locationHint: string
     category: string
-    interest: string
     message: string
     messageHint: string
     submit: string
@@ -56,7 +53,6 @@ export function EnquiryForm({
         email: field('email'),
         location: field('location'),
         category: categories.find((c) => c.key === category)?.label ?? category,
-        interest: field('interest'),
         message: field('message'),
       },
       copy,
@@ -107,14 +103,6 @@ export function EnquiryForm({
               <option key={c.key} value={c.key}>
                 {c.label}
               </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {copy.interest}
-          <select name="interest" defaultValue={interests[0]}>
-            {interests.map((interest) => (
-              <option key={interest}>{interest}</option>
             ))}
           </select>
         </label>

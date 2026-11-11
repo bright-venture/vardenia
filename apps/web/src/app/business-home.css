@@ -412,8 +412,17 @@
 .vd-biz-contact > div > p {
   margin: 28px 0 22px;
 }
+.vd-biz-reach {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
 .vd-biz-mail {
   font-size: 17px;
+}
+.vd-biz-mail:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
 }
 .vd-biz-form label {
   display: block;

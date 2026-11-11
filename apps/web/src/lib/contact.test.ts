@@ -44,11 +44,11 @@ describe('contact details', () => {
     })
   })
 
-  it('omits the phone line entirely rather than marking one we never wanted', () => {
-    expect(contactPhone()).toBeNull()
+  it('publishes the phone, and omits the line entirely rather than marking a gap', () => {
+    expect(contactPhone()).toContain('+961 79 338 358')
     restore(() => {
-      CONTACT.phone = '+961 1 000000'
-      expect(contactPhone()).toContain('+961 1 000000')
+      CONTACT.phone = null
+      expect(contactPhone()).toBeNull()
     })
   })
 

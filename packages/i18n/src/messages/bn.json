@@ -891,11 +891,6 @@
     "fieldLocation": "অবস্থান",
     "fieldLocationHint": "লেবাননের শহর বা এলাকা",
     "fieldCategory": "ব্যবসার বিভাগ",
-    "fieldInterest": "আগ্রহ",
-    "interestAdvertising": "ম্যাগাজিনে বিজ্ঞাপন",
-    "interestRegional": "আঞ্চলিক পরিচিতি",
-    "interestPartnership": "ছাপা ও ডিজিটাল অংশীদারি",
-    "interestAdvice": "আপনাদের পরামর্শ চাই",
     "fieldMessage": "আপনার জায়গা সম্পর্কে একটু",
     "fieldMessageHint": "আপনার ব্যবসা সম্পর্কে আমাদের কী জানা উচিত?",
     "prepareEnquiry": "আমার জিজ্ঞাসা তৈরি করুন",
@@ -911,7 +906,6 @@
     "mailEmail": "ইমেল",
     "mailLocation": "অবস্থান",
     "mailCategory": "বিভাগ",
-    "mailInterest": "আগ্রহ",
     "mailClosing": "অনুগ্রহ করে বিজ্ঞাপনের ফরম্যাট, প্রাপ্যতা ও আসন্ন আঞ্চলিক সংস্করণ সম্পর্কে তথ্য জানান।",
     "mailThanks": "ধন্যবাদ,"
   }

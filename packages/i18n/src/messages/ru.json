@@ -891,11 +891,6 @@
     "fieldLocation": "Место",
     "fieldLocationHint": "Город или район в Ливане",
     "fieldCategory": "Категория бизнеса",
-    "fieldInterest": "Интересует",
-    "interestAdvertising": "Реклама в журнале",
-    "interestRegional": "Заметность в регионе",
-    "interestPartnership": "Печатное и цифровое партнёрство",
-    "interestAdvice": "Хочу получить совет",
     "fieldMessage": "Немного о вашем месте",
     "fieldMessageHint": "Что нам стоит знать о вашем бизнесе?",
     "prepareEnquiry": "Подготовить запрос",
@@ -911,7 +906,6 @@
     "mailEmail": "Эл. почта",
     "mailLocation": "Место",
     "mailCategory": "Категория",
-    "mailInterest": "Интересует",
     "mailClosing": "Пожалуйста, пришлите информацию о рекламных форматах, наличии мест и будущих региональных выпусках.",
     "mailThanks": "Спасибо,"
   }

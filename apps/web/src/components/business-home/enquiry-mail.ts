@@ -12,7 +12,6 @@ export interface EnquiryCopy {
   mailEmail: string
   mailLocation: string
   mailCategory: string
-  mailInterest: string
   closing: string
   thanks: string
 }
@@ -23,7 +22,6 @@ export interface Enquiry {
   email: string
   location: string
   category: string
-  interest: string
   message: string
 }
 
@@ -38,7 +36,6 @@ export function enquiryMail(to: string, enquiry: Enquiry, copy: EnquiryCopy): st
     `${copy.mailEmail}: ${enquiry.email}`,
     `${copy.mailLocation}: ${enquiry.location}`,
     `${copy.mailCategory}: ${enquiry.category}`,
-    `${copy.mailInterest}: ${enquiry.interest}`,
     ...(enquiry.message ? ['', enquiry.message] : []),
     '',
     copy.closing,

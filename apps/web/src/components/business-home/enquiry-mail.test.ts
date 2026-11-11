@@ -10,7 +10,6 @@ const copy = {
   mailEmail: 'Email',
   mailLocation: 'Location',
   mailCategory: 'Category',
-  mailInterest: 'Interested in',
   closing: 'Closing.',
   thanks: 'Thank you,',
 }
@@ -20,7 +19,6 @@ const enquiry = {
   email: 'rana@example.com',
   location: 'Byblos',
   category: 'Hotels',
-  interest: 'Magazine advertising',
   message: 'Sea view, 12 rooms.',
 }
 
@@ -42,7 +40,6 @@ describe('the enquiry email draft', () => {
       'Email: rana@example.com',
       'Location: Byblos',
       'Category: Hotels',
-      'Interested in: Magazine advertising',
       'Sea view, 12 rooms.',
     ])
       expect(body).toContain(line)

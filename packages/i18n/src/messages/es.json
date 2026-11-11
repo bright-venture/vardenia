@@ -891,11 +891,6 @@
     "fieldLocation": "Ubicación",
     "fieldLocationHint": "Pueblo o zona del Líbano",
     "fieldCategory": "Categoría del negocio",
-    "fieldInterest": "Me interesa",
-    "interestAdvertising": "Publicidad en la revista",
-    "interestRegional": "Visibilidad regional",
-    "interestPartnership": "Colaboración impresa y digital",
-    "interestAdvice": "Me gustaría su consejo",
     "fieldMessage": "Un poco sobre tu lugar",
     "fieldMessageHint": "¿Qué deberíamos saber sobre tu negocio?",
     "prepareEnquiry": "Preparar mi consulta",
@@ -911,7 +906,6 @@
     "mailEmail": "Correo electrónico",
     "mailLocation": "Ubicación",
     "mailCategory": "Categoría",
-    "mailInterest": "Me interesa",
     "mailClosing": "Les agradecería información sobre formatos publicitarios, disponibilidad y las próximas ediciones regionales.",
     "mailThanks": "Gracias,"
   }
