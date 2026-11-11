@@ -29,9 +29,14 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
   })
   const pdf = issue && typeof issue.digitalEdition === 'object' ? issue.digitalEdition : null
 
-  // Headings set a word or a line in italics (<em>), and some break a line (<br>).
+  // Headings set a word or a line in italics (<em>), a word in Bordeaux italics
+  // (<wine>, "love" in For the love of Lebanon), and some break a line (<br>).
   const rich = (key: Parameters<typeof t.rich>[0]) =>
-    t.rich(key, { em: (chunks) => <em>{chunks}</em>, br: () => <br /> })
+    t.rich(key, {
+      em: (chunks) => <em>{chunks}</em>,
+      wine: (chunks) => <em className="vd-biz-wine">{chunks}</em>,
+      br: () => <br />,
+    })
 
   const categories = (['Hotels', 'Restaurants', 'Destinations', 'Experiences'] as const).map(
     (key) => ({
@@ -97,7 +102,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
         <section className="vd-biz-section vd-biz-axis vd-biz-about" aria-labelledby="biz-about">
           <div>
             <h2 id="biz-about" data-vd-reveal>
-              {t('aboutA')}
+              {rich('aboutA')}
               <br /> {rich('aboutB')}
             </h2>
           </div>

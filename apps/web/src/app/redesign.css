@@ -85,22 +85,14 @@
   gap: 12px;
   font-size: 14px;
 }
-/* "Homepage", the desktop nav's first item (header/HomepageLink, 11 November
-   2026), set like the Discover, Magazine and About buttons beside it. */
+/* "Home", the desktop nav's first item (header/HomepageLink, 11 November
+   2026). Its colour, size and padding are the Discover button's own utility
+   classes (SiteHeader), so the two always match: no underline, not even on
+   the homepage. */
 .vd-header .vd-homepage-link {
-  display: inline-flex;
-  align-items: center;
   min-height: 44px;
-  padding: 6px 8px;
-  color: var(--vd-ink);
-  font-size: 14px;
   white-space: nowrap;
   text-decoration: none;
-}
-.vd-header .vd-homepage-link:hover,
-.vd-header .vd-homepage-link[aria-current='page'] {
-  text-decoration: underline;
-  text-underline-offset: 5px;
 }
 .vd-header .vd-homepage-link:focus-visible,
 .vd-mobile-sheet .vd-mobile-homepage-link:focus-visible {

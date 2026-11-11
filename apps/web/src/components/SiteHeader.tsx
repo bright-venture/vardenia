@@ -165,7 +165,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             aria-label={t('nav.directory')}
             className="vd-desktop-nav items-stretch self-stretch"
           >
-            <HomepageLink label={t('nav.homepage')} className="vd-homepage-link" />
+            {/* Set exactly like the Discover, Magazine and About buttons beside it
+                (header/DropdownNav), without the chevron. */}
+            <HomepageLink
+              label={t('nav.homepage')}
+              className="vd-homepage-link text-ink-700 hover:text-ink-900 flex h-full items-center px-2 py-1.5 text-sm transition-colors"
+            />
             {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
             {sectionItems.length > 0 ? (
               <DropdownNav label={t('nav.discover')} wide>

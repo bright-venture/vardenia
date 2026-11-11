@@ -116,8 +116,12 @@
   line-height: 1.02;
   letter-spacing: -0.05em;
 }
-.vd-biz-hero h1 em {
+.vd-biz-hero h1 em,
+.vd-biz .vd-biz-wine {
   color: var(--biz-wine);
+}
+.vd-biz .vd-biz-wine {
+  font-style: italic;
 }
 .vd-biz-lead {
   max-width: 425px;
