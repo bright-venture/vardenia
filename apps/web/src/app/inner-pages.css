@@ -1072,6 +1072,52 @@
 }
 /* A portrait photograph (the magazine's on /magazine/issues): shown whole, at
    its own shape, never wider than a printed page would look beside the title. */
+/* A main photograph with a smaller one laid over its lower corner
+   (Getting Around, 12 November 2026). */
+.vd-inner-hero-collage {
+  position: relative;
+  min-width: 0;
+  padding-bottom: 56px;
+}
+.vd-inner-hero-collage .vd-inner-hero-media {
+  width: 100%;
+}
+.vd-inner-hero-inset {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  /* Physical, not logical: the photograph does not mirror in Arabic, and
+     on its right the inset would cover the magazine in the passenger's hands. */
+  left: -9%;
+  width: 34%;
+  margin: 0;
+  border: 8px solid var(--vd-paper);
+  box-shadow:
+    0 2px 6px rgb(36 60 50 / 0.16),
+    0 26px 50px -14px rgb(36 60 50 / 0.42);
+}
+.vd-inner-hero-inset img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1122 / 1402;
+  object-fit: cover;
+}
+/* In Arabic the photograph sits at the page's left edge, so the inset stays inside it. */
+[dir='rtl'] .vd-inner-hero-inset {
+  left: 4%;
+}
+@media (max-width: 700px) {
+  .vd-inner-hero-collage {
+    padding-bottom: 48px;
+  }
+  .vd-inner-hero-inset,
+  [dir='rtl'] .vd-inner-hero-inset {
+    left: 14px;
+    width: 40%;
+    border-width: 5px;
+  }
+}
 .vd-inner-hero-media.vd-inner-hero-media-portrait {
   aspect-ratio: 1122 / 1402;
   width: 100%;

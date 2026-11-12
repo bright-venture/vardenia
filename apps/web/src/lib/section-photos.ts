@@ -10,6 +10,12 @@
 export interface SectionPhoto {
   src: string
   alt: string
+  /**
+   * A second, smaller picture laid over the first one's lower corner, as Getting
+   * Around has had since 12 November 2026 (the coast road running out of the
+   * magazine's page).
+   */
+  inset?: { src: string; alt: string; width: number; height: number }
 }
 
 export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
@@ -37,6 +43,12 @@ export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
   'getting-around': {
     src: '/sections/getting-around.webp',
     alt: 'A drive along the coast road, a passenger holding a copy of Vardenia',
+    inset: {
+      src: '/sections/getting-around-road.webp',
+      alt: 'An open Vardenia magazine whose page becomes a winding mountain road, a classic copper sports car driving out of it',
+      width: 1122,
+      height: 1402,
+    },
   },
 }
 

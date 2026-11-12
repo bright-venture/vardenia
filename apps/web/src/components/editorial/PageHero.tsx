@@ -26,7 +26,14 @@ export function PageHero({
   intro?: string
   body?: string
   place?: number
-  photo?: { src: string; alt: string; width?: number; height?: number }
+  photo?: {
+    src: string
+    alt: string
+    width?: number
+    height?: number
+    /** A smaller picture laid over the main one's lower corner. */
+    inset?: { src: string; alt: string; width: number; height: number }
+  }
   locale: Locale
   children?: ReactNode
   immersive?: boolean
@@ -49,37 +56,62 @@ export function PageHero({
           </div>
         ) : null}
       </div>
-      <figure
-        className={`vd-inner-hero-media ${portrait ? 'vd-inner-hero-media-portrait' : ''}`}
-        data-vd-reveal
-      >
-        {photo ? (
-          <Image
-            src={photo.src}
-            alt={photo.alt}
-            width={photo.width ?? 1536}
-            height={photo.height ?? 1024}
-            sizes="(max-width:700px) 100vw, 60vw"
-            priority
-          />
-        ) : (
-          <>
+      {photo?.inset ? (
+        <div className="vd-inner-hero-collage" data-vd-reveal>
+          <figure className="vd-inner-hero-media">
             <Image
-              src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
-              alt={destination.alt}
-              width={1600}
-              height={1200}
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width ?? 1536}
+              height={photo.height ?? 1024}
               sizes="(max-width:700px) 100vw, 60vw"
               priority
             />
-            <Coordinates
-              place={destination}
-              enabled
-              label={locale === 'ar' ? destination.ar : destination.name}
+          </figure>
+          <figure className="vd-inner-hero-inset">
+            <Image
+              src={photo.inset.src}
+              alt={photo.inset.alt}
+              width={photo.inset.width}
+              height={photo.inset.height}
+              sizes="(max-width:700px) 44vw, 22vw"
+              priority
             />
-          </>
-        )}
-      </figure>
+          </figure>
+        </div>
+      ) : (
+        <figure
+          className={`vd-inner-hero-media ${portrait ? 'vd-inner-hero-media-portrait' : ''}`}
+          data-vd-reveal
+        >
+          {photo ? (
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              width={photo.width ?? 1536}
+              height={photo.height ?? 1024}
+              sizes="(max-width:700px) 100vw, 60vw"
+              priority
+            />
+          ) : (
+            <>
+              <Image
+                src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
+                alt={destination.alt}
+                width={1600}
+                height={1200}
+                sizes="(max-width:700px) 100vw, 60vw"
+                priority
+              />
+              <Coordinates
+                place={destination}
+                enabled
+                label={locale === 'ar' ? destination.ar : destination.name}
+              />
+            </>
+          )}
+        </figure>
+      )}
     </header>
   )
 }
