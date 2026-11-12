@@ -351,39 +351,70 @@
   grid-template-columns: 46% 1fr;
   align-items: center;
 }
-.vd-biz-beyond-art img {
+/* The Byblos page as the picture, the open spread laid over its corner. */
+.vd-biz-beyond-art {
+  position: relative;
+}
+.vd-biz-beyond-photo {
+  width: 80%;
+  margin: 0;
+}
+.vd-biz-beyond-photo img {
+  display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  box-shadow:
+    0 2px 4px #243c321f,
+    0 24px 48px -12px #243c3247;
+}
+.vd-biz-beyond-art .vd-biz-beyond-spread {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 66%;
+  height: auto;
+  margin-top: -24%;
+  margin-inline-start: auto;
   filter: drop-shadow(0 5px 4px #172d234d) drop-shadow(7px 22px 15px #172d2359);
 }
 .vd-biz-beyond-art .vd-biz-link {
   display: table;
-  margin: 25px auto 0;
+  margin: 22px auto 0;
 }
 .vd-biz-beyond h2 {
-  margin-bottom: 26px;
+  margin-bottom: 34px;
 }
-.vd-biz-beyond-statement {
-  font-size: 18px;
-}
+/* The three steps, titles only, numbered between hairlines. */
 .vd-biz-steps {
-  display: grid;
-  gap: 24px;
-  margin: 30px 0;
+  counter-reset: biz-step;
+  margin: 0;
   padding: 0;
   list-style: none;
+  max-width: 520px;
 }
 .vd-biz-steps li {
-  max-width: 590px;
+  counter-increment: biz-step;
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  padding: 22px 0;
+  border-top: 1px solid rgb(36 60 50 / 0.16);
+}
+.vd-biz-steps li:last-child {
+  border-bottom: 1px solid rgb(36 60 50 / 0.16);
+}
+.vd-biz-steps li::before {
+  content: counter(biz-step, decimal-leading-zero);
+  min-width: 2ch;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--biz-wine);
 }
 .vd-biz-steps h3 {
-  margin-bottom: 8px;
-  font-size: 24px;
-}
-.vd-biz-small {
-  margin-top: 22px;
-  font-size: 14px;
-  color: var(--biz-muted);
+  margin: 0;
+  font-size: 26px;
 }
 
 /* Make room for something memorable: the seven regional editions, a wide
@@ -676,8 +707,15 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-beyond-art {
     order: 2;
   }
-  .vd-biz-beyond-statement {
-    font-size: 17px;
+  .vd-biz-beyond-photo {
+    width: 86%;
+  }
+  .vd-biz-beyond-art .vd-biz-beyond-spread {
+    width: 72%;
+    margin-top: -26%;
+  }
+  .vd-biz-steps h3 {
+    font-size: 23px;
   }
   .vd-biz-form-row {
     grid-template-columns: 1fr;

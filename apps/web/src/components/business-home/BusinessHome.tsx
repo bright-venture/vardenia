@@ -190,13 +190,25 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
 
         <section className="vd-biz-section vd-biz-beyond" aria-labelledby="biz-beyond">
           <div className="vd-biz-axis">
+            {/* The Byblos page unfolding into the harbour (12 November 2026),
+                with the open spread laid over its lower corner. */}
             <div className="vd-biz-beyond-art">
+              <figure className="vd-biz-beyond-photo" data-vd-reveal>
+                <Image
+                  src="/business/byblos-pages.webp"
+                  width={1024}
+                  height={1280}
+                  alt={t('beyondArtAlt')}
+                  sizes="(max-width:700px) 86vw, 36vw"
+                />
+              </figure>
               <Image
+                className="vd-biz-beyond-spread"
                 src="/business/open-spread.webp"
                 width={1467}
                 height={957}
                 alt={t('spreadAlt')}
-                sizes="(max-width:700px) 100vw, 45vw"
+                sizes="(max-width:700px) 70vw, 30vw"
               />
               <a className="vd-biz-link" href="#magazine-viewer">
                 {t('browsePreview')}
@@ -207,22 +219,18 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
                 {t('beyondA')}
                 <br /> {rich('beyondB')}
               </h2>
-              <p className="vd-biz-beyond-statement">{t('beyondStatement')}</p>
+              {/* The three steps, titles only (12 November 2026). */}
               <ol className="vd-biz-steps">
                 <li>
                   <h3 data-vd-reveal>{t('stepPrintTitle')}</h3>
-                  <p>{t('stepPrintBody')}</p>
                 </li>
                 <li>
                   <h3 data-vd-reveal>{t('stepScanTitle')}</h3>
-                  <p>{t('stepScanBody')}</p>
                 </li>
                 <li>
                   <h3 data-vd-reveal>{t('stepOnlineTitle')}</h3>
-                  <p>{t('stepOnlineBody')}</p>
                 </li>
               </ol>
-              <p className="vd-biz-small">{t('beyondNote')}</p>
             </div>
           </div>
         </section>
