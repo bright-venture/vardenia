@@ -84,11 +84,13 @@ const ABOUT_PHOTOS: Record<number, AboutPhoto> = {
     },
   },
   // Postcards of Lebanon, a checklist and the site on a phone, above Byblos.
+  // After the opening paragraphs since 12 November 2026, so it does not follow
+  // the bottle under Our Commitment.
   1: {
     src: '/about/curated-experiences.webp',
     width: 1280,
     height: 720,
-    after: 'end',
+    after: 'body',
     alt: {
       en: 'Postcards of Baalbek, a Lebanese lane, the cedars, Raouché and a candlelit courtyard on a table above the sea at Byblos, beside a checklist and a phone showing Vardenia',
       ar: 'بطاقات بريدية لبعلبك وزقاق لبناني والأرز والروشة وباحة مضاءة بالشموع على طاولة تطلّ على البحر في جبيل، إلى جانب قائمة مهامّ وهاتف يعرض فاردينيا',
@@ -119,6 +121,35 @@ const ABOUT_PHOTOS: Record<number, AboutPhoto> = {
       hi: 'Vardenia का All Lebanon अंक, आवरण पर Discover Lebanon, रोशनी में दो खुली हथेलियों के बीच',
       bn: 'Vardenia-র All Lebanon সংখ্যা, প্রচ্ছদে Discover Lebanon, আলোর মধ্যে দুটি খোলা হাতের মাঝে',
       ur: 'Vardenia کا All Lebanon شمارہ، سرورق پر Discover Lebanon، روشنی میں دو کھلے ہاتھوں کے درمیان',
+    },
+  },
+}
+
+/** A list item that is nothing but a bold title: "- **Reliable Information**". */
+const TITLE_ONLY = /^- \*\*([^*]+)\*\*$/
+
+/**
+ * Photographs placed inside a section's text with a line "@ name" (About's Our
+ * Commitment, 12 November 2026), where a section-end photo would land after
+ * the closing line instead of after the list.
+ */
+const INLINE_PHOTOS: Record<string, AboutPhoto> = {
+  'message-in-a-bottle': {
+    src: '/about/message-in-a-bottle.webp',
+    width: 1533,
+    height: 1026,
+    after: 'body',
+    alt: {
+      en: 'Copies of Vardenia All Lebanon rolled into a corked glass bottle on the sand at sunset, the sea behind',
+      ar: 'نسخ من فاردينيا كلّ لبنان داخل قارورة زجاجية مسدودة بالفلّين على الرمل عند الغروب، والبحر خلفها',
+      fr: 'Des numéros de Vardenia All Lebanon glissés dans une bouteille bouchée de liège, sur le sable au coucher du soleil, la mer derrière',
+      es: 'Ejemplares de Vardenia All Lebanon dentro de una botella con tapón de corcho sobre la arena al atardecer, con el mar detrás',
+      pt: 'Exemplares da Vardenia All Lebanon dentro de uma garrafa rolhada com cortiça, na areia ao pôr do sol, com o mar atrás',
+      ru: 'Номера Vardenia All Lebanon в стеклянной бутылке с пробкой на песке на закате, позади море',
+      zh: '几本 Vardenia All Lebanon 杂志装在一只软木塞玻璃瓶里，躺在日落时的沙滩上，身后是大海',
+      hi: 'सूर्यास्त में रेत पर कॉर्क लगी काँच की बोतल में रखी Vardenia All Lebanon की प्रतियाँ, पीछे समुद्र',
+      bn: 'সূর্যাস্তে বালির ওপর কর্ক আঁটা কাচের বোতলে Vardenia All Lebanon-এর কয়েকটি সংখ্যা, পেছনে সমুদ্র',
+      ur: 'غروبِ آفتاب میں ریت پر کارک لگی شیشے کی بوتل میں Vardenia All Lebanon کی کاپیاں، پیچھے سمندر',
     },
   },
 }
@@ -232,6 +263,22 @@ export async function ContentPageView({
   const body = (section: ContentPage['sections'][number], sectionIndex: number) =>
     groupLines(section.body).map((group, groupIndex) => {
       const id = `${sectionIndex}-${groupIndex}`
+      // "@ name": one of the About page's photographs, inside a section's text.
+      const inline = group.kind === 'single' ? group.lines[0]?.match(/^@ (\S+)$/) : null
+      if (inline) {
+        const photo = INLINE_PHOTOS[inline[1]!]
+        return photo ? <div key={id}>{aboutPhoto(photo, locale)}</div> : null
+      }
+      // A list whose items are only bold titles: numbered, between hairlines.
+      if (group.kind === 'list' && group.lines.every((line) => TITLE_ONLY.test(line))) {
+        return (
+          <ol key={id} className="vd-story-titles">
+            {group.lines.map((line, itemIndex) => (
+              <li key={`${id}-${itemIndex}`}>{line.replace(TITLE_ONLY, '$1')}</li>
+            ))}
+          </ol>
+        )
+      }
       return group.kind === 'list' ? (
         <ul key={id} className="list-disc ps-6">
           {group.lines.map((item, itemIndex) => (
