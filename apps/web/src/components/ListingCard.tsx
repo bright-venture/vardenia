@@ -9,6 +9,7 @@ import { tripDayLabel, tripQuery, TRIP_DEFAULT_TIME, type Trip } from '../lib/tr
 import type { TripVerdict } from '../lib/trip-availability'
 import { Plate, Tier } from './ui'
 import { SaveButton } from './SaveButton'
+import { SHOW_SAVING } from '../lib/feature-display'
 
 /**
  * "0.4", "2.4", "18": a decimal only while it tells somebody something.
@@ -170,9 +171,11 @@ export function ListingCard({
           puts it above that anchor's `::after` overlay, so a press lands on the
           heart and a press anywhere else on the card follows the link.
         */}
-        <div className="absolute bottom-3 end-3 z-10">
-          <SaveButton slug={slug} name={name} />
-        </div>
+        {SHOW_SAVING ? (
+          <div className="absolute bottom-3 end-3 z-10">
+            <SaveButton slug={slug} name={name} />
+          </div>
+        ) : null}
       </div>
 
       {/*

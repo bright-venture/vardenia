@@ -1,4 +1,5 @@
 import { PageHero } from '../../../../components/editorial/PageHero'
+import { SHOW_REVIEWS, SHOW_SAVING } from '../../../../lib/feature-display'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -103,9 +104,11 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <Link href="/account/passport" className={LINK}>
               {t('passportLink')}
             </Link>
-            <Link href="/account/saved" className={LINK}>
-              {t('savedLink')}
-            </Link>
+            {SHOW_SAVING ? (
+              <Link href="/account/saved" className={LINK}>
+                {t('savedLink')}
+              </Link>
+            ) : null}
             <Link href="/account/receipts" className={LINK}>
               {t('receiptsLink')}
             </Link>
@@ -293,7 +296,7 @@ async function BookingList({
                 ended={booking.ended}
               />
 
-              {canReview ? (
+              {SHOW_REVIEWS && canReview ? (
                 <Link
                   href={`/directory/${slug}#reviews`}
                   className={`${LINK} mt-3 inline-block text-sm`}

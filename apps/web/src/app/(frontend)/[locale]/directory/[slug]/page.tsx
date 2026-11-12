@@ -27,6 +27,7 @@ import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { SHOW_LOCATION } from '../../../../../lib/location-display'
+import { SHOW_REVIEWS, SHOW_SAVING } from '../../../../../lib/feature-display'
 import { mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
@@ -387,7 +388,7 @@ export default async function ListingPage({ params }: Params) {
               The reviews, as a link down to them. The average only once there
               are enough reviews to mean something; before that, the count.
             */}
-              {reviews.count > 0 ? (
+              {SHOW_REVIEWS && reviews.count > 0 ? (
                 <a
                   href="#reviews"
                   className="hover:text-surface-base inline-flex items-center gap-1.5 underline-offset-4 transition-colors hover:underline"
@@ -442,7 +443,7 @@ export default async function ListingPage({ params }: Params) {
                   coordinates={point}
                 />
               ) : null}
-              <SaveButton slug={slug} variant="button" />
+              {SHOW_SAVING ? <SaveButton slug={slug} variant="button" /> : null}
             </div>
 
             {/*
@@ -451,7 +452,7 @@ export default async function ListingPage({ params }: Params) {
             <q> so the quote marks follow the page's language; the full list,
             good and bad, is below and one link away.
           */}
-            {highlights.length > 0 ? (
+            {SHOW_REVIEWS && highlights.length > 0 ? (
               <section className="mt-10" aria-labelledby="guests-say">
                 <h2
                   id="guests-say"
@@ -665,43 +666,47 @@ export default async function ListingPage({ params }: Params) {
           */}
             {/* `id` so a guest's account page can link a finished booking straight
               to the form, rather than to the top of a long page. */}
-            <section id="reviews" className="mt-16 scroll-mt-24">
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
-                {reviews.average !== null ? (
-                  <span className="flex items-center gap-2">
-                    <Stars rating={reviews.average} />
-                    <span className="text-ink-500 text-sm">
-                      {tReview('count', { count: reviews.count })}
+            {SHOW_REVIEWS ? (
+              <section id="reviews" className="mt-16 scroll-mt-24">
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <h2 className="text-ink-900 text-2xl">{tReview('sectionTitle')}</h2>
+                  {reviews.average !== null ? (
+                    <span className="flex items-center gap-2">
+                      <Stars rating={reviews.average} />
+                      <span className="text-ink-500 text-sm">
+                        {tReview('count', { count: reviews.count })}
+                      </span>
                     </span>
-                  </span>
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
 
-              {reviews.reviews.length > 0 ? (
-                <ul className="mt-6 space-y-6">
-                  {reviews.reviews.map((r) => (
-                    <li key={r.id} className="border-ink-100 border-t pt-5">
-                      <div className="flex items-center gap-3">
-                        <Stars rating={r.rating} />
-                        <span className="text-ink-900 text-sm font-medium">{r.authorName}</span>
-                      </div>
-                      {r.title ? <p className="text-ink-900 mt-2 font-medium">{r.title}</p> : null}
-                      <p
-                        dir="auto"
-                        className="text-ink-700 mt-1 whitespace-pre-line text-sm leading-relaxed"
-                      >
-                        {r.body}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-ink-500 mt-4 text-sm">{tReview('none')}</p>
-              )}
+                {reviews.reviews.length > 0 ? (
+                  <ul className="mt-6 space-y-6">
+                    {reviews.reviews.map((r) => (
+                      <li key={r.id} className="border-ink-100 border-t pt-5">
+                        <div className="flex items-center gap-3">
+                          <Stars rating={r.rating} />
+                          <span className="text-ink-900 text-sm font-medium">{r.authorName}</span>
+                        </div>
+                        {r.title ? (
+                          <p className="text-ink-900 mt-2 font-medium">{r.title}</p>
+                        ) : null}
+                        <p
+                          dir="auto"
+                          className="text-ink-700 mt-1 whitespace-pre-line text-sm leading-relaxed"
+                        >
+                          {r.body}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-ink-500 mt-4 text-sm">{tReview('none')}</p>
+                )}
 
-              <ReviewForm businessId={listing.id} locale={locale as Locale} />
-            </section>
+                <ReviewForm businessId={listing.id} locale={locale as Locale} />
+              </section>
+            ) : null}
           </div>
 
           {/*

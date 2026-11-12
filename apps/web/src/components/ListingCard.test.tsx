@@ -12,8 +12,12 @@ import { ListingCard } from './ListingCard'
  */
 const display = vi.hoisted(() => ({ SHOW_LOCATION: true }))
 vi.mock('../lib/location-display', () => display)
+/** Saving places (lib/feature-display), hidden since 12 November 2026; tested both ways. */
+const features = vi.hoisted(() => ({ SHOW_REVIEWS: false, SHOW_SAVING: true }))
+vi.mock('../lib/feature-display', () => features)
 beforeEach(() => {
   display.SHOW_LOCATION = true
+  features.SHOW_SAVING = true
 })
 
 /**
@@ -127,6 +131,11 @@ describe('ListingCard', () => {
    */
   it('names the listing on its save button', () => {
     expect(render()).toContain('aria-label="Save Le Royal Hotel"')
+  })
+
+  it('shows no save button while saving is hidden', () => {
+    features.SHOW_SAVING = false
+    expect(render()).not.toContain('aria-label="Save Le Royal Hotel"')
   })
 
   it('survives an image that is only an id, which is what depth 0 gives', () => {

@@ -10,6 +10,7 @@ import { LinkArrow } from './LinkArrow'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
 import { AccountIconLink, AccountLink, AccountSheetLinks } from './AccountLink'
 import { SavedNavLink } from './SavedNavLink'
+import { SHOW_SAVING } from '../lib/feature-display'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { DiscoveryMenu } from './header/DiscoveryMenu'
@@ -199,7 +200,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <SEARCH_ICON className="size-4" strokeWidth={1.75} aria-hidden />
           </Link>
           {/* Shown only to a signed-in reader; see SavedNavLink. */}
-          <SavedNavLink label={t('nav.saved')} />
+          {SHOW_SAVING ? <SavedNavLink label={t('nav.saved')} /> : null}
           {/* Not while the admin has Sign in hidden (lib/hidden-pages). */}
           {showAccount ? (
             <span className="vd-account-link">
@@ -308,11 +309,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 listed: on a phone the menu is the way around, and a signed-out
                 tap lands on the sign-in prompt. */}
             <div className="vd-mobile-foot">
-              <Link href="/account/saved" className="vd-sheet-row">
-                <Heart aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
-                <span className="vd-sheet-row-label">{t('nav.saved')}</span>
-                <LinkArrow />
-              </Link>
+              {SHOW_SAVING ? (
+                <Link href="/account/saved" className="vd-sheet-row">
+                  <Heart aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
+                  <span className="vd-sheet-row-label">{t('nav.saved')}</span>
+                  <LinkArrow />
+                </Link>
+              ) : null}
               {languageSheet}
               {showAccount ? <AccountSheetLinks /> : null}
             </div>
