@@ -28,6 +28,9 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
     return pdf && typeof pdf === 'object' && pdf.url && pdf.mimeType === 'application/pdf'
   })
   const pdf = issue && typeof issue.digitalEdition === 'object' ? issue.digitalEdition : null
+  // The links to the magazine land on its cover and "Open the magazine"
+  // (the reader's own #digital-edition), not on the section's heading above it.
+  const readerHref = issue && pdf?.url ? '#digital-edition' : '#magazine-viewer'
 
   // Headings set a word or a line in italics (<em>), a word in Bordeaux italics
   // (<wine>, "love" in For the love of Lebanon), and some break a line (<br>).
@@ -59,7 +62,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               <a className="vd-biz-button" href="#contact">
                 {t('becomePartner')} <span aria-hidden="true">↗</span>
               </a>
-              <a className="vd-biz-link" href="#magazine-viewer">
+              <a className="vd-biz-link" href={readerHref}>
                 {t('readMagazine')}
               </a>
             </div>
@@ -172,7 +175,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
                 width={1024}
                 height={1280}
                 alt={t('readerArtAlt')}
-                sizes="(max-width:700px) 100vw, 440px"
+                sizes="(max-width:700px) 100vw, 46vw"
               />
             </figure>
           </div>
@@ -210,7 +213,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
                 alt={t('spreadAlt')}
                 sizes="(max-width:700px) 70vw, 30vw"
               />
-              <a className="vd-biz-link" href="#magazine-viewer">
+              <a className="vd-biz-link" href={readerHref}>
                 {t('browsePreview')}
               </a>
             </div>

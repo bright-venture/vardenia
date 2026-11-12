@@ -286,8 +286,10 @@
 /* Heading and line on one side, the roller-coaster page on the other. */
 .vd-biz-reader-intro {
   display: grid;
-  grid-template-columns: 1fr minmax(0, 440px);
-  gap: 8%;
+  /* The picture takes the right half, from the middle of the page, rather
+     than a narrow column at the far edge (12 November 2026). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6%;
   align-items: center;
   margin-bottom: 54px;
 }
@@ -303,13 +305,19 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 5;
+  /* Square: as wide as its half and no taller than the section needs, still
+     holding the whole loop and the open magazine. */
+  aspect-ratio: 1 / 1;
   object-fit: cover;
+  object-position: 50% 58%;
   box-shadow:
     0 2px 4px #243c321f,
     0 24px 48px -12px #243c3247;
 }
 .vd-biz-reader-shell > section {
+  /* "Read the magazine" and "Browse the digital preview" land here, on the
+     cover and its button, clear of the sticky header. */
+  scroll-margin-top: 100px;
   margin-top: 0;
   border: 0;
   border-radius: 0;
@@ -689,6 +697,10 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-reader-intro p {
     margin-top: 20px;
     font-size: 16px;
+  }
+  .vd-biz-reader-art img {
+    aspect-ratio: 4 / 5;
+    object-position: 50% 50%;
   }
   .vd-biz-invitation-body {
     flex-direction: column;
