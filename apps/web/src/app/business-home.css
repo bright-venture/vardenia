@@ -249,6 +249,11 @@
 .vd-biz-about {
   padding-top: 65px;
 }
+/* The locals line now ends the text, so it holds the gap the two headed
+   notes used to leave above "Talk to the Vardenia team". */
+.vd-biz-about-locals {
+  margin-bottom: 32px;
+}
 .vd-biz-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -114,16 +114,8 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               {t('aboutStatement')}
             </p>
             <p>{t('aboutBody')}</p>
-            <div className="vd-biz-pair">
-              <article>
-                <h3 data-vd-reveal>{t('aboutLocalsTitle')}</h3>
-                <p>{t('aboutLocalsBody')}</p>
-              </article>
-              <article>
-                <h3 data-vd-reveal>{t('aboutStayTitle')}</h3>
-                <p>{t('aboutStayBody')}</p>
-              </article>
-            </div>
+            {/* One paragraph, no headings, since 12 November 2026. */}
+            <p className="vd-biz-about-locals">{t('aboutLocalsBody')}</p>
             <a className="vd-biz-link" href="#contact">
               {t('talkToTeam')}
             </a>
