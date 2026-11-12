@@ -146,52 +146,42 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
           en: [
             'Because meaningful experiences deserve more than a fleeting moment on a screen.',
             'In an increasingly digital world, Vardenia believes in the lasting value of print. A beautifully curated magazine offers something unique: a tangible source of inspiration that travelers can discover, explore, and return to throughout their journey.',
-            'Placed in hotels, guesthouses, and selected destinations across Lebanon, Vardenia connects visitors with exceptional places, authentic experiences, and carefully selected businesses.',
           ],
           ar: [
             'لأن التجارب ذات المعنى تستحقّ أكثر من لحظة عابرة على شاشة.',
             'في عالم يزداد رقمية، تؤمن فاردينيا بالقيمة الدائمة للمطبوع. فالمجلة المختارة بعناية تقدّم شيئاً فريداً: مصدر إلهام ملموساً يكتشفه المسافر ويستكشفه ويعود إليه طوال رحلته.',
-            'توضع فاردينيا في الفنادق وبيوت الضيافة ووجهات مختارة في أنحاء لبنان، فتصل الزوّار بأماكن استثنائية وتجارب أصيلة وأعمال منتقاة بعناية.',
           ],
           fr: [
             'Parce que les expériences qui comptent méritent plus qu’un instant fugace sur un écran.',
             'Dans un monde de plus en plus numérique, Vardenia croit à la valeur durable de l’imprimé. Un magazine soigneusement composé offre quelque chose d’unique : une source d’inspiration tangible que les voyageurs découvrent, explorent et retrouvent tout au long de leur séjour.',
-            'Présent dans les hôtels, les maisons d’hôtes et des lieux choisis à travers le Liban, Vardenia relie les visiteurs à des lieux d’exception, à des expériences authentiques et à des établissements soigneusement sélectionnés.',
           ],
           es: [
             'Porque las experiencias que importan merecen algo más que un instante fugaz en una pantalla.',
             'En un mundo cada vez más digital, Vardenia cree en el valor duradero del papel. Una revista cuidadosamente elaborada ofrece algo único: una fuente de inspiración tangible que los viajeros pueden descubrir, explorar y volver a consultar durante todo su viaje.',
-            'Presente en hoteles, casas de huéspedes y destinos seleccionados de todo el Líbano, Vardenia conecta a los visitantes con lugares excepcionales, experiencias auténticas y negocios cuidadosamente seleccionados.',
           ],
           pt: [
             'Porque as experiências que importam merecem mais do que um momento fugaz num ecrã.',
             'Num mundo cada vez mais digital, a Vardenia acredita no valor duradouro do impresso. Uma revista cuidadosamente feita oferece algo único: uma fonte de inspiração tangível que os viajantes podem descobrir, explorar e voltar a consultar ao longo de toda a viagem.',
-            'Presente em hotéis, casas de hóspedes e destinos selecionados por todo o Líbano, a Vardenia liga os visitantes a lugares excecionais, experiências autênticas e negócios cuidadosamente escolhidos.',
           ],
           ru: [
             'Потому что настоящие впечатления заслуживают большего, чем мимолётный миг на экране.',
             'В мире, который становится всё более цифровым, Vardenia верит в долговечную ценность печати. Тщательно собранный журнал даёт нечто особенное: осязаемый источник вдохновения, который путешественник может открыть, изучить и к которому может возвращаться на протяжении всей поездки.',
-            'Vardenia лежит в отелях, гостевых домах и избранных местах по всему Ливану и связывает гостей с исключительными местами, подлинными впечатлениями и тщательно отобранными заведениями.',
           ],
           zh: [
             '因为有意义的体验，值得的不只是屏幕上转瞬即逝的一刻。',
             '在日益数字化的世界里，Vardenia 相信印刷的持久价值。一本精心策划的杂志能带来独特的东西：一份可以握在手中的灵感来源，让旅行者在整个旅程中发现、探索并反复翻阅。',
-            'Vardenia 摆放在黎巴嫩各地的酒店、民宿和精选目的地，把旅行者与非凡的地方、真实的体验和精心挑选的商家联系起来。',
           ],
           hi: [
             'क्योंकि सार्थक अनुभव स्क्रीन पर एक क्षणिक पल से कहीं ज़्यादा के हक़दार हैं।',
             'लगातार डिजिटल होती दुनिया में Vardenia छपे हुए शब्द के स्थायी मूल्य में विश्वास करती है। ध्यान से तैयार की गई एक पत्रिका कुछ अनोखा देती है: प्रेरणा का एक ठोस स्रोत, जिसे यात्री पूरी यात्रा के दौरान खोज सकते हैं, पढ़ सकते हैं और बार-बार लौटकर देख सकते हैं।',
-            'लेबनान भर के होटलों, गेस्टहाउसों और चुनी हुई जगहों पर रखी गई Vardenia मेहमानों को असाधारण जगहों, सच्चे अनुभवों और ध्यान से चुने गए व्यवसायों से जोड़ती है।',
           ],
           bn: [
             'কারণ অর্থপূর্ণ অভিজ্ঞতা পর্দায় এক ঝলক মুহূর্তের চেয়ে বেশি কিছু পাওয়ার যোগ্য।',
             'ক্রমশ ডিজিটাল হয়ে ওঠা পৃথিবীতে Vardenia ছাপা মাধ্যমের স্থায়ী মূল্যে বিশ্বাস করে। যত্ন করে সাজানো একটি ম্যাগাজিন অনন্য কিছু দেয়: অনুপ্রেরণার একটি হাতে ধরা উৎস, যা ভ্রমণকারীরা পুরো যাত্রায় আবিষ্কার করতে, ঘুরে দেখতে আর বারবার ফিরে পড়তে পারেন।',
-            'লেবানন জুড়ে হোটেল, গেস্টহাউস ও বাছাই করা গন্তব্যে রাখা Vardenia অতিথিদের অসাধারণ জায়গা, খাঁটি অভিজ্ঞতা আর যত্ন করে বাছাই করা ব্যবসার সঙ্গে যুক্ত করে।',
           ],
           ur: [
             'کیونکہ بامعنی تجربات اسکرین پر ایک گزرتے لمحے سے کہیں زیادہ کے حق دار ہیں۔',
             'تیزی سے ڈیجیٹل ہوتی دنیا میں Vardenia چھپے ہوئے لفظ کی دیرپا قدر پر یقین رکھتا ہے۔ سلیقے سے ترتیب دیا گیا میگزین کچھ منفرد پیش کرتا ہے: تحریک کا ایک ٹھوس ذریعہ، جسے مسافر پورے سفر میں دریافت کر سکتے ہیں، کھوج سکتے ہیں اور بار بار پلٹ کر دیکھ سکتے ہیں۔',
-            'لبنان بھر کے ہوٹلوں، گیسٹ ہاؤسز اور منتخب مقامات پر رکھا گیا Vardenia مہمانوں کو غیر معمولی جگہوں، حقیقی تجربات اور احتیاط سے چنے گئے کاروباروں سے جوڑتا ہے۔',
           ],
         }),
         subsections: [
@@ -330,61 +320,51 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
           en: [
             '> Discover Lebanon through carefully selected places, trusted information, and authentic experiences.',
             'At Vardenia, we believe that discovering exceptional destinations should be effortless, inspiring, and reliable.',
-            'Unlike traditional open directories, Vardenia follows a curated approach. Every featured business is selected and managed by our team to maintain the quality, relevance, and consistency of the information presented to our readers and visitors.',
             "Our mission is to connect travelers with Lebanon's distinctive hotels, guesthouses, restaurants, attractions, and experiences through a platform built on quality and transparency.",
           ],
           ar: [
             '> اكتشف لبنان من خلال أماكن مختارة بعناية، ومعلومات موثوقة، وتجارب أصيلة.',
             'نؤمن في فاردينيا بأن اكتشاف الوجهات الاستثنائية يجب أن يكون سهلاً وملهماً وموثوقاً.',
-            'على خلاف الأدلّة المفتوحة التقليدية، تتّبع فاردينيا نهج الاختيار. فكلّ عمل معروض يختاره فريقنا ويديره، حفاظاً على جودة المعلومات المقدّمة لقرّائنا وزوّارنا وأهميّتها واتّساقها.',
             'مهمّتنا أن نصل المسافرين بفنادق لبنان وبيوت ضيافته ومطاعمه ومعالمه وتجاربه المميّزة، عبر منصّة قائمة على الجودة والشفافية.',
           ],
           fr: [
             '> Découvrez le Liban à travers des lieux choisis avec soin, des informations fiables et des expériences authentiques.',
             'Chez Vardenia, nous pensons que découvrir des destinations d’exception doit être simple, inspirant et fiable.',
-            'À la différence des annuaires ouverts traditionnels, Vardenia suit une démarche de sélection. Chaque établissement présenté est choisi et géré par notre équipe, afin de garantir la qualité, la pertinence et la cohérence des informations proposées à nos lecteurs et visiteurs.',
             'Notre mission est de relier les voyageurs aux hôtels, maisons d’hôtes, restaurants, sites et expériences qui font la singularité du Liban, grâce à une plateforme fondée sur la qualité et la transparence.',
           ],
           es: [
             '> Descubre el Líbano a través de lugares cuidadosamente seleccionados, información fiable y experiencias auténticas.',
             'En Vardenia creemos que descubrir destinos excepcionales debe ser sencillo, inspirador y fiable.',
-            'A diferencia de los directorios abiertos tradicionales, Vardenia sigue un enfoque de selección. Cada negocio destacado es elegido y gestionado por nuestro equipo para mantener la calidad, la relevancia y la coherencia de la información que ofrecemos a nuestros lectores y visitantes.',
             'Nuestra misión es conectar a los viajeros con los hoteles, casas de huéspedes, restaurantes, atracciones y experiencias que distinguen al Líbano, a través de una plataforma basada en la calidad y la transparencia.',
           ],
           pt: [
             '> Descubra o Líbano através de lugares escolhidos com cuidado, informação fiável e experiências autênticas.',
             'Na Vardenia acreditamos que descobrir destinos excecionais deve ser simples, inspirador e fiável.',
-            'Ao contrário dos diretórios abertos tradicionais, a Vardenia segue uma abordagem de curadoria. Cada negócio apresentado é escolhido e gerido pela nossa equipa, para manter a qualidade, a relevância e a coerência da informação que oferecemos aos nossos leitores e visitantes.',
             'A nossa missão é ligar os viajantes aos hotéis, casas de hóspedes, restaurantes, atrações e experiências que distinguem o Líbano, através de uma plataforma assente na qualidade e na transparência.',
           ],
           ru: [
             '> Откройте Ливан через тщательно отобранные места, надёжную информацию и подлинные впечатления.',
             'В Vardenia мы считаем, что открывать исключительные места должно быть легко, вдохновляюще и надёжно.',
-            'В отличие от обычных открытых справочников, Vardenia придерживается принципа отбора. Каждое представленное заведение выбирает и ведёт наша команда, чтобы информация для наших читателей и гостей оставалась качественной, актуальной и последовательной.',
             'Наша миссия: связать путешественников с особенными отелями, гостевыми домами, ресторанами, достопримечательностями и впечатлениями Ливана через платформу, построенную на качестве и прозрачности.',
           ],
           zh: [
             '> 通过精心挑选的地方、可靠的信息和真实的体验，发现黎巴嫩。',
             '在 Vardenia，我们相信发现非凡的目的地应当轻松、令人向往且值得信赖。',
-            '与传统的开放式名录不同，Vardenia 采用精选的方式。每一家入选的商家都由我们的团队挑选和管理，以确保呈现给读者和访客的信息质量上乘、切题且前后一致。',
             '我们的使命是通过一个以品质和透明为基础的平台，把旅行者与黎巴嫩别具特色的酒店、民宿、餐厅、景点和体验联系起来。',
           ],
           hi: [
             '> ध्यान से चुनी गई जगहों, भरोसेमंद जानकारी और सच्चे अनुभवों के ज़रिए लेबनान को खोजें।',
             'Vardenia में हमारा मानना है कि असाधारण जगहों को खोजना आसान, प्रेरक और भरोसेमंद होना चाहिए।',
-            'पारंपरिक खुली निर्देशिकाओं के विपरीत, Vardenia चयन का तरीक़ा अपनाती है। हर प्रस्तुत व्यवसाय हमारी टीम चुनती और संभालती है, ताकि पाठकों और मेहमानों को दी जाने वाली जानकारी की गुणवत्ता, प्रासंगिकता और एकरूपता बनी रहे।',
             'हमारा मिशन यात्रियों को लेबनान के विशिष्ट होटलों, गेस्टहाउसों, रेस्तराँओं, दर्शनीय स्थलों और अनुभवों से एक ऐसे प्लेटफ़ॉर्म के ज़रिए जोड़ना है जो गुणवत्ता और पारदर्शिता पर टिका है।',
           ],
           bn: [
             '> যত্নে বাছাই করা জায়গা, নির্ভরযোগ্য তথ্য আর খাঁটি অভিজ্ঞতার মধ্য দিয়ে লেবানন আবিষ্কার করুন।',
             'Vardenia-তে আমরা বিশ্বাস করি, অসাধারণ গন্তব্য আবিষ্কার হওয়া উচিত সহজ, অনুপ্রেরণাদায়ক ও নির্ভরযোগ্য।',
-            'প্রচলিত খোলা ডিরেক্টরির মতো নয়, Vardenia বাছাইয়ের পথ অনুসরণ করে। উপস্থাপিত প্রতিটি ব্যবসা আমাদের দল বেছে নেয় ও পরিচালনা করে, যাতে পাঠক ও অতিথিদের কাছে তুলে ধরা তথ্যের মান, প্রাসঙ্গিকতা ও সামঞ্জস্য বজায় থাকে।',
             'আমাদের লক্ষ্য হলো মান ও স্বচ্ছতার ওপর গড়া একটি প্ল্যাটফর্মের মাধ্যমে ভ্রমণকারীদের লেবাননের স্বতন্ত্র হোটেল, গেস্টহাউস, রেস্তোরাঁ, দর্শনীয় স্থান ও অভিজ্ঞতার সঙ্গে যুক্ত করা।',
           ],
           ur: [
             '> احتیاط سے منتخب جگہوں، قابلِ اعتماد معلومات اور حقیقی تجربات کے ذریعے لبنان کو دریافت کریں۔',
             'Vardenia میں ہمارا یقین ہے کہ غیر معمولی منزلوں کی دریافت آسان، متاثر کن اور قابلِ اعتماد ہونی چاہیے۔',
-            'روایتی کھلی ڈائریکٹریوں کے برعکس، Vardenia انتخاب کا طریقہ اپناتا ہے۔ ہر پیش کیا گیا کاروبار ہماری ٹیم منتخب اور منظم کرتی ہے، تاکہ قارئین اور مہمانوں کو دی جانے والی معلومات کا معیار، مطابقت اور یکسانیت برقرار رہے۔',
             'ہمارا مشن مسافروں کو لبنان کے منفرد ہوٹلوں، گیسٹ ہاؤسز، ریستورانوں، دلچسپ مقامات اور تجربات سے ایک ایسے پلیٹ فارم کے ذریعے جوڑنا ہے جو معیار اور شفافیت پر قائم ہے۔',
           ],
         }),
