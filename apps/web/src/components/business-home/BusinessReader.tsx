@@ -21,14 +21,7 @@ export function BusinessReader({
   title: string
   heading: string
   locale: string
-  copy: {
-    coverAlt: string
-    invitation: string
-    open: string
-    hintA: string
-    hintB: string
-    ready: string
-  }
+  copy: { coverAlt: string; open: string }
 }) {
   return (
     <div className="vd-biz-reader-shell">
@@ -49,17 +42,11 @@ export function BusinessReader({
               />
               <div>
                 <h3 dir="auto">{heading}</h3>
-                <p>{copy.invitation}</p>
                 <button className="vd-biz-button" type="button" onClick={open}>
                   {copy.open}
                 </button>
-                <p className="vd-biz-hint">
-                  {copy.hintA}
-                  <br /> {copy.hintB}
-                </p>
               </div>
             </div>
-            <p className="vd-biz-reader-status">{copy.ready}</p>
           </div>
         )}
       />

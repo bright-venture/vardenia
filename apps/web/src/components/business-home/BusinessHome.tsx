@@ -156,18 +156,25 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           id="magazine-viewer"
           aria-labelledby="biz-reader"
         >
-          <div className="vd-biz-top">
-            <h2 id="biz-reader" data-vd-reveal>
-              {t('readerTitle')}
-            </h2>
+          {/* The heading and its line beside the campaign's roller-coaster page
+              (12 November 2026), which replaced the PDF link and the reading
+              notes; the cover and its one button follow, full width. */}
+          <div className="vd-biz-reader-intro">
             <div>
+              <h2 id="biz-reader" data-vd-reveal>
+                {t('readerTitle')}
+              </h2>
               <p>{t('readerBody')}</p>
-              {pdf?.url ? (
-                <a className="vd-biz-link" href={pdf.url} target="_blank" rel="noopener noreferrer">
-                  {t('openPdf')} <span aria-hidden="true">↗</span>
-                </a>
-              ) : null}
             </div>
+            <figure className="vd-biz-reader-art" data-vd-reveal>
+              <Image
+                src="/business/turn-the-pages.webp"
+                width={1024}
+                height={1280}
+                alt={t('readerArtAlt')}
+                sizes="(max-width:700px) 100vw, 440px"
+              />
+            </figure>
           </div>
           {issue && pdf?.url ? (
             <BusinessReader
@@ -176,14 +183,7 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
               title={issue.title}
               heading={[issue.title, issue.season].filter(Boolean).join(', ')}
               locale={locale}
-              copy={{
-                coverAlt: t('coverAlt'),
-                invitation: t('readerInvitation'),
-                open: t('openMagazine'),
-                hintA: t('readerHintA'),
-                hintB: t('readerHintB'),
-                ready: t('readerReady'),
-              }}
+              copy={{ coverAlt: t('coverAlt'), open: t('openMagazine') }}
             />
           ) : null}
         </section>

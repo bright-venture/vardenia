@@ -283,8 +283,31 @@
 .vd-biz-reader {
   background: var(--biz-field);
 }
-.vd-biz-reader .vd-biz-top .vd-biz-link {
-  margin-top: 15px;
+/* Heading and line on one side, the roller-coaster page on the other. */
+.vd-biz-reader-intro {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 440px);
+  gap: 8%;
+  align-items: center;
+  margin-bottom: 54px;
+}
+.vd-biz-reader-intro p {
+  max-width: 460px;
+  margin-top: 26px;
+  font-size: 18px;
+}
+.vd-biz-reader-art {
+  margin: 0;
+}
+.vd-biz-reader-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  box-shadow:
+    0 2px 4px #243c321f,
+    0 24px 48px -12px #243c3247;
 }
 .vd-biz-reader-shell > section {
   margin-top: 0;
@@ -318,15 +341,6 @@
 }
 .vd-biz-invitation .vd-biz-button {
   margin-top: 26px;
-}
-.vd-biz-hint {
-  margin-top: 25px !important;
-  font-size: 14px;
-}
-.vd-biz-reader-status {
-  min-height: 52px;
-  padding: 15px 22px;
-  font-size: 14px;
 }
 
 /* Beyond the page */
@@ -636,11 +650,20 @@ body:has(.vd-biz) .vd-footer {
     max-width: none;
     margin-top: 24px;
   }
+  .vd-biz-reader-intro {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin-bottom: 32px;
+  }
+  .vd-biz-reader-intro p {
+    margin-top: 20px;
+    font-size: 16px;
+  }
   .vd-biz-invitation-body {
     flex-direction: column;
     gap: 25px;
     min-height: 0;
-    padding: 30px 14px 15px;
+    padding: 30px 14px 34px;
     text-align: center;
   }
   .vd-biz-invitation-body > img {
