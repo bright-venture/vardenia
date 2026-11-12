@@ -1107,8 +1107,10 @@
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1122 / 1402;
-  object-fit: cover;
+}
+/* A landscape inset (Experiences) is wider, so it reads at the same size. */
+.vd-inner-hero-inset.vd-inner-hero-inset-wide {
+  width: 48%;
 }
 /* In Arabic the photograph sits at the page's left edge, so the inset stays inside it. */
 [dir='rtl'] .vd-inner-hero-inset {
@@ -1123,6 +1125,9 @@
     left: 14px;
     width: 40%;
     border-width: 5px;
+  }
+  .vd-inner-hero-inset.vd-inner-hero-inset-wide {
+    width: 58%;
   }
 }
 .vd-inner-hero-media.vd-inner-hero-media-portrait {

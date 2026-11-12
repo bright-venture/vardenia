@@ -68,13 +68,19 @@ export function PageHero({
               priority
             />
           </figure>
-          <figure className="vd-inner-hero-inset">
+          <figure
+            className={`vd-inner-hero-inset ${photo.inset.width > photo.inset.height ? 'vd-inner-hero-inset-wide' : ''}`}
+          >
             <Image
               src={photo.inset.src}
               alt={photo.inset.alt}
               width={photo.inset.width}
               height={photo.inset.height}
-              sizes="(max-width:700px) 44vw, 22vw"
+              sizes={
+                photo.inset.width > photo.inset.height
+                  ? '(max-width:700px) 60vw, 30vw'
+                  : '(max-width:700px) 44vw, 22vw'
+              }
               priority
             />
           </figure>
