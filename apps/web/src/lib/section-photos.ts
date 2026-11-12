@@ -27,13 +27,6 @@ export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
     // The team's terrace dinner at sunset, since 11 November 2026.
     src: '/sections/eat-and-drink-terrace.webp',
     alt: 'Dinner on a stone terrace above the sea at sunset: hummus, tabbouleh, grilled meat, bread and a glass of white wine under bougainvillea',
-    // Since 12 November 2026, over the terrace's lower corner.
-    inset: {
-      src: '/sections/eat-and-drink-table.webp',
-      alt: 'A linen napkin folded like a doorway on a plate, opening onto a candlelit Lebanese restaurant where a waiter pulls out a chair, a copy of Vardenia beside it',
-      width: 1024,
-      height: 1280,
-    },
   },
   experiences: {
     src: '/sections/experiences.webp',
