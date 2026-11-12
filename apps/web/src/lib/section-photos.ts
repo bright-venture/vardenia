@@ -31,13 +31,6 @@ export const SECTION_PHOTOS: Record<string, SectionPhoto> = {
   experiences: {
     src: '/sections/experiences.webp',
     alt: 'Two hikers on a mountain trail, framed by a rock arch, above a stone village',
-    // Since 12 November 2026, over the hike's lower corner.
-    inset: {
-      src: '/sections/experiences-path.webp',
-      alt: 'A guide pointing out the valley to two walkers on a lantern-lit stone path at sunset, past Roman columns, a cedar and a village festival',
-      width: 1600,
-      height: 900,
-    },
   },
   weddings: {
     src: '/sections/weddings.webp',
