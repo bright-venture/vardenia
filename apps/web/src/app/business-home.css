@@ -393,9 +393,18 @@
 .vd-biz-notes article:last-child:nth-child(3) {
   grid-column: 1 / -1;
 }
-.vd-biz-join {
-  gap: 40px;
-  margin: 0;
+/* The two campaign images beside "Your place. Our pages." */
+.vd-biz-join-art {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.vd-biz-join-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
 }
 
 /* Contact */
@@ -616,7 +625,7 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-pair,
   .vd-biz-columns,
   .vd-biz-notes,
-  .vd-biz-join {
+  .vd-biz-join-art {
     grid-template-columns: 1fr;
     gap: 28px;
   }

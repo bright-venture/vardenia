@@ -271,13 +271,25 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
             <br /> {t('joinB')}
             <br /> {rich('joinC')}
           </h2>
-          <div className="vd-biz-pair vd-biz-join">
-            {(['Introduce', 'Region', 'Formats', 'Releases'] as const).map((key) => (
-              <article key={key} data-vd-reveal>
-                <h3>{t(`join${key}Title`)}</h3>
-                <p>{t(`join${key}Body`)}</p>
-              </article>
-            ))}
+          {/* Two of the campaign's images (12 November 2026), in place of the
+              four steps that stood here. */}
+          <div className="vd-biz-join-art">
+            <Image
+              src="/business/pack-your-curiosity.webp"
+              width={1024}
+              height={1280}
+              alt={t('joinPackAlt')}
+              sizes="(max-width:700px) 100vw, 26vw"
+              data-vd-reveal
+            />
+            <Image
+              src="/business/weekend-inspiration.webp"
+              width={1024}
+              height={1280}
+              alt={t('joinBoxAlt')}
+              sizes="(max-width:700px) 100vw, 26vw"
+              data-vd-reveal
+            />
           </div>
         </section>
 
