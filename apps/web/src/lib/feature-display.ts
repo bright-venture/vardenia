@@ -18,3 +18,11 @@ export const SHOW_REVIEWS = false
  * the account. /account/saved itself still answers, unlinked.
  */
 export const SHOW_SAVING = false
+
+/**
+ * The "When are you coming?" box above a section's or the directory's results
+ * (When is the big day?, When are you staying?...): a date, a time and a party
+ * size, then which places are free. Hidden since 13 November 2026. With it off
+ * nothing can set those dates, so every card shows as it does without them.
+ */
+export const SHOW_TRIP_SEARCH = false
