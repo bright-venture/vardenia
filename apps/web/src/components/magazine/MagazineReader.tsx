@@ -274,6 +274,22 @@ function ReaderBook({
   const shownPages = activeTurn && activeTurn.phase !== 'turning' ? activeTurn.fromPages : pages
   const shownFirst = shownPages[0]!
   const shownLast = shownPages[shownPages.length - 1]!
+  // Opening the lone cover into a spread (or closing a spread onto a lone
+  // page), the turning sheet slides half a page as the book recentres. The
+  // book below slides with it, so the page under the sheet stays under it, and
+  // the page that is the sheet's other side stays hidden until the sheet lands
+  // on it; otherwise page 2 shows beside the cover the moment the turn starts.
+  const bookShift =
+    activeTurn &&
+    activeTurn.phase !== 'returning' &&
+    activeTurn.fromPages.length !== activeTurn.toPages.length
+      ? {
+          hide: activeTurn.direction > 0 ? ('first' as const) : ('last' as const),
+          style: {
+            transform: `translateX(calc(${-activeTurn.direction} * var(--paper-width) * (1 - var(--paper-progress, 0)) / 2))`,
+          } as CSSProperties,
+        }
+      : null
   const pageStatus = `${copy.page} ${shownPages.join('–')} / ${document.numPages}`
   // While the reader rests on a spread, draw the spreads either side of it,
   // the next one first: a turn then finds its pages already in the cache.
@@ -700,7 +716,9 @@ function ReaderBook({
               ref={book}
               className={`${styles.book} ${pages.length === 2 ? styles.spreadBook : ''}`}
               data-reader-book="true"
+              data-turn-hide={bookShift?.hide}
               aria-busy={!!activeTurn && !activeTurn.ready}
+              style={bookShift?.style}
             >
               {pages.map((number) => (
                 <ReaderPage

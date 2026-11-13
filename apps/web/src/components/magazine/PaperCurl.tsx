@@ -218,6 +218,9 @@ export function PaperCurl({
       const p = clampProgress(value)
       progress.current = p
       element.dataset.paperProgress = p.toFixed(3)
+      // The book below follows the same progress when a lone cover opens into a
+      // spread, or a spread closes onto one (MagazineReader's bookShift).
+      element.parentElement?.style.setProperty('--paper-progress', p.toFixed(4))
       const centering =
         turn.fromPages.length !== turn.toPages.length ? (turn.direction * sheet.width * p) / 2 : 0
       element.style.transform = `translateX(calc(-50% + ${centering}px))`

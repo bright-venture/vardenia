@@ -235,6 +235,26 @@
 .book[aria-busy='true'] {
   visibility: hidden;
 }
+/* Mid-turn between a lone page and a spread (bookShift in MagazineReader):
+   the page still to be turned onto is hidden, so the shadow goes on the pages
+   instead of the whole book, or an empty shadowed page would show. */
+.book[data-turn-hide] {
+  box-shadow: none;
+}
+.book[data-turn-hide]::after {
+  display: none;
+}
+.book[data-turn-hide] > .page {
+  box-shadow:
+    0 2px 2px #0005,
+    0 8px 12px #0003,
+    0 28px 45px -10px #0008;
+}
+.book[data-turn-hide='first'] > .page:first-child,
+.book[data-turn-hide='last'] > .page:last-child {
+  /* Opacity, not visibility: the page's canvas sets its own visibility. */
+  opacity: 0;
+}
 .book::after {
   position: absolute;
   inset: 0;
