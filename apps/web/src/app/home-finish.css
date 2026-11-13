@@ -2494,3 +2494,13 @@ span.vd-lang-option {
     grid-column: 1/6;
   }
 }
+
+/* The Discover menu's heading and category names in the body sans, as the
+   designer's November update sets them; Magazine and About stay serif. */
+.vd-discovery-menu-plain .vd-discovery-heading h2,
+.vd-discovery-menu-plain .vd-discovery-composition strong,
+.vd-mobile-group-plain .vd-mobile-link strong {
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}

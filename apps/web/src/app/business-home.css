@@ -151,19 +151,20 @@
   padding-block: 45px 75px;
   padding-inline-start: 22px;
   overflow: hidden;
-  background: var(--biz-ink);
+  /* Paper, since the regional collection took the hero (13 November 2026). */
+  background: var(--biz-paper);
 }
 .vd-biz-hero-art img {
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 6px 4px #101d2040) drop-shadow(0 24px 16px #101d2066);
+  object-fit: contain;
 }
 .vd-biz-hero-art figcaption {
   position: absolute;
   inset-inline-start: 30px;
   bottom: 28px;
-  color: var(--biz-paper);
+  color: var(--biz-ink);
   font-size: 14px;
   letter-spacing: 0.03em;
 }
@@ -435,8 +436,8 @@
 .vd-biz-story img {
   width: 100%;
   height: auto;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
 }
 .vd-biz-story h2 {
   margin-bottom: 30px;
@@ -452,17 +453,73 @@
   grid-column: 1 / -1;
 }
 /* The two campaign images beside "Your place. Our pages." */
-.vd-biz-join-art {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+/* Your place. Our pages.: advertising information beside the box. */
+.vd-biz-advertising {
+  padding: 68px var(--biz-gutter);
+  background: var(--biz-ink);
+  color: var(--biz-paper);
 }
-.vd-biz-join-art img {
+.vd-biz-advertising-inner {
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  gap: 84px;
+  align-items: center;
+  max-width: 1200px;
+  margin: auto;
+}
+.vd-biz .vd-biz-advertising h2 {
+  margin-bottom: 25px;
+  font-size: clamp(44px, 5.3vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+.vd-biz-advertising-intro {
+  max-width: 500px;
+  margin-bottom: 28px;
+  font-size: 18px;
+  line-height: 1.55;
+  color: #d9dfd5;
+}
+.vd-biz-advertising dl {
+  margin: 0 0 29px;
+}
+.vd-biz-offer {
+  padding: 16px 0;
+  border-top: 1px solid rgb(247 244 237 / 0.19);
+}
+.vd-biz-offer dt {
+  margin-bottom: 7px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.vd-biz-offer dd {
+  max-width: 500px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #d9dfd5;
+}
+.vd-biz-advertising .vd-biz-button-light {
+  margin-top: 0;
+}
+.vd-biz-advertising-next {
+  max-width: 470px;
+  margin-top: 16px !important;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d9dfd5;
+}
+.vd-biz-advertising-art {
+  margin: 0;
+}
+.vd-biz-advertising-art img {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 4 / 5;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Contact */
@@ -682,8 +739,7 @@ body:has(.vd-biz) .vd-footer {
   }
   .vd-biz-pair,
   .vd-biz-columns,
-  .vd-biz-notes,
-  .vd-biz-join-art {
+  .vd-biz-notes {
     grid-template-columns: 1fr;
     gap: 28px;
   }
@@ -754,5 +810,46 @@ body:has(.vd-biz) .vd-footer {
   .vd-biz-button {
     transition: none !important;
     transform: none !important;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .vd-biz-advertising {
+    padding-block: 52px;
+  }
+  .vd-biz-advertising-inner {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 42px;
+  }
+  .vd-biz .vd-biz-advertising h2 {
+    font-size: 56px;
+  }
+  .vd-biz-advertising-intro {
+    font-size: 17px;
+  }
+}
+@media (max-width: 700px) {
+  .vd-biz-advertising {
+    padding: 38px var(--biz-gutter) 42px;
+  }
+  .vd-biz-advertising-inner {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .vd-biz .vd-biz-advertising h2 {
+    margin-bottom: 20px;
+    font-size: clamp(44px, 12.5vw, 62px);
+  }
+  .vd-biz-advertising-intro {
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+  .vd-biz-advertising-art {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .vd-biz-hero-art {
+    padding-top: 0;
   }
 }

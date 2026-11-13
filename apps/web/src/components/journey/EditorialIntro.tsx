@@ -23,12 +23,13 @@ export async function EditorialIntro({
           {t(magazine ? 'magazinePageB' : 'directoryEmphasis')}
         </h1>
         {magazine ? (
-          // The owner's text of 11 November 2026: a line under the title, four
-          // paragraphs and a closing line in italics. The journey homepage keeps
+          // The owner's text of 11 November 2026: a line under the title, two
+          // paragraphs (the first and fourth went in the designer's 13 November
+          // update) and a closing line in italics. The journey homepage keeps
           // its own shorter magazineA/B/Body.
           <>
             <p className="vd-page-intro-lead">{t('magazinePageLead')}</p>
-            {([1, 2, 3, 4] as const).map((n) => (
+            {([2, 3] as const).map((n) => (
               <p key={n}>{t(`magazinePageBody${n}`)}</p>
             ))}
             <p>

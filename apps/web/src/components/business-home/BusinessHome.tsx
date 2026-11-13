@@ -72,11 +72,12 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
             </p>
           </div>
           <figure className="vd-biz-hero-art">
+            {/* The regional collection, on paper (13 November 2026). */}
             <Image
-              src="/business/hero-magazines.webp"
+              src="/business/regional-editions.webp"
               width={1536}
               height={1024}
-              alt={t('heroAlt')}
+              alt={t('editionsAlt')}
               sizes="(max-width:700px) 100vw, 50vw"
               priority
             />
@@ -232,11 +233,12 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
 
         <section className="vd-biz-section vd-biz-axis vd-biz-story" aria-labelledby="biz-story">
           <div>
+            {/* Pack your curiosity (13 November 2026). */}
             <Image
-              src="/business/regional-editions.webp"
-              width={1536}
-              height={1024}
-              alt={t('editionsAlt')}
+              src="/business/pack-your-curiosity.webp"
+              width={1024}
+              height={1280}
+              alt={t('joinPackAlt')}
               sizes="(max-width:700px) 100vw, 40vw"
               data-vd-reveal
             />
@@ -268,31 +270,38 @@ export async function BusinessHome({ locale }: { locale: Locale }) {
           </div>
         </section>
 
-        <section className="vd-biz-section vd-biz-axis vd-biz-dark" aria-labelledby="biz-join">
-          <h2 id="biz-join" data-vd-reveal>
-            {t('joinA')}
-            <br /> {t('joinB')}
-            <br /> {rich('joinC')}
-          </h2>
-          {/* Two of the campaign's images (12 November 2026), in place of the
-              four steps that stood here. */}
-          <div className="vd-biz-join-art">
-            <Image
-              src="/business/pack-your-curiosity.webp"
-              width={1024}
-              height={1280}
-              alt={t('joinPackAlt')}
-              sizes="(max-width:700px) 100vw, 26vw"
-              data-vd-reveal
-            />
-            <Image
-              src="/business/weekend-inspiration.webp"
-              width={1024}
-              height={1280}
-              alt={t('joinBoxAlt')}
-              sizes="(max-width:700px) 100vw, 26vw"
-              data-vd-reveal
-            />
+        {/* What advertising means, beside the Weekend inspiration box
+            (13 November 2026); it replaced the two campaign pictures. */}
+        <section className="vd-biz-advertising" aria-labelledby="biz-advertising">
+          <div className="vd-biz-advertising-inner">
+            <div>
+              <h2 id="biz-advertising" data-vd-reveal>
+                {rich('adTitle')}
+              </h2>
+              <p className="vd-biz-advertising-intro">{t('adIntro')}</p>
+              <dl>
+                {([1, 2, 3] as const).map((n) => (
+                  <div key={n} className="vd-biz-offer">
+                    <dt>{t(`adOffer${n}Title`)}</dt>
+                    <dd>{t(`adOffer${n}Body`)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <a className="vd-biz-button vd-biz-button-light" href="#contact">
+                {t('adAction')} <span aria-hidden="true">↗</span>
+              </a>
+              <p className="vd-biz-advertising-next">{rich('adNextStep')}</p>
+            </div>
+            <figure className="vd-biz-advertising-art">
+              <Image
+                src="/business/weekend-inspiration.webp"
+                width={1024}
+                height={1280}
+                alt={t('joinBoxAlt')}
+                sizes="(max-width:700px) 90vw, 40vw"
+                data-vd-reveal
+              />
+            </figure>
           </div>
         </section>
 

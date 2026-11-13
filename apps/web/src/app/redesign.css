@@ -2120,3 +2120,10 @@ html[data-vd-motion='off'] .vd-destination-images img {
     max-width: none;
   }
 }
+
+/* Stories Worth Keeping, smaller (the designer's November update). */
+.vd-magazine-index .vd-page-intro h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}

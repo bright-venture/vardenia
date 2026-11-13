@@ -50,6 +50,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <DiscoveryMenu
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
+      plain
       footer={directoryShown ? { href: '/directory', label: t('home.wholeDirectory') } : undefined}
       items={sectionItems}
     />
@@ -88,13 +89,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     ],
     hidden,
   )
-  const magazineMenu = (
-    <DiscoveryMenu
-      title={t('nav.magazineMenuTitle')}
-      body={t('nav.magazineMenuBody')}
-      items={magazineItems}
-    />
-  )
+  const magazineMenu = <DiscoveryMenu title={t('nav.magazineMenuTitle')} items={magazineItems} />
   // About and Add your business show their pages' own photographs; the others
   // a destination by index into components/journey/destinations.
   const aboutItems = [
@@ -233,7 +228,10 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <HomepageLink label={t('nav.homepage')} className="vd-mobile-homepage-link" />
 
             {sectionItems.length > 0 || directoryShown ? (
-              <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
+              <section
+                className="vd-mobile-group vd-mobile-group-plain"
+                aria-labelledby="vd-mobile-discover"
+              >
                 <h2 id="vd-mobile-discover" className="vd-mobile-eyebrow">
                   {t('nav.discover')}
                 </h2>
