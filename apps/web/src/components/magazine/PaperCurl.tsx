@@ -203,7 +203,11 @@ export function PaperCurl({
   const forward = turn.direction > 0
   const sheet = (forward ? turn.pages[turn.pages.length - 1] : turn.pages[0])!
   const still = turn.pages.length === 2 ? (forward ? turn.pages[0] : turn.pages[1]) : null
-  const bookWidth = turn.pages.reduce((sum, item) => sum + item.width, 0)
+  // A lone page opening into a spread (the cover, or a lone back page turned
+  // back) lands on the side where no page is yet, so the canvas is a whole
+  // spread wide; otherwise the landing half would be cut off at the spine.
+  const opens = turn.pages.length === 1 && turn.toPages.length === 2
+  const bookWidth = opens ? sheet.width * 2 : turn.pages.reduce((sum, item) => sum + item.width, 0)
   const spine = forward ? bookWidth - sheet.width : sheet.width
   const back = turn.back
   useLayoutEffect(() => {
@@ -221,8 +225,14 @@ export function PaperCurl({
       // The book below follows the same progress when a lone cover opens into a
       // spread, or a spread closes onto one (MagazineReader's bookShift).
       element.parentElement?.style.setProperty('--paper-progress', p.toFixed(4))
+      // The book recentres by half a page as a lone page opens or a spread
+      // closes; a canvas widened for an opening page starts that half page
+      // further back, so the lone page sits where it was.
       const centering =
-        turn.fromPages.length !== turn.toPages.length ? (turn.direction * sheet.width * p) / 2 : 0
+        turn.fromPages.length !== turn.toPages.length
+          ? (turn.direction * sheet.width * p) / 2 -
+            (opens ? (turn.direction * sheet.width) / 2 : 0)
+          : 0
       element.style.transform = `translateX(calc(-50% + ${centering}px))`
       element.style.opacity =
         turn.fromPages.length === 1 && turn.toPages.length === 1
@@ -260,6 +270,7 @@ export function PaperCurl({
     turn.grabY,
     turn.fromPages.length,
     turn.toPages.length,
+    opens,
   ])
   useEffect(() => {
     if (turn.phase !== 'turning' && turn.phase !== 'returning') return
