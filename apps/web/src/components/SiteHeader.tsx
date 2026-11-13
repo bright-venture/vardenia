@@ -17,7 +17,7 @@ import { DiscoveryMenu } from './header/DiscoveryMenu'
 import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
-import { SECTION_PHOTOS } from '../lib/section-photos'
+import { ISSUES_PAGE_PHOTO, MAGAZINE_PAGE_PHOTO, SECTION_PHOTOS } from '../lib/section-photos'
 import {
   ABOUT_HERO,
   ABOUT_HERO_ALT,
@@ -72,13 +72,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         href: '/magazine',
         name: t('nav.magazine'),
         description: t('nav.magazineNote'),
-        photo: magazineSpread,
+        // The same picture as the page it opens (lib/section-photos).
+        photo: { src: MAGAZINE_PAGE_PHOTO.src, alt: t('nav.magazineMenuPhotoAlt') },
       },
       {
         href: '/magazine/issues',
         name: t('footer.issues'),
         description: t('nav.issuesNote'),
-        photo: magazineSpread,
+        photo: { src: ISSUES_PAGE_PHOTO.src, alt: ISSUES_PAGE_PHOTO.alt },
       },
       {
         href: '/magazine/articles',

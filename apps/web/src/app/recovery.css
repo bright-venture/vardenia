@@ -29,7 +29,7 @@
   background-blend-mode: soft-light;
 }
 .vd-recovery-brand {
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: 30px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -38,7 +38,7 @@
   color: inherit;
 }
 .vd-recovery h1 {
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
   font-size: clamp(42px, 5vw, 80px);
   line-height: 1.06;
   letter-spacing: -0.035em;
@@ -53,7 +53,7 @@
   max-width: 50ch;
 }
 .vd-recovery [lang='ar'] {
-  font-family: var(--font-amiri), serif;
+  font-family: var(--font-noto-arabic), 'Noto Sans Arabic', sans-serif;
   font-size: 22px;
 }
 .vd-recovery-actions {

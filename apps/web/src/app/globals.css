@@ -7,13 +7,12 @@
      <html> in the layout. See src/app/fonts.ts for why they are self-hosted
      rather than named in a stack and hoped for. */
   :root {
-    /* Georgia for headings, as the designer's green direction (11 November
-       2026) sets them. Android has no Georgia, so Gelasio, drawn to Georgia's
-       metrics, stands in there; it is not preloaded and nothing downloads it
-       where Georgia is installed. Playfair stays as the accent face of the
-       menus and the footer call to action. */
-    --font-display: Georgia, var(--font-gelasio), 'Times New Roman', serif;
-    --font-accent: var(--font-fraunces), Georgia, serif;
+    /* Georgia for the VARDENIA wordmark (it set every heading from 11 to 13
+       November 2026; headings follow the body face since, see :root:root
+       below). Android has no Georgia, so Gelasio, drawn to Georgia's metrics,
+       stands in there; it is not preloaded and nothing downloads it where
+       Georgia is installed. */
+    --font-wordmark: Georgia, var(--font-gelasio), 'Times New Roman', serif;
     --font-body: var(--font-manrope), system-ui, -apple-system, sans-serif;
     --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   }
@@ -26,7 +25,7 @@
      here, so an Arabic headline now reads as the same masthead as the English
      one instead of as a different brand. See app/fonts.ts. */
   :root:lang(ar) {
-    --font-display: var(--font-amiri), 'Noto Naskh Arabic', serif;
+    --font-wordmark: var(--font-amiri), 'Noto Naskh Arabic', serif;
     --font-body: var(--font-noto-arabic), 'Noto Sans Arabic', sans-serif;
   }
 
@@ -40,12 +39,12 @@
      display serif is overridden here. Chinese has no editorial serif that is
      worth its download, so Noto Sans SC serves both roles. */
   :root:lang(ru) {
-    --font-display: var(--font-noto-serif), Georgia, 'Times New Roman', serif;
+    --font-wordmark: var(--font-noto-serif), Georgia, 'Times New Roman', serif;
   }
 
   :root:lang(zh) {
     /* System faces: Apple, Windows, then Android and Linux. See fonts.ts. */
-    --font-display:
+    --font-wordmark:
       'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
       'Source Han Sans SC', sans-serif;
     --font-body:
@@ -54,24 +53,23 @@
   }
 
   :root:lang(hi) {
-    --font-display: var(--font-noto-devanagari), 'Nirmala UI', serif;
+    --font-wordmark: var(--font-noto-devanagari), 'Nirmala UI', serif;
     --font-body: var(--font-noto-devanagari), 'Nirmala UI', sans-serif;
   }
 
   :root:lang(bn) {
-    --font-display: var(--font-noto-bengali), 'Nirmala UI', serif;
+    --font-wordmark: var(--font-noto-bengali), 'Nirmala UI', serif;
     --font-body: var(--font-noto-bengali), 'Nirmala UI', sans-serif;
   }
 
-  /* Outside the Latin scripts the accent face is the language's display face:
-     Playfair has no Arabic, Cyrillic, Chinese, Devanagari or Bengali. */
-  :root:lang(ar),
-  :root:lang(ur),
-  :root:lang(ru),
-  :root:lang(zh),
-  :root:lang(hi),
-  :root:lang(bn) {
-    --font-accent: var(--font-display);
+  /* One family for the whole public site since 13 November 2026 (the
+     designer's v2 update): headings, menus and accents use each language's
+     body face, DM Sans for the Latin scripts. The per-script faces above now
+     serve only the VARDENIA wordmark, which keeps its look.
+     :root:root outranks the :root:lang() blocks above. */
+  :root:root {
+    --font-display: var(--font-body);
+    --font-accent: var(--font-body);
   }
 
   body {

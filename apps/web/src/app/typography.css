@@ -1,0 +1,52 @@
+/*
+ * Heading sizes across the public site (the designer's v2 update, 13 November
+ * 2026): page titles at most 48px (32px on a phone), section titles at most
+ * 36px (28px on a phone), all in the body face at weight 500.
+ *
+ * Loaded after every other stylesheet, and !important because each page sets
+ * its own sizes in more specific rules (hero titles reached 104px); one cap
+ * here keeps every page, including ones written later, inside the scale.
+ */
+.vd-public main h1 {
+  font-size: clamp(2rem, 3.75vw, 3rem) !important;
+  line-height: 1.12 !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.035em !important;
+}
+.vd-public main h2 {
+  font-size: clamp(1.75rem, 2.8vw, 2.25rem) !important;
+  line-height: 1.18 !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em !important;
+}
+.vd-discovery-heading h2,
+.vd-mobile-discovery-heading h2 {
+  font-size: 1.75rem !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+.vd-discovery-composition strong,
+.vd-mobile-sheet strong {
+  font-weight: 500;
+}
+.vd-magazine-index .vd-page-intro-lead {
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+/* Scripts that do not tighten: no negative tracking. */
+:lang(ar) .vd-public main :is(h1, h2),
+:lang(ur) .vd-public main :is(h1, h2),
+:lang(hi) .vd-public main :is(h1, h2),
+:lang(bn) .vd-public main :is(h1, h2),
+:lang(zh) .vd-public main :is(h1, h2) {
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+@media (max-width: 700px) {
+  .vd-public main h1 {
+    font-size: 2rem !important;
+  }
+  .vd-public main h2 {
+    font-size: 1.75rem !important;
+  }
+}

@@ -22,6 +22,7 @@ import '../../redesign.css'
 import '../../inner-pages.css'
 import '../../home-finish.css'
 import '../../business-home.css'
+import '../../typography.css'
 
 /**
  * Site-level metadata, per locale.

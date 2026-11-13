@@ -2215,7 +2215,7 @@ body:has(.vd-home .vd-magazine) .vd-footer::before {
   gap: 24px;
 }
 .vd-footer .vd-footer-brand {
-  font-family: var(--font-display);
+  font-family: var(--font-wordmark);
   font-size: 25px;
   line-height: 1.1;
   letter-spacing: 3px;

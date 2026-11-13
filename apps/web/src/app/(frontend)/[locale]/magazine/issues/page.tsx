@@ -1,5 +1,5 @@
 import { PageHero } from '../../../../../components/editorial/PageHero'
-import { MAGAZINE_PHOTO } from '../../../../../lib/section-photos'
+import { ISSUES_PAGE_PHOTO } from '../../../../../lib/section-photos'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { hiddenPages, notFoundIfHidden } from '../../../../../lib/hidden-pages'
@@ -50,7 +50,7 @@ export default async function IssuesPage({ params }: Props) {
       <PageHero
         title={t('magazine.issues')}
         intro={t('magazine.printArchive')}
-        photo={MAGAZINE_PHOTO}
+        photo={ISSUES_PAGE_PHOTO}
         locale={locale}
       >
         {/* Back to the magazine, unless the admin has it hidden. */}

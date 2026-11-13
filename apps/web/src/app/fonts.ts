@@ -31,7 +31,13 @@ export const gelasio = Gelasio({
   style: ['normal', 'italic'],
   preload: false,
 })
-export const manrope = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-manrope' })
+export const manrope = DM_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-manrope',
+  // Headings are DM Sans since 13 November 2026 and set words in italics.
+  style: ['normal', 'italic'],
+})
 export const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   display: 'swap',

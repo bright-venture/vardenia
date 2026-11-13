@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
-import { MAGAZINE_PHOTO } from '../../lib/section-photos'
+import { MAGAZINE_PAGE_PHOTO } from '../../lib/section-photos'
 import { Coordinates } from './Coordinates'
 import { DESTINATIONS } from './destinations'
 export async function EditorialIntro({
@@ -44,10 +44,10 @@ export async function EditorialIntro({
         // The magazine itself, not a place: no coordinates.
         <figure className="vd-page-intro-portrait">
           <Image
-            src={MAGAZINE_PHOTO.src}
-            alt={MAGAZINE_PHOTO.alt}
-            width={MAGAZINE_PHOTO.width}
-            height={MAGAZINE_PHOTO.height}
+            src={MAGAZINE_PAGE_PHOTO.src}
+            alt={MAGAZINE_PAGE_PHOTO.alt}
+            width={MAGAZINE_PAGE_PHOTO.width}
+            height={MAGAZINE_PAGE_PHOTO.height}
             sizes="(max-width:700px) 100vw, 440px"
             priority
           />
