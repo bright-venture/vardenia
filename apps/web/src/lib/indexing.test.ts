@@ -72,24 +72,17 @@ describe('indexingWarning', () => {
   })
 })
 
-/**
- * Before launch, indexing off is correct: every address shows the coming-soon
- * page, which is noindex anyway. The admin should say so quietly rather than
- * raise an alarm, and only warn once the site is public.
- */
 describe('indexingNotice', () => {
-  it('is a quiet note while the coming-soon page is on', () => {
-    const notice = indexingNotice(undefined, true)
-    expect(notice?.tone).toBe('info')
-    expect(notice?.detail).toContain('same deploy')
+  it('is a warning while the site is hidden from search engines', () => {
+    expect(indexingNotice(undefined)?.tone).toBe('warn')
   })
 
-  it('is a warning once the site is public and still hidden', () => {
-    expect(indexingNotice(undefined, false)?.tone).toBe('warn')
+  it('says nothing once indexing is on', () => {
+    expect(indexingNotice('true')).toBeNull()
   })
 
   it('says nothing when indexing is on, launched or not', () => {
-    expect(indexingNotice('true', true)).toBeNull()
-    expect(indexingNotice('true', false)).toBeNull()
+    expect(indexingNotice('true')).toBeNull()
+    expect(indexingNotice('true')).toBeNull()
   })
 })

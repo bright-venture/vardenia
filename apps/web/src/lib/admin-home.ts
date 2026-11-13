@@ -4,7 +4,6 @@ import { TIER_LABELS } from '../fields/tier'
 import { beirutDate, beirutInstant } from './beirut'
 import { dashboardCounts } from './dashboard-stats'
 import { emailWarning } from './email'
-import { comingSoonConfig } from './coming-soon'
 import { indexingNotice } from './indexing'
 
 /**
@@ -292,7 +291,7 @@ export async function adminHome(
 
   // Site setup first: each affects the whole site rather than one listing, and
   // each fails silently everywhere else.
-  const indexing = indexingNotice(undefined, comingSoonConfig().enabled)
+  const indexing = indexingNotice()
   if (indexing) attention.push({ area: 'Site setup', ...indexing })
   const email = emailWarning()
   if (email) {

@@ -27,10 +27,6 @@
  *   k6 cloud run load-tests/site.js            # from Frankfurt (the free plan's one city)
  *   k6 cloud run -e ZONES=5 load-tests/site.js # five cities, on a paid plan only
  *
- * If the coming-soon gate is ever up again, set $env:PREVIEW_TOKEN to the value
- * of COMING_SOON_PREVIEW_TOKEN first. It is read from the environment and never
- * written in this file. The gate serves its splash at the same address, so the
- * check below reads the page title rather than the URL.
  *
  * The test stops by itself if more than 10% of pages fail, so a site that is
  * falling over is not pushed further.
@@ -57,7 +53,6 @@ const failures = new Counter('failed_pages')
 let reported = 0
 
 const BASE = (__ENV.BASE_URL || 'https://vardenia.com').replace(/\/$/, '')
-const TOKEN = __ENV.PREVIEW_TOKEN || ''
 const PEAK = Number(__ENV.PEAK || 50)
 const SMOKE = Boolean(__ENV.SMOKE)
 
@@ -165,7 +160,6 @@ export const options = SMOKE
 const params = (page) => ({
   headers: {
     'User-Agent': 'vardenia-load-test (k6)',
-    ...(TOKEN ? { Cookie: `vd_preview=${TOKEN}` } : {}),
   },
   tags: { page, any: 'yes' },
 })
@@ -180,10 +174,9 @@ function open(path, page) {
   const title = (/<title>([^<]*)<\/title>/.exec(String(res.body)) || [])[1] || ''
   check(res, {
     'page opened (200)': (r) => r.status === 200,
-    // A missing page fails the check above (404). The splash answers 200 at the
-    // same address, titled "Vardenia" alone; every real page has more.
-    'the real page, not the coming-soon splash': () =>
-      title.trim() !== '' && title.trim() !== 'Vardenia',
+    // A missing page fails the check above (404). A bare "Vardenia" title means
+    // something answered that is not a real page; every real page has more.
+    'a real page, not a bare placeholder': () => title.trim() !== '' && title.trim() !== 'Vardenia',
   })
   if (res.status !== 200) {
     const server = String(res.headers['Server'] || res.headers['server'] || '?')
