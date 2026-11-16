@@ -1,5 +1,5 @@
 /**
- * Every hour, deletes what the privacy policy only keeps for a while: bookings
+ * Once a day, deletes what the privacy policy only keeps for a while: bookings
  * and receipts 12 months after the visit (a real visit is cut down to what its
  * passport stamp needs), printed-code scans after 12 months, error records
  * after 90 days. The work is done by the site itself, at POST /booking/retention
@@ -34,5 +34,8 @@ export default async (): Promise<Response> => {
   }
 }
 
-// Minute 41, away from the other two jobs (7 and every 15).
-export const config = { schedule: '41 * * * *' }
+// 03:41 UTC once a day since 16 November 2026 (hourly before): the limits are
+// counted in months and days, so a day's slack changes nothing for a reader,
+// and 23 fewer runs a day is that much less Netlify compute. Minute 41 stays
+// away from the other two jobs (7 and 15).
+export const config = { schedule: '41 3 * * *' }

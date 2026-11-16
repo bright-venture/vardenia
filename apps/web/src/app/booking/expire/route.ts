@@ -4,8 +4,8 @@ import { expireUnansweredBookings, isSchedulerRequest } from '../../../lib/booki
 import { reportError } from '../../../lib/report'
 
 /**
- * Declines the requests nobody answered before their time. Called every 15
- * minutes by netlify/functions/expire-bookings.mts; see lib/booking-expiry.
+ * Declines the requests nobody answered before their time. Called every hour
+ * by netlify/functions/expire-bookings.mts; see lib/booking-expiry.
  *
  * Not a page and not for people: anything without the scheduler's secret gets
  * a 404, so the endpoint does not even confirm it exists.

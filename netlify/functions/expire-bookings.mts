@@ -1,5 +1,5 @@
 /**
- * Every 15 minutes, declines the booking requests nobody answered before their
+ * Every hour, declines the booking requests nobody answered before their
  * time, and tells each guest. The work is done by the site itself, at
  * POST /booking/expire (apps/web/src/lib/booking-expiry.ts); this only knocks.
  *
@@ -34,4 +34,8 @@ export default async (): Promise<Response> => {
   }
 }
 
-export const config = { schedule: '*/15 * * * *' }
+// Hourly at minute 15 since 16 November 2026 (every 15 minutes before). A
+// request is declined only once its start time has passed, so the guest's
+// "no answer" email comes up to an hour after it rather than 15 minutes; each
+// run wakes two functions, and 72 fewer a day is that much less Netlify compute.
+export const config = { schedule: '15 * * * *' }

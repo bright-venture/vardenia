@@ -13,8 +13,9 @@ import type { Payload } from 'payload'
  * # What runs it
  *
  * A Netlify scheduled function (netlify/functions/expire-bookings.mts) calls
- * POST /booking/expire every 15 minutes, with CRON_SECRET as a bearer token.
- * So a request is declined at most about 15 minutes after its start time.
+ * POST /booking/expire every hour, with CRON_SECRET as a bearer token (every
+ * 15 minutes until 16 November 2026). So a request is declined at most about an
+ * hour after its start time.
  *
  * # What it writes, and what it does not
  *
@@ -26,7 +27,7 @@ import type { Payload } from 'payload'
  */
 
 /**
- * Requests declined in one run; the rest wait for the next, 15 minutes on.
+ * Requests declined in one run; the rest wait for the next, an hour on.
  * Small because each one sends an email and the route has the length of one
  * serverless invocation to finish in.
  */
