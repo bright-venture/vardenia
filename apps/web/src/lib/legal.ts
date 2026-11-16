@@ -46,6 +46,12 @@ export interface LegalSection {
   heading: string
   /** Paragraphs. A string starting with "- " renders as a list item. */
   body: string[]
+  /**
+   * Smaller headed parts under the section's own paragraphs. Only the standing
+   * pages use them (About's first section, since 11 November 2026); the legal
+   * documents do not.
+   */
+  subsections?: { heading: string; body: string[] }[]
 }
 
 export interface LegalDocument {

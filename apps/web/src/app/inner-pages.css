@@ -28,6 +28,13 @@
   max-width: 49ch;
   margin-top: 30px;
 }
+/* A section's own description under its intro (PageHero body). */
+.vd-inner-hero-copy > p.vd-inner-hero-body {
+  margin-top: 14px;
+  max-width: 46ch;
+  font-size: 16px;
+  color: rgb(17 29 45 / 0.74);
+}
 .vd-inner-hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1000,4 +1007,102 @@
   .vd-trip-bar h2 {
     font-size: 27px;
   }
+}
+
+/*
+ * The standing pages' text features, from the owner's About and Add your
+ * business texts (11 November 2026, brought back 16 November 2026 onto this
+ * design): headed subsections, a numbered list of titles, pull quotes and the
+ * closing signature. See ContentPage.
+ */
+/* Titles only, numbered between hairlines (About's Our Commitment). */
+.vd-story-titles {
+  counter-reset: vd-title;
+  margin: 22px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.vd-story-titles > li {
+  counter-increment: vd-title;
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding: 18px 0;
+  border-top: 1px solid rgb(17 29 45 / 0.16);
+  font-family: var(--font-display);
+  font-size: clamp(21px, 1.9vw, 25px);
+  line-height: 1.35;
+  color: var(--vd-ink);
+}
+
+.vd-story-titles > li:last-child {
+  border-bottom: 1px solid rgb(17 29 45 / 0.16);
+}
+
+.vd-story-titles > li::before {
+  content: counter(vd-title, decimal-leading-zero);
+  min-width: 2ch;
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--vd-gold);
+}
+
+/* A pull quote: a tagline, or a line set in italics (About). */
+.vd-story-body > p.vd-story-quote {
+  margin-top: 22px;
+  font-family: var(--font-display);
+  font-size: clamp(21px, 1.8vw, 25px);
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--vd-ink);
+}
+
+.vd-story-body > p.vd-story-quote:first-child {
+  margin-top: 0;
+}
+
+:lang(ar) .vd-story-body > p.vd-story-quote,
+:lang(ur) .vd-story-body > p.vd-story-quote,
+:lang(zh) .vd-story-body > p.vd-story-quote,
+:lang(hi) .vd-story-body > p.vd-story-quote,
+:lang(bn) .vd-story-body > p.vd-story-quote {
+  font-style: normal;
+}
+
+/* The closing signature: the wordmark over a last line (About). */
+.vd-story-body > p.vd-story-signoff {
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 1px solid rgb(17 29 45 / 0.18);
+  font-family: var(--font-display);
+  font-size: 19px;
+  color: var(--vd-ink);
+}
+
+.vd-story-signoff > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  letter-spacing: 0.32em;
+}
+
+/* A headed part under a section's paragraphs (About's first section). */
+.vd-story-subsection {
+  margin-top: 40px;
+}
+
+.vd-story-subsection h3 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+[dir='rtl'] .vd-story-subsection h3 {
+  letter-spacing: 0;
+  line-height: 1.4;
 }

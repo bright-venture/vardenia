@@ -121,6 +121,7 @@ export default async function SectionPage({ params, searchParams }: Props) {
       <PageHero
         title={nameFor(section, locale)}
         intro={sectionSummary(section, locale)}
+        body={t(`sectionIntro.${section.path}` as 'sectionIntro.stay')}
         locale={locale}
         place={
           (

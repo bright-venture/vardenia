@@ -1,7 +1,6 @@
 import type { Locale } from '@vardenia/i18n'
 import type { LegalDocument } from './legal'
 import { TBD, contactEmail, contactPhone, contactPostal } from './placeholder'
-import { CONTACT } from './contact'
 
 /**
  * The standing pages: About, Contact, FAQ, and the three that sell a listing.
@@ -132,196 +131,609 @@ export function aboutPage(locale: Locale = 'en'): ContentPage {
     sections: [
       {
         heading: pick(locale, {
-          en: 'Why print, in 2026',
-          ar: 'لماذا الطباعة، في 2026',
-          fr: "Pourquoi l'imprimé, en 2026",
-          es: 'Por qué en papel, en 2026',
-          pt: 'Por que impresso, em 2026',
-          ru: 'Зачем печать в 2026 году',
-          zh: '为什么在 2026 年还做印刷',
-          hi: '2026 में छपाई क्यों',
-          bn: '2026 সালে ছাপা কেন',
-          ur: '2026 میں چھپائی کیوں',
+          en: 'Why Print in a Digital World?',
+          ar: 'لماذا المطبوع في عالم رقمي؟',
+          fr: 'Pourquoi l’imprimé dans un monde numérique ?',
+          es: '¿Por qué el papel en un mundo digital?',
+          pt: 'Porquê o impresso num mundo digital?',
+          ru: 'Зачем печать в цифровом мире?',
+          zh: '为什么在数字时代坚持印刷？',
+          hi: 'डिजिटल दुनिया में छपाई क्यों?',
+          bn: 'ডিজিটাল দুনিয়ায় ছাপা কেন?',
+          ur: 'ڈیجیٹل دنیا میں چھپائی کیوں؟',
         }),
         body: pick(locale, {
           en: [
-            'Because a magazine sits on a hotel reception desk for a year, and a search result lasts as long as the next scroll. A visitor who has just landed, has no local recommendations and does not know what to search for is better served by something they can pick up.',
-            'The code on each listing closes the gap. Point a phone at it and the page opens, current, with the hours as they are today rather than as they were when the issue printed.',
-            'That is also why a code, once printed, is permanent. A listing can change everything about itself and the code still resolves. If a business leaves us, the code explains what happened rather than failing.',
+            'Because meaningful experiences deserve more than a fleeting moment on a screen.',
+            'In an increasingly digital world, Vardenia believes in the lasting value of print. A beautifully curated magazine offers something unique: a tangible source of inspiration that travelers can discover, explore, and return to throughout their journey.',
           ],
           ar: [
-            'لأن المجلة تبقى على مكتب استقبال الفندق سنة كاملة، أما نتيجة البحث فتبقى إلى حين التمرير التالي. الزائر الذي وصل للتو، ولا يعرف أحداً يوصي له بمكان، ولا يعرف حتى عمّ يبحث، تخدمه أكثر صفحة يستطيع أن يمسكها بيده.',
-            'والرمز المطبوع على كل مكان يسدّ الفجوة. وجّه هاتفك إليه فتُفتح الصفحة، محدّثة، بمواعيد العمل كما هي اليوم لا كما كانت يوم الطباعة.',
-            'ولهذا السبب نفسه يبقى الرمز دائماً بعد طباعته. يمكن للمكان أن يغيّر كل شيء عن نفسه ويظل الرمز يعمل. وإذا غادرنا صاحب المكان، يشرح الرمز ما حدث بدل أن يتعطّل.',
+            'لأن التجارب ذات المعنى تستحقّ أكثر من لحظة عابرة على شاشة.',
+            'في عالم يزداد رقمية، تؤمن فاردينيا بالقيمة الدائمة للمطبوع. فالمجلة المختارة بعناية تقدّم شيئاً فريداً: مصدر إلهام ملموساً يكتشفه المسافر ويستكشفه ويعود إليه طوال رحلته.',
           ],
           fr: [
-            "Parce qu'un magazine reste un an sur le comptoir d'une réception d'hôtel, alors qu'un résultat de recherche ne dure que jusqu'au prochain défilement. Un visiteur qui vient d'arriver, sans recommandations locales et sans savoir quoi chercher, est mieux servi par quelque chose qu'il peut prendre en main.",
-            "Le code de chaque fiche comble l'écart. Pointez un téléphone dessus et la page s'ouvre, à jour, avec les horaires d'aujourd'hui plutôt que ceux du jour de l'impression.",
-            "C'est aussi pourquoi un code, une fois imprimé, est permanent. Une fiche peut tout changer d'elle-même, le code continue de fonctionner. Si un établissement nous quitte, le code explique ce qui s'est passé au lieu de tomber en erreur.",
+            'Parce que les expériences qui comptent méritent plus qu’un instant fugace sur un écran.',
+            'Dans un monde de plus en plus numérique, Vardenia croit à la valeur durable de l’imprimé. Un magazine soigneusement composé offre quelque chose d’unique : une source d’inspiration tangible que les voyageurs découvrent, explorent et retrouvent tout au long de leur séjour.',
           ],
           es: [
-            'Porque una revista se queda un año en el mostrador de recepción de un hotel, y un resultado de búsqueda dura lo que tarda el siguiente desplazamiento. Un visitante que acaba de llegar, sin recomendaciones locales y sin saber qué buscar, está mejor servido por algo que puede tomar en la mano.',
-            'El código de cada ficha cierra esa brecha. Apunta el móvil hacia él y se abre la página, actualizada, con el horario de hoy y no con el del día en que se imprimió el número.',
-            'Por eso también un código, una vez impreso, es permanente. Una ficha puede cambiarlo todo y el código sigue funcionando. Si un negocio se va, el código explica lo que pasó en lugar de fallar.',
+            'Porque las experiencias que importan merecen algo más que un instante fugaz en una pantalla.',
+            'En un mundo cada vez más digital, Vardenia cree en el valor duradero del papel. Una revista cuidadosamente elaborada ofrece algo único: una fuente de inspiración tangible que los viajeros pueden descubrir, explorar y volver a consultar durante todo su viaje.',
           ],
           pt: [
-            'Porque uma revista fica um ano no balcão da recepção de um hotel, e um resultado de busca dura até a próxima rolagem. Um visitante que acabou de chegar, sem indicações locais e sem saber o que procurar, é mais bem servido por algo que pode pegar na mão.',
-            'O código em cada ficha fecha essa lacuna. Aponte o celular para ele e a página abre, atualizada, com o horário de hoje e não o do dia em que a edição foi impressa.',
-            'É também por isso que um código, depois de impresso, é permanente. Uma ficha pode mudar tudo sobre si e o código continua funcionando. Se um negócio nos deixa, o código explica o que aconteceu em vez de falhar.',
+            'Porque as experiências que importam merecem mais do que um momento fugaz num ecrã.',
+            'Num mundo cada vez mais digital, a Vardenia acredita no valor duradouro do impresso. Uma revista cuidadosamente feita oferece algo único: uma fonte de inspiração tangível que os viajantes podem descobrir, explorar e voltar a consultar ao longo de toda a viagem.',
           ],
           ru: [
-            'Потому что журнал год лежит на стойке регистрации в отеле, а результат поиска живёт до следующей прокрутки. Гостю, который только что прилетел, у которого нет местных рекомендаций и который не знает, что искать, больше поможет то, что можно взять в руки.',
-            'Код на каждой карточке закрывает этот разрыв. Наведите на него телефон, и откроется страница — актуальная, с сегодняшними часами работы, а не с теми, что были на момент печати номера.',
-            'Поэтому же напечатанный код остаётся навсегда. Заведение может изменить о себе всё, а код продолжит работать. Если заведение уходит от нас, код объясняет, что произошло, вместо того чтобы выдать ошибку.',
+            'Потому что настоящие впечатления заслуживают большего, чем мимолётный миг на экране.',
+            'В мире, который становится всё более цифровым, Vardenia верит в долговечную ценность печати. Тщательно собранный журнал даёт нечто особенное: осязаемый источник вдохновения, который путешественник может открыть, изучить и к которому может возвращаться на протяжении всей поездки.',
           ],
           zh: [
-            '因为一本杂志会在酒店前台摆上一整年，而一条搜索结果只能留到下一次滑动。一位刚下飞机、没有当地人推荐、也不知道该搜什么的旅客，更需要一样可以拿在手里的东西。',
-            '每个商户旁的二维码弥合了这道差距。用手机一扫，页面随即打开，内容是最新的，营业时间是今天的，而不是杂志印刷那天的。',
-            '这也是二维码一经印刷便永久有效的原因。商户的一切都可以改变，二维码依然能用。如果某个商户离开了我们，二维码会说明发生了什么，而不是直接失效。',
+            '因为有意义的体验，值得的不只是屏幕上转瞬即逝的一刻。',
+            '在日益数字化的世界里，Vardenia 相信印刷的持久价值。一本精心策划的杂志能带来独特的东西：一份可以握在手中的灵感来源，让旅行者在整个旅程中发现、探索并反复翻阅。',
           ],
           hi: [
-            'क्योंकि एक पत्रिका होटल के रिसेप्शन पर पूरे साल रखी रहती है, और एक सर्च रिज़ल्ट बस अगली स्क्रॉल तक टिकता है। जो यात्री अभी-अभी पहुँचा है, जिसके पास कोई स्थानीय सुझाव नहीं है और जिसे यह भी नहीं पता कि क्या खोजना है, उसके लिए ऐसी चीज़ बेहतर है जिसे वह हाथ में उठा सके।',
-            'हर लिस्टिंग पर छपा कोड यह दूरी मिटा देता है। फ़ोन उसकी ओर करें और पेज खुल जाता है, ताज़ा जानकारी के साथ, आज के समय के साथ, न कि उस दिन के जब अंक छपा था।',
-            'इसीलिए छपने के बाद कोड स्थायी होता है। कोई लिस्टिंग अपने बारे में सब कुछ बदल सकती है, फिर भी कोड काम करता रहता है। अगर कोई व्यवसाय हमसे अलग हो जाता है, तो कोड बंद होने के बजाय बताता है कि क्या हुआ।',
+            'क्योंकि सार्थक अनुभव स्क्रीन पर एक क्षणिक पल से कहीं ज़्यादा के हक़दार हैं।',
+            'लगातार डिजिटल होती दुनिया में Vardenia छपे हुए शब्द के स्थायी मूल्य में विश्वास करती है। ध्यान से तैयार की गई एक पत्रिका कुछ अनोखा देती है: प्रेरणा का एक ठोस स्रोत, जिसे यात्री पूरी यात्रा के दौरान खोज सकते हैं, पढ़ सकते हैं और बार-बार लौटकर देख सकते हैं।',
           ],
           bn: [
-            'কারণ একটি ম্যাগাজিন হোটেলের রিসেপশন ডেস্কে পুরো এক বছর থাকে, আর একটি সার্চ রেজাল্ট থাকে পরের স্ক্রল পর্যন্ত। যে অতিথি সবে এসে পৌঁছেছেন, যাঁর কাছে স্থানীয় কোনো পরামর্শ নেই এবং যিনি জানেনই না কী খুঁজবেন, তাঁর জন্য হাতে তুলে নেওয়ার মতো কিছু বেশি কাজের।',
-            'প্রতিটি লিস্টিংয়ের কোড এই ফাঁকটা পূরণ করে। ফোন তাক করলেই পেজ খুলে যায়, হালনাগাদ তথ্যসহ, আজকের সময়সূচিসহ, সংখ্যাটি ছাপার দিনের নয়।',
-            'এ কারণেই একবার ছাপা হলে কোড স্থায়ী। একটি লিস্টিং নিজের সবকিছু বদলে ফেলতে পারে, তবু কোড কাজ করে যায়। কোনো ব্যবসা আমাদের ছেড়ে গেলে কোড অচল হয়ে যাওয়ার বদলে জানিয়ে দেয় কী ঘটেছে।',
+            'কারণ অর্থপূর্ণ অভিজ্ঞতা পর্দায় এক ঝলক মুহূর্তের চেয়ে বেশি কিছু পাওয়ার যোগ্য।',
+            'ক্রমশ ডিজিটাল হয়ে ওঠা পৃথিবীতে Vardenia ছাপা মাধ্যমের স্থায়ী মূল্যে বিশ্বাস করে। যত্ন করে সাজানো একটি ম্যাগাজিন অনন্য কিছু দেয়: অনুপ্রেরণার একটি হাতে ধরা উৎস, যা ভ্রমণকারীরা পুরো যাত্রায় আবিষ্কার করতে, ঘুরে দেখতে আর বারবার ফিরে পড়তে পারেন।',
           ],
           ur: [
-            'کیونکہ میگزین ہوٹل کے استقبالیہ پر پورا سال پڑا رہتا ہے، جبکہ سرچ کا نتیجہ بس اگلی اسکرول تک رہتا ہے۔ جو مہمان ابھی پہنچا ہے، جس کے پاس کوئی مقامی مشورہ نہیں اور جسے یہ بھی معلوم نہیں کہ کیا تلاش کرے، اس کے لیے وہ چیز بہتر ہے جسے وہ ہاتھ میں اٹھا سکے۔',
-            'ہر لسٹنگ پر چھپا کوڈ یہ فاصلہ ختم کر دیتا ہے۔ فون اس کی طرف کریں اور صفحہ کھل جاتا ہے، تازہ معلومات کے ساتھ، آج کے اوقات کے ساتھ، نہ کہ اُس دن کے جب شمارہ چھپا تھا۔',
-            'اسی لیے چھپنے کے بعد کوڈ مستقل رہتا ہے۔ کوئی لسٹنگ اپنے بارے میں سب کچھ بدل سکتی ہے، پھر بھی کوڈ کام کرتا رہتا ہے۔ اگر کوئی کاروبار ہمیں چھوڑ دے تو کوڈ ناکام ہونے کے بجائے بتاتا ہے کہ کیا ہوا۔',
+            'کیونکہ بامعنی تجربات اسکرین پر ایک گزرتے لمحے سے کہیں زیادہ کے حق دار ہیں۔',
+            'تیزی سے ڈیجیٹل ہوتی دنیا میں Vardenia چھپے ہوئے لفظ کی دیرپا قدر پر یقین رکھتا ہے۔ سلیقے سے ترتیب دیا گیا میگزین کچھ منفرد پیش کرتا ہے: تحریک کا ایک ٹھوس ذریعہ، جسے مسافر پورے سفر میں دریافت کر سکتے ہیں، کھوج سکتے ہیں اور بار بار پلٹ کر دیکھ سکتے ہیں۔',
           ],
         }),
+        subsections: [
+          {
+            heading: pick(locale, {
+              en: 'Where Print Meets Digital',
+              ar: 'حيث يلتقي المطبوع بالرقمي',
+              fr: 'Là où l’imprimé rencontre le numérique',
+              es: 'Donde el papel se encuentra con lo digital',
+              pt: 'Onde o impresso encontra o digital',
+              ru: 'Где печать встречается с цифрой',
+              zh: '印刷与数字的交汇',
+              hi: 'जहाँ छपाई डिजिटल से मिलती है',
+              bn: 'যেখানে ছাপা মেলে ডিজিটালের সঙ্গে',
+              ur: 'جہاں چھپائی ڈیجیٹل سے ملتی ہے',
+            }),
+            body: pick(locale, {
+              en: [
+                'Vardenia combines the elegance of a printed publication with the convenience of a modern digital platform.',
+                'Through integrated QR codes, readers can instantly access updated business information, explore services, discover locations, and connect directly with featured destinations.',
+                'Our magazine creates the first impression. Our digital platform keeps the connection alive.',
+              ],
+              ar: [
+                'تجمع فاردينيا بين أناقة المطبوعة وسهولة منصّة رقمية حديثة.',
+                'بفضل رموز QR المدمجة، يصل القرّاء فوراً إلى معلومات محدّثة عن الأعمال، ويستكشفون الخدمات، ويكتشفون المواقع، ويتواصلون مباشرة مع الوجهات المعروضة.',
+                'مجلتنا تصنع الانطباع الأول. ومنصّتنا الرقمية تُبقي الصلة حيّة.',
+              ],
+              fr: [
+                'Vardenia allie l’élégance d’une publication imprimée à la commodité d’une plateforme numérique moderne.',
+                'Grâce aux codes QR intégrés, les lecteurs accèdent instantanément à des informations à jour sur les établissements, découvrent leurs services et leur emplacement, et contactent directement les lieux présentés.',
+                'Notre magazine crée la première impression. Notre plateforme numérique fait vivre le lien.',
+              ],
+              es: [
+                'Vardenia combina la elegancia de una publicación impresa con la comodidad de una plataforma digital moderna.',
+                'Gracias a los códigos QR integrados, los lectores acceden al instante a información actualizada de los negocios, exploran sus servicios, descubren su ubicación y contactan directamente con los destinos destacados.',
+                'Nuestra revista crea la primera impresión. Nuestra plataforma digital mantiene viva la conexión.',
+              ],
+              pt: [
+                'A Vardenia junta a elegância de uma publicação impressa à conveniência de uma plataforma digital moderna.',
+                'Através dos códigos QR integrados, os leitores acedem de imediato a informação atualizada sobre os negócios, exploram os serviços, descobrem a localização e contactam diretamente os destinos apresentados.',
+                'A nossa revista cria a primeira impressão. A nossa plataforma digital mantém a ligação viva.',
+              ],
+              ru: [
+                'Vardenia сочетает элегантность печатного издания с удобством современной цифровой платформы.',
+                'Благодаря встроенным QR-кодам читатели сразу получают актуальную информацию о заведениях, узнают об услугах, находят адреса и напрямую связываются с представленными местами.',
+                'Наш журнал создаёт первое впечатление. Наша цифровая платформа поддерживает связь.',
+              ],
+              zh: [
+                'Vardenia 将印刷出版物的优雅与现代数字平台的便捷结合在一起。',
+                '通过嵌入的二维码，读者可以即时获取最新的商家信息、了解服务、找到位置，并直接联系杂志介绍的目的地。',
+                '我们的杂志留下第一印象，我们的数字平台让这份联系延续下去。',
+              ],
+              hi: [
+                'Vardenia एक छपे हुए प्रकाशन की सुंदरता को आधुनिक डिजिटल प्लेटफ़ॉर्म की सुविधा के साथ जोड़ती है।',
+                'पत्रिका में जुड़े QR कोड के ज़रिए पाठक तुरंत व्यवसायों की ताज़ा जानकारी देख सकते हैं, सेवाएँ जान सकते हैं, जगहें खोज सकते हैं और प्रस्तुत जगहों से सीधे जुड़ सकते हैं।',
+                'हमारी पत्रिका पहली छाप छोड़ती है। हमारा डिजिटल प्लेटफ़ॉर्म इस जुड़ाव को बनाए रखता है।',
+              ],
+              bn: [
+                'Vardenia ছাপা প্রকাশনার সৌন্দর্যকে আধুনিক ডিজিটাল প্ল্যাটফর্মের সুবিধার সঙ্গে মিলিয়েছে।',
+                'ম্যাগাজিনে থাকা QR কোডের মাধ্যমে পাঠকেরা সঙ্গে সঙ্গে ব্যবসার হালনাগাদ তথ্য দেখতে, সেবাগুলো জানতে, অবস্থান খুঁজে পেতে আর উপস্থাপিত গন্তব্যের সঙ্গে সরাসরি যোগাযোগ করতে পারেন।',
+                'আমাদের ম্যাগাজিন প্রথম ছাপটা তৈরি করে। আমাদের ডিজিটাল প্ল্যাটফর্ম সেই সংযোগ বাঁচিয়ে রাখে।',
+              ],
+              ur: [
+                'Vardenia ایک چھپی ہوئی اشاعت کی نفاست کو ایک جدید ڈیجیٹل پلیٹ فارم کی سہولت کے ساتھ جوڑتا ہے۔',
+                'میگزین میں شامل QR کوڈز کے ذریعے قارئین فوراً کاروبار کی تازہ معلومات دیکھ سکتے ہیں، خدمات جان سکتے ہیں، مقامات تلاش کر سکتے ہیں اور پیش کی گئی منزلوں سے براہِ راست رابطہ کر سکتے ہیں۔',
+                'ہمارا میگزین پہلا تاثر بناتا ہے۔ ہمارا ڈیجیٹل پلیٹ فارم اس تعلق کو قائم رکھتا ہے۔',
+              ],
+            }),
+          },
+          {
+            heading: pick(locale, {
+              en: 'More Than a Magazine',
+              ar: 'أكثر من مجلة',
+              fr: 'Plus qu’un magazine',
+              es: 'Más que una revista',
+              pt: 'Mais do que uma revista',
+              ru: 'Больше, чем журнал',
+              zh: '不只是一本杂志',
+              hi: 'एक पत्रिका से कहीं बढ़कर',
+              bn: 'একটি ম্যাগাজিনের চেয়েও বেশি',
+              ur: 'ایک میگزین سے بڑھ کر',
+            }),
+            body: pick(locale, {
+              en: [
+                "Vardenia is a bridge between travelers and Lebanon's tourism industry, offering businesses meaningful visibility while inspiring visitors to discover the country with confidence.",
+              ],
+              ar: [
+                'فاردينيا جسر بين المسافرين وقطاع السياحة في لبنان، تمنح الأعمال حضوراً ذا معنى، وتُلهم الزوّار لاكتشاف البلد بثقة.',
+              ],
+              fr: [
+                'Vardenia est un pont entre les voyageurs et le secteur du tourisme au Liban : il offre aux établissements une visibilité qui compte, tout en donnant aux visiteurs l’envie de découvrir le pays en toute confiance.',
+              ],
+              es: [
+                'Vardenia es un puente entre los viajeros y el sector turístico del Líbano: ofrece a los negocios una visibilidad que cuenta e inspira a los visitantes a descubrir el país con confianza.',
+              ],
+              pt: [
+                'A Vardenia é uma ponte entre os viajantes e o setor do turismo do Líbano: dá aos negócios uma visibilidade que conta e inspira os visitantes a descobrir o país com confiança.',
+              ],
+              ru: [
+                'Vardenia становится мостом между путешественниками и туристической отраслью Ливана: даёт заведениям заметность, которая имеет значение, и вдохновляет гостей открывать страну с уверенностью.',
+              ],
+              zh: [
+                'Vardenia 是旅行者与黎巴嫩旅游业之间的桥梁，为商家带来有意义的曝光，也激励旅行者满怀信心地探索这个国家。',
+              ],
+              hi: [
+                'Vardenia यात्रियों और लेबनान के पर्यटन उद्योग के बीच एक पुल है, जो व्यवसायों को सार्थक पहचान देती है और मेहमानों को भरोसे के साथ देश खोजने की प्रेरणा देती है।',
+              ],
+              bn: [
+                'Vardenia ভ্রমণকারী আর লেবাননের পর্যটন শিল্পের মধ্যে একটি সেতু, যা ব্যবসাগুলোকে অর্থপূর্ণ পরিচিতি দেয় এবং অতিথিদের আত্মবিশ্বাসের সঙ্গে দেশটি আবিষ্কারে অনুপ্রাণিত করে।',
+              ],
+              ur: [
+                'Vardenia مسافروں اور لبنان کی سیاحتی صنعت کے درمیان ایک پل ہے، جو کاروباروں کو بامعنی پہچان دیتا ہے اور مہمانوں کو اعتماد کے ساتھ ملک دریافت کرنے کی ترغیب دیتا ہے۔',
+              ],
+            }),
+          },
+        ],
       },
       {
         heading: pick(locale, {
-          en: 'Curated, not crowdsourced',
-          ar: 'اختيار، لا تجميع',
-          fr: 'Sélectionné, pas participatif',
-          es: 'Seleccionado, no colaborativo',
-          pt: 'Curadoria, não colaboração aberta',
-          ru: 'Отбор, а не краудсорсинг',
-          zh: '精选，而非众包',
-          hi: 'चुनी हुई, भीड़ से जुटाई हुई नहीं',
-          bn: 'বাছাই করা, সবার লেখা নয়',
-          ur: 'منتخب، ہجوم سے جمع شدہ نہیں',
-        }),
-        body: pick(locale, {
-          en: [
-            'Nobody can add themselves to Vardenia. Every listing is entered by our team, and businesses cannot publish or edit their own pages.',
-            'That is slower and it is the point. A directory anybody can write themselves into is a directory of whoever is most persistent, and it is worth nothing to a reader deciding where to spend an evening.',
-            '- Every listing is visited and checked by our team before it appears.',
-            '- Bookings are answered by the venue, not by us. We pass the request on and tell you what they said.',
-            '- A venue pays Vardenia a commission on what each guest who books through us and comes spends. You pay the venue its usual price and nothing more, and a business cannot pay to be ranked above another in a way that is hidden from you.',
-          ],
-          ar: [
-            'لا يستطيع أحد أن يضيف نفسه إلى فاردينيا. كل مكان يدخله فريقنا بنفسه، ولا يستطيع أصحاب الأعمال نشر صفحاتهم أو تعديلها.',
-            'هذا أبطأ، وهذا هو المقصود. الدليل الذي يكتب فيه كل من أراد هو دليل لأكثر الناس إلحاحاً، ولا قيمة له عند قارئ يقرر أين يقضي سهرته.',
-            '- كل مكان يزوره فريقنا ويتحقق منه قبل أن يظهر.',
-            '- الحجوزات يردّ عليها المكان نفسه، لا نحن. ننقل الطلب ونخبرك بما قالوه.',
-            '- يدفع المكان لفاردينيا عمولة على ما ينفقه كل ضيف يحجز عبرنا ويحضر. أنت تدفع للمكان سعره المعتاد لا أكثر، ولا يستطيع مكان أن يدفع ليظهر فوق غيره بطريقة مخفية عنك.',
-          ],
-          fr: [
-            "Personne ne peut s'ajouter soi-même à Vardenia. Chaque fiche est saisie par notre équipe, et les établissements ne peuvent ni publier ni modifier leur propre page.",
-            "C'est plus lent, et c'est voulu. Un annuaire où chacun peut s'inscrire est l'annuaire des plus insistants, et il ne vaut rien pour un lecteur qui cherche où passer sa soirée.",
-            "- Chaque fiche est visitée et vérifiée par notre équipe avant d'apparaître.",
-            "- Les réservations reçoivent leur réponse de l'établissement, pas de nous. Nous transmettons la demande et vous disons ce qu'il a répondu.",
-            "- Un établissement verse à Vardenia une commission sur ce que dépense chaque client qui réserve par notre intermédiaire et se présente. Vous payez à l'établissement son prix habituel, rien de plus, et un établissement ne peut pas payer pour être classé devant un autre d'une manière qui vous serait cachée.",
-          ],
-          es: [
-            'Nadie puede añadirse a sí mismo a Vardenia. Cada ficha la introduce nuestro equipo, y los negocios no pueden publicar ni editar sus propias páginas.',
-            'Es más lento, y de eso se trata. Un directorio en el que cualquiera puede apuntarse es un directorio de los más insistentes, y no le vale de nada a quien decide dónde pasar la noche.',
-            '- Nuestro equipo visita y comprueba cada ficha antes de que aparezca.',
-            '- Las reservas las responde el local, no nosotros. Transmitimos la solicitud y te contamos lo que han dicho.',
-            '- Cada local paga a Vardenia una comisión sobre lo que gasta cada cliente que reserva a través de nosotros y acude. Tú pagas al local su precio habitual y nada más, y un negocio no puede pagar para aparecer por encima de otro de una forma que se te oculte.',
-          ],
-          pt: [
-            'Ninguém pode se adicionar à Vardenia. Cada ficha é inserida pela nossa equipe, e os negócios não podem publicar nem editar as próprias páginas.',
-            'Isso é mais lento, e é essa a ideia. Um diretório em que qualquer um se inscreve é um diretório dos mais insistentes, e não vale nada para quem está decidindo onde passar a noite.',
-            '- A nossa equipe visita e verifica cada ficha antes de ela aparecer.',
-            '- As reservas são respondidas pelo estabelecimento, não por nós. Repassamos o pedido e contamos o que responderam.',
-            '- Cada estabelecimento paga à Vardenia uma comissão sobre o que gasta cada cliente que reserva através de nós e comparece. Você paga ao estabelecimento o preço de sempre e nada mais, e um negócio não pode pagar para aparecer acima de outro de um jeito que fique escondido de você.',
-          ],
-          ru: [
-            'В Vardenia нельзя добавить себя самому. Каждую карточку вносит наша команда, а заведения не могут публиковать или редактировать свои страницы.',
-            'Это медленнее, и в этом весь смысл. Справочник, куда может вписать себя кто угодно, — это справочник самых настойчивых, и он ничего не стоит для читателя, который решает, где провести вечер.',
-            '- Каждую карточку наша команда посещает и проверяет до публикации.',
-            '- На бронирования отвечает само заведение, а не мы. Мы передаём запрос и сообщаем вам его ответ.',
-            '- Заведение платит Vardenia комиссию с суммы, которую потратил каждый гость, забронировавший через нас и пришедший. Вы платите заведению его обычную цену и ничего сверх неё, а заведение не может заплатить, чтобы скрыто от вас оказаться выше другого.',
-          ],
-          zh: [
-            '没有人能自行加入 Vardenia。每个商户都由我们的团队录入，商户无法自行发布或编辑自己的页面。',
-            '这样更慢，而这正是用意所在。人人都能把自己写进去的指南，只是最执着者的名单，对一个正在决定今晚去哪儿的读者毫无价值。',
-            '- 每个商户在上线前都经过我们团队的实地走访和核实。',
-            '- 预订由商户本身答复，而不是我们。我们转达请求，并告诉您他们的答复。',
-            '- 每位通过我们预订并实际到店的客人，商户会按其消费金额向 Vardenia 支付佣金。您向商户支付的仍是其正常价格，不多付一分，商户也无法以对您隐瞒的方式付费排到别人前面。',
-          ],
-          hi: [
-            'Vardenia में कोई भी ख़ुद को नहीं जोड़ सकता। हर लिस्टिंग हमारी टीम दर्ज करती है, और व्यवसाय अपने पेज न प्रकाशित कर सकते हैं, न बदल सकते हैं।',
-            'यह धीमा है, और यही मक़सद है। जिस निर्देशिका में कोई भी ख़ुद को लिख सके, वह सबसे ज़्यादा ज़िद करने वालों की सूची बन जाती है, और शाम कहाँ बितानी है यह तय कर रहे पाठक के लिए उसका कोई मोल नहीं।',
-            '- हर लिस्टिंग दिखने से पहले हमारी टीम वहाँ जाकर उसकी जाँच करती है।',
-            '- बुकिंग का जवाब वह जगह ख़ुद देती है, हम नहीं। हम अनुरोध आगे भेजते हैं और आपको बताते हैं कि उन्होंने क्या कहा।',
-            '- हमारे ज़रिए बुक करके आने वाले हर मेहमान के ख़र्च पर व्यवसाय Vardenia को कमीशन देता है। आप व्यवसाय को उसकी सामान्य क़ीमत ही देते हैं, उससे ज़्यादा कुछ नहीं, और कोई व्यवसाय आपसे छिपाकर पैसे देकर किसी दूसरे से ऊपर नहीं आ सकता।',
-          ],
-          bn: [
-            'কেউ নিজে নিজেকে Vardenia-তে যোগ করতে পারেন না। প্রতিটি লিস্টিং আমাদের দল নিজে যোগ করে, আর ব্যবসাগুলো নিজেদের পেজ প্রকাশ বা সম্পাদনা করতে পারে না।',
-            'এতে সময় বেশি লাগে, আর সেটাই উদ্দেশ্য। যে ডিরেক্টরিতে যে কেউ নিজের নাম লিখতে পারে, তা আসলে সবচেয়ে নাছোড়বান্দাদের তালিকা, আর সন্ধ্যাটা কোথায় কাটাবেন ভাবছেন এমন পাঠকের কাছে তার কোনো মূল্য নেই।',
-            '- প্রতিটি লিস্টিং প্রকাশের আগে আমাদের দল সেখানে গিয়ে যাচাই করে।',
-            '- বুকিংয়ের উত্তর দেয় জায়গাটি নিজেই, আমরা নই। আমরা অনুরোধটি পৌঁছে দিই এবং তাঁরা কী বলেছেন তা আপনাকে জানাই।',
-            '- আমাদের মাধ্যমে বুক করে যে অতিথি আসেন, তাঁদের প্রত্যেকের খরচের ওপর ব্যবসাটি Vardenia-কে একটি কমিশন দেয়। আপনি ব্যবসাটিকে তার স্বাভাবিক দামই দেন, এর বেশি কিছু নয়, আর কোনো ব্যবসা আপনার অগোচরে টাকা দিয়ে অন্যদের ওপরে উঠতে পারে না।',
-          ],
-          ur: [
-            'Vardenia میں کوئی خود کو شامل نہیں کر سکتا۔ ہر لسٹنگ ہماری ٹیم درج کرتی ہے، اور کاروبار اپنے صفحات نہ شائع کر سکتے ہیں نہ ان میں ترمیم کر سکتے ہیں۔',
-            'یہ سست ہے، اور مقصد یہی ہے۔ جس ڈائریکٹری میں کوئی بھی خود کو لکھ دے، وہ سب سے زیادہ اصرار کرنے والوں کی فہرست بن جاتی ہے، اور جو قاری شام گزارنے کی جگہ چن رہا ہو اس کے لیے اس کی کوئی قدر نہیں۔',
-            '- ہر لسٹنگ ظاہر ہونے سے پہلے ہماری ٹیم وہاں جا کر اس کی جانچ کرتی ہے۔',
-            '- بکنگ کا جواب مقام خود دیتا ہے، ہم نہیں۔ ہم درخواست آگے بھیجتے ہیں اور آپ کو بتاتے ہیں کہ انہوں نے کیا کہا۔',
-            '- ہمارے ذریعے بکنگ کر کے آنے والے ہر مہمان کے خرچ پر کاروبار Vardenia کو کمیشن دیتا ہے۔ آپ کاروبار کو اس کی معمول کی قیمت ہی دیتے ہیں، اس سے زیادہ کچھ نہیں، اور کوئی کاروبار آپ سے چھپا کر پیسے دے کر دوسرے سے اوپر نہیں آ سکتا۔',
-          ],
-        }),
-      },
-      {
-        heading: pick(locale, {
-          en: 'Who we are',
-          ar: 'من نحن',
-          fr: 'Qui nous sommes',
-          es: 'Quiénes somos',
-          pt: 'Quem somos',
-          ru: 'Кто мы',
-          zh: '我们是谁',
-          hi: 'हम कौन हैं',
-          bn: 'আমরা কারা',
-          ur: 'ہم کون ہیں',
+          en: 'Thoughtfully Curated Experiences',
+          ar: 'تجارب مختارة بعناية',
+          fr: 'Des expériences choisies avec soin',
+          es: 'Experiencias cuidadosamente seleccionadas',
+          pt: 'Experiências escolhidas com cuidado',
+          ru: 'Тщательно отобранные впечатления',
+          zh: '用心精选的体验',
+          hi: 'सोच-समझकर चुने गए अनुभव',
+          bn: 'যত্নে বাছাই করা অভিজ্ঞতা',
+          ur: 'سوچ سمجھ کر منتخب کیے گئے تجربات',
         }),
         /**
-         * Only where Vardenia is, from lib/contact. On 9 November 2026 the owner
-         * asked for the line about who runs it and why to be left out for now;
-         * the registration number is on the legal pages, not here.
+         * The owner's text of 11 November 2026, replacing "Curated, not
+         * crowdsourced". A line starting "> " is a pull quote (ContentPage).
          */
-        body: [aboutWhere(locale)],
+        body: pick(locale, {
+          en: [
+            '> Discover Lebanon through carefully selected places, trusted information, and authentic experiences.',
+            'At Vardenia, we believe that discovering exceptional destinations should be effortless, inspiring, and reliable.',
+            "Our mission is to connect travelers with Lebanon's distinctive hotels, guesthouses, restaurants, attractions, and experiences through a platform built on quality and transparency.",
+          ],
+          ar: [
+            '> اكتشف لبنان من خلال أماكن مختارة بعناية، ومعلومات موثوقة، وتجارب أصيلة.',
+            'نؤمن في فاردينيا بأن اكتشاف الوجهات الاستثنائية يجب أن يكون سهلاً وملهماً وموثوقاً.',
+            'مهمّتنا أن نصل المسافرين بفنادق لبنان وبيوت ضيافته ومطاعمه ومعالمه وتجاربه المميّزة، عبر منصّة قائمة على الجودة والشفافية.',
+          ],
+          fr: [
+            '> Découvrez le Liban à travers des lieux choisis avec soin, des informations fiables et des expériences authentiques.',
+            'Chez Vardenia, nous pensons que découvrir des destinations d’exception doit être simple, inspirant et fiable.',
+            'Notre mission est de relier les voyageurs aux hôtels, maisons d’hôtes, restaurants, sites et expériences qui font la singularité du Liban, grâce à une plateforme fondée sur la qualité et la transparence.',
+          ],
+          es: [
+            '> Descubre el Líbano a través de lugares cuidadosamente seleccionados, información fiable y experiencias auténticas.',
+            'En Vardenia creemos que descubrir destinos excepcionales debe ser sencillo, inspirador y fiable.',
+            'Nuestra misión es conectar a los viajeros con los hoteles, casas de huéspedes, restaurantes, atracciones y experiencias que distinguen al Líbano, a través de una plataforma basada en la calidad y la transparencia.',
+          ],
+          pt: [
+            '> Descubra o Líbano através de lugares escolhidos com cuidado, informação fiável e experiências autênticas.',
+            'Na Vardenia acreditamos que descobrir destinos excecionais deve ser simples, inspirador e fiável.',
+            'A nossa missão é ligar os viajantes aos hotéis, casas de hóspedes, restaurantes, atrações e experiências que distinguem o Líbano, através de uma plataforma assente na qualidade e na transparência.',
+          ],
+          ru: [
+            '> Откройте Ливан через тщательно отобранные места, надёжную информацию и подлинные впечатления.',
+            'В Vardenia мы считаем, что открывать исключительные места должно быть легко, вдохновляюще и надёжно.',
+            'Наша миссия: связать путешественников с особенными отелями, гостевыми домами, ресторанами, достопримечательностями и впечатлениями Ливана через платформу, построенную на качестве и прозрачности.',
+          ],
+          zh: [
+            '> 通过精心挑选的地方、可靠的信息和真实的体验，发现黎巴嫩。',
+            '在 Vardenia，我们相信发现非凡的目的地应当轻松、令人向往且值得信赖。',
+            '我们的使命是通过一个以品质和透明为基础的平台，把旅行者与黎巴嫩别具特色的酒店、民宿、餐厅、景点和体验联系起来。',
+          ],
+          hi: [
+            '> ध्यान से चुनी गई जगहों, भरोसेमंद जानकारी और सच्चे अनुभवों के ज़रिए लेबनान को खोजें।',
+            'Vardenia में हमारा मानना है कि असाधारण जगहों को खोजना आसान, प्रेरक और भरोसेमंद होना चाहिए।',
+            'हमारा मिशन यात्रियों को लेबनान के विशिष्ट होटलों, गेस्टहाउसों, रेस्तराँओं, दर्शनीय स्थलों और अनुभवों से एक ऐसे प्लेटफ़ॉर्म के ज़रिए जोड़ना है जो गुणवत्ता और पारदर्शिता पर टिका है।',
+          ],
+          bn: [
+            '> যত্নে বাছাই করা জায়গা, নির্ভরযোগ্য তথ্য আর খাঁটি অভিজ্ঞতার মধ্য দিয়ে লেবানন আবিষ্কার করুন।',
+            'Vardenia-তে আমরা বিশ্বাস করি, অসাধারণ গন্তব্য আবিষ্কার হওয়া উচিত সহজ, অনুপ্রেরণাদায়ক ও নির্ভরযোগ্য।',
+            'আমাদের লক্ষ্য হলো মান ও স্বচ্ছতার ওপর গড়া একটি প্ল্যাটফর্মের মাধ্যমে ভ্রমণকারীদের লেবাননের স্বতন্ত্র হোটেল, গেস্টহাউস, রেস্তোরাঁ, দর্শনীয় স্থান ও অভিজ্ঞতার সঙ্গে যুক্ত করা।',
+          ],
+          ur: [
+            '> احتیاط سے منتخب جگہوں، قابلِ اعتماد معلومات اور حقیقی تجربات کے ذریعے لبنان کو دریافت کریں۔',
+            'Vardenia میں ہمارا یقین ہے کہ غیر معمولی منزلوں کی دریافت آسان، متاثر کن اور قابلِ اعتماد ہونی چاہیے۔',
+            'ہمارا مشن مسافروں کو لبنان کے منفرد ہوٹلوں، گیسٹ ہاؤسز، ریستورانوں، دلچسپ مقامات اور تجربات سے ایک ایسے پلیٹ فارم کے ذریعے جوڑنا ہے جو معیار اور شفافیت پر قائم ہے۔',
+          ],
+        }),
+        subsections: [
+          {
+            heading: pick(locale, {
+              en: 'Our Commitment',
+              ar: 'التزامنا',
+              fr: 'Notre engagement',
+              es: 'Nuestro compromiso',
+              pt: 'O nosso compromisso',
+              ru: 'Наши обязательства',
+              zh: '我们的承诺',
+              hi: 'हमारी प्रतिबद्धता',
+              bn: 'আমাদের অঙ্গীকার',
+              ur: 'ہمارا عہد',
+            }),
+            body: pick(locale, {
+              en: [
+                '- **Carefully Selected Listings**',
+                '- **Reliable Information**',
+                '- **Direct Connections**',
+                '- **Transparent Partnerships**',
+                '> Our goal is simple: to make discovering Lebanon more inspiring, accessible, and trustworthy.',
+              ],
+              ar: [
+                '- **أماكن مختارة بعناية**',
+                '- **معلومات موثوقة**',
+                '- **تواصل مباشر**',
+                '- **شراكات شفّافة**',
+                '> هدفنا بسيط: أن نجعل اكتشاف لبنان أكثر إلهاماً وسهولة وثقة.',
+              ],
+              fr: [
+                '- **Des fiches choisies avec soin**',
+                '- **Des informations fiables**',
+                '- **Des liens directs**',
+                '- **Des partenariats transparents**',
+                '> Notre objectif est simple : rendre la découverte du Liban plus inspirante, plus accessible et plus digne de confiance.',
+              ],
+              es: [
+                '- **Fichas cuidadosamente seleccionadas**',
+                '- **Información fiable**',
+                '- **Contacto directo**',
+                '- **Colaboraciones transparentes**',
+                '> Nuestro objetivo es sencillo: que descubrir el Líbano sea más inspirador, accesible y fiable.',
+              ],
+              pt: [
+                '- **Fichas escolhidas com cuidado**',
+                '- **Informação fiável**',
+                '- **Ligação direta**',
+                '- **Parcerias transparentes**',
+                '> O nosso objetivo é simples: tornar a descoberta do Líbano mais inspiradora, acessível e digna de confiança.',
+              ],
+              ru: [
+                '- **Тщательно отобранные карточки**',
+                '- **Надёжная информация**',
+                '- **Прямая связь**',
+                '- **Прозрачное партнёрство**',
+                '> Наша цель проста: сделать знакомство с Ливаном более вдохновляющим, доступным и надёжным.',
+              ],
+              zh: [
+                '- **精心挑选的商户**',
+                '- **可靠的信息**',
+                '- **直接联系**',
+                '- **透明的合作**',
+                '> 我们的目标很简单：让发现黎巴嫩变得更令人向往、更容易，也更值得信赖。',
+              ],
+              hi: [
+                '- **ध्यान से चुनी गई लिस्टिंग**',
+                '- **भरोसेमंद जानकारी**',
+                '- **सीधा संपर्क**',
+                '- **पारदर्शी साझेदारी**',
+                '> हमारा लक्ष्य सीधा है: लेबनान की खोज को और प्रेरक, सुलभ और भरोसेमंद बनाना।',
+              ],
+              bn: [
+                '- **যত্নে বাছাই করা লিস্টিং**',
+                '- **নির্ভরযোগ্য তথ্য**',
+                '- **সরাসরি যোগাযোগ**',
+                '- **স্বচ্ছ অংশীদারি**',
+                '> আমাদের লক্ষ্য সহজ: লেবানন আবিষ্কারকে আরও অনুপ্রেরণাদায়ক, সহজলভ্য ও নির্ভরযোগ্য করা।',
+              ],
+              ur: [
+                '- **احتیاط سے منتخب لسٹنگز**',
+                '- **قابلِ اعتماد معلومات**',
+                '- **براہِ راست رابطہ**',
+                '- **شفاف شراکت داری**',
+                '> ہمارا مقصد سادہ ہے: لبنان کی دریافت کو زیادہ متاثر کن، آسان اور قابلِ اعتماد بنانا۔',
+              ],
+            }),
+          },
+        ],
+      },
+      {
+        heading: pick(locale, {
+          en: 'The Vardenia Story',
+          ar: 'قصّة فاردينيا',
+          fr: 'L’histoire de Vardenia',
+          es: 'La historia de Vardenia',
+          pt: 'A história da Vardenia',
+          ru: 'История Vardenia',
+          zh: 'Vardenia 的故事',
+          hi: 'Vardenia की कहानी',
+          bn: 'Vardenia-র গল্প',
+          ur: 'Vardenia کی کہانی',
+        }),
+        /**
+         * The owner's text of 11 November 2026, replacing "Who we are" (the
+         * address). "> " is a pull quote and "~ " the closing signature
+         * (ContentPage).
+         */
+        body: pick(locale, {
+          en: [
+            '> One Country. Countless Stories. Endless Discoveries.',
+            'Lebanon is a land of extraordinary contrasts, where ancient heritage meets modern life, mountains overlook the Mediterranean, and every destination tells a story of its own.',
+            '> Vardenia was born from a belief that Lebanon deserves to be discovered, celebrated, and experienced in all its richness.',
+            'More than a tourism magazine, Vardenia is a curated travel and discovery platform dedicated to showcasing the very essence of Lebanon.',
+            'Through our printed publication and digital platform, we bring together distinctive destinations, exceptional hospitality, authentic cuisine, cultural treasures, and unique experiences from across the country.',
+            'From hidden gems to celebrated landmarks, our purpose is to inspire exploration, connect travelers with local businesses, and reveal the remarkable diversity that makes Lebanon truly unforgettable.',
+          ],
+          ar: [
+            '> بلد واحد. قصص لا تُحصى. اكتشافات بلا نهاية.',
+            'لبنان أرض تناقضات استثنائية، يلتقي فيها التراث العريق بالحياة الحديثة، وتطلّ جباله على المتوسط، ولكلّ وجهة فيه قصّتها الخاصّة.',
+            '> وُلدت فاردينيا من إيمان بأن لبنان يستحقّ أن يُكتشَف ويُحتفى به ويُعاش بكلّ غناه.',
+            'فاردينيا أكثر من مجلة سياحية: إنها منصّة مختارة للسفر والاكتشاف، مكرّسة لإظهار جوهر لبنان.',
+            'عبر مطبوعتنا ومنصّتنا الرقمية، نجمع وجهات مميّزة وضيافة استثنائية ومطبخاً أصيلاً وكنوزاً ثقافية وتجارب فريدة من أنحاء البلد كافّة.',
+            'من الكنوز المخفية إلى المعالم الشهيرة، غايتنا أن نُلهم الاستكشاف، وأن نصل المسافرين بالأعمال المحلية، وأن نكشف التنوّع المدهش الذي يجعل لبنان لا يُنسى.',
+          ],
+          fr: [
+            '> Un pays. D’innombrables histoires. Des découvertes sans fin.',
+            'Le Liban est une terre de contrastes extraordinaires, où le patrimoine ancien rencontre la vie moderne, où les montagnes dominent la Méditerranée et où chaque lieu raconte sa propre histoire.',
+            '> Vardenia est née de la conviction que le Liban mérite d’être découvert, célébré et vécu dans toute sa richesse.',
+            'Plus qu’un magazine de tourisme, Vardenia est une plateforme de voyage et de découverte, fondée sur la sélection et consacrée à l’essence même du Liban.',
+            'À travers notre magazine imprimé et notre plateforme numérique, nous réunissons des destinations singulières, une hospitalité d’exception, une cuisine authentique, des trésors culturels et des expériences uniques venues de tout le pays.',
+            'Des trésors cachés aux sites célèbres, notre but est de donner envie d’explorer, de relier les voyageurs aux établissements locaux et de révéler la remarquable diversité qui rend le Liban inoubliable.',
+          ],
+          es: [
+            '> Un país. Incontables historias. Descubrimientos sin fin.',
+            'El Líbano es una tierra de contrastes extraordinarios, donde el patrimonio antiguo se encuentra con la vida moderna, las montañas miran al Mediterráneo y cada destino cuenta su propia historia.',
+            '> Vardenia nació de la convicción de que el Líbano merece ser descubierto, celebrado y vivido en toda su riqueza.',
+            'Más que una revista de turismo, Vardenia es una plataforma de viajes y descubrimiento, construida con criterio y dedicada a mostrar la esencia misma del Líbano.',
+            'A través de nuestra publicación impresa y nuestra plataforma digital, reunimos destinos singulares, una hospitalidad excepcional, cocina auténtica, tesoros culturales y experiencias únicas de todo el país.',
+            'De las joyas escondidas a los lugares más célebres, nuestro propósito es inspirar a explorar, conectar a los viajeros con los negocios locales y revelar la extraordinaria diversidad que hace del Líbano un lugar inolvidable.',
+          ],
+          pt: [
+            '> Um país. Histórias sem conta. Descobertas sem fim.',
+            'O Líbano é uma terra de contrastes extraordinários, onde o património antigo encontra a vida moderna, as montanhas olham o Mediterrâneo e cada destino conta a sua própria história.',
+            '> A Vardenia nasceu da convicção de que o Líbano merece ser descoberto, celebrado e vivido em toda a sua riqueza.',
+            'Mais do que uma revista de turismo, a Vardenia é uma plataforma de viagem e descoberta, feita com curadoria e dedicada a mostrar a essência do Líbano.',
+            'Através da nossa publicação impressa e da nossa plataforma digital, reunimos destinos singulares, hospitalidade excecional, cozinha autêntica, tesouros culturais e experiências únicas de todo o país.',
+            'Dos tesouros escondidos aos lugares mais célebres, o nosso propósito é inspirar a explorar, ligar os viajantes aos negócios locais e revelar a notável diversidade que torna o Líbano inesquecível.',
+          ],
+          ru: [
+            '> Одна страна. Бесчисленные истории. Бесконечные открытия.',
+            'Ливан: земля удивительных контрастов, где древнее наследие встречается с современной жизнью, горы смотрят на Средиземное море, а у каждого места своя история.',
+            '> Vardenia родилась из убеждения, что Ливан заслуживает того, чтобы его открывали, прославляли и проживали во всём его богатстве.',
+            'Vardenia больше, чем туристический журнал: это платформа для путешествий и открытий, основанная на отборе и посвящённая самой сути Ливана.',
+            'В печатном издании и на цифровой платформе мы собираем особенные места, исключительное гостеприимство, подлинную кухню, культурные сокровища и неповторимые впечатления со всей страны.',
+            'От скрытых жемчужин до знаменитых достопримечательностей: наша цель: вдохновлять на путешествия, связывать гостей с местным бизнесом и открывать удивительное разнообразие, которое делает Ливан незабываемым.',
+          ],
+          zh: [
+            '> 一个国家，无数故事，无尽发现。',
+            '黎巴嫩是一片充满非凡反差的土地：古老的遗产与现代生活交汇，群山俯瞰地中海，每一个目的地都有属于自己的故事。',
+            '> Vardenia 源于一个信念：黎巴嫩值得以它的全部丰富被发现、被赞美、被亲身体验。',
+            'Vardenia 不只是一本旅游杂志，更是一个精选的旅行与发现平台，致力于展现黎巴嫩最本真的模样。',
+            '通过我们的印刷刊物和数字平台，我们汇集了来自全国各地的独特目的地、非凡的款待、地道的美食、文化瑰宝和独一无二的体验。',
+            '从鲜为人知的宝藏到声名远扬的地标，我们的目标是激发探索、把旅行者与本地商家联系起来，并展现让黎巴嫩令人难忘的非凡多样。',
+          ],
+          hi: [
+            '> एक देश। अनगिनत कहानियाँ। अंतहीन खोजें।',
+            'लेबनान असाधारण विरोधाभासों की धरती है, जहाँ प्राचीन विरासत आधुनिक जीवन से मिलती है, पहाड़ भूमध्य सागर को निहारते हैं और हर जगह की अपनी एक कहानी है।',
+            '> Vardenia इस विश्वास से जन्मी कि लेबनान को उसकी पूरी समृद्धि के साथ खोजा, सराहा और जिया जाना चाहिए।',
+            'एक पर्यटन पत्रिका से बढ़कर, Vardenia यात्रा और खोज का एक चुनिंदा प्लेटफ़ॉर्म है, जो लेबनान के असली सार को सामने लाने के लिए समर्पित है।',
+            'अपनी छपी हुई पत्रिका और डिजिटल प्लेटफ़ॉर्म के ज़रिए हम पूरे देश से विशिष्ट जगहें, असाधारण आतिथ्य, असली व्यंजन, सांस्कृतिक धरोहरें और अनोखे अनुभव एक साथ लाते हैं।',
+            'छिपे हुए रत्नों से लेकर प्रसिद्ध स्थलों तक, हमारा उद्देश्य खोज की प्रेरणा देना, यात्रियों को स्थानीय व्यवसायों से जोड़ना और उस अद्भुत विविधता को सामने लाना है जो लेबनान को सचमुच अविस्मरणीय बनाती है।',
+          ],
+          bn: [
+            '> একটি দেশ। অগণিত গল্প। অফুরান আবিষ্কার।',
+            'লেবানন অসাধারণ বৈপরীত্যের দেশ, যেখানে প্রাচীন ঐতিহ্য মেলে আধুনিক জীবনের সঙ্গে, পাহাড় তাকিয়ে থাকে ভূমধ্যসাগরের দিকে, আর প্রতিটি গন্তব্যের রয়েছে নিজস্ব গল্প।',
+            '> Vardenia-র জন্ম এই বিশ্বাস থেকে যে লেবানন তার সমস্ত ঐশ্বর্য নিয়ে আবিষ্কৃত, উদযাপিত ও অনুভূত হওয়ার যোগ্য।',
+            'একটি পর্যটন ম্যাগাজিনের চেয়েও বেশি, Vardenia ভ্রমণ ও আবিষ্কারের একটি বাছাই করা প্ল্যাটফর্ম, যা লেবাননের আসল সারকে তুলে ধরতে নিবেদিত।',
+            'আমাদের ছাপা প্রকাশনা ও ডিজিটাল প্ল্যাটফর্মের মাধ্যমে আমরা সারা দেশ থেকে স্বতন্ত্র গন্তব্য, অসাধারণ আতিথেয়তা, খাঁটি রান্না, সাংস্কৃতিক সম্পদ ও অনন্য অভিজ্ঞতা একত্র করি।',
+            'লুকানো রত্ন থেকে বিখ্যাত নিদর্শন পর্যন্ত, আমাদের উদ্দেশ্য অন্বেষণে অনুপ্রাণিত করা, ভ্রমণকারীদের স্থানীয় ব্যবসার সঙ্গে যুক্ত করা এবং সেই অসাধারণ বৈচিত্র্য তুলে ধরা যা লেবাননকে সত্যিই অবিস্মরণীয় করে।',
+          ],
+          ur: [
+            '> ایک ملک۔ ان گنت کہانیاں۔ لامتناہی دریافتیں۔',
+            'لبنان غیر معمولی تضادات کی سرزمین ہے، جہاں قدیم ورثہ جدید زندگی سے ملتا ہے، پہاڑ بحیرۂ روم پر نظر رکھتے ہیں اور ہر منزل کی اپنی کہانی ہے۔',
+            '> Vardenia اس یقین سے پیدا ہوا کہ لبنان اپنی پوری رونق کے ساتھ دریافت کیے جانے، سراہے جانے اور جیے جانے کا حق دار ہے۔',
+            'سیاحتی میگزین سے بڑھ کر، Vardenia سفر اور دریافت کا ایک منتخب پلیٹ فارم ہے جو لبنان کی اصل روح کو سامنے لانے کے لیے وقف ہے۔',
+            'اپنی چھپی ہوئی اشاعت اور ڈیجیٹل پلیٹ فارم کے ذریعے ہم پورے ملک سے منفرد منزلیں، غیر معمولی مہمان نوازی، اصلی کھانے، ثقافتی خزانے اور انوکھے تجربات یکجا کرتے ہیں۔',
+            'پوشیدہ نگینوں سے مشہور مقامات تک، ہمارا مقصد دریافت کی ترغیب دینا، مسافروں کو مقامی کاروباروں سے جوڑنا اور اس حیرت انگیز تنوع کو سامنے لانا ہے جو لبنان کو واقعی ناقابلِ فراموش بناتا ہے۔',
+          ],
+        }),
+        subsections: [
+          {
+            heading: pick(locale, {
+              en: 'Our Vision',
+              ar: 'رؤيتنا',
+              fr: 'Notre vision',
+              es: 'Nuestra visión',
+              pt: 'A nossa visão',
+              ru: 'Наше видение',
+              zh: '我们的愿景',
+              hi: 'हमारी दृष्टि',
+              bn: 'আমাদের দৃষ্টি',
+              ur: 'ہمارا وژن',
+            }),
+            body: pick(locale, {
+              en: [
+                '> To become a leading gateway to discovering Lebanon.',
+                "We envision Vardenia as a trusted and inspiring reference for travelers seeking to explore Lebanon's destinations, culture, hospitality, and experiences.",
+                "Our ambition is to contribute to Lebanon's recognition as an exceptional tourism destination while supporting a thriving, connected, and sustainable tourism industry.",
+                "We aspire to create a platform where every region is represented, every authentic experience has the opportunity to be discovered, and Lebanon's unique identity is shared with the world.",
+              ],
+              ar: [
+                '> أن نصبح بوّابة رائدة لاكتشاف لبنان.',
+                'نرى فاردينيا مرجعاً موثوقاً وملهماً للمسافرين الراغبين في استكشاف وجهات لبنان وثقافته وضيافته وتجاربه.',
+                'طموحنا أن نساهم في ترسيخ مكانة لبنان وجهةً سياحية استثنائية، وأن ندعم قطاعاً سياحياً مزدهراً ومترابطاً ومستداماً.',
+                'نتطلّع إلى منصّة تُمثَّل فيها كلّ منطقة، وتُتاح فيها لكلّ تجربة أصيلة فرصة أن تُكتشف، وتُشارَك فيها هويّة لبنان الفريدة مع العالم.',
+              ],
+              fr: [
+                '> Devenir une porte d’entrée de référence pour découvrir le Liban.',
+                'Nous voyons Vardenia comme une référence fiable et inspirante pour les voyageurs qui souhaitent explorer les destinations, la culture, l’hospitalité et les expériences du Liban.',
+                'Notre ambition est de contribuer à faire reconnaître le Liban comme une destination touristique d’exception, tout en soutenant un secteur du tourisme prospère, connecté et durable.',
+                'Nous voulons créer une plateforme où chaque région est représentée, où chaque expérience authentique a la chance d’être découverte et où l’identité unique du Liban est partagée avec le monde.',
+              ],
+              es: [
+                '> Convertirnos en una puerta de entrada de referencia para descubrir el Líbano.',
+                'Imaginamos Vardenia como una referencia fiable e inspiradora para los viajeros que quieren explorar los destinos, la cultura, la hospitalidad y las experiencias del Líbano.',
+                'Nuestra ambición es contribuir a que el Líbano sea reconocido como un destino turístico excepcional, apoyando a la vez un sector turístico próspero, conectado y sostenible.',
+                'Aspiramos a crear una plataforma donde cada región esté representada, cada experiencia auténtica tenga la oportunidad de ser descubierta y la identidad única del Líbano se comparta con el mundo.',
+              ],
+              pt: [
+                '> Tornarmo-nos uma porta de entrada de referência para descobrir o Líbano.',
+                'Imaginamos a Vardenia como uma referência fiável e inspiradora para os viajantes que querem explorar os destinos, a cultura, a hospitalidade e as experiências do Líbano.',
+                'A nossa ambição é contribuir para que o Líbano seja reconhecido como um destino turístico excecional, apoiando um setor do turismo próspero, ligado e sustentável.',
+                'Queremos criar uma plataforma onde cada região esteja representada, cada experiência autêntica tenha a oportunidade de ser descoberta e a identidade única do Líbano seja partilhada com o mundo.',
+              ],
+              ru: [
+                '> Стать ведущими воротами в Ливан.',
+                'Мы видим Vardenia надёжным и вдохновляющим источником для путешественников, которые хотят узнать места, культуру, гостеприимство и впечатления Ливана.',
+                'Мы стремимся помочь Ливану получить признание как исключительному туристическому направлению и поддержать процветающую, связанную и устойчивую туристическую отрасль.',
+                'Мы хотим создать платформу, где представлен каждый регион, у каждого подлинного впечатления есть шанс быть замеченным, а неповторимый облик Ливана становится известен всему миру.',
+              ],
+              zh: [
+                '> 成为发现黎巴嫩的首要门户。',
+                '我们希望 Vardenia 成为旅行者探索黎巴嫩目的地、文化、款待与体验时值得信赖、富有启发的参考。',
+                '我们的抱负是助力黎巴嫩被公认为卓越的旅游目的地，同时支持一个繁荣、互联且可持续的旅游业。',
+                '我们希望打造这样一个平台：每个地区都有一席之地，每一种真实的体验都有机会被发现，黎巴嫩独特的身份得以与世界分享。',
+              ],
+              hi: [
+                '> लेबनान की खोज का एक अग्रणी द्वार बनना।',
+                'हम Vardenia को उन यात्रियों के लिए एक भरोसेमंद और प्रेरक संदर्भ के रूप में देखते हैं जो लेबनान की जगहों, संस्कृति, आतिथ्य और अनुभवों को खोजना चाहते हैं।',
+                'हमारी आकांक्षा है कि लेबनान को एक असाधारण पर्यटन स्थल के रूप में पहचान दिलाने में योगदान दें, और साथ ही एक फलते-फूलते, जुड़े हुए और टिकाऊ पर्यटन उद्योग का साथ दें।',
+                'हम ऐसा प्लेटफ़ॉर्म बनाना चाहते हैं जहाँ हर क्षेत्र का प्रतिनिधित्व हो, हर सच्चे अनुभव को खोजे जाने का मौक़ा मिले और लेबनान की अनूठी पहचान दुनिया तक पहुँचे।',
+              ],
+              bn: [
+                '> লেবানন আবিষ্কারের এক অগ্রণী প্রবেশদ্বার হয়ে ওঠা।',
+                'আমরা Vardenia-কে দেখি সেই ভ্রমণকারীদের জন্য একটি নির্ভরযোগ্য ও অনুপ্রেরণাদায়ক সূত্র হিসেবে, যাঁরা লেবাননের গন্তব্য, সংস্কৃতি, আতিথেয়তা ও অভিজ্ঞতা ঘুরে দেখতে চান।',
+                'আমাদের আকাঙ্ক্ষা লেবাননকে একটি অসাধারণ পর্যটন গন্তব্য হিসেবে স্বীকৃতি পেতে সাহায্য করা, আর একটি সমৃদ্ধ, সংযুক্ত ও টেকসই পর্যটন শিল্পের পাশে থাকা।',
+                'আমরা এমন একটি প্ল্যাটফর্ম গড়তে চাই যেখানে প্রতিটি অঞ্চলের প্রতিনিধিত্ব থাকবে, প্রতিটি খাঁটি অভিজ্ঞতা আবিষ্কৃত হওয়ার সুযোগ পাবে, আর লেবাননের অনন্য পরিচয় পৌঁছে যাবে বিশ্বের কাছে।',
+              ],
+              ur: [
+                '> لبنان کی دریافت کا ایک نمایاں دروازہ بننا۔',
+                'ہم Vardenia کو اُن مسافروں کے لیے ایک قابلِ اعتماد اور متاثر کن حوالہ دیکھتے ہیں جو لبنان کی منزلوں، ثقافت، مہمان نوازی اور تجربات کو دریافت کرنا چاہتے ہیں۔',
+                'ہماری خواہش ہے کہ لبنان کو ایک غیر معمولی سیاحتی منزل کے طور پر پہچان دلانے میں حصہ ڈالیں، اور ساتھ ہی ایک پھلتی پھولتی، مربوط اور پائیدار سیاحتی صنعت کا ساتھ دیں۔',
+                'ہم ایسا پلیٹ فارم بنانا چاہتے ہیں جہاں ہر علاقے کی نمائندگی ہو، ہر حقیقی تجربے کو دریافت ہونے کا موقع ملے اور لبنان کی منفرد شناخت دنیا تک پہنچے۔',
+              ],
+            }),
+          },
+          {
+            heading: pick(locale, {
+              en: 'Our Mission',
+              ar: 'مهمّتنا',
+              fr: 'Notre mission',
+              es: 'Nuestra misión',
+              pt: 'A nossa missão',
+              ru: 'Наша миссия',
+              zh: '我们的使命',
+              hi: 'हमारा मिशन',
+              bn: 'আমাদের লক্ষ্য',
+              ur: 'ہمارا مشن',
+            }),
+            body: pick(locale, {
+              en: [
+                '> Connecting People. Celebrating Places. Inspiring Journeys.',
+                'Our mission is to showcase the best of Lebanon through carefully curated content, engaging storytelling, and innovative digital experiences.',
+                'By connecting travelers with hotels, guesthouses, restaurants, attractions, and local businesses, we aim to make discovering Lebanon more accessible, meaningful, and enjoyable.',
+                "We are committed to supporting Lebanon's tourism community by promoting local businesses, encouraging exploration beyond traditional destinations, and creating valuable opportunities for visibility and growth.",
+                "> At Vardenia, we don't simply introduce destinations. We inspire people to experience the stories, culture, and spirit behind them.",
+                '~ All Lebanon. One Extraordinary Journey.',
+              ],
+              ar: [
+                '> نصل الناس. نحتفي بالأماكن. نُلهم الرحلات.',
+                'مهمّتنا أن نُظهر أفضل ما في لبنان عبر محتوى مختار بعناية، وسرد قصصي جذّاب، وتجارب رقمية مبتكرة.',
+                'بوصل المسافرين بالفنادق وبيوت الضيافة والمطاعم والمعالم والأعمال المحلية، نسعى إلى أن نجعل اكتشاف لبنان أسهل وأعمق معنى وأكثر متعة.',
+                'نلتزم بدعم المجتمع السياحي في لبنان، بالترويج للأعمال المحلية، وتشجيع الاستكشاف أبعد من الوجهات التقليدية، وخلق فرص قيّمة للحضور والنموّ.',
+                '> في فاردينيا، لا نكتفي بالتعريف بالوجهات. نحن نُلهم الناس ليعيشوا القصص والثقافة والروح التي تقف وراءها.',
+                '~ كلّ لبنان. رحلة واحدة استثنائية.',
+              ],
+              fr: [
+                '> Relier les gens. Célébrer les lieux. Inspirer les voyages.',
+                'Notre mission est de montrer le meilleur du Liban grâce à des contenus choisis avec soin, des récits qui captivent et des expériences numériques innovantes.',
+                'En reliant les voyageurs aux hôtels, maisons d’hôtes, restaurants, sites et commerces locaux, nous voulons rendre la découverte du Liban plus accessible, plus riche de sens et plus agréable.',
+                'Nous nous engageons à soutenir la communauté touristique libanaise en mettant en avant les établissements locaux, en encourageant l’exploration au-delà des destinations habituelles et en créant de vraies occasions de visibilité et de croissance.',
+                '> Chez Vardenia, nous ne nous contentons pas de présenter des destinations. Nous donnons envie de vivre les histoires, la culture et l’esprit qui les habitent.',
+                '~ Tout le Liban. Un voyage extraordinaire.',
+              ],
+              es: [
+                '> Conectar personas. Celebrar lugares. Inspirar viajes.',
+                'Nuestra misión es mostrar lo mejor del Líbano a través de contenidos cuidadosamente seleccionados, relatos que atrapan y experiencias digitales innovadoras.',
+                'Al conectar a los viajeros con hoteles, casas de huéspedes, restaurantes, atracciones y negocios locales, queremos que descubrir el Líbano sea más accesible, significativo y agradable.',
+                'Nos comprometemos a apoyar a la comunidad turística del Líbano promoviendo los negocios locales, animando a explorar más allá de los destinos tradicionales y creando oportunidades valiosas de visibilidad y crecimiento.',
+                '> En Vardenia no nos limitamos a presentar destinos. Inspiramos a las personas a vivir las historias, la cultura y el espíritu que hay detrás de ellos.',
+                '~ Todo el Líbano. Un viaje extraordinario.',
+              ],
+              pt: [
+                '> Ligar pessoas. Celebrar lugares. Inspirar viagens.',
+                'A nossa missão é mostrar o melhor do Líbano através de conteúdos escolhidos com cuidado, histórias envolventes e experiências digitais inovadoras.',
+                'Ao ligar os viajantes a hotéis, casas de hóspedes, restaurantes, atrações e negócios locais, queremos tornar a descoberta do Líbano mais acessível, significativa e agradável.',
+                'Comprometemo-nos a apoiar a comunidade turística do Líbano, promovendo os negócios locais, incentivando a exploração para lá dos destinos habituais e criando oportunidades valiosas de visibilidade e crescimento.',
+                '> Na Vardenia não nos limitamos a apresentar destinos. Inspiramos as pessoas a viver as histórias, a cultura e o espírito que estão por trás deles.',
+                '~ Todo o Líbano. Uma viagem extraordinária.',
+              ],
+              ru: [
+                '> Соединять людей. Прославлять места. Вдохновлять на путешествия.',
+                'Наша миссия: показывать лучшее в Ливане через тщательно отобранный контент, увлекательные истории и новые цифровые возможности.',
+                'Связывая путешественников с отелями, гостевыми домами, ресторанами, достопримечательностями и местным бизнесом, мы хотим сделать знакомство с Ливаном доступнее, содержательнее и приятнее.',
+                'Мы поддерживаем туристическое сообщество Ливана: продвигаем местный бизнес, зовём исследовать страну за пределами привычных маршрутов и создаём настоящие возможности для заметности и роста.',
+                '> В Vardenia мы не просто рассказываем о местах. Мы вдохновляем людей прожить истории, культуру и дух, которые за ними стоят.',
+                '~ Весь Ливан. Одно необыкновенное путешествие.',
+              ],
+              zh: [
+                '> 连接人与人，礼赞每个地方，启发每段旅程。',
+                '我们的使命是通过精心策划的内容、引人入胜的故事和创新的数字体验，展现黎巴嫩最好的一面。',
+                '通过把旅行者与酒店、民宿、餐厅、景点和本地商家联系起来，我们希望让发现黎巴嫩变得更容易、更有意义，也更愉快。',
+                '我们致力于支持黎巴嫩的旅游群体：推广本地商家，鼓励人们走出传统路线去探索，并为曝光与成长创造有价值的机会。',
+                '> 在 Vardenia，我们不只是介绍目的地，更启发人们去体验其背后的故事、文化与精神。',
+                '~ 整个黎巴嫩，一段非凡的旅程。',
+              ],
+              hi: [
+                '> लोगों को जोड़ना। जगहों का उत्सव मनाना। यात्राओं को प्रेरित करना।',
+                'हमारा मिशन ध्यान से चुनी गई सामग्री, दिलचस्प कहानियों और नए डिजिटल अनुभवों के ज़रिए लेबनान का सबसे अच्छा रूप दिखाना है।',
+                'यात्रियों को होटलों, गेस्टहाउसों, रेस्तराँओं, दर्शनीय स्थलों और स्थानीय व्यवसायों से जोड़कर हम लेबनान की खोज को और सुलभ, सार्थक और आनंददायक बनाना चाहते हैं।',
+                'हम लेबनान के पर्यटन समुदाय का साथ देने के लिए प्रतिबद्ध हैं: स्थानीय व्यवसायों को बढ़ावा देकर, पारंपरिक जगहों से आगे खोज के लिए प्रोत्साहित करके और पहचान व विकास के मूल्यवान अवसर बनाकर।',
+                '> Vardenia में हम सिर्फ़ जगहों का परिचय नहीं कराते। हम लोगों को उनके पीछे की कहानियों, संस्कृति और आत्मा को जीने की प्रेरणा देते हैं।',
+                '~ पूरा लेबनान। एक असाधारण यात्रा।',
+              ],
+              bn: [
+                '> মানুষকে যুক্ত করা। জায়গাকে উদযাপন করা। যাত্রাকে অনুপ্রাণিত করা।',
+                'আমাদের লক্ষ্য যত্নে বাছাই করা কনটেন্ট, আকর্ষণীয় গল্প আর উদ্ভাবনী ডিজিটাল অভিজ্ঞতার মধ্য দিয়ে লেবাননের সেরাটা তুলে ধরা।',
+                'ভ্রমণকারীদের হোটেল, গেস্টহাউস, রেস্তোরাঁ, দর্শনীয় স্থান ও স্থানীয় ব্যবসার সঙ্গে যুক্ত করে আমরা লেবানন আবিষ্কারকে আরও সহজলভ্য, অর্থবহ ও আনন্দময় করতে চাই।',
+                'আমরা লেবাননের পর্যটন সম্প্রদায়ের পাশে থাকতে অঙ্গীকারবদ্ধ: স্থানীয় ব্যবসার প্রচার করে, প্রচলিত গন্তব্যের বাইরে ঘুরে দেখতে উৎসাহ দিয়ে, আর পরিচিতি ও বৃদ্ধির মূল্যবান সুযোগ তৈরি করে।',
+                '> Vardenia-তে আমরা শুধু গন্তব্যের পরিচয় দিই না। আমরা মানুষকে অনুপ্রাণিত করি তার পেছনের গল্প, সংস্কৃতি ও প্রাণকে অনুভব করতে।',
+                '~ সমগ্র লেবানন। এক অসাধারণ যাত্রা।',
+              ],
+              ur: [
+                '> لوگوں کو جوڑنا۔ جگہوں کا جشن منانا۔ سفر کی ترغیب دینا۔',
+                'ہمارا مشن احتیاط سے منتخب مواد، دلچسپ کہانیوں اور نئے ڈیجیٹل تجربات کے ذریعے لبنان کا بہترین رخ دکھانا ہے۔',
+                'مسافروں کو ہوٹلوں، گیسٹ ہاؤسز، ریستورانوں، دلچسپ مقامات اور مقامی کاروباروں سے جوڑ کر ہم لبنان کی دریافت کو زیادہ آسان، بامعنی اور خوشگوار بنانا چاہتے ہیں۔',
+                'ہم لبنان کی سیاحتی برادری کا ساتھ دینے کے پابند ہیں: مقامی کاروباروں کو فروغ دے کر، روایتی منزلوں سے آگے دریافت کی حوصلہ افزائی کر کے، اور پہچان اور ترقی کے قیمتی مواقع پیدا کر کے۔',
+                '> Vardenia میں ہم صرف منزلوں کا تعارف نہیں کراتے۔ ہم لوگوں کو ان کے پیچھے چھپی کہانیوں، ثقافت اور روح کو جینے کی ترغیب دیتے ہیں۔',
+                '~ پورا لبنان۔ ایک غیر معمولی سفر۔',
+              ],
+            }),
+          },
+        ],
       },
     ],
   }
-}
-
-/** Where Vardenia is based, in the reader's language, or the marked gap if unset. */
-function aboutWhere(locale: Locale): string {
-  const address = CONTACT.postalAddress
-  if (!address) return TBD('where Vardenia is based')
-  return pick(locale, {
-    en: `Vardenia is based at ${address}.`,
-    ar: `مقرّ فاردينيا: ${address}.`,
-    fr: `Le siège de Vardenia : ${address}.`,
-    es: `Vardenia tiene su sede en ${address}.`,
-    pt: `A Vardenia tem sede em ${address}.`,
-    ru: `Vardenia находится по адресу: ${address}.`,
-    zh: `Vardenia 位于：${address}。`,
-    hi: `Vardenia का पता: ${address}।`,
-    bn: `Vardenia-র ঠিকানা: ${address}।`,
-    ur: `Vardenia کا پتا: ${address}۔`,
-  })
 }
 
 // ------------------------------------------------------------------- contact
@@ -1510,123 +1922,377 @@ export function advertisePage(locale: Locale = 'en'): ContentPage {
 
 // ----------------------------------------------------- add your business
 
+/**
+ * The owner's text of 11 November 2026, "Introduce Your Business", replacing
+ * the earlier what-to-send page. The seven things to send are subsections, in
+ * the owner's order. A line starting "> " is a pull quote and "~ " the closing
+ * Vardenia signature (ContentPage). The one line added to the owner's text is
+ * the address to write to, so the page says where to send it all.
+ */
 export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
+  const steps: [string, string][] = pick(locale, {
+    en: [
+      ['Business Name & Location', 'Your business name, region, and full address.'],
+      [
+        'Business Category',
+        'Tell us about your business, whether it is a hotel, guesthouse, restaurant, café, attraction, activity provider, or another tourism-related service.',
+      ],
+      [
+        'About Your Business',
+        'A brief introduction highlighting what makes your destination, services, or experiences unique.',
+      ],
+      [
+        'Website & Social Media',
+        'Share your official website and social media pages, if available.',
+      ],
+      [
+        'Photos & Visual Content',
+        'A selection of high-quality photographs that showcase your property, services, or experiences.',
+      ],
+      [
+        'Contact Information',
+        'Provide the name, phone number, and email address of your business representative.',
+      ],
+      [
+        'Booking Preferences',
+        'Let us know whether you are interested in receiving booking inquiries through Vardenia or prefer customers to contact you directly.',
+      ],
+    ],
+    ar: [
+      ['اسم العمل وموقعه', 'اسم عملك والمنطقة والعنوان الكامل.'],
+      [
+        'فئة العمل',
+        'أخبرنا عن عملك، سواء كان فندقاً أو بيت ضيافة أو مطعماً أو مقهى أو معلماً سياحياً أو مقدّم أنشطة أو خدمة سياحية أخرى.',
+      ],
+      ['نبذة عن عملك', 'تعريف موجز يُبرز ما يميّز وجهتك أو خدماتك أو تجاربك.'],
+      [
+        'الموقع الإلكتروني ومواقع التواصل',
+        'شاركنا موقعك الرسمي وصفحاتك على مواقع التواصل الاجتماعي، إن وُجدت.',
+      ],
+      ['الصور والمحتوى المرئي', 'مجموعة من الصور عالية الجودة تُظهر منشأتك أو خدماتك أو تجاربك.'],
+      ['معلومات الاتصال', 'اسم ممثّل عملك ورقم هاتفه وبريده الإلكتروني.'],
+      [
+        'تفضيلات الحجز',
+        'أخبرنا إن كنت ترغب في تلقّي طلبات الحجز عبر فاردينيا، أو تفضّل أن يتواصل معك العملاء مباشرة.',
+      ],
+    ],
+    fr: [
+      [
+        'Nom et adresse de l’établissement',
+        'Le nom de votre établissement, sa région et son adresse complète.',
+      ],
+      [
+        'Catégorie',
+        'Dites-nous ce qu’est votre établissement : hôtel, maison d’hôtes, restaurant, café, site à visiter, prestataire d’activités ou autre service touristique.',
+      ],
+      [
+        'À propos de votre établissement',
+        'Une courte présentation de ce qui rend votre destination, vos services ou vos expériences uniques.',
+      ],
+      [
+        'Site web et réseaux sociaux',
+        'Votre site officiel et vos pages sur les réseaux sociaux, s’il y en a.',
+      ],
+      [
+        'Photos et contenus visuels',
+        'Une sélection de photographies de grande qualité qui mettent en valeur votre établissement, vos services ou vos expériences.',
+      ],
+      [
+        'Coordonnées',
+        'Le nom, le numéro de téléphone et l’adresse e-mail de la personne qui représente votre établissement.',
+      ],
+      [
+        'Préférences de réservation',
+        'Dites-nous si vous souhaitez recevoir des demandes de réservation via Vardenia ou si vous préférez que les clients vous contactent directement.',
+      ],
+    ],
+    es: [
+      [
+        'Nombre y ubicación del negocio',
+        'El nombre de tu negocio, la región y la dirección completa.',
+      ],
+      [
+        'Categoría del negocio',
+        'Cuéntanos qué es tu negocio: un hotel, una casa de huéspedes, un restaurante, un café, una atracción, un proveedor de actividades u otro servicio turístico.',
+      ],
+      [
+        'Sobre tu negocio',
+        'Una breve presentación que destaque lo que hace único a tu destino, tus servicios o tus experiencias.',
+      ],
+      [
+        'Web y redes sociales',
+        'Comparte tu web oficial y tus perfiles en redes sociales, si los tienes.',
+      ],
+      [
+        'Fotos y contenido visual',
+        'Una selección de fotografías de alta calidad que muestren tu establecimiento, tus servicios o tus experiencias.',
+      ],
+      [
+        'Datos de contacto',
+        'El nombre, el teléfono y el correo electrónico de la persona que representa a tu negocio.',
+      ],
+      [
+        'Preferencias de reserva',
+        'Dinos si te interesa recibir solicitudes de reserva a través de Vardenia o prefieres que los clientes te contacten directamente.',
+      ],
+    ],
+    pt: [
+      ['Nome e localização do negócio', 'O nome do seu negócio, a região e o endereço completo.'],
+      [
+        'Categoria do negócio',
+        'Conte-nos sobre o seu negócio: se é um hotel, uma pousada, um restaurante, um café, uma atração, um prestador de atividades ou outro serviço turístico.',
+      ],
+      [
+        'Sobre o seu negócio',
+        'Uma breve apresentação destacando o que torna únicos o seu destino, os seus serviços ou as suas experiências.',
+      ],
+      [
+        'Site e redes sociais',
+        'Compartilhe seu site oficial e suas páginas nas redes sociais, se houver.',
+      ],
+      [
+        'Fotos e conteúdo visual',
+        'Uma seleção de fotografias de alta qualidade que mostrem seu espaço, seus serviços ou suas experiências.',
+      ],
+      ['Informações de contato', 'O nome, o telefone e o e-mail do representante do seu negócio.'],
+      [
+        'Preferências de reserva',
+        'Diga-nos se você tem interesse em receber pedidos de reserva pela Vardenia ou se prefere que os clientes entrem em contato diretamente com você.',
+      ],
+    ],
+    ru: [
+      ['Название и адрес', 'Название вашего заведения, регион и полный адрес.'],
+      [
+        'Категория',
+        'Расскажите, что у вас за заведение: отель, гостевой дом, ресторан, кафе, достопримечательность, организатор досуга или другая туристическая услуга.',
+      ],
+      [
+        'О вашем заведении',
+        'Краткий рассказ о том, что делает ваше место, услуги или впечатления особенными.',
+      ],
+      [
+        'Сайт и соцсети',
+        'Ссылки на ваш официальный сайт и страницы в социальных сетях, если они есть.',
+      ],
+      [
+        'Фотографии и визуальные материалы',
+        'Подборка качественных фотографий, которые показывают ваше заведение, услуги или впечатления.',
+      ],
+      [
+        'Контактные данные',
+        'Имя, номер телефона и адрес электронной почты представителя вашего заведения.',
+      ],
+      [
+        'Бронирования',
+        'Сообщите, хотите ли вы получать запросы на бронирование через Vardenia или предпочитаете, чтобы клиенты связывались с вами напрямую.',
+      ],
+    ],
+    zh: [
+      ['商户名称与位置', '您的商户名称、所在地区及详细地址。'],
+      [
+        '商户类别',
+        '告诉我们您的商户类型：酒店、民宿、餐厅、咖啡馆、景点、活动服务商，或其他旅游相关服务。',
+      ],
+      ['商户简介', '简要介绍您的目的地、服务或体验有何独特之处。'],
+      ['网站与社交媒体', '如有，请提供您的官方网站和社交媒体主页。'],
+      ['照片与视觉内容', '精选几张高质量照片，展示您的场所、服务或体验。'],
+      ['联系方式', '商户代表的姓名、电话号码和电子邮箱。'],
+      ['预订偏好', '请告诉我们，您希望通过 Vardenia 接收预订咨询，还是更希望客人直接联系您。'],
+    ],
+    hi: [
+      ['व्यवसाय का नाम और स्थान', 'आपके व्यवसाय का नाम, क्षेत्र और पूरा पता।'],
+      [
+        'व्यवसाय की श्रेणी',
+        'हमें अपने व्यवसाय के बारे में बताएँ, चाहे वह होटल हो, गेस्टहाउस, रेस्तराँ, कैफ़े, दर्शनीय स्थल, गतिविधि प्रदाता या कोई और पर्यटन सेवा।',
+      ],
+      [
+        'आपके व्यवसाय के बारे में',
+        'एक छोटा परिचय, जो बताए कि आपकी जगह, सेवाएँ या अनुभव किस बात में अनोखे हैं।',
+      ],
+      ['वेबसाइट और सोशल मीडिया', 'अगर हों, तो अपनी आधिकारिक वेबसाइट और सोशल मीडिया पेज साझा करें।'],
+      [
+        'तस्वीरें और विज़ुअल सामग्री',
+        'उच्च गुणवत्ता वाली कुछ चुनिंदा तस्वीरें, जो आपकी जगह, सेवाएँ या अनुभव दिखाएँ।',
+      ],
+      ['संपर्क जानकारी', 'आपके व्यवसाय के प्रतिनिधि का नाम, फ़ोन नंबर और ईमेल पता।'],
+      [
+        'बुकिंग की पसंद',
+        'हमें बताएँ कि आप Vardenia के ज़रिए बुकिंग अनुरोध पाना चाहते हैं या चाहते हैं कि ग्राहक सीधे आपसे संपर्क करें।',
+      ],
+    ],
+    bn: [
+      ['ব্যবসার নাম ও অবস্থান', 'আপনার ব্যবসার নাম, অঞ্চল ও পূর্ণ ঠিকানা।'],
+      [
+        'ব্যবসার ধরন',
+        'আপনার ব্যবসা সম্পর্কে বলুন: হোটেল, গেস্টহাউস, রেস্তোরাঁ, ক্যাফে, দর্শনীয় স্থান, কার্যক্রম আয়োজক বা পর্যটন-সংক্রান্ত অন্য কোনো সেবা।',
+      ],
+      [
+        'আপনার ব্যবসা সম্পর্কে',
+        'একটি সংক্ষিপ্ত পরিচিতি, যাতে বোঝা যায় আপনার গন্তব্য, সেবা বা অভিজ্ঞতাকে কী অনন্য করে তোলে।',
+      ],
+      ['ওয়েবসাইট ও সোশ্যাল মিডিয়া', 'আপনার অফিসিয়াল ওয়েবসাইট ও সোশ্যাল মিডিয়া পেজ, যদি থাকে।'],
+      [
+        'ছবি ও ভিজ্যুয়াল কনটেন্ট',
+        'উচ্চমানের কিছু বাছাই করা ছবি, যা আপনার প্রতিষ্ঠান, সেবা বা অভিজ্ঞতা তুলে ধরে।',
+      ],
+      ['যোগাযোগের তথ্য', 'আপনার ব্যবসার প্রতিনিধির নাম, ফোন নম্বর ও ইমেল ঠিকানা।'],
+      [
+        'বুকিংয়ের পছন্দ',
+        'আমাদের জানান, আপনি Vardenia-র মাধ্যমে বুকিংয়ের অনুরোধ পেতে চান, নাকি চান অতিথিরা সরাসরি আপনার সঙ্গে যোগাযোগ করুন।',
+      ],
+    ],
+    ur: [
+      ['کاروبار کا نام اور مقام', 'آپ کے کاروبار کا نام، علاقہ اور مکمل پتا۔'],
+      [
+        'کاروبار کی قسم',
+        'ہمیں اپنے کاروبار کے بارے میں بتائیں، چاہے وہ ہوٹل ہو، گیسٹ ہاؤس، ریستوران، کیفے، سیاحتی مقام، سرگرمیوں کا منتظم یا سیاحت سے متعلق کوئی اور خدمت۔',
+      ],
+      [
+        'آپ کے کاروبار کے بارے میں',
+        'ایک مختصر تعارف جو بتائے کہ آپ کی منزل، خدمات یا تجربات کو کیا چیز منفرد بناتی ہے۔',
+      ],
+      [
+        'ویب سائٹ اور سوشل میڈیا',
+        'اگر ہوں تو اپنی سرکاری ویب سائٹ اور سوشل میڈیا صفحات شیئر کریں۔',
+      ],
+      [
+        'تصاویر اور بصری مواد',
+        'اعلیٰ معیار کی چند منتخب تصاویر جو آپ کی جگہ، خدمات یا تجربات دکھائیں۔',
+      ],
+      ['رابطے کی معلومات', 'آپ کے کاروبار کے نمائندے کا نام، فون نمبر اور ای میل پتا۔'],
+      [
+        'بکنگ کی ترجیحات',
+        'ہمیں بتائیں کہ آپ Vardenia کے ذریعے بکنگ کی درخواستیں وصول کرنا چاہتے ہیں یا چاہتے ہیں کہ گاہک براہِ راست آپ سے رابطہ کریں۔',
+      ],
+    ],
+  })
+
   return {
     title: pick(locale, {
-      en: 'Add your business',
-      ar: 'أضف عملك',
-      fr: 'Ajouter votre établissement',
-      es: 'Añade tu negocio',
-      pt: 'Adicione seu negócio',
-      ru: 'Добавить своё заведение',
-      zh: '添加您的商户',
-      hi: 'अपना व्यवसाय जोड़ें',
-      bn: 'আপনার ব্যবসা যোগ করুন',
-      ur: 'اپنا کاروبار شامل کریں',
+      en: 'Introduce Your Business',
+      ar: 'عرّف بعملك',
+      fr: 'Présentez votre établissement',
+      es: 'Presenta tu negocio',
+      pt: 'Apresente seu negócio',
+      ru: 'Расскажите о своём заведении',
+      zh: '介绍您的商户',
+      hi: 'अपने व्यवसाय का परिचय दें',
+      bn: 'আপনার ব্যবসার পরিচয় দিন',
+      ur: 'اپنے کاروبار کا تعارف کروائیں',
     }),
     intro: pick(locale, {
-      en: 'Every listing in Vardenia is entered by our team, so this starts with a conversation rather than a form that publishes itself.',
-      ar: 'كل إدراج في فاردينيا يدخله فريقنا بنفسه، فالبداية محادثة لا استمارة تنشر نفسها.',
-      fr: 'Chaque fiche de Vardenia est saisie par notre équipe : tout commence donc par une conversation, pas par un formulaire qui se publie tout seul.',
-      es: 'Cada ficha de Vardenia la introduce nuestro equipo, así que esto empieza con una conversación y no con un formulario que se publica solo.',
-      pt: 'Cada ficha da Vardenia é inserida pela nossa equipe, então isso começa com uma conversa, e não com um formulário que se publica sozinho.',
-      ru: 'Каждую карточку в Vardenia вносит наша команда, поэтому всё начинается с разговора, а не с формы, которая публикует сама себя.',
-      zh: 'Vardenia 的每个商户都由我们的团队录入，所以这一切从一次沟通开始，而不是一张会自动发布的表单。',
-      hi: 'Vardenia की हर लिस्टिंग हमारी टीम दर्ज करती है, इसलिए शुरुआत एक बातचीत से होती है, किसी ऐसे फ़ॉर्म से नहीं जो ख़ुद प्रकाशित हो जाए।',
-      bn: 'Vardenia-র প্রতিটি লিস্টিং আমাদের দল নিজে যোগ করে, তাই এর শুরু একটি কথোপকথনে, এমন কোনো ফর্মে নয় যা নিজে থেকেই প্রকাশ হয়ে যায়।',
-      ur: 'Vardenia کی ہر لسٹنگ ہماری ٹیم درج کرتی ہے، اس لیے اس کی شروعات ایک گفتگو سے ہوتی ہے، کسی ایسے فارم سے نہیں جو خود بخود شائع ہو جائے۔',
+      en: 'Your Destination. Your Story. A Wider Audience.',
+      ar: 'وجهتك. قصتك. جمهور أوسع.',
+      fr: 'Votre destination. Votre histoire. Un public plus large.',
+      es: 'Tu destino. Tu historia. Un público más amplio.',
+      pt: 'Seu destino. Sua história. Um público maior.',
+      ru: 'Ваше место. Ваша история. Более широкая аудитория.',
+      zh: '您的目的地。您的故事。更广的受众。',
+      hi: 'आपकी मंज़िल। आपकी कहानी। एक बड़ा दर्शक वर्ग।',
+      bn: 'আপনার গন্তব্য। আপনার গল্প। আরও বিস্তৃত পাঠক ও অতিথি।',
+      ur: 'آپ کی منزل۔ آپ کی کہانی۔ ایک وسیع تر حلقہ۔',
     }),
     sections: [
       {
         heading: pick(locale, {
-          en: 'What to send',
-          ar: 'ما ترسله',
-          fr: "Ce qu'il faut envoyer",
-          es: 'Qué enviar',
-          pt: 'O que enviar',
-          ru: 'Что прислать',
-          zh: '需要发送什么',
-          hi: 'क्या भेजें',
-          bn: 'কী পাঠাবেন',
-          ur: 'کیا بھیجیں',
+          en: 'A Story Worth Sharing',
+          ar: 'قصة تستحق أن تُروى',
+          fr: 'Une histoire à partager',
+          es: 'Una historia que contar',
+          pt: 'Uma história para contar',
+          ru: 'История, которой стоит поделиться',
+          zh: '值得分享的故事',
+          hi: 'एक कहानी जो बताने लायक है',
+          bn: 'বলার মতো একটি গল্প',
+          ur: 'سنانے کے لائق ایک کہانی',
         }),
         body: pick(locale, {
           en: [
-            '- The name of the business and where it is.',
-            '- What it is: a hotel, a restaurant, a wedding venue, a tour, a car service.',
-            "- A sentence or two about what makes it worth a visitor's evening.",
-            '- A website or a social account, if there is one.',
-            '- Whether you would want to take bookings through Vardenia.',
+            '> Every exceptional destination has a story worth sharing.',
+            'At Vardenia, we welcome hotels, guesthouses, restaurants, attractions, and tourism service providers who wish to become part of our growing network across Lebanon.',
+            'Whether you represent an established destination or a hidden gem waiting to be discovered, we invite you to introduce your business to our team.',
           ],
           ar: [
-            '- اسم العمل وأين هو.',
-            '- ما هو: فندق، مطعم، قاعة أعراس، جولة سياحية، خدمة سيارات.',
-            '- جملة أو جملتان عمّا يجعله يستحق سهرة زائر.',
-            '- موقع إلكتروني أو حساب على مواقع التواصل، إن وُجد.',
-            '- وهل تريد أن تستقبل الحجوزات عبر فاردينيا.',
+            '> لكلّ وجهة استثنائية قصة تستحق أن تُروى.',
+            'نرحّب في فاردينيا بالفنادق وبيوت الضيافة والمطاعم والمعالم السياحية ومقدّمي الخدمات السياحية الراغبين في الانضمام إلى شبكتنا المتنامية في أنحاء لبنان.',
+            'سواء كنت تمثّل وجهة عريقة أو جوهرة خفيّة تنتظر من يكتشفها، ندعوك إلى التعريف بعملك لدى فريقنا.',
           ],
           fr: [
-            "- Le nom de l'établissement et où il se trouve.",
-            "- Ce que c'est : un hôtel, un restaurant, une salle de mariage, une visite guidée, un service de voitures.",
-            "- Une phrase ou deux sur ce qui vaut à un visiteur d'y passer sa soirée.",
-            "- Un site web ou un compte sur les réseaux sociaux, s'il y en a un.",
-            '- Si vous souhaitez recevoir des réservations via Vardenia.',
+            '> Chaque destination d’exception a une histoire qui mérite d’être partagée.',
+            'Vardenia accueille les hôtels, maisons d’hôtes, restaurants, sites à visiter et prestataires touristiques qui souhaitent rejoindre notre réseau grandissant à travers le Liban.',
+            'Que vous représentiez une adresse reconnue ou une perle cachée qui n’attend que d’être découverte, nous vous invitons à présenter votre établissement à notre équipe.',
           ],
           es: [
-            '- El nombre del negocio y dónde está.',
-            '- Qué es: un hotel, un restaurante, un salón de bodas, un tour, un servicio de coches.',
-            '- Una o dos frases sobre por qué merece la noche de un visitante.',
-            '- Una web o una cuenta en redes sociales, si la hay.',
-            '- Si te gustaría recibir reservas a través de Vardenia.',
+            '> Todo destino excepcional tiene una historia que merece ser contada.',
+            'En Vardenia damos la bienvenida a hoteles, casas de huéspedes, restaurantes, atracciones y proveedores de servicios turísticos que deseen formar parte de nuestra creciente red en todo el Líbano.',
+            'Tanto si representas un destino consolidado como una joya escondida a la espera de ser descubierta, te invitamos a presentar tu negocio a nuestro equipo.',
           ],
           pt: [
-            '- O nome do negócio e onde fica.',
-            '- O que é: um hotel, um restaurante, um espaço para casamentos, um passeio, um serviço de carros.',
-            '- Uma ou duas frases sobre o que faz dele um bom programa para a noite de um visitante.',
-            '- Um site ou perfil em rede social, se houver.',
-            '- Se você gostaria de receber reservas pela Vardenia.',
+            '> Todo destino excepcional tem uma história que merece ser contada.',
+            'Na Vardenia, recebemos hotéis, pousadas, restaurantes, atrações e prestadores de serviços turísticos que desejam fazer parte da nossa rede crescente em todo o Líbano.',
+            'Seja você o representante de um destino consagrado ou de uma joia escondida à espera de ser descoberta, convidamos você a apresentar seu negócio à nossa equipe.',
           ],
           ru: [
-            '- Название заведения и где оно находится.',
-            '- Что это: отель, ресторан, свадебный зал, экскурсия, служба такси.',
-            '- Одно-два предложения о том, почему гостю стоит провести там вечер.',
-            '- Сайт или страница в соцсетях, если есть.',
-            '- Хотите ли вы принимать бронирования через Vardenia.',
+            '> У каждого особенного места есть история, которой стоит поделиться.',
+            'Vardenia приглашает отели, гостевые дома, рестораны, достопримечательности и поставщиков туристических услуг, которые хотят стать частью нашей растущей сети по всему Ливану.',
+            'Представляете ли вы известное место или скрытую жемчужину, которая ждёт, чтобы её открыли, мы приглашаем вас рассказать о своём заведении нашей команде.',
           ],
           zh: [
-            '- 商户名称及所在位置。',
-            '- 它是什么：酒店、餐厅、婚礼场地、旅游团、用车服务。',
-            '- 一两句话，说说为什么值得访客在这里度过一个晚上。',
-            '- 网站或社交媒体账号（如有）。',
-            '- 是否希望通过 Vardenia 接受预订。',
+            '> 每一处非凡的目的地，都有一个值得分享的故事。',
+            'Vardenia 欢迎酒店、民宿、餐厅、景点及旅游服务商加入我们遍布黎巴嫩、不断壮大的网络。',
+            '无论您代表的是久负盛名的目的地，还是一颗等待被发现的遗珠，我们都诚邀您向我们的团队介绍您的商户。',
           ],
           hi: [
-            '- व्यवसाय का नाम और वह कहाँ है।',
-            '- वह क्या है: होटल, रेस्तराँ, शादी का स्थल, टूर, कार सेवा।',
-            '- एक-दो वाक्य कि किसी आगंतुक की शाम के लिए वह क्यों ख़ास है।',
-            '- कोई वेबसाइट या सोशल अकाउंट, अगर हो।',
-            '- क्या आप Vardenia के ज़रिए बुकिंग लेना चाहेंगे।',
+            '> हर असाधारण मंज़िल के पास एक कहानी होती है जो बताने लायक है।',
+            'Vardenia में हम उन होटलों, गेस्टहाउसों, रेस्तराँओं, दर्शनीय स्थलों और पर्यटन सेवा प्रदाताओं का स्वागत करते हैं जो पूरे लेबनान में फैले हमारे बढ़ते नेटवर्क का हिस्सा बनना चाहते हैं।',
+            'चाहे आप किसी जानी-मानी जगह का प्रतिनिधित्व करते हों या किसी छिपे हुए रत्न का जो खोजे जाने की राह देख रहा है, हम आपको अपनी टीम से अपने व्यवसाय का परिचय कराने के लिए आमंत्रित करते हैं।',
           ],
           bn: [
-            '- ব্যবসার নাম এবং সেটি কোথায়।',
-            '- এটি কী: হোটেল, রেস্তোরাঁ, বিয়ের ভেন্যু, ট্যুর, গাড়ি সেবা।',
-            '- একটি বা দুটি বাক্য, কেন সেটি একজন অতিথির সন্ধ্যা কাটানোর মতো জায়গা।',
-            '- ওয়েবসাইট বা সোশ্যাল অ্যাকাউন্ট, যদি থাকে।',
-            '- আপনি Vardenia-র মাধ্যমে বুকিং নিতে চান কি না।',
+            '> প্রতিটি অসাধারণ গন্তব্যের একটি গল্প আছে, যা সবার সঙ্গে ভাগ করে নেওয়ার মতো।',
+            'Vardenia-তে আমরা সেই সব হোটেল, গেস্টহাউস, রেস্তোরাঁ, দর্শনীয় স্থান ও পর্যটন সেবাদাতাকে স্বাগত জানাই, যারা লেবানন জুড়ে আমাদের ক্রমবর্ধমান নেটওয়ার্কের অংশ হতে চান।',
+            'আপনি কোনো সুপ্রতিষ্ঠিত গন্তব্যের প্রতিনিধি হোন বা আবিষ্কারের অপেক্ষায় থাকা কোনো লুকোনো রত্নের, আমাদের দলের কাছে আপনার ব্যবসার পরিচয় দিতে আমরা আপনাকে আমন্ত্রণ জানাই।',
           ],
           ur: [
-            '- کاروبار کا نام اور وہ کہاں ہے۔',
-            '- وہ کیا ہے: ہوٹل، ریستوران، شادی ہال، ٹور، کار سروس۔',
-            '- ایک دو جملے کہ کسی مہمان کی شام کے لیے وہ کیوں خاص ہے۔',
-            '- کوئی ویب سائٹ یا سوشل اکاؤنٹ، اگر ہو۔',
-            '- کیا آپ Vardenia کے ذریعے بکنگ لینا چاہیں گے۔',
+            '> ہر غیر معمولی منزل کے پاس ایک ایسی کہانی ہوتی ہے جو سنانے کے لائق ہے۔',
+            'Vardenia میں ہم ان ہوٹلوں، گیسٹ ہاؤسز، ریستورانوں، سیاحتی مقامات اور سیاحتی خدمات فراہم کرنے والوں کا خیرمقدم کرتے ہیں جو پورے لبنان میں پھیلے ہمارے بڑھتے ہوئے نیٹ ورک کا حصہ بننا چاہتے ہیں۔',
+            'چاہے آپ کسی معروف منزل کی نمائندگی کرتے ہوں یا کسی چھپے ہوئے نگینے کی جو دریافت ہونے کا منتظر ہے، ہم آپ کو دعوت دیتے ہیں کہ اپنے کاروبار کا تعارف ہماری ٹیم سے کروائیں۔',
           ],
         }),
       },
       {
         heading: pick(locale, {
-          en: 'What happens next',
-          ar: 'ماذا يحدث بعدها',
+          en: 'To Get Started',
+          ar: 'للبدء',
+          fr: 'Pour commencer',
+          es: 'Para empezar',
+          pt: 'Para começar',
+          ru: 'С чего начать',
+          zh: '如何开始',
+          hi: 'शुरुआत कैसे करें',
+          bn: 'যেভাবে শুরু করবেন',
+          ur: 'آغاز کیسے کریں',
+        }),
+        body: [
+          contactEmail(locale),
+          pick(locale, {
+            en: 'Simply share the following information:',
+            ar: 'يكفي أن ترسل إلينا المعلومات التالية:',
+            fr: 'Il suffit de nous transmettre les informations suivantes :',
+            es: 'Solo tienes que compartir la siguiente información:',
+            pt: 'Basta compartilhar as seguintes informações:',
+            ru: 'Просто пришлите нам следующую информацию:',
+            zh: '只需提供以下信息：',
+            hi: 'बस नीचे दी गई जानकारी हमें भेजें:',
+            bn: 'শুধু নিচের তথ্যগুলো আমাদের জানান:',
+            ur: 'بس درج ذیل معلومات ہمیں بھیجیں:',
+          }),
+        ],
+        subsections: steps.map(([heading, text]) => ({ heading, body: [text] })),
+      },
+      {
+        heading: pick(locale, {
+          en: 'What Happens Next',
+          ar: 'ماذا يحدث بعد ذلك',
           fr: 'Et ensuite',
           es: 'Qué pasa después',
           pt: 'O que acontece depois',
@@ -1636,105 +2302,46 @@ export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
           bn: 'এরপর কী হয়',
           ur: 'اس کے بعد کیا ہوتا ہے',
         }),
-        body: [
-          contactEmail(locale),
-          ...pick(locale, {
-            en: [
-              'We look at every business that gets in touch. If it is right for the directory we will come back to you with what a listing involves and what it costs.',
-              'If it is not, we will say so plainly rather than leaving you waiting. A directory is only worth something to a reader if some things are left out.',
-            ],
-            ar: [
-              'ننظر في كل عمل يتواصل معنا. إذا كان مناسباً للدليل نعود إليك بما يتضمنه الإدراج وبتكلفته.',
-              'وإذا لم يكن، نقول ذلك بوضوح بدل أن نتركك تنتظر. الدليل لا يساوي شيئاً عند القارئ إلا إذا بقي شيء خارجه.',
-            ],
-            fr: [
-              "Nous examinons chaque établissement qui nous contacte. S'il a sa place dans l'annuaire, nous reviendrons vers vous avec ce qu'implique une fiche et ce qu'elle coûte.",
-              "Sinon, nous vous le dirons clairement plutôt que de vous laisser attendre. Un annuaire n'a de valeur pour un lecteur que si certaines choses en sont exclues.",
-            ],
-            es: [
-              'Revisamos cada negocio que se pone en contacto. Si encaja en el directorio, te responderemos con lo que implica una ficha y lo que cuesta.',
-              'Si no, te lo diremos con claridad en lugar de dejarte esperando. Un directorio solo vale algo para un lector si algunas cosas se quedan fuera.',
-            ],
-            pt: [
-              'Analisamos todo negócio que entra em contato. Se ele combinar com o diretório, voltaremos com o que uma ficha envolve e quanto custa.',
-              'Se não combinar, diremos isso com clareza em vez de deixar você esperando. Um diretório só vale algo para o leitor se algumas coisas ficarem de fora.',
-            ],
-            ru: [
-              'Мы рассматриваем каждое заведение, которое к нам обращается. Если оно подходит для справочника, мы ответим, что включает карточка и сколько она стоит.',
-              'Если нет, мы прямо об этом скажем, а не оставим вас ждать. Справочник чего-то стоит для читателя, только если в него попадает не всё.',
-            ],
-            zh: [
-              '每一家联系我们的商户，我们都会认真查看。如果适合收录，我们会告诉您收录包含什么、需要多少费用。',
-              '如果不适合，我们会直接告诉您，而不是让您一直等。只有有所取舍，一份指南对读者才有价值。',
-            ],
-            hi: [
-              'जो भी व्यवसाय हमसे संपर्क करता है, हम उसे देखते हैं। अगर वह निर्देशिका के लिए ठीक है, तो हम आपको बताएँगे कि लिस्टिंग में क्या शामिल है और उसकी क़ीमत क्या है।',
-              'अगर नहीं है, तो हम आपको इंतज़ार कराने के बजाय साफ़-साफ़ बता देंगे। निर्देशिका पाठक के लिए तभी कुछ मायने रखती है जब कुछ चीज़ें उससे बाहर रहें।',
-            ],
-            bn: [
-              'যে ব্যবসাই যোগাযোগ করে, আমরা সেটি দেখি। ডিরেক্টরির জন্য উপযুক্ত হলে লিস্টিংয়ে কী থাকে আর তার খরচ কত, তা নিয়ে আমরা আপনার কাছে ফিরব।',
-              'উপযুক্ত না হলে আপনাকে অপেক্ষায় না রেখে সোজাসুজি জানিয়ে দেব। কিছু জিনিস বাদ না পড়লে একটি ডিরেক্টরি পাঠকের কাছে মূল্যহীন।',
-            ],
-            ur: [
-              'جو بھی کاروبار ہم سے رابطہ کرتا ہے، ہم اسے دیکھتے ہیں۔ اگر وہ ڈائریکٹری کے لیے موزوں ہو تو ہم آپ کو بتائیں گے کہ لسٹنگ میں کیا شامل ہے اور اس کی قیمت کیا ہے۔',
-              'اگر نہیں، تو ہم آپ کو انتظار کروانے کے بجائے صاف بتا دیں گے۔ ڈائریکٹری قاری کے لیے تبھی قیمتی ہے جب کچھ چیزیں اس سے باہر رہیں۔',
-            ],
-          }),
-        ],
-      },
-      {
-        heading: pick(locale, {
-          en: 'If you are already listed',
-          ar: 'إذا كنت مدرجاً بالفعل',
-          fr: 'Si vous êtes déjà référencé',
-          es: 'Si ya estás en el directorio',
-          pt: 'Se você já está no diretório',
-          ru: 'Если вы уже в справочнике',
-          zh: '如果您已被收录',
-          hi: 'अगर आप पहले से लिस्ट हैं',
-          bn: 'আপনি যদি আগে থেকেই লিস্টিংয়ে থাকেন',
-          ur: 'اگر آپ پہلے سے لسٹ ہیں',
-        }),
         body: pick(locale, {
           en: [
-            'To correct something on an existing listing, or to add photographs, get in touch and we will update it. Businesses cannot edit their own pages.',
-            'To answer bookings, sign in at **For partners**. If you have not been given an account and you want one, say so.',
+            'Once we receive your information, our team will review your submission and contact you to discuss the next steps.',
+            '~ Join Vardenia and become part of a platform dedicated to showcasing the richness of Lebanon.',
           ],
           ar: [
-            'لتصحيح شيء في إدراج قائم أو لإضافة صور، تواصل معنا ونحدّثه. لا يستطيع أصحاب الأعمال تعديل صفحاتهم بأنفسهم.',
-            'وللرد على الحجوزات، سجّل الدخول من **للشركاء**. وإذا لم يُنشأ لك حساب وتريد واحداً، أخبرنا.',
+            'حين تصلنا معلوماتك، يراجع فريقنا طلبك ويتواصل معك لمناقشة الخطوات التالية.',
+            '~ انضمّ إلى فاردينيا وكن جزءاً من منصّة مكرّسة لإبراز غنى لبنان.',
           ],
           fr: [
-            'Pour corriger quelque chose sur une fiche existante ou ajouter des photos, contactez-nous et nous la mettrons à jour. Les établissements ne peuvent pas modifier leurs propres pages.',
-            "Pour répondre aux réservations, connectez-vous via **Pour les partenaires**. Si vous n'avez pas reçu de compte et en voulez un, dites-le-nous.",
+            'Dès réception de vos informations, notre équipe examinera votre demande et vous contactera pour convenir des prochaines étapes.',
+            '~ Rejoignez Vardenia et prenez part à une plateforme consacrée à toute la richesse du Liban.',
           ],
           es: [
-            'Para corregir algo de una ficha existente o añadir fotos, ponte en contacto y la actualizaremos. Los negocios no pueden editar sus propias páginas.',
-            'Para responder a las reservas, inicia sesión en **Para socios**. Si no te han dado una cuenta y quieres una, dínoslo.',
+            'En cuanto recibamos tu información, nuestro equipo revisará tu solicitud y se pondrá en contacto contigo para hablar de los siguientes pasos.',
+            '~ Únete a Vardenia y forma parte de una plataforma dedicada a mostrar la riqueza del Líbano.',
           ],
           pt: [
-            'Para corrigir algo em uma ficha existente ou adicionar fotos, entre em contato e nós atualizamos. Os negócios não podem editar as próprias páginas.',
-            'Para responder às reservas, entre por **Para parceiros**. Se você não recebeu uma conta e quer uma, avise.',
+            'Assim que recebermos suas informações, nossa equipe analisará seu pedido e entrará em contato para conversar sobre os próximos passos.',
+            '~ Junte-se à Vardenia e faça parte de uma plataforma dedicada a mostrar a riqueza do Líbano.',
           ],
           ru: [
-            'Чтобы исправить что-то в существующей карточке или добавить фотографии, свяжитесь с нами, и мы её обновим. Заведения не могут редактировать свои страницы сами.',
-            'Чтобы отвечать на бронирования, войдите через раздел **Для партнёров**. Если у вас нет аккаунта и он вам нужен, сообщите нам.',
+            'Получив вашу информацию, наша команда рассмотрит заявку и свяжется с вами, чтобы обсудить следующие шаги.',
+            '~ Присоединяйтесь к Vardenia и станьте частью платформы, которая показывает всё богатство Ливана.',
           ],
           zh: [
-            '如需修改现有页面上的信息或添加照片，请联系我们，我们会为您更新。商户无法自行编辑页面。',
-            '要处理预订，请通过**面向合作伙伴**登录。如果您还没有账户但需要一个，请告诉我们。',
+            '收到您的信息后，我们的团队会审核您的申请，并与您联系，商讨下一步事宜。',
+            '~ 加入 Vardenia，成为一个致力于展现黎巴嫩丰富魅力的平台的一员。',
           ],
           hi: [
-            'किसी मौजूदा लिस्टिंग में कुछ सुधारना हो या तस्वीरें जोड़नी हों, तो हमसे संपर्क करें और हम उसे अपडेट कर देंगे। व्यवसाय अपने पेज ख़ुद नहीं बदल सकते।',
-            'बुकिंग का जवाब देने के लिए **साझेदारों के लिए** से साइन इन करें। अगर आपको खाता नहीं मिला है और आप चाहते हैं, तो हमें बताइए।',
+            'आपकी जानकारी मिलने के बाद हमारी टीम आपके आवेदन की समीक्षा करेगी और अगले क़दमों पर बात करने के लिए आपसे संपर्क करेगी।',
+            '~ Vardenia से जुड़ें और लेबनान की समृद्धि को दिखाने के लिए समर्पित एक मंच का हिस्सा बनें।',
           ],
           bn: [
-            'বিদ্যমান কোনো লিস্টিংয়ে কিছু সংশোধন করতে বা ছবি যোগ করতে আমাদের সঙ্গে যোগাযোগ করুন, আমরা সেটি হালনাগাদ করে দেব। ব্যবসাগুলো নিজেদের পেজ সম্পাদনা করতে পারে না।',
-            'বুকিংয়ের উত্তর দিতে **অংশীদারদের জন্য** থেকে সাইন ইন করুন। আপনাকে অ্যাকাউন্ট দেওয়া না হয়ে থাকলে এবং আপনি একটি চাইলে, আমাদের জানান।',
+            'আপনার তথ্য পাওয়ার পর আমাদের দল আপনার আবেদন পর্যালোচনা করবে এবং পরবর্তী ধাপ নিয়ে আলোচনা করতে আপনার সঙ্গে যোগাযোগ করবে।',
+            '~ Vardenia-তে যোগ দিন এবং লেবাননের ঐশ্বর্য তুলে ধরতে নিবেদিত একটি প্ল্যাটফর্মের অংশ হয়ে উঠুন।',
           ],
           ur: [
-            'کسی موجودہ لسٹنگ میں کچھ درست کرنا ہو یا تصاویر شامل کرنی ہوں تو ہم سے رابطہ کریں، ہم اسے اپ ڈیٹ کر دیں گے۔ کاروبار اپنے صفحات خود تبدیل نہیں کر سکتے۔',
-            'بکنگز کا جواب دینے کے لیے **شراکت داروں کے لیے** سے سائن اِن کریں۔ اگر آپ کو اکاؤنٹ نہیں دیا گیا اور آپ چاہتے ہیں تو ہمیں بتائیں۔',
+            'آپ کی معلومات موصول ہونے پر ہماری ٹیم آپ کی درخواست کا جائزہ لے گی اور اگلے مراحل پر بات کرنے کے لیے آپ سے رابطہ کرے گی۔',
+            '~ Vardenia میں شامل ہوں اور لبنان کی رنگا رنگی کو دنیا کے سامنے لانے والے پلیٹ فارم کا حصہ بنیں۔',
           ],
         }),
       },

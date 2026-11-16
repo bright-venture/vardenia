@@ -74,8 +74,26 @@ function Line({ text, id }: { text: string; id: string }) {
     return <li className="text-ink-700 mt-2 leading-relaxed">{withEmphasis(body, id)}</li>
   }
 
+  // A pull quote: a tagline or a line the owner set in italics (About).
+  if (body.startsWith('> ')) {
+    return <p className="vd-story-quote">{withEmphasis(body.slice(2), id)}</p>
+  }
+
+  // The closing signature: the wordmark over a last line (About).
+  if (body.startsWith('~ ')) {
+    return (
+      <p className="vd-story-signoff">
+        <span aria-hidden="true">VARDENIA</span>
+        {body.slice(2)}
+      </p>
+    )
+  }
+
   return <p className="text-ink-700 mt-4 leading-relaxed">{withEmphasis(body, id)}</p>
 }
+
+/** A list item that is nothing but a bold title: "- **Reliable Information**". */
+const TITLE_ONLY = /^- \*\*([^*]+)\*\*$/
 
 /**
  * No locale prop any more: lib/pages already returned the right language, and a
@@ -118,9 +136,20 @@ export async function ContentPageView({
     'partner-with-us': 5,
     advertise: 3,
   }[slug]
-  const body = (section: ContentPage['sections'][number], sectionIndex: number) =>
+  const body = (section: { body: string[] }, sectionIndex: number) =>
     groupLines(section.body).map((group, groupIndex) => {
       const id = `${sectionIndex}-${groupIndex}`
+      // A list whose items are only bold titles: numbered, between hairlines
+      // (About's Our Commitment, the owner's text of 11 November 2026).
+      if (group.kind === 'list' && group.lines.every((line) => TITLE_ONLY.test(line))) {
+        return (
+          <ol key={id} className="vd-story-titles">
+            {group.lines.map((line, itemIndex) => (
+              <li key={`${id}-${itemIndex}`}>{line.replace(TITLE_ONLY, '$1')}</li>
+            ))}
+          </ol>
+        )
+      }
       return group.kind === 'list' ? (
         <ul key={id} className="list-disc ps-6">
           {group.lines.map((item, itemIndex) => (
@@ -189,6 +218,14 @@ export async function ContentPageView({
                 </span>
                 <h2>{section.heading}</h2>
                 <div className="vd-story-body">{body(section, i)}</div>
+                {/* Smaller headed parts under the section's own paragraphs. */}
+                {section.subsections?.map((part, partIndex) => (
+                  <div className="vd-story-subsection" key={part.heading}>
+                    <h3>{part.heading}</h3>
+                    <div className="vd-story-body">{body(part, i * 100 + partIndex + 1)}</div>
+                  </div>
+                ))}
+                {/* After the subsections, so it closes the section. */}
                 {slug === 'about' && i === 0 ? (
                   <figure className="vd-story-photograph" data-vd-reveal>
                     <Image

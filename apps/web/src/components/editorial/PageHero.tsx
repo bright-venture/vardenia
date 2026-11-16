@@ -4,10 +4,16 @@ import type { Locale } from '@vardenia/i18n'
 import { Coordinates } from '../journey/Coordinates'
 import { DESTINATIONS } from '../journey/destinations'
 
-/** Contextual Lebanese photography, never presented as a pictured business. */
+/**
+ * Contextual Lebanese photography, never presented as a pictured business.
+ *
+ * `body` is a longer line under the intro: the sections' own descriptions
+ * (directory.sectionIntro, the owner's text of 11 November 2026).
+ */
 export function PageHero({
   title,
   intro,
+  body,
   place = 0,
   locale,
   children,
@@ -15,6 +21,7 @@ export function PageHero({
 }: {
   title: string
   intro?: string
+  body?: string
   place?: number
   locale: Locale
   children?: ReactNode
@@ -26,6 +33,11 @@ export function PageHero({
       <div className="vd-inner-hero-copy">
         <h1 data-vd-reveal>{title}</h1>
         {intro ? <p data-vd-reveal>{intro}</p> : null}
+        {body ? (
+          <p className="vd-inner-hero-body" data-vd-reveal>
+            {body}
+          </p>
+        ) : null}
         {children ? (
           <div className="vd-inner-hero-actions" data-vd-reveal>
             {children}

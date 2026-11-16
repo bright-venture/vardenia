@@ -127,6 +127,14 @@
       "note": "Cada ficha diz agora se está livre.",
       "clear": "Limpar datas",
       "onlineOnly": "Só reserva online"
+    },
+    "sectionIntro": {
+      "stay": "Casas de hóspedes em pedra, hotéis boutique e quartos abertos para a montanha ou o mar. Escolha onde acordar e deixe a vista ditar o ritmo do dia.",
+      "eat-and-drink": "Mezze partilhado sem pressa, uma mesa sobre o mar, um café na praça da aldeia, uma noite longa na cidade. O Líbano entende-se melhor à mesa.",
+      "experiences": "Trilhos antigos e vales, ruínas milenares, festivais e dias guiados. Formas de descobrir o país a pé, com quem o conhece bem.",
+      "weddings": "Organizadores que conhecem os espaços, as estações e a luz do fim da tarde. Para um dia sob as oliveiras, junto ao mar ou no alto da montanha.",
+      "lifestyle": "Ruas comerciais, centros comerciais e ginásios para os dias entre viagens: uma aula de manhã, uma tarde a passear, a cidade ao seu ritmo.",
+      "getting-around": "Levante um carro, seja recebido no aeroporto ou fique com um motorista o dia todo, para que a estrada pela costa e até à montanha faça parte da viagem."
     }
   },
   "booking": {
@@ -662,6 +670,12 @@
     "magazineA": "Histórias,",
     "magazineB": "para guardar.",
     "magazineBody": "Cada lugar na revista traz um código. Aponte o celular e a ficha se abre, com os horários de hoje em vez dos do dia em que foi impressa.",
+    "magazinePageA": "Histórias",
+    "magazinePageB": "para guardar.",
+    "magazinePageLead": "Descubra o Líbano. Uma região. Mil histórias.",
+    "magazinePageBody2": "A Vardenia dá vida aos destinos extraordinários do Líbano, ao seu rico patrimônio, à sua hospitalidade excepcional e às suas experiências autênticas, por meio de uma coleção de revistas regionais escolhida com cuidado.",
+    "magazinePageBody3": "Das cidades vibrantes e pitorescas vilas costeiras aos refúgios escondidos nas montanhas e às aldeias atemporais, cada edição celebra o caráter próprio de uma parte diferente do Líbano.",
+    "magazinePageClosing": "Mais do que uma publicação. Uma coleção de histórias do Líbano, à espera de serem descobertas.",
     "readMagazine": "Ler a revista",
     "aboutA": "A viagem",
     "aboutB": "continua.",
