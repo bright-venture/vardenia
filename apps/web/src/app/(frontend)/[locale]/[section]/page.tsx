@@ -60,7 +60,18 @@ import { tripVerdicts } from '../../../../lib/trip-availability'
  * the design work would multiply by the same factor.
  */
 
-export const revalidate = 3600
+/**
+ * Rendered per request, declared rather than inferred.
+ *
+ * Reading `searchParams` already makes this page dynamic, but Next decides that
+ * at build time from what the render touched. If an admin has the page hidden
+ * when the site is built, `notFoundIfHidden` stops the render before
+ * `searchParams` is read, Next files the page as static, and unhiding it later
+ * fails every request with DYNAMIC_SERVER_USAGE (a 500). That happened to
+ * /magazine/articles on 16 November 2026. Saying so here makes the build's
+ * answer the same whether the page was hidden or not.
+ */
+export const dynamic = 'force-dynamic'
 
 interface Props {
   params: Promise<{ locale: string; section: string }>
