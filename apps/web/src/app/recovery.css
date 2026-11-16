@@ -1,7 +1,7 @@
 .vd-recovery-body {
   margin: 0;
-  background: #f7f4ed;
-  color: #243c32;
+  background: #faf8f3;
+  color: #111d2d;
   font-family: var(--font-manrope), system-ui, sans-serif;
 }
 .vd-recovery-body .vd-colour-grade {
@@ -25,11 +25,11 @@
   flex-direction: column;
   justify-content: center;
   padding: 70px 9%;
-  background: #f7f4ed url('/journey/natural-paper-grain.webp') center/220% 270%;
+  background: #faf8f3 url('/journey/natural-paper-grain.webp') center/220% 270%;
   background-blend-mode: soft-light;
 }
 .vd-recovery-brand {
-  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-family: var(--font-fraunces), Georgia, serif;
   font-size: 30px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -38,7 +38,7 @@
   color: inherit;
 }
 .vd-recovery h1 {
-  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-family: var(--font-fraunces), Georgia, serif;
   font-size: clamp(42px, 5vw, 80px);
   line-height: 1.06;
   letter-spacing: -0.035em;
@@ -53,7 +53,7 @@
   max-width: 50ch;
 }
 .vd-recovery [lang='ar'] {
-  font-family: var(--font-noto-arabic), 'Noto Sans Arabic', sans-serif;
+  font-family: var(--font-amiri), serif;
   font-size: 22px;
 }
 .vd-recovery-actions {
@@ -70,8 +70,8 @@
   padding: 14px 24px;
   border: 0;
   border-radius: 999px;
-  background: #243c32;
-  color: #f7f4ed;
+  background: #111d2d;
+  color: #faf8f3;
   font-size: 16px;
   text-decoration: none;
   cursor: pointer;
@@ -79,7 +79,7 @@
 .vd-recovery-actions a + a {
   padding-inline: 0;
   background: transparent;
-  color: #243c32;
+  color: #111d2d;
   text-decoration: underline;
   text-underline-offset: 5px;
 }

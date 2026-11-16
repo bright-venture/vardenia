@@ -28,13 +28,6 @@
   max-width: 49ch;
   margin-top: 30px;
 }
-/* A section's description, under its one-line summary (PageHero `body`). */
-.vd-inner-hero-copy > p.vd-inner-hero-body {
-  margin-top: 14px;
-  max-width: 46ch;
-  font-size: 16px;
-  color: rgb(36 60 50 / 0.74);
-}
 .vd-inner-hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -59,7 +52,7 @@
   position: absolute;
   inset: auto 25px 25px auto;
   color: var(--vd-paper);
-  background: #243c3299;
+  background: #111d2d99;
   padding: 12px 16px;
   z-index: 1;
 }
@@ -92,7 +85,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: #243c3266;
+  background: #111d2d66;
 }
 .vd-inner-hero-immersive .vd-inner-hero-media .vd-coordinates {
   z-index: 2;
@@ -145,17 +138,10 @@
 .vd-subcategories li > a,
 .vd-subcategories li > div {
   border: 0;
-  background: #ece7db;
+  background: #eeeae2;
   padding: 24px;
   margin-bottom: 8px;
   min-height: 86px;
-}
-/* Exactly four kinds of place (Eat & Drink, Experiences) sit on one row on a
-   wide screen rather than three and one. */
-@media (min-width: 1024px) {
-  .vd-subcategories > ul:has(> li:nth-child(4):last-child) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 }
 .vd-subcategories li > a:hover {
   background: var(--vd-ink);
@@ -253,97 +239,6 @@
   aspect-ratio: 4/3;
   object-fit: cover;
 }
-.vd-story-photograph.vd-story-photograph-wide img {
-  height: auto;
-}
-/* Titles only, numbered between hairlines (About's Our Commitment). */
-.vd-story-titles {
-  counter-reset: vd-title;
-  margin: 22px 0 8px;
-  padding: 0;
-  list-style: none;
-}
-.vd-story-titles > li {
-  counter-increment: vd-title;
-  display: flex;
-  align-items: baseline;
-  gap: 20px;
-  padding: 18px 0;
-  border-top: 1px solid rgb(36 60 50 / 0.16);
-  font-family: var(--font-display);
-  font-size: clamp(21px, 1.9vw, 25px);
-  line-height: 1.35;
-  color: var(--vd-ink);
-}
-.vd-story-titles > li:last-child {
-  border-bottom: 1px solid rgb(36 60 50 / 0.16);
-}
-.vd-story-titles > li::before {
-  content: counter(vd-title, decimal-leading-zero);
-  min-width: 2ch;
-  font-family: var(--font-body);
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  color: #762e39;
-}
-.vd-story-photograph.vd-story-photograph-portrait {
-  max-width: 480px;
-}
-.vd-story-photograph.vd-story-photograph-portrait img {
-  height: auto;
-  aspect-ratio: 1122 / 1402;
-}
-/* A pull quote: a tagline, or a line set in italics (About). */
-.vd-story-body > p.vd-story-quote {
-  margin-top: 22px;
-  font-family: var(--font-display);
-  font-size: clamp(21px, 1.8vw, 25px);
-  font-style: italic;
-  line-height: 1.45;
-  color: var(--vd-ink);
-}
-.vd-story-body > p.vd-story-quote:first-child {
-  margin-top: 0;
-}
-:lang(ar) .vd-story-body > p.vd-story-quote,
-:lang(ur) .vd-story-body > p.vd-story-quote,
-:lang(zh) .vd-story-body > p.vd-story-quote,
-:lang(hi) .vd-story-body > p.vd-story-quote,
-:lang(bn) .vd-story-body > p.vd-story-quote {
-  font-style: normal;
-}
-/* The closing signature: the wordmark over a last line (About). */
-.vd-story-body > p.vd-story-signoff {
-  margin-top: 40px;
-  padding-top: 26px;
-  border-top: 1px solid rgb(36 60 50 / 0.18);
-  font-family: var(--font-display);
-  font-size: 19px;
-  color: var(--vd-ink);
-}
-.vd-story-signoff > span {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 15px;
-  letter-spacing: 0.32em;
-}
-
-/* A headed part under a section's paragraphs (About's first section). */
-.vd-story-subsection {
-  margin-top: 40px;
-}
-.vd-story-subsection h3 {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 2.2vw, 32px);
-  font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin-bottom: 14px;
-}
-[dir='rtl'] .vd-story-subsection h3 {
-  letter-spacing: 0;
-  line-height: 1.4;
-}
 .vd-story-photograph figcaption {
   margin-top: 12px;
   font-size: 15px;
@@ -360,7 +255,7 @@
   scroll-margin-top: 120px;
   margin-bottom: 14px;
   padding: 25px 30px;
-  background: #ece7db;
+  background: #eeeae2;
 }
 .vd-question summary {
   display: flex;
@@ -433,7 +328,7 @@
 }
 .vd-issue-card .relative {
   padding: 22px;
-  background: #e6e1d4;
+  background: #eae5da;
 }
 .vd-issue-card h2 {
   font-size: 30px;
@@ -448,7 +343,7 @@
 .vd-archive-empty {
   padding: 35px;
   margin-top: 0;
-  background: #ece7db;
+  background: #eeeae2;
   font-size: 20px;
 }
 .vd-issue-page {
@@ -492,12 +387,12 @@
 .vd-issue-subhead > span {
   font-family: var(--font-body);
   font-size: 14px;
-  color: rgb(36 60 50 / 0.62);
+  color: rgb(17 29 45 / 0.62);
 }
 .vd-issue-places {
   margin-top: 80px;
   padding-top: 48px;
-  border-top: 1px solid rgb(36 60 50 / 0.12);
+  border-top: 1px solid rgb(17 29 45 / 0.12);
 }
 .vd-issue-places > h2 {
   font-family: var(--font-display);
@@ -515,7 +410,7 @@
   gap: 10px;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid rgb(36 60 50 / 0.18);
+  border: 1px solid rgb(17 29 45 / 0.18);
   font-size: 14px;
   color: var(--vd-ink);
   text-decoration: none;
@@ -525,7 +420,7 @@
 }
 .vd-issue-regions a:hover {
   border-color: var(--vd-ink);
-  background: rgb(36 60 50 / 0.04);
+  background: rgb(17 29 45 / 0.04);
 }
 .vd-issue-regions a:focus-visible {
   outline: 2px solid var(--vd-gold);
@@ -533,7 +428,7 @@
 }
 .vd-issue-regions a > span {
   font-size: 13px;
-  color: rgb(36 60 50 / 0.62);
+  color: rgb(17 29 45 / 0.62);
 }
 .vd-issue-region {
   margin-top: 56px;
@@ -626,7 +521,7 @@
   margin-top: 60px;
 }
 .vd-account-page > div:has(details) {
-  background: #ece7db;
+  background: #eeeae2;
   padding: 10px 25px;
 }
 .vd-account-page details > summary {
@@ -681,7 +576,7 @@
   border: 0;
   padding: 14px 22px;
   font-size: 16px;
-  background: #ece7db;
+  background: #eeeae2;
 }
 .vd-partner-tabs > a[aria-current='page'] {
   background: var(--vd-ink);
@@ -699,7 +594,7 @@
 }
 .vd-booking-panel {
   border: 0;
-  background: #ece7db;
+  background: #eeeae2;
   padding: 35px;
   scroll-margin-top: 110px;
 }
@@ -718,7 +613,7 @@
 .vd-task-page {
   margin-block: 70px;
   padding: 45px;
-  background: #ece7db;
+  background: #eeeae2;
   max-width: 760px;
   width: calc(100% - 48px);
 }
@@ -893,7 +788,7 @@
     flex: 0 0 auto;
     max-width: 260px;
     padding: 14px 18px;
-    background: #ece7db;
+    background: #eeeae2;
   }
   .vd-story-index .vd-button {
     margin-top: 15px;
@@ -1059,7 +954,7 @@
 .vd-trip-bar {
   border: 0;
   padding: 30px;
-  background: #ece7db;
+  background: #eeeae2;
 }
 .vd-trip-bar h2 {
   font-size: 30px;
@@ -1104,73 +999,5 @@
   }
   .vd-trip-bar h2 {
     font-size: 27px;
-  }
-}
-/* A portrait photograph (the magazine's on /magazine/issues): shown whole, at
-   its own shape, never wider than a printed page would look beside the title. */
-/* A main photograph with a smaller one laid over its lower corner
-   (Getting Around, 12 November 2026). */
-.vd-inner-hero-collage {
-  position: relative;
-  min-width: 0;
-  padding-bottom: 56px;
-}
-.vd-inner-hero-collage .vd-inner-hero-media {
-  width: 100%;
-}
-.vd-inner-hero-inset {
-  position: absolute;
-  z-index: 1;
-  bottom: 0;
-  /* Physical, not logical: the photograph does not mirror in Arabic, and
-     on its right the inset would cover the magazine in the passenger's hands. */
-  left: -9%;
-  width: 34%;
-  margin: 0;
-  border: 8px solid var(--vd-paper);
-  box-shadow:
-    0 2px 6px rgb(36 60 50 / 0.16),
-    0 26px 50px -14px rgb(36 60 50 / 0.42);
-}
-.vd-inner-hero-inset img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-/* A landscape inset (Experiences) is wider, so it reads at the same size. */
-.vd-inner-hero-inset.vd-inner-hero-inset-wide {
-  width: 48%;
-}
-/* In Arabic the photograph sits at the page's left edge, so the inset stays inside it. */
-[dir='rtl'] .vd-inner-hero-inset {
-  left: 4%;
-}
-@media (max-width: 700px) {
-  .vd-inner-hero-collage {
-    padding-bottom: 48px;
-  }
-  .vd-inner-hero-inset,
-  [dir='rtl'] .vd-inner-hero-inset {
-    left: 14px;
-    width: 40%;
-    border-width: 5px;
-  }
-  .vd-inner-hero-inset.vd-inner-hero-inset-wide {
-    width: 58%;
-  }
-}
-.vd-inner-hero-media.vd-inner-hero-media-portrait {
-  aspect-ratio: 1122 / 1402;
-  width: 100%;
-  max-width: 500px;
-  justify-self: center;
-}
-.vd-inner-hero-media.vd-inner-hero-media-portrait img {
-  transform: none;
-}
-@media (max-width: 700px) {
-  .vd-inner-hero-media.vd-inner-hero-media-portrait {
-    aspect-ratio: 1122 / 1402;
-    max-width: none;
   }
 }

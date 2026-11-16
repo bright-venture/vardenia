@@ -9,7 +9,6 @@ import {
   TRIP_MAX_PARTY,
 } from '../lib/trip'
 import { FilterChip } from './FilterChip'
-import { SHOW_TRIP_SEARCH } from '../lib/feature-display'
 import { filterHref, type FilterState } from './ListingFilters'
 import { INPUT, LABEL, LINK, PRIMARY_BUTTON } from './formStyles'
 
@@ -100,8 +99,6 @@ export async function TripBar({
   /** The section path, or null for the whole directory. Stay asks for nights. */
   section: string | null
 }) {
-  // Hidden for now, wherever it is placed (lib/feature-display).
-  if (!SHOW_TRIP_SEARCH) return null
   const t = await getTranslations()
   const trip = state.trip ?? null
   const today = beirutDate()

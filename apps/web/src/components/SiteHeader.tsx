@@ -1,5 +1,4 @@
 import { MobileMenu } from './header/MobileMenu'
-import { HomepageLink } from './header/HomepageLink'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ChevronDown, Heart } from 'lucide-react'
@@ -10,20 +9,12 @@ import { LinkArrow } from './LinkArrow'
 import { LanguageSwitcher, LanguageSwitcherLinks } from './LanguageSwitcher'
 import { AccountIconLink, AccountLink, AccountSheetLinks } from './AccountLink'
 import { SavedNavLink } from './SavedNavLink'
-import { SHOW_SAVING } from '../lib/feature-display'
 import { HeaderBar } from './header/HeaderBar'
 import { DropdownNav } from './header/DropdownNav'
 import { DiscoveryMenu } from './header/DiscoveryMenu'
 import { SEARCH_ICON } from './navIcons'
 import { sectionName, sectionSummary } from '../lib/labels'
 import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
-import { ISSUES_PAGE_PHOTO, MAGAZINE_PAGE_PHOTO, SECTION_PHOTOS } from '../lib/section-photos'
-import {
-  ABOUT_HERO,
-  ABOUT_HERO_ALT,
-  ADD_BUSINESS_PHOTO,
-  ADD_BUSINESS_PHOTO_ALT,
-} from './editorial/standingPagePhotos'
 
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
@@ -33,6 +24,14 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   // The header's sign-in and account links, which Settings can hide.
   const showAccount = !hidden.includes('sign-in')
   const shown = (slug: (typeof hidden)[number]) => !hidden.includes(slug)
+  const categoryPhotos: Record<string, number> = {
+    stay: 1,
+    'eat-and-drink': 0,
+    experiences: 3,
+    weddings: 5,
+    lifestyle: 2,
+    'getting-around': 4,
+  }
 
   // The six sections and the directory, without the ones an admin has hidden.
   const sectionItems = withoutHidden(
@@ -40,8 +39,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       href: `/${section.path}`,
       name: sectionName(section, locale),
       description: sectionSummary(section, locale),
-      // The section's own photograph, as on its page (lib/section-photos).
-      photo: SECTION_PHOTOS[section.path],
+      destination: categoryPhotos[section.path] ?? 0,
     })),
     hidden,
   )
@@ -50,7 +48,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     <DiscoveryMenu
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
-      plain
       footer={directoryShown ? { href: '/directory', label: t('home.wholeDirectory') } : undefined}
       items={sectionItems}
     />
@@ -63,8 +60,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
    * Discover does; the magazine shows its own open spread.
    */
   const magazineSpread = {
-    src: '/journey/all-lebanon-box.webp',
-    alt: t('nav.magazineMenuPhotoAlt'),
+    src: '/journey/vardenia-magazine-open-v1.webp',
+    alt: 'The Vardenia magazine, open on a spread',
+    whole: true,
   }
   const magazineItems = withoutHidden(
     [
@@ -72,14 +70,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         href: '/magazine',
         name: t('nav.magazine'),
         description: t('nav.magazineNote'),
-        // The same picture as the page it opens (lib/section-photos).
-        photo: { src: MAGAZINE_PAGE_PHOTO.src, alt: t('nav.magazineMenuPhotoAlt') },
+        photo: magazineSpread,
       },
       {
         href: '/magazine/issues',
         name: t('footer.issues'),
         description: t('nav.issuesNote'),
-        photo: { src: ISSUES_PAGE_PHOTO.src, alt: ISSUES_PAGE_PHOTO.alt },
+        photo: magazineSpread,
       },
       {
         href: '/magazine/articles',
@@ -90,17 +87,22 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
     ],
     hidden,
   )
-  const magazineMenu = <DiscoveryMenu title={t('nav.magazineMenuTitle')} items={magazineItems} />
-  // About and Add your business show their pages' own photographs; the others
-  // a destination by index into components/journey/destinations.
+  const magazineMenu = (
+    <DiscoveryMenu
+      title={t('nav.magazineMenuTitle')}
+      body={t('nav.magazineMenuBody')}
+      items={magazineItems}
+    />
+  )
+  // Destinations by index into components/journey/destinations: Byblos,
+  // Beirut, Deir el Qamar, Tyre.
   const aboutItems = [
     shown('about')
       ? {
           href: '/about',
           name: t('nav.aboutVardenia'),
           description: t('nav.aboutVardeniaNote'),
-          // The About page's own header picture (editorial/standingPagePhotos).
-          photo: { src: ABOUT_HERO.src, alt: ABOUT_HERO_ALT[locale] },
+          destination: 0,
         }
       : null,
     shown('add-your-business')
@@ -108,8 +110,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           href: '/add-your-business',
           name: t('home.addBusiness'),
           description: t('nav.addBusinessNote'),
-          // The page's own photograph (editorial/standingPagePhotos).
-          photo: { src: ADD_BUSINESS_PHOTO.src, alt: ADD_BUSINESS_PHOTO_ALT[locale] },
+          destination: 2,
         }
       : null,
     shown('faq')
@@ -162,12 +163,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             aria-label={t('nav.directory')}
             className="vd-desktop-nav items-stretch self-stretch"
           >
-            {/* Set exactly like the Discover, Magazine and About buttons beside it
-                (header/DropdownNav), without the chevron. */}
-            <HomepageLink
-              label={t('nav.homepage')}
-              className="vd-homepage-link text-ink-700 hover:text-ink-900 flex h-full items-center px-2 py-1.5 text-sm transition-colors"
-            />
             {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
             {sectionItems.length > 0 ? (
               <DropdownNav label={t('nav.discover')} wide>
@@ -196,7 +191,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             <SEARCH_ICON className="size-4" strokeWidth={1.75} aria-hidden />
           </Link>
           {/* Shown only to a signed-in reader; see SavedNavLink. */}
-          {SHOW_SAVING ? <SavedNavLink label={t('nav.saved')} /> : null}
+          <SavedNavLink label={t('nav.saved')} />
           {/* Not while the admin has Sign in hidden (lib/hidden-pages). */}
           {showAccount ? (
             <span className="vd-account-link">
@@ -226,13 +221,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <SEARCH_ICON aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
               <span>{t('home.searchPlaceholder')}</span>
             </Link>
-            <HomepageLink label={t('nav.homepage')} className="vd-mobile-homepage-link" />
 
             {sectionItems.length > 0 || directoryShown ? (
-              <section
-                className="vd-mobile-group vd-mobile-group-plain"
-                aria-labelledby="vd-mobile-discover"
-              >
+              <section className="vd-mobile-group" aria-labelledby="vd-mobile-discover">
                 <h2 id="vd-mobile-discover" className="vd-mobile-eyebrow">
                   {t('nav.discover')}
                 </h2>
@@ -308,13 +299,11 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 listed: on a phone the menu is the way around, and a signed-out
                 tap lands on the sign-in prompt. */}
             <div className="vd-mobile-foot">
-              {SHOW_SAVING ? (
-                <Link href="/account/saved" className="vd-sheet-row">
-                  <Heart aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
-                  <span className="vd-sheet-row-label">{t('nav.saved')}</span>
-                  <LinkArrow />
-                </Link>
-              ) : null}
+              <Link href="/account/saved" className="vd-sheet-row">
+                <Heart aria-hidden className="size-[18px] shrink-0" strokeWidth={1.5} />
+                <span className="vd-sheet-row-label">{t('nav.saved')}</span>
+                <LinkArrow />
+              </Link>
               {languageSheet}
               {showAccount ? <AccountSheetLinks /> : null}
             </div>

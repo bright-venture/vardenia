@@ -4,7 +4,6 @@ import {
   Playfair_Display,
   IBM_Plex_Mono,
   DM_Sans,
-  Gelasio,
   Noto_Sans_Arabic,
   Noto_Sans_Bengali,
   Noto_Sans_Devanagari,
@@ -18,26 +17,7 @@ export const fraunces = Playfair_Display({
   display: 'swap',
   variable: '--font-fraunces',
 })
-/**
- * Georgia's stand-in where Georgia is not installed (Android). Same metrics, so
- * headings set the same on every phone. Not preloaded: a browser only fetches
- * it when the first face in the stack, Georgia, is missing.
- */
-export const gelasio = Gelasio({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-gelasio',
-  weight: ['400', '500'],
-  style: ['normal', 'italic'],
-  preload: false,
-})
-export const manrope = DM_Sans({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-manrope',
-  // Headings are DM Sans since 13 November 2026 and set words in italics.
-  style: ['normal', 'italic'],
-})
+export const manrope = DM_Sans({ subsets: ['latin'], display: 'swap', variable: '--font-manrope' })
 export const plexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   display: 'swap',
@@ -86,7 +66,6 @@ export const notoBengali = Noto_Sans_Bengali({
 })
 export const FONT_VARIABLES = [
   fraunces.variable,
-  gelasio.variable,
   manrope.variable,
   plexMono.variable,
   amiri.variable,

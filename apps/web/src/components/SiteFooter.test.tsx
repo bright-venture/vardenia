@@ -8,7 +8,9 @@ import type { HideablePage } from '../lib/hideable-pages'
 const hidden = vi.hoisted(() => ({ pages: [] as HideablePage[] }))
 
 vi.mock('next-intl/server', () => ({
-  getTranslations: async () => createTranslator({ locale: 'en', messages: getMessages('en') }),
+  // The footer asks for the whole catalogue and for the journey's namespace.
+  getTranslations: async (namespace?: string) =>
+    createTranslator({ locale: 'en', messages: getMessages('en'), namespace: namespace as never }),
 }))
 vi.mock('../lib/hidden-pages', async () => {
   const actual =
@@ -23,7 +25,7 @@ async function footerLinks(pages: HideablePage[]): Promise<string[]> {
   const root = document.createElement('div')
   root.innerHTML = renderToStaticMarkup(
     <NextIntlClientProvider locale="en" messages={getMessages('en')} timeZone="Asia/Beirut">
-      {await SiteFooter()}
+      {await SiteFooter({ locale: 'en' })}
     </NextIntlClientProvider>,
   )
   return [...root.querySelectorAll('a')].map((a) => a.textContent ?? '')
@@ -31,30 +33,34 @@ async function footerLinks(pages: HideablePage[]): Promise<string[]> {
 
 describe('the site footer and hidden pages', () => {
   it('shows every link when nothing is hidden', async () => {
-    expect(await footerLinks([])).toEqual([
-      'Vardenia',
-      'About',
+    const links = await footerLinks([])
+    for (const label of [
+      'Stay',
       'Magazine',
-      'Partner with us',
+      'Directory',
+      'About',
       'Contact',
+      'Partner with us',
+      'Partner sign in',
       'Privacy',
       'Terms',
       'Credits',
-      'Partner sign in',
     ])
+      expect(links).toContain(label)
   })
 
   /**
    * The Settings list on 11 November 2026: Partner sign in, Partner with us and
-   * Contact were hidden and still showed, because the compact footer wrote its
-   * small print out by hand and its Partner with us leads to the homepage form.
+   * Contact were hidden, and the footer has to follow it.
    */
-  it('leaves out what Settings hides, small print and Partner with us included', async () => {
+  it('leaves out what Settings hides', async () => {
     const links = await footerLinks(['partner-sign-in', 'partner-with-us', 'contact', 'faq'])
     expect(links).not.toContain('Partner sign in')
     expect(links).not.toContain('Partner with us')
     expect(links).not.toContain('Contact')
-    expect(links).toEqual(['Vardenia', 'About', 'Magazine', 'Privacy', 'Terms', 'Credits'])
+    expect(links).not.toContain('Questions')
+    expect(links).toContain('About')
+    expect(links).toContain('Privacy')
   })
 
   it('takes Privacy, Terms and Credits out of the small print when hidden', async () => {

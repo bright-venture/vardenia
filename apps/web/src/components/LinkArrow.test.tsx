@@ -24,6 +24,7 @@ describe('LinkArrow', () => {
 
   it.each([
     'ContentPage.tsx',
+    'SiteFooter.tsx',
     'journey/CinematicJourney.tsx',
     'journey/MagazineArt.tsx',
     'home/HomePlaces.tsx',

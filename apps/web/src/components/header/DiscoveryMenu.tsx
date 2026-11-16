@@ -41,16 +41,12 @@ export function DiscoveryMenu({
   body,
   items,
   footer,
-  plain = false,
 }: {
   title: string
-  /** A line beside the heading; the Magazine menu has none since 13 November 2026. */
-  body?: string
+  body: string
   items: DiscoveryCategory[]
   /** A link under the list, such as the whole directory. */
   footer?: { href: string; label: string }
-  /** Heading and item names in the body sans (the Discover menu, 13 November 2026). */
-  plain?: boolean
 }) {
   const [active, setActive] = useState(0)
   // Three of these sit in the header at once, so the heading id is per menu.
@@ -59,10 +55,10 @@ export function DiscoveryMenu({
   const place = item?.photo ? null : (DESTINATIONS[item?.destination ?? 0] ?? DESTINATIONS[0])
   const photo = item?.photo ?? (place ? { src: `/journey/${place.image}`, alt: place.alt } : null)
   return (
-    <div className={`vd-discovery-menu ${plain ? 'vd-discovery-menu-plain' : ''}`}>
+    <div className="vd-discovery-menu">
       <header className="vd-discovery-heading">
         <h2 id={headingId}>{title}</h2>
-        {body ? <p>{body}</p> : null}
+        <p>{body}</p>
       </header>
       <div className="vd-discovery-composition">
         <nav aria-labelledby={headingId}>

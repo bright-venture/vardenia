@@ -1,7 +1,5 @@
-import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
-import { MAGAZINE_PAGE_PHOTO } from '../../lib/section-photos'
 import { Coordinates } from './Coordinates'
 import { DESTINATIONS } from './destinations'
 export async function EditorialIntro({
@@ -13,51 +11,21 @@ export async function EditorialIntro({
 }) {
   const t = await getTranslations({ locale, namespace: 'journey' })
   const magazine = kind === 'magazine',
-    place = DESTINATIONS[0]
+    place = DESTINATIONS[magazine ? 3 : 0]
   return (
     <header className="vd-page-intro">
       <div>
         <h1>
-          {t(magazine ? 'magazinePageA' : 'directoryTitle')}
+          {t(magazine ? 'magazineA' : 'directoryTitle')}
           <br />
-          {t(magazine ? 'magazinePageB' : 'directoryEmphasis')}
+          {t(magazine ? 'magazineB' : 'directoryEmphasis')}
         </h1>
-        {magazine ? (
-          // The owner's text of 11 November 2026: a line under the title, two
-          // paragraphs (the first and fourth went in the designer's 13 November
-          // update) and a closing line in italics. The journey homepage keeps
-          // its own shorter magazineA/B/Body.
-          <>
-            <p className="vd-page-intro-lead">{t('magazinePageLead')}</p>
-            {([2, 3] as const).map((n) => (
-              <p key={n}>{t(`magazinePageBody${n}`)}</p>
-            ))}
-            <p>
-              <em>{t('magazinePageClosing')}</em>
-            </p>
-          </>
-        ) : (
-          <p>{t('directoryBody')}</p>
-        )}
+        <p>{t(magazine ? 'magazineBody' : 'directoryBody')}</p>
       </div>
-      {magazine ? (
-        // The magazine itself, not a place: no coordinates.
-        <figure className="vd-page-intro-portrait">
-          <Image
-            src={MAGAZINE_PAGE_PHOTO.src}
-            alt={MAGAZINE_PAGE_PHOTO.alt}
-            width={MAGAZINE_PAGE_PHOTO.width}
-            height={MAGAZINE_PAGE_PHOTO.height}
-            sizes="(max-width:700px) 100vw, 440px"
-            priority
-          />
-        </figure>
-      ) : (
-        <figure>
-          <img src={`/journey/${place.image}`} alt={place.alt} width="1600" height="1200" />
-          <Coordinates place={place} enabled label={locale === 'ar' ? place.ar : place.name} />
-        </figure>
-      )}
+      <figure>
+        <img src={`/journey/${place.image}`} alt={place.alt} width="1600" height="1200" />
+        <Coordinates place={place} enabled label={locale === 'ar' ? place.ar : place.name} />
+      </figure>
     </header>
   )
 }

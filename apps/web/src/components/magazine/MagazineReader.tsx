@@ -10,7 +10,6 @@ import {
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
-  type ReactNode,
 } from 'react'
 import {
   ArrowUpRight,
@@ -42,12 +41,6 @@ interface Props {
   originalSrc: string
   title: string
   locale: string
-  /**
-   * The homepage's own invitation (11 November 2026): it draws the closed
-   * reader itself and calls `open` from its button. The page around it then
-   * carries the heading, so the reader's own header is left out.
-   */
-  invitation?: (open: () => void) => ReactNode
 }
 interface PageGesture {
   pointerId: number
@@ -66,7 +59,7 @@ interface PageGesture {
 }
 
 /** PDF.js and PDF bytes are loaded only after an explicit invitation to read. */
-export function MagazineReader({ src, originalSrc, title, locale, invitation }: Props) {
+export function MagazineReader({ src, originalSrc, title, locale }: Props) {
   const copy = readerCopy(locale)
   const [motion] = useJourneyMotion()
   const [open, setOpen] = useState(false)
@@ -78,20 +71,18 @@ export function MagazineReader({ src, originalSrc, title, locale, invitation }: 
       data-reader-motion={motion ? 'on' : 'off'}
       aria-label={copy.heading}
     >
-      {invitation ? null : (
-        <header className={styles.heading}>
-          <div>
-            <p>
-              VARDENIA <span aria-hidden="true">/</span> {copy.heading}
-            </p>
-            <h2 dir="auto">{title}</h2>
-          </div>
-          <a href={originalSrc} target="_blank" rel="noopener noreferrer">
-            {copy.openPdf}
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </a>
-        </header>
-      )}
+      <header className={styles.heading}>
+        <div>
+          <p>
+            VARDENIA <span aria-hidden="true">/</span> {copy.heading}
+          </p>
+          <h2 dir="auto">{title}</h2>
+        </div>
+        <a href={originalSrc} target="_blank" rel="noopener noreferrer">
+          {copy.openPdf}
+          <ArrowUpRight size={16} aria-hidden="true" />
+        </a>
+      </header>
       {open ? (
         <LoadedReader
           key={`${src}:${attempt}`}
@@ -102,8 +93,6 @@ export function MagazineReader({ src, originalSrc, title, locale, invitation }: 
           motion={motion}
           retry={() => setAttempt(attempt + 1)}
         />
-      ) : invitation ? (
-        invitation(() => setOpen(true))
       ) : (
         <div className={styles.start}>
           <div className={styles.bookInvitation} aria-hidden="true">

@@ -13,9 +13,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
     const host = root.current
     if (
       !host ||
-      // The journey homepage runs its own motion; the business homepage that
-      // replaced it on 11 November 2026 uses this one.
-      (pathname === '/' && host.querySelector('.vd-main-home')) ||
+      pathname === '/' ||
       !motion ||
       document.hidden ||
       matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -63,12 +61,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
       ),
     )
     streamed.observe(host, { childList: true, subtree: true })
-    const photos = [
-      ...host.querySelectorAll<HTMLElement>(
-        // A portrait photo is shown whole (the magazine's), so it does not drift.
-        '.vd-inner-hero-media:not(.vd-inner-hero-media-portrait) img',
-      ),
-    ]
+    const photos = [...host.querySelectorAll<HTMLElement>('.vd-inner-hero-media img')]
     const paint = () => {
       frame = 0
       if (keyboard || document.hidden) return

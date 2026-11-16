@@ -21,8 +21,6 @@ import '../../globals.css'
 import '../../redesign.css'
 import '../../inner-pages.css'
 import '../../home-finish.css'
-import '../../business-home.css'
-import '../../typography.css'
 
 /**
  * Site-level metadata, per locale.
@@ -169,7 +167,7 @@ export default async function FrontendLayout({
             <div id="vd-content" className="flex-1" tabIndex={-1}>
               <PageMotion>{children}</PageMotion>
             </div>
-            <SiteFooter />
+            <SiteFooter locale={locale as Locale} />
             {/* Renders nothing until NEXT_PUBLIC_WHATSAPP_NUMBER is set. */}
             <WhatsAppButton />
           </SavedProvider>
