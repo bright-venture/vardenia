@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+// The homepage's own styles, out of the stylesheets every page loads.
+import '../../home.css'
 import QRCode from 'qrcode'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'

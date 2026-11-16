@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pageWindow } from './page'
+import { pageWindow } from './page-window'
 
 /**
  * The directory rendered a link for every page. At 24 listings per page that is

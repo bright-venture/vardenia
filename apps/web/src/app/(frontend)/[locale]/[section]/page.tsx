@@ -29,7 +29,7 @@ import {
   parseFilterState,
   type RawFilterParams,
 } from '../../../../components/ListingFilters'
-import { pageWindow } from '../directory/page'
+import { Pagination } from '../../../../components/Pagination'
 import { TripBar } from '../../../../components/TripBar'
 import { tripVerdicts } from '../../../../lib/trip-availability'
 
@@ -315,35 +315,12 @@ async function SectionResults({
         }
       />
 
-      {(result?.totalPages ?? 0) > 1 ? (
-        <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
-          {pageWindow(result?.page ?? 1, result?.totalPages ?? 1).map((n, i) =>
-            n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1 py-1">
-                &hellip;
-              </span>
-            ) : (
-              <Link
-                key={n}
-                href={pageHref(n)}
-                // Every listing is in the sitemap, so crawlers need not walk
-                // the pages, and a reader's browser need not render them all
-                // ahead of a click.
-                prefetch={false}
-                rel="nofollow"
-                aria-current={n === result?.page ? 'page' : undefined}
-                className={
-                  n === result?.page
-                    ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
-                    : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
-                }
-              >
-                {n}
-              </Link>
-            ),
-          )}
-        </nav>
-      ) : null}
+      <Pagination
+        className="mt-12"
+        page={result?.page ?? 1}
+        totalPages={result?.totalPages ?? 1}
+        href={pageHref}
+      />
     </>
   )
 }

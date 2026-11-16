@@ -3,9 +3,11 @@ import { fileURLToPath } from 'node:url'
 import { parse } from 'postcss'
 import { describe, expect, it } from 'vitest'
 
-const css = parse(
-  readFileSync(fileURLToPath(new URL('../app/home-finish.css', import.meta.url)), 'utf8'),
-)
+// The homepage's own rules live in home.css since 16 November 2026; the rest of
+// the old home-finish.css is still read, so a rule moved back is still checked.
+const read = (file: string) =>
+  readFileSync(fileURLToPath(new URL(`../app/${file}`, import.meta.url)), 'utf8')
+const css = parse(read('home.css') + '\n' + read('home-finish.css'))
 
 /** Both full-width atlas siblings align with the existing responsive site gutter. */
 describe('homepage edition and featured-place gutters', () => {

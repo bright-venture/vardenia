@@ -13,6 +13,7 @@ import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
+import { Pagination } from '../../../../components/Pagination'
 import { EditorialIntro } from '../../../../components/journey/EditorialIntro'
 import { TripBar } from '../../../../components/TripBar'
 import { tripVerdicts } from '../../../../lib/trip-availability'
@@ -227,76 +228,7 @@ async function DirectoryResults({
         }
       />
 
-      {/*
-          Square cells, navy for the current page, per the design. The windowing
-          stays: the design draws every page number because its sample data has
-          four, and 308 listings at 24 a page is thirteen - which on a phone is a
-          second row of controls under the results. `pageWindow` keeps it to one.
-        */}
-      {(result?.totalPages ?? 0) > 1 ? (
-        <nav className="mt-16 flex items-center justify-center gap-2" aria-label="Pagination">
-          {pageWindow(result?.page ?? 1, result?.totalPages ?? 1).map((n, i) =>
-            n === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="text-ink-500 px-1">
-                &hellip;
-              </span>
-            ) : (
-              <Link
-                key={n}
-                href={pageHref(n)}
-                // As in the sections: the listings are in the sitemap.
-                prefetch={false}
-                rel="nofollow"
-                aria-current={n === result?.page ? 'page' : undefined}
-                className={
-                  n === result?.page
-                    ? 'bg-cedar-900 text-surface-base inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums'
-                    : 'text-ink-500 hover:bg-surface-raised hover:text-ink-900 inline-flex h-10 w-10 items-center justify-center font-mono text-xs tabular-nums transition-colors'
-                }
-              >
-                {n}
-              </Link>
-            ),
-          )}
-        </nav>
-      ) : null}
+      <Pagination page={result?.page ?? 1} totalPages={result?.totalPages ?? 1} href={pageHref} />
     </>
   )
-}
-
-/**
- * The page numbers worth showing: the first, the last, and a few either side.
- *
- * This rendered every page. At 24 listings a page that is 42 links for a
- * thousand listings and 417 for ten thousand, in the HTML of every directory
- * view - a control whose usefulness is fixed while its cost grows with the
- * catalogue. Gaps are rendered as an ellipsis so the jump is legible rather
- * than looking like missing pages.
- */
-export function pageWindow(current: number, total: number, span = 2): (number | 'gap')[] {
-  if (total <= 1) return []
-
-  const wanted = new Set<number>([1, total])
-  for (let n = current - span; n <= current + span; n++) {
-    if (n >= 1 && n <= total) wanted.add(n)
-  }
-
-  const pages = [...wanted].sort((a, b) => a - b)
-  const out: (number | 'gap')[] = []
-
-  pages.forEach((n, i) => {
-    const previous = pages[i - 1]
-
-    if (previous !== undefined) {
-      const missing = n - previous - 1
-      // An ellipsis standing in for one page takes the same room as the page
-      // and tells the reader less. Only collapse a genuine run.
-      if (missing === 1) out.push(previous + 1)
-      else if (missing > 1) out.push('gap')
-    }
-
-    out.push(n)
-  })
-
-  return out
 }

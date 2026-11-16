@@ -10,6 +10,7 @@ import { Link } from '../../../../../i18n/routing'
 import { findArticles } from '../../../../../lib/articles'
 import { ArticleCard } from '../../../../../components/ArticleCard'
 import { ResultsSkeleton } from '../../../../../components/ResultsSkeleton'
+import { Pagination } from '../../../../../components/Pagination'
 
 /**
  * Every article, newest first, regardless of which edition it ran in.
@@ -130,23 +131,12 @@ async function ArticleResults({
         </div>
       )}
 
-      {result.totalPages > 1 ? (
-        <nav className="mt-12 flex justify-center gap-3 text-sm" aria-label="Pagination">
-          {Array.from({ length: result.totalPages }, (_, i) => i + 1).map((n) => (
-            <Link
-              key={n}
-              href={`/magazine/articles?page=${n}`}
-              className={
-                n === result.page
-                  ? 'bg-cedar-900 text-surface-base px-3 py-1 tabular-nums'
-                  : 'border-ink-100 text-ink-700 hover:border-ink-300 border px-3 py-1 tabular-nums'
-              }
-            >
-              {n}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <Pagination
+        className="mt-12"
+        page={result.page ?? 1}
+        totalPages={result.totalPages}
+        href={(n) => `/magazine/articles?page=${n}`}
+      />
     </>
   )
 }

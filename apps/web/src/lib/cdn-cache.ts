@@ -42,9 +42,18 @@ const HEADERS = [
   { key: 'Netlify-Vary', value: 'query' },
 ]
 
+/**
+ * `en` belongs in the prefixed pattern too, although English addresses have no
+ * prefix. The proxy rewrites /stay to /en/stay inside the server, and on
+ * Netlify these rules are matched against the rewritten address: with `en`
+ * left out, every English view of the directory and the sections was built
+ * afresh (`fwd=bypass`) while the French ones were served from the CDN, which
+ * is how it showed up on 16 November 2026. `next start` matches the address
+ * as requested, so the unprefixed rule stays for local runs.
+ */
 export function cdnCacheHeaders() {
   const paths = ['directory', ...CACHED_SECTION_PATHS]
-  const locales = PREFIXED_LOCALES.join('|')
+  const locales = ['en', ...PREFIXED_LOCALES].join('|')
   return paths.flatMap((path) => [
     { source: `/${path}`, headers: HEADERS },
     { source: `/:locale(${locales})/${path}`, headers: HEADERS },
