@@ -82,8 +82,18 @@ Give null for anything you cannot read with confidence rather than a guess. Text
 
 let client: Anthropic | null = null
 
-/** Whether receipts are read at all: only with an API key. */
-export const readerConfigured = () => Boolean(process.env.ANTHROPIC_API_KEY?.trim())
+const claudeConfigured = () => Boolean(process.env.ANTHROPIC_API_KEY?.trim())
+
+/**
+ * The free text reader instead (lib/receipt-text-reader), for testing the
+ * pipeline on staging without a key: RECEIPT_READER=text. A key wins when both
+ * are set, so production cannot drop to the rules by a stray variable.
+ */
+const textReaderOn = () =>
+  !claudeConfigured() && process.env.RECEIPT_READER?.trim().toLowerCase() === 'text'
+
+/** Whether receipts are read at all: with an API key, or the free text reader. */
+export const readerConfigured = () => claudeConfigured() || textReaderOn()
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -157,6 +167,12 @@ export async function readReceipt(
   place: string,
 ): Promise<ReceiptReading | null> {
   if (!readerConfigured()) return null
+  if (textReaderOn()) {
+    // Text only: a photo has none, and the guest types the total as before.
+    if (kind !== 'application/pdf') return null
+    const { pdfLines, readReceiptText } = await import('./receipt-text-reader')
+    return cleanReading(readReceiptText(await pdfLines(bytes), place))
+  }
   client ??= new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 })
   const data = Buffer.from(bytes).toString('base64')
   const file: Anthropic.Beta.BetaContentBlockParam =
