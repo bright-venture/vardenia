@@ -97,6 +97,25 @@ export const contactPostal = (lang: Locale = 'en'): string => {
   return line[lang]
 }
 
-/** The phone number, when there is one worth committing to answer. */
-export const contactPhone = (): string | null =>
-  CONTACT.phone ? `By phone: ${CONTACT.phone}.` : null
+/**
+ * The phone number, when there is one worth committing to answer. The number
+ * is isolated left to right, so "+961 79 338 358" does not come out reversed
+ * inside Arabic or Urdu.
+ */
+export const contactPhone = (lang: Locale = 'en'): string | null => {
+  if (!CONTACT.phone) return null
+  const phone = `⁦${CONTACT.phone}⁩`
+  const line: Record<Locale, string> = {
+    en: `By phone: ${phone}.`,
+    ar: `بالهاتف: ${phone}.`,
+    fr: `Par téléphone : ${phone}.`,
+    es: `Por teléfono: ${phone}.`,
+    pt: `Por telefone: ${phone}.`,
+    ru: `По телефону: ${phone}.`,
+    zh: `电话：${phone}。`,
+    hi: `फ़ोन से: ${phone}।`,
+    bn: `ফোনে: ${phone}।`,
+    ur: `بذریعہ فون: ${phone}۔`,
+  }
+  return line[lang]
+}

@@ -23,8 +23,8 @@
  * is added under Gmail's "Send mail as".
  *
  * The postal address is the registered address the owner gave on 6 November
- * 2026. The phone is still unset, and every page that would show it leaves the
- * line out rather than inventing one.
+ * 2026. The phone is the number the owner gave on 11 November 2026 for the
+ * homepage's contact block.
  */
 
 export interface ContactDetails {
@@ -38,7 +38,7 @@ export interface ContactDetails {
 
 export const CONTACT: ContactDetails = {
   email: 'contact@vardenia.com',
-  phone: null,
+  phone: '+961 79 338 358',
   postalAddress: 'Office 01, Qubic Center, Sin El Fil, Lebanon',
 }
 

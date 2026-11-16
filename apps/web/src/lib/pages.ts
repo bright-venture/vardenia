@@ -1,6 +1,6 @@
 import type { Locale } from '@vardenia/i18n'
 import type { LegalDocument } from './legal'
-import { TBD, contactEmail, contactPostal } from './placeholder'
+import { TBD, contactEmail, contactPhone, contactPostal } from './placeholder'
 import { CONTACT } from './contact'
 
 /**
@@ -480,9 +480,11 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
         }),
         body: [
           contactEmail(locale),
+          // The phone the owner gave on 11 November 2026, added here on 16
+          // November. No hours or reply time are promised (the owner's choice
+          // on 9 November 2026).
+          ...[contactPhone(locale)].filter((line): line is string => line !== null),
           contactPostal(locale),
-          // No hours or reply time are promised: the owner chose on 9 November
-          // 2026 to show only the two ways to reach us.
         ],
       },
     ],
