@@ -84,6 +84,27 @@
   gap: 12px;
   font-size: 14px;
 }
+/*
+ * The header's menu titles on one line (16 November 2026, with the Business
+ * menu): a title broken in two read as two items. Not on the narrowest desktop
+ * widths, where one line each would push the logo off centre; there they wrap,
+ * as before.
+ */
+@media (min-width: 900px) {
+  .vd-header nav.vd-desktop-nav summary {
+    white-space: nowrap;
+  }
+}
+/*
+ * The Business menu needs the width of a laptop: below it the four titles push
+ * the logo off centre in French and Spanish. Its pages stay in the footer's For
+ * business column, and the phone menu has its own fold.
+ */
+@media (max-width: 1199px) {
+  .vd-header .vd-nav-business {
+    display: none;
+  }
+}
 .vd-header-tools {
   grid-column: 3;
   grid-row: 1;

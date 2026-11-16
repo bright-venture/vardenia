@@ -9,11 +9,14 @@ export function DropdownNav({
   children,
   align = 'start',
   wide = false,
+  className = '',
 }: {
   label: string
   children: ReactNode
   align?: 'start' | 'end'
   wide?: boolean
+  /** Extra classes on the disclosure, e.g. to hide one menu at some widths. */
+  className?: string
 }) {
   const root = useRef<HTMLDetailsElement>(null)
   const panelId = useId()
@@ -49,7 +52,7 @@ export function DropdownNav({
       ref={root}
       name="vd-desktop-navigation"
       data-vd-desktop-dropdown
-      className={wide ? 'vd-discovery-dropdown group' : 'group relative'}
+      className={`${wide ? 'vd-discovery-dropdown group' : 'group relative'} ${className}`.trim()}
       onPointerEnter={(event) => {
         if (event.pointerType === 'mouse' && root.current) {
           closePeers()

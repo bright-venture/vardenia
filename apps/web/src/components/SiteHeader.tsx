@@ -105,14 +105,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           destination: 0,
         }
       : null,
-    shown('add-your-business')
-      ? {
-          href: '/add-your-business',
-          name: t('home.addBusiness'),
-          description: t('nav.addBusinessNote'),
-          destination: 2,
-        }
-      : null,
     shown('faq')
       ? {
           href: '/faq',
@@ -135,6 +127,47 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       title={t('nav.aboutMenuTitle')}
       body={t('nav.aboutMenuBody')}
       items={aboutItems}
+    />
+  )
+
+  /*
+   * For business (16 November 2026): the pages a business owner looks for, out
+   * of About, which had held Add your business alone. The partner sign-in is
+   * left out on purpose: a sign-in link on every page invites credential
+   * stuffing, so it stays in the footer, where partners are told to look (see
+   * SiteFooter). Destinations as above: Deir el Qamar, Beirut, Tyre.
+   */
+  const businessItems = [
+    shown('add-your-business')
+      ? {
+          href: '/add-your-business',
+          name: t('home.addBusiness'),
+          description: t('nav.addBusinessNote'),
+          destination: 2,
+        }
+      : null,
+    shown('partner-with-us')
+      ? {
+          href: '/partner-with-us',
+          name: t('footer.partnerWithUs'),
+          description: t('nav.partnerWithUsNote'),
+          destination: 1,
+        }
+      : null,
+    shown('advertise')
+      ? {
+          href: '/advertise',
+          name: t('footer.advertise'),
+          description: t('nav.advertiseNote'),
+          destination: 3,
+        }
+      : null,
+  ].filter((item) => item !== null)
+  const businessMenu = (
+    <DiscoveryMenu
+      title={t('nav.businessMenuTitle')}
+      body={t('nav.businessMenuBody')}
+      items={businessItems}
     />
   )
 
@@ -177,6 +210,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             {aboutItems.length > 0 ? (
               <DropdownNav label={t('nav.about')} wide>
                 {aboutMenu}
+              </DropdownNav>
+            ) : null}
+            {businessItems.length > 0 ? (
+              // Hidden on narrow desktops, where four titles push the logo
+              // off centre (redesign.css); the footer lists the same pages.
+              <DropdownNav label={t('nav.business')} wide className="vd-nav-business">
+                {businessMenu}
               </DropdownNav>
             ) : null}
           </nav>
@@ -280,6 +320,28 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 </summary>
                 <ul className="vd-mobile-list">
                   {aboutItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="vd-mobile-link vd-mobile-link-small">
+                        <span>
+                          <strong>{item.name}</strong>
+                          <span>{item.description}</span>
+                        </span>
+                        <LinkArrow />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+
+            {businessItems.length > 0 ? (
+              <details className="vd-mobile-fold">
+                <summary>
+                  {t('nav.business')}
+                  <ChevronDown aria-hidden className="vd-mobile-chevron" strokeWidth={1.5} />
+                </summary>
+                <ul className="vd-mobile-list">
+                  {businessItems.map((item) => (
                     <li key={item.href}>
                       <Link href={item.href} className="vd-mobile-link vd-mobile-link-small">
                         <span>
