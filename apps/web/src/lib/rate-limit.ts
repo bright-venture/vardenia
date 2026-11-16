@@ -283,13 +283,32 @@ export function withRateLimit(
       : checkRate(request.headers, now, budget)
     if (!verdict.allowed) return tooManyRequests(verdict)
 
-    const response = await handler(request, context)
+    return withHeaders(await handler(request, context), rateHeaders(verdict))
+  }
+}
 
-    for (const [key, value] of Object.entries(rateHeaders(verdict))) {
-      response.headers.set(key, value)
-    }
-
+/**
+ * The response with these headers added.
+ *
+ * `Response.redirect()` returns a response whose headers are immutable, and
+ * setting one throws "TypeError: immutable". The guest's "Yes, I went"
+ * (/booking/attendance/answer) and the receipt form (/booking/receipt) both
+ * answer with a redirect, so both failed with a 500 after doing their work's
+ * redirect step (found on staging, 16 November 2026). Such a response is copied
+ * into one that can take headers: same status, same body, same headers.
+ */
+function withHeaders(response: Response, extra: Record<string, string>): Response {
+  try {
+    for (const [key, value] of Object.entries(extra)) response.headers.set(key, value)
     return response
+  } catch {
+    const copy = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: new Headers(response.headers),
+    })
+    for (const [key, value] of Object.entries(extra)) copy.headers.set(key, value)
+    return copy
   }
 }
 

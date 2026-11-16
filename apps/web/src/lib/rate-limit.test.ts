@@ -120,6 +120,23 @@ describe('withRateLimit', () => {
     expect(Number(res.headers.get('x-ratelimit-remaining'))).toBeGreaterThanOrEqual(0)
   })
 
+  /**
+   * Response.redirect() has immutable headers. Setting the budget on it threw,
+   * and "Yes, I went" and the receipt form answered 500 (16 November 2026).
+   */
+  it('keeps a redirect a redirect, with the budget on it', async () => {
+    const wrapped = withRateLimit((async () =>
+      Response.redirect('https://vardenia.com/visit/1.x?done=recorded', 303)) as never)
+    const res = await wrapped(
+      new Request('http://x/booking/attendance/answer', { headers: { 'x-real-ip': '2.2.2.2' } }),
+      undefined as never,
+    )
+
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toBe('https://vardenia.com/visit/1.x?done=recorded')
+    expect(res.headers.get('x-ratelimit-limit')).toBe(String(RATE_LIMIT.MAX_PER_WINDOW))
+  })
+
   it('answers 429 with Retry-After once the budget is gone', async () => {
     const wrapped = withRateLimit(ok as never)
     const request = () =>
