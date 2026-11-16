@@ -56,6 +56,11 @@ export function FilterChip({
   return (
     <Link
       href={href}
+      // A filter is a view of a page, not a page: not followed by crawlers and
+      // not prefetched, or one visit to a section renders every chip on the
+      // server (GPTBot, 14 November 2026: 47,000 renders in a day).
+      prefetch={false}
+      rel="nofollow"
       aria-current={active ? 'true' : undefined}
       className={
         'vd-filter-chip ' +

@@ -292,7 +292,12 @@ async function SectionResults({
         emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
         emptyAction={
           anyFilterApplied(state) ? (
-            <Link href={filterHref(base, { amenities: [], trip: state.trip }, {})} className={LINK}>
+            <Link
+              href={filterHref(base, { amenities: [], trip: state.trip }, {})}
+              prefetch={false}
+              rel="nofollow"
+              className={LINK}
+            >
               {t('clearFilters')}
             </Link>
           ) : null
@@ -310,6 +315,11 @@ async function SectionResults({
               <Link
                 key={n}
                 href={pageHref(n)}
+                // Every listing is in the sitemap, so crawlers need not walk
+                // the pages, and a reader's browser need not render them all
+                // ahead of a click.
+                prefetch={false}
+                rel="nofollow"
                 aria-current={n === result?.page ? 'page' : undefined}
                 className={
                   n === result?.page

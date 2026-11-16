@@ -1,5 +1,6 @@
 import { defineRouting } from 'next-intl/routing'
 import { createNavigation } from 'next-intl/navigation'
+import { createElement, type ComponentProps } from 'react'
 import { DEFAULT_LOCALE, LOCALES } from '@vardenia/i18n'
 
 export const routing = defineRouting({
@@ -45,4 +46,26 @@ export const routing = defineRouting({
   localeCookie: false,
 })
 
-export const { Link, redirect, usePathname, useRouter, getPathname } = createNavigation(routing)
+const navigation = createNavigation(routing)
+export const { redirect, usePathname, useRouter, getPathname } = navigation
+
+/**
+ * The locale-aware link, with prefetching off unless a link asks for it.
+ *
+ * Next prefetches every link that scrolls into view, and on this site most
+ * pages are rendered on the server per request: the header and footer menus,
+ * the sections, the directory and every listing card. So one page view set off
+ * 40 to 60 server renders in the background (measured 16 November 2026), for a
+ * reader who would click one of them at most - and a crawler driving a real
+ * browser (GPTBot, 14 November) set them off on every page it opened. Those
+ * renders were the functions line of the Netlify bill.
+ *
+ * Without the prefetch a click fetches the page then, which on a static page
+ * is a CDN hit and on a dynamic one is the same render it would have cost
+ * anyway, once instead of speculatively. A link that should be instant can
+ * still pass `prefetch` itself.
+ */
+type NavigationLinkProps = ComponentProps<typeof navigation.Link>
+export function Link({ prefetch = false, ...props }: NavigationLinkProps) {
+  return createElement(navigation.Link, { ...props, prefetch })
+}

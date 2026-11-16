@@ -204,6 +204,8 @@ async function DirectoryResults({
           anyFilterApplied(state) ? (
             <Link
               href={filterHref('/directory', { amenities: [], trip: state.trip }, {})}
+              prefetch={false}
+              rel="nofollow"
               className={LINK}
             >
               {t('clearFilters')}
@@ -229,6 +231,9 @@ async function DirectoryResults({
               <Link
                 key={n}
                 href={pageHref(n)}
+                // As in the sections: the listings are in the sitemap.
+                prefetch={false}
+                rel="nofollow"
                 aria-current={n === result?.page ? 'page' : undefined}
                 className={
                   n === result?.page

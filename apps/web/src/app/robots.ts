@@ -45,12 +45,36 @@ export default function robots(): MetadataRoute.Robots {
     }
   }
 
+  /**
+   * # No address with a query string, and no sign-in pages
+   *
+   * On 14 November 2026 GPTBot asked for 52,900 addresses in a day, and
+   * Amazonbot 36,100 in the week: every combination of a section's filters,
+   * regions and page numbers, in ten languages, plus the sign-in page once
+   * per listing through the Save button. Each one was a page rendered on
+   * the server, and together they were nearly all of the Netlify bill.
+   *
+   * Every page worth finding is a plain address in the sitemap, so `/*?` asks
+   * crawlers to skip the filtered and paginated views (and Next's `_rsc`
+   * fetches) without hiding anything. `/_next/` stays open: the optimised
+   * images are fetched with a query string, and the longer rule wins.
+   */
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: ['/admin', '/api/', '/g/', '/qr/', '/reports/', '/scan/'],
+        allow: ['/', '/_next/'],
+        disallow: [
+          '/admin',
+          '/api/',
+          '/g/',
+          '/qr/',
+          '/reports/',
+          '/scan/',
+          '/*?',
+          '/account/',
+          '/*/account/',
+        ],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

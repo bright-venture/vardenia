@@ -414,6 +414,8 @@ export async function ListingFilters({
               that is least excusable. */}
           <Link
             href={filterHref(base, { amenities: [], trip: state.trip }, {})}
+            prefetch={false}
+            rel="nofollow"
             className="text-gold-700 hover:text-ink-900 text-sm underline underline-offset-4"
           >
             {t('filters.clearFilters')}

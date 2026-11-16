@@ -96,6 +96,9 @@ export async function SubcategoryTiles({
               {count === null || count > 0 ? (
                 <Link
                   href={`${base}?filter=${sub.slug}`}
+                  // A filtered view, not a page of its own (see FilterChip).
+                  prefetch={false}
+                  rel="nofollow"
                   className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
                 >
                   <span className="font-display text-ink-900 group-hover:text-gold-700 text-xl transition-colors">

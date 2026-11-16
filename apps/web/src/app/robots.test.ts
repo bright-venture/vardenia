@@ -71,8 +71,19 @@ describe('robots.txt once indexing is allowed', () => {
     process.env.NEXT_PUBLIC_ALLOW_INDEX = 'true'
   })
 
-  it('allows the site', () => {
-    expect(firstRule(robots()).allow).toBe('/')
+  it('allows the site, and the optimised images', () => {
+    expect(firstRule(robots()).allow).toEqual(['/', '/_next/'])
+  })
+
+  /**
+   * The crawl trap of 14 November 2026: GPTBot walked every filter, region and
+   * page number of every section in ten languages, each a server render.
+   */
+  it('keeps crawlers off filtered views and the sign-in pages', () => {
+    const disallow = disallowList(robots())
+    expect(disallow).toContain('/*?')
+    expect(disallow).toContain('/account/')
+    expect(disallow).toContain('/*/account/')
   })
 
   it('advertises the sitemap again', () => {
