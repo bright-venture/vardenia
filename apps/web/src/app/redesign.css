@@ -1200,7 +1200,10 @@
   aspect-ratio: 1.4;
   overflow: hidden;
 }
-.vd-page-intro figure > img {
+.vd-page-intro figure > img,
+.vd-page-intro figure > picture,
+.vd-page-intro figure > picture > img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
