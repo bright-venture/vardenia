@@ -4,7 +4,8 @@ vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
 vi.mock('payload', () => ({ getPayload: vi.fn() }))
 vi.mock('../payload.config', () => ({ default: {} }))
 
-const { toMyReceipt } = await import('./my-receipts')
+const { toMyReceipt, receiptsForCurrent } = await import('./my-receipts')
+const { getPayload } = await import('payload')
 
 /** One receipt as "My receipts" shows it, whatever shape the booking came back in. */
 
@@ -55,5 +56,26 @@ describe('a receipt on "My receipts"', () => {
   it('knows a PDF from a photo, and keeps pounds as pounds', () => {
     const doc = receipt({ mimeType: 'application/pdf', currency: 'LBP', amount: 2_500_000 })
     expect(toMyReceipt(doc)).toMatchObject({ isPdf: true, currency: 'LBP', amount: 2_500_000 })
+  })
+})
+
+/**
+ * Payload builds an upload's `url` from its filename. Selected without it, the
+ * url came back empty and the "View receipt" link never showed (16 November
+ * 2026). The query has to ask for both.
+ */
+describe('the query behind "My receipts"', () => {
+  it('selects the filename with the url, so the file link is built', async () => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    vi.mocked(getPayload).mockResolvedValue({
+      auth: async () => ({ user: { id: 7, collection: 'customers' } }),
+      find,
+    } as never)
+
+    await receiptsForCurrent('en')
+
+    const select = (find.mock.calls[0] as unknown as [{ select: Record<string, boolean> }])[0]
+      .select
+    expect(select).toMatchObject({ url: true, filename: true })
   })
 })

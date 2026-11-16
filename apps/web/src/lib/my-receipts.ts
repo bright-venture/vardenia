@@ -85,6 +85,10 @@ export async function receiptsForCurrent(locale: Locale, limit = 100): Promise<M
       amount: true,
       currency: true,
       url: true,
+      // Payload builds `url` from the filename (uploads and the storage
+      // plugin alike); selected without it, `url` came back empty and the
+      // "View receipt" link never showed (16 November 2026).
+      filename: true,
       mimeType: true,
       booking: true,
       createdAt: true,
