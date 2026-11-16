@@ -32,6 +32,8 @@ describe('locale routing applies to', () => {
     '/account/login',
     '/account/signup',
     '/scan/moved',
+    // The token has a dot; it is still a page (16 November 2026).
+    '/visit/104.csjY8qq9urzlxAqX4cVAnCXR',
   ])('%s', (path) => {
     expect(routed(path)).toBe(true)
   })

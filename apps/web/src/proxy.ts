@@ -236,10 +236,19 @@ export default function proxy(request: NextRequest): NextResponse {
  * JSON. That is why sign-up moved from /account/signup to /auth/signup - the
  * sign-up *page* wants the readable URL, and the two cannot share a path once
  * this file stops rewriting one of them into the other.
+ *
+ * # A dot means a file, except in a visit link
+ *
+ * `.*\.` keeps files (`/favicon.ico`, `/sitemap.xml`) out of locale routing.
+ * A visit link's token carries a dot too (`/visit/104.csjY...`, lib/attendance),
+ * so every English visit link - the "Did you go?" email and "Add your receipt"
+ * on the account page - skipped the rewrite to /en and answered 404. Found on
+ * staging on 16 November 2026; the Arabic and other prefixed links worked,
+ * since they name their locale themselves. `(?!visit/)` exempts that one path.
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|.*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],
