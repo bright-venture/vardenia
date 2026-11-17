@@ -45,8 +45,8 @@ export async function dashboardCounts(payload: Payload, since: Date): Promise<Da
   // from a request. The only request-shaped value is the date, which is bound.
   const result = await db.pool.query(
     `select
-       (select count(*) from ${businesses} where _status = 'published')::int as published_listings,
-       (select count(*) from ${businesses} where _status = 'draft')::int     as draft_listings,
+       (select count(*) from ${businesses} where _status = 'published' and deleted_at is null)::int as published_listings,
+       (select count(*) from ${businesses} where _status = 'draft' and deleted_at is null)::int     as draft_listings,
        (select count(*) from ${articles}   where _status = 'published')::int as published_articles,
        (select count(*) from ${issues})::int                                 as issues,
        (select count(*) from ${codes}      where active)::int                as active_codes,

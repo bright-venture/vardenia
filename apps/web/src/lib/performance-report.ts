@@ -288,7 +288,7 @@ export async function performanceReport(
              (select name from {schema}.businesses_locales where _parent_id = b.id and _locale = 'en') as name,
              exists (select 1 from {schema}.business_users_rels r where r.businesses_id = b.id) as has_partner
       from {schema}.businesses b
-      where b._status = 'published'`),
+      where b._status = 'published' and b.deleted_at is null`),
     q(
       `select business_id as id,
               count(*) filter (where scanned_at >= $1 and scanned_at < $2)::int as cur,

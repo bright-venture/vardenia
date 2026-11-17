@@ -78,7 +78,22 @@ export const Businesses: CollectionConfig = {
     group: 'Directory',
     listSearchableFields: ['name', 'slug', 'address'],
   },
-  versions: { drafts: true, maxPerDoc: 25 },
+  /**
+   * No versions, and a trash (17 November 2026).
+   *
+   * Listings used Payload's drafts, which kept every save as a full copy in the
+   * `_businesses_v*` tables. Nobody used that history: a hotel or a restaurant
+   * is only ever shown or hidden. So the copies were dropped (migration
+   * 20261117_drop_business_versions) and draft/published became the plain
+   * `_status` field below, a column on `businesses` itself. Saving changes the
+   * live listing at once.
+   *
+   * `trash` makes Delete move a listing to the trash: the row stays, with
+   * `deletedAt` set, hidden everywhere Payload reads, and it can be restored.
+   * Its bookings, receipts and statements keep pointing at it. Deleting from
+   * the trash is the permanent delete, and the guards below still apply to it.
+   */
+  trash: true,
   access: {
     read: publishedStaffOrOwned,
     create: isStaff,
@@ -427,7 +442,7 @@ export const Businesses: CollectionConfig = {
               admin: {
                 date: { displayFormat: 'd MMM yyyy' },
                 description:
-                  'Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.',
+                  'The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Leave it empty for no end.',
               },
             },
             {
@@ -503,6 +518,29 @@ export const Businesses: CollectionConfig = {
       ],
     },
 
+    /**
+     * Shown on the website or hidden. Kept under the name drafts gave it, so
+     * the column, its values and every query that reads `_status` are exactly
+     * as they were. Draft is the default, so a new or imported listing stays
+     * hidden until someone publishes it. lib/contract-lapse sets it back to
+     * Draft the day after the contract ends.
+     */
+    {
+      name: '_status',
+      label: 'Status',
+      type: 'select',
+      required: true,
+      defaultValue: 'draft',
+      index: true,
+      options: [
+        { label: 'Draft (hidden)', value: 'draft' },
+        { label: 'Published (on the website)', value: 'published' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: 'Only published listings appear on the website.',
+      },
+    },
     {
       name: 'qrCode',
       label: 'QR code',

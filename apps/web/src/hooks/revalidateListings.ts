@@ -97,7 +97,7 @@ const clearQrDestinations = async () => {
   }
 }
 
-type ListingDoc = { slug?: string | null; _status?: string | null }
+type ListingDoc = { slug?: string | null; _status?: string | null; deletedAt?: string | null }
 
 export const revalidateListingsAfterChange: CollectionAfterChangeHook = async ({
   doc,
@@ -107,7 +107,15 @@ export const revalidateListingsAfterChange: CollectionAfterChangeHook = async ({
   const before = (previousDoc ?? {}) as ListingDoc
   await clearListingsCache()
   await clearListingPages([now.slug, before.slug])
-  if (now.slug !== before.slug || now._status !== before._status) await clearQrDestinations()
+  // Moving to the trash or restoring is an update, not a delete, so it is
+  // caught here: a printed code must stop (or start) leading to the listing.
+  if (
+    now.slug !== before.slug ||
+    now._status !== before._status ||
+    Boolean(now.deletedAt) !== Boolean(before.deletedAt)
+  ) {
+    await clearQrDestinations()
+  }
   return doc
 }
 

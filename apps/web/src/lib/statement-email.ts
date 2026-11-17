@@ -149,7 +149,13 @@ export async function sendStatementEmail(payload: Payload, doc: StatementDoc): P
       overrideAccess: true,
     }),
     payload
-      .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+      .findByID({
+        collection: 'businesses',
+        id: businessId,
+        depth: 0,
+        overrideAccess: true,
+        trash: true,
+      })
       .catch(() => null),
   ])
 

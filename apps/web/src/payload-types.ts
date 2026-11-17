@@ -428,7 +428,7 @@ export interface Business {
   verified?: boolean | null;
   contractStartsAt?: string | null;
   /**
-   * Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.
+   * The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Leave it empty for no end.
    */
   contractEndsAt?: string | null;
   salesOwner?: (number | null) | User;
@@ -440,6 +440,10 @@ export interface Business {
    * Set by a bulk import. A listing carrying this can be removed by scripts/remove-import, including its QR code. Blank means a person created it.
    */
   importBatch?: string | null;
+  /**
+   * Only published listings appear on the website.
+   */
+  _status: 'draft' | 'published';
   /**
    * Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.
    */
@@ -461,7 +465,7 @@ export interface Business {
   };
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1365,6 +1369,7 @@ export interface BusinessesSelect<T extends boolean = true> {
   salesOwner?: T;
   internalNotes?: T;
   importBatch?: T;
+  _status?: T;
   qrCode?: T;
   seo?:
     | T
@@ -1376,7 +1381,7 @@ export interface BusinessesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
+  deletedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

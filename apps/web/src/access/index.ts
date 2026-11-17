@@ -225,10 +225,13 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
  * The test "is restated exactly for the SQL counts" in index.test pins that: if
  * the public clause ever gains a condition, it fails and says to change this.
  *
+ * The second condition is the trash (17 November 2026). Payload adds it to
+ * every query on its own, so the rule above never says it; raw SQL has to.
+ *
  * Only counts come out of those queries, so getting this wrong would miscount
  * rather than leak. `b` is the alias the count queries give the listings table.
  */
-export const PUBLISHED_SQL = `b._status = 'published'`
+export const PUBLISHED_SQL = `b._status = 'published' and b.deleted_at is null`
 
 /**
  * Your own account in this collection, or any if you are staff.

@@ -124,12 +124,14 @@ interface CodeRow {
  * slug and, for the two collections that have drafts, its `_status` - because a
  * listing unpublished after the magazine shipped has to land on "this has moved"
  * rather than on a 404. Slugs are not localised (see fields/slug), so there is
- * no locale table to join.
+ * no locale table to join. A listing in the trash reads as a draft here, so its
+ * code lands on "this has moved" too.
  */
 const LOOKUP = `
   select
     q.id, q.code, q.active, q.target_type, q.category, q.external_url, q.placement,
-    b.id as business_id, b.slug as business_slug, b._status as business_status,
+    b.id as business_id, b.slug as business_slug,
+    case when b.deleted_at is not null then 'draft' else b._status::text end as business_status,
     a.id as article_id, a.slug as article_slug, a._status as article_status,
     i.id as issue_id, i.slug as issue_slug
   from "${DB_SCHEMA}"."qr_codes" q

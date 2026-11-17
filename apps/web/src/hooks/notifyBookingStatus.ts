@@ -197,7 +197,13 @@ async function notifyVenue(booking: BookingDoc, from: BookingStatus, req: Payloa
   if (recipients.length === 0) return
 
   const business = await req.payload
-    .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+    .findByID({
+      collection: 'businesses',
+      id: businessId,
+      depth: 0,
+      overrideAccess: true,
+      trash: true,
+    })
     .catch(() => null)
 
   const customerId = idOf(booking.customer)

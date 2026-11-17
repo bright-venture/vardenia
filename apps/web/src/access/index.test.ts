@@ -305,7 +305,10 @@ describe('publishedStaffOrOwned', () => {
     const condition = where[field] as Record<string, unknown>
     expect(Object.keys(condition), 'the public rule is no longer an equals').toEqual(['equals'])
 
-    expect(PUBLISHED_SQL).toBe(`b.${field} = '${String(condition.equals)}'`)
+    // Plus the trash, which Payload adds to its own queries by itself.
+    expect(PUBLISHED_SQL).toBe(
+      `b.${field} = '${String(condition.equals)}' and b.deleted_at is null`,
+    )
   })
 })
 

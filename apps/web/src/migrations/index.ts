@@ -60,6 +60,7 @@ import * as migration_20261110_090000_drop_old_settings_tables from './20261110_
 import * as migration_20261111_120000_hidden_pages_more from './20261111_120000_hidden_pages_more'
 import * as migration_20261111_160000_hidden_pages_sign_in from './20261111_160000_hidden_pages_sign_in'
 import * as migration_20261111_170000_hidden_pages_legal_links from './20261111_170000_hidden_pages_legal_links'
+import * as migration_20261117_100312_drop_business_versions from './20261117_100312_drop_business_versions'
 
 export const migrations = [
   {
@@ -371,5 +372,10 @@ export const migrations = [
     up: migration_20261111_170000_hidden_pages_legal_links.up,
     down: migration_20261111_170000_hidden_pages_legal_links.down,
     name: '20261111_170000_hidden_pages_legal_links',
+  },
+  {
+    up: migration_20261117_100312_drop_business_versions.up,
+    down: migration_20261117_100312_drop_business_versions.down,
+    name: '20261117_100312_drop_business_versions',
   },
 ]
