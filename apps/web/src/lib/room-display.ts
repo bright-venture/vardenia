@@ -24,6 +24,8 @@ export interface RoomTypeView {
   description: string
   beds: string
   sizeM2: number | null
+  /** How many rooms of this type the hotel has. */
+  rooms: number
   sleepsAdults: number
   sleepsChildren: number
   views: string[]
@@ -67,6 +69,7 @@ export async function listingRoomTypes(listingId: number, locale: Locale): Promi
         description: typeof d.description === 'string' ? d.description : '',
         beds: typeof d.beds === 'string' ? d.beds : '',
         sizeM2: typeof d.sizeM2 === 'number' ? d.sizeM2 : null,
+        rooms: Number(d.rooms ?? 0),
         sleepsAdults: Number(d.sleepsAdults ?? 2),
         sleepsChildren: Number(d.sleepsChildren ?? 0),
         views: Array.isArray(d.views) ? (d.views as string[]) : [],

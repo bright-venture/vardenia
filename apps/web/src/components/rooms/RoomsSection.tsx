@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import type { Locale } from '@vardenia/i18n'
@@ -61,6 +61,7 @@ export function RoomsSection({
   const tb = useTranslations('booking')
   const common = useTranslations('common')
   const pathname = usePathname()
+  const dateFieldId = useId()
 
   /**
    * Filled in from the directory search. Read from the address without an
@@ -91,7 +92,10 @@ export function RoomsSection({
   const { date, nights, guests, breakfast, freeCancel, seaView } = { ...fromQuery, ...chosen }
   const choose_ = <K extends keyof typeof fromQuery>(key: K, value: (typeof fromQuery)[K]) =>
     setChosen((current) => ({ ...current, [key]: value }))
-  const setDate = (value: string) => choose_('date', value)
+  const setDate = (value: string) => {
+    choose_('date', value)
+    setError(null)
+  }
   const setNights = (value: number) => choose_('nights', value)
   const setGuests = (value: number) => choose_('guests', value)
   const setBreakfast = (value: boolean) => choose_('breakfast', value)
@@ -178,7 +182,13 @@ export function RoomsSection({
   }
 
   async function submit() {
-    if (!date || totalRooms === 0) return
+    if (totalRooms === 0) return
+    if (!date) {
+      // Rooms can be picked before dates; the dates are asked for here.
+      setError(t('pickDates'))
+      document.getElementById(dateFieldId)?.focus()
+      return
+    }
     setBusy(true)
     setError(null)
     setSignIn(null)
@@ -273,6 +283,7 @@ export function RoomsSection({
         <label className="block">
           <span className={LABEL}>{t('checkIn')}</span>
           <input
+            id={dateFieldId}
             type="date"
             className={`${INPUT} mt-1`}
             value={date}
@@ -362,8 +373,10 @@ export function RoomsSection({
         <ul className="mt-4 space-y-6">
           {visible.map((room) => {
             const roomLeft = left?.get(room.id)
-            const free = roomLeft === undefined ? null : Math.max(0, roomLeft - 0)
-            const remaining = free === null ? null : Math.max(0, free - pickedOfType(room.id))
+            const free = roomLeft === undefined ? null : Math.max(0, roomLeft)
+            // Before dates are chosen, up to the rooms the hotel has (10 at most).
+            const capacity = free ?? Math.min(Math.max(0, room.rooms), 10)
+            const remaining = Math.max(0, capacity - pickedOfType(room.id))
             return (
               <li key={room.id} className="border-ink-100 border">
                 <div className="grid gap-4 p-4 sm:grid-cols-[220px_1fr]">
@@ -417,7 +430,7 @@ export function RoomsSection({
                     .map((option) => {
                       const id = `${room.id}:${option.id}`
                       const current = picked[id] ?? 0
-                      const max = free === null ? 0 : current + (remaining ?? 0)
+                      const max = current + remaining
                       return (
                         <li
                           key={option.id}
@@ -444,7 +457,7 @@ export function RoomsSection({
                             <select
                               className="border-ink-100 bg-surface-base min-h-[44px] border px-2"
                               value={current}
-                              disabled={free === null || max === 0}
+                              disabled={max === 0}
                               onChange={(event) =>
                                 choose(room.id, option.id, Number(event.target.value))
                               }
