@@ -25,11 +25,14 @@ export function PartnerTabs({
   listing,
   scans,
   statements,
+  rooms,
 }: {
   bookings: string
   listing: string
   scans: string
   statements: string
+  /** Shown only to a partner with a hotel or getaway. */
+  rooms?: string
 }) {
   const pathname = usePathname()
 
@@ -43,13 +46,14 @@ export function PartnerTabs({
   const onScans = /\/partner\/scans(\/|$)/.test(pathname)
   // Includes a single statement, /partner/statements/12, so the tab stays lit there.
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
+  const onRooms = /\/partner\/rooms(\/|$)/.test(pathname)
 
   return (
     <nav
       className={`${styles.navigation} vd-partner-tabs border-ink-100 mt-8 gap-6 border-b`}
       aria-label={bookings}
     >
-      <Tab href="/partner" active={!onListing && !onScans && !onStatements}>
+      <Tab href="/partner" active={!onListing && !onScans && !onStatements && !onRooms}>
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
@@ -61,6 +65,11 @@ export function PartnerTabs({
       <Tab href="/partner/statements" active={onStatements}>
         {statements}
       </Tab>
+      {rooms ? (
+        <Tab href="/partner/rooms" active={onRooms}>
+          {rooms}
+        </Tab>
+      ) : null}
     </nav>
   )
 }

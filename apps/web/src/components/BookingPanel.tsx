@@ -32,6 +32,7 @@ export async function BookingPanel({
   venue,
   payments,
   answerHours,
+  roomsOnPage = false,
 }: {
   businessId: number
   rules: BookingRules | null | undefined
@@ -41,6 +42,8 @@ export async function BookingPanel({
   payments?: PaymentsAccepted | null
   /** The typical wait for an answer, in hours; null when not known well enough. */
   answerHours?: number | null
+  /** A hotel with room types: rooms are booked from the list on the page. */
+  roomsOnPage?: boolean
 }) {
   /**
    * `enabled` is read through `resolveRules` rather than off the raw group,
@@ -52,6 +55,25 @@ export async function BookingPanel({
   if (!resolveRules(rules).enabled) return null
 
   const t = await getTranslations('booking')
+
+  if (roomsOnPage) {
+    const tr = await getTranslations('rooms')
+    return (
+      <section
+        id="book"
+        className="vd-booking-panel border-ink-100 bg-surface-raised border p-6 md:p-8"
+      >
+        <h2 className="font-display text-ink-900 text-2xl">{tr('panelTitle')}</h2>
+        <p className="text-ink-700 mt-3 text-sm">{tr('panelBody')}</p>
+        <a
+          href="#rooms"
+          className="bg-cedar-900 text-surface-base mt-5 inline-flex min-h-[44px] items-center px-5 text-sm font-semibold"
+        >
+          {tr('panelLink')}
+        </a>
+      </section>
+    )
+  }
 
   /**
    * Built here, and therefore built at prerender time.

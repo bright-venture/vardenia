@@ -12,6 +12,14 @@ import {
 import type { OpeningHour } from './hours'
 import { addDays } from './beirut'
 import { tripInterval, type Trip } from './trip'
+import {
+  checkRoomRequest,
+  hotelHasSpace,
+  roomStayInterval,
+  type ExistingRoomBooking,
+  type RoomTypeInventory,
+} from './room-availability'
+import { roomBookingsFor, roomTypesFor } from './room-booking'
 
 /**
  * Whether each bookable place on a page could take a guest's plans.
@@ -52,7 +60,10 @@ export function verdictFrom(result: Availability): TripVerdict {
   if (result.ok) return { kind: 'free' }
   switch (result.reason) {
     case 'at-capacity':
+    case 'rooms-full':
       return { kind: 'full' }
+    case 'rooms-too-small':
+      return { kind: 'party' }
     case 'closed':
     case 'closed-period':
       return { kind: 'closed' }
@@ -64,6 +75,46 @@ export function verdictFrom(result: Availability): TripVerdict {
     default:
       return { kind: 'other' }
   }
+}
+
+/**
+ * The verdict for a hotel with room types (17 November 2026): the hotel's own
+ * rules for those dates, then whether one room type has enough rooms left for
+ * the party and meets the room filters (all met by the same room type).
+ */
+export function roomTripVerdict(
+  listing: TripListing,
+  trip: Trip,
+  types: readonly RoomTypeInventory[],
+  existing: readonly ExistingRoomBooking[],
+  closures: ClosedPeriod[],
+  now: Date = new Date(),
+): TripVerdict {
+  const rules = listing.booking as BookingRules | null | undefined
+  const interval = roomStayInterval(trip.date, trip.nights, rules)
+  if (!interval) return { kind: 'other' }
+  const general = checkRoomRequest({
+    rules,
+    closures,
+    types: [{ id: -1, rooms: 1, sleepsAdults: 50, options: [], active: true }],
+    existing: [],
+    request: { interval, guests: trip.party, lines: [{ roomType: -1, count: 1 }] },
+    now,
+  })
+  if (!general.ok) return verdictFrom(general)
+  return hotelHasSpace(
+    types,
+    existing,
+    interval,
+    { guests: trip.party, rooms: trip.rooms ?? 1 },
+    {
+      breakfast: trip.breakfast,
+      freeCancellation: trip.freeCancellation,
+      view: trip.view ?? null,
+    },
+  )
+    ? { kind: 'free' }
+    : { kind: 'full' }
 }
 
 /** The fields of a listing the check reads. Every ListingSummary has them. */
@@ -193,7 +244,29 @@ export async function tripVerdicts(
       closuresBy.set(business, list)
     }
 
+    // Hotels with room types are answered from their rooms.
+    const typesBy = await roomTypesFor(payload, ids)
+    const hotelIds = [...typesBy.keys()]
+    const roomBookingsBy = hotelIds.length
+      ? await roomBookingsFor(payload, hotelIds, from, new Date(to.getTime() + 31 * 86_400_000))
+      : new Map<number, ExistingRoomBooking[]>()
+
     for (const { listing } of bookable) {
+      const types = typesBy.get(listing.id)
+      if (types && types.length > 0) {
+        verdicts.set(
+          listing.id,
+          roomTripVerdict(
+            listing,
+            trip,
+            types,
+            roomBookingsBy.get(listing.id) ?? [],
+            closuresBy.get(listing.id) ?? [],
+            now,
+          ),
+        )
+        continue
+      }
       const verdict = tripVerdictFor(
         listing,
         trip,

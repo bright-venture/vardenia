@@ -44,6 +44,11 @@ export const UNAVAILABLE_REASONS = [
   'closed-period',
   'closed',
   'at-capacity',
+  // Room bookings at hotels with room types (lib/room-availability).
+  'no-rooms-chosen',
+  'room-unknown',
+  'rooms-full',
+  'rooms-too-small',
 ] as const
 
 export type UnavailableReason = (typeof UNAVAILABLE_REASONS)[number]
@@ -80,6 +85,9 @@ export interface BookingRules {
   roomTypes?: ({ label?: string | null; price?: number | null } | null)[] | null
   /** Free-text cancellation terms, shown to the customer. Not enforced. */
   cancellationPolicy?: string | null
+  /** "HH:MM". For hotels with room types; see fields/bookingRules. */
+  checkInTime?: string | null
+  checkOutTime?: string | null
 }
 
 /** An existing booking, reduced to what the check actually needs. */
@@ -459,6 +467,54 @@ const MESSAGES: Record<UnavailableReason, Record<Locale, string>> = {
     hi: 'इस समय यह जगह पूरी तरह बुक है।',
     bn: 'এই সময়ে জায়গাটি পুরোপুরি বুক করা।',
     ur: 'اس وقت یہ مقام مکمل طور پر بک ہے۔',
+  },
+  'no-rooms-chosen': {
+    en: 'Choose at least one room.',
+    ar: 'اختر غرفة واحدة على الأقل.',
+    fr: 'Choisissez au moins une chambre.',
+    es: 'Elige al menos una habitación.',
+    pt: 'Escolha pelo menos um quarto.',
+    ru: 'Выберите хотя бы один номер.',
+    zh: '请至少选择一间客房。',
+    hi: 'कम से कम एक कमरा चुनें।',
+    bn: 'অন্তত একটি রুম বেছে নিন।',
+    ur: 'کم از کم ایک کمرہ منتخب کریں۔',
+  },
+  'room-unknown': {
+    en: 'One of those rooms is no longer offered. Please reload the page and choose again.',
+    ar: 'إحدى هذه الغرف لم تعد متاحة. يرجى إعادة تحميل الصفحة والاختيار من جديد.',
+    fr: "L'une de ces chambres n'est plus proposée. Rechargez la page et choisissez à nouveau.",
+    es: 'Una de esas habitaciones ya no se ofrece. Recarga la página y elige de nuevo.',
+    pt: 'Um desses quartos não está mais disponível. Recarregue a página e escolha de novo.',
+    ru: 'Один из этих номеров больше не предлагается. Обновите страницу и выберите снова.',
+    zh: '其中一间客房已不再提供，请刷新页面重新选择。',
+    hi: 'इनमें से एक कमरा अब उपलब्ध नहीं है। पेज दोबारा लोड करके फिर चुनें।',
+    bn: 'এর একটি রুম আর দেওয়া হচ্ছে না। পেজটি আবার লোড করে বেছে নিন।',
+    ur: 'ان میں سے ایک کمرہ اب دستیاب نہیں۔ صفحہ دوبارہ لوڈ کر کے پھر منتخب کریں۔',
+  },
+  'rooms-full': {
+    en: 'There are not enough of those rooms left for those dates.',
+    ar: 'لم يتبقَّ عدد كافٍ من هذه الغرف في هذه التواريخ.',
+    fr: 'Il ne reste pas assez de ces chambres pour ces dates.',
+    es: 'No quedan suficientes habitaciones de ese tipo para esas fechas.',
+    pt: 'Não restam quartos suficientes desse tipo para essas datas.',
+    ru: 'На эти даты таких номеров осталось недостаточно.',
+    zh: '这些日期剩余的该类客房不足。',
+    hi: 'उन तारीख़ों के लिए ऐसे कमरे पर्याप्त नहीं बचे हैं।',
+    bn: 'ওই তারিখগুলোতে এই রুম যথেষ্ট বাকি নেই।',
+    ur: 'ان تاریخوں کے لیے ایسے کمرے کافی نہیں بچے۔',
+  },
+  'rooms-too-small': {
+    en: 'Those rooms do not sleep that many guests. Add a room or choose a bigger one.',
+    ar: 'هذه الغرف لا تتسع لهذا العدد من الضيوف. أضف غرفة أو اختر غرفة أكبر.',
+    fr: "Ces chambres n'accueillent pas autant de personnes. Ajoutez une chambre ou choisissez-en une plus grande.",
+    es: 'Esas habitaciones no alojan a tantos huéspedes. Añade una habitación o elige una más grande.',
+    pt: 'Esses quartos não acomodam tantos hóspedes. Adicione um quarto ou escolha um maior.',
+    ru: 'В этих номерах нельзя разместить столько гостей. Добавьте номер или выберите больший.',
+    zh: '这些客房容纳不下这么多客人，请增加客房或选择更大的房型。',
+    hi: 'इन कमरों में इतने मेहमान नहीं ठहर सकते। एक कमरा जोड़ें या बड़ा कमरा चुनें।',
+    bn: 'এই রুমগুলোতে এতজন অতিথি থাকতে পারবেন না। আরেকটি রুম যোগ করুন বা বড় রুম বেছে নিন।',
+    ur: 'ان کمروں میں اتنے مہمان نہیں ٹھہر سکتے۔ ایک کمرہ شامل کریں یا بڑا کمرہ منتخب کریں۔',
   },
 }
 

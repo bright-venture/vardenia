@@ -83,6 +83,7 @@ export default async function DashboardLayout({
         listing={t('tabListing')}
         scans={t('tabScans')}
         statements={t('tabStatements')}
+        {...(listings.some((listing) => listing.hasRooms) ? { rooms: t('tabRooms') } : {})}
       />
 
       {/* An account staff have not yet attached a listing to. It authenticates

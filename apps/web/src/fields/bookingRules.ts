@@ -172,7 +172,7 @@ export const bookingRulesField: Field = {
         condition: (_, siblings) =>
           siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
         description:
-          'Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.',
+          'Simple room labels for the stay form, without their own availability. For real rooms with photos and a number of rooms, use Room types (Directory > Room types, or the partner area); once a hotel has room types, guests book those instead.',
       },
       fields: [
         { name: 'label', type: 'text', required: true },
@@ -188,6 +188,45 @@ export const bookingRulesField: Field = {
           name: 'note',
           type: 'text',
           admin: { description: 'Optional, e.g. "Sleeps 2, sea view".' },
+        },
+      ],
+    },
+
+    {
+      /**
+       * When a stay starts and ends on the day (17 November 2026).
+       *
+       * Hotels use check-in and check-out times, not opening hours: a room
+       * booking runs from check-in on the first day to check-out on the last,
+       * and its nights are what count against the room types. Only read for a
+       * listing that has room types; every other stay keeps 15:00 and 11:00
+       * (lib/booking-form CHECK_IN and CHECK_OUT).
+       */
+      type: 'row',
+      admin: {
+        condition: (_, siblings) =>
+          siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
+      },
+      fields: [
+        {
+          name: 'checkInTime',
+          label: 'Check-in from',
+          type: 'text',
+          defaultValue: '15:00',
+          validate: (value: unknown) =>
+            !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))
+              ? true
+              : 'Use 24-hour time, like 15:00.',
+        },
+        {
+          name: 'checkOutTime',
+          label: 'Check-out until',
+          type: 'text',
+          defaultValue: '11:00',
+          validate: (value: unknown) =>
+            !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))
+              ? true
+              : 'Use 24-hour time, like 11:00.',
         },
       ],
     },

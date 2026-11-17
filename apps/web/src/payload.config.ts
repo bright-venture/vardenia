@@ -18,6 +18,7 @@ import { Statements } from './collections/Statements'
 import { SavedListings } from './collections/SavedListings'
 import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
+import { RoomTypes } from './collections/RoomTypes'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
@@ -194,6 +195,7 @@ export default buildConfig({
     Receipts,
     Statements,
     Closures,
+    RoomTypes,
     Articles,
     Issues,
     Editions,

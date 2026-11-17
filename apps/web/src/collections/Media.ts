@@ -1,5 +1,5 @@
-import type { CollectionConfig } from 'payload'
-import { anyone, isStaff } from '../access/index'
+import type { Access, CollectionConfig } from 'payload'
+import { anyone, isStaff, isStaffUser, ownedBusinessIds } from '../access/index'
 import { blockMediaInUse } from '../hooks/blockMediaInUse'
 import { unguessableFilename } from '../hooks/unguessableFilename'
 import { PHOTO_MAX_BYTES, limitUploadSize } from '../hooks/limitUploadSize'
@@ -14,12 +14,21 @@ import { revalidateMediaAfterChange, revalidateMediaAfterDelete } from '../hooks
  */
 const WEBP = { format: 'webp', options: { quality: 82 } } as const
 
+/**
+ * Partners may upload, so they can add photos of their own room types (17
+ * November 2026). Only uploading: changing or removing a photo stays with the
+ * team, so a partner cannot touch an image used anywhere else. The size limit
+ * and the unguessable filename below apply to their uploads as to ours.
+ */
+const staffOrPartner: Access = ({ req }) =>
+  isStaffUser(req.user) || ownedBusinessIds(req.user).length > 0
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: { group: 'Magazine' },
   access: {
     read: anyone,
-    create: isStaff,
+    create: staffOrPartner,
     update: isStaff,
     delete: isStaff,
   },

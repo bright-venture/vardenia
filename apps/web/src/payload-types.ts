@@ -76,6 +76,7 @@ export interface Config {
     receipts: Receipt;
     statements: Statement;
     closures: Closure;
+    'room-types': RoomType;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -101,6 +102,7 @@ export interface Config {
     receipts: ReceiptsSelect<false> | ReceiptsSelect<true>;
     statements: StatementsSelect<false> | StatementsSelect<true>;
     closures: ClosuresSelect<false> | ClosuresSelect<true>;
+    'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -384,7 +386,7 @@ export interface Business {
      */
     maxDurationMinutes?: number | null;
     /**
-     * Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.
+     * Simple room labels for the stay form, without their own availability. For real rooms with photos and a number of rooms, use Room types (Directory > Room types, or the partner area); once a hotel has room types, guests book those instead.
      */
     roomTypes?:
       | {
@@ -400,6 +402,8 @@ export interface Business {
           id?: string | null;
         }[]
       | null;
+    checkInTime?: string | null;
+    checkOutTime?: string | null;
     /**
      * Shown to the customer before they book, e.g. "Free cancellation up to 48 hours before". Leave empty to show nothing.
      */
@@ -826,6 +830,20 @@ export interface Booking {
    */
   roomType?: string | null;
   /**
+   * The rooms this hotel booking holds.
+   */
+  rooms?:
+    | {
+        roomType: number | RoomType;
+        count: number;
+        roomName?: string | null;
+        optionId?: string | null;
+        optionLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  roomCount?: number | null;
+  /**
    * Change it with the buttons on the booking, then Save.
    */
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show';
@@ -881,6 +899,82 @@ export interface Booking {
    * Roughly, from the answer the guest gave to "Did you go?". Used when the venue gave none, or when the team sides with the guest.
    */
   guestAmount?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The rooms a hotel or getaway sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-types".
+ */
+export interface RoomType {
+  id: number;
+  business: number | Business;
+  name: string;
+  /**
+   * Guests can filter a hotel by rooms or suites.
+   */
+  kind: 'room' | 'suite';
+  description?: string | null;
+  photos?: (number | Media)[] | null;
+  /**
+   * How many identical rooms of this type. 0 stops it being booked.
+   */
+  rooms: number;
+  sleepsAdults: number;
+  sleepsChildren?: number | null;
+  sizeM2?: number | null;
+  /**
+   * For example "1 large double bed" or "2 single beds".
+   */
+  beds?: string | null;
+  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool')[] | null;
+  amenities?:
+    | (
+        | 'private-bathroom'
+        | 'balcony'
+        | 'kitchenette'
+        | 'air-conditioning'
+        | 'heating'
+        | 'wifi'
+        | 'tv'
+        | 'minibar'
+        | 'coffee-machine'
+        | 'bathtub'
+        | 'work-desk'
+        | 'safe'
+        | 'soundproofing'
+        | 'fireplace'
+      )[]
+    | null;
+  /**
+   * How this room is sold: with or without breakfast, free cancellation or not, pay at the property or in advance. At least one.
+   */
+  options?:
+    | {
+        breakfast?: boolean | null;
+        cancellation: 'free' | 'non-refundable';
+        /**
+         * 0 means until the day of arrival.
+         */
+        freeCancellationDays?: number | null;
+        payment: 'at-property' | 'in-advance';
+        /**
+         * Not shown on the website for now.
+         */
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Off hides it from guests. Existing bookings are kept.
+   */
+  active?: boolean | null;
+  /**
+   * Lower first.
+   */
+  order?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1191,6 +1285,10 @@ export interface PayloadLockedDocument {
         value: number | Closure;
       } | null)
     | ({
+        relationTo: 'room-types';
+        value: number | RoomType;
+      } | null)
+    | ({
         relationTo: 'articles';
         value: number | Article;
       } | null)
@@ -1354,6 +1452,8 @@ export interface BusinessesSelect<T extends boolean = true> {
               note?: T;
               id?: T;
             };
+        checkInTime?: T;
+        checkOutTime?: T;
         cancellationPolicy?: T;
       };
   tier?: T;
@@ -1430,6 +1530,17 @@ export interface BookingsSelect<T extends boolean = true> {
   end?: T;
   partySize?: T;
   roomType?: T;
+  rooms?:
+    | T
+    | {
+        roomType?: T;
+        count?: T;
+        roomName?: T;
+        optionId?: T;
+        optionLabel?: T;
+        id?: T;
+      };
+  roomCount?: T;
   status?: T;
   notes?: T;
   locale?: T;
@@ -1530,6 +1641,38 @@ export interface ClosuresSelect<T extends boolean = true> {
   startsOn?: T;
   endsOn?: T;
   note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-types_select".
+ */
+export interface RoomTypesSelect<T extends boolean = true> {
+  business?: T;
+  name?: T;
+  kind?: T;
+  description?: T;
+  photos?: T;
+  rooms?: T;
+  sleepsAdults?: T;
+  sleepsChildren?: T;
+  sizeM2?: T;
+  beds?: T;
+  views?: T;
+  amenities?: T;
+  options?:
+    | T
+    | {
+        breakfast?: T;
+        cancellation?: T;
+        freeCancellationDays?: T;
+        payment?: T;
+        price?: T;
+        id?: T;
+      };
+  active?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -33,6 +33,22 @@ export interface BookingConfirmationArgs {
   end: Date
   partySize: number
   locale: Locale
+  /** For a hotel booking: "2 × Deluxe Twin". */
+  roomType?: string
+}
+
+/** The rooms row in a guest's email (hotel bookings with room types). */
+const ROOMS_LABEL: Record<Locale, string> = {
+  en: 'Rooms',
+  ar: 'الغرف',
+  fr: 'Chambres',
+  es: 'Habitaciones',
+  pt: 'Quartos',
+  ru: 'Номера',
+  zh: '客房',
+  hi: 'कमरे',
+  bn: 'রুম',
+  ur: 'کمرے',
 }
 
 const BEIRUT = 'Asia/Beirut'
@@ -369,11 +385,12 @@ export function bookingConfirmationContent({
   end,
   partySize,
   locale,
+  roomType,
 }: Omit<BookingConfirmationArgs, 'payload' | 'to'>): BookingEmailContent | null {
   const copy = copyFor(status, locale)
   if (!copy) return null
 
-  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale })
+  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale, roomType })
 }
 
 /**
@@ -393,6 +410,7 @@ function renderBookingEmail({
   partySize,
   locale,
   reason,
+  roomType,
 }: {
   copy: Copy
   name: string
@@ -403,6 +421,7 @@ function renderBookingEmail({
   locale: Locale
   /** What the venue said, when they said anything. See `REASON_LABEL`. */
   reason?: string
+  roomType?: string
 }): BookingEmailContent {
   // From the language, not `=== 'ar'`: Urdu is right-to-left too, and an
   // Urdu email laid out left-to-right puts every label on the wrong side.
@@ -415,6 +434,9 @@ function renderBookingEmail({
     [copy.whenLabel, when],
     [copy.untilLabel, until],
     [copy.partyLabel, String(partySize)],
+    ...(roomType
+      ? ([[ROOMS_LABEL[locale] ?? ROOMS_LABEL.en, roomType]] as [string, string][])
+      : []),
     [copy.referenceLabel, reference],
   ]
 

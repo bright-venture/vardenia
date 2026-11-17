@@ -7,6 +7,7 @@ import {
   TRIP_DEFAULT_TIME,
   TRIP_MAX_DAYS_AHEAD,
   TRIP_MAX_PARTY,
+  TRIP_MAX_ROOMS,
 } from '../lib/trip'
 import { FilterChip } from './FilterChip'
 import { filterHref, type FilterState } from './ListingFilters'
@@ -128,7 +129,11 @@ export async function TripBar({
       <form
         action={getPathname({ href: base, locale })}
         method="get"
-        className="mt-4 grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]"
+        className={`mt-4 grid grid-cols-2 items-end gap-3 ${
+          nights
+            ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_6.5rem_auto]'
+            : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
+        }`}
       >
         {carried.map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
@@ -200,6 +205,56 @@ export async function TripBar({
             className={FIELD}
           />
         </div>
+
+        {nights ? (
+          <>
+            <div>
+              <label className={LABEL} htmlFor="trip-rooms">
+                {t('rooms.roomsField')}
+              </label>
+              <input
+                id="trip-rooms"
+                type="number"
+                name="rooms"
+                inputMode="numeric"
+                min={1}
+                max={TRIP_MAX_ROOMS}
+                defaultValue={trip?.rooms ?? 1}
+                className={FIELD}
+              />
+            </div>
+            {/* Room filters: met by the same room type at a hotel with room types. */}
+            <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-5">
+              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="breakfast"
+                  value="1"
+                  defaultChecked={trip?.breakfast === true}
+                />
+                {t('rooms.filterBreakfast')}
+              </label>
+              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="cancel"
+                  value="1"
+                  defaultChecked={trip?.freeCancellation === true}
+                />
+                {t('rooms.filterFreeCancel')}
+              </label>
+              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="view"
+                  value="sea"
+                  defaultChecked={trip?.view === 'sea'}
+                />
+                {t('rooms.filterSeaView')}
+              </label>
+            </div>
+          </>
+        ) : null}
 
         <button type="submit" className={`${PRIMARY_BUTTON} col-span-2 h-11 py-0 sm:col-span-1`}>
           {t(`directory.trip.${words.apply}`)}

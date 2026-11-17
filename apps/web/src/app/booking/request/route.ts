@@ -151,10 +151,11 @@ export const POST = withRateLimit(
         name: String(customer.name ?? ''),
         reference: outcome.reference,
         status: outcome.status,
-        start: new Date(parsed.data.start),
-        end: new Date(parsed.data.end),
+        start: new Date(outcome.start ?? parsed.data.start),
+        end: new Date(outcome.end ?? parsed.data.end),
         partySize: parsed.data.partySize,
         locale: parsed.data.locale ?? 'en',
+        ...(outcome.roomType ? { roomType: outcome.roomType } : {}),
       }).catch(async (error) => {
         /**
          * The most consequential silent failure in the product. The booking is real
@@ -180,8 +181,8 @@ export const POST = withRateLimit(
         businessName: outcome.businessName || 'your listing',
         guestName: String(customer.name ?? ''),
         reference: outcome.reference,
-        start: new Date(parsed.data.start),
-        end: new Date(parsed.data.end),
+        start: new Date(outcome.start ?? parsed.data.start),
+        end: new Date(outcome.end ?? parsed.data.end),
         partySize: parsed.data.partySize,
         roomType: outcome.roomType,
         confirmed: outcome.status === 'confirmed',

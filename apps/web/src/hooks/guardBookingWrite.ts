@@ -12,6 +12,8 @@ import {
 } from '@vardenia/core'
 import { checkAvailability, unavailableMessage, type ExistingBooking } from '../lib/availability'
 import { closedPeriods } from '../lib/booking-service'
+import { checkRoomRequest } from '../lib/room-availability'
+import { roomBookingsFor, roomTypesFor } from '../lib/room-booking'
 import { transactionDb } from '../lib/transaction-db'
 
 /**
@@ -91,6 +93,18 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   if (!data) return data
 
   const { payload, user } = req
+
+  /**
+   * How many rooms a hotel booking holds, kept in step with its lines on
+   * every write that sends them. The database reads it before the lines exist
+   * (see the roomCount field on Bookings).
+   */
+  if (Array.isArray(data.rooms)) {
+    data.roomCount = (data.rooms as { count?: unknown }[]).reduce(
+      (sum, line) => sum + Math.max(0, Math.floor(Number(line?.count ?? 0)) || 0),
+      0,
+    )
+  }
 
   // -------------------------------------------------------------------------
   // Things that never change once a booking exists
@@ -302,6 +316,49 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
 
   const hours = (business as { openingHours?: unknown }).openingHours as
     Parameters<typeof checkAvailability>[0]['hours'] | undefined
+
+  /**
+   * A hotel booking with room lines is counted against its room types, night
+   * by night, not against the listing's single capacity (17 November 2026).
+   */
+  const roomLines = (
+    (Array.isArray(data.rooms) ? data.rooms : originalDoc?.rooms) as
+      { roomType?: unknown; count?: unknown; optionId?: unknown }[] | undefined
+  )?.flatMap((line) => {
+    const roomType = Number(idOf(line?.roomType))
+    const count = Number(line?.count ?? 0)
+    return Number.isFinite(roomType) && count > 0
+      ? [{ roomType, count, option: typeof line.optionId === 'string' ? line.optionId : null }]
+      : []
+  })
+
+  if (roomLines && roomLines.length > 0) {
+    const id = Number(businessId)
+    const [typesBy, existingBy, closures] = await Promise.all([
+      roomTypesFor(payload, [id], { req }),
+      roomBookingsFor(payload, [id], start, end, req),
+      closedPeriods(payload, businessId, start, end),
+    ])
+    const verdict = checkRoomRequest({
+      rules,
+      closures,
+      types: typesBy.get(id) ?? [],
+      existing: existingBy.get(id) ?? [],
+      request: {
+        interval: { start, end },
+        guests: Number(data.partySize ?? originalDoc?.partySize ?? 1),
+        lines: roomLines.map((line) => ({ ...line, option: null })),
+        ...(self !== null ? { excludeBookingId: self } : {}),
+      },
+    })
+    if (!verdict.ok) throw new APIError(unavailableMessage(verdict.reason), 400)
+
+    if (operation === 'create' && (user?.collection !== 'users' || !data.status)) {
+      const autoConfirm = (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm === true
+      data.status = autoConfirm ? 'confirmed' : 'pending'
+    }
+    return data
+  }
 
   /**
    * Only the bookings that could conflict, filtered in the database.

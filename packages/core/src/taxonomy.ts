@@ -168,6 +168,22 @@ export function canTakeBookings(subcategories: readonly (string | null | undefin
   return subcategories.some(isBookableSubcategory)
 }
 
+/**
+ * The kinds of place that sell rooms by room type (17 November 2026).
+ *
+ * A hotel or a getaway lists its room types (Standard, Deluxe, Suite), each
+ * with a number of rooms, and a guest books rooms of those types for nights.
+ * Every other bookable kind keeps the single capacity number it always had.
+ */
+export const ROOM_TYPE_SUBCATEGORIES = ['hotels', 'getaways'] as const
+
+/** Whether a listing filed under these kinds of place may have room types. */
+export function canHaveRoomTypes(subcategories: readonly (string | null | undefined)[]): boolean {
+  return subcategories.some(
+    (slug) => !!slug && (ROOM_TYPE_SUBCATEGORIES as readonly string[]).includes(slug),
+  )
+}
+
 /** True when any kind of place in this category can be booked. */
 export function categoryTakesBookings(category: string | null | undefined): boolean {
   const found = category ? findCategory(category) : undefined

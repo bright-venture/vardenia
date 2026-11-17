@@ -1,4 +1,4 @@
-import { isTerminalStatus, type BookingStatus } from '@vardenia/core'
+import { canHaveRoomTypes, isTerminalStatus, type BookingStatus } from '@vardenia/core'
 import { cache } from 'react'
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload, type TypedUser } from 'payload'
@@ -295,6 +295,8 @@ export interface OwnerListing {
    * exists, and the only codes a partner is ever handed are their own.
    */
   code: string
+  /** A hotel or getaway: it can have room types (17 November 2026). */
+  hasRooms: boolean
 }
 
 export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
@@ -311,7 +313,7 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
     // Published or not: an owner may manage a listing staff have not published
     // yet, and it is still theirs.
     overrideAccess: true,
-    select: { name: true, slug: true, _status: true, qrCode: true },
+    select: { name: true, slug: true, _status: true, qrCode: true, subcategories: true },
   })
 
   /**
@@ -357,6 +359,7 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
       slug: String(doc.slug ?? ''),
       published: (doc as { _status?: unknown })._status !== 'draft',
       code: codeId === null ? '' : (codes.get(String(codeId)) ?? ''),
+      hasRooms: canHaveRoomTypes((doc as { subcategories?: string[] | null }).subcategories ?? []),
     }
   })
 })

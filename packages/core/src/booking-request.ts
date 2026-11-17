@@ -92,6 +92,22 @@ export const bookingRequestSchema = z
      */
     roomType: z.string().trim().max(120, 'too long').optional(),
 
+    /**
+     * For a hotel with room types: which rooms, how many, and with which option
+     * (17 November 2026). Absent for every other booking. Checked against the
+     * hotel's room types and their rooms left on the server.
+     */
+    rooms: z
+      .array(
+        z.object({
+          roomType: z.coerce.number().int().positive(),
+          count: z.coerce.number().int().min(1).max(10),
+          option: z.string().trim().max(64).optional(),
+        }),
+      )
+      .max(10)
+      .optional(),
+
     /** What the customer wants us to pass on: a dietary need, an anniversary. */
     notes: z.string().trim().max(1000, 'too long').optional(),
 

@@ -31,6 +31,10 @@ import { mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
+import { RoomsSection } from '../../../../../components/rooms/RoomsSection'
+import { listingRoomTypes } from '../../../../../lib/room-display'
+import { bookingFormModel } from '../../../../../lib/booking-form'
+import { canHaveRoomTypes } from '@vardenia/core'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
@@ -226,6 +230,23 @@ export default async function ListingPage({ params }: Params) {
     // No nightly rate: listings show no prices (decided 10 November 2026).
     return [{ label, note }]
   })
+
+  /**
+   * Real rooms, for a hotel or getaway with room types (17 November 2026).
+   * When there are any, they replace the simple room labels and the stay form:
+   * the guest picks dates and rooms in the list, and the sidebar points there.
+   */
+  const realRooms =
+    bookable &&
+    canHaveRoomTypes((listing as { subcategories?: string[] | null }).subcategories ?? [])
+      ? await listingRoomTypes(listing.id, locale as Locale)
+      : []
+  const stayRules = (listing.booking ?? {}) as BookingRules & {
+    checkInTime?: string | null
+    checkOutTime?: string | null
+    autoConfirm?: boolean | null
+  }
+  const stayModel = bookingFormModel(stayRules)
 
   const reviews = await listingReviews(listing.id)
   const highlights = reviewHighlights(reviews.reviews)
@@ -597,7 +618,18 @@ export default async function ListingPage({ params }: Params) {
             note beside each - the same set a guest picks from in the booking
             form, shown here so they can weigh the options before opening it.
           */}
-            {roomTypes.length > 0 ? (
+            {realRooms.length > 0 ? (
+              <RoomsSection
+                businessId={listing.id}
+                rooms={realRooms}
+                locale={locale as Locale}
+                earliestDate={stayModel.earliestDate}
+                latestDate={stayModel.latestDate}
+                checkInTime={stayRules.checkInTime || '15:00'}
+                checkOutTime={stayRules.checkOutTime || '11:00'}
+                autoConfirm={stayRules.autoConfirm === true}
+              />
+            ) : roomTypes.length > 0 ? (
               <section className="mt-14">
                 <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
                   {t('rooms')}
@@ -731,6 +763,7 @@ export default async function ListingPage({ params }: Params) {
                   venue={listing.name}
                   payments={(listing as { payments?: PaymentsAccepted | null }).payments}
                   answerHours={answerHours}
+                  roomsOnPage={realRooms.length > 0}
                 />
               </div>
             </aside>

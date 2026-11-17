@@ -288,6 +288,63 @@ export const Bookings: CollectionConfig = {
     },
 
     {
+      /**
+       * The rooms a hotel booking holds (17 November 2026): one line per room
+       * type and option, with how many rooms. Empty for every other booking,
+       * which keeps the listing's single capacity as before.
+       *
+       * The name and the option's wording are copied in when the booking is
+       * made, so the reservation book and the emails still read correctly if
+       * the hotel later renames the room. What counts against the hotel's rooms
+       * is `roomType` and `count`, per night: lib/room-availability, and the
+       * database trigger installed with the room types migration.
+       */
+      name: 'rooms',
+      type: 'array',
+      access: { update: isStaffFieldLevel },
+      labels: { singular: 'Room', plural: 'Rooms' },
+      admin: {
+        condition: (data) => Array.isArray(data?.rooms) && data.rooms.length > 0,
+        description: 'The rooms this hotel booking holds.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'roomType',
+              type: 'relationship',
+              relationTo: 'room-types',
+              required: true,
+              index: true,
+            },
+            { name: 'count', type: 'number', required: true, min: 1, max: 50, defaultValue: 1 },
+          ],
+        },
+        { name: 'roomName', type: 'text' },
+        { name: 'optionId', type: 'text' },
+        { name: 'optionLabel', type: 'text' },
+      ],
+    },
+    {
+      /**
+       * How many rooms the booking holds in all; 0 for everything that is not a
+       * room booking. Set by guardBookingWrite from `rooms`, never typed.
+       *
+       * A column of its own because the database needs it before the lines
+       * exist: the listing-capacity trigger runs when the booking row is
+       * inserted, and Payload writes the lines afterwards. A room booking is
+       * counted against its room types instead (see the room types migration),
+       * so that trigger skips a row whose count is above 0.
+       */
+      name: 'roomCount',
+      type: 'number',
+      defaultValue: 0,
+      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+      admin: { readOnly: true, condition: (data) => Number(data?.roomCount) > 0 },
+    },
+
+    {
       name: 'status',
       type: 'select',
       required: true,

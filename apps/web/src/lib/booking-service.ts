@@ -11,6 +11,15 @@ import {
   type ExistingBooking,
 } from './availability'
 import { canTakeBookings, OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
+import {
+  checkRoomRequest,
+  optionLabel,
+  roomStayInterval,
+  roomsSummary,
+  stayNights,
+} from './room-availability'
+import { roomBookingsFor, roomTypesFor } from './room-booking'
+import { beirutDate } from './beirut'
 
 /**
  * Turning a request into a booking.
@@ -46,6 +55,9 @@ export type BookingOutcome =
       businessId: number
       businessName: string
       roomType?: string
+      /** The times actually booked, when the server set them (room bookings). */
+      start?: string
+      end?: string
       /** A retry of an attempt that had already made this booking. */
       replayed?: boolean
     }
@@ -53,6 +65,8 @@ export type BookingOutcome =
 
 /** Postgres raises this when the capacity trigger refuses an insert. */
 const CAPACITY_MESSAGE = 'fully booked'
+/** Raised by the room inventory trigger; see the room types migration. */
+const ROOMS_MESSAGE = 'not enough rooms'
 /** Raised by the enforce_customer_booking_limit trigger; see translateInsertError. */
 const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
 
@@ -274,6 +288,10 @@ export function translateInsertError(error: unknown, locale: Locale = 'en'): Boo
    * who lost the race for the last table was told "fully booked" in English -
    * on the Arabic site too, not only on the eight newer languages.
    */
+  if (lower.includes(ROOMS_MESSAGE)) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage('rooms-full', locale) }
+  }
+
   if (lower.includes(CAPACITY_MESSAGE)) {
     return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity', locale) }
   }
@@ -383,6 +401,10 @@ export async function createBooking({
     }
   }
 
+  if (request.rooms && request.rooms.length > 0) {
+    return createRoomBooking({ payload, request, customerId, now, business, rules })
+  }
+
   const [existing, closures] = await Promise.all([
     overlappingBookings(payload, business.id, start, end),
     closedPeriods(payload, business.id, start, end),
@@ -483,5 +505,132 @@ export async function createBooking({
       if (made) return replayOf(made, business)
     }
     return translateInsertError(error, request.locale ?? 'en')
+  }
+}
+
+/**
+ * A booking of rooms at a hotel with room types (17 November 2026).
+ *
+ * The times are the hotel's own: check-in on the first day to check-out after
+ * the nights, whatever the form sent, so every room booking counts the same
+ * nights the database trigger counts. The lines carry a copy of the room's name
+ * and the option's wording, and `roomType` on the booking gets the summary
+ * ("2 × Deluxe Twin"), which is what the account page, the admin and the
+ * emails already show.
+ */
+async function createRoomBooking({
+  payload,
+  request,
+  customerId,
+  now,
+  business,
+  rules,
+}: {
+  payload: Payload
+  request: BookingRequest
+  customerId: number
+  now: Date
+  business: { id: number | string; name?: unknown }
+  rules: Parameters<typeof checkAvailability>[0]['rules']
+}): Promise<BookingOutcome> {
+  const locale = request.locale ?? 'en'
+  const requestedStart = new Date(request.start)
+  const requestedEnd = new Date(request.end)
+  const interval = roomStayInterval(
+    beirutDate(requestedStart),
+    stayNights(requestedStart, requestedEnd).length,
+    rules,
+  )
+  if (!interval) {
+    return {
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('invalid-interval', locale),
+    }
+  }
+
+  const businessId = Number(business.id)
+  const [typesBy, existingBy, closures] = await Promise.all([
+    roomTypesFor(payload, [businessId], { locale }),
+    roomBookingsFor(payload, [businessId], interval.start, interval.end),
+    closedPeriods(payload, businessId, interval.start, interval.end),
+  ])
+  const types = typesBy.get(businessId) ?? []
+  const lines = (request.rooms ?? []).map((line) => ({
+    roomType: line.roomType,
+    count: line.count,
+    option: line.option ?? null,
+  }))
+
+  const verdict = checkRoomRequest({
+    rules,
+    closures,
+    types,
+    existing: existingBy.get(businessId) ?? [],
+    request: { interval, guests: request.partySize, lines },
+    now,
+  })
+  if (!verdict.ok) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage(verdict.reason, locale) }
+  }
+
+  const pending = await pendingBookingCount(payload, customerId)
+  if (pending >= MAX_PENDING_PER_CUSTOMER) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${pending} upcoming bookings. Please cancel one before making another.`,
+    }
+  }
+
+  const rows = lines.map((line) => {
+    const type = types.find((candidate) => candidate.id === line.roomType)
+    const option =
+      type?.options.find((candidate) => candidate.id === line.option) ?? type?.options[0]
+    return {
+      roomType: line.roomType,
+      count: line.count,
+      roomName: type?.name ?? '',
+      optionId: option?.id ?? '',
+      optionLabel: optionLabel(option),
+    }
+  })
+  const summary = roomsSummary(rows)
+
+  try {
+    const booking = await payload.create({
+      collection: 'bookings',
+      data: {
+        business: businessId,
+        customer: customerId,
+        start: interval.start.toISOString(),
+        end: interval.end.toISOString(),
+        partySize: request.partySize,
+        roomType: summary,
+        rooms: rows,
+        ...(request.notes ? { notes: request.notes } : {}),
+        locale,
+        status: 'pending',
+        ...(request.requestId ? { requestId: request.requestId } : {}),
+      },
+      overrideAccess: true,
+    })
+    return {
+      ok: true,
+      bookingId: booking.id,
+      reference: String((booking as { reference?: unknown }).reference ?? ''),
+      status: (booking as { status: BookingStatus }).status,
+      businessId,
+      businessName: String(business.name ?? ''),
+      roomType: summary,
+      start: interval.start.toISOString(),
+      end: interval.end.toISOString(),
+    }
+  } catch (error) {
+    if (request.requestId) {
+      const made = await bookingForAttempt(payload, customerId, request.requestId)
+      if (made) return replayOf(made, business)
+    }
+    return translateInsertError(error, locale)
   }
 }
