@@ -2,10 +2,12 @@ import type { Payload, PayloadRequest } from 'payload'
 import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
 import type {
   ExistingRoomBooking,
+  OpenPeriod,
   RoomLine,
   RoomOption,
   RoomTypeInventory,
 } from './room-availability'
+import { addDays, beirutDate } from './beirut'
 
 /**
  * Reading a hotel's room types and room bookings from the database, for
@@ -60,12 +62,61 @@ export async function roomTypesFor(
     ...(locale ? { locale: locale as never } : {}),
     where: { and: [{ business: { in: [...businessIds] } }, { active: { equals: true } }] },
   })
+  const periodsBy = await openPeriodsFor(
+    payload,
+    result.docs.map((doc) => Number(doc.id)),
+    req,
+  )
   for (const doc of result.docs) {
     const business = idOf((doc as { business?: unknown }).business)
     if (business === null) continue
     const list = out.get(business) ?? []
-    list.push(toInventory(doc as unknown as Record<string, unknown>))
+    list.push({
+      ...toInventory(doc as unknown as Record<string, unknown>),
+      periods: periodsBy.get(Number(doc.id)) ?? [],
+    })
     out.set(business, list)
+  }
+  return out
+}
+
+/**
+ * The nights each room type is open (Room dates), from a year back so a staff
+ * move of a recent booking still sees its nights.
+ */
+export async function openPeriodsFor(
+  payload: Payload,
+  roomTypeIds: readonly number[],
+  req?: PayloadRequest,
+): Promise<Map<number, OpenPeriod[]>> {
+  const out = new Map<number, OpenPeriod[]>()
+  if (roomTypeIds.length === 0) return out
+  const result = await payload.find({
+    collection: 'room-availability',
+    depth: 0,
+    limit: 5000,
+    pagination: false,
+    overrideAccess: true,
+    sort: 'id',
+    ...(req ? { req } : {}),
+    where: {
+      and: [
+        { roomType: { in: [...roomTypeIds] } },
+        { endsOn: { greater_than_equal: addDays(beirutDate(), -366) } },
+      ],
+    },
+  })
+  for (const doc of result.docs) {
+    const roomType = idOf((doc as { roomType?: unknown }).roomType)
+    if (roomType === null) continue
+    const list = out.get(roomType) ?? []
+    list.push({
+      id: Number(doc.id),
+      startsOn: String((doc as { startsOn?: unknown }).startsOn ?? ''),
+      endsOn: String((doc as { endsOn?: unknown }).endsOn ?? ''),
+      rooms: Number((doc as { rooms?: unknown }).rooms ?? 0),
+    })
+    out.set(roomType, list)
   }
   return out
 }

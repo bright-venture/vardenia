@@ -839,7 +839,11 @@
       "safe": "Cofre",
       "soundproofing": "Isolamento acústico",
       "fireplace": "Lareira"
-    }
+    },
+    "nightOne": "{date}: {count} livres",
+    "nightRange": "De {from} a {to}: {count} livres",
+    "freeFrom": "Não está livre a estadia toda. Livre a partir de {date}.",
+    "checkInOut": "Check-in e check-out"
   },
   "partnerRooms": {
     "title": "Room types",
@@ -863,7 +867,7 @@
     "bedsHint": "For example \"1 large double bed\".",
     "size": "Size (m²)",
     "rooms": "Number of rooms",
-    "roomsHint": "How many identical rooms of this type. 0 stops bookings.",
+    "roomsHint": "How many identical rooms of this type in all. Open the dates you sell under each room type.",
     "adults": "Sleeps (adults)",
     "children": "Plus children",
     "views": "Views",
@@ -890,6 +894,20 @@
     "order": "Display order",
     "inactive": "Hidden",
     "summary": "{rooms} rooms · sleeps {sleeps}",
-    "error": "That could not be saved. Please check the form and try again."
+    "error": "That could not be saved. Please check the form and try again.",
+    "hotelTimes": "Check-in and check-out",
+    "hotelTimesHint": "Shown on your page instead of opening hours. Every stay starts at check-in and ends at check-out.",
+    "checkIn": "Check-in from",
+    "checkOut": "Check-out until",
+    "openDates": "Open dates",
+    "noDates": "Closed: no dates open yet. Guests cannot book this room type until you open dates.",
+    "closedPeriod": "Closed",
+    "roomsOpen": "{rooms} rooms open",
+    "removeDates": "Remove",
+    "firstNight": "First night",
+    "lastNight": "Last night",
+    "roomsToSell": "Rooms to sell",
+    "openThese": "Open these dates",
+    "openDatesHint": "Guests can only book the nights you open. Use 0 rooms to close some nights inside an open period."
   }
 }

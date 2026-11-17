@@ -126,10 +126,12 @@ export function RoomsSection({
   const [answer, setAnswer] = useState<{
     question: string
     left: Map<number, number>
+    nights: Map<number, { night: string; free: number }[]>
     message: string | null
   } | null>(null)
   const current = answer && answer.question === question ? answer : null
   const left = current?.left ?? null
+  const nightsBy = current?.nights ?? null
   const checking = Boolean(question) && !current
   const dateProblem = current?.message ?? null
 
@@ -138,12 +140,17 @@ export function RoomsSection({
     const controller = new AbortController()
     fetch(`/booking/rooms?${question}`, { signal: controller.signal })
       .then((response) => response.json())
-      .then((body: { message?: string; types?: { id: number; left: number }[] }) =>
-        setAnswer({
-          question,
-          left: new Map((body.types ?? []).map((type) => [type.id, type.left])),
-          message: body.message ?? null,
-        }),
+      .then(
+        (body: {
+          message?: string
+          types?: { id: number; left: number; nights?: { night: string; free: number }[] }[]
+        }) =>
+          setAnswer({
+            question,
+            left: new Map((body.types ?? []).map((type) => [type.id, type.left])),
+            nights: new Map((body.types ?? []).map((type) => [type.id, type.nights ?? []])),
+            message: body.message ?? null,
+          }),
       )
       .catch(() => {})
     return () => controller.abort()
@@ -417,6 +424,11 @@ export function RoomsSection({
                         {free === 0 ? t('soldOut') : t('left', { count: free })}
                       </p>
                     ) : null}
+                    <NightLine
+                      nights={nightsBy?.get(room.id) ?? []}
+                      locale={locale}
+                      wholeStayFree={free ?? 0}
+                    />
                   </div>
                 </div>
 
@@ -563,6 +575,59 @@ function RoomPhotos({ room, prev, next }: { room: RoomTypeView; prev: string; ne
             ›
           </button>
         </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * Night by night, when the nights differ: "13 Dec: 4 free · 14 to 19 Dec: 5
+ * free", and "Free from 14 Dec" when the whole stay does not fit but its end
+ * does. Hidden when every night has the same number, which "N left" says.
+ */
+function NightLine({
+  nights,
+  locale,
+  wholeStayFree,
+}: {
+  nights: { night: string; free: number }[]
+  locale: Locale
+  wholeStayFree: number
+}) {
+  const t = useTranslations('rooms')
+  if (nights.length < 2 || nights.every((n) => n.free === nights[0]?.free)) return null
+
+  const day = (night: string) =>
+    new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(
+      new Date(`${night}T12:00:00Z`),
+    )
+
+  const groups: { from: string; to: string; free: number }[] = []
+  for (const { night, free } of nights) {
+    const last = groups[groups.length - 1]
+    if (last && last.free === free) last.to = night
+    else groups.push({ from: night, to: night, free })
+  }
+
+  const lastClosed = nights.map((n) => n.free).lastIndexOf(0)
+  const freeFrom =
+    wholeStayFree === 0 && lastClosed >= 0 && lastClosed < nights.length - 1
+      ? nights[lastClosed + 1]?.night
+      : undefined
+
+  return (
+    <div className="text-ink-500 mt-2 text-sm">
+      <p>
+        {groups
+          .map((group) =>
+            group.from === group.to
+              ? t('nightOne', { date: day(group.from), count: group.free })
+              : t('nightRange', { from: day(group.from), to: day(group.to), count: group.free }),
+          )
+          .join(' · ')}
+      </p>
+      {freeFrom ? (
+        <p className="text-ink-900 mt-1">{t('freeFrom', { date: day(freeFrom) })}</p>
       ) : null}
     </div>
   )

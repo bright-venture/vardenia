@@ -36,11 +36,28 @@ export interface RoomOption {
   payment?: 'at-property' | 'in-advance' | null
 }
 
+/**
+ * Nights a room type is open, and how many rooms are sold on them (the Room
+ * dates collection). Inclusive, as Beirut nights.
+ */
+export interface OpenPeriod {
+  id?: number
+  startsOn: string
+  endsOn: string
+  rooms: number
+}
+
 export interface RoomTypeInventory {
   id: number
   name?: string | null
-  /** How many identical rooms. 0 means it cannot be booked. */
+  /** How many identical rooms in all. What is sold is set per night by `periods`. */
   rooms: number
+  /**
+   * The nights opened by the hotel. A night no period covers is closed
+   * (decided 17 November 2026). Left undefined, every night sells `rooms`:
+   * only for callers that do not load periods, never for a booking.
+   */
+  periods?: OpenPeriod[]
   sleepsAdults: number
   sleepsChildren?: number | null
   active?: boolean | null
@@ -74,6 +91,12 @@ export interface RoomFilters {
 }
 
 export const MAX_ROOMS_PER_BOOKING = 10
+
+const MINUTES_PER_DAY = 1440
+
+/** A duration rule kept only when it is already in whole days. */
+const nightsLimit = (value: number | null | undefined, fallback: number): number =>
+  typeof value === 'number' && value >= MINUTES_PER_DAY ? value : fallback
 
 /** Sleeps, adults and children together, never below one. */
 export const sleeps = (type: Pick<RoomTypeInventory, 'sleepsAdults' | 'sleepsChildren'>): number =>
@@ -133,6 +156,37 @@ export function roomsTakenByNight(
   return taken
 }
 
+/**
+ * Rooms this type sells on one night: the last-saved period covering it, or
+ * none (closed). Never more than the rooms it has.
+ */
+export function roomsOnNight(type: RoomTypeInventory, night: string): number {
+  if (!type.periods) return Math.max(0, Math.floor(type.rooms))
+  let best: OpenPeriod | null = null
+  for (const period of type.periods) {
+    if (period.startsOn <= night && period.endsOn >= night) {
+      if (!best || (period.id ?? 0) >= (best.id ?? 0)) best = period
+    }
+  }
+  return best ? Math.max(0, Math.min(Math.floor(best.rooms), Math.floor(type.rooms))) : 0
+}
+
+/** Free rooms of this type on each night of the stay. */
+export function nightlyFree(
+  type: RoomTypeInventory,
+  existing: readonly ExistingRoomBooking[],
+  interval: { start: Date; end: Date },
+  excludeBookingId?: number | string,
+): { night: string; free: number }[] {
+  if (type.active === false) return []
+  const nights = stayNights(interval.start, interval.end)
+  const taken = roomsTakenByNight(type.id, existing, nights, excludeBookingId)
+  return nights.map((night) => ({
+    night,
+    free: Math.max(0, roomsOnNight(type, night) - (taken.get(night) ?? 0)),
+  }))
+}
+
 /** Rooms of this type still free on every night of the stay. */
 export function roomsLeft(
   type: RoomTypeInventory,
@@ -140,11 +194,8 @@ export function roomsLeft(
   interval: { start: Date; end: Date },
   excludeBookingId?: number | string,
 ): number {
-  if (type.active === false) return 0
-  const nights = stayNights(interval.start, interval.end)
-  const taken = roomsTakenByNight(type.id, existing, nights, excludeBookingId)
-  const busiest = Math.max(0, ...taken.values())
-  return Math.max(0, Math.floor(type.rooms) - busiest)
+  const nights = nightlyFree(type, existing, interval, excludeBookingId)
+  return nights.length === 0 ? 0 : Math.min(...nights.map((n) => n.free))
 }
 
 /** The options of a type that meet the filters; all of them when none is set. */
@@ -227,6 +278,11 @@ export function checkRoomRequest({
   const general = checkAvailability({
     rules: {
       ...(rules ?? {}),
+      // A room booking is counted in nights. A listing whose rules were set up
+      // for sittings (a minimum of an hour, a maximum of a few) would refuse
+      // every night as "too long", so shorter limits mean 1 to 30 nights.
+      minDurationMinutes: nightsLimit(rules?.minDurationMinutes, MINUTES_PER_DAY),
+      maxDurationMinutes: nightsLimit(rules?.maxDurationMinutes, MINUTES_PER_DAY * 30),
       capacity: Number.MAX_SAFE_INTEGER,
       minPartySize: 1,
       maxPartySize: 1000,

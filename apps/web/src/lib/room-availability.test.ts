@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkRoomRequest,
   hotelHasSpace,
+  nightlyFree,
   roomStayInterval,
   roomsLeft,
   stayNights,
@@ -188,5 +189,58 @@ describe('filters', () => {
     const interval = stay('2026-12-24', 1)
     expect(hotelHasSpace([twin, suite], [], interval, { guests: 4, rooms: 2 })).toBe(true)
     expect(hotelHasSpace([twin, suite], [], interval, { guests: 5, rooms: 2 })).toBe(false)
+  })
+})
+
+describe('a hotel whose rules were set up for sittings', () => {
+  it('still takes a night', () => {
+    expect(
+      checkRoomRequest({
+        rules: { enabled: true, minDurationMinutes: 60, maxDurationMinutes: 120 },
+        types: [twin],
+        existing: [],
+        request: { interval: stay('2026-12-24', 1), guests: 2, lines: [{ roomType: 1, count: 1 }] },
+        now: NOW,
+      }),
+    ).toEqual({ ok: true })
+  })
+})
+
+describe('open dates (closed until the hotel opens them)', () => {
+  const withPeriods = (periods: RoomTypeInventory['periods']): RoomTypeInventory => ({
+    ...twin,
+    rooms: 5,
+    periods,
+  })
+
+  it('is closed on nights no period covers', () => {
+    expect(roomsLeft(withPeriods([]), [], stay('2026-12-13', 1))).toBe(0)
+  })
+
+  it('sells the rooms the period opens, night by night', () => {
+    const type = withPeriods([{ id: 1, startsOn: '2026-12-13', endsOn: '2026-12-19', rooms: 5 }])
+    const existing = [booked('2026-12-13', 1, [{ roomType: 1, count: 1 }])]
+    expect(roomsLeft(type, existing, stay('2026-12-13', 7))).toBe(4)
+    expect(nightlyFree(type, existing, stay('2026-12-13', 3))).toEqual([
+      { night: '2026-12-13', free: 4 },
+      { night: '2026-12-14', free: 5 },
+      { night: '2026-12-15', free: 5 },
+    ])
+    // The 20th is not open, so a stay through it is not available.
+    expect(roomsLeft(type, existing, stay('2026-12-14', 7))).toBe(0)
+  })
+
+  it('lets the last-saved period win, so 0 closes nights inside a season', () => {
+    const type = withPeriods([
+      { id: 1, startsOn: '2026-12-01', endsOn: '2026-12-31', rooms: 5 },
+      { id: 2, startsOn: '2026-12-24', endsOn: '2026-12-25', rooms: 0 },
+    ])
+    expect(roomsLeft(type, [], stay('2026-12-20', 2))).toBe(5)
+    expect(roomsLeft(type, [], stay('2026-12-23', 2))).toBe(0)
+  })
+
+  it('never sells more than the room type has', () => {
+    const type = withPeriods([{ id: 1, startsOn: '2026-12-01', endsOn: '2026-12-31', rooms: 9 }])
+    expect(roomsLeft(type, [], stay('2026-12-10', 1))).toBe(5)
   })
 })

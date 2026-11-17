@@ -6,6 +6,7 @@ import { dataLocale, isLocale } from '@vardenia/i18n'
 import config from '../../../../../../payload.config'
 import { currentOwner, ownerListings } from '../../../../../../lib/session'
 import { resolvePhotograph } from '../../../../../../lib/media'
+import { beirutDate } from '../../../../../../lib/beirut'
 import {
   RoomTypesManager,
   type ManagedRoomType,
@@ -96,13 +97,78 @@ export default async function PartnerRoomsPage({ params }: Props) {
       ),
       active: d.active !== false,
       order: Number(d.order ?? 0),
+      periods: [],
     }
   })
+
+  // The nights each room type is open, from today on.
+  const today = beirutDate()
+  const periods =
+    roomTypes.length === 0
+      ? { docs: [] }
+      : await payload.find({
+          collection: 'room-availability',
+          depth: 0,
+          limit: 1000,
+          pagination: false,
+          overrideAccess: true,
+          sort: 'startsOn',
+          where: {
+            and: [
+              { roomType: { in: roomTypes.map((room) => room.id) } },
+              { endsOn: { greater_than_equal: today } },
+            ],
+          },
+        })
+  for (const doc of periods.docs) {
+    const d = doc as unknown as Record<string, unknown>
+    const roomTypeId = Number(
+      typeof d.roomType === 'object' && d.roomType !== null
+        ? (d.roomType as { id: unknown }).id
+        : d.roomType,
+    )
+    roomTypes
+      .find((room) => room.id === roomTypeId)
+      ?.periods.push({
+        id: Number(d.id),
+        startsOn: String(d.startsOn ?? ''),
+        endsOn: String(d.endsOn ?? ''),
+        rooms: Number(d.rooms ?? 0),
+      })
+  }
+
+  // Each hotel's check-in and check-out times.
+  const times =
+    hotels.length === 0
+      ? { docs: [] }
+      : await payload.find({
+          collection: 'businesses',
+          depth: 0,
+          limit: hotels.length,
+          overrideAccess: true,
+          where: { id: { in: hotels.map((hotel) => hotel.id) } },
+          select: { booking: true },
+        })
+  const timesBy = new Map(
+    times.docs.map((doc) => {
+      const booking = (doc as { booking?: { checkInTime?: string; checkOutTime?: string } }).booking
+      return [
+        Number(doc.id),
+        { checkIn: booking?.checkInTime || '15:00', checkOut: booking?.checkOutTime || '11:00' },
+      ] as const
+    }),
+  )
 
   return (
     <RoomTypesManager
       locale={locale}
-      hotels={hotels.map((hotel) => ({ id: hotel.id, name: hotel.name }))}
+      hotels={hotels.map((hotel) => ({
+        id: hotel.id,
+        name: hotel.name,
+        checkIn: timesBy.get(hotel.id)?.checkIn ?? '15:00',
+        checkOut: timesBy.get(hotel.id)?.checkOut ?? '11:00',
+      }))}
+      today={today}
       initial={roomTypes}
     />
   )

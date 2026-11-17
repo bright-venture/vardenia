@@ -7,6 +7,7 @@ import { withRateLimit } from '../../../lib/rate-limit'
 import {
   MAX_ROOMS_PER_BOOKING,
   checkRoomRequest,
+  nightlyFree,
   roomStayInterval,
   roomsLeft,
 } from '../../../lib/room-availability'
@@ -80,9 +81,16 @@ export const GET = withRateLimit(async (request: Request) => {
     ...(general.ok
       ? {}
       : { reason: general.reason, message: unavailableMessage(general.reason, locale) }),
+    // Per night as well, so the page can say "13 Dec: 4 free, 14 to 19 Dec: 5".
     types: types.map((type) => ({
       id: type.id,
       left: general.ok ? Math.min(roomsLeft(type, existing, interval), MAX_ROOMS_PER_BOOKING) : 0,
+      nights: general.ok
+        ? nightlyFree(type, existing, interval).map(({ night, free }) => ({
+            night,
+            free: Math.min(free, MAX_ROOMS_PER_BOOKING),
+          }))
+        : [],
     })),
   })
 })

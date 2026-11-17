@@ -77,6 +77,7 @@ export interface Config {
     statements: Statement;
     closures: Closure;
     'room-types': RoomType;
+    'room-availability': RoomAvailability;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -103,6 +104,7 @@ export interface Config {
     statements: StatementsSelect<false> | StatementsSelect<true>;
     closures: ClosuresSelect<false> | ClosuresSelect<true>;
     'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
+    'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -919,7 +921,7 @@ export interface RoomType {
   description?: string | null;
   photos?: (number | Media)[] | null;
   /**
-   * How many identical rooms of this type. 0 stops it being booked.
+   * How many identical rooms of this type in all. Guests can only book the nights opened in Room dates (closed until opened).
    */
   rooms: number;
   sleepsAdults: number;
@@ -1109,6 +1111,28 @@ export interface Closure {
   createdAt: string;
 }
 /**
+ * The nights each room type is open and how many rooms are sold. A room type is closed on nights no entry covers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-availability".
+ */
+export interface RoomAvailability {
+  id: number;
+  roomType: number | RoomType;
+  business?: (number | null) | Business;
+  startsOn: string;
+  /**
+   * Inclusive. The guest leaves the next morning.
+   */
+  endsOn: string;
+  /**
+   * 0 closes these nights.
+   */
+  rooms: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
@@ -1287,6 +1311,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'room-types';
         value: number | RoomType;
+      } | null)
+    | ({
+        relationTo: 'room-availability';
+        value: number | RoomAvailability;
       } | null)
     | ({
         relationTo: 'articles';
@@ -1673,6 +1701,19 @@ export interface RoomTypesSelect<T extends boolean = true> {
       };
   active?: T;
   order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-availability_select".
+ */
+export interface RoomAvailabilitySelect<T extends boolean = true> {
+  roomType?: T;
+  business?: T;
+  startsOn?: T;
+  endsOn?: T;
+  rooms?: T;
   updatedAt?: T;
   createdAt?: T;
 }

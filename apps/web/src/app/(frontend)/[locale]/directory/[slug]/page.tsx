@@ -248,6 +248,8 @@ export default async function ListingPage({ params }: Params) {
   }
   const stayModel = bookingFormModel(stayRules)
 
+  const tRooms = await getTranslations('rooms')
+
   const reviews = await listingReviews(listing.id)
   const highlights = reviewHighlights(reviews.reviews)
 
@@ -386,7 +388,7 @@ export default async function ListingPage({ params }: Params) {
               The dot is aria-hidden because the word beside it already says
               it. Colour is never the only signal here.
             */}
-              {open !== null ? (
+              {open !== null && realRooms.length === 0 ? (
                 <span className="inline-flex items-center gap-2">
                   <span
                     aria-hidden
@@ -565,7 +567,21 @@ export default async function ListingPage({ params }: Params) {
             page, and the urgent half of the question - open or not - is already
             answered beside the name.
           */}
-              {hours.length > 0 ? (
+              {/* A hotel with room types gives check-in and check-out, not
+                  opening hours (17 November 2026). */}
+              {realRooms.length > 0 ? (
+                <div className="border-ink-100 grid gap-1 border-b py-5 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                    {tRooms('checkInOut')}
+                  </span>
+                  <span className="text-ink-900 text-sm" dir="auto">
+                    {tRooms('times', {
+                      in: stayRules.checkInTime || '15:00',
+                      out: stayRules.checkOutTime || '11:00',
+                    })}
+                  </span>
+                </div>
+              ) : hours.length > 0 ? (
                 <details className="border-ink-100 group border-b py-5">
                   <summary className="flex cursor-pointer list-none items-center gap-4 sm:grid sm:grid-cols-[180px_1fr]">
                     <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">

@@ -172,7 +172,8 @@ export const RoomTypes: CollectionConfig = {
           max: 1000,
           defaultValue: 1,
           admin: {
-            description: 'How many identical rooms of this type. 0 stops it being booked.',
+            description:
+              'How many identical rooms of this type in all. Guests can only book the nights opened in Room dates (closed until opened).',
           },
         },
         {

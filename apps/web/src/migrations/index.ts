@@ -62,6 +62,7 @@ import * as migration_20261111_160000_hidden_pages_sign_in from './20261111_1600
 import * as migration_20261111_170000_hidden_pages_legal_links from './20261111_170000_hidden_pages_legal_links'
 import * as migration_20261117_100312_drop_business_versions from './20261117_100312_drop_business_versions'
 import * as migration_20261117_115415_room_types from './20261117_115415_room_types'
+import * as migration_20261117_132014_room_availability from './20261117_132014_room_availability'
 
 export const migrations = [
   {
@@ -383,5 +384,10 @@ export const migrations = [
     up: migration_20261117_115415_room_types.up,
     down: migration_20261117_115415_room_types.down,
     name: '20261117_115415_room_types',
+  },
+  {
+    up: migration_20261117_132014_room_availability.up,
+    down: migration_20261117_132014_room_availability.down,
+    name: '20261117_132014_room_availability',
   },
 ]

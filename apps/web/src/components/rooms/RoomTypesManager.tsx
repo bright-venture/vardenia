@@ -48,6 +48,15 @@ export interface ManagedRoomType {
   options: ManagedOption[]
   active: boolean
   order: number
+  /** Nights opened for sale, from today on. See the Room dates collection. */
+  periods: { id: number; startsOn: string; endsOn: string; rooms: number }[]
+}
+
+export interface ManagedHotel {
+  id: number
+  name: string
+  checkIn: string
+  checkOut: string
 }
 
 const VIEWS = ['sea', 'mountain', 'city', 'garden', 'pool'] as const
@@ -80,10 +89,13 @@ export function RoomTypesManager({
   locale,
   hotels,
   initial,
+  today,
 }: {
   locale: string
-  hotels: { id: number; name: string }[]
+  hotels: ManagedHotel[]
   initial: ManagedRoomType[]
+  /** Beirut's today, the first night that can be opened. */
+  today: string
 }) {
   const t = useTranslations('partnerRooms')
   const tr = useTranslations('rooms')
@@ -113,6 +125,7 @@ export function RoomTypesManager({
       options: [blankOption()],
       active: true,
       order: 0,
+      periods: [],
     })
   }
 
@@ -264,7 +277,13 @@ export function RoomTypesManager({
 
   return (
     <section className="mt-10">
-      <h2 className="font-display text-ink-900 text-2xl">{t('title')}</h2>
+      {!editing
+        ? hotels.map((hotel) => (
+            <HotelTimes key={hotel.id} hotel={hotel} showName={hotels.length > 1} />
+          ))
+        : null}
+
+      <h2 className="font-display text-ink-900 mt-10 text-2xl">{t('title')}</h2>
       <p className="text-ink-500 mt-2 text-sm">{t('intro')}</p>
 
       {saved ? <p className={`${NOTICE_SUCCESS} mt-4`}>{t('saved')}</p> : null}
@@ -277,42 +296,52 @@ export function RoomTypesManager({
           ) : (
             <ul className="border-ink-100 mt-6 divide-y border">
               {initial.map((room) => (
-                <li key={room.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="text-ink-900 font-semibold">
-                      {room.name}{' '}
-                      {room.active ? null : (
-                        <span className="text-ink-500 font-normal">({t('inactive')})</span>
-                      )}
-                    </p>
-                    <p className="text-ink-500 text-sm">
-                      {hotels.length > 1 ? `${hotelName(room.business)} · ` : ''}
-                      {t('summary', {
-                        rooms: room.rooms,
-                        sleeps: room.sleepsAdults + room.sleepsChildren,
-                      })}
-                    </p>
+                <li key={room.id} className="p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-ink-900 font-semibold">
+                        {room.name}{' '}
+                        {room.active ? null : (
+                          <span className="text-ink-500 font-normal">({t('inactive')})</span>
+                        )}
+                      </p>
+                      <p className="text-ink-500 text-sm">
+                        {hotels.length > 1 ? `${hotelName(room.business)} · ` : ''}
+                        {t('summary', {
+                          rooms: room.rooms,
+                          sleeps: room.sleepsAdults + room.sleepsChildren,
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        className={SECONDARY_BUTTON}
+                        onClick={() => {
+                          setSaved(false)
+                          setError(null)
+                          setEditing(room)
+                        }}
+                      >
+                        {t('edit')}
+                      </button>
+                      <button
+                        type="button"
+                        className="text-state-danger min-h-[44px] px-2 text-sm"
+                        onClick={() => room.id && remove(room.id)}
+                      >
+                        {t('delete')}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      className={SECONDARY_BUTTON}
-                      onClick={() => {
-                        setSaved(false)
-                        setError(null)
-                        setEditing(room)
-                      }}
-                    >
-                      {t('edit')}
-                    </button>
-                    <button
-                      type="button"
-                      className="text-state-danger min-h-[44px] px-2 text-sm"
-                      onClick={() => room.id && remove(room.id)}
-                    >
-                      {t('delete')}
-                    </button>
-                  </div>
+                  {room.id ? (
+                    <OpenDates
+                      roomTypeId={room.id}
+                      total={room.rooms}
+                      periods={room.periods}
+                      today={today}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -666,5 +695,193 @@ export function RoomTypesManager({
         </form>
       )}
     </section>
+  )
+}
+
+/** A hotel's check-in and check-out times, saved through /booking/hotel-times. */
+function HotelTimes({ hotel, showName }: { hotel: ManagedHotel; showName: boolean }) {
+  const t = useTranslations('partnerRooms')
+  const [checkIn, setCheckIn] = useState(hotel.checkIn)
+  const [checkOut, setCheckOut] = useState(hotel.checkOut)
+  const [state, setState] = useState<'idle' | 'busy' | 'saved' | 'error'>('idle')
+
+  async function save() {
+    setState('busy')
+    const response = await fetch('/booking/hotel-times', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ business: hotel.id, checkInTime: checkIn, checkOutTime: checkOut }),
+    }).catch(() => null)
+    setState(response?.ok ? 'saved' : 'error')
+  }
+
+  return (
+    <section className="border-ink-100 mt-10 border p-5">
+      <h2 className="font-display text-ink-900 text-2xl">
+        {t('hotelTimes')}
+        {showName ? ` · ${hotel.name}` : ''}
+      </h2>
+      <p className="text-ink-500 mt-1 text-sm">{t('hotelTimesHint')}</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <label className="block">
+          <span className={LABEL}>{t('checkIn')}</span>
+          <input
+            type="time"
+            className={`${INPUT} mt-1`}
+            value={checkIn}
+            onChange={(e) => {
+              setCheckIn(e.target.value)
+              setState('idle')
+            }}
+          />
+        </label>
+        <label className="block">
+          <span className={LABEL}>{t('checkOut')}</span>
+          <input
+            type="time"
+            className={`${INPUT} mt-1`}
+            value={checkOut}
+            onChange={(e) => {
+              setCheckOut(e.target.value)
+              setState('idle')
+            }}
+          />
+        </label>
+        <button type="button" className={PRIMARY_BUTTON} disabled={state === 'busy'} onClick={save}>
+          {state === 'busy' ? t('saving') : t('save')}
+        </button>
+      </div>
+      {state === 'saved' ? <p className={`${NOTICE_SUCCESS} mt-3`}>{t('saved')}</p> : null}
+      {state === 'error' ? <p className={`${NOTICE_ERROR} mt-3`}>{t('error')}</p> : null}
+    </section>
+  )
+}
+
+/**
+ * The nights a room type is open, and how many of its rooms are sold on them.
+ * Closed on every night not listed here (decided 17 November 2026).
+ */
+function OpenDates({
+  roomTypeId,
+  total,
+  periods,
+  today,
+}: {
+  roomTypeId: number
+  total: number
+  periods: ManagedRoomType['periods']
+  today: string
+}) {
+  const t = useTranslations('partnerRooms')
+  const router = useRouter()
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [rooms, setRooms] = useState(total)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function add() {
+    if (!from || !to) return
+    setBusy(true)
+    setError(null)
+    const response = await fetch('/api/room-availability', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ roomType: roomTypeId, startsOn: from, endsOn: to, rooms }),
+    }).catch(() => null)
+    setBusy(false)
+    if (!response?.ok) {
+      const json = (await response?.json().catch(() => null)) as {
+        errors?: { message?: string }[]
+      } | null
+      setError(json?.errors?.[0]?.message ?? t('error'))
+      return
+    }
+    setFrom('')
+    setTo('')
+    router.refresh()
+  }
+
+  async function remove(id: number) {
+    const response = await fetch(`/api/room-availability/${id}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    }).catch(() => null)
+    if (response?.ok) router.refresh()
+    else setError(t('error'))
+  }
+
+  return (
+    <div className="bg-surface-raised mt-3 p-3">
+      <p className={LABEL}>{t('openDates')}</p>
+      {periods.length === 0 ? (
+        <p className="text-state-danger mt-1 text-sm">{t('noDates')}</p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-sm">
+          {periods.map((period) => (
+            <li key={period.id} className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-ink-900" dir="ltr">
+                {period.startsOn} → {period.endsOn}
+              </span>
+              <span className="text-ink-700">
+                {period.rooms === 0 ? t('closedPeriod') : t('roomsOpen', { rooms: period.rooms })}
+              </span>
+              <button
+                type="button"
+                className="text-state-danger min-h-[44px] px-2"
+                onClick={() => remove(period.id)}
+              >
+                {t('removeDates')}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_7rem_auto] sm:items-end">
+        <label className="block">
+          <span className={LABEL}>{t('firstNight')}</span>
+          <input
+            type="date"
+            min={today}
+            className={`${INPUT} mt-1`}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </label>
+        <label className="block">
+          <span className={LABEL}>{t('lastNight')}</span>
+          <input
+            type="date"
+            min={from || today}
+            className={`${INPUT} mt-1`}
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </label>
+        <label className="block">
+          <span className={LABEL}>{t('roomsToSell')}</span>
+          <input
+            type="number"
+            min={0}
+            max={total}
+            className={`${INPUT} mt-1`}
+            value={rooms}
+            onChange={(e) => setRooms(Number(e.target.value))}
+          />
+        </label>
+        <button
+          type="button"
+          className={SECONDARY_BUTTON}
+          disabled={busy || !from || !to}
+          onClick={add}
+        >
+          {t('openThese')}
+        </button>
+      </div>
+      <p className={HINT}>{t('openDatesHint')}</p>
+      {error ? <p className={`${NOTICE_ERROR} mt-2`}>{error}</p> : null}
+    </div>
   )
 }
