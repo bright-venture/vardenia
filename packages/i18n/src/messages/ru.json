@@ -846,7 +846,9 @@
     "freeFrom": "Свободно не на весь срок. Свободно с {date}.",
     "checkInOut": "Заезд и выезд",
     "adults": "Взрослые",
-    "children": "Дети"
+    "children": "Дети",
+    "selectedOf": "Выбрано номеров: {count} из {wanted}",
+    "tooSmallFor": "{rooms, plural, one {Мало для вашей группы в 1 номере} other {Мало для вашей группы в # номерах}}"
   },
   "partnerRooms": {
     "title": "Room types",

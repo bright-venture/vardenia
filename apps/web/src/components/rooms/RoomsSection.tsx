@@ -79,12 +79,15 @@ export function RoomsSection({
     const n = Number(q.get('nights'))
     const p = Number(q.get('party'))
     const c = Number(q.get('children'))
+    const r = Number(q.get('rooms'))
     return {
       date: d && d >= earliestDate && d <= latestDate ? d : '',
       nights: Number.isInteger(n) && n >= 1 && n <= MAX_NIGHTS ? n : 1,
       // Adults and children apart, as on the Stay search (18 November 2026).
       adults: Number.isInteger(p) && p >= 1 && p <= 50 ? p : 2,
       children: Number.isInteger(c) && c >= 0 && c <= 20 ? c : 0,
+      // How many rooms the guest wants, a guide for picking (18 November 2026).
+      roomsWanted: Number.isInteger(r) && r >= 1 && r <= 10 ? r : 1,
       breakfast: q.get('breakfast') === '1',
       freeCancel: q.get('cancel') === '1',
       seaView: q.get('view') === 'sea',
@@ -92,7 +95,7 @@ export function RoomsSection({
   })()
 
   const [chosen, setChosen] = useState<Partial<typeof fromQuery>>({})
-  const { date, nights, adults, children, breakfast, freeCancel, seaView } = {
+  const { date, nights, adults, children, roomsWanted, breakfast, freeCancel, seaView } = {
     ...fromQuery,
     ...chosen,
   }
@@ -106,6 +109,7 @@ export function RoomsSection({
   const setNights = (value: number) => choose_('nights', value)
   const setAdults = (value: number) => choose_('adults', value)
   const setChildren = (value: number) => choose_('children', value)
+  const setRoomsWanted = (value: number) => choose_('roomsWanted', value)
   const setBreakfast = (value: boolean) => choose_('breakfast', value)
   const setFreeCancel = (value: boolean) => choose_('freeCancel', value)
   const setSeaView = (value: boolean) => choose_('seaView', value)
@@ -325,7 +329,7 @@ export function RoomsSection({
             ))}
           </select>
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <label className="block">
             <span className={LABEL}>{t('adults')}</span>
             <input
@@ -349,6 +353,19 @@ export function RoomsSection({
               value={children}
               onChange={(event) =>
                 setChildren(Math.max(0, Math.min(20, Number(event.target.value) || 0)))
+              }
+            />
+          </label>
+          <label className="block">
+            <span className={LABEL}>{t('roomsField')}</span>
+            <input
+              type="number"
+              min={1}
+              max={10}
+              className={`${INPUT} mt-1`}
+              value={roomsWanted}
+              onChange={(event) =>
+                setRoomsWanted(Math.max(1, Math.min(10, Number(event.target.value) || 1)))
               }
             />
           </label>
@@ -451,6 +468,14 @@ export function RoomsSection({
                         {free === 0 ? t('soldOut') : t('left', { count: free })}
                       </p>
                     ) : null}
+                    {/* Whether the group fits in the rooms asked for, all of this
+                        type: adults in adult places, everyone in the total. */}
+                    {room.sleepsAdults * roomsWanted < adults ||
+                    (room.sleepsAdults + room.sleepsChildren) * roomsWanted < guests ? (
+                      <p className="text-ink-500 mt-1 text-sm">
+                        {t('tooSmallFor', { rooms: roomsWanted })}
+                      </p>
+                    ) : null}
                     <NightLine
                       nights={nightsBy?.get(room.id) ?? []}
                       locale={locale}
@@ -520,7 +545,11 @@ export function RoomsSection({
 
       {totalRooms > 0 ? (
         <div className="border-ink-100 bg-surface-raised sticky bottom-0 mt-6 border p-4">
-          <p className="text-ink-900 font-semibold">{t('selected', { count: totalRooms })}</p>
+          <p className="text-ink-900 font-semibold">
+            {totalRooms === roomsWanted
+              ? t('selected', { count: totalRooms })
+              : t('selectedOf', { count: totalRooms, wanted: roomsWanted })}
+          </p>
           {tooSmall ? (
             <p className="text-state-danger mt-1 text-sm">
               {totalSleeps < guests

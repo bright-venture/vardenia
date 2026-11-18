@@ -846,7 +846,9 @@
     "freeFrom": "Not free for your whole stay. Free from {date}.",
     "checkInOut": "Check-in and check-out",
     "adults": "Adults",
-    "children": "Children"
+    "children": "Children",
+    "selectedOf": "{count} of {wanted} rooms selected",
+    "tooSmallFor": "{rooms, plural, one {Too small for your group in 1 room} other {Too small for your group in # rooms}}"
   },
   "partnerRooms": {
     "title": "Room types",

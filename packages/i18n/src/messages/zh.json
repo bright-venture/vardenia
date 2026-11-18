@@ -846,7 +846,9 @@
     "freeFrom": "整个住宿期间无空房，{date} 起有空房。",
     "checkInOut": "入住与退房",
     "adults": "成人",
-    "children": "儿童"
+    "children": "儿童",
+    "selectedOf": "已选 {count}/{wanted} 间",
+    "tooSmallFor": "{rooms, plural, other {# 间住不下您的团体}}"
   },
   "partnerRooms": {
     "title": "Room types",

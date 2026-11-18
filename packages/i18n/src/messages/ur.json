@@ -846,7 +846,9 @@
     "freeFrom": "آپ کے پورے قیام کے لیے خالی نہیں۔ {date} سے خالی۔",
     "checkInOut": "چیک اِن اور چیک آؤٹ",
     "adults": "بالغ",
-    "children": "بچے"
+    "children": "بچے",
+    "selectedOf": "{wanted} میں سے {count} کمرے منتخب",
+    "tooSmallFor": "{rooms, plural, one {1 کمرے میں آپ کے گروپ کے لیے چھوٹا} other {# کمروں میں آپ کے گروپ کے لیے چھوٹا}}"
   },
   "partnerRooms": {
     "title": "Room types",

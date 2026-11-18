@@ -846,7 +846,9 @@
     "freeFrom": "পুরো থাকার সময় খালি নেই। {date} থেকে খালি।",
     "checkInOut": "চেক-ইন ও চেক-আউট",
     "adults": "প্রাপ্তবয়স্ক",
-    "children": "শিশু"
+    "children": "শিশু",
+    "selectedOf": "{wanted}টির মধ্যে {count}টি রুম বাছাই",
+    "tooSmallFor": "{rooms, plural, one {১টি রুমে আপনার দলের জন্য ছোট} other {#টি রুমে আপনার দলের জন্য ছোট}}"
   },
   "partnerRooms": {
     "title": "Room types",

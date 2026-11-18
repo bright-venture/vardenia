@@ -846,7 +846,9 @@
     "freeFrom": "غير متاحة طوال إقامتك. متاحة ابتداءً من {date}.",
     "checkInOut": "الوصول والمغادرة",
     "adults": "البالغون",
-    "children": "الأطفال"
+    "children": "الأطفال",
+    "selectedOf": "اخترت {count} من {wanted} غرف",
+    "tooSmallFor": "{rooms, plural, one {لا تتسع لمجموعتكم في غرفة واحدة} other {لا تتسع لمجموعتكم في # غرف}}"
   },
   "partnerRooms": {
     "title": "أنواع الغرف",

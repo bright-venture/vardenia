@@ -846,7 +846,9 @@
     "freeFrom": "No está libre toda tu estancia. Libre desde el {date}.",
     "checkInOut": "Entrada y salida",
     "adults": "Adultos",
-    "children": "Niños"
+    "children": "Niños",
+    "selectedOf": "{count} de {wanted} habitaciones elegidas",
+    "tooSmallFor": "{rooms, plural, one {Pequeña para tu grupo en 1 habitación} other {Pequeña para tu grupo en # habitaciones}}"
   },
   "partnerRooms": {
     "title": "Room types",
