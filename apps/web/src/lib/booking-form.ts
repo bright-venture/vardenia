@@ -144,18 +144,10 @@ export function bookingFormModel(
         : [],
     nightOptions:
       mode === 'nights' ? nightChoices(config.minDurationMinutes, config.maxDurationMinutes) : [],
-    // Only a stay has room types; a sitting never asks for one. Blank labels a
-    // half-filled CMS row might carry are dropped so the dropdown has no empty
-    // option.
-    roomTypes:
-      mode === 'nights'
-        ? (rules?.roomTypes ?? []).flatMap((entry) => {
-            const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
-            if (!label) return []
-            // No nightly rate: listings show no prices (decided 10 November 2026).
-            return [{ label }]
-          })
-        : [],
+    // The old simple room labels are no longer offered (18 November 2026):
+    // hotels and getaways sell real room types now, booked from the room
+    // list on their page. The labels stay in the database, unused.
+    roomTypes: [],
     leadTimeMinutes: config.leadTimeMinutes,
   }
 }

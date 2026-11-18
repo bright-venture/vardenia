@@ -168,6 +168,9 @@ export const bookingRulesField: Field = {
       name: 'roomTypes',
       label: 'Simple room labels (old)',
       type: 'array',
+      // Hidden and unused since 18 November 2026: room types replace them
+      // (the Rooms tab). Kept so no saved data is lost.
+      hidden: true,
       labels: { singular: 'Room label', plural: 'Room labels' },
       admin: {
         condition: (_, siblings) =>

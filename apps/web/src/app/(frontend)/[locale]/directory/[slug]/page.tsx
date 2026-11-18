@@ -216,22 +216,6 @@ export default async function ListingPage({ params }: Params) {
       : null
 
   /**
-   * Room or unit types, for a stay. Read from the same booking group the form
-   * uses, so the section on the page and the dropdown in the form never disagree.
-   * Blank labels a half-filled CMS row might carry are dropped.
-   */
-  const bookingGroup = (listing.booking ?? {}) as {
-    roomTypes?: ({ label?: string | null; note?: string | null } | null)[] | null
-  }
-  const roomTypes = (bookingGroup.roomTypes ?? []).flatMap((entry) => {
-    const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
-    if (!label) return []
-    const note = typeof entry?.note === 'string' ? entry.note.trim() : ''
-    // No nightly rate: listings show no prices (decided 10 November 2026).
-    return [{ label, note }]
-  })
-
-  /**
    * Real rooms, for a hotel or getaway with room types (17 November 2026).
    * When there are any, they replace the simple room labels and the stay form:
    * the guest picks dates and rooms in the list, and the sidebar points there.
@@ -645,25 +629,6 @@ export default async function ListingPage({ params }: Params) {
                 checkOutTime={stayRules.checkOutTime || '11:00'}
                 autoConfirm={stayRules.autoConfirm === true}
               />
-            ) : roomTypes.length > 0 ? (
-              <section className="mt-14">
-                <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                  {t('rooms')}
-                </h2>
-                <ul className="border-ink-100 mt-4 border-t">
-                  {roomTypes.map((room) => (
-                    <li
-                      key={room.label}
-                      className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
-                    >
-                      <span className="text-ink-900">{room.label}</span>
-                      <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
-                        {room.note ? <span>{room.note}</span> : null}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             ) : null}
 
             {/* The menu, as a link to the file. Restaurants and cafes keep one as a
