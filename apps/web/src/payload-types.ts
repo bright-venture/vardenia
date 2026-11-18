@@ -80,6 +80,7 @@ export interface Config {
     'room-availability': RoomAvailability;
     'staff-requests': StaffRequest;
     areas: Area;
+    'guest-questions': GuestQuestion;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -117,6 +118,7 @@ export interface Config {
     'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
     areas: AreasSelect<false> | AreasSelect<true>;
+    'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -1223,6 +1225,31 @@ export interface StaffRequest {
   createdAt: string;
 }
 /**
+ * Asked from the Questions page. Write the Answer, set the status to Answered and save: the guest gets the answer by email.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guest-questions".
+ */
+export interface GuestQuestion {
+  id: number;
+  status: 'new' | 'answered';
+  name: string;
+  email: string;
+  question: string;
+  /**
+   * Sent to the guest by email when the status is Answered and you save. Sent once.
+   */
+  answer?: string | null;
+  answeredAt?: string | null;
+  locale?: string | null;
+  /**
+   * For the team only.
+   */
+  internalNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
@@ -1413,6 +1440,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'areas';
         value: number | Area;
+      } | null)
+    | ({
+        relationTo: 'guest-questions';
+        value: number | GuestQuestion;
       } | null)
     | ({
         relationTo: 'articles';
@@ -1854,6 +1885,22 @@ export interface AreasSelect<T extends boolean = true> {
   slug?: T;
   governorate?: T;
   order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guest-questions_select".
+ */
+export interface GuestQuestionsSelect<T extends boolean = true> {
+  status?: T;
+  name?: T;
+  email?: T;
+  question?: T;
+  answer?: T;
+  answeredAt?: T;
+  locale?: T;
+  internalNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

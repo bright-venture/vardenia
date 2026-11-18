@@ -22,6 +22,7 @@ import { RoomTypes } from './collections/RoomTypes'
 import { RoomAvailability } from './collections/RoomAvailability'
 import { StaffRequests } from './collections/StaffRequests'
 import { Areas } from './collections/Areas'
+import { GuestQuestions } from './collections/GuestQuestions'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
@@ -202,6 +203,7 @@ export default buildConfig({
     RoomAvailability,
     StaffRequests,
     Areas,
+    GuestQuestions,
     Articles,
     Issues,
     Editions,

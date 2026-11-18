@@ -1,4 +1,5 @@
 import { StoryIndex } from './editorial/StoryIndex'
+import { AskQuestionForm } from './AskQuestionForm'
 import './editorial/standing-pages.css'
 import { LinkArrow } from './LinkArrow'
 import type { ContentPage, ContentPageSlug } from '../lib/pages'
@@ -243,6 +244,8 @@ export async function ContentPageView({
               </section>
             ),
           )}
+          {/* A question the list did not answer (18 November 2026). */}
+          {faq ? <AskQuestionForm locale={locale} /> : null}
           <nav className="vd-story-next" aria-label={page.title}>
             <Link href={next.href} className="vd-button">
               {next.label}

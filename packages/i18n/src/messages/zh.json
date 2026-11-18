@@ -957,5 +957,17 @@
     "emailIntro": "谢谢。Vardenia 团队会尽快联系您安排人员。",
     "role_hostesses": "礼宾",
     "role_waiters": "服务员"
+  },
+  "askQuestion": {
+    "title": "向我们提问",
+    "intro": "没有找到答案？写信给我们，Vardenia 团队会通过邮件回复。",
+    "name": "姓名",
+    "email": "邮箱",
+    "question": "您的问题",
+    "send": "发送问题",
+    "sending": "发送中...",
+    "sent": "谢谢。Vardenia 团队会尽快通过邮件回复您。",
+    "error": "发送失败，请检查表单后重试。",
+    "tooMany": "短时间内消息过多，请几分钟后再试。"
   }
 }

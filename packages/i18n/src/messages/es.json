@@ -957,5 +957,17 @@
     "emailIntro": "Gracias. El equipo de Vardenia te contactará pronto para organizar el personal.",
     "role_hostesses": "Azafatas",
     "role_waiters": "Camareros"
+  },
+  "askQuestion": {
+    "title": "Haznos una pregunta",
+    "intro": "¿No encontraste la respuesta? Escríbenos y el equipo de Vardenia te responderá por correo.",
+    "name": "Nombre",
+    "email": "Correo",
+    "question": "Tu pregunta",
+    "send": "Enviar pregunta",
+    "sending": "Enviando...",
+    "sent": "Gracias. El equipo de Vardenia te responderá pronto por correo.",
+    "error": "No se pudo enviar. Revisa el formulario e inténtalo de nuevo.",
+    "tooMany": "Demasiados mensajes en poco tiempo. Inténtalo en unos minutos."
   }
 }

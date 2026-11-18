@@ -957,5 +957,17 @@
     "emailIntro": "Merci. L'équipe Vardenia vous contactera bientôt pour organiser votre personnel.",
     "role_hostesses": "Hôtesses",
     "role_waiters": "Serveurs"
+  },
+  "askQuestion": {
+    "title": "Posez-nous une question",
+    "intro": "Vous n'avez pas trouvé la réponse ? Écrivez-nous, l'équipe Vardenia vous répondra par e-mail.",
+    "name": "Nom",
+    "email": "E-mail",
+    "question": "Votre question",
+    "send": "Envoyer la question",
+    "sending": "Envoi...",
+    "sent": "Merci. L'équipe Vardenia vous répondra bientôt par e-mail.",
+    "error": "L'envoi a échoué. Vérifiez le formulaire et réessayez.",
+    "tooMany": "Trop de messages en peu de temps. Réessayez dans quelques minutes."
   }
 }

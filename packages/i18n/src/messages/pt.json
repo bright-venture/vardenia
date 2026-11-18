@@ -957,5 +957,17 @@
     "emailIntro": "Obrigado. A equipe Vardenia entrará em contato em breve para organizar a equipe.",
     "role_hostesses": "Recepcionistas",
     "role_waiters": "Garçons"
+  },
+  "askQuestion": {
+    "title": "Faça-nos uma pergunta",
+    "intro": "Não encontrou a resposta? Escreva para nós e a equipe Vardenia responderá por e-mail.",
+    "name": "Nome",
+    "email": "E-mail",
+    "question": "Sua pergunta",
+    "send": "Enviar pergunta",
+    "sending": "Enviando...",
+    "sent": "Obrigado. A equipe Vardenia responderá em breve por e-mail.",
+    "error": "Não foi possível enviar. Confira o formulário e tente de novo.",
+    "tooMany": "Muitas mensagens em pouco tempo. Tente de novo em alguns minutos."
   }
 }
