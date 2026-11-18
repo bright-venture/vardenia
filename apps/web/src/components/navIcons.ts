@@ -1,4 +1,5 @@
 import {
+  ConciergeBell,
   BedDouble,
   BookOpen,
   CarFront,
@@ -45,6 +46,8 @@ export const SECTION_ICONS: Record<CategorySlug, LucideIcon> = {
 }
 
 /** The handful used outside the section list, by the header and the footer. */
+/** Event Staff, the seventh section (18 November 2026). */
+export const EVENT_STAFF_ICON = ConciergeBell
 export const MAGAZINE_ICON = Newspaper
 export const SEARCH_ICON = Search
 export const CONTACT_ICON = Mail

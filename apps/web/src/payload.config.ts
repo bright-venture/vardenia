@@ -20,6 +20,7 @@ import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
 import { RoomTypes } from './collections/RoomTypes'
 import { RoomAvailability } from './collections/RoomAvailability'
+import { StaffRequests } from './collections/StaffRequests'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
@@ -198,6 +199,7 @@ export default buildConfig({
     Closures,
     RoomTypes,
     RoomAvailability,
+    StaffRequests,
     Articles,
     Issues,
     Editions,

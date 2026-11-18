@@ -145,3 +145,35 @@ export function sectionForPath(path: string | null | undefined): SiteSection | n
 
 /** Every section path, for static generation. */
 export const SECTION_PATHS: readonly string[] = SECTIONS.map((section) => section.path)
+
+/**
+ * The seventh section, Event Staff (18 November 2026).
+ *
+ * Not a category of listings: there is nothing to browse. A guest picks
+ * Hostesses or Waiters and sends the Vardenia team a request through a form
+ * (signed-in guests only), and the team answers it. Kept apart from SECTIONS,
+ * which are tied one to one to listing categories and drive the directory,
+ * the filters and the database enums; the navigation lists it after them.
+ */
+export interface StaffRole {
+  slug: 'hostesses' | 'waiters'
+  en: string
+  ar: string
+}
+
+export const EVENT_STAFF_ROLES: readonly StaffRole[] = [
+  { slug: 'hostesses', en: 'Hostesses', ar: 'مضيفات' },
+  { slug: 'waiters', en: 'Waiters', ar: 'نادلون' },
+]
+
+export const EVENT_STAFF_SECTION = {
+  path: 'event-staff',
+  en: 'Event Staff',
+  ar: 'طاقم المناسبات',
+  descriptionEn: 'Hostesses and waiters for your event',
+  descriptionAr: 'مضيفات ونادلون لمناسبتكم',
+} as const
+
+export function staffRoleForSlug(slug: string | null | undefined): StaffRole | null {
+  return EVENT_STAFF_ROLES.find((role) => role.slug === slug) ?? null
+}

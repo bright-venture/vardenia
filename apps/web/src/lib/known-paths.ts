@@ -50,6 +50,8 @@ const FIXED_SEGMENTS = [
   'advertise',
   'contact',
   'directory',
+  // Event Staff, the request-form section (18 November 2026).
+  'event-staff',
   'faq',
   'legal',
   'magazine',

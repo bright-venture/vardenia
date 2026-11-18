@@ -1,7 +1,7 @@
 import { LinkArrow } from './LinkArrow'
 import { MotionControl } from './editorial/MotionControl'
 import { getTranslations } from 'next-intl/server'
-import { SECTIONS } from '@vardenia/core'
+import { EVENT_STAFF_SECTION, SECTIONS } from '@vardenia/core'
 import type { LucideIcon } from 'lucide-react'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
@@ -18,6 +18,7 @@ import {
   MAGAZINE_ICON,
   PARTNER_ICON,
   SECTION_ICONS,
+  EVENT_STAFF_ICON,
   SIGN_IN_ICON,
 } from './navIcons'
 
@@ -100,6 +101,11 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
     label: sectionName(section, locale),
     icon: SECTION_ICONS[section.category],
   }))
+  discover.push({
+    href: `/${EVENT_STAFF_SECTION.path}`,
+    label: sectionName(EVENT_STAFF_SECTION, locale),
+    icon: EVENT_STAFF_ICON,
+  })
 
   const read: FooterLink[] = [
     { href: '/magazine', label: t('nav.magazine'), icon: MAGAZINE_ICON },

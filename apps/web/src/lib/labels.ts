@@ -78,6 +78,9 @@ export function amenityLabel(slug: string, locale: Locale): string {
   return found ? localize(found, locale) : slug
 }
 
+/** What sectionName and sectionSummary read; Event Staff has no category. */
+type SectionWords = Pick<SiteSection, 'path' | 'en' | 'ar' | 'descriptionEn' | 'descriptionAr'>
+
 /**
  * A section's name and one-line summary, in the reader's language.
  *
@@ -85,7 +88,7 @@ export function amenityLabel(slug: string, locale: Locale): string {
  * print); the other eight UI languages come from the section translations in
  * @vardenia/i18n, falling back to the English field.
  */
-export function sectionName(section: SiteSection, locale: Locale): string {
+export function sectionName(section: SectionWords, locale: Locale): string {
   return locale === 'ar'
     ? section.ar
     : locale === 'en'
@@ -93,7 +96,7 @@ export function sectionName(section: SiteSection, locale: Locale): string {
       : (sectionLabel(section.path, locale) ?? section.en)
 }
 
-export function sectionSummary(section: SiteSection, locale: Locale): string {
+export function sectionSummary(section: SectionWords, locale: Locale): string {
   return locale === 'ar'
     ? section.descriptionAr
     : locale === 'en'

@@ -15,7 +15,12 @@ import {
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
+import {
+  countByDistrict,
+  countByGovernorate,
+  countBySubcategory,
+  findListings,
+} from '../../../../lib/listings'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import { sectionName, sectionSummary } from '../../../../lib/labels'
 import { sectionSeoCopy } from '../../../../lib/section-seo'
@@ -190,12 +195,13 @@ async function SectionResults({
    * second Frankfurt round trip does not sit in front of the render. The tile
    * counts are only fetched when the tiles are actually being drawn.
    */
-  const [counts, result, subcategoryCounts] = await Promise.all([
+  const [counts, result, subcategoryCounts, districtCounts] = await Promise.all([
     countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
     choosing
       ? countBySubcategory({ category: section.category })
       : Promise.resolve<Record<string, number> | null>({}),
+    countByDistrict({ category: section.category, subcategory: state.subcategory }),
   ])
 
   const base = `/${section.path}`
@@ -289,7 +295,13 @@ async function SectionResults({
         <TripBar base={base} state={state} locale={locale} section={section.path} />
       ) : null}
 
-      <ListingFilters base={base} state={state} locale={locale} counts={counts} />
+      <ListingFilters
+        base={base}
+        state={state}
+        locale={locale}
+        counts={counts}
+        districtCounts={districtCounts}
+      />
 
       <ListingGrid
         listings={result?.docs ?? []}

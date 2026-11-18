@@ -111,12 +111,15 @@ export function FilterSheet({
   state,
   locale,
   counts,
+  districtCounts,
 }: {
   base: string
   state: FilterState
   locale: Locale
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
+  /** Listings per district, for the district chips. */
+  districtCounts?: Record<string, number>
 }) {
   const t = useTranslations('filters')
   const router = useRouter()
@@ -331,14 +334,9 @@ export function FilterSheet({
               filterHref does: a district belongs to somewhere else, and the
               pair would return nothing while looking deliberate.
             */}
+            {/* No "All of Lebanon" (18 November 2026): no region chosen is
+                every listing, and tapping the chosen region again unselects it. */}
             <Group title={t('region')}>
-              <Toggle
-                active={!draft.governorate}
-                onClick={() => set({ governorate: undefined, district: undefined })}
-                count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
-              >
-                {t('allOfLebanon')}
-              </Toggle>
               {GOVERNORATES.map((g) => (
                 <Toggle
                   key={g.slug}
@@ -356,10 +354,11 @@ export function FilterSheet({
               ))}
             </Group>
 
-            {/* Only shown once a governorate is chosen, because a flat list of
-                twenty-eight districts across eight governorates is not a
-                choice anybody can make. */}
-            {districts.length > 1 ? (
+            {/* Every district of the chosen region, each with its count, 0
+                included (18 November 2026). Shown once a region is chosen,
+                because a flat list of every district is not a choice anybody
+                can make. */}
+            {districts.length > 0 ? (
               <Group title={t('district')}>
                 {districts.map((d) => (
                   <Toggle
@@ -368,6 +367,7 @@ export function FilterSheet({
                     onClick={() =>
                       set({ district: draft.district === d.slug ? undefined : d.slug })
                     }
+                    count={districtCounts?.[d.slug] ?? (districtCounts ? 0 : undefined)}
                   >
                     {districtLabel(d.slug, locale)}
                   </Toggle>

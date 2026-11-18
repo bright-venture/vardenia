@@ -637,19 +637,40 @@ async function countPublished(
  * be keyed on locale anyway, holding ten identical copies of each count; the
  * `locale` argument went with it.
  */
-export async function countByGovernorate({
-  category,
-  subcategory,
-}: {
+export async function countByGovernorate(filter: {
   category?: string
   subcategory?: string
 }): Promise<Record<string, number> | undefined> {
+  return countByPlace('governorate', filter)
+}
+
+/**
+ * The same counts per district (18 November 2026), so the Filters sheet can
+ * show every district of a region with its number, 0 included.
+ */
+export async function countByDistrict(filter: {
+  category?: string
+  subcategory?: string
+}): Promise<Record<string, number> | undefined> {
+  return countByPlace('district', filter)
+}
+
+async function countByPlace(
+  column: 'governorate' | 'district',
+  {
+    category,
+    subcategory,
+  }: {
+    category?: string
+    subcategory?: string
+  },
+): Promise<Record<string, number> | undefined> {
   const run = () =>
     countPublished(
-      'listings.governorate-counts',
+      `listings.${column}-counts`,
       ({ businesses, subcategories }) => {
         const values: unknown[] = []
-        const where = [PUBLISHED_SQL, 'b.governorate is not null']
+        const where = [PUBLISHED_SQL, `b.${column} is not null`]
 
         if (category) {
           values.push(category)
@@ -665,7 +686,7 @@ export async function countByGovernorate({
         }
 
         return {
-          sql: `select b.governorate::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
+          sql: `select b.${column}::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
           values,
         }
       },
@@ -681,7 +702,7 @@ export async function countByGovernorate({
    */
   const counts = await unstable_cache(
     run,
-    ['governorate-counts', category ?? '', subcategory ?? ''],
+    [`${column}-counts`, category ?? '', subcategory ?? ''],
     { revalidate: LISTINGS_TTL, tags: ['businesses'] },
   )()
 

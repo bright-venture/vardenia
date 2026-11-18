@@ -2,7 +2,7 @@ import { MobileMenu } from './header/MobileMenu'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ChevronDown, Heart } from 'lucide-react'
-import { SECTIONS } from '@vardenia/core'
+import { EVENT_STAFF_SECTION, SECTIONS } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LinkArrow } from './LinkArrow'
@@ -35,12 +35,21 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
   // The six sections and the directory, without the ones an admin has hidden.
   const sectionItems = withoutHidden(
-    SECTIONS.map((section) => ({
-      href: `/${section.path}`,
-      name: sectionName(section, locale),
-      description: sectionSummary(section, locale),
-      destination: categoryPhotos[section.path] ?? 0,
-    })),
+    [
+      ...SECTIONS.map((section) => ({
+        href: `/${section.path}`,
+        name: sectionName(section, locale),
+        description: sectionSummary(section, locale),
+        destination: categoryPhotos[section.path] ?? 0,
+      })),
+      // The seventh section: a request form, not listings (18 November 2026).
+      {
+        href: `/${EVENT_STAFF_SECTION.path}`,
+        name: sectionName(EVENT_STAFF_SECTION, locale),
+        description: sectionSummary(EVENT_STAFF_SECTION, locale),
+        destination: 5,
+      },
+    ],
     hidden,
   )
   const directoryShown = shown('directory')

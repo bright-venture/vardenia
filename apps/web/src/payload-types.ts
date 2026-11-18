@@ -78,6 +78,7 @@ export interface Config {
     closures: Closure;
     'room-types': RoomType;
     'room-availability': RoomAvailability;
+    'staff-requests': StaffRequest;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -105,6 +106,7 @@ export interface Config {
     closures: ClosuresSelect<false> | ClosuresSelect<true>;
     'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
     'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
+    'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -1133,6 +1135,40 @@ export interface RoomAvailability {
   createdAt: string;
 }
 /**
+ * Requests for hostesses and waiters from the Event Staff section. Call or email the guest, then set the status.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "staff-requests".
+ */
+export interface StaffRequest {
+  id: number;
+  reference?: string | null;
+  role: 'hostesses' | 'waiters';
+  status: 'new' | 'contacted' | 'confirmed' | 'declined';
+  customer: number | Customer;
+  name: string;
+  email: string;
+  phone?: string | null;
+  eventType: 'wedding' | 'private-dinner' | 'corporate' | 'other';
+  guests: number;
+  /**
+   * Empty means the guest is not sure.
+   */
+  staffWanted?: number | null;
+  eventDate: string;
+  startTime?: string | null;
+  hours?: number | null;
+  venue: string;
+  notes?: string | null;
+  locale?: string | null;
+  /**
+   * For the team only. Never shown to the guest.
+   */
+  internalNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
@@ -1315,6 +1351,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'room-availability';
         value: number | RoomAvailability;
+      } | null)
+    | ({
+        relationTo: 'staff-requests';
+        value: number | StaffRequest;
       } | null)
     | ({
         relationTo: 'articles';
@@ -1714,6 +1754,31 @@ export interface RoomAvailabilitySelect<T extends boolean = true> {
   startsOn?: T;
   endsOn?: T;
   rooms?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "staff-requests_select".
+ */
+export interface StaffRequestsSelect<T extends boolean = true> {
+  reference?: T;
+  role?: T;
+  status?: T;
+  customer?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  eventType?: T;
+  guests?: T;
+  staffWanted?: T;
+  eventDate?: T;
+  startTime?: T;
+  hours?: T;
+  venue?: T;
+  notes?: T;
+  locale?: T;
+  internalNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

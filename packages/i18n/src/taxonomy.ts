@@ -585,6 +585,16 @@ const SECTION_LABELS: Record<string, Labels> = {
     bn: 'যাতায়াত',
     ur: 'آمد و رفت',
   },
+  'event-staff': {
+    fr: 'Personnel d’événement',
+    es: 'Personal para eventos',
+    pt: 'Equipe para eventos',
+    ru: 'Персонал для мероприятий',
+    zh: '活动服务人员',
+    hi: 'इवेंट स्टाफ़',
+    bn: 'ইভেন্ট স্টাফ',
+    ur: 'تقریب کا عملہ',
+  },
 }
 
 const SECTION_DESCRIPTIONS: Record<string, Labels> = {
@@ -647,6 +657,16 @@ const SECTION_DESCRIPTIONS: Record<string, Labels> = {
     hi: 'कार किराया, हवाई अड्डा स्थानांतरण और निजी ड्राइवर',
     bn: 'গাড়ি ভাড়া, বিমানবন্দর ট্রান্সফার ও ব্যক্তিগত চালক',
     ur: 'کار کرایہ، ایئرپورٹ ٹرانسفر اور نجی ڈرائیور',
+  },
+  'event-staff': {
+    fr: 'Hôtesses et serveurs pour votre événement',
+    es: 'Azafatas y camareros para tu evento',
+    pt: 'Recepcionistas e garçons para o seu evento',
+    ru: 'Хостес и официанты для вашего мероприятия',
+    zh: '为您的活动提供礼宾与服务员',
+    hi: 'आपके कार्यक्रम के लिए होस्टेस और वेटर',
+    bn: 'আপনার অনুষ্ঠানের জন্য হোস্টেস ও ওয়েটার',
+    ur: 'آپ کی تقریب کے لیے میزبان خواتین اور ویٹر',
   },
 }
 

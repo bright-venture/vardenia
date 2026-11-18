@@ -229,6 +229,7 @@ export async function ListingFilters({
   state,
   locale,
   counts,
+  districtCounts,
 }: {
   base: string
   state: FilterState
@@ -241,6 +242,8 @@ export async function ListingFilters({
    * lib/listings.countByGovernorate for what the numbers mean.
    */
   counts?: Record<string, number>
+  /** Listings per district, passed to the Filters sheet. */
+  districtCounts?: Record<string, number>
 }) {
   const t = await getTranslations()
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
@@ -329,17 +332,12 @@ export async function ListingFilters({
               the regions shown plus those behind Filters is the number on the
               first chip. Without it the reader has parts and no whole.
             */}
-            <FilterChip
-              href={href({ governorate: undefined })}
-              active={!state.governorate}
-              count={counts ? Object.values(counts).reduce((n, c) => n + c, 0) : undefined}
-            >
-              {t('filters.allOfLebanon')}
-            </FilterChip>
+            {/* No "All of Lebanon" chip (18 November 2026): no region chosen
+                is every listing, and the chosen region's chip unselects it. */}
             {shown.map((g) => (
               <FilterChip
                 key={g.slug}
-                href={href({ governorate: g.slug })}
+                href={href({ governorate: state.governorate === g.slug ? undefined : g.slug })}
                 active={state.governorate === g.slug}
                 // Absent counts render no number at all rather than a zero,
                 // which would claim something untrue.
@@ -365,7 +363,13 @@ export async function ListingFilters({
 
         {/* Region, district and the sixteen amenities live in here. The
             kind of place does not: it is the section page's own tile row. */}
-        <FilterSheet base={base} state={state} locale={locale} counts={counts} />
+        <FilterSheet
+          base={base}
+          state={state}
+          locale={locale}
+          counts={counts}
+          districtCounts={districtCounts}
+        />
       </div>
 
       {/*

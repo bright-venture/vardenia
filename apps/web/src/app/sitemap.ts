@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { SECTIONS } from '@vardenia/core'
+import { EVENT_STAFF_ROLES, EVENT_STAFF_SECTION, SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { alternatesFor } from '../lib/seo'
 import { CONTENT_PAGE_SLUGS } from '../lib/pages'
@@ -118,6 +118,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * to a real search than "every listing in Lebanon" is.
    */
   for (const section of SECTIONS) push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+  // Event Staff and its two request forms (18 November 2026).
+  push(`/${EVENT_STAFF_SECTION.path}`, CHANGE_FREQUENCY.index, 0.7)
+  for (const role of EVENT_STAFF_ROLES) {
+    push(`/${EVENT_STAFF_SECTION.path}/${role.slug}`, CHANGE_FREQUENCY.index, 0.6)
+  }
 
   push('/magazine', CHANGE_FREQUENCY.index, 0.9)
   push('/magazine/articles', CHANGE_FREQUENCY.index, 0.7)
