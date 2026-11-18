@@ -16,7 +16,6 @@ import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
 import { Pagination } from '../../../../components/Pagination'
 import { EditorialIntro } from '../../../../components/journey/EditorialIntro'
-import { TripBar } from '../../../../components/TripBar'
 import { tripVerdicts } from '../../../../lib/trip-availability'
 import { tripParams } from '../../../../lib/trip'
 import {
@@ -204,7 +203,9 @@ async function DirectoryResults({
         ))}
       </nav>
 
-      <TripBar base="/directory" state={state} locale={locale} section={null} />
+      {/* No "When are you going?" on the whole directory (18 November 2026):
+          what a date means differs per kind of place, so it is asked in each
+          section (Stay asks for nights and rooms). */}
 
       <ListingFilters
         base="/directory"
@@ -213,6 +214,7 @@ async function DirectoryResults({
         counts={counts}
         areas={areas}
         areaCounts={areaCounts}
+        showBookable
       />
 
       <ListingGrid

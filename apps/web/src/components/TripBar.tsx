@@ -9,7 +9,6 @@ import {
   TRIP_MAX_PARTY,
   TRIP_MAX_ROOMS,
 } from '../lib/trip'
-import { FilterChip } from './FilterChip'
 import { filterHref, type FilterState } from './ListingFilters'
 import { INPUT, LABEL, LINK, PRIMARY_BUTTON } from './formStyles'
 
@@ -82,11 +81,6 @@ const FIELD = `mt-1.5 h-11 py-0 ${INPUT}`
  * table for a restaurant, a pick-up time and passengers for getting around. See
  * WORDING below; the directory as a whole uses the general one.
  *
- * # "Online booking only" sits here, not with the other filters
- *
- * It is the question this bar raises: most listings are contact-only, and a
- * guest who has just chosen a date wants the ones that can take it. Placed in
- * the filter row it also squeezed the region chips off a phone.
  */
 export async function TripBar({
   base,
@@ -106,12 +100,11 @@ export async function TripBar({
   const words = WORDING[section ?? 'any'] ?? WORDING.any!
   const nights = section === 'stay'
   /**
-   * Adults, children and rooms apart (18 November 2026): on Stay, and on the
-   * whole directory, which holds hotels too. A table there is checked for
-   * adults and children together; a hotel by its rooms. The other sections
-   * keep their single People field.
+   * Adults, children and rooms apart (18 November 2026): on Stay. The other
+   * sections keep their single People field, and the whole directory has no
+   * date box at all.
    */
-  const family = nights || section === null
+  const family = nights
 
   // The filters already applied, carried through the submit. Built by the same
   // function as every other link, so the names and order cannot drift.
@@ -139,9 +132,7 @@ export async function TripBar({
         className={`mt-4 grid grid-cols-2 items-end gap-3 ${
           nights
             ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_6rem_6rem_auto]'
-            : family
-              ? 'sm:grid-cols-[minmax(0,1fr)_minmax(9rem,1fr)_5rem_5rem_5rem_auto]'
-              : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
+            : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
         }`}
       >
         {carried.map(([name, value]) => (
@@ -288,20 +279,16 @@ export async function TripBar({
         </button>
       </form>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <FilterChip
-          href={filterHref(base, state, { bookable: !state.bookable })}
-          active={Boolean(state.bookable)}
-        >
-          {t('directory.trip.onlineOnly')}
-        </FilterChip>
-
-        {trip ? (
+      {/* "Online booking only" was removed on 18 November 2026: hotels and
+          guesthouses will all take bookings, so the switch would soon filter
+          nothing. An old link with ?book=1 still works. */}
+      {trip ? (
+        <div className="mt-4">
           <Link href={filterHref(base, withoutTrip, {})} className={`${LINK} text-sm`}>
             {t('directory.trip.clear')}
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </section>
   )
 }

@@ -247,6 +247,7 @@ export async function ListingFilters({
   counts,
   areas = [],
   areaCounts,
+  showBookable = false,
 }: {
   base: string
   state: FilterState
@@ -263,6 +264,12 @@ export async function ListingFilters({
   areas?: AreaOption[]
   /** Listings per area slug, for the Filters sheet. */
   areaCounts?: Record<string, number>
+  /**
+   * The "Online booking only" chip, on the whole directory (18 November
+   * 2026): many places there take no bookings. Not on Stay, where hotels and
+   * guesthouses will all take them.
+   */
+  showBookable?: boolean
 }) {
   const t = await getTranslations()
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
@@ -379,6 +386,14 @@ export async function ListingFilters({
             {t('directory.openNow')}
           </FilterChip>
         </div>
+
+        {showBookable ? (
+          <div className="shrink-0">
+            <FilterChip href={href({ bookable: !state.bookable })} active={Boolean(state.bookable)}>
+              {t('directory.trip.onlineOnly')}
+            </FilterChip>
+          </div>
+        ) : null}
 
         {/* Region, district and the sixteen amenities live in here. The
             kind of place does not: it is the section page's own tile row. */}
