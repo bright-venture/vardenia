@@ -475,7 +475,8 @@
     "features": "Features",
     "clearAll": "Clear all",
     "showResults": "Show results",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "area": "Area"
   },
   "magazine": {
     "title": "Magazine",

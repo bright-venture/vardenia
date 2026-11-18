@@ -79,6 +79,7 @@ export interface Config {
     'room-types': RoomType;
     'room-availability': RoomAvailability;
     'staff-requests': StaffRequest;
+    areas: Area;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -107,6 +108,7 @@ export interface Config {
     'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
     'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
+    areas: AreasSelect<false> | AreasSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -331,6 +333,10 @@ export interface Business {
         | 'tyre'
       )
     | null;
+  /**
+   * The neighbourhood or town, for the directory filter. Only the region above is offered.
+   */
+  area?: (number | null) | Area;
   address?: string | null;
   /**
    * Filled by the link above. Drives "near me" search and Google Maps directions.
@@ -548,6 +554,27 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * Neighbourhoods and towns guests filter by (Achrafieh, Faraya). Each belongs to one region.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "areas".
+ */
+export interface Area {
+  id: number;
+  name: string;
+  /**
+   * In the web address (?area=mar-mikhael). Keep it once set.
+   */
+  slug: string;
+  governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
+  /**
+   * Lower first.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1357,6 +1384,10 @@ export interface PayloadLockedDocument {
         value: number | StaffRequest;
       } | null)
     | ({
+        relationTo: 'areas';
+        value: number | Area;
+      } | null)
+    | ({
         relationTo: 'articles';
         value: number | Article;
       } | null)
@@ -1488,6 +1519,7 @@ export interface BusinessesSelect<T extends boolean = true> {
   tags?: T;
   governorate?: T;
   district?: T;
+  area?: T;
   address?: T;
   location?: T;
   openingHours?:
@@ -1779,6 +1811,18 @@ export interface StaffRequestsSelect<T extends boolean = true> {
   notes?: T;
   locale?: T;
   internalNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "areas_select".
+ */
+export interface AreasSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  governorate?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }

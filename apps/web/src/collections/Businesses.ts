@@ -310,6 +310,23 @@ export const Businesses: CollectionConfig = {
                   : 'That district is not in the chosen governorate.',
               admin: { description: 'Only the districts of the governorate above are offered.' },
             },
+            {
+              /**
+               * The neighbourhood or town guests filter by (18 November 2026):
+               * Achrafieh, Faraya. Only the chosen region's areas are offered.
+               * Manage the list under Directory > Areas.
+               */
+              name: 'area',
+              type: 'relationship',
+              relationTo: 'areas',
+              index: true,
+              filterOptions: ({ data }) =>
+                data?.governorate ? { governorate: { equals: data.governorate } } : true,
+              admin: {
+                description:
+                  'The neighbourhood or town, for the directory filter. Only the region above is offered.',
+              },
+            },
             { name: 'address', type: 'textarea', localized: true },
             {
               // Fills the point below from a pasted link. See components/admin/MapsLinkField.

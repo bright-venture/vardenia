@@ -475,7 +475,8 @@
     "features": "Comodidades",
     "clearAll": "Limpar tudo",
     "showResults": "Ver resultados",
-    "clearFilters": "Limpar filtros"
+    "clearFilters": "Limpar filtros",
+    "area": "Área"
   },
   "magazine": {
     "title": "Revista",

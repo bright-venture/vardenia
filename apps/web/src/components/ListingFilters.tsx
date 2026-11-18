@@ -1,4 +1,6 @@
 import { getTranslations } from 'next-intl/server'
+import { AREA_SLUG } from '@vardenia/core/areas'
+import type { AreaOption } from '../lib/areas'
 import { AMENITIES, AMENITY_SLUGS } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
@@ -59,6 +61,8 @@ export interface FilterState {
   subcategory?: string
   governorate?: string
   district?: string
+  /** An area slug (Achrafieh, Faraya), within the governorate. 18 November 2026. */
+  area?: string
   amenities: string[]
   /** Show only places open right now, in Beirut time. Evaluated live, not cached. */
   openNow?: boolean
@@ -83,6 +87,7 @@ export function anyFilterApplied(state: FilterState): boolean {
     Boolean(state.subcategory) ||
     Boolean(state.governorate) ||
     Boolean(state.district) ||
+    Boolean(state.area) ||
     state.amenities.length > 0 ||
     Boolean(state.openNow) ||
     Boolean(state.bookable)
@@ -103,12 +108,14 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
   // somewhere else, and the pair would return nothing while looking deliberate.
   if ('governorate' in change && change.governorate !== state.governorate) {
     next.district = undefined
+    next.area = undefined
   }
 
   const params = new URLSearchParams()
   if (next.subcategory) params.set('filter', next.subcategory)
   if (next.governorate) params.set('where', next.governorate)
   if (next.district) params.set('district', next.district)
+  if (next.area) params.set('area', next.area)
   if (next.amenities.length > 0) params.set('has', [...next.amenities].sort().join(','))
   if (next.openNow) params.set('open', '1')
   if (next.bookable) params.set('book', '1')
@@ -145,6 +152,7 @@ export interface RawFilterParams {
   breakfast?: string
   cancel?: string
   view?: string
+  area?: string
 }
 
 /**
@@ -173,6 +181,13 @@ export function parseFilterState(
     subcategory: subcategories.some((c) => c.slug === raw.filter) ? raw.filter : undefined,
     governorate,
     district: districts.some((d) => d.slug === raw.district) ? raw.district : undefined,
+    // Checked for shape only: the areas live in the database. One that matches
+    // nothing gives an empty page, like any other honest filter. Kept only with
+    // a governorate, so the pair cannot contradict itself.
+    area:
+      governorate && raw.area && AREA_SLUG.test(raw.area) && raw.area.length <= 60
+        ? raw.area
+        : undefined,
     amenities: (raw.has ?? '')
       .split(',')
       .filter((slug) => AMENITY_SLUGS.includes(slug))
@@ -229,7 +244,8 @@ export async function ListingFilters({
   state,
   locale,
   counts,
-  districtCounts,
+  areas = [],
+  areaCounts,
 }: {
   base: string
   state: FilterState
@@ -242,8 +258,10 @@ export async function ListingFilters({
    * lib/listings.countByGovernorate for what the numbers mean.
    */
   counts?: Record<string, number>
-  /** Listings per district, passed to the Filters sheet. */
-  districtCounts?: Record<string, number>
+  /** Every region's areas, in the reader's language. See lib/areas. */
+  areas?: AreaOption[]
+  /** Listings per area slug, for the Filters sheet. */
+  areaCounts?: Record<string, number>
 }) {
   const t = await getTranslations()
   const href = (change: Partial<FilterState>) => filterHref(base, state, change)
@@ -271,7 +289,7 @@ export async function ListingFilters({
    */
   const shown = inlineRegions(counts, state.governorate)
 
-  const narrowed = state.amenities.length > 0 || Boolean(state.district)
+  const narrowed = state.amenities.length > 0 || Boolean(state.district) || Boolean(state.area)
 
   const anyFilter =
     Boolean(state.subcategory) ||
@@ -368,7 +386,8 @@ export async function ListingFilters({
           state={state}
           locale={locale}
           counts={counts}
-          districtCounts={districtCounts}
+          areas={areas}
+          areaCounts={areaCounts}
         />
       </div>
 
@@ -393,6 +412,13 @@ export async function ListingFilters({
           {state.district ? (
             <FilterChip href={href({ district: undefined })} active>
               {districtLabel(state.district, locale)}
+              <Cross />
+            </FilterChip>
+          ) : null}
+
+          {state.area ? (
+            <FilterChip href={href({ area: undefined })} active>
+              {areas.find((a) => a.slug === state.area)?.name ?? state.area}
               <Cross />
             </FilterChip>
           ) : null}

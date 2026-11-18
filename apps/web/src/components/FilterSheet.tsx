@@ -2,11 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { type Labelled } from '@vardenia/core/attributes'
+import type { AreaOption } from '../lib/areas'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import { amenityLabel, districtLabel, governorateLabel } from '../lib/labels'
+import { amenityLabel, governorateLabel } from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -111,15 +111,18 @@ export function FilterSheet({
   state,
   locale,
   counts,
-  districtCounts,
+  areas = [],
+  areaCounts,
 }: {
   base: string
   state: FilterState
   locale: Locale
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
-  /** Listings per district, for the district chips. */
-  districtCounts?: Record<string, number>
+  /** Every region's areas, in the reader's language. */
+  areas?: AreaOption[]
+  /** Listings per area slug, for the area chips. */
+  areaCounts?: Record<string, number>
 }) {
   const t = useTranslations('filters')
   const router = useRouter()
@@ -182,8 +185,11 @@ export function FilterSheet({
     return () => dialog.removeEventListener('close', onClose)
   }, [])
 
-  const districts =
-    GOVERNORATES.find((g) => g.slug === draft.governorate)?.districts ?? ([] as Labelled[])
+  // The chosen region's areas (18 November 2026). Districts are no longer
+  // offered here: "Keserwan inside Keserwan" tells a traveller nothing.
+  const regionAreas = draft.governorate
+    ? areas.filter((area) => area.governorate === draft.governorate)
+    : []
 
   /**
    * How many facets are narrowing the result right now, from the URL.
@@ -192,7 +198,11 @@ export function FilterSheet({
    * own tile row rather than in here, so counting it would put a badge on a
    * button that cannot show the reader what it is counting.
    */
-  const count = (state.governorate ? 1 : 0) + (state.district ? 1 : 0) + state.amenities.length
+  const count =
+    (state.governorate ? 1 : 0) +
+    (state.district ? 1 : 0) +
+    (state.area ? 1 : 0) +
+    state.amenities.length
 
   const set = (change: Partial<FilterState>) =>
     setDraft((current) => {
@@ -201,6 +211,7 @@ export function FilterSheet({
       // changing the governorate cannot keep it.
       if ('governorate' in change && change.governorate !== current.governorate) {
         next.district = undefined
+        next.area = undefined
       }
       return next
     })
@@ -232,6 +243,7 @@ export function FilterSheet({
       ...current,
       governorate: undefined,
       district: undefined,
+      area: undefined,
       amenities: [],
     }))
 
@@ -354,22 +366,18 @@ export function FilterSheet({
               ))}
             </Group>
 
-            {/* Every district of the chosen region, each with its count, 0
-                included (18 November 2026). Shown once a region is chosen,
-                because a flat list of every district is not a choice anybody
-                can make. */}
-            {districts.length > 0 ? (
-              <Group title={t('district')}>
-                {districts.map((d) => (
+            {/* Every area of the chosen region, each with its count, 0
+                included (18 November 2026). Shown once a region is chosen. */}
+            {regionAreas.length > 0 ? (
+              <Group title={t('area')}>
+                {regionAreas.map((area) => (
                   <Toggle
-                    key={d.slug}
-                    active={draft.district === d.slug}
-                    onClick={() =>
-                      set({ district: draft.district === d.slug ? undefined : d.slug })
-                    }
-                    count={districtCounts?.[d.slug] ?? (districtCounts ? 0 : undefined)}
+                    key={area.slug}
+                    active={draft.area === area.slug}
+                    onClick={() => set({ area: draft.area === area.slug ? undefined : area.slug })}
+                    count={areaCounts?.[area.slug] ?? (areaCounts ? 0 : undefined)}
                   >
-                    {districtLabel(d.slug, locale)}
+                    {area.name}
                   </Toggle>
                 ))}
               </Group>

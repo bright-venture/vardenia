@@ -475,7 +475,8 @@
     "features": "Удобства",
     "clearAll": "Сбросить всё",
     "showResults": "Показать результаты",
-    "clearFilters": "Сбросить фильтры"
+    "clearFilters": "Сбросить фильтры",
+    "area": "Район"
   },
   "magazine": {
     "title": "Журнал",

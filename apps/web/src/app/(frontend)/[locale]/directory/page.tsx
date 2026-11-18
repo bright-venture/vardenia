@@ -8,7 +8,8 @@ import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { countByDistrict, countByGovernorate, findListings } from '../../../../lib/listings'
+import { areaOptions } from '../../../../lib/areas'
+import { countByArea, countByGovernorate, findListings } from '../../../../lib/listings'
 import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { LINK } from '../../../../components/formStyles'
@@ -137,12 +138,14 @@ async function DirectoryResults({
    */
   const state = parseFilterState(raw, [])
 
-  const [counts, result, districtCounts] = await Promise.all([
+  // The regions' areas for the Filters, cached (lib/areas).
+  const areas = await areaOptions(locale as Locale)
+  const [counts, result, areaCounts] = await Promise.all([
     // No category here - /directory is every section at once, so the counts are
     // "listings in this governorate" across the whole directory.
     countByGovernorate({}),
     findListings({ locale, ...state, page: Number(page) || 1 }),
-    countByDistrict({}),
+    countByArea({}),
   ])
 
   // Only with plans set, and only for the places on this page that take
@@ -208,7 +211,8 @@ async function DirectoryResults({
         state={state}
         locale={locale}
         counts={counts}
-        districtCounts={districtCounts}
+        areas={areas}
+        areaCounts={areaCounts}
       />
 
       <ListingGrid

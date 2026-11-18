@@ -475,7 +475,8 @@
     "features": "Équipements",
     "clearAll": "Tout effacer",
     "showResults": "Voir les résultats",
-    "clearFilters": "Effacer les filtres"
+    "clearFilters": "Effacer les filtres",
+    "area": "Quartier ou ville"
   },
   "magazine": {
     "title": "Magazine",
