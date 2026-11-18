@@ -844,7 +844,9 @@
     "nightOne": "{date}: {count} खाली",
     "nightRange": "{from} से {to}: {count} खाली",
     "freeFrom": "आपके पूरे ठहराव के लिए खाली नहीं। {date} से खाली।",
-    "checkInOut": "चेक-इन और चेक-आउट"
+    "checkInOut": "चेक-इन और चेक-आउट",
+    "adults": "वयस्क",
+    "children": "बच्चे"
   },
   "partnerRooms": {
     "title": "Room types",

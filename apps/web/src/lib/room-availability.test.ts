@@ -244,3 +244,35 @@ describe('open dates (closed until the hotel opens them)', () => {
     expect(roomsLeft(type, [], stay('2026-12-10', 1))).toBe(5)
   })
 })
+
+describe('adults and children (18 November 2026)', () => {
+  const family: RoomTypeInventory = {
+    ...suite,
+    id: 7,
+    rooms: 3,
+    sleepsAdults: 2,
+    sleepsChildren: 2,
+  }
+  const interval = stay('2026-12-24', 1)
+
+  it('fits two adults and two children in one family room', () => {
+    expect(hotelHasSpace([family], [], interval, { guests: 4, adults: 2, rooms: 1 })).toBe(true)
+  })
+
+  it('does not fit four adults in it: children places are not adult places', () => {
+    expect(hotelHasSpace([family], [], interval, { guests: 4, adults: 4, rooms: 1 })).toBe(false)
+    expect(
+      checkRoomRequest({
+        rules: RULES,
+        types: [family],
+        existing: [],
+        request: { interval, guests: 4, adults: 4, lines: [{ roomType: 7, count: 1 }] },
+        now: NOW,
+      }),
+    ).toMatchObject({ ok: false, reason: 'rooms-too-small' })
+  })
+
+  it('takes four adults in two of them', () => {
+    expect(hotelHasSpace([family], [], interval, { guests: 4, adults: 4, rooms: 2 })).toBe(true)
+  })
+})

@@ -844,7 +844,9 @@
     "nightOne": "{date} : {count} libres",
     "nightRange": "Du {from} au {to} : {count} libres",
     "freeFrom": "Pas libre pour tout votre séjour. Libre à partir du {date}.",
-    "checkInOut": "Arrivée et départ"
+    "checkInOut": "Arrivée et départ",
+    "adults": "Adultes",
+    "children": "Enfants"
   },
   "partnerRooms": {
     "title": "Room types",

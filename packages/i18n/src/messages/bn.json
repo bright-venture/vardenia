@@ -844,7 +844,9 @@
     "nightOne": "{date}: {count}টি খালি",
     "nightRange": "{from} থেকে {to}: {count}টি খালি",
     "freeFrom": "পুরো থাকার সময় খালি নেই। {date} থেকে খালি।",
-    "checkInOut": "চেক-ইন ও চেক-আউট"
+    "checkInOut": "চেক-ইন ও চেক-আউট",
+    "adults": "প্রাপ্তবয়স্ক",
+    "children": "শিশু"
   },
   "partnerRooms": {
     "title": "Room types",

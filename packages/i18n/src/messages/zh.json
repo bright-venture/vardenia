@@ -844,7 +844,9 @@
     "nightOne": "{date}：空余 {count} 间",
     "nightRange": "{from} 至 {to}：空余 {count} 间",
     "freeFrom": "整个住宿期间无空房，{date} 起有空房。",
-    "checkInOut": "入住与退房"
+    "checkInOut": "入住与退房",
+    "adults": "成人",
+    "children": "儿童"
   },
   "partnerRooms": {
     "title": "Room types",

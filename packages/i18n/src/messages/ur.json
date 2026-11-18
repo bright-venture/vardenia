@@ -844,7 +844,9 @@
     "nightOne": "{date}: {count} خالی",
     "nightRange": "{from} سے {to}: {count} خالی",
     "freeFrom": "آپ کے پورے قیام کے لیے خالی نہیں۔ {date} سے خالی۔",
-    "checkInOut": "چیک اِن اور چیک آؤٹ"
+    "checkInOut": "چیک اِن اور چیک آؤٹ",
+    "adults": "بالغ",
+    "children": "بچے"
   },
   "partnerRooms": {
     "title": "Room types",

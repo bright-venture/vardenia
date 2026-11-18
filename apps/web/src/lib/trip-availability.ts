@@ -98,7 +98,11 @@ export function roomTripVerdict(
     closures,
     types: [{ id: -1, rooms: 1, sleepsAdults: 50, options: [], active: true }],
     existing: [],
-    request: { interval, guests: trip.party, lines: [{ roomType: -1, count: 1 }] },
+    request: {
+      interval,
+      guests: trip.party + (trip.children ?? 0),
+      lines: [{ roomType: -1, count: 1 }],
+    },
     now,
   })
   if (!general.ok) return verdictFrom(general)
@@ -106,7 +110,8 @@ export function roomTripVerdict(
     types,
     existing,
     interval,
-    { guests: trip.party, rooms: trip.rooms ?? 1 },
+    // On the Stay search the party is the adults; children come on top.
+    { guests: trip.party + (trip.children ?? 0), adults: trip.party, rooms: trip.rooms ?? 1 },
     {
       breakfast: trip.breakfast,
       freeCancellation: trip.freeCancellation,

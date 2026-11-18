@@ -856,6 +856,7 @@ export interface Booking {
   start: string;
   end: string;
   partySize: number;
+  children?: number | null;
   /**
    * The room or unit type requested, for a stay. Empty for a table booking.
    */
@@ -1629,6 +1630,7 @@ export interface BookingsSelect<T extends boolean = true> {
   start?: T;
   end?: T;
   partySize?: T;
+  children?: T;
   roomType?: T;
   rooms?:
     | T

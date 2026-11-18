@@ -347,6 +347,9 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
       request: {
         interval: { start, end },
         guests: Number(data.partySize ?? originalDoc?.partySize ?? 1),
+        adults:
+          Number(data.partySize ?? originalDoc?.partySize ?? 1) -
+          Number(data.children ?? originalDoc?.children ?? 0),
         lines: roomLines.map((line) => ({ ...line, option: null })),
         ...(self !== null ? { excludeBookingId: self } : {}),
       },

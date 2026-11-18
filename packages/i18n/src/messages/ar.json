@@ -844,7 +844,9 @@
     "nightOne": "{date}: {count} متاحة",
     "nightRange": "من {from} إلى {to}: {count} متاحة",
     "freeFrom": "غير متاحة طوال إقامتك. متاحة ابتداءً من {date}.",
-    "checkInOut": "الوصول والمغادرة"
+    "checkInOut": "الوصول والمغادرة",
+    "adults": "البالغون",
+    "children": "الأطفال"
   },
   "partnerRooms": {
     "title": "أنواع الغرف",

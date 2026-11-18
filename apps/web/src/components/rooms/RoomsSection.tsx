@@ -78,10 +78,13 @@ export function RoomsSection({
     const d = q.get('date')
     const n = Number(q.get('nights'))
     const p = Number(q.get('party'))
+    const c = Number(q.get('children'))
     return {
       date: d && d >= earliestDate && d <= latestDate ? d : '',
       nights: Number.isInteger(n) && n >= 1 && n <= MAX_NIGHTS ? n : 1,
-      guests: Number.isInteger(p) && p >= 1 && p <= 50 ? p : 2,
+      // Adults and children apart, as on the Stay search (18 November 2026).
+      adults: Number.isInteger(p) && p >= 1 && p <= 50 ? p : 2,
+      children: Number.isInteger(c) && c >= 0 && c <= 20 ? c : 0,
       breakfast: q.get('breakfast') === '1',
       freeCancel: q.get('cancel') === '1',
       seaView: q.get('view') === 'sea',
@@ -89,7 +92,11 @@ export function RoomsSection({
   })()
 
   const [chosen, setChosen] = useState<Partial<typeof fromQuery>>({})
-  const { date, nights, guests, breakfast, freeCancel, seaView } = { ...fromQuery, ...chosen }
+  const { date, nights, adults, children, breakfast, freeCancel, seaView } = {
+    ...fromQuery,
+    ...chosen,
+  }
+  const guests = adults + children
   const choose_ = <K extends keyof typeof fromQuery>(key: K, value: (typeof fromQuery)[K]) =>
     setChosen((current) => ({ ...current, [key]: value }))
   const setDate = (value: string) => {
@@ -97,7 +104,8 @@ export function RoomsSection({
     setError(null)
   }
   const setNights = (value: number) => choose_('nights', value)
-  const setGuests = (value: number) => choose_('guests', value)
+  const setAdults = (value: number) => choose_('adults', value)
+  const setChildren = (value: number) => choose_('children', value)
   const setBreakfast = (value: boolean) => choose_('breakfast', value)
   const setFreeCancel = (value: boolean) => choose_('freeCancel', value)
   const setSeaView = (value: boolean) => choose_('seaView', value)
@@ -177,6 +185,9 @@ export function RoomsSection({
     (sum, line) => sum + line.count * (line.room.sleepsAdults + line.room.sleepsChildren),
     0,
   )
+  // Adults need adult places; children may use either (18 November 2026).
+  const adultSleeps = lines.reduce((sum, line) => sum + line.count * line.room.sleepsAdults, 0)
+  const tooSmall = totalSleeps < guests || adultSleeps < adults
 
   const pickedOfType = (roomId: number) =>
     rooms
@@ -210,6 +221,7 @@ export function RoomsSection({
       start: start.toISOString(),
       end: end.toISOString(),
       partySize: guests,
+      children,
       locale,
       rooms: lines.map((line) => ({
         roomType: line.room.id,
@@ -313,19 +325,34 @@ export function RoomsSection({
             ))}
           </select>
         </label>
-        <label className="block">
-          <span className={LABEL}>{t('guests')}</span>
-          <input
-            type="number"
-            min={1}
-            max={50}
-            className={`${INPUT} mt-1`}
-            value={guests}
-            onChange={(event) =>
-              setGuests(Math.max(1, Math.min(50, Number(event.target.value) || 1)))
-            }
-          />
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className={LABEL}>{t('adults')}</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              className={`${INPUT} mt-1`}
+              value={adults}
+              onChange={(event) =>
+                setAdults(Math.max(1, Math.min(50, Number(event.target.value) || 1)))
+              }
+            />
+          </label>
+          <label className="block">
+            <span className={LABEL}>{t('children')}</span>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              className={`${INPUT} mt-1`}
+              value={children}
+              onChange={(event) =>
+                setChildren(Math.max(0, Math.min(20, Number(event.target.value) || 0)))
+              }
+            />
+          </label>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -494,15 +521,17 @@ export function RoomsSection({
       {totalRooms > 0 ? (
         <div className="border-ink-100 bg-surface-raised sticky bottom-0 mt-6 border p-4">
           <p className="text-ink-900 font-semibold">{t('selected', { count: totalRooms })}</p>
-          {totalSleeps < guests ? (
+          {tooSmall ? (
             <p className="text-state-danger mt-1 text-sm">
-              {t('tooManyGuests', { sleeps: totalSleeps, guests })}
+              {totalSleeps < guests
+                ? t('tooManyGuests', { sleeps: totalSleeps, guests })
+                : t('tooManyGuests', { sleeps: adultSleeps, guests: adults })}
             </p>
           ) : null}
           <button
             type="button"
             className={`${PRIMARY_BUTTON} mt-3`}
-            disabled={busy || totalSleeps < guests}
+            disabled={busy || tooSmall}
             onClick={submit}
           >
             {busy ? tb('submitting') : autoConfirm ? t('book') : t('request')}

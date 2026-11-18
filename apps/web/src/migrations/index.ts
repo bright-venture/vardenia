@@ -65,6 +65,7 @@ import * as migration_20261117_115415_room_types from './20261117_115415_room_ty
 import * as migration_20261117_132014_room_availability from './20261117_132014_room_availability'
 import * as migration_20261118_075104_event_staff from './20261118_075104_event_staff'
 import * as migration_20261118_083233_areas from './20261118_083233_areas'
+import * as migration_20261118_084619_booking_children from './20261118_084619_booking_children'
 
 export const migrations = [
   {
@@ -401,5 +402,10 @@ export const migrations = [
     up: migration_20261118_083233_areas.up,
     down: migration_20261118_083233_areas.down,
     name: '20261118_083233_areas',
+  },
+  {
+    up: migration_20261118_084619_booking_children.up,
+    down: migration_20261118_084619_booking_children.down,
+    name: '20261118_084619_booking_children',
   },
 ]

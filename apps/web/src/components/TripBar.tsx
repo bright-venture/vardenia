@@ -131,7 +131,7 @@ export async function TripBar({
         method="get"
         className={`mt-4 grid grid-cols-2 items-end gap-3 ${
           nights
-            ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_6.5rem_auto]'
+            ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_6rem_6rem_auto]'
             : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
         }`}
       >
@@ -192,7 +192,8 @@ export async function TripBar({
 
         <div>
           <label className={LABEL} htmlFor="trip-party">
-            {t(`directory.trip.${words.party}`)}
+            {/* A stay asks for adults and children apart (18 November 2026). */}
+            {nights ? t('rooms.adults') : t(`directory.trip.${words.party}`)}
           </label>
           <input
             id="trip-party"
@@ -209,6 +210,21 @@ export async function TripBar({
         {nights ? (
           <>
             <div>
+              <label className={LABEL} htmlFor="trip-children">
+                {t('rooms.children')}
+              </label>
+              <input
+                id="trip-children"
+                type="number"
+                name="children"
+                inputMode="numeric"
+                min={0}
+                max={20}
+                defaultValue={trip?.children ?? 0}
+                className={FIELD}
+              />
+            </div>
+            <div>
               <label className={LABEL} htmlFor="trip-rooms">
                 {t('rooms.roomsField')}
               </label>
@@ -224,7 +240,7 @@ export async function TripBar({
               />
             </div>
             {/* Room filters: met by the same room type at a hotel with room types. */}
-            <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-5">
+            <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-6">
               <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
                 <input
                   type="checkbox"

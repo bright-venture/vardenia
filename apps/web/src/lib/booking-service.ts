@@ -567,7 +567,12 @@ async function createRoomBooking({
     closures,
     types,
     existing: existingBy.get(businessId) ?? [],
-    request: { interval, guests: request.partySize, lines },
+    request: {
+      interval,
+      guests: request.partySize,
+      adults: request.partySize - Math.min(request.children ?? 0, request.partySize - 1),
+      lines,
+    },
     now,
   })
   if (!verdict.ok) {
@@ -606,6 +611,7 @@ async function createRoomBooking({
         start: interval.start.toISOString(),
         end: interval.end.toISOString(),
         partySize: request.partySize,
+        children: Math.min(request.children ?? 0, request.partySize - 1),
         roomType: summary,
         rooms: rows,
         ...(request.notes ? { notes: request.notes } : {}),

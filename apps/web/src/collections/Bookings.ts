@@ -271,6 +271,19 @@ export const Bookings: CollectionConfig = {
       // The fee is charged per guest for some venues. Staff only, re-checked.
       access: { update: isStaffFieldLevel },
     },
+    {
+      /**
+       * Of the party, how many are children (18 November 2026). Asked on hotel
+       * bookings, as Booking.com does: adults need adult places in the rooms,
+       * children may also use the extra places. 0 for everything else.
+       */
+      name: 'children',
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      access: { update: isStaffFieldLevel },
+      admin: { condition: (data) => Number(data?.children) > 0 },
+    },
 
     {
       /**

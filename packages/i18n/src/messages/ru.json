@@ -844,7 +844,9 @@
     "nightOne": "{date}: свободно {count}",
     "nightRange": "С {from} по {to}: свободно {count}",
     "freeFrom": "Свободно не на весь срок. Свободно с {date}.",
-    "checkInOut": "Заезд и выезд"
+    "checkInOut": "Заезд и выезд",
+    "adults": "Взрослые",
+    "children": "Дети"
   },
   "partnerRooms": {
     "title": "Room types",

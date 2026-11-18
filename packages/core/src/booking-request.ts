@@ -60,6 +60,12 @@ export const bookingRequestSchema = z
     partySize: z.coerce.number().int().min(1, 'at least one person').max(500, 'too many'),
 
     /**
+     * Of the party, how many are children: hotel bookings (18 November 2026).
+     * Adults need adult places in the rooms; children may use the extra ones.
+     */
+    children: z.coerce.number().int().min(0).max(50).optional(),
+
+    /**
      * Neither is sent any more, and neither is trusted if it is.
      *
      * Booking requires a signed-in customer with a verified address, so the

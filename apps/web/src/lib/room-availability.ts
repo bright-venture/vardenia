@@ -231,7 +231,7 @@ export function hotelHasSpace(
   types: readonly RoomTypeInventory[],
   existing: readonly ExistingRoomBooking[],
   interval: { start: Date; end: Date },
-  { guests, rooms }: { guests: number; rooms: number },
+  { guests, rooms, adults }: { guests: number; rooms: number; adults?: number },
   filters: RoomFilters = {},
 ): boolean {
   const wanted = Math.max(1, Math.floor(rooms))
@@ -240,13 +240,21 @@ export function hotelHasSpace(
       type.active !== false &&
       typeMatches(type, filters) &&
       roomsLeft(type, existing, interval) >= wanted &&
-      sleeps(type) * wanted >= guests,
+      sleeps(type) * wanted >= guests &&
+      // Adults need adult places; children may also use them (18 November 2026).
+      (adults === undefined || adultPlaces(type) * wanted >= adults),
   )
 }
+
+/** Adult places in one room of this type. */
+export const adultPlaces = (type: Pick<RoomTypeInventory, 'sleepsAdults'>): number =>
+  Math.max(1, Math.floor(type.sleepsAdults || 1))
 
 export interface RoomRequest {
   interval: { start: Date; end: Date }
   guests: number
+  /** Of the guests, how many are adults. Absent means all of them may be. */
+  adults?: number
   lines: RoomLine[]
   /** Set when a booking is being changed, so it does not compete with itself. */
   excludeBookingId?: number | string
@@ -308,6 +316,7 @@ export function checkRoomRequest({
   }
 
   let capacity = 0
+  let adultCapacity = 0
   for (const [typeId, count] of wanted) {
     const type = types.find((candidate) => candidate.id === typeId)
     if (!type || type.active === false) return { ok: false, reason: 'room-unknown' }
@@ -319,10 +328,14 @@ export function checkRoomRequest({
     const left = roomsLeft(type, existing, request.interval, request.excludeBookingId)
     if (count > left) return { ok: false, reason: 'rooms-full', detail: { left } }
     capacity += sleeps(type) * count
+    adultCapacity += adultPlaces(type) * count
   }
 
   if (Math.floor(request.guests) > capacity) {
     return { ok: false, reason: 'rooms-too-small', detail: { sleeps: capacity } }
+  }
+  if (request.adults !== undefined && Math.floor(request.adults) > adultCapacity) {
+    return { ok: false, reason: 'rooms-too-small', detail: { sleeps: adultCapacity } }
   }
 
   return { ok: true }

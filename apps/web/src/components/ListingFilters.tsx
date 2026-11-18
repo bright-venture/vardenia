@@ -149,6 +149,7 @@ export interface RawFilterParams {
   nights?: string
   party?: string
   rooms?: string
+  children?: string
   breakfast?: string
   cancel?: string
   view?: string
