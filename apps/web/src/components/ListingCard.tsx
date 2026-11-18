@@ -262,7 +262,7 @@ export function ListingCard({
                 : verdict.kind === 'closed'
                   ? t('tripClosed')
                   : verdict.kind === 'party'
-                    ? t('tripParty', { party: trip.party })
+                    ? t('tripParty', { party: trip.party + (trip.children ?? 0) })
                     : verdict.kind === 'notice'
                       ? t('tripNotice')
                       : t('tripOther')}

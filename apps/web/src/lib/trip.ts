@@ -215,6 +215,7 @@ export function prefillFromTrip(
     date: inRange ? trip.date : defaults.date,
     time: trip.time ?? defaults.time,
     nights,
-    partySize: trip.party,
+    // Children come on top of the party where the search asked for them apart.
+    partySize: trip.party + (trip.children ?? 0),
   }
 }

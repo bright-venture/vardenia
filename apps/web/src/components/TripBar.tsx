@@ -105,6 +105,13 @@ export async function TripBar({
   const today = beirutDate()
   const words = WORDING[section ?? 'any'] ?? WORDING.any!
   const nights = section === 'stay'
+  /**
+   * Adults, children and rooms apart (18 November 2026): on Stay, and on the
+   * whole directory, which holds hotels too. A table there is checked for
+   * adults and children together; a hotel by its rooms. The other sections
+   * keep their single People field.
+   */
+  const family = nights || section === null
 
   // The filters already applied, carried through the submit. Built by the same
   // function as every other link, so the names and order cannot drift.
@@ -132,7 +139,9 @@ export async function TripBar({
         className={`mt-4 grid grid-cols-2 items-end gap-3 ${
           nights
             ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_6rem_6rem_auto]'
-            : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
+            : family
+              ? 'sm:grid-cols-[minmax(0,1fr)_minmax(9rem,1fr)_5rem_5rem_5rem_auto]'
+              : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
         }`}
       >
         {carried.map(([name, value]) => (
@@ -193,7 +202,7 @@ export async function TripBar({
         <div>
           <label className={LABEL} htmlFor="trip-party">
             {/* A stay asks for adults and children apart (18 November 2026). */}
-            {nights ? t('rooms.adults') : t(`directory.trip.${words.party}`)}
+            {family ? t('rooms.adults') : t(`directory.trip.${words.party}`)}
           </label>
           <input
             id="trip-party"
@@ -207,7 +216,7 @@ export async function TripBar({
           />
         </div>
 
-        {nights ? (
+        {family ? (
           <>
             <div>
               <label className={LABEL} htmlFor="trip-children">
@@ -240,35 +249,37 @@ export async function TripBar({
               />
             </div>
             {/* Room filters: met by the same room type at a hotel with room types. */}
-            <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-6">
-              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="breakfast"
-                  value="1"
-                  defaultChecked={trip?.breakfast === true}
-                />
-                {t('rooms.filterBreakfast')}
-              </label>
-              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="cancel"
-                  value="1"
-                  defaultChecked={trip?.freeCancellation === true}
-                />
-                {t('rooms.filterFreeCancel')}
-              </label>
-              <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="view"
-                  value="sea"
-                  defaultChecked={trip?.view === 'sea'}
-                />
-                {t('rooms.filterSeaView')}
-              </label>
-            </div>
+            {nights ? (
+              <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-6">
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="breakfast"
+                    value="1"
+                    defaultChecked={trip?.breakfast === true}
+                  />
+                  {t('rooms.filterBreakfast')}
+                </label>
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="cancel"
+                    value="1"
+                    defaultChecked={trip?.freeCancellation === true}
+                  />
+                  {t('rooms.filterFreeCancel')}
+                </label>
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="view"
+                    value="sea"
+                    defaultChecked={trip?.view === 'sea'}
+                  />
+                  {t('rooms.filterSeaView')}
+                </label>
+              </div>
+            ) : null}
           </>
         ) : null}
 

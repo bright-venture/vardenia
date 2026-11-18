@@ -152,7 +152,10 @@ export function tripVerdictFor(
       hours: listing.openingHours as OpeningHour[] | null | undefined,
       closures,
       existing,
-      request: { interval: { start: interval.start, end: interval.end }, partySize: trip.party },
+      request: {
+        interval: { start: interval.start, end: interval.end },
+        partySize: trip.party + (trip.children ?? 0),
+      },
       now,
     }),
   )
