@@ -425,8 +425,9 @@ export function RoomsSection({
           {visible.map((room) => {
             const roomLeft = left?.get(room.id)
             const free = roomLeft === undefined ? null : Math.max(0, roomLeft)
-            // Before dates are chosen, up to the rooms the hotel has (10 at most).
-            const capacity = free ?? Math.min(Math.max(0, room.rooms), 10)
+            // Nothing can be picked before a check-in date (18 November 2026):
+            // only then is it known which rooms are free.
+            const capacity = date ? (free ?? 0) : 0
             const remaining = Math.max(0, capacity - pickedOfType(room.id))
             return (
               <li key={room.id} className="border-ink-100 border">
@@ -467,6 +468,8 @@ export function RoomsSection({
                       >
                         {free === 0 ? t('soldOut') : t('left', { count: free })}
                       </p>
+                    ) : !date ? (
+                      <p className="text-ink-900 mt-3 text-sm font-semibold">{t('pickDates')}</p>
                     ) : null}
                     {/* Whether the group fits in the rooms asked for, all of this
                         type: adults in adult places, everyone in the total. */}
