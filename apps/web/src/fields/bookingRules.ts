@@ -1,5 +1,5 @@
 import type { Field } from 'payload'
-import { canTakeBookings } from '@vardenia/core'
+import { canHaveRoomTypes, canTakeBookings } from '@vardenia/core'
 import { isStaffFieldLevel } from '../access/index'
 
 /**
@@ -67,7 +67,7 @@ export const bookingRulesField: Field = {
       admin: {
         condition: (_, siblings) => siblings?.enabled === true,
         description:
-          'How many bookings may overlap at once - tables, rooms, seats. This is enforced in the database, not just here.',
+          'How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel or getaway with room types: there, each room type has its own rooms and open dates (Rooms tab).',
       },
     },
 
@@ -166,13 +166,14 @@ export const bookingRulesField: Field = {
      */
     {
       name: 'roomTypes',
+      label: 'Simple room labels (old)',
       type: 'array',
-      labels: { singular: 'Room type', plural: 'Room types' },
+      labels: { singular: 'Room label', plural: 'Room labels' },
       admin: {
         condition: (_, siblings) =>
           siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
         description:
-          'Simple room labels for the stay form, without their own availability. For real rooms with photos and a number of rooms, use Room types (Directory > Room types, or the partner area); once a hotel has room types, guests book those instead.',
+          'Old: names only, with no photos, rooms or availability. Use the Rooms tab instead. These show on the page only while the listing has no room types.',
       },
       fields: [
         { name: 'label', type: 'text', required: true },
@@ -204,8 +205,12 @@ export const bookingRulesField: Field = {
        */
       type: 'row',
       admin: {
-        condition: (_, siblings) =>
-          siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
+        // For hotels and getaways (18 November 2026), and any listing that
+        // sells nights. Partners can also set these from their Rooms tab.
+        condition: (data, siblings) =>
+          siblings?.enabled === true &&
+          (canHaveRoomTypes((data?.subcategories as string[]) ?? []) ||
+            Number(siblings?.minDurationMinutes ?? 0) >= 1440),
       },
       fields: [
         {

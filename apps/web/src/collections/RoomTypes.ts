@@ -139,6 +139,8 @@ export const RoomTypes: CollectionConfig = {
       required: true,
       index: true,
       access: { update: fixedOnceCreated },
+      // Only hotels and getaways sell rooms (core ROOM_TYPE_SUBCATEGORIES).
+      filterOptions: { subcategories: { in: ['hotels', 'getaways'] } },
     },
     { name: 'name', type: 'text', required: true, localized: true, maxLength: 120 },
     {
@@ -283,6 +285,22 @@ export const RoomTypes: CollectionConfig = {
           ],
         },
       ],
+    },
+    {
+      // The nights this room type is open, listed here with Create new
+      // (18 November 2026). Closed on every night not listed.
+      name: 'openDates',
+      label: 'Open dates',
+      type: 'join',
+      collection: 'room-availability',
+      on: 'roomType',
+      defaultSort: 'startsOn',
+      admin: {
+        description:
+          'Guests can only book the nights opened here. 0 rooms closes nights inside an open period.',
+        defaultColumns: ['startsOn', 'endsOn', 'rooms'],
+        allowCreate: true,
+      },
     },
     {
       name: 'active',

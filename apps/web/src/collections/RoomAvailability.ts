@@ -56,6 +56,18 @@ export const RoomAvailability: CollectionConfig = {
       required: true,
       index: true,
       access: { update: fixedOnceCreated },
+      // Opened from a listing's Rooms tab, only that listing's room types.
+      filterOptions: ({ data }) =>
+        data?.business
+          ? {
+              business: {
+                equals:
+                  typeof data.business === 'object' && data.business !== null
+                    ? (data.business as { id: unknown }).id
+                    : data.business,
+              },
+            }
+          : true,
     },
     {
       /** Copied from the room type by the guard, so access can filter on it. */

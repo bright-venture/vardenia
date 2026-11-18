@@ -96,7 +96,15 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    businesses: {
+      roomTypeList: 'room-types';
+      roomDateList: 'room-availability';
+    };
+    'room-types': {
+      openDates: 'room-availability';
+    };
+  };
   collectionsSelect: {
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
     'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>;
@@ -374,7 +382,7 @@ export interface Business {
      */
     autoConfirm?: boolean | null;
     /**
-     * How many bookings may overlap at once - tables, rooms, seats. This is enforced in the database, not just here.
+     * How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel or getaway with room types: there, each room type has its own rooms and open dates (Rooms tab).
      */
     capacity?: number | null;
     minPartySize?: number | null;
@@ -396,7 +404,7 @@ export interface Business {
      */
     maxDurationMinutes?: number | null;
     /**
-     * Simple room labels for the stay form, without their own availability. For real rooms with photos and a number of rooms, use Room types (Directory > Room types, or the partner area); once a hotel has room types, guests book those instead.
+     * Old: names only, with no photos, rooms or availability. Use the Rooms tab instead. These show on the page only while the listing has no room types.
      */
     roomTypes?:
       | {
@@ -418,6 +426,16 @@ export interface Business {
      * Shown to the customer before they book, e.g. "Free cancellation up to 48 hours before". Leave empty to show nothing.
      */
     cancellationPolicy?: string | null;
+  };
+  roomTypeList?: {
+    docs?: (number | RoomType)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  roomDateList?: {
+    docs?: (number | RoomAvailability)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
   };
   /**
    * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set in Settings, Commission and tiers. Every silver listing comes before every bronze one.
@@ -573,6 +591,112 @@ export interface Area {
    * Lower first.
    */
   order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The rooms a hotel or getaway sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-types".
+ */
+export interface RoomType {
+  id: number;
+  business: number | Business;
+  name: string;
+  /**
+   * Guests can filter a hotel by rooms or suites.
+   */
+  kind: 'room' | 'suite';
+  description?: string | null;
+  photos?: (number | Media)[] | null;
+  /**
+   * How many identical rooms of this type in all. Guests can only book the nights opened in Room dates (closed until opened).
+   */
+  rooms: number;
+  sleepsAdults: number;
+  sleepsChildren?: number | null;
+  sizeM2?: number | null;
+  /**
+   * For example "1 large double bed" or "2 single beds".
+   */
+  beds?: string | null;
+  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool')[] | null;
+  amenities?:
+    | (
+        | 'private-bathroom'
+        | 'balcony'
+        | 'kitchenette'
+        | 'air-conditioning'
+        | 'heating'
+        | 'wifi'
+        | 'tv'
+        | 'minibar'
+        | 'coffee-machine'
+        | 'bathtub'
+        | 'work-desk'
+        | 'safe'
+        | 'soundproofing'
+        | 'fireplace'
+      )[]
+    | null;
+  /**
+   * How this room is sold: with or without breakfast, free cancellation or not, pay at the property or in advance. At least one.
+   */
+  options?:
+    | {
+        breakfast?: boolean | null;
+        cancellation: 'free' | 'non-refundable';
+        /**
+         * 0 means until the day of arrival.
+         */
+        freeCancellationDays?: number | null;
+        payment: 'at-property' | 'in-advance';
+        /**
+         * Not shown on the website for now.
+         */
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Guests can only book the nights opened here. 0 rooms closes nights inside an open period.
+   */
+  openDates?: {
+    docs?: (number | RoomAvailability)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Off hides it from guests. Existing bookings are kept.
+   */
+  active?: boolean | null;
+  /**
+   * Lower first.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The nights each room type is open and how many rooms are sold. A room type is closed on nights no entry covers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-availability".
+ */
+export interface RoomAvailability {
+  id: number;
+  roomType: number | RoomType;
+  business?: (number | null) | Business;
+  startsOn: string;
+  /**
+   * Inclusive. The guest leaves the next morning.
+   */
+  endsOn: string;
+  /**
+   * 0 closes these nights.
+   */
+  rooms: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -935,82 +1059,6 @@ export interface Booking {
   createdAt: string;
 }
 /**
- * The rooms a hotel or getaway sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "room-types".
- */
-export interface RoomType {
-  id: number;
-  business: number | Business;
-  name: string;
-  /**
-   * Guests can filter a hotel by rooms or suites.
-   */
-  kind: 'room' | 'suite';
-  description?: string | null;
-  photos?: (number | Media)[] | null;
-  /**
-   * How many identical rooms of this type in all. Guests can only book the nights opened in Room dates (closed until opened).
-   */
-  rooms: number;
-  sleepsAdults: number;
-  sleepsChildren?: number | null;
-  sizeM2?: number | null;
-  /**
-   * For example "1 large double bed" or "2 single beds".
-   */
-  beds?: string | null;
-  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool')[] | null;
-  amenities?:
-    | (
-        | 'private-bathroom'
-        | 'balcony'
-        | 'kitchenette'
-        | 'air-conditioning'
-        | 'heating'
-        | 'wifi'
-        | 'tv'
-        | 'minibar'
-        | 'coffee-machine'
-        | 'bathtub'
-        | 'work-desk'
-        | 'safe'
-        | 'soundproofing'
-        | 'fireplace'
-      )[]
-    | null;
-  /**
-   * How this room is sold: with or without breakfast, free cancellation or not, pay at the property or in advance. At least one.
-   */
-  options?:
-    | {
-        breakfast?: boolean | null;
-        cancellation: 'free' | 'non-refundable';
-        /**
-         * 0 means until the day of arrival.
-         */
-        freeCancellationDays?: number | null;
-        payment: 'at-property' | 'in-advance';
-        /**
-         * Not shown on the website for now.
-         */
-        price?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Off hides it from guests. Existing bookings are kept.
-   */
-  active?: boolean | null;
-  /**
-   * Lower first.
-   */
-  order?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * What guests paid, as photographed. Private: only the guest and the team can open one.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1137,28 +1185,6 @@ export interface Closure {
    * Why. Not shown to guests.
    */
   note?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The nights each room type is open and how many rooms are sold. A room type is closed on nights no entry covers.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "room-availability".
- */
-export interface RoomAvailability {
-  id: number;
-  roomType: number | RoomType;
-  business?: (number | null) | Business;
-  startsOn: string;
-  /**
-   * Inclusive. The guest leaves the next morning.
-   */
-  endsOn: string;
-  /**
-   * 0 closes these nights.
-   */
-  rooms: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -1557,6 +1583,8 @@ export interface BusinessesSelect<T extends boolean = true> {
         checkOutTime?: T;
         cancellationPolicy?: T;
       };
+  roomTypeList?: T;
+  roomDateList?: T;
   tier?: T;
   commission?:
     | T
@@ -1773,6 +1801,7 @@ export interface RoomTypesSelect<T extends boolean = true> {
         price?: T;
         id?: T;
       };
+  openDates?: T;
   active?: T;
   order?: T;
   updatedAt?: T;

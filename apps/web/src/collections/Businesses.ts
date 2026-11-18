@@ -1,3 +1,4 @@
+import { canHaveRoomTypes } from '@vardenia/core'
 import type { CollectionConfig } from 'payload'
 import {
   GOVERNORATES,
@@ -424,6 +425,48 @@ export const Businesses: CollectionConfig = {
           description:
             'Reservations taken through Vardenia. Owners manage the bookings themselves; these rules stay with us.',
           fields: [bookingRulesField],
+        },
+        {
+          /**
+           * The hotel's rooms, in one place (18 November 2026): its room types
+           * and the nights each is open, listed from their own collections
+           * (join fields, nothing stored here) with Create new beside each.
+           * Only for hotels and getaways, the kinds that sell rooms.
+           */
+          label: 'Rooms',
+          description:
+            'Room types and the nights each is open. Guests can only book nights that are open (closed until opened). Partners manage the same from their Rooms tab.',
+          admin: {
+            condition: (data) => canHaveRoomTypes((data?.subcategories as string[]) ?? []),
+          },
+          fields: [
+            {
+              name: 'roomTypeList',
+              label: 'Room types',
+              type: 'join',
+              collection: 'room-types',
+              on: 'business',
+              defaultSort: 'order',
+              admin: {
+                defaultColumns: ['name', 'kind', 'rooms', 'sleepsAdults', 'active'],
+                allowCreate: true,
+              },
+            },
+            {
+              name: 'roomDateList',
+              label: 'Open dates',
+              type: 'join',
+              collection: 'room-availability',
+              on: 'business',
+              defaultSort: 'startsOn',
+              // Loads each entry's room type, so the list shows its name.
+              maxDepth: 1,
+              admin: {
+                defaultColumns: ['roomType', 'startsOn', 'endsOn', 'rooms'],
+                allowCreate: true,
+              },
+            },
+          ],
         },
         {
           label: 'Commercial',
