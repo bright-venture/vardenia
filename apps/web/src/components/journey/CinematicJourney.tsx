@@ -1,5 +1,7 @@
 'use client'
+import { Caveat } from 'next/font/google'
 import { filmSources } from '../../lib/film'
+import { ArrowDown, ChevronDown, Play } from 'lucide-react'
 import { EditionRegions, editionLabel } from './EditionRegions'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import { LinkArrow } from '../LinkArrow'
@@ -12,9 +14,13 @@ import { Coordinates } from './Coordinates'
 import { GeographicMap } from './GeographicMap'
 import { mapPosition } from './map-projection'
 import { useCityAutoplay } from './useCityAutoplay'
+import { mountPinnedPhotos } from './pinned-physics'
+import { PinnedScenicPhoto } from './PinnedScenicPhoto'
+import { useDesktopEdition } from '../editorial/useDesktopEdition'
 import {
   DESTINATIONS,
   directoryFor,
+  sceneDirectoryFor,
   matchesFeeling,
   routePath,
   SCENE_PHOTOS,
@@ -26,6 +32,8 @@ const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n))
 const assets = '/journey/'
 // The film from the media bucket when storage is configured; see lib/film.
 const FILM_SOURCES = filmSources(process.env.NEXT_PUBLIC_FILM_BASE)
+const captionFont = Caveat({ weight: '500', subsets: ['latin'], display: 'swap', preload: false, variable: '--font-home-handwriting' })
+
 export function CinematicJourney({
   locale,
   directory,
@@ -56,6 +64,13 @@ export function CinematicJourney({
   const [motion, toggleMotion] = useJourneyMotion(),
     [playing, setPlaying] = useState(false),
     [failed, setFailed] = useState(false)
+  const desktop = useDesktopEdition(locale)
+  const citiesShown = !desktop
+  useEffect(() => {
+    const host = root.current
+    if (!host || !motion || !desktop) return
+    return mountPinnedPhotos(host)
+  }, [motion, desktop])
   const [feeling, setFeeling] = useState<Feeling>('all'),
     [active, setActive] = useState<string>('byblos')
   const [cityIndex, setCityIndex] = useState(3)
@@ -65,11 +80,15 @@ export function CinematicJourney({
   const advanceCity = useCallback(() => {
     setCityIndex((old) => (old + 1) % DESTINATIONS.length)
   }, [])
-  useCityAutoplay(cityRoot, motion && !cityHover && !cityFocus, advanceCity, cityIndex)
+  useCityAutoplay(cityRoot, citiesShown && motion && !cityHover && !cityFocus, advanceCity, cityIndex)
   const city = DESTINATIONS[cityIndex]!
   const [trip, setTrip] = useDiscoveryRoute(),
     [flipped, setFlipped] = useState<string[]>([]),
     [pointerMotion, setPointerMotion] = useState(true)
+  // The revised postcard copy and interaction are under review on English desktop.
+  const desktopPostcards = desktop
+  const [hoveredPostcard, setHoveredPostcard] = useState<string | null>(null)
+  const [focusedPostcard, setFocusedPostcard] = useState<string | null>(null)
   const ar = locale === 'ar',
     name = (p: Pick<Destination, 'name' | 'ar'> | ScenePhoto) => (ar ? p.ar : p.name),
     region = (p: Destination) => {
@@ -132,7 +151,7 @@ export function CinematicJourney({
     setLeavingCity(shownCity)
     setShownCity(cityIndex)
   }
-  const cityLoaded = pageReady
+  const cityLoaded = pageReady && citiesShown
     ? [leavingCity, cityIndex, (cityIndex + 1) % DESTINATIONS.length]
         .filter((index): index is number => index !== null)
         .map((index) => DESTINATIONS[index]!.id)
@@ -188,11 +207,15 @@ export function CinematicJourney({
       route = host.querySelector<SVGSVGElement>('.vd-route')!
     let frame = 0,
       dirty = true,
+      heroStickyTop = 0,
       stops: { at: number; radius: number }[] = [],
       box = { x: 0, y: 0, width: 1, height: 1 }
     const length = path.getTotalLength()
     path.style.strokeDasharray = String(length)
     const measure = () => {
+      // The approved overlay header lets the hero begin at zero. Measure its
+      // actual sticky position so phones do not begin partway through the fade.
+      heroStickyTop = citiesShown ? (innerWidth < 701 ? 70 : 80) : (Number.parseFloat(getComputedStyle(hero).top) || 0)
       const r = route.getBoundingClientRect(),
         p = landscape.getBoundingClientRect(),
         den = Math.max(1, landscape.offsetHeight - 380)
@@ -222,10 +245,9 @@ export function CinematicJourney({
     const update = () => {
       frame = 0
       if (dirty) measure()
-      const h = innerWidth < 701 ? 70 : 80,
-        hr = heroTrack.getBoundingClientRect(),
+      const hr = heroTrack.getBoundingClientRect(),
         p = motion
-          ? clamp((h - hr.top) / Math.max(1, heroTrack.offsetHeight - hero.offsetHeight))
+          ? clamp((heroStickyTop - hr.top) / Math.max(1, heroTrack.offsetHeight - hero.offsetHeight))
           : 0
       hero.style.setProperty('--vd-copy-out', String(clamp((p - 0.08) / 0.38)))
       hero.style.setProperty('--vd-bridge-in', String(clamp((p - 0.45) / 0.35)))
@@ -306,7 +328,7 @@ export function CinematicJourney({
       window.removeEventListener('load', resize)
       reveals.forEach((el) => el.classList.remove('vd-pending'))
     }
-  }, [motion])
+  }, [motion, citiesShown])
   const cycle = (direction: number, pointer: boolean) => {
     setPointerMotion(pointer)
     const i = available.findIndex((p) => p.id === place?.id)
@@ -371,6 +393,17 @@ export function CinematicJourney({
   // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
     const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
+    if (desktop) return (
+      <PinnedScenicPhoto
+        photo={p}
+        label={name(p)}
+        className={extra}
+        ready={pageReady}
+        interactive={motion}
+        href={directoryShown ? sceneDirectoryFor(id) : undefined}
+        dragLabel={directoryShown ? `Explore ${name(p)}.${motion ? ' Drag to swing the photo; arrow keys also work.' : ''}` : name(p)}
+      />
+    )
     return (
       <figure className={`vd-scene-photo ${extra}`} data-vd-parallax={shift} data-vd-reveal>
         <div className="vd-scene-image">
@@ -407,7 +440,7 @@ export function CinematicJourney({
     <div
       ref={root}
       data-vd-pointer={pointerMotion}
-      className={`vd-home ${motion ? '' : 'vd-motion-off'}`}
+      className={`vd-home ${captionFont.variable} ${motion ? '' : 'vd-motion-off'}`}
     >
       <section className="vd-hero-track" aria-label={t('heroA')}>
         <div className="vd-hero">
@@ -500,7 +533,7 @@ export function CinematicJourney({
             <a className="vd-button vd-button-light" href="#ways">
               {t('begin')}{' '}
               <span aria-hidden>
-                <LinkArrow />
+                {desktop ? <ArrowDown size={16} aria-hidden /> : <LinkArrow />}
               </span>
             </a>
           </div>
@@ -517,8 +550,21 @@ export function CinematicJourney({
               </a>
             </div>
           </div>
-          <details className="vd-film-controls">
-            <summary>{t('film')}</summary>
+          <details
+            className="vd-film-controls"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && event.currentTarget.open) {
+                event.preventDefault()
+                event.currentTarget.open = false
+                event.currentTarget.querySelector('summary')?.focus({ preventScroll: true })
+              }
+            }}
+          >
+            <summary>
+              {desktop && <Play size={13} fill="currentColor" strokeWidth={0} aria-hidden />}
+              {t('film')}
+              {desktop && <ChevronDown className="vd-film-chevron" size={14} aria-hidden />}
+            </summary>
             <div>
               {!failed && (
                 <button
@@ -544,7 +590,7 @@ export function CinematicJourney({
             </div>
           </details>
           <a className="vd-hero-next" href="#ways" aria-label={t('begin')}>
-            ↓
+            {desktop ? <ArrowDown size={28} strokeWidth={1.4} aria-hidden /> : '↓'}
           </a>
         </div>
       </section>
@@ -618,12 +664,10 @@ export function CinematicJourney({
         </div>
         <p className="vd-journey-outro" data-vd-reveal>
           {t('outro')}
-          <br />
-          <a href="#stone" aria-label={t('citySlider')}>
-            ↓
-          </a>
+          {!desktop && <><br /><a href="#stone" aria-label={t('citySlider')}>↓</a></>}
         </p>
       </section>
+      {citiesShown && (
       <section
         ref={cityRoot}
         className="vd-stone vd-city-slider"
@@ -678,6 +722,7 @@ export function CinematicJourney({
           label={name(city)}
         />
       </section>
+      )}
       <section className="vd-atlas" id="destinations">
         <div className="vd-section-heading">
           <h2 data-vd-reveal>
@@ -687,7 +732,7 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('atlasBody')}</p>
         </div>
-        {directoryShown ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
+        {directoryShown && !desktop ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
         <h3 className="vd-featured-destinations-title" id="vd-featured-destinations-title">
           {t('featuredDestinations')}
         </h3>
@@ -761,10 +806,8 @@ export function CinematicJourney({
                   }}
                 >
                   <span />
-                  {/* The region, as the title beside the map says it (11
-                      November 2026): the pin read "Byblos" under a
-                      "Keserwan" heading. The place stays in the details. */}
-                  <span className="vd-map-city-label">{region(p)}</span>
+                  {/* Match the place title beside the map. */}
+                  <span className="vd-map-city-label">{desktop ? name(p) : region(p)}</span>
                 </button>
               ))}
             </div>
@@ -775,11 +818,20 @@ export function CinematicJourney({
           </div>
           {place && (
             <div className="vd-atlas-details" key={place.id} aria-live="polite">
-              <h3>{region(place)}</h3>
-              <p className="vd-destination-name">{name(place)}</p>
+              {desktop ? (
+                <>
+                  <p className="vd-destination-region">{region(place)}</p>
+                  <h3>{name(place)}</h3>
+                </>
+              ) : (
+                <>
+                  <h3>{region(place)}</h3>
+                  <p className="vd-destination-name">{name(place)}</p>
+                </>
+              )}
               <Coordinates
                 place={place}
-                enabled={motion && pointerMotion}
+                enabled={!desktop && motion && pointerMotion}
                 className="vd-destination-coordinates"
               />
               <p className="vd-destination-description">{body(place)}</p>
@@ -825,12 +877,12 @@ export function CinematicJourney({
             </div>
           </div>
         </div>
-        <section className="vd-trip-panel" id="discovery-route" aria-labelledby="vd-route-title">
+        <section className="vd-trip-panel" data-empty={!trip.length} id="discovery-route" aria-labelledby="vd-route-title">
           <div className="vd-trip-heading">
             <h3 id="vd-route-title">{t('routeTitle')}</h3>
-            <p>{t('routeBody')}</p>
+            {trip.length || !desktop ? <p>{t('routeBody')}</p> : null}
             <span aria-live="polite">
-              {trip.length} {t('stops')}
+              {trip.length} {desktop && trip.length === 1 ? 'stop' : t('stops')}
             </span>
           </div>
           {trip.length ? (
@@ -884,7 +936,7 @@ export function CinematicJourney({
           ) : (
             <p className="vd-route-empty">{t('routeEmpty')}</p>
           )}
-          <div className="vd-trip-actions">
+          {trip.length || !desktop ? <div className="vd-trip-actions">
             <button className="vd-button" disabled={!trip.length} onClick={exportRoute}>
               {t('download')} ↓
             </button>
@@ -892,10 +944,10 @@ export function CinematicJourney({
               {t('clear')}
             </button>
             <p>{t('routeNote')}</p>
-          </div>
+          </div> : null}
         </section>
       </section>
-      <section className="vd-detours" id="discover">
+      <section className="vd-detours" id="discover" data-desktop-postcards={desktopPostcards}>
         <div className="vd-section-heading">
           <h2 data-vd-reveal>
             {t('detourA')}
@@ -903,7 +955,11 @@ export function CinematicJourney({
             {t('detourB')}
           </h2>
           <div>
-            <p data-vd-reveal>{t('detourBody')}</p>
+            <p data-vd-reveal>
+              {desktopPostcards
+                ? 'Seven places to begin. Turn a postcard, find your next feeling, and follow it into the directory.'
+                : t('detourBody')}
+            </p>
             <div className="vd-postcard-controls">
               <button
                 type="button"
@@ -940,46 +996,80 @@ export function CinematicJourney({
           aria-label={t('detourA') + ' ' + t('detourB')}
         >
           {DESTINATIONS.map((p) => {
-            const back = flipped.includes(p.id)
+            const back =
+              flipped.includes(p.id) ||
+              (desktopPostcards && (hoveredPostcard === p.id || focusedPostcard === p.id))
+            const turn = (
+              <button
+                type="button"
+                className="vd-postcard-turn"
+                aria-expanded={back}
+                aria-label={`${back ? t('front') : t('turn')} · ${name(p)}`}
+                onClick={(event) => {
+                  setPointerMotion(event.detail !== 0)
+                  setHoveredPostcard(null)
+                  setFlipped((old) => (back ? old.filter((id) => id !== p.id) : [...old, p.id]))
+                }}
+              >
+                {desktopPostcards ? null : `${back ? t('front') : t('turn')} ↶`}
+              </button>
+            )
             return (
               <article key={p.id} className="vd-postcard">
-                <div className={`vd-postcard-photo ${back ? 'vd-flipped' : ''}`}>
+                <div
+                  className={`vd-postcard-photo ${back ? 'vd-flipped' : ''}`}
+                  onPointerEnter={(event) => {
+                    if (desktopPostcards && event.pointerType === 'mouse') setHoveredPostcard(p.id)
+                  }}
+                  onPointerLeave={() => {
+                    if (desktopPostcards) setHoveredPostcard((id) => (id === p.id ? null : id))
+                  }}
+                >
+                  {desktopPostcards ? turn : null}
                   <div
                     className="vd-postcard-inner"
-                    style={{ transition: motion && pointerMotion ? undefined : 'none' }}
+                    style={{ transition: motion && (desktopPostcards || pointerMotion) ? undefined : 'none' }}
                   >
                     <div className="vd-postcard-front" inert={back}>
-                      {directoryShown ? (
+                      {directoryShown && !desktopPostcards ? (
                         <Link href={directoryFor(p)} aria-label={name(p)}>
                           {postcardImage(p)}
                         </Link>
                       ) : (
                         postcardImage(p)
                       )}
-                      <Coordinates place={p} enabled={motion && !back} label={name(p)} />
+                      <Coordinates
+                        place={p}
+                        enabled={!desktopPostcards && motion && !back}
+                        label={desktopPostcards ? undefined : name(p)}
+                      />
                     </div>
                     <div className="vd-postcard-back" inert={!back}>
-                      <span>Vardenia</span>
+                      {desktopPostcards ? (
+                        <p className="vd-postcard-region">{region(p)}</p>
+                      ) : (
+                        <span>Vardenia</span>
+                      )}
                       <p>{body(p)}</p>
                       {directoryShown ? (
-                        <Link href={directoryFor(p)}>
-                          {t('readRegion')} <LinkArrow />
+                        <Link
+                          className={desktopPostcards ? 'vd-button' : undefined}
+                          href={directoryFor(p)}
+                          onFocus={() => {
+                            if (desktopPostcards) setFocusedPostcard(p.id)
+                          }}
+                          onBlur={() => {
+                            if (desktopPostcards) setFocusedPostcard(null)
+                          }}
+                        >
+                          {desktopPostcards ? `Explore ${name(p)}` : t('readRegion')}{' '}
+                          <LinkArrow />
                         </Link>
                       ) : null}
                     </div>
                   </div>
                 </div>
-                <button
-                  className="vd-postcard-turn"
-                  aria-expanded={back}
-                  aria-label={`${back ? t('front') : t('turn')} · ${name(p)}`}
-                  onClick={(event) => {
-                    setPointerMotion(event.detail !== 0)
-                    setFlipped((old) => (back ? old.filter((id) => id !== p.id) : [...old, p.id]))
-                  }}
-                >
-                  {back ? t('front') : t('turn')} ↶
-                </button>
+                {desktopPostcards ? null : turn}
                 <h3>{directoryShown ? <Link href={directoryFor(p)}>{name(p)}</Link> : name(p)}</h3>
                 <p>{body(p)}</p>
               </article>

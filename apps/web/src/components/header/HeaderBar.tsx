@@ -1,5 +1,40 @@
-import type { ReactNode } from 'react'
-/** Opaque paper navigation remains readable over every page and photograph. */
+'use client'
+
+import { useEffect, useState, type ReactNode } from 'react'
+import { useLocale } from 'next-intl'
+import { useDesktopEdition } from '../editorial/useDesktopEdition'
+import { usePathname } from '../../i18n/routing'
+
+/** The homepage opens over the film; menus and the remaining pages use paper. */
 export function HeaderBar({ children }: { children: ReactNode }) {
-  return <header className="vd-header">{children}</header>
+  const pathname = usePathname()
+  const desktop = useDesktopEdition(useLocale())
+  const home = desktop && pathname === '/'
+  const [overHero, setOverHero] = useState(true)
+
+  useEffect(() => {
+    if (!home) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const hero = document.querySelector('.vd-hero-track')
+      const header = document.querySelector('.vd-header')
+      setOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > (header?.getBoundingClientRect().height ?? 80)))
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    window.addEventListener('pageshow', schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      window.removeEventListener('pageshow', schedule)
+    }
+  }, [home, pathname])
+
+  return <header className="vd-header" data-home={home || undefined} data-overlay={(home && overHero) || undefined}>{children}</header>
 }

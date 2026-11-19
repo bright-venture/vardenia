@@ -1,11 +1,15 @@
 'use client'
 import { useCallback, useEffect, useState, type RefObject } from 'react'
 
-export const PRINT_SCAN_DELAYS = [1000, 2400, 1500] as const
+export const PRINT_SCAN_DELAYS = [600, 800, 1000] as const
 export type ScanPhase = 0 | 1 | 2 | 3
 
 /** A camera demonstration only: no camera permission or navigation is triggered. */
-export function usePrintScan(root: RefObject<HTMLElement | null>, enabled: boolean) {
+export function usePrintScan(
+  root: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  desktop = false,
+) {
   const [phase, setPhase] = useState<ScanPhase>(0)
   const [replayKey, setReplayKey] = useState(0)
   const replay = useCallback(() => {
@@ -27,12 +31,13 @@ export function usePrintScan(root: RefObject<HTMLElement | null>, enabled: boole
         )
       }
     }
+    const minimumVisible = desktop && phase === 0 ? 0.72 : 0.35
     const observer = new IntersectionObserver(
       ([entry]) => {
-        visible = Boolean(entry && entry.intersectionRatio >= 0.35)
+        visible = Boolean(entry && entry.intersectionRatio >= minimumVisible)
         sync()
       },
-      { threshold: [0, 0.35] },
+      { threshold: [0, minimumVisible], rootMargin: desktop ? '-80px 0px 0px' : undefined },
     )
     observer.observe(phone)
     document.addEventListener('visibilitychange', sync)
@@ -41,6 +46,6 @@ export function usePrintScan(root: RefObject<HTMLElement | null>, enabled: boole
       observer.disconnect()
       document.removeEventListener('visibilitychange', sync)
     }
-  }, [root, enabled, phase, replayKey])
+  }, [root, enabled, phase, replayKey, desktop])
   return { phase: enabled ? phase : 3, replay, reveal } as const
 }

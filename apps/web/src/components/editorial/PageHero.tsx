@@ -1,3 +1,5 @@
+import { InteriorScenicPhoto } from './InteriorScenicPhoto'
+import { hiddenPages } from '../../lib/hidden-pages'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 import type { Locale } from '@vardenia/i18n'
@@ -10,7 +12,7 @@ import { DESTINATIONS } from '../journey/destinations'
  * `body` is a longer line under the intro: the sections' own descriptions
  * (directory.sectionIntro, the owner's text of 11 November 2026).
  */
-export function PageHero({
+export async function PageHero({
   title,
   intro,
   body,
@@ -44,21 +46,29 @@ export function PageHero({
           </div>
         ) : null}
       </div>
-      <figure className="vd-inner-hero-media" data-vd-reveal>
-        <Image
-          src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
-          alt={destination.alt}
-          width={1600}
-          height={1200}
-          sizes="(max-width:700px) 100vw, 60vw"
-          priority
-        />
+      <InteriorScenicPhoto
+        locale={locale}
+        place={destination}
+        directoryShown={locale === 'en' && !(await hiddenPages()).includes('directory')}
+        className="vd-inner-hero-media"
+        pinOnRight={!immersive}
+        image={
+          <Image
+            src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
+            alt={destination.alt}
+            width={1600}
+            height={1200}
+            sizes="(max-width:700px) 100vw, 60vw"
+            priority
+          />
+        }
+      >
         <Coordinates
           place={destination}
           enabled
           label={locale === 'ar' ? destination.ar : destination.name}
         />
-      </figure>
+      </InteriorScenicPhoto>
     </header>
   )
 }
