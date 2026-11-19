@@ -55,6 +55,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   const directoryShown = shown('directory')
   const sectionMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
       footer={directoryShown ? { href: '/directory', label: t('home.wholeDirectory') } : undefined}
@@ -133,6 +134,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   ].filter((item) => item !== null)
   const aboutMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('nav.aboutMenuTitle')}
       body={t('nav.aboutMenuBody')}
       items={aboutItems}
@@ -181,6 +183,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   ].filter((item) => item !== null)
   const businessMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('nav.businessMenuTitle')}
       body={t('nav.businessMenuBody')}
       items={businessItems}

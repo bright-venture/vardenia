@@ -1,8 +1,67 @@
-/*
- * English desktop interiors (designer update, 19 November 2026).
- * Only the rules this update added: the designer's own copy of this file
- * held earlier rules this site does not have.
- */
+.vd-weddings-empty { display: none; }
+.vd-weddings-standard { display: contents; }
+
+@media (min-width: 1051px) {
+  html:lang(en) {
+    --vd-stone: theme('colors.surface.sunken');
+    --vd-radius-control: 6px;
+    --vd-radius-photo: 10px;
+  }
+  html:lang(en) .vd-public #vd-content:not(:has(.vd-main-home)) {
+    background: var(--vd-paper) url('/journey/natural-paper-grain.webp') center top / 1600px auto repeat-y;
+    background-blend-mode: soft-light;
+  }
+  html:lang(en) .vd-weddings-empty {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    padding: 36px 0 16px;
+    border-top: 1px solid color-mix(in srgb, var(--vd-ink) 20%, transparent);
+  }
+  html:lang(en) .vd-weddings-empty h2 {
+    font: 400 clamp(38px, 4vw, 62px)/1.1 var(--font-display);
+    letter-spacing: -0.035em;
+  }
+  html:lang(en) .vd-weddings-standard { display: none; }
+  html:lang(en) :is(.vd-directory, .vd-magazine-index) .vd-page-intro figure {
+    padding: 10px;
+    background: var(--vd-paper);
+    border: 1px solid color-mix(in srgb, var(--vd-ink) 12%, transparent);
+    box-shadow: 0 10px 24px -16px #111d2d66;
+  }
+  html:lang(en) .vd-page-intro figure img { border-radius: var(--vd-radius-photo); }
+  html:lang(en) .vd-page-intro p { max-width: 54ch; }
+  html:lang(en) .vd-article .prose-vardenia { max-width: 66ch; margin-inline: auto; }
+  html:lang(en) .vd-reading-index a { text-underline-offset: .23em; }
+  html:lang(en) :is(.vd-partner-tabs > a, .vd-auth-card :is(input:not([type='checkbox']), select), .vd-task-page :is(input,select)) {
+    border-radius: 6px;
+  }
+  html:lang(en) .vd-auth-image { border-radius: 10px; overflow: hidden; }
+  html:lang(en) .vd-task-page {
+    background: var(--vd-paper);
+    border: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
+    border-top: 3px solid var(--vd-gold);
+  }
+  html:lang(en) :is(.vd-legal-page, .vd-credits-page) {
+    max-width: 1160px;
+    margin-inline: auto;
+    padding-block: clamp(52px, 6vw, 90px);
+  }
+  html:lang(en) .vd-legal-page > section {
+    padding-top: 24px;
+    border-top: 1px solid color-mix(in srgb, var(--vd-ink) 16%, transparent);
+  }
+  html:lang(en) .vd-partner-tabs { flex-wrap: wrap; }
+  html:lang(en) .vd-reservation { border-radius: 6px; }
+  html:lang(en) .vd-issue-header > .relative { align-self: start; }
+}
+
+@media (min-width: 1051px) {
+  html:lang(en) .vd-category-page:is([data-section='weddings'], [data-section='lifestyle']) .vd-inner-hero h1 {
+    font-size: clamp(62px, 6.5vw, 104px);
+    overflow-wrap: normal;
+  }
+}
 
 /* English desktop interiors, using the homepage's paper, ink and photo captions. */
 @media (min-width: 1051px) {
@@ -254,4 +313,149 @@
 
 @media (min-width: 1051px) and (prefers-reduced-motion: reduce) {
   html:lang(en) .vd-inner-hero-immersive .vd-inner-hero-media img { transform: none; }
+}
+
+@media (min-width: 1051px) {
+  html:lang(en) .vd-header nav.vd-desktop-nav {
+    align-items: center;
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details > summary {
+    position: relative;
+    height: 44px;
+    padding-inline: 12px;
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details > summary::after {
+    content: '';
+    position: absolute;
+    inset-inline: 12px;
+    bottom: 2px;
+    height: 1px;
+    background: theme('colors.gold.700');
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details[open] > summary::after {
+    opacity: 1;
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details > summary:focus:not(:focus-visible) {
+    outline: none;
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details > summary:focus-visible {
+    outline: 2px solid theme('colors.gold.700');
+    outline-offset: 2px;
+  }
+  html:lang(en) .vd-header:has(.vd-desktop-nav > details[open])::after {
+    opacity: 1;
+  }
+  html:lang(en) .vd-header::after {
+    content: '';
+    position: fixed;
+    inset: 80px 0 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--vd-ink) 24%, transparent);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 450ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  html:lang(en) .vd-header[data-overlay]::before {
+    opacity: 1;
+    transition: opacity 450ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  html:lang(en) .vd-header[data-overlay]:has(.vd-desktop-nav > details[open])::before {
+    display: block;
+    opacity: 0;
+  }
+  html:lang(en) .vd-header .vd-discovery-dropdown > div {
+    padding-top: 8px;
+  }
+  html:lang(en) .vd-header .vd-discovery-panel {
+    width: min(100%, 1040px);
+    max-height: calc(100dvh - 112px);
+    margin-inline: auto;
+    padding: 28px 32px;
+    border: 1px solid color-mix(in srgb, var(--vd-ink) 12%, transparent);
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-header .vd-discovery-dropdown[open] .vd-discovery-panel {
+    animation: vd-header-menu-enter 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  html:lang(en) .vd-header .vd-discovery-heading {
+    align-items: start;
+    gap: 32px;
+    margin-bottom: 24px;
+  }
+  html:lang(en) .vd-header .vd-discovery-heading h2 {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+  html:lang(en) .vd-header .vd-discovery-heading p {
+    max-width: 36ch;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  html:lang(en) .vd-header .vd-discovery-composition strong {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+  html:lang(en) .vd-header .vd-discovery-composition li a > span > span {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  html:lang(en) .vd-header .vd-discovery-composition li {
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-header .vd-discovery-composition li a {
+    min-height: 76px;
+    padding: 12px 16px;
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-header .vd-discovery-composition li:focus-within {
+    background: var(--vd-stone);
+  }
+  html:lang(en) .vd-header .vd-discovery-composition li a:focus-visible {
+    outline: 2px solid theme('colors.gold.700');
+    outline-offset: -2px;
+  }
+  html:lang(en) .vd-header .vd-discovery-arrow {
+    font-size: 18px;
+  }
+  html:lang(en) .vd-header .vd-discovery-menu[data-layout='links'] .vd-discovery-composition {
+    display: block;
+  }
+  html:lang(en) .vd-header .vd-discovery-menu[data-layout='links'] ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 24px;
+  }
+  html:lang(en) .vd-header .vd-discovery-menu[data-layout='links'][data-count='3'] ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  html:lang(en) .vd-header .vd-discovery-all {
+    display: flex;
+    width: fit-content;
+    margin: 20px 0 0;
+    gap: 8px;
+    font-size: 14px;
+  }
+  html:lang(en) .vd-header .vd-discovery-photo {
+    min-height: 260px;
+    max-height: 340px;
+  }
+  html:lang(en) .vd-header .vd-discovery-composition a[aria-current] {
+    background: var(--vd-stone); box-shadow: inset 3px 0 var(--vd-gold);
+  }
+  html:lang(en) .vd-header .vd-desktop-nav > details:has(.vd-discovery-composition a[aria-current]) > summary::after { opacity: 1; }
+  html:lang(en) .vd-header .vd-discovery-menu[data-layout='links'][data-count='4'] ul { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@keyframes vd-header-menu-enter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (min-width: 1051px) and (prefers-reduced-motion: reduce) {
+  html:lang(en) .vd-header .vd-discovery-dropdown[open] .vd-discovery-panel { animation: none; }
+  html:lang(en) .vd-header::after { transition: none; }
+}
+@media (min-width: 1051px) {
+  html:lang(en) body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-panel { animation: none; }
 }

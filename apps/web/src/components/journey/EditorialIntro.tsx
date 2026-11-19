@@ -1,7 +1,10 @@
+import { Caveat } from 'next/font/google'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Coordinates } from './Coordinates'
 import { DESTINATIONS } from './destinations'
+const captionFont = Caveat({ weight: '500', subsets: ['latin'], display: 'swap', preload: false, variable: '--font-pinned-caption' })
+
 export async function EditorialIntro({
   locale,
   kind = 'directory',
@@ -37,7 +40,7 @@ export async function EditorialIntro({
           <p>{t('directoryBody')}</p>
         )}
       </div>
-      <figure>
+      <figure className={locale === 'en' ? captionFont.variable : undefined}>
         {/*
           The phone crop below 700px, as on the home page (CinematicJourney):
           the 640px file is about a fifth of the 1600px one. This photograph is

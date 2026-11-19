@@ -2,7 +2,9 @@
 import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
 import { useId, useState } from 'react'
-import { Link } from '../../i18n/routing'
+import { useLocale } from 'next-intl'
+import { Link, usePathname } from '../../i18n/routing'
+import { useDesktopEdition } from '../editorial/useDesktopEdition'
 import { DESTINATIONS } from '../journey/destinations'
 
 /**
@@ -29,9 +31,8 @@ export interface DiscoveryCategory {
 }
 
 /**
- * The large header menu: Discover, Magazine and About all open this, so the
- * three read as one set (10 November 2026; Magazine and About used to be small
- * lists of icon rows).
+ * Shared header panel. Category and company menus use compact text links;
+ * editorial menus may show their actual artwork beside the list.
  *
  * The links always navigate; previewing a photograph is a pointer/keyboard
  * enhancement.
@@ -41,21 +42,35 @@ export function DiscoveryMenu({
   body,
   items,
   footer,
+  layout = 'editorial',
 }: {
   title: string
   body: string
   items: DiscoveryCategory[]
   /** A link under the list, such as the whole directory. */
   footer?: { href: string; label: string }
+  /** Category/company menus use compact links; editorial artwork stays optional. */
+  layout?: 'links' | 'editorial'
 }) {
-  const [active, setActive] = useState(0)
+  const pathname = usePathname()
+  const locale = useLocale()
+  const desktop = useDesktopEdition(locale)
+  const links = footer ? [...items, footer] : items
+  const current = desktop
+    ? links.filter(({ href }) => pathname === href || pathname.startsWith(href + '/'))
+        .sort((a, b) => b.href.length - a.href.length)[0]?.href
+    : undefined
+  const currentState = (href: string) =>
+    href === current ? (pathname === href ? 'page' : 'location') : undefined
+  const [active, setActive] = useState<number | null>(null)
   // Three of these sit in the header at once, so the heading id is per menu.
   const headingId = useId()
-  const item = items[active] ?? items[0]
+  const currentItem = items.find((entry) => entry.href === current)
+  const item = (active === null ? currentItem : items[active]) ?? items[0]
   const place = item?.photo ? null : (DESTINATIONS[item?.destination ?? 0] ?? DESTINATIONS[0])
   const photo = item?.photo ?? (place ? { src: `/journey/${place.image}`, alt: place.alt } : null)
   return (
-    <div className="vd-discovery-menu">
+    <div className="vd-discovery-menu" data-layout={desktop ? layout : 'editorial'} data-count={items.length}>
       <header className="vd-discovery-heading">
         <h2 id={headingId}>{title}</h2>
         <p>{body}</p>
@@ -64,9 +79,10 @@ export function DiscoveryMenu({
         <nav aria-labelledby={headingId}>
           <ul>
             {items.map((entry, index) => (
-              <li key={entry.href} data-active={active === index}>
+              <li key={entry.href} data-active={entry === item}>
                 <Link
                   href={entry.href}
+                  aria-current={currentState(entry.href)}
                   onPointerEnter={() => setActive(index)}
                   onFocus={() => setActive(index)}
                 >
@@ -82,12 +98,12 @@ export function DiscoveryMenu({
             ))}
           </ul>
           {footer ? (
-            <Link className="vd-discovery-all" href={footer.href}>
+            <Link className="vd-discovery-all" href={footer.href} aria-current={currentState(footer.href)}>
               {footer.label} <LinkArrow />
             </Link>
           ) : null}
         </nav>
-        {photo ? (
+        {(!desktop || layout === 'editorial') && photo ? (
           <figure
             className="vd-discovery-photo"
             data-whole={'whole' in photo && photo.whole ? 'true' : undefined}

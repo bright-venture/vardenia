@@ -261,7 +261,9 @@ export async function ContentPageView({
             ),
           )}
           {/* A question the list did not answer (18 November 2026). */}
-          {faq ? <AskQuestionForm locale={locale} /> : null}
+          {(faq || (locale === 'en' && (slug === 'contact' || slug === 'advertise'))) && (
+            <AskQuestionForm locale={locale} topic={slug === 'contact' || slug === 'advertise' ? slug : 'faq'} />
+          )}
           <nav className="vd-story-next" aria-label={page.title}>
             <Link href={next.href} className="vd-button">
               {next.label}
