@@ -169,7 +169,7 @@ async function DirectoryResults({
         row with a List/Map toggle; the map was removed before launch because no
         listing carries coordinates, so there was never anything to draw.
       */}
-      <div className="mt-3">
+      <div className="vd-directory-count mt-3">
         {/* Hidden at zero: the empty state below already says it. */}
         {total > 0 ? (
           <p className="text-ink-500 font-mono text-sm tabular-nums">
@@ -190,7 +190,7 @@ async function DirectoryResults({
         than as loose buttons.
       */}
       <nav
-        className="border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
+        className="vd-directory-categories border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
         aria-label={t('sections')}
       >
         <FilterChip href="/directory" active>

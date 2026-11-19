@@ -32,9 +32,23 @@
         padding: 0.7rem 1.4rem;
         cursor: pointer;
       }
+      @media (min-width: 1051px) {
+        body[data-english-recovery] main { width: min(920px, 86vw); max-width: none; text-align: start; display: grid; grid-template-columns: 1.2fr .8fr; align-items: start; gap: 16px 7%; padding-block: 30px; border-block: 1px solid #c7ae7c; }
+        body[data-english-recovery] .mark { grid-column: 1/-1; margin: 0 0 22px; font-size: 22px; }
+        body[data-english-recovery] main > h1 { font-size: clamp(54px, 5.4vw, 84px); line-height: 1.03; letter-spacing: -.04em; margin: 0; }
+        body[data-english-recovery] main > p { grid-column: 1; font: 17px/1.65 system-ui,sans-serif; margin: 0; }
+        body[data-english-recovery] [lang='ar'] { grid-column: 2; grid-row: 2 / span 2; align-self: center; }
+        body[data-english-recovery] button { grid-column: 1; justify-self: start; border-radius: 6px; font: 500 15px/1.5 system-ui,sans-serif; }
+      }
     </style>
   </head>
   <body>
+    <script>
+      // A service worker serves this document at the address the visitor requested.
+      if (!['ar','fr','es','pt','ru','zh','hi','bn','ur'].includes(location.pathname.split('/')[1])) {
+        document.body.setAttribute('data-english-recovery', '')
+      }
+    </script>
     <main>
       <div class="mark">VARDENIA</div>
       <h1>You are offline</h1>

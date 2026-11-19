@@ -15,8 +15,9 @@ import { isStaff } from '../access/index'
  * - Expired: the contract ended. Set automatically the morning after the
  *   contract end date (lib/place-requests, run by the daily job).
  *
- * Draft can become Published or Rejected; Published can become Expired.
- * Rejected and Expired are final: a new request is a new record.
+ * Draft can become Published or Rejected; Published can become Expired; an
+ * Expired place can be Published again when the business renews (19 November
+ * 2026), with a new contract end date. Rejected is final.
  */
 
 export const PLACE_STATUSES = ['draft', 'published', 'rejected', 'expired'] as const
@@ -26,7 +27,8 @@ const MOVES: Record<PlaceStatus, readonly PlaceStatus[]> = {
   draft: ['published', 'rejected'],
   published: ['expired'],
   rejected: [],
-  expired: [],
+  // A renewal: the business signs a new contract.
+  expired: ['published'],
 }
 
 const guardPlaceRequest: CollectionBeforeValidateHook = ({ data, originalDoc, operation }) => {
@@ -39,14 +41,20 @@ const guardPlaceRequest: CollectionBeforeValidateHook = ({ data, originalDoc, op
   }
   if (operation === 'update' && after !== before && !MOVES[before].includes(after)) {
     throw new APIError(
-      before === 'rejected' || before === 'expired'
-        ? `This request is ${before}. Make a new request instead.`
+      before === 'rejected'
+        ? 'This request was rejected. Make a new request instead.'
         : `A ${before} request can only become ${MOVES[before].join(' or ')}.`,
       400,
     )
   }
-  if (after === 'published' && !(data.contractEndsAt ?? originalDoc?.contractEndsAt)) {
-    throw new APIError('Set the contract end date before publishing.', 400)
+  if (after === 'published') {
+    const ends = data.contractEndsAt ?? originalDoc?.contractEndsAt
+    if (!ends) throw new APIError('Set the contract end date before publishing.', 400)
+    // Publishing, or renewing, with an end date already past would expire
+    // again the next morning.
+    if (after !== before && new Date(String(ends)).getTime() < Date.now() - 86_400_000) {
+      throw new APIError('The contract end date has passed. Set the new end date.', 400)
+    }
   }
   return data
 }
@@ -59,7 +67,7 @@ export const PlaceRequests: CollectionConfig = {
     defaultColumns: ['businessName', 'issue', 'placeNumber', 'status', 'contractEndsAt'],
     group: 'Magazine',
     description:
-      'Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends.',
+      'Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends, and can be Published again to renew.',
   },
   access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
   hooks: { beforeValidate: [guardPlaceRequest] },
@@ -79,7 +87,7 @@ export const PlaceRequests: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Draft can become Published or Rejected. Published becomes Expired after the contract ends.',
+          'Draft can become Published or Rejected. Published becomes Expired after the contract ends. To renew, set a new contract end date and choose Published again.',
       },
     },
     { name: 'businessName', label: 'Business', type: 'text', required: true, maxLength: 160 },

@@ -1,3 +1,4 @@
+import { recoveryEditionScript } from '../../lib/recovery-edition'
 import { colors } from '@vardenia/tokens'
 
 /**
@@ -89,9 +90,18 @@ function page(): string {
   a { color: inherit; }
   .ar { direction: rtl; }
   hr { width: 3rem; border: 0; border-top: 1px solid currentColor; opacity: 0.2; margin: 1rem 0; }
+  @media (min-width: 1051px) {
+    body[data-english-recovery] { display: grid; align-content: center; justify-content: stretch; grid-template-columns: minmax(0, 1fr) minmax(240px,.65fr); gap: 18px 8vw; margin: auto; max-width: 1140px; text-align: start; box-sizing: border-box; padding: 64px 5vw; background: #faf8f3; color: #111d2d; }
+    body[data-english-recovery] > :is(h1,p) { grid-column: 1; opacity: 1; }
+    body[data-english-recovery] > h1 { font: 400 clamp(56px,6vw,88px)/1 Georgia,serif; letter-spacing: -.045em; border-top: 2px solid #c7ae7c; padding-top: 26px; }
+    body[data-english-recovery] > p a { display:inline-flex; padding: 12px 20px; border-radius:6px; background:#111d2d; color:#faf8f3; text-decoration:none; }
+    body[data-english-recovery] > hr { display:none; }
+    body[data-english-recovery] > .ar { grid-column:2; grid-row:1 / span 3; align-self:center; text-align:start; }
+  }
 </style>
 </head>
 <body>
+  <script>${recoveryEditionScript}</script>
   <h1>${escape(COPY.en.title)}</h1>
   <p>${escape(COPY.en.body)}</p>
   <p><a href="/">${escape(COPY.en.home)}</a></p>

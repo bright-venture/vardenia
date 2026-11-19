@@ -128,6 +128,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
     },
     { href: '/partner-with-us', label: t('footer.partnerWithUs'), icon: PARTNER_ICON },
     { href: '/advertise', label: t('footer.advertise'), icon: ADVERTISE_ICON },
+    { href: '/magazine-places', label: t('magazinePlaces.title'), icon: MAGAZINE_ICON },
     // Last, and in this column rather than orphaned under the editorial links.
     { href: '/partner', label: t('footer.partnerSignIn'), icon: SIGN_IN_ICON },
   ]

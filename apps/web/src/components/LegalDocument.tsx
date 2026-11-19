@@ -155,8 +155,24 @@ export function LegalDocumentView({
 
       <p className="text-ink-700 mt-8 text-lg leading-relaxed">{document.intro}</p>
 
+      {locale === 'en' && document.sections.length > 1 && (
+        <details className="vd-legal-contents" hidden>
+          <summary>On this page</summary>
+          <nav aria-label="Document sections">
+            {document.sections.map((section, index) => (
+              <a key={section.heading} href={`#section-${index + 1}`}>
+                {section.heading}
+              </a>
+            ))}
+          </nav>
+        </details>
+      )}
       {document.sections.map((section, sectionIndex) => (
-        <section key={section.heading} className="mt-12">
+        <section
+          key={section.heading}
+          id={locale === 'en' ? `section-${sectionIndex + 1}` : undefined}
+          className="mt-12"
+        >
           <h2 className="font-display text-ink-900 text-2xl">{section.heading}</h2>
 
           {groupLines(section.body).map((group, groupIndex) => {

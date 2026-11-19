@@ -103,7 +103,7 @@ export default async function MagazinePage({ params }: Props) {
       <EditorialIntro locale={locale} kind="magazine" />
 
       {current && issuesShown ? (
-        <section className="border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
+        <section className="vd-current-issue border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
           <Link href={`/magazine/issues/${current.slug}`} className="group block">
             <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
               {cover ? (
@@ -140,7 +140,7 @@ export default async function MagazinePage({ params }: Props) {
       ) : null}
 
       {articlesShown ? (
-        <section className="border-ink-100 mt-16 border-t pt-12">
+        <section className="vd-latest-articles border-ink-100 mt-16 border-t pt-12">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-ink-500 text-xs uppercase tracking-widest">
               {t('magazine.latestArticles')}

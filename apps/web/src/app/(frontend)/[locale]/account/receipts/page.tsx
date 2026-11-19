@@ -1,3 +1,4 @@
+import { ReaderDeskNav } from '../../../../../components/account/ReaderDeskNav'
 import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
@@ -43,7 +44,7 @@ export default async function ReceiptsPage({ params }: { params: Promise<{ local
 
   if (!customer) {
     return (
-      <main data-ui className="vd-account-gate">
+      <main data-ui data-gate="receipts" className="vd-account-gate">
         <PageHero
           title={t('receiptsTitle')}
           intro={t('signInToReceipts')}
@@ -69,6 +70,7 @@ export default async function ReceiptsPage({ params }: { params: Promise<{ local
 
   return (
     <main data-ui className="vd-receipts-page mx-auto max-w-3xl px-6 py-16">
+      {locale === 'en' && <ReaderDeskNav t={t} current="/account/receipts" />}
       <header className="vd-personal-header flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('receiptsTitle')}</h1>

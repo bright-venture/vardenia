@@ -44,7 +44,7 @@ export default async function PartnerListingPage({ params }: Props) {
 
   if (!owner) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="listings" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
           <Link href="/partner/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -61,6 +61,11 @@ export default async function PartnerListingPage({ params }: Props) {
 
   return (
     <>
+      {locale === 'en' && (
+        <h2 hidden className="vd-desk-heading" data-desk="listings">
+          {t('tabListing')}
+        </h2>
+      )}
       {/*
         The way out to their own listing, as the public reads it.
 

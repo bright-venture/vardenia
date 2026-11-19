@@ -75,7 +75,7 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   if (!owner) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="bookings" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
           <Link href="/partner/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -122,6 +122,11 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   return (
     <>
+      {locale === 'en' && (
+        <h2 hidden className="vd-desk-heading" data-desk="bookings">
+          {t('tabBookings')}
+        </h2>
+      )}
       {/*
         The sentence the owner came for, before the controls they did not.
 
@@ -246,7 +251,10 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
     `/partner${bookingFilterQuery({ ...filter, ...next })}`
 
   return (
-    <section className="border-ink-100 mt-8 border-t pt-6" aria-label={t('filters')}>
+    <section
+      className="vd-booking-filters border-ink-100 mt-8 border-t pt-6"
+      aria-label={t('filters')}
+    >
       {/*
         Three windows, and they fit on a phone. Left as a wrapping row.
       */}

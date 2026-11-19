@@ -42,6 +42,7 @@ export default async function PartnerForgotPage({
 
   return (
     <AuthCard
+      mode="forgot"
       icon={KeyRound}
       eyebrow={partner('eyebrow')}
       title={t('forgot')}

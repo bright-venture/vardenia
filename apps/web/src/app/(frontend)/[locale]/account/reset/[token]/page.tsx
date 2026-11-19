@@ -44,7 +44,7 @@ export default async function ResetPage({
   const t = await getTranslations('account')
 
   return (
-    <AuthCard icon={KeyRound} title={t('resetTitle')}>
+    <AuthCard mode="reset" icon={KeyRound} title={t('resetTitle')}>
       <ResetPasswordForm token={token} />
     </AuthCard>
   )

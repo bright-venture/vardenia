@@ -1,3 +1,4 @@
+import { ReaderDeskNav } from '../../../../components/account/ReaderDeskNav'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -58,7 +59,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   if (!customer) {
     return (
-      <main data-ui className="vd-account-gate">
+      <main data-ui data-gate="overview" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={1} locale={locale}>
           <Link href="/account/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -97,11 +98,12 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   return (
     <main data-ui className="vd-account-page mx-auto max-w-3xl px-6 py-16">
+      {locale === 'en' && <ReaderDeskNav t={t} current="/account" />}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
           <p className="text-ink-500 mt-2 text-sm">{customer.email}</p>
-          <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+          <p className="vd-account-shortcuts mt-3 flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/account/passport" className={LINK}>
               {t('passportLink')}
             </Link>
@@ -126,7 +128,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           about them rather than about a restaurant. Each row is closed at rest,
           so the page still opens as a short summary of what is true rather than
           as a settings panel. */}
-      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('details')}</h2>
+      <h2 id="reader-details" className="text-ink-500 mt-12 text-xs uppercase tracking-widest">
+        {t('details')}
+      </h2>
 
       <div className="mt-4">
         <ChangeName current={customer.name} />
@@ -134,7 +138,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <ChangePassword />
       </div>
 
-      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('bookings')}</h2>
+      <h2 id="reader-bookings" className="text-ink-500 mt-12 text-xs uppercase tracking-widest">
+        {t('bookings')}
+      </h2>
 
       {bookings.length === 0 ? (
         <div className="mt-6">

@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 
 /** Shared photographic shell; existing forms own authentication and validation. */
 export function AuthCard({
+  mode,
   icon: Icon,
   title,
   subtitle,
@@ -11,6 +12,7 @@ export function AuthCard({
 }: {
   /** A lucide icon, drawn in the badge above the title. */
   icon: LucideIcon
+  mode: 'sign-in' | 'sign-up' | 'forgot' | 'reset'
   title: string
   /** One line on what this account is for. */
   subtitle?: string
@@ -19,7 +21,7 @@ export function AuthCard({
   children: ReactNode
 }) {
   return (
-    <main className="vd-auth">
+    <main className="vd-auth" data-entry={mode} data-audience={eyebrow ? 'partner' : 'reader'}>
       <aside className="vd-auth-image" aria-hidden>
         <img src="/journey/byblos.webp" alt="" width="1600" height="1200" loading="lazy" />
         <span>Vardenia</span>

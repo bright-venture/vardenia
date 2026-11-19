@@ -1252,7 +1252,7 @@ export interface GuestQuestion {
   createdAt: string;
 }
 /**
- * Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends.
+ * Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends, and can be Published again to renew.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "place-requests".
@@ -1260,7 +1260,7 @@ export interface GuestQuestion {
 export interface PlaceRequest {
   id: number;
   /**
-   * Draft can become Published or Rejected. Published becomes Expired after the contract ends.
+   * Draft can become Published or Rejected. Published becomes Expired after the contract ends. To renew, set a new contract end date and choose Published again.
    */
   status: 'draft' | 'published' | 'rejected' | 'expired';
   businessName: string;

@@ -421,7 +421,7 @@ export default async function ListingPage({ params }: Params) {
         </header>
 
         <div
-          className={`mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
+          className={`vd-listing-details mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
             bookable ? 'lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-20' : ''
           }`}
         >

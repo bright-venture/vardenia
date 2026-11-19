@@ -21,6 +21,9 @@ import '../../globals.css'
 import '../../redesign.css'
 import '../../inner-pages.css'
 import '../../home-finish.css'
+// English desktop design updates (designer, 19 November 2026).
+import '../../desktop-pages.css'
+import '../../remaining-desktop.css'
 
 /**
  * Site-level metadata, per locale.

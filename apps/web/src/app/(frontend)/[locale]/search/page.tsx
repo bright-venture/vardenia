@@ -60,9 +60,19 @@ export default async function SearchPage({ params, searchParams }: Props) {
   })
 
   return (
-    <main className="vd-search-page">
+    <main className="vd-search-page" data-has-query={results.query !== null}>
       <PageHero title={t('search.title')} intro={t('search.prompt')} place={2} locale={locale}>
         <SearchForm locale={locale} initial={results.query ?? ''} />
+        {locale === 'en' && results.query === null && (
+          <nav hidden className="vd-search-examples" aria-label="Example searches">
+            <span>Try</span>
+            {['Beirut', 'Byblos', 'Baalbek'].map((place) => (
+              <Link key={place} href={`/search?q=${encodeURIComponent(place)}`}>
+                {place}
+              </Link>
+            ))}
+          </nav>
+        )}
       </PageHero>
       <div className="vd-search-results">
         {results.query === null ? (

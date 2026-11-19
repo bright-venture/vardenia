@@ -96,11 +96,12 @@ function Line({ text, id }: { text: string; id: string }) {
 /** A list item that is nothing but a bold title: "- **Reliable Information**". */
 const TITLE_ONLY = /^- \*\*([^*]+)\*\*$/
 
-/**
- * No locale prop any more: lib/pages already returned the right language, and a
- * component that takes both the copy and the language it is in has two sources
- * of truth for one fact.
- */
+const DESKTOP_ENQUIRY_ACTIONS: Partial<Record<ContentPageSlug, string>> = {
+  contact: 'Send a message',
+  faq: 'Ask a question',
+  advertise: 'Discuss a campaign',
+}
+
 export async function ContentPageView({
   page,
   slug = 'about',
@@ -115,6 +116,7 @@ export async function ContentPageView({
 }) {
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
+  const enquiryAction = locale === 'en' ? DESKTOP_ENQUIRY_ACTIONS[slug] : undefined
   // The buttons at the foot point at the directory when Contact is hidden, and
   // the second link is left out when the page it names is hidden. With the
   // directory hidden as well, the first goes home.
@@ -170,6 +172,20 @@ export async function ContentPageView({
         locale={locale}
         immersive={slug === 'about'}
       >
+        {locale === 'en' && (slug === 'add-your-business' || slug === 'partner-with-us') && (
+          <nav hidden className="vd-business-chapters" aria-label={page.title}>
+            {page.sections.map((section, i) => (
+              <a key={section.heading} href={`#story-${i}`}>
+                {section.heading}
+              </a>
+            ))}
+          </nav>
+        )}
+        {enquiryAction && (
+          <a hidden className="vd-desktop-enquiry-link" href="#enquiry">
+            {enquiryAction}
+          </a>
+        )}
         <a href="#page-story" className={`vd-button ${slug === 'about' ? 'vd-button-paper' : ''}`}>
           {page.sections[0]?.heading} <span aria-hidden>↓</span>
         </a>

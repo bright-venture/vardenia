@@ -11,7 +11,7 @@
  * self.registration.unregister() and deploy: browsers check for a new version
  * on every visit.
  */
-const CACHE = 'vardenia-offline-v1'
+const CACHE = 'vardenia-offline-v2'
 const OFFLINE = '/offline.html'
 
 self.addEventListener('install', (event) => {

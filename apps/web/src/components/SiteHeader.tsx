@@ -171,6 +171,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           destination: 3,
         }
       : null,
+    // Booking a place in the printed magazine (19 November 2026).
+    {
+      href: '/magazine-places',
+      name: t('magazinePlaces.title'),
+      description: t('nav.magazinePlacesNote'),
+      destination: 4,
+    },
   ].filter((item) => item !== null)
   const businessMenu = (
     <DiscoveryMenu
@@ -207,24 +214,29 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           >
             {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
             {sectionItems.length > 0 ? (
-              <DropdownNav label={t('nav.discover')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.discover')} wide>
                 {sectionMenu}
               </DropdownNav>
             ) : null}
             {magazineItems.length > 0 ? (
-              <DropdownNav label={t('nav.magazine')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.magazine')} wide>
                 {magazineMenu}
               </DropdownNav>
             ) : null}
             {aboutItems.length > 0 ? (
-              <DropdownNav label={t('nav.about')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.about')} wide>
                 {aboutMenu}
               </DropdownNav>
             ) : null}
             {businessItems.length > 0 ? (
               // Hidden on narrow desktops, where four titles push the logo
               // off centre (redesign.css); the footer lists the same pages.
-              <DropdownNav label={t('nav.business')} wide className="vd-nav-business">
+              <DropdownNav
+                preserveInitialOpen={locale === 'en'}
+                label={t('nav.business')}
+                wide
+                className="vd-nav-business"
+              >
                 {businessMenu}
               </DropdownNav>
             ) : null}

@@ -9,22 +9,30 @@ export function DropdownNav({
   children,
   align = 'start',
   wide = false,
+  preserveInitialOpen = false,
   className = '',
 }: {
   label: string
   children: ReactNode
   align?: 'start' | 'end'
   wide?: boolean
+  preserveInitialOpen?: boolean
   /** Extra classes on the disclosure, e.g. to hide one menu at some widths. */
   className?: string
 }) {
   const root = useRef<HTMLDetailsElement>(null)
   const panelId = useId()
   const pathname = usePathname()
+  const previousPath = useRef(pathname)
 
+  // Closed on navigation; a menu opened before the page was interactive stays
+  // open on first load (designer update, 19 November 2026).
   useEffect(() => {
-    if (root.current) root.current.open = false
-  }, [pathname])
+    if (root.current && (!preserveInitialOpen || previousPath.current !== pathname)) {
+      root.current.open = false
+    }
+    previousPath.current = pathname
+  }, [pathname, preserveInitialOpen])
 
   useEffect(() => {
     const outside = (event: PointerEvent) => {
@@ -51,6 +59,8 @@ export function DropdownNav({
     <details
       ref={root}
       name="vd-desktop-navigation"
+      // A visitor can natively open the disclosure before React attaches.
+      suppressHydrationWarning={preserveInitialOpen}
       data-vd-desktop-dropdown
       className={`${wide ? 'vd-discovery-dropdown group' : 'group relative'} ${className}`.trim()}
       onPointerEnter={(event) => {

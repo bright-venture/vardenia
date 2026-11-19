@@ -3,31 +3,37 @@ import type { Locale } from '@vardenia/i18n'
 import { DESTINATIONS } from './destinations'
 const photoCredits = [
   [
+    'byblos',
     'Byblos harbour',
     'https://commons.wikimedia.org/wiki/File:The_harbor_in_the_old_city_of_Byblos,_Lebanon.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
   [
+    'bsharri',
     'Bsharri',
     'https://commons.wikimedia.org/wiki/File:Bsharri_(Becharre)_village_as_seen_from_the_slopes_of_Mt_Lebanon,_Bsharri,_Lebanon.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
   [
+    'beirut',
     'Raouché',
     'https://commons.wikimedia.org/wiki/File:Pigeon_Rocks_of_Beirut,_Rock_of_Raouche,_Beirut,_Lebanon.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
   [
+    'baalbek',
     'Baalbek',
     'https://commons.wikimedia.org/wiki/File:Lebanon,_Baalbek,_Temple_of_Jupiter.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
   [
+    'tyre',
     'Tyre',
     'https://commons.wikimedia.org/wiki/File:Port,_Tyre,_Lebanon.jpg',
     'Vyacheslav Argenberg · CC BY 4.0',
   ],
   [
+    'broummana',
     'Broummana',
     'https://commons.wikimedia.org/wiki/File:Broumana_From_Hazmieh,_Lebanon.jpg',
     'Paul Saad · CC BY-SA 4.0',
@@ -37,20 +43,38 @@ const photoCredits = [
   // it goes here.
 ]
 
-export async function PhotographyCredits({ locale }: { locale: Locale }) {
+export async function PhotographyCredits({
+  locale,
+  thumbnails = false,
+}: {
+  locale: Locale
+  thumbnails?: boolean
+}) {
   const t = await getTranslations({ locale, namespace: 'journey' })
   return (
     <div className="vd-credit-content">
       <p>{t('creditIntro')}</p>
       <ul>
-        {photoCredits.map(([title, url, credit]) => (
-          <li key={url}>
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              {title}
-            </a>{' '}
-            · {credit}
-          </li>
-        ))}
+        {photoCredits.map(([id, title, url, credit]) => {
+          const place = DESTINATIONS.find((destination) => destination.id === id)
+          return (
+            <li key={url}>
+              {thumbnails && locale === 'en' && place && (
+                <picture hidden className="vd-credit-thumb">
+                  <source
+                    media="(min-width: 1051px)"
+                    srcSet={`/journey/${place.image.replace('.webp', '-m.webp')}`}
+                  />
+                  <img alt="" width={128} height={90} loading="lazy" />
+                </picture>
+              )}
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                {title}
+              </a>{' '}
+              · {credit}
+            </li>
+          )
+        })}
       </ul>
       <p>
         Photographs cropped, resized and colour-graded for display.{' '}

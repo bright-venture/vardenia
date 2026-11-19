@@ -80,6 +80,11 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
         place={1}
         locale={locale}
       >
+        {locale === 'en' && (
+          <a href="#archive" hidden className="vd-desktop-archive-link">
+            Browse articles
+          </a>
+        )}
         {/* Back to the magazine, unless the admin has it hidden. */}
         {(await hiddenPages()).includes('magazine') ? null : (
           <Link href="/magazine" className="vd-text-link">
@@ -87,7 +92,7 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
           </Link>
         )}
       </PageHero>
-      <div className="vd-editorial-results">
+      <div id="archive" tabIndex={-1} className="vd-editorial-results">
         {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it, matching the directory page. */}
         <Suspense fallback={<ResultsSkeleton kind="editorial" />}>

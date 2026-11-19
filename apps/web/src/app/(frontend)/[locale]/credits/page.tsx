@@ -14,7 +14,7 @@ export default async function CreditsPage({ params }: Props) {
   return (
     <main className="vd-credits-page">
       <h1>{t('credits')}</h1>
-      <PhotographyCredits locale={locale} />
+      <PhotographyCredits locale={locale} thumbnails />
     </main>
   )
 }

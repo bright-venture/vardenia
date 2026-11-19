@@ -62,13 +62,22 @@ export function PageMotion({ children }: { children: ReactNode }) {
     )
     streamed.observe(host, { childList: true, subtree: true })
     const photos = [...host.querySelectorAll<HTMLElement>('.vd-inner-hero-media img')]
+    const desktopWidth = matchMedia('(min-width: 1051px)')
+    const englishPage = document.documentElement.lang === 'en'
     const paint = () => {
       frame = 0
       if (keyboard || document.hidden) return
       photos.forEach((image) => {
+        const desktop = englishPage && desktopWidth.matches
+        // The desktop paper frames stand still. Keep the immersive photograph's
+        // scroll offset on our wrapper so Next can hydrate its own image styles.
+        if (desktop && !image.closest('.vd-inner-hero-immersive')) return
         const box = image.parentElement!.getBoundingClientRect()
-        if (box.bottom > 0 && box.top < innerHeight)
-          image.style.transform = `translateY(${Math.min(25, Math.max(-25, -box.top * 0.045))}px) scale(1.08)`
+        if (box.bottom <= 0 || box.top >= innerHeight) return
+        const offset = Math.min(25, Math.max(-25, -box.top * 0.045))
+        const transform = `translateY(${offset}px) scale(1.08)`
+        if (desktop) host.style.setProperty('--vd-immersive-photo-transform', transform)
+        else image.style.transform = transform
       })
     }
     const scroll = () => {
@@ -77,6 +86,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
     const stop = () => {
       animations.forEach((a) => a.cancel())
       animations.clear()
+      host.style.removeProperty('--vd-immersive-photo-transform')
       photos.forEach((p) => p.style.removeProperty('transform'))
     }
     const key = (event: KeyboardEvent) => {

@@ -1,0 +1,257 @@
+/*
+ * English desktop interiors (designer update, 19 November 2026).
+ * Only the rules this update added: the designer's own copy of this file
+ * held earlier rules this site does not have.
+ */
+
+/* English desktop interiors, using the homepage's paper, ink and photo captions. */
+@media (min-width: 1051px) {
+  html:lang(en) .vd-inner-hero-immersive .vd-inner-hero-media img {
+    transform: var(--vd-immersive-photo-transform, none);
+  }
+  html:lang(en) :is(.vd-inner-motion-off, .vd-motion-off) .vd-inner-hero-immersive .vd-inner-hero-media img { transform: none; }
+  html:lang(en) .vd-page-intro {
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, .96fr);
+    gap: clamp(44px, 5.2vw, 84px);
+  }
+  html:lang(en) .vd-page-intro h1 {
+    font-size: clamp(58px, 5.7vw, 88px);
+    line-height: .99;
+  }
+  html:lang(en) .vd-page-intro figure {
+    aspect-ratio: auto;
+    border-radius: var(--vd-radius-photo);
+  }
+  html:lang(en) .vd-page-intro figure > picture {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+  html:lang(en) .vd-page-intro .vd-coordinates {
+    position: static;
+    display: flex;
+    flex-flow: row-reverse wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 12px 4px 2px;
+    color: var(--vd-ink);
+    text-shadow: none;
+  }
+  html:lang(en) .vd-page-intro .vd-coordinates::before { content: none; }
+  html:lang(en) .vd-page-intro .vd-coordinate-place {
+    font: 500 28px/1.2 var(--font-pinned-caption, var(--font-display));
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  html:lang(en) .vd-category-page[data-section='getting-around'] .vd-subcategories ul:has(> li:nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  html:lang(en) .vd-directory .vd-directory-count {
+    padding-top: 22px;
+    border-top: 1px solid theme('colors.ink.100');
+  }
+  html:lang(en) .vd-directory .vd-directory-categories {
+    flex-wrap: wrap;
+    margin-top: 6px;
+    border-bottom: 1px solid theme('colors.ink.100');
+  }
+  html:lang(en) .vd-listing-details dl div { align-items: baseline; }
+  html:lang(en) .vd-listing-details :is(dt, summary > span:first-child) {
+    font: 500 .86rem/1.45 var(--font-body);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  html:lang(en) .vd-listing-details dd { font-size: 1rem; }
+  html:lang(en) .vd-listing .vd-booking-panel {
+    background: var(--vd-paper);
+    border: 1px solid theme('colors.ink.100');
+    border-top: 3px solid var(--vd-gold);
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-search-page form[role='search'] > div {
+    overflow: hidden;
+    border-radius: var(--vd-radius-control);
+  }
+  html:lang(en) .vd-search-page form[role='search'] > div:focus-within {
+    outline: 2px solid var(--vd-ink);
+    outline-offset: 3px;
+  }
+  html:lang(en) .vd-search-results { border-top: 1px solid theme('colors.ink.100'); }
+  html:lang(en) .vd-search-results h2 {
+    font: 400 clamp(32px, 3.2vw, 48px)/1.15 var(--font-display);
+  }
+
+  html:lang(en) .vd-current-issue {
+    grid-template-columns: minmax(180px, 24%) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(32px, 5vw, 76px);
+  }
+  html:lang(en) :is(.vd-current-issue h2, .vd-latest-articles h2) {
+    color: var(--vd-ink);
+    font: 400 clamp(34px, 3.8vw, 56px)/1.12 var(--font-display);
+    letter-spacing: -.035em;
+    text-transform: none;
+  }
+  html:lang(en) .vd-magazine-index .vd-page-intro p + p { margin-top: 14px; }
+  html:lang(en) :is(.vd-editorial-grid, .vd-issue-grid) {
+    border-top: 1px solid theme('colors.ink.100');
+    padding-top: 28px;
+  }
+  html:lang(en) .vd-issue-region { scroll-margin-top: 110px; }
+  html:lang(en) .vd-issue-regions a { border-radius: var(--vd-radius-control); }
+  html:lang(en) .vd-article-photo { max-height: min(46vw, 52vh); }
+  html:lang(en) .vd-article-copy { max-width: 84ch; }
+  html:lang(en) .vd-article-copy > h1 { max-width: 19ch; text-wrap: balance; }
+  html:lang(en) .vd-article-copy > h1 + p {
+    max-width: 48ch;
+    font: 400 clamp(23px, 2.15vw, 31px)/1.4 var(--font-display);
+  }
+
+  html:lang(en) .vd-inner-hero-actions:has(.vd-desktop-enquiry-link) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 22px;
+  }
+  html:lang(en) .vd-desktop-enquiry-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 10px 20px;
+    border-radius: var(--vd-radius-control);
+    background: var(--vd-ink);
+    color: var(--vd-paper);
+    font: 500 1rem/1.4 var(--font-body);
+  }
+  html:lang(en) .vd-desktop-enquiry-link + .vd-button {
+    background: transparent;
+    color: var(--vd-ink);
+    padding-inline: 0;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: .28em;
+  }
+  html:lang(en) .vd-story-index {
+    max-height: calc(100dvh - 135px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 8px 6px 4px;
+  }
+  html:lang(en) .vd-story-section { margin-bottom: clamp(56px, 6vw, 88px); }
+  html:lang(en) .vd-story-photograph {
+    padding: 10px;
+    border: 1px solid theme('colors.ink.100');
+    border-radius: var(--vd-radius-photo);
+    background: var(--vd-paper);
+  }
+  html:lang(en) .vd-story-photograph figcaption {
+    margin: 8px 4px 0;
+    font: 500 26px/1.25 var(--font-pinned-caption, var(--font-display));
+  }
+  html:lang(en) .vd-question {
+    margin: 0;
+    border-top: 1px solid theme('colors.ink.100');
+    background: transparent;
+  }
+  html:lang(en) .vd-question[open] { background: theme('colors.surface.sunken'); }
+  html:lang(en) .vd-enquiry {
+    scroll-margin-top: 105px;
+    padding: clamp(25px, 3.3vw, 50px);
+    border: 1px solid theme('colors.ink.100');
+    border-top: 3px solid var(--vd-gold);
+    background: var(--vd-paper);
+  }
+  html:lang(en) .vd-enquiry h2 {
+    font: 400 clamp(34px, 3.2vw, 48px)/1.12 var(--font-display);
+  }
+  html:lang(en) .vd-enquiry :is(input, textarea) {
+    background: theme('colors.surface.raised');
+    border-radius: var(--vd-radius-control);
+  }
+
+  html:lang(en) :is(.vd-account-page > header, .vd-personal-header, .vd-partner-page > header) {
+    color: var(--vd-ink);
+    background: transparent;
+    border-block: 1px solid theme('colors.ink.100');
+    padding: clamp(22px, 3.4vw, 48px) 0;
+    align-items: center;
+  }
+  html:lang(en) :is(.vd-account-page > header, .vd-personal-header, .vd-partner-page > header) :is(a, button) {
+    border-color: currentColor;
+    text-underline-offset: .22em;
+  }
+  html:lang(en) .vd-partner-tabs {
+    margin-top: 20px;
+    gap: 8px;
+    padding: 4px 2px 12px;
+  }
+  html:lang(en) .vd-partner-page :is(th, td) {
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+  html:lang(en) :is(.vd-passport-page, .vd-saved-page, .vd-receipts-page) > :is(h2, header) + :is(ul, div) {
+    border-color: theme('colors.ink.100');
+  }
+  html:lang(en) .vd-passport-page > h2 {
+    color: var(--vd-ink);
+    font: 400 30px/1.25 var(--font-display);
+    letter-spacing: -.02em;
+    text-transform: none;
+  }
+  html:lang(en) .vd-auth-card { border-block-start: 2px solid var(--vd-gold); }
+  html:lang(en) .vd-auth-heading p { max-width: 43ch; line-height: 1.6; }
+  html:lang(en) .vd-task-page { margin-block: clamp(40px, 5.3vw, 80px); }
+  html:lang(en) .vd-task-page > p { max-width: 58ch; }
+
+  html:lang(en) .vd-legal-contents {
+    display: block;
+    margin-top: 32px;
+    padding: 14px 20px;
+    border-block: 1px solid theme('colors.ink.100');
+  }
+  html:lang(en) .vd-legal-contents summary {
+    width: fit-content;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  html:lang(en) .vd-legal-contents nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 32px;
+    margin-block: 14px 4px;
+  }
+  html:lang(en) .vd-legal-contents a {
+    padding-block: 6px;
+    text-decoration: underline;
+    text-underline-offset: .22em;
+  }
+  html:lang(en) .vd-legal-page > section { scroll-margin-top: 108px; }
+  html:lang(en) .vd-credits-page .vd-credit-content { max-width: 72ch; }
+}
+
+@media (min-width: 1051px) {
+  html:lang(en) .vd-magazine-index .vd-inner-hero-actions:has(.vd-desktop-archive-link) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+  }
+  html:lang(en) .vd-desktop-archive-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    border: 1px solid var(--vd-ink);
+    padding: 10px 20px;
+    border-radius: var(--vd-radius-control);
+    color: var(--vd-ink);
+  }
+  html:lang(en) .vd-desktop-archive-link:is(:hover, :focus-visible) {
+    background: var(--vd-ink);
+    color: var(--vd-paper);
+  }
+}
+
+@media (min-width: 1051px) and (prefers-reduced-motion: reduce) {
+  html:lang(en) .vd-inner-hero-immersive .vd-inner-hero-media img { transform: none; }
+}

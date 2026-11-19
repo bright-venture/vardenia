@@ -52,6 +52,11 @@ export default async function IssuesPage({ params }: Props) {
         place={3}
         locale={locale}
       >
+        {locale === 'en' && (
+          <a href="#archive" hidden className="vd-desktop-archive-link">
+            Browse issues
+          </a>
+        )}
         {/* Back to the magazine, unless the admin has it hidden. */}
         {(await hiddenPages()).includes('magazine') ? null : (
           <Link href="/magazine" className="vd-text-link">
@@ -59,7 +64,7 @@ export default async function IssuesPage({ params }: Props) {
           </Link>
         )}
       </PageHero>
-      <div className="vd-editorial-results">
+      <div id="archive" tabIndex={-1} className="vd-editorial-results">
         {result.docs.length === 0 ? (
           <p className="vd-archive-empty text-ink-500 mt-16">{t('magazine.noIssues')}</p>
         ) : (
