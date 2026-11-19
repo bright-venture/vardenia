@@ -199,7 +199,13 @@ export function RoomsSection({
       ?.options.reduce((sum, option) => sum + (picked[`${roomId}:${option.id}`] ?? 0), 0) ?? 0
 
   function choose(roomId: number, optionId: string, count: number) {
-    setPicked((current) => ({ ...current, [`${roomId}:${optionId}`]: count }))
+    const key = `${roomId}:${optionId}`
+    setPicked((current) => ({ ...current, [key]: count }))
+    // Picking more rooms than the Rooms box asked for raises the box to match,
+    // so the summary never reads "3 of 1 rooms selected" (19 November 2026).
+    // Picking fewer leaves it, and the summary says how many are still to pick.
+    const total = totalRooms - (picked[key] ?? 0) + count
+    if (total > roomsWanted) setRoomsWanted(total)
     setError(null)
   }
 
