@@ -60,6 +60,7 @@ interface FooterLink {
   href: string
   label: string
   icon: LucideIcon
+  directorySlot?: 'desktop' | 'standard'
 }
 
 function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
@@ -69,8 +70,8 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
     <div className="vd-footer-column">
       <h3 className="text-ink-900 text-xs font-semibold uppercase tracking-wider">{title}</h3>
       <ul className="mt-4 space-y-2.5">
-        {links.map(({ href, label, icon: Icon }) => (
-          <li key={href}>
+        {links.map(({ href, label, icon: Icon, directorySlot }) => (
+          <li key={href} data-directory-slot={directorySlot} className={directorySlot === 'desktop' ? 'hidden' : undefined}>
             <Link
               href={href}
               className="vd-footer-link text-ink-500 hover:text-ink-900 group inline-flex items-center gap-2 text-sm transition-colors"
@@ -107,11 +108,18 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
     icon: EVENT_STAFF_ICON,
   })
 
+  const directory: FooterLink = {
+    href: '/directory',
+    label: t('footer.directory'),
+    icon: BUSINESS_ICON,
+  }
+  if (locale === 'en') discover.unshift({ ...directory, directorySlot: 'desktop' })
+
   const read: FooterLink[] = [
     { href: '/magazine', label: t('nav.magazine'), icon: MAGAZINE_ICON },
     { href: '/magazine/issues', label: t('footer.issues'), icon: ISSUE_ICON },
     { href: '/magazine/articles', label: t('footer.articles'), icon: ARTICLE_ICON },
-    { href: '/directory', label: t('footer.directory'), icon: BUSINESS_ICON },
+    { ...directory, directorySlot: locale === 'en' ? 'standard' : undefined },
   ]
 
   const company: FooterLink[] = [

@@ -15,6 +15,7 @@
 
 import { useMemo, useRef, useSyncExternalStore } from 'react'
 import { clamp01, smooth, usePinProgress } from '../../lib/motion'
+import { useDesktopViewport } from '../editorial/useDesktopEdition'
 import { useJourneyMotion } from '../journey/browser-state'
 
 const subscribeReady = () => () => {}
@@ -78,6 +79,7 @@ export function KineticType({
   className?: string
   headingId?: string
 }) {
+  const desktop = useDesktopViewport()
   const [motion] = useJourneyMotion()
   const ready = useSyncExternalStore(subscribeReady, clientReady, serverReady)
   const phone = useSyncExternalStore(subscribePhone, clientPhone, serverPhone)
@@ -107,7 +109,8 @@ export function KineticType({
         <h2 id={headingId} className={className}>
           {segments.map((segment, i) => {
             if (segment.index < 0) return <span key={i}>{segment.text}</span>
-            const p = disabled ? 1 : wordProgress(segment.index)
+            const showOpening = locale === 'en' && desktop && segment.index < 2
+            const p = disabled || showOpening ? 1 : wordProgress(segment.index)
             const isAccent = segment.index === accentIndex
             const settle = p > 0.7 && p < 1 ? (p - 0.85) * 30 : 0
             return (

@@ -4,7 +4,7 @@ import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import type { Business } from '../payload-types'
 import { findEvery } from './find-every'
-import { isHomeCandidate, selectHomePlaces, type HomeCandidate } from './home-selection'
+import { HOME_PLACES_LIMIT, isHomeCandidate, selectHomePlaces, type HomeCandidate } from './home-selection'
 import { reportError } from './report'
 
 export type HomeListing = Pick<
@@ -27,15 +27,17 @@ const eligible: Where = {
 
 /**
  * Separate from the paid Featured band. A narrow candidate index chooses the
- * mix; only the six displayed records load card copy and resized media. Public
+ * mix; only the selected records load card copy and resized media. Public
  * access rules stay on for both queries. No database writes or curation flags.
  */
 export async function findHomeListings({
   locale,
   excludedIds = [],
+  limit = HOME_PLACES_LIMIT,
 }: {
   locale: Locale
   excludedIds?: number[]
+  limit?: number
 }): Promise<HomeListing[]> {
   const excluded = [...new Set(excludedIds)].sort((a, b) => a - b)
   const run = async (): Promise<HomeListing[]> => {
@@ -67,7 +69,7 @@ export async function findHomeListings({
       // verified records, rather than loading an ever-growing full directory.
       4,
     )
-    const picks = selectHomePlaces(candidates.docs, excluded)
+    const picks = selectHomePlaces(candidates.docs, excluded, limit)
     if (!picks.length) return []
 
     const result = await payload.find({
@@ -89,7 +91,7 @@ export async function findHomeListings({
         _status: true,
         heroImage: true,
       },
-      // Keep complete media for these six cards. Storage adapters may need
+      // Keep complete media for the chosen cards. Storage adapters may need
       // their own prefix/object-key fields to generate the final public URLs.
     })
     const byId = new Map(result.docs.map((listing) => [listing.id, listing]))
@@ -101,8 +103,10 @@ export async function findHomeListings({
     })
   }
 
+  const cacheKey = ['home-listings', locale, excluded.join(',')]
+  if (limit !== HOME_PLACES_LIMIT) cacheKey.push(String(limit))
   try {
-    return await unstable_cache(run, ['home-listings', locale, excluded.join(',')], {
+    return await unstable_cache(run, cacheKey, {
       revalidate: 3600,
       tags: ['businesses', 'media'],
     })()

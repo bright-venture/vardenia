@@ -13,7 +13,11 @@ function subscribe(notify: () => void) {
 const getSnapshot = () => window.matchMedia?.(desktop).matches ?? false
 const getServerSnapshot = () => false
 
+export function useDesktopViewport() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
+
 export function useDesktopEdition(locale: string) {
-  const wide = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const wide = useDesktopViewport()
   return wide && locale === 'en'
 }

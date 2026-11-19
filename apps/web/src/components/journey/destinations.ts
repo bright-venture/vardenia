@@ -188,6 +188,17 @@ export function directoryFor(p: Pick<Destination, 'where'>) {
   return parent ? `/directory?where=${parent.slug}&district=${p.where}` : '/directory'
 }
 
+/** Scenic photographs open the destination they actually depict. */
+export function sceneDirectoryFor(id: string): string {
+  const sceneDestination: Record<string, string> = {
+    'beirut-downtown': 'beirut',
+    arz: 'bsharri',
+    'byblos-harbour': 'byblos',
+  }
+  const destination = DESTINATIONS.find((place) => place.id === (sceneDestination[id] ?? id))
+  return destination ? directoryFor(destination) : '/directory'
+}
+
 /** A place can belong to several ways of exploring; filters never imply bookable activities. */
 const THEMES: Record<Destination['id'], readonly Exclude<Feeling, 'all'>[]> = {
   byblos: ['coast', 'heritage', 'harbours', 'sunsets'],
