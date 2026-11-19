@@ -63,10 +63,15 @@ Payload CMS owns all content, in Postgres. Collections:
 | `reviews`        | Review records (present; not yet surfaced on the site).        |
 | `articles`       | Editorial, shared between web and print.                       |
 | `issues`         | Print editions, with print run and page ranges.                |
+| `listing-ranges` | Each governorate's block of an issue's listing numbers.        |
 | `media`          | Images and video, with rights tracking and unguessable names.  |
 | `rate-limits`    | The shared auth rate-limit counter, in Postgres.               |
 | `error-events`   | Server error log.                                              |
 | `users`          | Vardenia staff and admin - the only accounts that reach admin. |
+
+The public submission form (`POST /place-submissions`) is the only anonymous write to
+`businesses`, always as a draft; publishing a submitted listing creates or links its owner's
+partner account in `business-users`.
 
 ### Taxonomy is code, not data
 

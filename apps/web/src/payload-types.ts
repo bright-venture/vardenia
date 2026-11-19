@@ -1308,7 +1308,7 @@ export interface PlaceRequest {
   createdAt: string;
 }
 /**
- * Each governorate owns one block of the issue’s listing numbers. Blocks cannot overlap or run past the issue total.
+ * Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "listing-ranges".

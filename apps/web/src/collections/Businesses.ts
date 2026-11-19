@@ -1,5 +1,5 @@
 import { canHaveRoomTypes, isInRange, type NumberRange } from '@vardenia/core'
-import type { CollectionConfig, Payload } from 'payload'
+import type { CollectionConfig, PayloadRequest } from 'payload'
 import {
   GOVERNORATES,
   SUBCATEGORY_PARENT,
@@ -49,12 +49,20 @@ const idOf = (value: unknown): number | string | null => {
   return typeof id === 'number' || typeof id === 'string' ? id : null
 }
 
-/** A listing number must sit inside its governorate's range for the chosen issue. */
+/**
+ * A listing number must be a whole number inside its governorate's range for
+ * the chosen issue, and not held by another listing of that issue.
+ *
+ * The holder lookup only gives staff a readable answer naming who has it; the
+ * unique index on (issue, listingNumber) still decides a race between two saves.
+ */
 export const validListingNumber = async (
   value: unknown,
-  { data, req }: { data?: unknown; req?: { payload?: Payload } },
+  { data, id, req }: { data?: unknown; id?: number | string; req?: PayloadRequest },
 ): Promise<true | string> => {
   if (value === null || value === undefined || value === '') return true
+  const n = Number(value)
+  if (!Number.isInteger(n)) return 'A listing number is a whole number, like 12.'
   const { issue, governorate } = (data ?? {}) as { issue?: unknown; governorate?: string }
   const issueId = idOf(issue)
   if (issueId === null) return 'Choose the magazine issue before giving a listing number.'
@@ -66,18 +74,45 @@ export const validListingNumber = async (
     limit: 1,
     depth: 0,
     overrideAccess: true,
+    req,
   })
   const range = found.docs[0] as unknown as NumberRange | undefined
   if (!range) return `This issue has no number range for ${governorate} yet.`
-  return isInRange(Number(value), range)
-    ? true
-    : `Listing numbers for ${governorate} run from ${range.from} to ${range.to}.`
+  if (!isInRange(n, range)) {
+    return `Listing numbers for ${governorate} run from ${range.from} to ${range.to}.`
+  }
+
+  // Trashed listings are not found, and they have given their number back.
+  const held = await req.payload.find({
+    collection: 'businesses',
+    where: {
+      and: [
+        { issue: { equals: issueId } },
+        { listingNumber: { equals: n } },
+        ...(id !== undefined && id !== null ? [{ id: { not_equals: id } }] : []),
+      ],
+    },
+    select: { name: true },
+    // No `locale` here: the local API would write it onto the shared `req` and
+    // change the locale of the save being validated. The request's own locale,
+    // with the config's fallback to the default, gives the name staff read.
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+    req,
+  })
+  const holder = held.docs[0] as unknown as { id: number | string; name?: unknown } | undefined
+  if (!holder) return true
+  const name = typeof holder.name === 'string' && holder.name ? holder.name : 'another listing'
+  return `Number ${n} is already held by "${name}" (listing ${holder.id}) in this issue. Choose another number.`
 }
 
 /**
  * The directory listing - the central document in the whole platform.
  *
- * Only Vardenia staff edit these; listed businesses have no accounts. The split
+ * Only Vardenia staff edit these. An owner sees their own through a partner
+ * account (business-users), which publishing a listing submitted through the
+ * public form creates or links; that form only ever writes drafts. The split
  * that still matters is between the first four tabs, which describe what the
  * public sees, and the "Commercial" tab, whose contract fields carry field-level
  * read rules so they never reach an API response.

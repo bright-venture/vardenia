@@ -72,8 +72,9 @@ export function numbersIn(range: NumberRange): number[] {
   return out
 }
 
+/** A whole number inside the range: 1.5 is never a printed number. */
 export function isInRange(n: number, range: NumberRange): boolean {
-  return n >= range.from && n <= range.to
+  return Number.isInteger(n) && n >= range.from && n <= range.to
 }
 
 /** How many numbers the ranges hand out between them. */

@@ -1,8 +1,10 @@
+import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 
 import { isInRange, type NumberRange, type PlaceSubmission } from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { heldNumbers } from '../collections/ListingRanges'
+import { slugify } from '../fields/slug'
 import { PHOTO_MAX_BYTES } from '../hooks/limitUploadSize'
 import { uniqueViolation } from './db-errors'
 import { richText } from './rich-text'
@@ -23,7 +25,8 @@ import { reportError } from './report'
  *
  * Not transactional: if the listing fails after its photos were stored, the
  * photos stay behind as orphans. Accepted for v1; staff can delete them in the
- * Media library, and there is no cleanup job.
+ * Media library, and there is no cleanup job. A slug clash is not such a
+ * failure: the listing is retried with the same photos (see below).
  */
 
 export type SubmissionFiles = { hero: File; gallery: File[]; logo?: File }
@@ -158,14 +161,38 @@ export async function listNumbersFor(
 /**
  * A refusal of the (issue, listing_number) unique index, however it arrived.
  *
- * Payload rethrows the driver's 23505 as a ValidationError whose entry path is
- * the index's columns taken from the error detail, "issue_id, listing_number";
- * the raw driver error names the index instead. Either way the name contains
- * `listing_number`. A unique refusal on another column (the slug) is not this.
+ * Payload rethrows the driver's 23505 as a ValidationError. The index is one
+ * Payload did not make for a field, so the entry path is the columns read from
+ * the error detail, "issue_id, listing_number". The raw driver error names the
+ * index itself, `issue_listingNumber_idx` (migration 20261119_131549).
  */
 export function isListingNumberTaken(error: unknown): boolean {
   const named = uniqueViolation(error)
-  return named !== null && named.includes('listing_number')
+  return named === 'issue_id, listing_number' || named === 'issue_listingNumber_idx'
+}
+
+/**
+ * A refusal of the unique slug index. Payload maps its index,
+ * `businesses_slug_idx` (baseline migration), back to the field path `slug`;
+ * the raw driver error names the index.
+ */
+export function isSlugTaken(error: unknown): boolean {
+  const named = uniqueViolation(error)
+  return named === 'slug' || named === 'businesses_slug_idx'
+}
+
+/**
+ * The slugs to try for a new listing, in order. First none: the collection
+ * makes one from the name, as for any listing, so most submissions get the
+ * plain slug. Only on a clash (a second "Cafe Nour", or two Arabic names that
+ * transliterate alike) does a suffix appear: the listing number, then the
+ * number and four random hex characters, twice. Slugs are permanent once
+ * published; staff can still change this one while it is a draft.
+ */
+function slugAttempts(name: string, listingNumber: number): (string | undefined)[] {
+  const base = `${slugify(name) || 'place'}-${listingNumber}`
+  const random = () => `${base}-${randomBytes(2).toString('hex')}`
+  return [undefined, base, random(), random()]
 }
 
 export async function createPlaceSubmission(args: {
@@ -223,54 +250,69 @@ export async function createPlaceSubmission(args: {
     for (const photo of checked.gallery) gallery.push(await upload(photo))
     const logo = checked.logo ? await upload(checked.logo) : undefined
 
-    const listing = await payload.create({
-      collection: 'businesses',
-      // The allow-list. Tier is left to its default; nothing commercial,
-      // verified, contract, QR, slug or staff-only is ever set here.
-      data: {
-        name: input.name,
-        tagline: input.tagline,
-        description: input.description ? richText(paragraphs(input.description)) : undefined,
-        category: input.category,
-        subcategories: input.subcategories,
-        governorate: input.governorate,
-        district: input.district,
-        area: input.area,
-        address: input.address,
-        openingHours: input.openingHours,
-        priceRange: input.priceRange,
-        amenities: input.amenities,
-        payments: input.payments,
-        heroImage,
-        gallery,
-        logo,
-        issue: input.issue,
-        listingNumber: input.listingNumber,
-        _status: 'draft',
-        submission: {
-          status: 'pending',
-          ownerName: input.ownerName,
-          ownerEmail: input.ownerEmail,
-          ownerPhone: input.ownerPhone,
-          publicPhone: input.publicPhone,
-          website: input.website,
-          pageTemplate: input.pageTemplate,
-          submittedAt: new Date().toISOString(),
-        },
-      } as never,
-      // Name, tagline, description and address are localized: they are saved in
-      // the language the owner wrote them in.
-      locale: input.locale,
-      overrideAccess: true,
-      // Two afterChange hooks must not act on an anonymous create.
-      // skipQrGeneration: the default tier is silver, a printed tier, so
-      // ensureQrCode would otherwise mint a QR code for every public
-      // submission; staff get it when they set the tier and save or publish.
-      // skipAutoTranslate: an anonymous request must not call the translation
-      // engine (cost, abuse), and staff review the owner's text first.
-      context: { skipQrGeneration: true, skipAutoTranslate: true },
-    })
-    const listingId = listing.id as number
+    // The allow-list. Tier is left to its default; nothing commercial,
+    // verified, contract, QR or staff-only is ever set here, and the slug only
+    // when the automatic one clashes.
+    const data = {
+      name: input.name,
+      tagline: input.tagline,
+      description: input.description ? richText(paragraphs(input.description)) : undefined,
+      category: input.category,
+      subcategories: input.subcategories,
+      governorate: input.governorate,
+      district: input.district,
+      area: input.area,
+      address: input.address,
+      openingHours: input.openingHours,
+      priceRange: input.priceRange,
+      amenities: input.amenities,
+      payments: input.payments,
+      heroImage,
+      gallery,
+      logo,
+      issue: input.issue,
+      listingNumber: input.listingNumber,
+      _status: 'draft',
+      submission: {
+        status: 'pending',
+        ownerName: input.ownerName,
+        ownerEmail: input.ownerEmail,
+        ownerPhone: input.ownerPhone,
+        publicPhone: input.publicPhone,
+        website: input.website,
+        pageTemplate: input.pageTemplate,
+        submittedAt: new Date().toISOString(),
+      },
+    }
+
+    // A slug clash is retried with the photos already stored; any other
+    // failure, or the last clash, goes to the catch below.
+    let listingId: number | undefined
+    const attempts = slugAttempts(input.name, input.listingNumber)
+    for (const [i, slug] of attempts.entries()) {
+      try {
+        const listing = await payload.create({
+          collection: 'businesses',
+          data: (slug ? { ...data, slug } : data) as never,
+          // Name, tagline, description and address are localized: they are
+          // saved in the language the owner wrote them in.
+          locale: input.locale,
+          overrideAccess: true,
+          // Two afterChange hooks must not act on an anonymous create.
+          // skipQrGeneration: the default tier is silver, a printed tier, so
+          // ensureQrCode would otherwise mint a QR code for every public
+          // submission; staff get it when they set the tier and save or publish.
+          // skipAutoTranslate: an anonymous request must not call the translation
+          // engine (cost, abuse), and staff review the owner's text first.
+          context: { skipQrGeneration: true, skipAutoTranslate: true },
+        })
+        listingId = listing.id as number
+        break
+      } catch (error) {
+        if (!isSlugTaken(error) || i === attempts.length - 1) throw error
+      }
+    }
+    if (listingId === undefined) throw new Error('unreachable: no listing and no error')
 
     // Name and address are a proper noun and a street, so they are also written
     // into the default locale: otherwise staff browsing in English see a blank

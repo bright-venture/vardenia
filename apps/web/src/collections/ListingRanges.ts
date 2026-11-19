@@ -1,4 +1,11 @@
-import type { CollectionBeforeValidateHook, CollectionConfig, Payload } from 'payload'
+import { APIError } from 'payload'
+import type {
+  CollectionBeforeDeleteHook,
+  CollectionBeforeValidateHook,
+  CollectionConfig,
+  Payload,
+  PayloadRequest,
+} from 'payload'
 import {
   DEFAULT_LISTING_TOTAL,
   LISTING_GOVERNORATES,
@@ -56,6 +63,7 @@ export async function heldNumbers(
   payload: Payload,
   issueId: number | string,
   governorate: string,
+  req?: PayloadRequest,
 ): Promise<number[]> {
   const found = await payload.find({
     collection: 'businesses',
@@ -73,6 +81,7 @@ export async function heldNumbers(
     pagination: false,
     depth: 0,
     overrideAccess: true,
+    ...(req ? { req } : {}),
   })
   return (found.docs as unknown as { listingNumber?: number | null }[])
     .map((d) => d.listingNumber)
@@ -144,7 +153,8 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
       : nextFreeNumber(siblings.docs as unknown as NumberRange[])
   if (data && typeof data.from !== 'number') data.from = from
 
-  const held = operation === 'update' ? await heldNumbers(payload, issueId, merged.governorate) : []
+  const held =
+    operation === 'update' ? await heldNumbers(payload, issueId, merged.governorate, req) : []
 
   const problem = validateRangeAgainstIssue({
     candidate: {
@@ -156,8 +166,35 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     total,
     held,
   })
-  if (problem) throw new Error(problem)
+  // Public 400: a plain Error is a hidden 500 and staff would read only
+  // "Something went wrong." instead of the rule they broke.
+  if (problem) throw new APIError(problem, 400, null, true)
   return data
+}
+
+/**
+ * Deleting a range is the extreme case of shrinking it: each number a listing
+ * holds in it would belong to no range, and every later save of that listing
+ * would fail with "This issue has no number range". Refused while any is held.
+ */
+const refuseDeletingHeldRange: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  const range = (await req.payload.findByID({
+    collection: 'listing-ranges',
+    id,
+    depth: 0,
+    overrideAccess: true,
+    req,
+  })) as unknown as { issue?: unknown; governorate?: string }
+  const issueId = idOf(range.issue)
+  if (issueId === null || !range.governorate) return
+  const held = await heldNumbers(req.payload, issueId, range.governorate, req)
+  if (held.length === 0) return
+  throw new APIError(
+    `Listings already hold ${[...held].sort((a, b) => a - b).join(', ')} in this range. Give them other numbers before deleting it.`,
+    400,
+    null,
+    true,
+  )
 }
 
 /**
@@ -174,12 +211,12 @@ export const ListingRanges: CollectionConfig = {
     defaultColumns: ['issue', 'governorate', 'from', 'to'],
     group: 'Magazine',
     description:
-      'Each governorate owns one block of the issue’s listing numbers. Blocks cannot overlap or run past the issue total.',
+      "Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.",
   },
   access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
   // One row per governorate per issue; also stops a double-click making two.
   indexes: [{ fields: ['issue', 'governorate'], unique: true }],
-  hooks: { beforeValidate: [checkRange] },
+  hooks: { beforeValidate: [checkRange], beforeDelete: [refuseDeletingHeldRange] },
   fields: [
     { name: 'issue', type: 'relationship', relationTo: 'issues', required: true, index: true },
     {

@@ -65,6 +65,11 @@ describe('helpers', () => {
     expect(isInRange(91, keserwan)).toBe(false)
   })
 
+  it('refuses a fraction, even inside the range', () => {
+    expect(isInRange(1.5, keserwan)).toBe(false)
+    expect(isInRange(Number.NaN, keserwan)).toBe(false)
+  })
+
   it('finds held numbers outside a range', () => {
     expect(orphanedNumbers([5, 95], keserwan)).toEqual([95])
   })

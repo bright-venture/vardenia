@@ -24,19 +24,32 @@ const idOf = (value: unknown): number | string | null => {
  * A rejected submission is a closed case: it stays in the admin as a draft
  * record, so publishing it would put a business the team turned down on the
  * website, and create an account for its owner.
+ *
+ * The other direction is refused too: rejecting a listing that stays published.
+ * Rejecting releases its number (hooks/releaseListingNumber), and the printed
+ * number of a live page must not become free for the next owner. Checked on
+ * every update, against the merged state after the save.
  */
 export const refusePublishingRejected: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
-  if (data?._status !== 'published' || originalDoc?._status === 'published') return data
+  const published = (data?._status ?? originalDoc?._status) === 'published'
   const status =
-    (data.submission as Submission | undefined)?.status ??
+    (data?.submission as Submission | undefined)?.status ??
     (originalDoc?.submission as Submission | undefined)?.status
-  if (status === 'rejected') {
+  if (!published || status !== 'rejected') return data
+  if (originalDoc?._status !== 'published') {
     throw new APIError(
       'This submission was rejected, so it cannot be published. Set its review status back to pending first.',
       400,
+      null,
+      true,
     )
   }
-  return data
+  throw new APIError(
+    'A published listing cannot be rejected, because rejecting gives its listing number away while the page is still live. Set the listing to Draft first, then reject it.',
+    400,
+    null,
+    true,
+  )
 }
 
 /**

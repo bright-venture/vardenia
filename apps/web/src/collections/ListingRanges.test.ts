@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Access } from 'payload'
+import { APIError, type Access } from 'payload'
 import { isStaff } from '../access/index'
 import { ListingRanges, nextFromDefault, validateRangeAgainstIssue } from './ListingRanges'
 import { Issues, checkListingTotal } from './Issues'
@@ -174,6 +174,20 @@ describe('the range hook', () => {
     ).rejects.toThrow(/overlaps north-lebanon \(80-150\)/)
   })
 
+  // A plain Error is a non-public 500: the admin shows "Something went wrong."
+  it('refuses with a public 400, so staff read the reason', async () => {
+    const s = setup({ siblings: [north] })
+    const error = await run(s, {
+      data: { from: 1, to: 90 },
+      originalDoc: keserwan,
+      operation: 'update',
+    }).catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(400)
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as APIError).message).toMatch(/overlaps north-lebanon \(80-150\)/)
+  })
+
   it('refuses shrinking below a held number, naming it', async () => {
     const s = setup({ held: [95] })
     await expect(
@@ -222,11 +236,15 @@ describe('the issue hook', () => {
     return { find, req: { payload: { find } } }
   }
 
-  it('refuses a total below the highest range end', async () => {
+  it('refuses a total below the highest range end, as a public 400', async () => {
     const s = stub([{ to: 90 }, { to: 150 }])
-    await expect(
+    const error = await Promise.resolve(
       hook({ data: { listingTotal: 100 }, originalDoc: { id: 1 }, req: s.req } as never),
-    ).rejects.toThrow(/150/)
+    ).catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(400)
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as APIError).message).toMatch(/150/)
     expect(JSON.stringify(s.find.mock.calls[0]![0])).toContain('"equals":1')
   })
 
@@ -242,5 +260,47 @@ describe('the issue hook', () => {
     await hook({ data: { listingTotal: 1 }, req: s.req } as never)
     await hook({ data: { title: 'x' }, originalDoc: { id: 1 }, req: s.req } as never)
     expect(s.find).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * Deleting a range is the extreme case of shrinking it: every number it held
+ * would belong to no range, and each of those listings would then fail its
+ * next save with "This issue has no number range".
+ */
+describe('deleting a range', () => {
+  const hook = (args: never) =>
+    (ListingRanges.hooks?.beforeDelete?.[0] as (args: never) => Promise<unknown>)(args)
+  const range = { id: 7, issue: { id: 1 }, governorate: 'keserwan', from: 1, to: 90 }
+
+  const setup = (held: number[]) => {
+    const findByID = vi.fn(async (_args: unknown) => range)
+    const find = vi.fn(async (_args: unknown) => ({
+      docs: held.map((listingNumber) => ({ listingNumber })),
+    }))
+    const req = { payload: { find, findByID } }
+    return { find, findByID, req }
+  }
+
+  it('is refused while listings hold numbers in it, naming them', async () => {
+    const s = setup([12, 40])
+    const error = await hook({ id: 7, req: s.req } as never).catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(400)
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as APIError).message).toContain('12, 40')
+    const query = JSON.stringify(s.find.mock.calls[0]![0])
+    expect(query).toContain('"issue":{"equals":1}')
+    expect(query).toContain('"governorate":{"equals":"keserwan"}')
+    expect(s.findByID.mock.calls[0]![0]).toMatchObject({
+      collection: 'listing-ranges',
+      id: 7,
+      req: s.req,
+    })
+  })
+
+  it('is allowed when no listing holds a number in it', async () => {
+    const s = setup([])
+    await expect(hook({ id: 7, req: s.req } as never)).resolves.toBeUndefined()
   })
 })

@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access/index'
 import { DEFAULT_LISTING_TOTAL, totalProblem } from '@vardenia/core'
 import { slugField } from '../fields/slug'
@@ -34,7 +34,8 @@ export const Issues: CollectionConfig = {
           overrideAccess: true,
         })
         const problem = checkListingTotal(total, ranges.docs as unknown as { to: number }[])
-        if (problem) throw new Error(problem)
+        // Public 400, so the admin shows the reason rather than a hidden 500.
+        if (problem) throw new APIError(problem, 400, null, true)
         return data
       },
     ],

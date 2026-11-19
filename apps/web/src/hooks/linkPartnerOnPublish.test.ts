@@ -170,6 +170,15 @@ describe('refusePublishingRejected', () => {
       originalDoc,
       operation: 'update',
     } as never)
+  /** The thrown error, or undefined when the hook lets the save through. */
+  const refusal = (data: Record<string, unknown>, originalDoc: Record<string, unknown>) => {
+    try {
+      run(data, originalDoc)
+    } catch (e) {
+      return e
+    }
+    return undefined
+  }
 
   it('refuses publishing a rejected submission', () => {
     let error: unknown
@@ -190,5 +199,56 @@ describe('refusePublishingRejected', () => {
     expect(() =>
       run({ name: 'x' }, { _status: 'draft', submission: { status: 'rejected' } }),
     ).not.toThrow()
+  })
+
+  /**
+   * Rejecting releases the listing number (hooks/releaseListingNumber). On a
+   * live listing that would free the printed number of a page still on the
+   * website, so the next owner could take it.
+   */
+  describe('rejecting a published listing', () => {
+    it('is refused while it stays published, telling staff to set it to Draft first', () => {
+      const error = refusal(
+        { submission: { status: 'rejected' } },
+        { _status: 'published', submission: { status: 'approved' } },
+      )
+      expect(error).toBeInstanceOf(APIError)
+      expect((error as APIError).status).toBe(400)
+      expect((error as APIError).isPublic).toBe(true)
+      expect((error as APIError).message).toMatch(/draft first/i)
+    })
+
+    it('is refused when a full admin save sends both fields', () => {
+      const error = refusal(
+        { _status: 'published', submission: { status: 'rejected' } },
+        { _status: 'published', submission: { status: 'approved' } },
+      )
+      expect(error).toBeInstanceOf(APIError)
+      expect((error as APIError).message).toMatch(/draft first/i)
+    })
+
+    it('is allowed in the same save that sets it back to Draft', () => {
+      expect(
+        refusal(
+          { _status: 'draft', submission: { status: 'rejected' } },
+          { _status: 'published', submission: { status: 'approved' } },
+        ),
+      ).toBeUndefined()
+    })
+
+    it('still lets staff edit a published listing that is not rejected', () => {
+      expect(
+        refusal({ name: 'x' }, { _status: 'published', submission: { status: 'approved' } }),
+      ).toBeUndefined()
+    })
+  })
+
+  it('makes the draft-to-published refusal public', () => {
+    const error = refusal(
+      { _status: 'published' },
+      { _status: 'draft', submission: { status: 'rejected' } },
+    )
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as APIError).message).toMatch(/back to pending/i)
   })
 })

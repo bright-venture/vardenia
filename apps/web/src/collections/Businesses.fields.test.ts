@@ -133,21 +133,32 @@ function optionsOf2(f: Loose) {
 
 describe('listing number', () => {
   const number = field('listingNumber')
-  const withRange = (range: object | null) => ({
-    payload: { find: vi.fn(async () => ({ docs: range ? [range] : [] })) },
+  /** A range for every query on listing-ranges; `holders` for the businesses lookup. */
+  const withRange = (range: object | null, holders: object[] = []) => ({
+    payload: {
+      find: vi.fn(async ({ collection }: { collection: string }) => ({
+        docs: collection === 'businesses' ? holders : range ? [range] : [],
+      })),
+    },
   })
+  const beirut = { governorate: 'beirut', from: 100, to: 150 }
   const data = { issue: 4, governorate: 'beirut' }
 
   it('accepts a number inside the range of its governorate', async () => {
-    const req = withRange({ governorate: 'beirut', from: 100, to: 150 })
+    const req = withRange(beirut)
     expect(await number.validate!(120, { data, req })).toBe(true)
   })
 
   it('refuses a number outside it, naming the range', async () => {
-    const req = withRange({ governorate: 'beirut', from: 100, to: 150 })
+    const req = withRange(beirut)
     const result = await number.validate!(151, { data, req })
     expect(result).toContain('100')
     expect(result).toContain('150')
+  })
+
+  it('refuses a fraction inside the range', async () => {
+    const req = withRange(beirut)
+    expect(await number.validate!(120.5, { data, req })).toMatch(/whole number/i)
   })
 
   it('accepts an empty number without looking anything up', async () => {
@@ -158,6 +169,42 @@ describe('listing number', () => {
 
   it('refuses a number when the governorate has no range in that issue', async () => {
     expect(await number.validate!(5, { data, req: withRange(null) })).not.toBe(true)
+  })
+
+  /**
+   * The unique index alone answers "Value must be unique" on a path of two
+   * columns, which tells staff nothing. The index stays the judge for races.
+   */
+  it('names the listing that already holds the number in this issue', async () => {
+    const req = withRange(beirut, [{ id: 31, name: 'Cafe Nour' }])
+    const result = await number.validate!(120, { data, req, id: 9 } as never)
+    expect(result).toContain('120')
+    expect(result).toContain('Cafe Nour')
+    expect(result).toContain('31')
+    const query = req.payload.find.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .find((a) => a.collection === 'businesses')!
+    expect(query).toMatchObject({ limit: 1, depth: 0, overrideAccess: true, req })
+    // A locale here would be written onto the shared req, changing the save's.
+    expect(query).not.toHaveProperty('locale')
+    const where = JSON.stringify(query.where)
+    expect(where).toContain('"issue":{"equals":4}')
+    expect(where).toContain('"listingNumber":{"equals":120}')
+    expect(where).toContain('"id":{"not_equals":9}')
+  })
+
+  it('still answers when the holder has no name in any locale', async () => {
+    const req = withRange(beirut, [{ id: 31 }])
+    expect(await number.validate!(120, { data, req })).toMatch(/held by .*31/)
+  })
+
+  it('does not exclude anything on create', async () => {
+    const req = withRange(beirut)
+    await number.validate!(120, { data, req })
+    const query = req.payload.find.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .find((a) => a.collection === 'businesses')!
+    expect(JSON.stringify(query.where)).not.toContain('not_equals')
   })
 
   it('is unique per issue', () => {

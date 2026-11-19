@@ -60,9 +60,16 @@ interface Stub {
 
 /** A payload with one beirut range 10-20 in issue 7 and number 11 taken. */
 function stub(
-  opts: { range?: boolean; failListing?: unknown; failUpdate?: unknown } = {},
+  opts: {
+    range?: boolean
+    failListing?: unknown
+    /** One error per listing create, in order; creates after the last succeed. */
+    listingErrors?: unknown[]
+    failUpdate?: unknown
+  } = {},
 ): Stub & Payload {
   let mediaId = 100
+  const listingErrors = [...(opts.listingErrors ?? [])]
   const find = vi.fn(async ({ collection }: { collection: string }) => {
     if (collection === 'listing-ranges') {
       return {
@@ -78,6 +85,8 @@ function stub(
   const create = vi.fn(async ({ collection }: { collection: string }) => {
     if (collection === 'media') return { id: mediaId++ }
     if (opts.failListing) throw opts.failListing
+    const next = listingErrors.shift()
+    if (next) throw next
     return { id: 555 }
   })
   const update = vi.fn(async () => {
@@ -266,7 +275,7 @@ describe('createPlaceSubmission', () => {
 
   it('also maps the raw driver error naming the index', async () => {
     const raw = Object.assign(new Error('dup'), {
-      cause: { code: '23505', constraint: 'businesses_issue_listing_number_idx' },
+      cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
     })
     const out = await createPlaceSubmission({
       payload: stub({ failListing: raw }),
@@ -276,17 +285,99 @@ describe('createPlaceSubmission', () => {
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
   })
 
-  it('does not call a unique refusal on some other column a taken number', async () => {
-    const slug = Object.assign(new Error('Value must be unique'), {
-      name: 'ValidationError',
-      data: { errors: [{ message: 'x', path: 'slug', tableName: 'businesses' }] },
+  /**
+   * The slug comes from the name, and the slug is unique, so a second "Cafe
+   * Nour" (or two Arabic names that transliterate alike) used to fail for good.
+   */
+  describe('a name whose slug is taken', () => {
+    // The two shapes a slug refusal arrives in: Payload's, where the adapter
+    // maps the index businesses_slug_idx back to the field, and the raw one.
+    const slugTaken = () =>
+      Object.assign(new Error('Value must be unique'), {
+        name: 'ValidationError',
+        data: { errors: [{ message: 'x', path: 'slug', tableName: 'businesses' }] },
+      })
+    const rawSlugTaken = () =>
+      Object.assign(new Error('dup'), {
+        cause: { code: '23505', constraint: 'businesses_slug_idx' },
+      })
+    const listingCreates = (s: Stub) => created(s, 'businesses')
+
+    it('tries the automatic slug first, then the name with the listing number', async () => {
+      const s = stub({ listingErrors: [slugTaken()] })
+      const out = await createPlaceSubmission({
+        payload: s,
+        input: input({ name: 'Cafe Nour' }),
+        files: files(),
+      })
+      expect(out).toEqual({ ok: true, listingId: 555 })
+      const calls = listingCreates(s)
+      expect(calls).toHaveLength(2)
+      expect(calls[0].data).not.toHaveProperty('slug')
+      expect(calls[1].data.slug).toBe('cafe-nour-12')
     })
-    const out = await createPlaceSubmission({
-      payload: stub({ failListing: slug }),
-      input: input(),
-      files: files(),
+
+    it('uses the transliterated name for an Arabic name', async () => {
+      const s = stub({ listingErrors: [rawSlugTaken()] })
+      await createPlaceSubmission({
+        payload: s,
+        input: input({ name: '\u0645\u0637\u0639\u0645' }),
+        files: files(),
+      })
+      expect(listingCreates(s)[1].data.slug).toBe('mtam-12')
     })
-    expect(out).toMatchObject({ ok: false, code: 'error' })
+
+    it('then adds four random hex characters, fresh each time', async () => {
+      const s = stub({ listingErrors: [slugTaken(), slugTaken(), slugTaken()] })
+      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      expect(out.ok).toBe(true)
+      const slugs = listingCreates(s).map((c) => c.data.slug)
+      expect(slugs).toHaveLength(4)
+      expect(slugs[2]).toMatch(/^cafe-nour-12-[0-9a-f]{4}$/)
+      expect(slugs[3]).toMatch(/^cafe-nour-12-[0-9a-f]{4}$/)
+    })
+
+    it('reuses the photos already stored: no new media on a retry', async () => {
+      const s = stub({ listingErrors: [slugTaken(), slugTaken()] })
+      await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      expect(created(s, 'media')).toHaveLength(3)
+      for (const call of listingCreates(s)) {
+        expect(call.data.heroImage).toBe(100)
+        expect(call.data.gallery).toEqual([101])
+        expect(call.data.logo).toBe(102)
+      }
+    })
+
+    it('does not retry a taken listing number', async () => {
+      const number = Object.assign(new Error('dup'), {
+        cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
+      })
+      const s = stub({ listingErrors: [number] })
+      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+      expect(listingCreates(s)).toHaveLength(1)
+    })
+
+    it('gives up after three retries with the generic error, and reports it', async () => {
+      vi.mocked(reportError).mockClear()
+      const s = stub({ failListing: slugTaken() })
+      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      expect(out).toEqual({
+        ok: false,
+        code: 'error',
+        message: 'We could not save that. Please try again.',
+      })
+      expect(listingCreates(s)).toHaveLength(4)
+      expect(created(s, 'media')).toHaveLength(3)
+      expect(reportError).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not retry any other failure', async () => {
+      const s = stub({ listingErrors: [new Error('boom')] })
+      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      expect(out).toMatchObject({ ok: false, code: 'error' })
+      expect(listingCreates(s)).toHaveLength(1)
+    })
   })
 
   it('reports any other failure and leaks nothing', async () => {
