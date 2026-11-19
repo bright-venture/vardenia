@@ -47,6 +47,8 @@ describe('locale routing leaves alone', () => {
     ['/auth/signup', 'JSON, and the reason sign-up moved off /account'],
     ['/booking/request', 'JSON: rewritten, this returned the 404 page'],
     ['/booking/availability', 'the same'],
+    ['/place-submissions', 'a multipart POST: add-your-place submissions'],
+    ['/place-submissions/numbers', 'JSON: the number picker'],
     ['/g/AB12CD3', 'a printed short link must stay short'],
     ['/qr/AB12CD3', 'serves an SVG; a rewrite returns HTML with an .svg name'],
     ['/qr/sheet', 'the print sheet'],
@@ -84,6 +86,7 @@ describe('a prefix is not a segment', () => {
     '/readers',
     '/qrcodes',
     '/authors',
+    '/place-submissionsx',
   ])('%s is a page, not an excluded prefix', (path) => {
     expect(routed(path)).toBe(true)
   })

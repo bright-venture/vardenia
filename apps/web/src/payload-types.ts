@@ -84,6 +84,7 @@ export interface Config {
     'place-requests': PlaceRequest;
     articles: Article;
     issues: Issue;
+    'listing-ranges': ListingRange;
     editions: Edition;
     media: Media;
     'business-users': BusinessUser;
@@ -123,6 +124,7 @@ export interface Config {
     'place-requests': PlaceRequestsSelect<false> | PlaceRequestsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
+    'listing-ranges': ListingRangesSelect<false> | ListingRangesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'business-users': BusinessUsersSelect<false> | BusinessUsersSelect<true>;
@@ -484,6 +486,21 @@ export interface Business {
    * Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.
    */
   qrCode?: (number | null) | QrCode;
+  issue?: (number | null) | Issue;
+  /**
+   * The number in the printed magazine, from the range of this governorate in the chosen issue.
+   */
+  listingNumber?: number | null;
+  submission?: {
+    status?: ('pending' | 'approved' | 'rejected') | null;
+    ownerName?: string | null;
+    ownerEmail?: string | null;
+    ownerPhone?: string | null;
+    publicPhone?: string | null;
+    website?: string | null;
+    pageTemplate?: ('a' | 'b' | 'c') | null;
+    submittedAt?: string | null;
+  };
   seo?: {
     /**
      * Falls back to the document title when empty.
@@ -874,6 +891,10 @@ export interface Issue {
    * Copies printed. Used to compute scan rate per thousand copies.
    */
   printRun?: number | null;
+  /**
+   * How many numbers the printed issue has. Each governorate takes a block of them under Listing number ranges.
+   */
+  listingTotal?: number | null;
   /**
    * The full issue as a PDF, read on the issue page like a book. Upload it here or pick one from Magazine PDFs (up to 200 MB).
    */
@@ -1287,6 +1308,21 @@ export interface PlaceRequest {
   createdAt: string;
 }
 /**
+ * Each governorate owns one block of the issue’s listing numbers. Blocks cannot overlap or run past the issue total.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listing-ranges".
+ */
+export interface ListingRange {
+  id: number;
+  issue: number | Issue;
+  governorate: 'keserwan' | 'north-lebanon' | 'beirut' | 'beqaa' | 'south-lebanon' | 'chouf' | 'matn';
+  from: number;
+  to: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
@@ -1495,6 +1531,10 @@ export interface PayloadLockedDocument {
         value: number | Issue;
       } | null)
     | ({
+        relationTo: 'listing-ranges';
+        value: number | ListingRange;
+      } | null)
+    | ({
         relationTo: 'editions';
         value: number | Edition;
       } | null)
@@ -1672,6 +1712,20 @@ export interface BusinessesSelect<T extends boolean = true> {
   importBatch?: T;
   _status?: T;
   qrCode?: T;
+  issue?: T;
+  listingNumber?: T;
+  submission?:
+    | T
+    | {
+        status?: T;
+        ownerName?: T;
+        ownerEmail?: T;
+        ownerPhone?: T;
+        publicPhone?: T;
+        website?: T;
+        pageTemplate?: T;
+        submittedAt?: T;
+      };
   seo?:
     | T
     | {
@@ -2014,7 +2068,20 @@ export interface IssuesSelect<T extends boolean = true> {
   publishedAt?: T;
   pageCount?: T;
   printRun?: T;
+  listingTotal?: T;
   digitalEdition?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listing-ranges_select".
+ */
+export interface ListingRangesSelect<T extends boolean = true> {
+  issue?: T;
+  governorate?: T;
+  from?: T;
+  to?: T;
   updatedAt?: T;
   createdAt?: T;
 }

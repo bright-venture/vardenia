@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Businesses, validTime } from './Businesses'
 
 /**
@@ -14,7 +14,11 @@ type Loose = {
   filterOptions?: (args: { options: { label: string; value: string }[]; data: object }) => {
     value: string
   }[]
-  validate?: (value: unknown, args: { data: object }) => true | string
+  validate?: (
+    value: unknown,
+    args: { data: object; req?: object },
+  ) => true | string | Promise<true | string>
+  access?: Record<string, (args: { req: { user?: unknown } }) => boolean>
 }
 
 const all = (fields: Loose[]): Loose[] =>
@@ -88,5 +92,75 @@ describe('opening times', () => {
   it('is what both time fields check', () => {
     expect(field('opens').validate).toBe(validTime)
     expect(field('closes').validate).toBe(validTime)
+  })
+})
+
+describe('submission fields', () => {
+  const names = [
+    'status',
+    'ownerName',
+    'ownerEmail',
+    'ownerPhone',
+    'publicPhone',
+    'website',
+    'pageTemplate',
+    'submittedAt',
+  ]
+  const group = field('submission')
+  const sub = (name: string) => (group.fields as Loose[]).find((f) => f.name === name)!
+
+  it.each(names)('keeps %s staff-only at the field level', (name) => {
+    const access = sub(name).access!
+    expect(access.read!({ req: {} })).toBe(false)
+    expect(access.read!({ req: { user: { collection: 'users', roles: ['staff'] } } })).toBe(true)
+    expect(access.create!({ req: { user: { collection: 'users', roles: ['admin'] } } })).toBe(false)
+    expect(access.update!({ req: {} })).toBe(false)
+  })
+
+  it('leaves the status empty on listings staff create (no default)', () => {
+    expect(sub('status')).not.toHaveProperty('defaultValue')
+  })
+
+  it('offers the three review statuses and templates', () => {
+    expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected'])
+    expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
+  })
+})
+
+function optionsOf2(f: Loose) {
+  return (f as unknown as { options: { value: string }[] }).options.map((o) => o.value)
+}
+
+describe('listing number', () => {
+  const number = field('listingNumber')
+  const withRange = (range: object | null) => ({
+    payload: { find: vi.fn(async () => ({ docs: range ? [range] : [] })) },
+  })
+  const data = { issue: 4, governorate: 'beirut' }
+
+  it('accepts a number inside the range of its governorate', async () => {
+    const req = withRange({ governorate: 'beirut', from: 100, to: 150 })
+    expect(await number.validate!(120, { data, req })).toBe(true)
+  })
+
+  it('refuses a number outside it, naming the range', async () => {
+    const req = withRange({ governorate: 'beirut', from: 100, to: 150 })
+    const result = await number.validate!(151, { data, req })
+    expect(result).toContain('100')
+    expect(result).toContain('150')
+  })
+
+  it('accepts an empty number without looking anything up', async () => {
+    const req = withRange(null)
+    expect(await number.validate!(null, { data, req })).toBe(true)
+    expect(req.payload.find).not.toHaveBeenCalled()
+  })
+
+  it('refuses a number when the governorate has no range in that issue', async () => {
+    expect(await number.validate!(5, { data, req: withRange(null) })).not.toBe(true)
+  })
+
+  it('is unique per issue', () => {
+    expect(Businesses.indexes).toContainEqual({ fields: ['issue', 'listingNumber'], unique: true })
   })
 })

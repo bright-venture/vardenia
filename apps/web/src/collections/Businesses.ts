@@ -1,5 +1,5 @@
-import { canHaveRoomTypes } from '@vardenia/core'
-import type { CollectionConfig } from 'payload'
+import { canHaveRoomTypes, isInRange, type NumberRange } from '@vardenia/core'
+import type { CollectionConfig, Payload } from 'payload'
 import {
   GOVERNORATES,
   SUBCATEGORY_PARENT,
@@ -20,6 +20,12 @@ import { commissionField } from '../fields/commission'
 import { bookingRulesField } from '../fields/bookingRules'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
+import { releaseListingNumber } from '../hooks/releaseListingNumber'
+import {
+  approveSubmissionOnPublish,
+  linkPartnerOnPublish,
+  refusePublishingRejected,
+} from '../hooks/linkPartnerOnPublish'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
@@ -29,6 +35,44 @@ import {
   revalidateListingsAfterChange,
   revalidateListingsAfterDelete,
 } from '../hooks/revalidateListings'
+
+/** Staff read and change the submission; nobody creates it through the API. */
+const submissionAccess = {
+  read: isStaffFieldLevel,
+  create: () => false,
+  update: isStaffFieldLevel,
+}
+
+const idOf = (value: unknown): number | string | null => {
+  if (typeof value === 'number' || typeof value === 'string') return value
+  const id = (value as { id?: unknown } | null)?.id
+  return typeof id === 'number' || typeof id === 'string' ? id : null
+}
+
+/** A listing number must sit inside its governorate's range for the chosen issue. */
+export const validListingNumber = async (
+  value: unknown,
+  { data, req }: { data?: unknown; req?: { payload?: Payload } },
+): Promise<true | string> => {
+  if (value === null || value === undefined || value === '') return true
+  const { issue, governorate } = (data ?? {}) as { issue?: unknown; governorate?: string }
+  const issueId = idOf(issue)
+  if (issueId === null) return 'Choose the magazine issue before giving a listing number.'
+  if (!governorate || !req?.payload) return true
+
+  const found = await req.payload.find({
+    collection: 'listing-ranges',
+    where: { and: [{ issue: { equals: issueId } }, { governorate: { equals: governorate } }] },
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const range = found.docs[0] as unknown as NumberRange | undefined
+  if (!range) return `This issue has no number range for ${governorate} yet.`
+  return isInRange(Number(value), range)
+    ? true
+    : `Listing numbers for ${governorate} run from ${range.from} to ${range.to}.`
+}
 
 /**
  * The directory listing - the central document in the whole platform.
@@ -95,6 +139,9 @@ export const Businesses: CollectionConfig = {
    * the trash is the permanent delete, and the guards below still apply to it.
    */
   trash: true,
+  // Numbers are per issue. Many listings have none (NULLs do not collide), and
+  // older ones keep null.
+  indexes: [{ fields: ['issue', 'listingNumber'], unique: true }],
   access: {
     read: publishedStaffOrOwned,
     create: isStaff,
@@ -114,7 +161,16 @@ export const Businesses: CollectionConfig = {
     // The cached directory is keyed per filter, so publishing has to clear all
     // of them or the unfiltered view keeps serving an answer from before the
     // listing existed. See hooks/revalidateListings.
-    afterChange: [ensureQrCode, autoTranslateListing, revalidateListingsAfterChange],
+    // A rejected submission cannot be published; publishing approves it in the
+    // same write. See hooks/linkPartnerOnPublish.
+    beforeValidate: [refusePublishingRejected],
+    beforeChange: [approveSubmissionOnPublish, releaseListingNumber],
+    afterChange: [
+      ensureQrCode,
+      linkPartnerOnPublish,
+      autoTranslateListing,
+      revalidateListingsAfterChange,
+    ],
     afterDelete: [revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
     // listing mints a new one. Refused rather than warned about.
@@ -612,6 +668,69 @@ export const Businesses: CollectionConfig = {
         description:
           'Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.',
       },
+    },
+    {
+      name: 'issue',
+      label: 'Magazine issue',
+      type: 'relationship',
+      relationTo: 'issues',
+      index: true,
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'listingNumber',
+      label: 'Listing number',
+      type: 'number',
+      index: true,
+      min: 1,
+      validate: validListingNumber,
+      admin: {
+        position: 'sidebar',
+        step: 1,
+        description:
+          'The number in the printed magazine, from the range of this governorate in the chosen issue.',
+      },
+    },
+    {
+      /**
+       * What the owner typed into the public submission form, and where staff
+       * are in reviewing it. Staff-only at the field level: the public route
+       * writes it with overrideAccess, and nobody else can create it, read it
+       * or change it through the API.
+       */
+      name: 'submission',
+      type: 'group',
+      admin: { condition: (_, __, { user }) => hasStaffRole(user) },
+      fields: [
+        {
+          name: 'status',
+          type: 'select',
+          // No default on purpose: a listing staff create themselves has no
+          // status. The public submission service sets 'pending' itself.
+          options: [
+            { label: 'Pending', value: 'pending' },
+            { label: 'Approved', value: 'approved' },
+            { label: 'Rejected', value: 'rejected' },
+          ],
+          access: submissionAccess,
+        },
+        { name: 'ownerName', type: 'text', access: submissionAccess },
+        { name: 'ownerEmail', type: 'email', access: submissionAccess },
+        { name: 'ownerPhone', type: 'text', access: submissionAccess },
+        { name: 'publicPhone', type: 'text', access: submissionAccess },
+        { name: 'website', type: 'text', access: submissionAccess },
+        {
+          name: 'pageTemplate',
+          type: 'select',
+          options: [
+            { label: 'A', value: 'a' },
+            { label: 'B', value: 'b' },
+            { label: 'C', value: 'c' },
+          ],
+          access: submissionAccess,
+        },
+        { name: 'submittedAt', type: 'date', access: submissionAccess },
+      ],
     },
     seoField,
   ],

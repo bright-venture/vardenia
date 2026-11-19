@@ -93,6 +93,9 @@ export const UNMATCHED_PREFIXES = [
   'billing',
   'invoice',
   'media',
+  // The public "add your place" endpoints (a multipart POST and the number
+  // picker's JSON), actions rather than pages. Excluded from the matcher.
+  'place-submissions',
 ] as const
 
 export const KNOWN_SEGMENTS: ReadonlySet<string> = new Set<string>([

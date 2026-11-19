@@ -1,0 +1,206 @@
+import type { CollectionBeforeValidateHook, CollectionConfig, Payload } from 'payload'
+import {
+  DEFAULT_LISTING_TOTAL,
+  LISTING_GOVERNORATES,
+  nextFreeNumber,
+  orphanedNumbers,
+  rangeProblem,
+  type NumberRange,
+} from '@vardenia/core'
+import { isStaff } from '../access/index'
+
+const GOVERNORATE_LABELS: Record<(typeof LISTING_GOVERNORATES)[number], string> = {
+  keserwan: 'Keserwan',
+  'north-lebanon': 'North Lebanon',
+  beirut: 'Beirut',
+  beqaa: 'Beqaa',
+  'south-lebanon': 'South Lebanon',
+  chouf: 'Chouf',
+  matn: 'Matn',
+}
+
+const idOf = (value: unknown): number | string | null => {
+  if (typeof value === 'number' || typeof value === 'string') return value
+  const id = (value as { id?: unknown } | null)?.id
+  return typeof id === 'number' || typeof id === 'string' ? id : null
+}
+
+/**
+ * Why a governorate's range cannot be saved, or null when it can.
+ *
+ * `others` is the issue's other ranges without the row being edited, and `held`
+ * is every number a listing of this governorate and issue already holds. Pure,
+ * so the rules are tested without a database.
+ */
+export function validateRangeAgainstIssue(args: {
+  candidate: NumberRange
+  others: readonly NumberRange[]
+  total: number
+  held: readonly number[]
+}): string | null {
+  const problem = rangeProblem(args.candidate, args.others, args.total)
+  if (problem) return problem
+  const orphaned = orphanedNumbers(args.held, args.candidate)
+  return orphaned.length > 0
+    ? `Listings already hold ${orphaned.join(', ')}, which this range would no longer cover.`
+    : null
+}
+
+/**
+ * The numbers listings of this governorate hold in this issue.
+ *
+ * Injectable: the businesses fields that carry them (`issue`, `listingNumber`)
+ * arrive after this collection, so the generated types do not know them yet.
+ */
+export async function heldNumbers(
+  payload: Payload,
+  issueId: number | string,
+  governorate: string,
+): Promise<number[]> {
+  const found = await payload.find({
+    collection: 'businesses',
+    // Cast: `issue` and `listingNumber` are not in the generated types until
+    // the businesses fields are added and the types regenerated.
+    where: {
+      and: [
+        { issue: { equals: issueId } },
+        { governorate: { equals: governorate } },
+        { listingNumber: { exists: true } },
+      ],
+    } as never,
+    select: { listingNumber: true } as never,
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return (found.docs as unknown as { listingNumber?: number | null }[])
+    .map((d) => d.listingNumber)
+    .filter((n): n is number => typeof n === 'number')
+}
+
+/** The next free number in the latest issue's ranges; undefined without an issue. */
+export async function nextFromDefault(payload: Payload | undefined): Promise<number | undefined> {
+  if (!payload) return undefined
+  const latest = await payload.find({
+    collection: 'issues',
+    sort: '-id',
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const issue = latest.docs[0]
+  if (!issue) return undefined
+  const existing = await payload.find({
+    collection: 'listing-ranges',
+    where: { issue: { equals: issue.id } },
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return nextFreeNumber(existing.docs as unknown as NumberRange[])
+}
+
+const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, operation, req }) => {
+  const merged = { ...(originalDoc ?? {}), ...(data ?? {}) } as {
+    issue?: unknown
+    governorate?: string
+    from?: number
+    to?: number
+  }
+  const issueId = idOf(merged.issue)
+  if (issueId === null || !merged.governorate || !req?.payload) return data
+  const { payload } = req
+
+  const issue = await payload.findByID({
+    collection: 'issues',
+    id: issueId,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const total = (issue as { listingTotal?: number | null }).listingTotal ?? DEFAULT_LISTING_TOTAL
+
+  const siblings = await payload.find({
+    collection: 'listing-ranges',
+    where: {
+      and: [
+        { issue: { equals: issueId } },
+        ...(operation === 'update' && originalDoc?.id !== undefined
+          ? [{ id: { not_equals: originalDoc.id } }]
+          : []),
+      ],
+    },
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+
+  // REST and local API writes may leave `from` out; start after the last block.
+  const from =
+    typeof merged.from === 'number'
+      ? merged.from
+      : nextFreeNumber(siblings.docs as unknown as NumberRange[])
+  if (data && typeof data.from !== 'number') data.from = from
+
+  const held = operation === 'update' ? await heldNumbers(payload, issueId, merged.governorate) : []
+
+  const problem = validateRangeAgainstIssue({
+    candidate: {
+      governorate: merged.governorate,
+      from,
+      to: merged.to as number,
+    },
+    others: siblings.docs as unknown as NumberRange[],
+    total,
+    held,
+  })
+  if (problem) throw new Error(problem)
+  return data
+}
+
+/**
+ * A governorate's block of the magazine's numbers, for one issue.
+ *
+ * Staff only on every operation: the public numbers route reads with
+ * overrideAccess, so the ranges are not exposed through the REST API.
+ */
+export const ListingRanges: CollectionConfig = {
+  slug: 'listing-ranges',
+  labels: { singular: 'Listing number range', plural: 'Listing number ranges' },
+  admin: {
+    useAsTitle: 'governorate',
+    defaultColumns: ['issue', 'governorate', 'from', 'to'],
+    group: 'Magazine',
+    description:
+      'Each governorate owns one block of the issue’s listing numbers. Blocks cannot overlap or run past the issue total.',
+  },
+  access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
+  // One row per governorate per issue; also stops a double-click making two.
+  indexes: [{ fields: ['issue', 'governorate'], unique: true }],
+  hooks: { beforeValidate: [checkRange] },
+  fields: [
+    { name: 'issue', type: 'relationship', relationTo: 'issues', required: true, index: true },
+    {
+      name: 'governorate',
+      type: 'select',
+      required: true,
+      options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_LABELS[value], value })),
+    },
+    {
+      name: 'from',
+      label: 'From number',
+      type: 'number',
+      required: true,
+      min: 1,
+      // Starts after the highest number any range reaches, so a new
+      // governorate's block begins where the last one ended. A best guess: the
+      // default cannot see which issue the form has chosen, so it uses the
+      // most recently created one. The beforeValidate hook still validates,
+      // and fills `from`, for the issue actually chosen.
+      defaultValue: ({ req }: { req?: { payload?: Payload } }) => nextFromDefault(req?.payload),
+    },
+    { name: 'to', label: 'To number', type: 'number', required: true, min: 1 },
+  ],
+}

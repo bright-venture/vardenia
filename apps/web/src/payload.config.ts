@@ -29,6 +29,7 @@ import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
+import { ListingRanges } from './collections/ListingRanges'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
@@ -208,6 +209,7 @@ export default buildConfig({
     PlaceRequests,
     Articles,
     Issues,
+    ListingRanges,
     Editions,
     Media,
     BusinessUsers,
