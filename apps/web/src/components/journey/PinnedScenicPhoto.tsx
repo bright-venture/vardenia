@@ -12,6 +12,7 @@ export function PinnedScenicPhoto({
   interactive,
   dragLabel,
   href,
+  image,
 }: {
   photo: ScenePhoto
   label: string
@@ -20,25 +21,28 @@ export function PinnedScenicPhoto({
   interactive: boolean
   dragLabel: string
   href?: string
+  image?: React.ReactNode
 }) {
   const assets = '/journey/'
   const contents = (
     <>
       <div className="vd-scene-image">
-        <img
-          src={ready ? assets + photo.image : undefined}
-          srcSet={
-            ready
-              ? `${assets + photo.image.replace('.webp', '-m.webp')} 640w, ${assets + photo.image} 1600w`
-              : undefined
-          }
-          sizes="(max-width:700px) calc(100vw - 48px), 60vw"
-          alt={photo.alt}
-          width="1600"
-          height="1200"
-          loading="lazy"
-          draggable={false}
-        />
+        {image ?? (
+          <img
+            src={ready ? assets + photo.image : undefined}
+            srcSet={
+              ready
+                ? `${assets + photo.image.replace('.webp', '-m.webp')} 640w, ${assets + photo.image} 1600w`
+                : undefined
+            }
+            sizes="(max-width:700px) calc(100vw - 48px), 60vw"
+            alt={photo.alt}
+            width="1600"
+            height="1200"
+            loading="lazy"
+            draggable={false}
+          />
+        )}
       </div>
       <span className="vd-photo-caption">
         <span>{label}</span>

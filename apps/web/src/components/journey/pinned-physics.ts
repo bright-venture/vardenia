@@ -10,6 +10,7 @@ export function advancePinSpring(
   elapsed: number,
   limit = 2,
   stiffness = 32,
+  damping = 0.62,
 ): PinSpring {
   let { angle, velocity } = state
   const duration = Math.min(Math.max(elapsed, 0), 0.064)
@@ -18,7 +19,7 @@ export function advancePinSpring(
   for (let i = 0; i < steps; i++) {
     // Gravity pulls a suspended print back towards its resting angle.
     const gravity = Math.sin(((target - angle) * Math.PI) / 180) * (180 / Math.PI) * stiffness
-    velocity += (gravity - velocity * 0.8 * Math.sqrt(stiffness)) * dt
+    velocity += (gravity - velocity * damping * Math.sqrt(stiffness)) * dt
     angle += velocity * dt
     if (Math.abs(angle) > limit) {
       angle = Math.sign(angle) * limit
@@ -34,6 +35,14 @@ export function resistedPinAngle(start: number, delta: number, limit: number): n
   return limit * Math.tanh(Math.atanh(ratio) + delta / limit)
 }
 
+// A rectangular sheet rotates more slowly as its mass extends farther from the pin.
+// Dividing both torque and moment of inertia by mass leaves only its dimensions.
+function printStiffness(width: number, height: number, holeY: number): number {
+  const distance = Math.max(1, height / 2 - holeY)
+  const inertia = (width * width + height * height) / 12 + distance * distance
+  return 7200 * distance / inertia
+}
+
 /** Scroll adds a small impulse; the spring keeps its velocity when direction changes. */
 export function mountPinnedPhotos(host: HTMLElement): () => void {
   const media = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -43,8 +52,8 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     visible: false,
     gain: index % 2 ? -0.8 : 1,
     state: { angle: 0, velocity: 0 },
-    limit: 2,
-    stiffness: Math.max(24, Math.min(58, 32 * (420 / Math.max(240, element.offsetHeight)))),
+    limit: 8,
+    stiffness: printStiffness(element.offsetWidth, element.offsetHeight, parseFloat(getComputedStyle(element).transformOrigin.split(' ')[1]!)),
     lift: { angle: 0, velocity: 0 },
     corner: 0,
     blockClicksUntil: 0,
@@ -58,9 +67,10 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
         touch: boolean
         x: number
         y: number
-        pivotX: number
-        pivotY: number
-        start: number
+        holeX: number
+        holeY: number
+        bearing: number
+        turn: number
         angle: number
         time: number
         radius: number
@@ -75,7 +85,7 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     item.state = { angle: 0, velocity: 0 }
     item.lift = { angle: 0, velocity: 0 }
     item.corner = 0
-    item.limit = 2
+    item.limit = 8
     for (const property of ['--vd-pin-sway', '--vd-paper-lift', '--vd-paper-twist'])
       item.element.style.removeProperty(property)
   }
@@ -94,16 +104,16 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
   let frame = 0
   let lastFrame = 0
   let lastScroll = window.scrollY
-  let lastInput = performance.now()
-  let drive = 0
+  let scrollTravel = 0
+  let scrollSpeed = 0
   const reset = () => {
     endDrag(true)
     cancelAnimationFrame(frame)
     frame = 0
-    drive = 0
+    scrollTravel = 0
+    scrollSpeed = 0
     lastFrame = 0
     lastScroll = window.scrollY
-    lastInput = performance.now()
     for (const item of items) {
       clearItem(item)
     }
@@ -111,14 +121,20 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
   const tick = (now: number) => {
     frame = 0
     if (media.matches || document.hidden) return reset()
-    const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.064) : 1 / 60
+    const dt = lastFrame ? Math.max(0.001, Math.min((now - lastFrame) / 1000, 0.064)) : 1 / 60
     lastFrame = now
-    drive *= Math.exp(-12 * dt)
+    // Sample once per frame so trackpad and wheel events share the same timing.
+    // A change in scroll speed nudges the pendulum, including when the page stops.
+    const speed = Math.max(-2, Math.min(2, scrollTravel / (dt * 1000)))
+    scrollTravel = 0
+    const change = (speed - scrollSpeed) * (1 - Math.exp(-dt / 0.065))
+    scrollSpeed += change
     let moving = false
     for (const item of items) {
       if (!item.visible || drag?.item === item) continue
-      item.state = advancePinSpring(item.state, drive * item.gain, dt, item.limit, item.stiffness)
-      item.lift = advancePinSpring(item.lift, 0, dt, 1, 58)
+      item.state.velocity += change * 6 * item.gain
+      item.state = advancePinSpring(item.state, 0, dt, item.limit, item.stiffness)
+      item.lift = advancePinSpring(item.lift, 0, dt, 1, 58, 1.4)
       // The wall stops the paper from swinging through its supporting surface.
       if (item.lift.angle < 0)
         item.lift = { angle: 0, velocity: Math.abs(item.lift.velocity) * 0.12 }
@@ -129,7 +145,7 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
         item.lift.angle > 0.001 ||
         Math.abs(item.lift.velocity) > 0.005
     }
-    if (moving || Math.abs(drive) > 0.002) frame = requestAnimationFrame(tick)
+    if (moving || Math.abs(scrollSpeed) > 0.002) frame = requestAnimationFrame(tick)
     else if (!drag) reset()
     else lastFrame = 0
   }
@@ -149,8 +165,8 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     if (!item) return
     item.blockClicksUntil = 0
     const rect = item.element.parentElement!.getBoundingClientRect()
-    const pivotX = rect.left + rect.width / 2,
-      pivotY = rect.top
+    const [holeX, holeY] = getComputedStyle(item.element).transformOrigin.split(' ').map(parseFloat)
+    const pivotX = rect.left + holeX!, pivotY = rect.top + holeY!
     drag = {
       item,
       id: event.pointerId,
@@ -158,17 +174,19 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
       touch: event.pointerType === 'touch',
       x: event.clientX,
       y: event.clientY,
-      pivotX,
-      pivotY,
-      start: angleAt(event.clientX, event.clientY, pivotX, pivotY),
+      holeX: holeX!,
+      holeY: holeY!,
+      turn: 0,
+      bearing: angleAt(event.clientX, event.clientY, pivotX, pivotY),
       angle: item.state.angle,
       time: performance.now(),
-      radius: Math.max(40, Math.hypot(event.clientX - pivotX, event.clientY - pivotY)),
+      radius: Math.hypot(event.clientX - pivotX, event.clientY - pivotY),
     }
     item.corner = Math.max(-1, Math.min(1, (event.clientX - pivotX) / Math.max(1, rect.width / 2)))
-    item.stiffness = Math.max(24, Math.min(58, 32 * (420 / Math.max(240, rect.height))))
+    item.stiffness = printStiffness(rect.width, rect.height, holeY!)
     item.state.velocity = 0
-    drive = 0
+    scrollTravel = 0
+    scrollSpeed = 0
   }
   const onPointerMove = (event: PointerEvent) => {
     if (!drag || event.pointerId !== drag.id) return
@@ -186,25 +204,29 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     }
     const now = performance.now(),
       item = drag.item
-    const limit = window.innerWidth < 701 ? 4 : 8
-    const next = resistedPinAngle(
-      drag.angle,
-      -angleAt(event.clientX, event.clientY, drag.pivotX, drag.pivotY) + drag.start,
-      limit,
-    )
+    const wall = item.element.parentElement!.getBoundingClientRect()
+    const pivotX = wall.left + drag.holeX, pivotY = wall.top + drag.holeY
+    const radius = Math.hypot(event.clientX - pivotX, event.clientY - pivotY)
+    const bearing = angleAt(event.clientX, event.clientY, pivotX, pivotY)
+    // Follow the shortest arc across ±180°. Very close to the tack there is
+    // almost no leverage, so crossing the hole cannot whip the page around.
+    const sweep = ((drag.bearing - bearing + 540) % 360) - 180
+    drag.turn += sweep * Math.min(1, radius / 40, drag.radius / 40)
+    drag.bearing = bearing
+    const next = resistedPinAngle(drag.angle, drag.turn, 30)
     const elapsed = Math.max(0.008, (now - drag.time) / 1000)
     const speed = (next - item.state.angle) / elapsed
-    const extension =
-      Math.hypot(event.clientX - drag.pivotX, event.clientY - drag.pivotY) - drag.radius
+    const extension = radius - drag.radius
     const lift = Math.max(0, Math.min(0.85, extension / 110 + Math.abs(next - drag.angle) * 0.018))
     item.lift = {
       angle: lift,
       velocity: Math.max(-2, Math.min(2, (lift - item.lift.angle) / elapsed)),
     }
-    item.limit = limit
+    item.limit = 65
+    const follow = 1 - Math.exp(-elapsed / 0.035)
     item.state = {
       angle: next,
-      velocity: Math.max(-35, Math.min(35, item.state.velocity * 0.65 + speed * 0.35)),
+      velocity: Math.max(-100, Math.min(100, item.state.velocity + (speed - item.state.velocity) * follow)),
     }
     drag.time = now
     paint(item)
@@ -214,15 +236,9 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     if (!drag || event.pointerId !== drag.id) return
     // Holding still before release removes the old throwing velocity.
     const item = drag.item
-    if (performance.now() - drag.time > 90) {
-      item.state.velocity = 0
-      item.lift.velocity = 0
-    } else {
-      // Leave room for the release arc instead of slamming into the safety bound.
-      const room =
-        Math.sqrt(Math.max(0, item.limit ** 2 - item.state.angle ** 2) * item.stiffness) * 0.85
-      item.state.velocity = Math.max(-room, Math.min(room, item.state.velocity))
-    }
+    const release = Math.exp(-Math.max(0, performance.now() - drag.time - 16) / 35)
+    item.state.velocity *= release
+    item.lift.velocity *= release
     endDrag(event.type !== 'pointerup')
     wake()
   }
@@ -262,20 +278,14 @@ export function mountPinnedPhotos(host: HTMLElement): () => void {
     if (items.some((item) => item.element.contains(event.target as Node))) event.preventDefault()
   }
   const onScroll = () => {
-    const now = performance.now()
     const delta = window.scrollY - lastScroll
-    const elapsed = Math.max(16, Math.min(64, now - lastInput))
     lastScroll = window.scrollY
-    lastInput = now
     if (drag?.active || media.matches || document.hidden || !items.some((item) => item.visible))
       return
     // A jump to an anchor must not throw the photographs across the page.
     if (Math.abs(delta) > window.innerHeight) return
-    drive = Math.max(-1.4, Math.min(1.4, (delta / elapsed) * 0.7))
-    if (!frame) {
-      lastFrame = 0
-      frame = requestAnimationFrame(tick)
-    }
+    scrollTravel += delta
+    wake()
   }
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {

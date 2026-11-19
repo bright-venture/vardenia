@@ -7,6 +7,9 @@
     --vd-radius-control: 6px;
     --vd-radius-photo: 10px;
   }
+  html:lang(en) .vd-footer-top { flex-wrap: wrap; }
+  html:lang(en) .vd-footer-top h2 { white-space: nowrap; }
+  html:lang(en) .vd-footer-top h2 br { display: none; }
   html:lang(en) .vd-public #vd-content:not(:has(.vd-main-home)) {
     background: var(--vd-paper) url('/journey/natural-paper-grain.webp') center top / 1600px auto repeat-y;
     background-blend-mode: soft-light;
@@ -23,13 +26,13 @@
     letter-spacing: -0.035em;
   }
   html:lang(en) .vd-weddings-standard { display: none; }
-  html:lang(en) :is(.vd-directory, .vd-magazine-index) .vd-page-intro figure {
+  html:lang(en) :is(.vd-directory, .vd-magazine-index) .vd-page-intro > figure {
     padding: 10px;
     background: var(--vd-paper);
     border: 1px solid color-mix(in srgb, var(--vd-ink) 12%, transparent);
     box-shadow: 0 10px 24px -16px #111d2d66;
   }
-  html:lang(en) .vd-page-intro figure img { border-radius: var(--vd-radius-photo); }
+  html:lang(en) .vd-page-intro > figure img { border-radius: var(--vd-radius-photo); }
   html:lang(en) .vd-page-intro p { max-width: 54ch; }
   html:lang(en) .vd-article .prose-vardenia { max-width: 66ch; margin-inline: auto; }
   html:lang(en) .vd-reading-index a { text-underline-offset: .23em; }
@@ -77,15 +80,15 @@
     font-size: clamp(58px, 5.7vw, 88px);
     line-height: .99;
   }
-  html:lang(en) .vd-page-intro figure {
+  html:lang(en) .vd-page-intro > figure {
     aspect-ratio: auto;
     border-radius: var(--vd-radius-photo);
   }
-  html:lang(en) .vd-page-intro figure > picture {
+  html:lang(en) .vd-page-intro > figure > picture {
     height: auto;
     aspect-ratio: 3 / 2;
   }
-  html:lang(en) .vd-page-intro .vd-coordinates {
+  html:lang(en) .vd-page-intro > figure .vd-coordinates {
     position: static;
     display: flex;
     flex-flow: row-reverse wrap;
@@ -96,8 +99,8 @@
     color: var(--vd-ink);
     text-shadow: none;
   }
-  html:lang(en) .vd-page-intro .vd-coordinates::before { content: none; }
-  html:lang(en) .vd-page-intro .vd-coordinate-place {
+  html:lang(en) .vd-page-intro > figure .vd-coordinates::before { content: none; }
+  html:lang(en) .vd-page-intro > figure .vd-coordinate-place {
     font: 500 28px/1.2 var(--font-pinned-caption, var(--font-display));
     text-transform: none;
     letter-spacing: 0;

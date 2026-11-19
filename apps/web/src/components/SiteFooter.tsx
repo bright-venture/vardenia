@@ -142,10 +142,10 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
   ]
 
   return (
-    <footer className="vd-footer">
+    <footer id="footer" className="vd-footer">
       <div className="vd-footer-top">
         <h2>
-          {j('footerA')}
+          {j('footerA')}{' '}
           <br />
           {j('footerB')}
         </h2>
