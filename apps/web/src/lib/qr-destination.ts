@@ -146,6 +146,9 @@ export function resolveDestination(qr: QrDoc, rawSiteUrl: string): string {
      */
     case 'home':
       return `${siteUrl}/`
+    // Where businesses book a place in the magazine (19 November 2026).
+    case 'magazine-places':
+      return `${siteUrl}/magazine-places`
     default:
       // A target type with no case here used to land on the homepage, which
       // tells the reader nothing and looks like the code worked. The

@@ -55,6 +55,8 @@ const FIXED_SEGMENTS = [
   'faq',
   'legal',
   'magazine',
+  // Where businesses book a place in the magazine (19 November 2026).
+  'magazine-places',
   'partner',
   'partner-with-us',
   'scan',

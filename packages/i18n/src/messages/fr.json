@@ -969,5 +969,13 @@
     "sent": "Merci. L'équipe Vardenia vous répondra bientôt par e-mail.",
     "error": "L'envoi a échoué. Vérifiez le formulaire et réessayez.",
     "tooMany": "Trop de messages en peu de temps. Réessayez dans quelques minutes."
+  },
+  "magazinePlaces": {
+    "title": "Votre place dans le magazine",
+    "intro": "Découvrez le magazine et demandez une place pour votre établissement.",
+    "viewerTitle": "Le magazine",
+    "viewerSoon": "La liseuse du magazine arrive bientôt.",
+    "formTitle": "Demander une place",
+    "formSoon": "Le formulaire de demande arrive bientôt."
   }
 }

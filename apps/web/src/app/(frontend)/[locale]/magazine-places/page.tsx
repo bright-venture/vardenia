@@ -1,0 +1,59 @@
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { isLocale, type Locale } from '@vardenia/i18n'
+import { PageHero } from '../../../../components/editorial/PageHero'
+
+/**
+ * Where businesses book a place in the printed magazine (19 November 2026).
+ * Reached from its own QR code (target "The magazine places page").
+ *
+ * A first version: the magazine viewer and the request form are empty frames
+ * for now, decided with the team. Requests are kept in the admin under
+ * Magazine > Magazine place requests (Draft, Published, Rejected, Expired).
+ * Not in the sitemap and not indexed: it is for businesses holding the code.
+ */
+
+interface Props {
+  params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params
+  if (!isLocale(locale)) return {}
+  const t = await getTranslations({ locale, namespace: 'magazinePlaces' })
+  return { title: t('title'), robots: { index: false, follow: false } }
+}
+
+export default async function MagazinePlacesPage({ params }: Props) {
+  const { locale } = await params
+  if (!isLocale(locale)) notFound()
+  setRequestLocale(locale)
+  const t = await getTranslations('magazinePlaces')
+
+  return (
+    <main>
+      <PageHero title={t('title')} intro={t('intro')} place={3} locale={locale as Locale} />
+      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[3fr_2fr]">
+        <section aria-labelledby="places-viewer">
+          <h2 id="places-viewer" className="font-display text-ink-900 text-2xl">
+            {t('viewerTitle')}
+          </h2>
+          {/* The magazine viewer will go here. */}
+          <div className="border-ink-100 bg-surface-raised text-ink-500 mt-4 flex aspect-[3/4] items-center justify-center border p-6 text-center text-sm">
+            {t('viewerSoon')}
+          </div>
+        </section>
+        <section aria-labelledby="places-form">
+          <h2 id="places-form" className="font-display text-ink-900 text-2xl">
+            {t('formTitle')}
+          </h2>
+          {/* The request form will go here. */}
+          <div className="border-ink-100 bg-surface-raised text-ink-500 mt-4 flex min-h-[280px] items-center justify-center border p-6 text-center text-sm">
+            {t('formSoon')}
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}

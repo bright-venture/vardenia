@@ -167,7 +167,7 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { page, show, ...raw } = await searchParams
+  const { page, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
   // Widened from the literal type, because the tiles and the check below both
@@ -181,15 +181,10 @@ async function SectionResults({
   const state = parseFilterState(raw, children)
 
   /**
-   * The section opens on a choice of subcategory rather than on listings.
-   *
-   * Only when nothing has been narrowed yet: once a reader has picked a kind of
-   * place, or a region, or anything else, they have answered the question the
-   * tiles exist to ask and the listings are what they want. `?show=all` is the
-   * explicit way past them - see SubcategoryTiles.
+   * No separate first screen of kinds of place any more (18 November 2026):
+   * the section opens on its listings, with the kinds as filter tabs above
+   * them (SubcategoryTiles). An old `?show=all` link still lands here.
    */
-  // Plans count as an answer too: a guest who has set a date wants places.
-  const choosing = show !== 'all' && !anyFilterApplied(state) && !state.trip
 
   /**
    * Counts feed the filter chips, and the grid needs its page. In parallel, so a
@@ -201,9 +196,7 @@ async function SectionResults({
   const [counts, result, subcategoryCounts, areaCounts] = await Promise.all([
     countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
-    choosing
-      ? countBySubcategory({ category: section.category })
-      : Promise.resolve<Record<string, number> | null>({}),
+    countBySubcategory({ category: section.category }),
     countByArea({ category: section.category, subcategory: state.subcategory }),
   ])
 
@@ -224,55 +217,23 @@ async function SectionResults({
   // See the directory: only with plans set, and only for bookable places.
   const verdicts = await tripVerdicts(result?.docs ?? [], state.trip ?? null)
 
-  /**
-   * The tiles answer for themselves whether there is a choice worth offering -
-   * fewer than two subcategories on the section and they render nothing. Asking
-   * here as well keeps the page from hiding its listings behind a row that is
-   * about to be empty.
-   */
-  const tiles = choosing ? (
-    <SubcategoryTiles
-      base={base}
-      subcategories={children}
-      counts={subcategoryCounts}
-      locale={locale}
-    />
-  ) : null
-
-  /**
-   * Mirrors what SubcategoryTiles decides, because a disagreement between the
-   * two would render a page with neither tiles nor listings on it.
-   *
-   * It does not count non-empty subcategories. The row lists every kind of
-   * place in the section and marks the empty ones with a nought, so the
-   * question is only whether the section has a taxonomy worth showing at all.
-   */
-  const offeringChoice = choosing && children.filter((sub) => !sub.retired).length > 1
-
-  /**
-   * The choice, and nothing else on the page.
-   *
-   * The filter bar used to sit under the tiles. It asked the second question
-   * while the first was still open, and it asked it in a different shape - a
-   * row of regions and a Filters button below a row of kinds of place, with no
-   * results for either of them to act on. Filtering comes after a choice, so
-   * the bar appears on the listings view and not here.
-   *
-   * A section with nothing in it anywhere gets the row and nothing else, not
-   * even the empty state. It used to fall straight through to "No places
-   * found", which is how Weddings, Lifestyle, Health and Getting Around came
-   * to show no kinds of place at all - the four sections where a reader most
-   * needs to be told what will eventually be there. A row of noughts already
-   * says there is nothing here, and says it about each kind of place rather
-   * than about the section, so a box underneath repeating it in a sentence was
-   * the same fact twice.
-   */
-  if (offeringChoice) {
-    return tiles
-  }
+  // Listings in the whole section, for the All tab.
+  const sectionTotal = subcategoryCounts
+    ? Object.values(subcategoryCounts).reduce((sum, n) => sum + n, 0)
+    : null
 
   return (
     <>
+      {/* The kinds of place, as filter tabs above the listings. */}
+      <SubcategoryTiles
+        base={base}
+        state={state}
+        subcategories={children}
+        counts={subcategoryCounts}
+        total={sectionTotal}
+        locale={locale}
+      />
+
       {/*
         The result count. It used to share this row with a List/Map toggle; the
         map was removed before launch because no listing carries coordinates.

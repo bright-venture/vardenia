@@ -969,5 +969,13 @@
     "sent": "谢谢。Vardenia 团队会尽快通过邮件回复您。",
     "error": "发送失败，请检查表单后重试。",
     "tooMany": "短时间内消息过多，请几分钟后再试。"
+  },
+  "magazinePlaces": {
+    "title": "您在杂志中的位置",
+    "intro": "浏览杂志，为您的商家申请一个位置。",
+    "viewerTitle": "杂志",
+    "viewerSoon": "杂志阅读器即将推出。",
+    "formTitle": "申请位置",
+    "formSoon": "申请表即将推出。"
   }
 }

@@ -70,6 +70,11 @@ export const QR_TARGET_TYPES = [
    * entire reason scans go through /g at all.
    */
   'home',
+  /**
+   * The page where businesses book a place in the magazine (19 November
+   * 2026), /magazine-places. Resolved from the site's own address like home.
+   */
+  'magazine-places',
 ] as const
 export type QrTargetType = (typeof QR_TARGET_TYPES)[number]
 

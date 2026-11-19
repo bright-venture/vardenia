@@ -2,132 +2,108 @@ import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { subcategoryLabel } from '../lib/labels'
+import { filterHref, type FilterState } from './ListingFilters'
 
 /**
- * The choice a section page opens on.
+ * The kinds of place in a section (Hotels, Getaways), as large filter tabs
+ * above the listings (18 November 2026).
  *
- * # Why a section does not open on listings
+ * They used to be a separate first screen: a reader picked Hotels and only
+ * then saw any listing. Now every listing of the section shows at once, and
+ * these tabs narrow it in place, keeping the other filters and the dates. "All"
+ * comes first; the chosen kind is drawn in navy, so it reads as the answer to
+ * "what am I looking at". Tapping the chosen one again shows all.
  *
- * "Stay" held hotels, guesthouses, chalets, apart-hotels, mountain resorts,
- * beach resorts and private villas in one undifferentiated grid, ordered by
- * tier. Somebody looking for a chalet in the mountains was shown a city hotel
- * first and had to notice a row of filter chips above it to do anything about
- * it. The kind of place is the first question a reader actually has, so it is
- * asked first rather than offered as a refinement.
- *
- * The filters are still there once a choice is made, and location is the second
- * question - which is the order people ask them in.
- *
- * # Why every subcategory is listed, including the empty ones
- *
- * The row used to drop anything with nothing behind it, which read as a
- * complete menu and was not one: "Stay" showed three of its eight kinds of
- * place and gave a reader no way to tell whether Lebanon has no mountain
- * resorts or whether Vardenia simply has not added any yet. The section is the
- * taxonomy, so the row states the taxonomy, and the count says what is there.
- *
- * An empty one is shown but not linked. A count of zero has already answered
- * the question the click would ask, and a tile that leads to an empty results
- * page is a dead end we sent the reader into. So it renders as plain text, out
- * of the tab order and marked up as a disabled item, while the ones with
- * listings behind them stay links.
- *
- * # There is no "browse everything" row
- *
- * There was one, carrying the section total and linking to `?show=all`. It was
- * removed: it sat at the end of a row of kinds of place without being one, and
- * it let a reader past the question the row exists to ask. The page still
- * honours `?show=all` so anything already pointing at it keeps working, but
- * nothing here offers it.
- *
- * The consequence is deliberate and worth knowing: a section is now entered
- * through a kind of place or through a filter below the row, and there is no
- * single click that shows everything in it. /directory is where that lives.
+ * A kind with nothing in it is shown but not linked, with its nought, so the
+ * row states the whole taxonomy and never leads to an empty page.
  */
 export async function SubcategoryTiles({
   base,
+  state,
   subcategories,
   counts,
+  total,
   locale,
 }: {
   /** The section's own path, e.g. `/stay`. */
   base: string
+  /** The current filters, kept when a tab is chosen. */
+  state: FilterState
   subcategories: readonly { slug: string; retired?: boolean }[]
   /**
    * Listings per subcategory, or `null` when they could not all be counted.
-   *
-   * Unknown is not zero. Every tile is then a link without a number, because
-   * treating an uncounted subcategory as empty would unlink it - and a kind of
-   * place with listings behind it would be unreachable from its own section.
-   * See lib/listings countBySubcategory.
+   * Unknown is not zero: every tab is then a link without a number.
    */
   counts: Record<string, number> | null
+  /** Listings in the whole section, for the All tab. */
+  total: number | null
   locale: Locale
 }) {
   const t = await getTranslations('directory')
 
-  /**
-   * Retired is the one reason to leave a subcategory out.
-   *
-   * It means the slug has shipped and must keep resolving for printed codes,
-   * not that it is still on offer - so it stays out of a menu of things to
-   * choose. See TAXONOMY, which forbids deleting a slug outright.
-   */
+  // Retired kinds keep resolving for printed codes but are not on offer.
   const offered = subcategories.filter((sub) => !sub.retired)
 
   // Nothing to choose between is not a choice.
   if (offered.length < 2) return null
 
-  const ROW =
-    'border-ink-100 flex items-baseline justify-between gap-4 border-b px-1 py-5 transition-colors'
+  const TAB =
+    'flex min-h-[64px] items-baseline justify-between gap-4 border px-5 py-4 transition-colors'
+  const ACTIVE = 'border-cedar-900 bg-cedar-900 text-surface-base'
+  const IDLE =
+    'border-ink-100 bg-surface-raised text-ink-900 hover:border-ink-300 focus-visible:outline-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2'
+
+  const tab = (key: string, label: string, count: number | null, active: boolean, href: string) => (
+    <li key={key}>
+      {count === null || count > 0 || active ? (
+        <Link
+          href={href}
+          // A filtered view, not a page of its own (see FilterChip).
+          prefetch={false}
+          rel="nofollow"
+          scroll={false}
+          aria-current={active ? 'true' : undefined}
+          className={`${TAB} ${active ? ACTIVE : IDLE}`}
+        >
+          <span className="font-display text-xl">{label}</span>
+          {count === null ? null : (
+            <span
+              className={`font-mono text-xs tabular-nums ${active ? 'text-surface-base' : 'text-ink-500'}`}
+            >
+              {count}
+            </span>
+          )}
+        </Link>
+      ) : (
+        <div className={`${TAB} border-ink-100`} aria-disabled="true">
+          <span className="font-display text-ink-500 text-xl">{label}</span>
+          <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
+        </div>
+      )}
+    </li>
+  )
 
   return (
-    <nav className="vd-subcategories mt-10" aria-label={t('chooseType')}>
+    <nav className="vd-subcategories mt-8" aria-label={t('chooseType')}>
       <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.2em]">
         {t('chooseType')}
       </h2>
-
-      <ul className="border-ink-100 mt-4 grid gap-px border-t sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {tab(
+          'all',
+          t('all'),
+          total,
+          !state.subcategory,
+          filterHref(base, state, { subcategory: undefined }),
+        )}
         {offered.map((sub) => {
-          const count = counts ? (counts[sub.slug] ?? 0) : null
-
-          return (
-            <li key={sub.slug}>
-              {count === null || count > 0 ? (
-                <Link
-                  href={`${base}?filter=${sub.slug}`}
-                  // A filtered view, not a page of its own (see FilterChip).
-                  prefetch={false}
-                  rel="nofollow"
-                  className={`${ROW} hover:bg-surface-raised focus-visible:outline-gold-500 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`}
-                >
-                  <span className="font-display text-ink-900 group-hover:text-gold-700 text-xl transition-colors">
-                    {subcategoryLabel(sub.slug, locale)}
-                  </span>
-                  {count === null ? null : (
-                    <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
-                  )}
-                </Link>
-              ) : (
-                /*
-                  Not a link, and said so rather than merely greyed: a sighted
-                  reader has the count, and `aria-disabled` is what gives a
-                  screen reader the same fact.
-
-                  The label drops from ink-900 to ink-500 and nothing else
-                  changes, so the row keeps its place in the menu. Not ink-300,
-                  which is the obvious "disabled" step and measures 2.11 against
-                  this ground - it may tint an icon and never carries a glyph.
-                  See lib/contrast.test, which enforces that.
-                */
-                <div className={ROW} aria-disabled="true">
-                  <span className="font-display text-ink-500 text-xl">
-                    {subcategoryLabel(sub.slug, locale)}
-                  </span>
-                  <span className="text-ink-500 font-mono text-xs tabular-nums">{count}</span>
-                </div>
-              )}
-            </li>
+          const active = state.subcategory === sub.slug
+          return tab(
+            sub.slug,
+            subcategoryLabel(sub.slug, locale),
+            counts ? (counts[sub.slug] ?? 0) : null,
+            active,
+            filterHref(base, state, { subcategory: active ? undefined : sub.slug }),
           )
         })}
       </ul>

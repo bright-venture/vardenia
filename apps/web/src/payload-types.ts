@@ -81,6 +81,7 @@ export interface Config {
     'staff-requests': StaffRequest;
     areas: Area;
     'guest-questions': GuestQuestion;
+    'place-requests': PlaceRequest;
     articles: Article;
     issues: Issue;
     editions: Edition;
@@ -119,6 +120,7 @@ export interface Config {
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
     areas: AreasSelect<false> | AreasSelect<true>;
     'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
+    'place-requests': PlaceRequestsSelect<false> | PlaceRequestsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
@@ -747,7 +749,7 @@ export interface QrCode {
   /**
    * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.
    */
-  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home';
+  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home' | 'magazine-places';
   /**
    * Every listing gets its code automatically when it is saved. Make one here only for a listing that has none.
    */
@@ -1250,6 +1252,41 @@ export interface GuestQuestion {
   createdAt: string;
 }
 /**
+ * Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-requests".
+ */
+export interface PlaceRequest {
+  id: number;
+  /**
+   * Draft can become Published or Rejected. Published becomes Expired after the contract ends.
+   */
+  status: 'draft' | 'published' | 'rejected' | 'expired';
+  businessName: string;
+  issue?: (number | null) | Issue;
+  placeNumber?: number | null;
+  contactName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  /**
+   * The listing, once it exists.
+   */
+  listing?: (number | null) | Business;
+  contractStartsAt?: string | null;
+  /**
+   * Needed to publish. The morning after, the status becomes Expired.
+   */
+  contractEndsAt?: string | null;
+  notes?: string | null;
+  /**
+   * For the team only.
+   */
+  internalNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "business-users".
  */
@@ -1444,6 +1481,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'guest-questions';
         value: number | GuestQuestion;
+      } | null)
+    | ({
+        relationTo: 'place-requests';
+        value: number | PlaceRequest;
       } | null)
     | ({
         relationTo: 'articles';
@@ -1900,6 +1941,26 @@ export interface GuestQuestionsSelect<T extends boolean = true> {
   answer?: T;
   answeredAt?: T;
   locale?: T;
+  internalNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-requests_select".
+ */
+export interface PlaceRequestsSelect<T extends boolean = true> {
+  status?: T;
+  businessName?: T;
+  issue?: T;
+  placeNumber?: T;
+  contactName?: T;
+  email?: T;
+  phone?: T;
+  listing?: T;
+  contractStartsAt?: T;
+  contractEndsAt?: T;
+  notes?: T;
   internalNotes?: T;
   updatedAt?: T;
   createdAt?: T;

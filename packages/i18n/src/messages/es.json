@@ -969,5 +969,13 @@
     "sent": "Gracias. El equipo de Vardenia te responderá pronto por correo.",
     "error": "No se pudo enviar. Revisa el formulario e inténtalo de nuevo.",
     "tooMany": "Demasiados mensajes en poco tiempo. Inténtalo en unos minutos."
+  },
+  "magazinePlaces": {
+    "title": "Tu lugar en la revista",
+    "intro": "Mira la revista y solicita un lugar para tu negocio.",
+    "viewerTitle": "La revista",
+    "viewerSoon": "El visor de la revista llegará pronto.",
+    "formTitle": "Solicitar un lugar",
+    "formSoon": "El formulario de solicitud llegará pronto."
   }
 }

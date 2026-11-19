@@ -969,5 +969,13 @@
     "sent": "Thank you. The Vardenia team will reply to you by email soon.",
     "error": "That could not be sent. Please check the form and try again.",
     "tooMany": "Too many messages in a short time. Please try again in a few minutes."
+  },
+  "magazinePlaces": {
+    "title": "Your place in the magazine",
+    "intro": "See the magazine and request a place for your business.",
+    "viewerTitle": "The magazine",
+    "viewerSoon": "The magazine viewer is coming soon.",
+    "formTitle": "Request a place",
+    "formSoon": "The request form is coming soon."
   }
 }
