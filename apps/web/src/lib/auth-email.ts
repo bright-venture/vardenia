@@ -203,12 +203,6 @@ export const partnerLoginUrl = (origin = siteOrigin()) => `${origin}/partner`
 export const PARTNER_INVITE_DAYS = 3
 export const PARTNER_INVITE_MS = PARTNER_INVITE_DAYS * 24 * 60 * 60 * 1000
 
-/**
- * Set on the request context by hooks/inviteBusinessUser, so the email builder
- * can tell the invitation from an ordinary reset.
- */
-export const PARTNER_INVITE_CONTEXT = 'partnerInvite'
-
 const PARTNER_INVITE: Copy = {
   subject: 'Set your Vardenia password - تعيين كلمة المرور',
   heading: 'Set your password',

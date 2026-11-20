@@ -8,13 +8,9 @@ import {
   isStaffFieldLevel,
   selfOrStaff,
 } from '../access/index'
-import { PARTNER_INVITE_CONTEXT, partnerResetEmail } from '../lib/auth-email'
+import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
-
-/** True when hooks/inviteBusinessUser sent this email: the first one, the invitation. */
-const isInvite = (req: { context?: Record<string, unknown> } | undefined): boolean =>
-  req?.context?.[PARTNER_INVITE_CONTEXT] === true
 
 /**
  * Owners and managers of listings we have onboarded.
@@ -65,12 +61,12 @@ export const BusinessUsers: CollectionConfig = {
       // level it would beat the one the invitation passes per call, so every
       // ordinary reset link would live as long as an invitation. An ordinary
       // reset keeps Payload's default hour; hooks/inviteBusinessUser asks for
-      // PARTNER_INVITE_DAYS.
-      generateEmailSubject: (args) =>
-        partnerResetEmail('', undefined, { invite: isInvite(args?.req) }).subject,
+      // PARTNER_INVITE_DAYS and sends the invitation email itself, so the email
+      // built here is always the ordinary reset.
+      generateEmailSubject: () => partnerResetEmail('').subject,
       generateEmailHTML: (args) => {
         if (!args?.token) throw new Error('No reset token to put in the partner email')
-        return partnerResetEmail(args.token, undefined, { invite: isInvite(args.req) }).html
+        return partnerResetEmail(args.token).html
       },
     },
   },

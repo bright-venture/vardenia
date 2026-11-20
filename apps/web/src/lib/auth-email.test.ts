@@ -133,14 +133,11 @@ describe('partner set-password links', () => {
     expect(mail.text).not.toContain('days')
   })
 
-  it('builds the invitation email only when the invitation hook marked the request', async () => {
+  it('makes "forgot password" send the ordinary 1 hour reset email', async () => {
     const { BusinessUsers } = await import('../collections/BusinessUsers')
     const fp = (
       BusinessUsers.auth as { forgotPassword: { generateEmailHTML: (a: unknown) => string } }
     ).forgotPassword
-    const invite = fp.generateEmailHTML({ token: 't', req: { context: { partnerInvite: true } } })
-    const reset = fp.generateEmailHTML({ token: 't', req: { context: {} } })
-    expect(invite).toContain(`${PARTNER_INVITE_DAYS} days`)
-    expect(reset).toContain('1 hour')
+    expect(fp.generateEmailHTML({ token: 't' })).toContain('1 hour')
   })
 })
