@@ -8,9 +8,13 @@ import {
   isStaffFieldLevel,
   selfOrStaff,
 } from '../access/index'
-import { PARTNER_LINK_DAYS, partnerResetEmail } from '../lib/auth-email'
+import { PARTNER_INVITE_CONTEXT, partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
+
+/** True when hooks/inviteBusinessUser sent this email: the first one, the invitation. */
+const isInvite = (req: { context?: Record<string, unknown> } | undefined): boolean =>
+  req?.context?.[PARTNER_INVITE_CONTEXT] === true
 
 /**
  * Owners and managers of listings we have onboarded.
@@ -57,13 +61,16 @@ export const BusinessUsers: CollectionConfig = {
      * nobody could ever use.
      */
     forgotPassword: {
-      // The invitation is this link, so it has to outlive Payload's default
-      // hour. See PARTNER_LINK_DAYS.
-      expiration: PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000,
-      generateEmailSubject: () => partnerResetEmail('').subject,
+      // No `expiration` here on purpose (20 November 2026): set at collection
+      // level it would beat the one the invitation passes per call, so every
+      // ordinary reset link would live as long as an invitation. An ordinary
+      // reset keeps Payload's default hour; hooks/inviteBusinessUser asks for
+      // PARTNER_INVITE_DAYS.
+      generateEmailSubject: (args) =>
+        partnerResetEmail('', undefined, { invite: isInvite(args?.req) }).subject,
       generateEmailHTML: (args) => {
         if (!args?.token) throw new Error('No reset token to put in the partner email')
-        return partnerResetEmail(args.token).html
+        return partnerResetEmail(args.token, undefined, { invite: isInvite(args.req) }).html
       },
     },
   },

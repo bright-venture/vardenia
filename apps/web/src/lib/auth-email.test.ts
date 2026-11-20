@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PARTNER_LINK_DAYS,
+  PARTNER_INVITE_DAYS,
   partnerResetEmail,
   passwordResetEmail,
   resetUrl,
@@ -105,19 +105,42 @@ describe('escaping', () => {
 })
 
 /**
- * The partner set-password link is also the invitation, so it must outlive
- * Payload's default hour, and the email must say how long it has.
+ * The first set-password email is the invitation and lives for days; an
+ * ordinary reset keeps Payload's default hour (20 November 2026). Each email
+ * must say how long its own link works.
  */
-describe('the partner invitation', () => {
-  it('lasts as long as the email says, in both languages', async () => {
+describe('partner set-password links', () => {
+  it('sets no lifetime on the collection, so an ordinary reset keeps the default hour', async () => {
     const { BusinessUsers } = await import('../collections/BusinessUsers')
     const auth = BusinessUsers.auth as { forgotPassword?: { expiration?: number } }
-    expect(auth.forgotPassword?.expiration).toBe(PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000)
-    expect(PARTNER_LINK_DAYS).toBeGreaterThanOrEqual(2)
+    expect(auth.forgotPassword?.expiration).toBeUndefined()
+  })
 
+  it('says the invitation lasts as many days as it does, in both languages', () => {
+    expect(PARTNER_INVITE_DAYS).toBeGreaterThanOrEqual(2)
+    const mail = partnerResetEmail('tok123', 'https://vardenia.com', { invite: true })
+    expect(mail.subject).toContain('Set your Vardenia password')
+    expect(mail.text).toContain(`works for ${PARTNER_INVITE_DAYS} days`)
+    expect(mail.text).toContain(`لمدة ${PARTNER_INVITE_DAYS} أيام`)
+    expect(mail.html).toContain(`works for ${PARTNER_INVITE_DAYS} days`)
+  })
+
+  it('says an ordinary reset lasts 1 hour, in both languages', () => {
     const mail = partnerResetEmail('tok123', 'https://vardenia.com')
-    expect(mail.text).toContain(`works for ${PARTNER_LINK_DAYS} days`)
-    expect(mail.text).toContain(`لمدة ${PARTNER_LINK_DAYS} أيام`)
-    expect(mail.html).toContain(`works for ${PARTNER_LINK_DAYS} days`)
+    expect(mail.subject).toContain('Reset your Vardenia password')
+    expect(mail.text).toContain('works for 1 hour')
+    expect(mail.text).toContain('لمدة ساعة واحدة')
+    expect(mail.text).not.toContain('days')
+  })
+
+  it('builds the invitation email only when the invitation hook marked the request', async () => {
+    const { BusinessUsers } = await import('../collections/BusinessUsers')
+    const fp = (
+      BusinessUsers.auth as { forgotPassword: { generateEmailHTML: (a: unknown) => string } }
+    ).forgotPassword
+    const invite = fp.generateEmailHTML({ token: 't', req: { context: { partnerInvite: true } } })
+    const reset = fp.generateEmailHTML({ token: 't', req: { context: {} } })
+    expect(invite).toContain(`${PARTNER_INVITE_DAYS} days`)
+    expect(reset).toContain('1 hour')
   })
 })

@@ -188,29 +188,55 @@ export const partnerLoginUrl = (origin = siteOrigin()) => `${origin}/partner`
  * message every one of them is guaranteed to receive.
  */
 /**
- * How long a partner's set-password link works.
+ * How long a partner's first set-password link, the invitation, works.
  *
- * The same link is the invitation, so it cannot be Payload's default hour: a
- * venue owner reads email when the evening is over, not within sixty minutes
- * of the team creating the account, and an invitation that has died before it
- * is opened is an account nobody can get into. Read by BusinessUsers'
- * `forgotPassword.expiration`, and stated in the email so the date is no
- * surprise.
+ * It cannot be Payload's default hour: a venue owner reads email when the
+ * evening is over, not within sixty minutes of the team creating the account,
+ * and an invitation that has died before it is opened is an account nobody can
+ * get into. Passed by hooks/inviteBusinessUser as the `expiration` of that one
+ * call, and stated in the email so the date is no surprise.
+ *
+ * An ordinary "forgot password" link keeps Payload's default hour (20 November
+ * 2026): a reset link that works for days is days in which a forwarded or
+ * leaked email opens the account.
  */
-export const PARTNER_LINK_DAYS = 3
+export const PARTNER_INVITE_DAYS = 3
+export const PARTNER_INVITE_MS = PARTNER_INVITE_DAYS * 24 * 60 * 60 * 1000
 
-const PARTNER_RESET: Copy = {
+/**
+ * Set on the request context by hooks/inviteBusinessUser, so the email builder
+ * can tell the invitation from an ordinary reset.
+ */
+export const PARTNER_INVITE_CONTEXT = 'partnerInvite'
+
+const PARTNER_INVITE: Copy = {
   subject: 'Set your Vardenia password - تعيين كلمة المرور',
   heading: 'Set your password',
-  en: `Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings. The link works for ${PARTNER_LINK_DAYS} days; after that, ask for a new one from the sign-in page.`,
-  ar: `افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها. يعمل الرابط لمدة ${PARTNER_LINK_DAYS} أيام، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.`,
+  en: `Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings. The link works for ${PARTNER_INVITE_DAYS} days; after that, ask for a new one from the sign-in page.`,
+  ar: `افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها. يعمل الرابط لمدة ${PARTNER_INVITE_DAYS} أيام، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.`,
   action: 'Set a password',
   ignoreEn: 'If you were not expecting this, you can ignore this message and nothing will change.',
   ignoreAr: 'إذا لم تكن تتوقع هذه الرسالة، تجاهلها ولن يتغير شيء.',
 }
 
-export function partnerResetEmail(token: string, origin = siteOrigin()): AuthEmailContent {
-  const mail = render(PARTNER_RESET, partnerResetUrl(token, origin))
+const PARTNER_RESET: Copy = {
+  subject: 'Reset your Vardenia password - إعادة تعيين كلمة المرور',
+  heading: 'Reset your password',
+  en: 'Open the link below to choose a new password for your Vardenia partner account. The link works for 1 hour; after that, ask for a new one from the sign-in page.',
+  ar: 'افتح الرابط أدناه لاختيار كلمة مرور جديدة لحساب الشريك الخاص بك في فاردينيا. يعمل الرابط لمدة ساعة واحدة، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.',
+  action: 'Choose a new password',
+  ignoreEn:
+    'If you did not ask for this, you can ignore this message and your password will not change.',
+  ignoreAr: 'إذا لم تطلب ذلك، تجاهل هذه الرسالة ولن تتغير كلمة المرور.',
+}
+
+/** `invite` is the first set-password email; otherwise an ordinary reset. */
+export function partnerResetEmail(
+  token: string,
+  origin = siteOrigin(),
+  { invite = false }: { invite?: boolean } = {},
+): AuthEmailContent {
+  const mail = render(invite ? PARTNER_INVITE : PARTNER_RESET, partnerResetUrl(token, origin))
   const login = partnerLoginUrl(origin)
 
   /**

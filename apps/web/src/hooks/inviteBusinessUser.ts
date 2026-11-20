@@ -1,4 +1,5 @@
 import type { CollectionAfterChangeHook } from 'payload'
+import { PARTNER_INVITE_CONTEXT, PARTNER_INVITE_MS } from '../lib/auth-email'
 import { reportError } from '../lib/report'
 
 /**
@@ -35,11 +36,17 @@ export const inviteBusinessUser: CollectionAfterChangeHook = async ({ doc, opera
   const email = String((doc as { email?: unknown }).email ?? '')
   if (!email) return doc
 
+  // Marks this email as the invitation, for the email builder in BusinessUsers,
+  // and asks for a link that outlives an ordinary reset (20 November 2026).
+  // Taken off again after, because the context belongs to the whole request.
+  const context = req.context as Record<string, unknown>
+  context[PARTNER_INVITE_CONTEXT] = true
   try {
     await req.payload.forgotPassword({
       collection: 'business-users',
       data: { email },
       disableEmail: false,
+      expiration: PARTNER_INVITE_MS,
 
       /**
        * Passed so this joins the transaction the create is still inside.
@@ -58,6 +65,8 @@ export const inviteBusinessUser: CollectionAfterChangeHook = async ({ doc, opera
       source: 'partner.invite',
       extra: { businessUser: (doc as { id?: unknown }).id },
     })
+  } finally {
+    delete context[PARTNER_INVITE_CONTEXT]
   }
 
   return doc

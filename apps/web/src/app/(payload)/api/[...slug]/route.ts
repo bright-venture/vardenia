@@ -9,6 +9,7 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes'
 import { withApiLimits } from '../../../../lib/api-limits'
+import { sameAnswerForForgotPassword } from '../../../../lib/forgot-password'
 import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
 
 /**
@@ -88,7 +89,11 @@ export const GET = guardRead(REST_GET(config))
 // POST gets the page cap too: a POST carrying a method-override header is a read,
 // and was the way round the cap. Genuine writes pass through it untouched. See
 // withApiLimits.
-export const POST = guardWrite(withApiLimits(REST_POST(config) as never))
+// Forgot password answers the same whether or not the email could be sent, so
+// it never reveals which addresses have an account. See lib/forgot-password.
+export const POST = guardWrite(
+  sameAnswerForForgotPassword(withApiLimits(REST_POST(config) as never) as never),
+)
 export const DELETE = guardWrite(REST_DELETE(config))
 export const PATCH = guardWrite(REST_PATCH(config))
 export const PUT = guardWrite(REST_PUT(config))
