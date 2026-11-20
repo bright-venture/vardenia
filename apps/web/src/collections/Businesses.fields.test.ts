@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { Businesses, validTime } from './Businesses'
 
 /**
@@ -14,7 +14,11 @@ type Loose = {
   filterOptions?: (args: { options: { label: string; value: string }[]; data: object }) => {
     value: string
   }[]
-  validate?: (value: unknown, args: { data: object }) => true | string
+  validate?: (
+    value: unknown,
+    args: { data: object; req?: object },
+  ) => true | string | Promise<true | string>
+  access?: Record<string, (args: { req: { user?: unknown } }) => boolean>
 }
 
 const all = (fields: Loose[]): Loose[] =>
@@ -88,5 +92,122 @@ describe('opening times', () => {
   it('is what both time fields check', () => {
     expect(field('opens').validate).toBe(validTime)
     expect(field('closes').validate).toBe(validTime)
+  })
+})
+
+describe('submission fields', () => {
+  const names = [
+    'status',
+    'ownerName',
+    'ownerEmail',
+    'ownerPhone',
+    'publicPhone',
+    'website',
+    'pageTemplate',
+    'submittedAt',
+  ]
+  const group = field('submission')
+  const sub = (name: string) => (group.fields as Loose[]).find((f) => f.name === name)!
+
+  it.each(names)('keeps %s staff-only at the field level', (name) => {
+    const access = sub(name).access!
+    expect(access.read!({ req: {} })).toBe(false)
+    expect(access.read!({ req: { user: { collection: 'users', roles: ['staff'] } } })).toBe(true)
+    expect(access.create!({ req: { user: { collection: 'users', roles: ['admin'] } } })).toBe(false)
+    expect(access.update!({ req: {} })).toBe(false)
+  })
+
+  it('leaves the status empty on listings staff create (no default)', () => {
+    expect(sub('status')).not.toHaveProperty('defaultValue')
+  })
+
+  it('offers the three review statuses and templates', () => {
+    expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected'])
+    expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
+  })
+})
+
+function optionsOf2(f: Loose) {
+  return (f as unknown as { options: { value: string }[] }).options.map((o) => o.value)
+}
+
+describe('listing number', () => {
+  const number = field('listingNumber')
+  /** A range for every query on listing-ranges; `holders` for the businesses lookup. */
+  const withRange = (range: object | null, holders: object[] = []) => ({
+    payload: {
+      find: vi.fn(async ({ collection }: { collection: string }) => ({
+        docs: collection === 'businesses' ? holders : range ? [range] : [],
+      })),
+    },
+  })
+  const beirut = { governorate: 'beirut', from: 100, to: 150 }
+  const data = { issue: 4, governorate: 'beirut' }
+
+  it('accepts a number inside the range of its governorate', async () => {
+    const req = withRange(beirut)
+    expect(await number.validate!(120, { data, req })).toBe(true)
+  })
+
+  it('refuses a number outside it, naming the range', async () => {
+    const req = withRange(beirut)
+    const result = await number.validate!(151, { data, req })
+    expect(result).toContain('100')
+    expect(result).toContain('150')
+  })
+
+  it('refuses a fraction inside the range', async () => {
+    const req = withRange(beirut)
+    expect(await number.validate!(120.5, { data, req })).toMatch(/whole number/i)
+  })
+
+  it('accepts an empty number without looking anything up', async () => {
+    const req = withRange(null)
+    expect(await number.validate!(null, { data, req })).toBe(true)
+    expect(req.payload.find).not.toHaveBeenCalled()
+  })
+
+  it('refuses a number when the governorate has no range in that issue', async () => {
+    expect(await number.validate!(5, { data, req: withRange(null) })).not.toBe(true)
+  })
+
+  /**
+   * The unique index alone answers "Value must be unique" on a path of two
+   * columns, which tells staff nothing. The index stays the judge for races.
+   */
+  it('names the listing that already holds the number in this issue', async () => {
+    const req = withRange(beirut, [{ id: 31, name: 'Cafe Nour' }])
+    const result = await number.validate!(120, { data, req, id: 9 } as never)
+    expect(result).toContain('120')
+    expect(result).toContain('Cafe Nour')
+    expect(result).toContain('31')
+    const query = req.payload.find.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .find((a) => a.collection === 'businesses')!
+    expect(query).toMatchObject({ limit: 1, depth: 0, overrideAccess: true, req })
+    // A locale here would be written onto the shared req, changing the save's.
+    expect(query).not.toHaveProperty('locale')
+    const where = JSON.stringify(query.where)
+    expect(where).toContain('"issue":{"equals":4}')
+    expect(where).toContain('"listingNumber":{"equals":120}')
+    expect(where).toContain('"id":{"not_equals":9}')
+  })
+
+  it('still answers when the holder has no name in any locale', async () => {
+    const req = withRange(beirut, [{ id: 31 }])
+    expect(await number.validate!(120, { data, req })).toMatch(/held by .*31/)
+  })
+
+  it('does not exclude anything on create', async () => {
+    const req = withRange(beirut)
+    await number.validate!(120, { data, req })
+    const query = req.payload.find.mock.calls
+      .map((c) => c[0] as Record<string, unknown>)
+      .find((a) => a.collection === 'businesses')!
+    expect(JSON.stringify(query.where)).not.toContain('not_equals')
+  })
+
+  it('is unique per issue', () => {
+    expect(Businesses.indexes).toContainEqual({ fields: ['issue', 'listingNumber'], unique: true })
   })
 })

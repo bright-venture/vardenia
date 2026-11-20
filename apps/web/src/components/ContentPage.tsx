@@ -1,3 +1,4 @@
+import { InteriorScenicPhoto } from './editorial/InteriorScenicPhoto'
 import { StoryIndex } from './editorial/StoryIndex'
 import { AskQuestionForm } from './AskQuestionForm'
 import './editorial/standing-pages.css'
@@ -244,24 +245,33 @@ export async function ContentPageView({
                 ))}
                 {/* After the subsections, so it closes the section. */}
                 {slug === 'about' && i === 0 ? (
-                  <figure className="vd-story-photograph" data-vd-reveal>
-                    <Image
-                      src={`/journey/${DESTINATIONS[5].image}`}
-                      alt={DESTINATIONS[5].alt}
-                      width={1600}
-                      height={1200}
-                      sizes="(max-width:700px) 100vw, 60vw"
-                    />
+                  <InteriorScenicPhoto
+                    locale={locale}
+                    place={DESTINATIONS[5]}
+                    directoryShown={directoryShown}
+                    className="vd-story-photograph"
+                    image={
+                      <Image
+                        src={`/journey/${DESTINATIONS[5].image}`}
+                        alt={DESTINATIONS[5].alt}
+                        width={1600}
+                        height={1200}
+                        sizes="(max-width:700px) 100vw, 60vw"
+                      />
+                    }
+                  >
                     <figcaption>
                       {locale === 'ar' ? DESTINATIONS[5].ar : DESTINATIONS[5].name}
                     </figcaption>
-                  </figure>
+                  </InteriorScenicPhoto>
                 ) : null}
               </section>
             ),
           )}
           {/* A question the list did not answer (18 November 2026). */}
-          {faq ? <AskQuestionForm locale={locale} /> : null}
+          {(faq || (locale === 'en' && (slug === 'contact' || slug === 'advertise'))) && (
+            <AskQuestionForm locale={locale} topic={slug === 'contact' || slug === 'advertise' ? slug : 'faq'} />
+          )}
           <nav className="vd-story-next" aria-label={page.title}>
             <Link href={next.href} className="vd-button">
               {next.label}

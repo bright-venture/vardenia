@@ -40,12 +40,28 @@ import { isStaffUser } from '../access/index'
  * before any document is assembled.
  */
 
-/** Fields whose *order* is as sensitive as their value. */
+/**
+ * Fields whose *order* is as sensitive as their value: every staff-only field
+ * of a listing, a group's fields written as the dotted path `?sort=` takes.
+ * guardSort.test walks the collection and fails when one is missing.
+ */
 export const PROTECTED_SORT_FIELDS = [
   'contractStartsAt',
   'contractEndsAt',
   'salesOwner',
   'internalNotes',
+  'importBatch',
+  'commission.rate',
+  'commission.waivedUntil',
+  // What an owner typed into the public submission form.
+  'submission.status',
+  'submission.ownerName',
+  'submission.ownerEmail',
+  'submission.ownerPhone',
+  'submission.publicPhone',
+  'submission.website',
+  'submission.pageTemplate',
+  'submission.submittedAt',
 ] as const
 
 /** `sort` arrives as a string, a comma-joined string, or an array of either. */

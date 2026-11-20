@@ -1,14 +1,17 @@
 import { LinkArrow } from '../LinkArrow'
+import { MagazineSpread } from './MagazineSpread'
 import Image from 'next/image'
 import { Link } from '../../i18n/routing'
 export function MagazineArt({
   title,
   href = '/magazine',
   openLabel,
+  desktopIssueHref,
 }: {
   title: string
   /** Null when the magazine's pages are hidden (lib/hidden-pages): no link. */
   href?: string | null
+  desktopIssueHref?: string | null
   openLabel: string
 }) {
   const picture = (
@@ -24,6 +27,9 @@ export function MagazineArt({
   )
   return (
     <div className="vd-magazine-edition" data-vd-reveal>
+      {desktopIssueHref !== undefined && (
+        <MagazineSpread title="All Lebanon" pageLabel="Pages" desktopIssueHref={desktopIssueHref} />
+      )}
       {href ? (
         <Link
           href={href}

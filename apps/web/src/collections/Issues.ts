@@ -1,6 +1,15 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access/index'
+import { DEFAULT_LISTING_TOTAL, totalProblem } from '@vardenia/core'
 import { slugField } from '../fields/slug'
+
+/** Why the listing total cannot drop to this value, given the issue's ranges. */
+export function checkListingTotal(total: number, ranges: readonly { to: number }[]): string | null {
+  return totalProblem(
+    total,
+    ranges.reduce((high, r) => Math.max(high, r.to), 0),
+  )
+}
 
 /** A print edition. The digital archive and the QR attribution both hang off this. */
 export const Issues: CollectionConfig = {
@@ -11,6 +20,26 @@ export const Issues: CollectionConfig = {
     group: 'Magazine',
   },
   access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
+  hooks: {
+    beforeValidate: [
+      async ({ data, originalDoc, req }) => {
+        const total = data?.listingTotal
+        if (typeof total !== 'number' || originalDoc?.id === undefined || !req?.payload) return data
+        const ranges = await req.payload.find({
+          collection: 'listing-ranges',
+          where: { issue: { equals: originalDoc.id } },
+          limit: 0,
+          pagination: false,
+          depth: 0,
+          overrideAccess: true,
+        })
+        const problem = checkListingTotal(total, ranges.docs as unknown as { to: number }[])
+        // Public 400, so the admin shows the reason rather than a hidden 500.
+        if (problem) throw new APIError(problem, 400, null, true)
+        return data
+      },
+    ],
+  },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },
     slugField('title'),
@@ -35,6 +64,28 @@ export const Issues: CollectionConfig = {
       // or a competitor should be able to scrape while rates are being agreed.
       access: { read: isStaffFieldLevel },
       admin: { description: 'Copies printed. Used to compute scan rate per thousand copies.' },
+    },
+    {
+      name: 'listingTotal',
+      label: 'Listing numbers in this issue',
+      type: 'number',
+      // Not required: issues made before this field existed hold null, read as the default.
+      defaultValue: DEFAULT_LISTING_TOTAL,
+      min: 1,
+      admin: {
+        step: 1,
+        description:
+          'How many numbers the printed issue has. Each governorate takes a block of them under Listing number ranges.',
+      },
+    },
+    {
+      // Shows how much of the total the governorates' blocks cover; nothing
+      // stored. See components/admin/ListingAllocation.
+      name: 'listingAllocation',
+      type: 'ui',
+      admin: {
+        components: { Field: '/components/admin/ListingAllocation#ListingAllocation' },
+      },
     },
     {
       name: 'digitalEdition',

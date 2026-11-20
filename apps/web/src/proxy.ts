@@ -237,6 +237,9 @@ export default function proxy(request: NextRequest): NextResponse {
  * sign-up *page* wants the readable URL, and the two cannot share a path once
  * this file stops rewriting one of them into the other.
  *
+ * `/place-submissions/*` is JSON and multipart (the add-your-place submit and its
+ * number picker), so it is excluded like `/booking`.
+ *
  * # A dot means a file, except in a visit link
  *
  * `.*\.` keeps files (`/favicon.ico`, `/sitemap.xml`) out of locale routing.
@@ -248,7 +251,7 @@ export default function proxy(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

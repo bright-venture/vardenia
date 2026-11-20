@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { isStaffFieldLevel } from '../access/index'
+import { Businesses } from '../collections/Businesses'
 import { PROTECTED_SORT_FIELDS, protectedSortField, sortFields } from './guardSort'
 
 /**
@@ -72,5 +74,57 @@ describe('protectedSortField', () => {
 
   it('allows an absent sort', () => {
     expect(protectedSortField(undefined)).toBeNull()
+  })
+})
+
+/**
+ * The list is kept by hand, so a staff-only field added to listings later would
+ * be sortable by anyone until somebody remembered it. This walks the collection
+ * and fails on any field hidden by `read: isStaffFieldLevel` (on the field or on
+ * a group above it) that the guard does not know, in the dotted path form a
+ * caller would write in `?sort=`.
+ */
+describe('every staff-only listing field', () => {
+  type Loose = {
+    name?: string
+    type?: string
+    fields?: Loose[]
+    tabs?: { name?: string; fields: Loose[] }[]
+    access?: { read?: unknown }
+  }
+
+  const staffOnlyPaths = (fields: Loose[], prefix = '', hidden = false): string[] =>
+    fields.flatMap((f) => {
+      const here = hidden || f.access?.read === isStaffFieldLevel
+      if (f.tabs) {
+        return f.tabs.flatMap((tab) =>
+          staffOnlyPaths(tab.fields, tab.name ? `${prefix}${tab.name}.` : prefix, here),
+        )
+      }
+      if (f.fields) return staffOnlyPaths(f.fields, f.name ? `${prefix}${f.name}.` : prefix, here)
+      return f.name && here ? [`${prefix}${f.name}`] : []
+    })
+
+  /**
+   * Staff-only fields deliberately left sortable, each with the reason. Empty
+   * today: every one of them is as sensitive in order as in value.
+   */
+  const SORTABLE_ON_PURPOSE: Record<string, string> = {}
+
+  it('is protected from sorting', () => {
+    const paths = staffOnlyPaths(Businesses.fields as unknown as Loose[])
+    expect(paths).toContain('submission.ownerEmail')
+    const missing = paths.filter(
+      (path) =>
+        !(PROTECTED_SORT_FIELDS as readonly string[]).includes(path) &&
+        !(path in SORTABLE_ON_PURPOSE),
+    )
+    expect(missing).toEqual([])
+  })
+
+  it('is refused for the owner details, ascending and descending', () => {
+    expect(protectedSortField('submission.ownerEmail')).toBe('submission.ownerEmail')
+    expect(protectedSortField('-submission.ownerPhone')).toBe('submission.ownerPhone')
+    expect(protectedSortField('name,-submission.submittedAt')).toBe('submission.submittedAt')
   })
 })

@@ -123,7 +123,7 @@ export default async function SectionPage({ params, searchParams }: Props) {
   const t = await getTranslations('directory')
 
   return (
-    <main className="vd-category-page">
+    <main className="vd-category-page" data-section={section.path}>
       <PageHero
         title={nameFor(section, locale)}
         intro={sectionSummary(section, locale)}
@@ -222,83 +222,95 @@ async function SectionResults({
     ? Object.values(subcategoryCounts).reduce((sum, n) => sum + n, 0)
     : null
 
+  const emptyWeddings =
+    locale === 'en' && section.path === 'weddings' && !anyFilterApplied(state) && result?.totalDocs === 0
+
   return (
     <>
-      {/* The kinds of place, as filter tabs above the listings. */}
-      <SubcategoryTiles
-        base={base}
-        state={state}
-        subcategories={children}
-        counts={subcategoryCounts}
-        total={sectionTotal}
-        locale={locale}
-      />
+      {emptyWeddings && (
+        <section className="vd-weddings-empty" aria-labelledby="wedding-planners-title">
+          <h2 id="wedding-planners-title">Wedding planners</h2>
+          <p>No wedding planners are listed yet.</p>
+          <Link className="vd-text-link" href="/directory">Explore the directory <span aria-hidden>↗</span></Link>
+        </section>
+      )}
+      <div className={emptyWeddings ? 'vd-weddings-standard' : 'contents'}>
+        {/* The kinds of place, as filter tabs above the listings. */}
+        <SubcategoryTiles
+          base={base}
+          state={state}
+          subcategories={children}
+          counts={subcategoryCounts}
+          total={sectionTotal}
+          locale={locale}
+        />
 
-      {/*
-        The result count. It used to share this row with a List/Map toggle; the
-        map was removed before launch because no listing carries coordinates.
-      */}
-      <div className="mt-3">
-        {/* Hidden at zero: the empty state below says the same sentence. */}
-        {total > 0 ? (
-          <p className="text-ink-500 font-mono text-sm tabular-nums">
-            {t('resultCount', { count: total })}
-          </p>
+        {/*
+          The result count. It used to share this row with a List/Map toggle; the
+          map was removed before launch because no listing carries coordinates.
+        */}
+        <div className="mt-3">
+          {/* Hidden at zero: the empty state below says the same sentence. */}
+          {total > 0 ? (
+            <p className="text-ink-500 font-mono text-sm tabular-nums">
+              {t('resultCount', { count: total })}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Only where something here can be booked. Lifestyle, and Cafes, Pools,
+            Nightlife, Festivals and Historic Sites, are listed and advertised but
+            never booked, so asking for a date there promises an answer nobody can
+            give. See bookable in core/taxonomy. */}
+        {(
+          state.subcategory
+            ? isBookableSubcategory(state.subcategory)
+            : categoryTakesBookings(section.category)
+        ) ? (
+          <TripBar base={base} state={state} locale={locale} section={section.path} />
         ) : null}
+
+        <ListingFilters
+          base={base}
+          state={state}
+          locale={locale}
+          counts={counts}
+          areas={areas}
+          areaCounts={areaCounts}
+        />
+
+        <ListingGrid
+          listings={result?.docs ?? []}
+          locale={locale}
+          // A section page is a results page: the grid starts near the top.
+          eager
+          trip={state.trip}
+          verdicts={verdicts}
+          empty={t('resultCount', { count: 0 })}
+          // Says which way out exists, rather than restating the problem. See
+          // ui/EmptyState: the title is what happened, the body is what to do.
+          emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+          emptyAction={
+            anyFilterApplied(state) ? (
+              <Link
+                href={filterHref(base, { amenities: [], trip: state.trip }, {})}
+                prefetch={false}
+                rel="nofollow"
+                className={LINK}
+              >
+                {t('clearFilters')}
+              </Link>
+            ) : null
+          }
+        />
+
+        <Pagination
+          className="mt-12"
+          page={result?.page ?? 1}
+          totalPages={result?.totalPages ?? 1}
+          href={pageHref}
+        />
       </div>
-
-      {/* Only where something here can be booked. Lifestyle, and Cafes, Pools,
-          Nightlife, Festivals and Historic Sites, are listed and advertised but
-          never booked, so asking for a date there promises an answer nobody can
-          give. See bookable in core/taxonomy. */}
-      {(
-        state.subcategory
-          ? isBookableSubcategory(state.subcategory)
-          : categoryTakesBookings(section.category)
-      ) ? (
-        <TripBar base={base} state={state} locale={locale} section={section.path} />
-      ) : null}
-
-      <ListingFilters
-        base={base}
-        state={state}
-        locale={locale}
-        counts={counts}
-        areas={areas}
-        areaCounts={areaCounts}
-      />
-
-      <ListingGrid
-        listings={result?.docs ?? []}
-        locale={locale}
-        // A section page is a results page: the grid starts near the top.
-        eager
-        trip={state.trip}
-        verdicts={verdicts}
-        empty={t('resultCount', { count: 0 })}
-        // Says which way out exists, rather than restating the problem. See
-        // ui/EmptyState: the title is what happened, the body is what to do.
-        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
-        emptyAction={
-          anyFilterApplied(state) ? (
-            <Link
-              href={filterHref(base, { amenities: [], trip: state.trip }, {})}
-              prefetch={false}
-              rel="nofollow"
-              className={LINK}
-            >
-              {t('clearFilters')}
-            </Link>
-          ) : null
-        }
-      />
-
-      <Pagination
-        className="mt-12"
-        page={result?.page ?? 1}
-        totalPages={result?.totalPages ?? 1}
-        href={pageHref}
-      />
     </>
   )
 }

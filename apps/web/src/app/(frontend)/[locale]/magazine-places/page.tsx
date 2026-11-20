@@ -3,13 +3,15 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { PageHero } from '../../../../components/editorial/PageHero'
+import { PlaceSubmissionForm } from '../../../../components/places/PlaceSubmissionForm'
 
 /**
  * Where businesses book a place in the printed magazine (19 November 2026).
  * Reached from its own QR code (target "The magazine places page").
  *
- * A first version: the magazine viewer and the request form are empty frames
- * for now, decided with the team. Requests are kept in the admin under
+ * The magazine viewer is still an empty frame (a teammate's part). The form is
+ * the "add your place" submission (components/places): it creates a draft
+ * listing with a reserved page number, for the team to review. Requests are kept in the admin under
  * Magazine > Magazine place requests (Draft, Published, Rejected, Expired).
  * Not in the sitemap and not indexed: it is for businesses holding the code.
  */
@@ -48,10 +50,8 @@ export default async function MagazinePlacesPage({ params }: Props) {
           <h2 id="places-form" className="font-display text-ink-900 text-2xl">
             {t('formTitle')}
           </h2>
-          {/* The request form will go here. */}
-          <div className="border-ink-100 bg-surface-raised text-ink-500 mt-4 flex min-h-[280px] items-center justify-center border p-6 text-center text-sm">
-            {t('formSoon')}
-          </div>
+          {/* The page preview sits at the top of the form; see PlaceSubmissionForm. */}
+          <PlaceSubmissionForm locale={locale as Locale} />
         </section>
       </div>
     </main>
