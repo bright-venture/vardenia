@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook, CollectionConfig } from 'payload'
 import { AREA_SLUG } from '@vardenia/core'
-import { anyone, isStaff } from '../access/index'
+import { anyone, isAdmin, isStaff } from '../access/index'
 import { governorateOptions } from './options'
 import { clearListingsCache } from '../hooks/revalidateListings'
 
@@ -36,7 +36,9 @@ export const Areas: CollectionConfig = {
     description:
       'Neighbourhoods and towns guests filter by (Achrafieh, Faraya). Each belongs to one region.',
   },
-  access: { read: anyone, create: isStaff, update: isStaff, delete: isStaff },
+  // Deleting an area is permanent and listings filter on it: admin only
+  // (20 November 2026, auth audit step 6).
+  access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
   hooks: { afterChange: [clearAreas] },
   fields: [
     { name: 'name', type: 'text', required: true, localized: true, maxLength: 80 },

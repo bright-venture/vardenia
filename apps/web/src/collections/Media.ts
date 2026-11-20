@@ -1,5 +1,5 @@
 import type { Access, CollectionConfig } from 'payload'
-import { anyone, isStaff, isStaffUser, ownedBusinessIds } from '../access/index'
+import { anyone, isAdmin, isStaff, isStaffUser, ownedBusinessIds } from '../access/index'
 import { blockMediaInUse } from '../hooks/blockMediaInUse'
 import { unguessableFilename } from '../hooks/unguessableFilename'
 import { PHOTO_MAX_BYTES, limitUploadSize } from '../hooks/limitUploadSize'
@@ -30,7 +30,9 @@ export const Media: CollectionConfig = {
     read: anyone,
     create: staffOrPartner,
     update: isStaff,
-    delete: isStaff,
+    // A photo may be on a live listing or article, and deleting removes the
+    // file for good: admin only (20 November 2026, auth audit step 6).
+    delete: isAdmin,
   },
   hooks: {
     // Renames every upload before it is stored, so a file cannot be reached by

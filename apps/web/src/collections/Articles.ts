@@ -1,5 +1,5 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
-import { isStaff, publishedOrStaff } from '../access/index'
+import { isAdmin, isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { protectArticleWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { seoField } from '../fields/seo'
@@ -53,7 +53,8 @@ export const Articles: CollectionConfig = {
     create: isStaff,
     update: isStaff,
 
-    delete: isStaff,
+    // A permanent delete with no trash: admin only (20 November 2026, auth audit step 6).
+    delete: isAdmin,
   },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },
