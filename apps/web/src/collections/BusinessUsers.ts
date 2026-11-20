@@ -10,6 +10,7 @@ import {
 } from '../access/index'
 import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
+import { enforcePasswordRule } from '../hooks/enforcePasswordRule'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
@@ -72,6 +73,8 @@ export const BusinessUsers: CollectionConfig = {
   },
 
   hooks: {
+    // One password rule for every path that sets one. hooks/enforcePasswordRule.
+    beforeValidate: [enforcePasswordRule],
     /**
      * A new partner is sent a link to choose their own password.
      *

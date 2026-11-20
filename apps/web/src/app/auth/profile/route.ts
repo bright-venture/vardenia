@@ -59,6 +59,9 @@ const passwordSchema = z
   .string()
   .min(10, 'Use at least 10 characters.')
   .max(200, 'That is longer than we can store.')
+  // As at sign-up: spaces alone do not count. Ten spaces were accepted here
+  // and then refused at sign-in, locking the customer out (20 November 2026).
+  .refine((value) => value.trim().length >= 10, 'Use at least 10 characters.')
 
 const bodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('name'), name: nameSchema }),

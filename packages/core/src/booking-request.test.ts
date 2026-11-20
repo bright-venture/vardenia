@@ -5,6 +5,7 @@ import {
   fieldErrors,
   resetPasswordSchema,
   signupSchema,
+  passwordProblem,
 } from './booking-request'
 import { LOCALE_CODES } from './locales'
 
@@ -377,5 +378,14 @@ describe('bookingRequestSchema requestId', () => {
     ]) {
       expect(bookingRequestSchema.safeParse({ ...VALID, requestId }).success, requestId).toBe(false)
     }
+  })
+})
+
+describe('passwordProblem', () => {
+  it('is the same rule as sign-up, as a plain check', () => {
+    expect(passwordProblem('Faraya-2026')).toBeNull()
+    expect(passwordProblem('abc')).toBe('must be at least 10 characters')
+    expect(passwordProblem('          ')).toBe('must be at least 10 characters')
+    expect(passwordProblem(undefined)).not.toBeNull()
   })
 })

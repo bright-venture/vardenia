@@ -10,6 +10,7 @@ import {
 } from '@payloadcms/next/routes'
 import { withApiLimits } from '../../../../lib/api-limits'
 import { sameAnswerForForgotPassword } from '../../../../lib/forgot-password'
+import { passwordRuleOnReset } from '../../../../lib/password-rule'
 import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
 
 /**
@@ -92,7 +93,11 @@ export const GET = guardRead(REST_GET(config))
 // Forgot password answers the same whether or not the email could be sent, so
 // it never reveals which addresses have an account. See lib/forgot-password.
 export const POST = guardWrite(
-  sameAnswerForForgotPassword(withApiLimits(REST_POST(config) as never) as never),
+  // The password rule on the built-in reset, which skips collection hooks.
+  // See lib/password-rule.
+  passwordRuleOnReset(
+    sameAnswerForForgotPassword(withApiLimits(REST_POST(config) as never) as never),
+  ),
 )
 export const DELETE = guardWrite(REST_DELETE(config))
 export const PATCH = guardWrite(REST_PATCH(config))

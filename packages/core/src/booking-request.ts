@@ -186,12 +186,24 @@ export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
  * the other is not a floor: anybody could sign up, immediately reset, and land
  * below it.
  */
-const accountPassword = z
+/**
+ * The password rule for every account: customers, partners and the team
+ * (20 November 2026). Used by the site's forms and, on the server, by
+ * hooks/enforcePasswordRule and the built-in reset guard, so no path can set a
+ * password that breaks it.
+ */
+export const accountPassword = z
   .string()
   .min(10, 'must be at least 10 characters')
   .max(200, 'too long')
   // A password of only spaces satisfies a length check and nothing else.
   .refine((value) => value.trim().length >= 10, 'must be at least 10 characters')
+
+/** The same rule as a plain check: null when the password is fine, else why not. */
+export function passwordProblem(value: unknown): string | null {
+  const result = accountPassword.safeParse(value)
+  return result.success ? null : (result.error.issues[0]?.message ?? 'is not allowed')
+}
 
 /**
  * Opening an account from the site.
