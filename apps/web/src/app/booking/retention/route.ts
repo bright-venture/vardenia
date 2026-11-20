@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const payload = await getPayload({ config })
     const result = await applyRetention(payload, { dryRun })
     if (result.failed > 0) {
-      await reportError(new Error(`${result.failed} old booking(s) could not be cleared`), {
+      await reportError(new Error('Retention could not clear old receipts'), {
         source: 'booking.retention',
         level: 'warning',
         extra: { ...result },

@@ -74,7 +74,12 @@ describe('closeCustomerAccount', () => {
     const dbWrites: Record<string, unknown>[] = []
 
     const payload = {
-      find: vi.fn(async () => ({ docs: bookings, totalDocs: bookings.length })),
+      find: vi.fn(async ({ collection }: { collection: string }) =>
+        collection === 'bookings'
+          ? { docs: bookings, totalDocs: bookings.length }
+          : { docs: [], totalDocs: 0 },
+      ),
+      findByID: vi.fn(async () => ({ id: 7, email: 'sami@example.com' })),
       update: vi.fn(async (args: Record<string, unknown>) => {
         calls.push(args)
         return {}
@@ -142,6 +147,7 @@ describe('closing an account ends every session', () => {
     const dbWrites: Record<string, unknown>[] = []
     const payload = {
       find: vi.fn(async () => ({ docs: [], totalDocs: 0 })),
+      findByID: vi.fn(async () => ({ id: 7, email: 'sami@example.com' })),
       update: vi.fn(async () => ({})),
       delete: vi.fn(async () => ({})),
       db: {
@@ -159,6 +165,89 @@ describe('closing an account ends every session', () => {
     expect(dbWrites[0]).toMatchObject({ collection: 'customers', id: 7 })
     expect((dbWrites[0]?.data as { sessions?: unknown[] })?.sessions).toEqual([])
   })
+})
+
+/**
+ * Everything else the person left with us (20 November 2026). Bookings stay as
+ * anonymous records; these are theirs alone.
+ */
+describe('closing an account removes the rest of what is personal', () => {
+  function world(failOn?: string) {
+    const rows: Record<string, Record<string, unknown>[]> = {
+      bookings: [],
+      receipts: [{ id: 41 }, { id: 42 }],
+      'staff-requests': [{ id: 51 }],
+      'guest-questions': [
+        { id: 61, email: 'Sami@Example.com' },
+        { id: 62, email: 'notsami@example.com' },
+      ],
+    }
+    const updates: Record<string, unknown>[] = []
+    const deletes: Record<string, unknown>[] = []
+    const payload = {
+      find: vi.fn(async ({ collection }: { collection: string }) => {
+        const docs = rows[collection] ?? []
+        return { docs, totalDocs: docs.length }
+      }),
+      findByID: vi.fn(async () => ({ id: 7, email: 'sami@example.com' })),
+      update: vi.fn(async (args: Record<string, unknown>) => {
+        if (args.collection === failOn) throw new Error('down')
+        updates.push(args)
+        return {}
+      }),
+      delete: vi.fn(async (args: Record<string, unknown>) => {
+        if (args.collection === failOn) throw new Error('down')
+        deletes.push(args)
+        return {}
+      }),
+      db: {
+        findOne: vi.fn(async () => ({ id: 7, sessions: [] })),
+        updateOne: vi.fn(async () => ({})),
+      },
+    } as unknown as Payload
+    return { payload, updates, deletes }
+  }
+
+  it("deletes the receipts and their photos, without re-reading the bookings' billing", async () => {
+    const { payload, deletes } = world()
+    await closeCustomerAccount(payload, 7)
+    const receipts = deletes.filter((d) => d.collection === 'receipts')
+    expect(receipts.map((d) => d.id)).toEqual([41, 42])
+    for (const d of receipts) expect(d.context).toEqual({ retention: true })
+  })
+
+  it('deletes their reviews', async () => {
+    const { payload, deletes } = world()
+    await closeCustomerAccount(payload, 7)
+    const reviews = deletes.find((d) => d.collection === 'reviews')
+    expect((reviews?.where as { customer?: { equals?: unknown } })?.customer?.equals).toBe(7)
+  })
+
+  it('keeps an Event Staff request but erases who sent it', async () => {
+    const { payload, updates } = world()
+    await closeCustomerAccount(payload, 7)
+    const request = updates.find((u) => u.collection === 'staff-requests')
+    expect(request?.id).toBe(51)
+    const data = request?.data as Record<string, unknown>
+    expect(data).toMatchObject({ name: 'Closed account', phone: null, notes: null })
+    expect(String(data.email)).toMatch(/@removed\.invalid$/)
+  })
+
+  it('deletes their questions, matched on the exact address whatever its case', async () => {
+    const { payload, deletes } = world()
+    await closeCustomerAccount(payload, 7)
+    const questions = deletes.filter((d) => d.collection === 'guest-questions')
+    expect(questions.map((d) => d.id)).toEqual([61])
+  })
+
+  it.each(['receipts', 'reviews', 'staff-requests', 'guest-questions'])(
+    'does not anonymise the account when %s cannot be cleared',
+    async (collection) => {
+      const { payload, updates } = world(collection)
+      await expect(closeCustomerAccount(payload, 7)).rejects.toThrow(/was not closed/)
+      expect(updates.find((u) => u.collection === 'customers')).toBeUndefined()
+    },
+  )
 })
 
 describe('isClosed', () => {

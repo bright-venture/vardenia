@@ -66,7 +66,7 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-10'
+export const LEGAL_LAST_UPDATED = '2026-11-20'
 
 /**
  * Who runs the site, as both documents state it.
@@ -213,7 +213,7 @@ function englishPrivacyPolicy(): LegalDocument {
           '- **It is optional.** Leave it blank and your booking request is exactly the same. You can always tell the place in person instead.',
           '- **If you write in it, you tick a box to agree** that Vardenia and the place may use what you wrote, including any health information, only to arrange that visit. The box is never ticked for you, and notes are not sent without it.',
           '- **Who receives it.** The place you are booking with, and the Vardenia team. Nobody else.',
-          '- **How long it is kept.** With the booking, for 12 months after the visit.',
+          '- **How long it is kept.** With the booking, while your account is open. When you close your account, your notes are deleted.',
           '- **Your rights.** You can ask us to show you what you wrote, to correct it, or to delete it.',
           'Please only write what you are comfortable sharing with that place.',
         ],
@@ -228,7 +228,7 @@ function englishPrivacyPolicy(): LegalDocument {
           '- **Reading it automatically.** When you choose the photo, the total, the receipt number, the date and the name of the place can be read from it by an automated service, so you only have to check the figure. You can always correct the total before sending, and nothing is decided about you from it.',
           '- **Each receipt counts once.** The receipt number is read so that the same receipt cannot be sent twice for the same place. A receipt that has already been sent is refused.',
           '- **Who sees your answer.** The Vardenia team. If it disagrees with what the business recorded, we may tell the business that the visit is disputed while we look into it.',
-          '- **How long it is kept.** The receipt, what was read from it, and the amount you gave are kept for 12 months after the visit. That you came stays with the visit, for your passport.',
+          '- **How long it is kept.** The receipt and what was read from it are kept until you close your account, when they are deleted. The amount stays with the booking as the record of what the business was billed, without your name.',
         ],
       },
 
@@ -290,19 +290,19 @@ function englishPrivacyPolicy(): LegalDocument {
         heading: 'How long we keep it',
         body: [
           'Only as long as it is needed for the reason we hold it.',
-          '- **Bookings**, including your notes: 12 months after the visit. A booking that became a visit is then cut down to the place, the date, the size of your party and that you came, so its stamp stays in your passport until you close your account.',
-          '- **Receipts**, what was read from them, and the amount you gave after a visit: 12 months after the visit.',
+          '- **Bookings**: kept as the record of each visit. While your account is open, a booking includes your notes and receipts. When you close your account, your name, contact details, notes, receipts and what was read from them are deleted, and the booking stays only as an anonymous record (the place, the date, the size of your party, its status and the amounts), which can no longer be linked to you.',
+          '- **Receipts** and what was read from them: until you close your account.',
           '- **Records of printed-code scans**: 12 months.',
           '- **Error records**: 90 days.',
           '- **Your account**: until you close it.',
-          '- **Reviews**: while they are published, or until you ask us to take one down.',
+          '- **Reviews**: while they are published, until you ask us to take one down, or until you close your account.',
+          '- **Questions you send from the Questions page**: until you close your account. **Event Staff requests** are kept as a record of the event, without your name or contact details once you close your account.',
           /**
            * Ten years: the period Lebanese commercial and tax law sets for a
            * business's accounting records, settled by the owner on 9 November
            * 2026. A bill line holds the booking reference, the day and the
            * amounts (collections/Statements), never a guest's name, so keeping
-           * bills this long keeps nothing personal beyond the booking's own
-           * 12 months.
+           * bills this long keeps nothing personal.
            */
           '- **Messages you send us** by email or on WhatsApp: as long as we need them to answer you and follow up.',
           "- **Monthly bills to businesses**: ten years, as Lebanese law requires for a business's accounting records. A bill lists each visit by its booking reference, date and amount, never by a guest's name.",
