@@ -29,16 +29,30 @@ const idOf = (value: unknown): number | string | null => {
  * Rejecting releases its number (hooks/releaseListingNumber), and the printed
  * number of a live page must not become free for the next owner. Checked on
  * every update, against the merged state after the save.
+ *
+ * Rejected is final (20 November 2026, as decided for magazine places on 19
+ * November): it cannot be set back to pending, approved or expired. Reopening
+ * used to be allowed, and a reopened submission went live with no listing
+ * number, since rejecting had released it. The business sends a new request.
  */
 export const refusePublishingRejected: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
+  const before = (originalDoc?.submission as Submission | undefined)?.status
+  const asked = (data?.submission as Submission | undefined)?.status
+  if (before === 'rejected' && asked !== undefined && asked !== 'rejected') {
+    throw new APIError(
+      'This submission was rejected, and a rejection is final. The business can send a new request from the Magazine Places page.',
+      400,
+      null,
+      true,
+    )
+  }
+
   const published = (data?._status ?? originalDoc?._status) === 'published'
-  const status =
-    (data?.submission as Submission | undefined)?.status ??
-    (originalDoc?.submission as Submission | undefined)?.status
+  const status = asked ?? before
   if (!published || status !== 'rejected') return data
   if (originalDoc?._status !== 'published') {
     throw new APIError(
-      'This submission was rejected, so it cannot be published. Set its review status back to pending first.',
+      'This submission was rejected, so it cannot be published. A rejection is final: the business can send a new request.',
       400,
       null,
       true,
@@ -50,6 +64,46 @@ export const refusePublishingRejected: CollectionBeforeValidateHook = ({ data, o
     null,
     true,
   )
+}
+
+/**
+ * A listing that came through the form needs a contract end date to be
+ * published (20 November 2026, auth audit step 7).
+ *
+ * Without one it never expires: lib/contract-lapse hides a listing only once
+ * its contract has ended. An end date already more than a day past is refused
+ * too, because the daily job would hide the listing again the next morning.
+ * Only on the move to Published, so a renewal (new date, publish again) works,
+ * and only for submitted listings, so older listings without a contract can
+ * still be saved.
+ */
+export const requireContractToPublish: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
+  const publishing = data?._status === 'published' && originalDoc?._status !== 'published'
+  if (!publishing) return data
+  const submission = {
+    ...((originalDoc?.submission as Submission | undefined) ?? {}),
+    ...((data?.submission as Submission | undefined) ?? {}),
+  }
+  if (!submission.ownerEmail) return data
+
+  const ends = data?.contractEndsAt ?? originalDoc?.contractEndsAt
+  if (!ends) {
+    throw new APIError(
+      'Set the contract end date (Commercial tab) before publishing this listing.',
+      400,
+      null,
+      true,
+    )
+  }
+  if (new Date(String(ends)).getTime() < Date.now() - 24 * 60 * 60 * 1000) {
+    throw new APIError(
+      'The contract end date has passed. Set the new end date before publishing.',
+      400,
+      null,
+      true,
+    )
+  }
+  return data
 }
 
 /**

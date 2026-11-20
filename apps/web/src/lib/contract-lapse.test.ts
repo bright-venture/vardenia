@@ -52,6 +52,31 @@ describe('hiding lapsed listings', () => {
     expect(update).not.toHaveBeenCalled()
   })
 
+  it('marks a listing that came through the form as Expired, keeping its submission', async () => {
+    const submission = { status: 'approved', ownerEmail: 'owner@example.com', ownerName: 'Rana' }
+    const update = vi.fn(async () => ({}))
+    const payload = {
+      find: vi.fn(async () => ({
+        docs: [
+          { id: 7, submission },
+          { id: 8, submission: {} },
+        ],
+      })),
+      update,
+      logger: { error: vi.fn() },
+    } as unknown as Payload
+    await hideLapsedListings(payload)
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 7,
+        data: { _status: 'draft', submission: { ...submission, status: 'expired' } },
+      }),
+    )
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 8, data: { _status: 'draft' } }),
+    )
+  })
+
   it('carries on past one that fails', async () => {
     const { payload, update } = fake([4, 9])
     update.mockRejectedValueOnce(new Error('locked'))

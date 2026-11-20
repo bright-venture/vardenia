@@ -51,6 +51,8 @@ export const PROTECTED_SORT_FIELDS = [
   'salesOwner',
   'internalNotes',
   'importBatch',
+  // Draft / Published / Rejected / Expired: tells a reader whose contract ended.
+  'state',
   'commission.rate',
   'commission.waivedUntil',
   // What an owner typed into the public submission form.

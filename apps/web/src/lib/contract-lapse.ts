@@ -55,7 +55,7 @@ export async function hideLapsedListings(
     depth: 0,
     limit: 0,
     overrideAccess: true,
-    select: { slug: true },
+    select: { slug: true, submission: true },
   })
 
   if (dryRun) return { hidden: docs.length, failed: 0 }
@@ -64,10 +64,17 @@ export async function hideLapsedListings(
   let failed = 0
   for (const doc of docs) {
     try {
+      // A listing that came through the form is also marked Expired, so the
+      // admin tells it apart from a new draft (20 November 2026). Publishing
+      // again with a new end date makes it Approved.
+      const submission = (doc as { submission?: { ownerEmail?: unknown } | null }).submission
       await payload.update({
         collection: 'businesses',
         id: doc.id,
-        data: { _status: 'draft' },
+        data: {
+          _status: 'draft',
+          ...(submission?.ownerEmail ? { submission: { ...submission, status: 'expired' } } : {}),
+        } as never,
         depth: 0,
         overrideAccess: true,
       })

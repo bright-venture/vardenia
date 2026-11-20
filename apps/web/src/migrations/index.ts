@@ -69,6 +69,7 @@ import * as migration_20261118_084619_booking_children from './20261118_084619_b
 import * as migration_20261118_094623_guest_questions from './20261118_094623_guest_questions'
 import * as migration_20261119_090456_magazine_places from './20261119_090456_magazine_places'
 import * as migration_20261119_131549_business_submissions from './20261119_131549_business_submissions'
+import * as migration_20261120_131807_remove_place_requests_add_expired from './20261120_131807_remove_place_requests_add_expired'
 
 export const migrations = [
   {
@@ -425,5 +426,10 @@ export const migrations = [
     up: migration_20261119_131549_business_submissions.up,
     down: migration_20261119_131549_business_submissions.down,
     name: '20261119_131549_business_submissions',
+  },
+  {
+    up: migration_20261120_131807_remove_place_requests_add_expired.up,
+    down: migration_20261120_131807_remove_place_requests_add_expired.down,
+    name: '20261120_131807_remove_place_requests_add_expired',
   },
 ]
