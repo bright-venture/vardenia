@@ -153,6 +153,32 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
       : nextFreeNumber(siblings.docs as unknown as NumberRange[])
   if (data && typeof data.from !== 'number') data.from = from
 
+  /*
+   * Moving a range to another governorate or issue (21 November 2026, auth
+   * audit step 8). The checks below look at the range's new place, so the
+   * numbers listings hold in its old place were left outside any range. A
+   * range whose old place still has numbers in use stays where it is.
+   */
+  if (operation === 'update' && originalDoc) {
+    const oldIssue = idOf(originalDoc.issue)
+    const oldGovernorate = originalDoc.governorate as string | undefined
+    const moved =
+      oldIssue !== null &&
+      oldGovernorate !== undefined &&
+      (String(oldIssue) !== String(issueId) || oldGovernorate !== merged.governorate)
+    if (moved) {
+      const stranded = await heldNumbers(payload, oldIssue, oldGovernorate, req)
+      if (stranded.length > 0) {
+        throw new APIError(
+          `Listings in ${oldGovernorate} already hold ${[...stranded].sort((a, b) => a - b).join(', ')} in this range. Give them other numbers before moving it.`,
+          400,
+          null,
+          true,
+        )
+      }
+    }
+  }
+
   const held =
     operation === 'update' ? await heldNumbers(payload, issueId, merged.governorate, req) : []
 
