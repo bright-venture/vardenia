@@ -40,18 +40,16 @@ These make the PRD describe what the product really does.
 
 ### 2. Decisions waiting for you
 
-- **Two-step sign-in for the team** (step 10): decided 21 November 2026, Cloudflare Access in front of `/admin` and `/api/users`; the steps are in `docs/CLOUDFLARE-ACCESS-ADMIN.md`. Left: refuse `/admin` and `/api/users` on Netlify's own `*.netlify.app` addresses, which skip Cloudflare (small code change, proposed).
-
 ### 3. Settings for you (no code)
 
 - **Netlify, Branch deploys: add `RESEND_API_KEY`** (step 10): without it staging writes emails to the server log, so staging sign-ups cannot be verified and invitations and resets never arrive.
 - **Netlify, Branch deploys: add `TURNSTILE_SECRET_KEY`, and the staging address in the Turnstile widget in Cloudflare** (step 10): staging shows the anti-bot box but nothing checks it.
 - **After the release, in the live admin: set All Lebanon's total to 408 and enter the seven ranges** (steps 8 and 10): the live database gets the tables from the migration, but not the numbers.
-- **Set up Cloudflare Access** following `docs/CLOUDFLARE-ACCESS-ADMIN.md` (step 10).
 - **In a few weeks, DMARC from `p=none` to `p=quarantine`** (step 10): today fake emails claiming to come from vardenia.com are only reported, not blocked; read the reports first.
 
 ### 4. Later or in progress
 
+- **Two-step sign-in for the team** (step 10): postponed 21 November 2026 (Cloudflare's free plan needs a card authorisation for usage beyond free limits). The steps are ready in `docs/CLOUDFLARE-ACCESS-ADMIN.md`. When it is set up, also make the site refuse `/admin` and `/api/users` on Netlify's own `*.netlify.app` addresses, which skip Cloudflare. Until then the team signs in with a password alone.
 - **Partner listing editing** (step 5, being built): when it lands, re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
 - **"Add another listing" button for partners** (step 10): today a partner adds a business by using the form again with the same email, which works.
 - **Google and Apple sign-in** (step 10): decide with the mobile app; Apple requires Sign in with Apple if the iPhone app offers Google.
