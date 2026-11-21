@@ -2,9 +2,12 @@
  * Google Maps links: which ones a listing may store, and the point they carry.
  *
  * One pure module for the server (the `mapUrl` field validation and the hook
- * that fills `location`), the partner guard and the admin's paste box, so the
- * three can never disagree about what a link means. Nothing here touches the
- * network: a short link is recognised and kept as it is, never opened.
+ * that fills `location`), the partner guard and the branch endpoint, so they
+ * can never disagree about what a link means. The admin's paste box
+ * (components/admin/MapsLinkField) keeps its own parser, web lib/maps-paste,
+ * as it was before Task 4, and refuses a point outside Lebanon with the same
+ * isWithinLebanon. Nothing here touches the network: a short link is
+ * recognised and kept as it is, never opened.
  *
  * # Which links are accepted
  *
@@ -25,10 +28,20 @@
  *   33.8938, 35.5018                                                copied numbers
  *
  * The pin (!3d/!4d) wins over the centre (@): a place link is centred on the
- * map view, which can be a street away from the place. Latitude is -90..90 and
- * longitude -180..180; whether it is in Lebanon is not checked, a listing may
- * be anywhere.
+ * map view, which can be a street away from the place. parseMapsLink itself
+ * reads any latitude (-90..90) and longitude (-180..180).
+ *
+ * # Lebanon is the one rule for a point
+ *
+ * A point a listing stores must lie within Lebanon, by isWithinLebanon in
+ * ./regions (Task 4b, restoring the rule the listing field had before Task 4).
+ * isValidPoint applies it, and mapsUrlProblem refuses a link whose coordinates
+ * fall outside it, so the listing field, the partner guard, the branch endpoint
+ * and the hook that fills `location` from `mapUrl` all agree. A link with no
+ * coordinates (a short link, a place name) is not judged: it names no point.
  */
+
+import { isWithinLebanon } from './regions'
 
 export type MapsLinkResult =
   { ok: true; lat: number; lng: number } | { ok: false; reason: 'short-link' | 'no-coordinates' }
@@ -66,6 +79,9 @@ export function parseMapsLink(input: string): MapsLinkResult {
 }
 
 const MAX_LENGTH = 2000
+
+/** Shown on the link box; the same words as the admin's paste box (MapsLinkField). */
+export const OUTSIDE_LEBANON_LINK = 'That link points outside Lebanon. Check it is the right place.'
 
 /**
  * Whether a normalised host and path are one of the accepted Google Maps
@@ -109,13 +125,19 @@ export function mapsUrlProblem(value: string): string | null {
     return fail
   }
   if (url.protocol !== 'https:' || url.username || url.password || url.port) return fail
-  return onMapsHost(url.hostname.toLowerCase(), url.pathname.toLowerCase()) ? null : fail
+  if (!onMapsHost(url.hostname.toLowerCase(), url.pathname.toLowerCase())) return fail
+  // The one rule for a point: a link that names coordinates outside Lebanon is
+  // refused here, so its point is never written to `location`.
+  const parsed = parseMapsLink(text)
+  if (parsed.ok && !isWithinLebanon(parsed.lat, parsed.lng)) return OUTSIDE_LEBANON_LINK
+  return null
 }
 
 /**
  * The point a valid link names, as Payload stores it: [longitude, latitude].
- * Null for a refused link, a short link, or a link with no coordinates, in
- * which case the listing's location is left as it is.
+ * Null for a refused link (including one pointing outside Lebanon), a short
+ * link, or a link with no coordinates, in which case the listing's location is
+ * left as it is.
  */
 export function pointFromMapsUrl(value: string): [number, number] | null {
   if (mapsUrlProblem(value) !== null) return null
@@ -125,7 +147,8 @@ export function pointFromMapsUrl(value: string): [number, number] | null {
 
 /**
  * A point as Payload stores it: [longitude, latitude], two finite numbers (a
- * numeric string is what a form posts) within -180..180 and -90..90.
+ * numeric string is what a form posts) that lie within Lebanon
+ * (isWithinLebanon). The one check for a stored point.
  */
 export function isValidPoint(value: unknown): boolean {
   if (!Array.isArray(value) || value.length !== 2) return false
@@ -136,7 +159,5 @@ export function isValidPoint(value: unknown): boolean {
         ? Number(part)
         : NaN,
   )
-  return (
-    Number.isFinite(lng) && Number.isFinite(lat) && Math.abs(lat!) <= 90 && Math.abs(lng!) <= 180
-  )
+  return Number.isFinite(lng) && Number.isFinite(lat) && isWithinLebanon(lat!, lng!)
 }

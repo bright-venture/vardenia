@@ -26,6 +26,7 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
+import { SHOW_LOCATION } from '../../../../../lib/location-display'
 import { hasMapTarget, mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
@@ -163,8 +164,10 @@ export default async function ListingPage({ params }: Params) {
     can(tierOf(listing.tier), 'galleryLimit'),
   )
   const place = placeLabel(listing.governorate, listing.district, locale as Locale)
+  // The area, the address and both map links follow the switch; see
+  // lib/location-display. `place` is still computed for the related listings.
   // Blank counts as none: spaces alone must not draw an empty address row.
-  const address = listing.address?.trim() || null
+  const address = SHOW_LOCATION ? listing.address?.trim() || null : null
   const open = isOpenNow(listing.openingHours as never)
 
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
@@ -338,7 +341,7 @@ export default async function ListingPage({ params }: Params) {
             </Suspense>
 
             <Eyebrow inverse>
-              {[categoryLabel(listing.category, locale as Locale), place]
+              {[categoryLabel(listing.category, locale as Locale), SHOW_LOCATION ? place : null]
                 .filter(Boolean)
                 .join(' · ')}
             </Eyebrow>
@@ -437,10 +440,12 @@ export default async function ListingPage({ params }: Params) {
               </p>
             ) : null}
 
-            {/* Directions sit beside Save (always), and only when the listing has
-              a point, a map link or an address to send the reader to. */}
+            {/* Directions sit beside Save (always), only while locations are
+              shown (lib/location-display) and only when the listing has a
+              point, a map link or an address to send the reader to. */}
             <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-              {hasMapTarget({ coordinates: point, mapUrl: listing.mapUrl, address }) ? (
+              {SHOW_LOCATION &&
+              hasMapTarget({ coordinates: point, mapUrl: listing.mapUrl, address }) ? (
                 <ActionBar
                   name={listing.name ?? ''}
                   address={address}

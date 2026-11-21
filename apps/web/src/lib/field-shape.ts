@@ -112,9 +112,10 @@ function checkValue(value: unknown, field: Named, path: string, media: Id[]): vo
       checkRichText(value, path, media)
       return
     case 'point':
-      // [longitude, latitude]: two numbers in range, nothing else.
+      // [longitude, latitude]: two numbers within Lebanon (core isValidPoint,
+      // the one rule for a point), nothing else.
       if (!isValidPoint(value)) {
-        throw new ShapeProblem(path, 'must be a point: [longitude, latitude].')
+        throw new ShapeProblem(path, 'must be a point in Lebanon: [longitude, latitude].')
       }
       return
     case 'select': {

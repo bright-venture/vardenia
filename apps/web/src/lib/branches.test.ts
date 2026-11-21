@@ -109,9 +109,11 @@ type Lock = (req: unknown, key: string) => Promise<void>
  * its transaction commits or rolls back (released from `req.afterEnd`), like
  * pg_advisory_xact_lock.
  */
-function keyedMutex(): Lock {
+function keyedMutex(only = ''): Lock {
   const tails = new Map<string, Promise<void>>()
   return async (req, key) => {
+    // Only the lock class under test is real; the others do nothing.
+    if (!key.startsWith(only)) return
     const previous = tails.get(key) ?? Promise.resolve()
     let release!: () => void
     const mine = new Promise<void>((resolve) => (release = resolve))
@@ -677,7 +679,7 @@ describe('createBranch: only a live, accepted listing can be a source', () => {
 describe('createBranch: long names', () => {
   // 300 Arabic letters in words of five, each letter a two-letter digraph
   // when transliterated, so the plain slug would be about 600 characters.
-  const longArabic = Array.from({ length: 60 }, () => 'خشخشخ').join(' ')
+  const longArabic = Array.from({ length: 60 }, () => '\u062e\u0634\u062e\u0634\u062e').join(' ')
 
   it('cuts the brand name to 160 at a word boundary and keeps slugs within the public lookup', async () => {
     const { payload, run } = setup({ businesses: [source({ name: { en: longArabic } })] })
@@ -817,7 +819,7 @@ describe('createBranch: two requests at once', () => {
   }
 
   it('lets exactly one through at the fifth branch of the day', async () => {
-    const { run } = atDailyBoundary(keyedMutex())
+    const { run } = atDailyBoundary(keyedMutex('vardenia.branches.partner:'))
     const results = await Promise.all([
       run(input({ name: 'Nour One' })),
       run(input({ name: 'Nour Two' })),
@@ -836,7 +838,10 @@ describe('createBranch: two requests at once', () => {
   })
 
   const atBrandBoundary = (lock: Lock) => {
-    const members = Array.from({ length: 18 }, (_, i) => ({
+    // Two different restaurants of brand 7, each managed by its own partner,
+    // plus 17 more listings: 19 in all. Neither the partner nor the source
+    // locks are shared, so only the brand lock can serialise the two requests.
+    const members = Array.from({ length: 17 }, (_, i) => ({
       id: 100 + i,
       name: `Member ${i}`,
       slug: `seed-m${i}`,
@@ -847,12 +852,14 @@ describe('createBranch: two requests at once', () => {
     }))
     const ctx = setup({
       brands: brand7,
-      businesses: [source({ brand: 7 }), ...members],
-      // Two partners who both manage the source: their own locks do not
-      // serialise them, only the brand lock does.
+      businesses: [
+        source({ brand: 7 }),
+        source({ id: 11, slug: 'cafe-nour-2', brand: 7, listingNumber: 15 }),
+        ...members,
+      ],
       partners: [
         partnerRow([10]),
-        { id: 4, email: 'manager@example.com', name: 'Sami', businesses: [10] },
+        { id: 4, email: 'manager@example.com', name: 'Sami', businesses: [11] },
       ],
       lock,
       slowWrites: true,
@@ -861,11 +868,11 @@ describe('createBranch: two requests at once', () => {
     return { ...ctx, sami }
   }
 
-  it('lets exactly one through at the twentieth listing of a brand, across partners', async () => {
-    const { run, sami } = atBrandBoundary(keyedMutex())
+  it('lets exactly one through at the twentieth listing of a brand, from two sources', async () => {
+    const { run, sami } = atBrandBoundary(keyedMutex('vardenia.branches.brand:'))
     const results = await Promise.all([
       run(input({ name: 'Nour One' })),
-      run(input({ name: 'Nour Two' }), sami),
+      run(input({ name: 'Nour Two', sourceListingId: 11 }), sami),
     ])
     expect(results.filter((r) => r.ok)).toHaveLength(1)
     expect(results.filter((r) => !r.ok && r.code === 'brand-full')).toHaveLength(1)
@@ -875,7 +882,7 @@ describe('createBranch: two requests at once', () => {
     const { run, sami } = atBrandBoundary(noLock)
     const results = await Promise.all([
       run(input({ name: 'Nour One' })),
-      run(input({ name: 'Nour Two' }), sami),
+      run(input({ name: 'Nour Two', sourceListingId: 11 }), sami),
     ])
     expect(results.filter((r) => r.ok)).toHaveLength(2)
   })

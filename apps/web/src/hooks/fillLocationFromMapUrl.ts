@@ -11,6 +11,13 @@ import { pointFromMapsUrl } from '@vardenia/core'
  * validation will refuse all leave `location` as it was: a short link is kept
  * as it is and nobody opens it, because this never fetches the network.
  *
+ * A link whose coordinates fall outside Lebanon is skipped here too (core
+ * pointFromMapsUrl gives nothing for it), and the save is then refused by the
+ * `mapUrl` field validation (core mapsUrlProblem: "That link points outside
+ * Lebanon"), so the error appears on the box the editor pasted into rather
+ * than on a location they never touched. Lebanon is the one rule for a point:
+ * core isValidPoint, the `location` validation and the partner guard agree.
+ *
  * beforeValidate, so the field's own point validation sees the filled value.
  * The order is Payload's: [longitude, latitude]. If one write changes the link
  * and also sends a different `location`, the link wins: the editor pasted it

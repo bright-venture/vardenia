@@ -114,6 +114,19 @@ describe('POST /partner-data/branches', () => {
     expect(createBranch).not.toHaveBeenCalled()
   })
 
+  it('refuses a point or a map link outside Lebanon (the one rule)', async () => {
+    auth.mockResolvedValue({ user: partner })
+    for (const over of [
+      { mapUrl: undefined, location: [2.35, 48.85] },
+      { mapUrl: undefined, location: [33.98, 35.61] },
+      { mapUrl: 'https://www.google.com/maps/@48.85,2.35,15z' },
+    ]) {
+      const result = await post({ ...body, ...over })
+      expect(result.status, JSON.stringify(over)).toBe(400)
+    }
+    expect(createBranch).not.toHaveBeenCalled()
+  })
+
   it('refuses a district of another governorate', async () => {
     auth.mockResolvedValue({ user: partner })
     const result = await post({ ...body, governorate: 'beirut' })

@@ -61,6 +61,23 @@ describe('fillLocationFromMapUrl', () => {
     expect(data.location).toEqual([35.5018, 33.8938])
   })
 
+  /**
+   * A link pointing outside Lebanon is never written to location (Task 4b):
+   * the hook skips it, and the mapUrl field validation refuses the save with
+   * "That link points outside Lebanon", so the editor sees the error on the
+   * box they pasted into, not on a location they never touched.
+   */
+  it('never fills from a link whose point is outside Lebanon', () => {
+    expect(run({ mapUrl: 'https://www.google.com/maps/@48.85,2.35,15z' })).not.toHaveProperty(
+      'location',
+    )
+    const kept = run(
+      { mapUrl: 'https://www.google.com/maps/@48.85,2.35,15z', location: [35.5, 33.9] },
+      { mapUrl: LE_GRAY },
+    )
+    expect(kept.location).toEqual([35.5, 33.9])
+  })
+
   it('stores the link trimmed', () => {
     expect(run({ mapUrl: `  ${LE_GRAY}  ` }).mapUrl).toBe(LE_GRAY)
   })

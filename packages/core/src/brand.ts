@@ -64,7 +64,7 @@ export const branchRequestSchema = z
     ),
     location: z
       .tuple([z.number(), z.number()])
-      .refine(isValidPoint, 'must be a longitude (-180 to 180) then a latitude (-90 to 90)')
+      .refine(isValidPoint, 'must be a point in Lebanon: longitude then latitude')
       .optional(),
     openingHours: z.array(z.strictObject(openingHourShape)).max(7).optional(),
     contact: contactInputSchema.optional(),

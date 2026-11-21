@@ -133,6 +133,17 @@ describe('address, map link and location', () => {
     const { promise } = run({ user: owner, data: { location } })
     await expect(promise).rejects.toMatchObject({ status: 400 })
   })
+
+  /** The one rule for a point (Task 4b): within Lebanon, as isWithinLebanon. */
+  it.each([
+    [[2.35, 48.85]], // Paris
+    [[33.8938, 35.5018]], // a Beirut point with longitude and latitude swapped
+    [['2.35', '48.85']],
+  ])('refuses the point %j, which is outside Lebanon', async (location) => {
+    const { promise } = run({ user: owner, data: { location } })
+    await expect(promise).rejects.toMatchObject({ status: 400 })
+    await expect(run({ user: owner, data: { location } }).promise).rejects.toThrow(/Lebanon/)
+  })
 })
 
 describe('what a partner may not send', () => {

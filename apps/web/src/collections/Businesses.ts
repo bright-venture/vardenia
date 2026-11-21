@@ -549,18 +549,32 @@ export const Businesses: CollectionConfig = {
                   : mapsUrlProblem(value) || true,
             },
             {
+              // Fills the point below from a pasted link. See components/admin/MapsLinkField.
+              name: 'locationFromLink',
+              type: 'ui',
+              admin: { components: { Field: '/components/admin/MapsLinkField#MapsLinkField' } },
+            },
+            {
               // Public: "near me" search and directions use it. [longitude, latitude].
               name: 'location',
               type: 'point',
               index: true,
               admin: {
                 description:
-                  'Filled from the map link above when it carries coordinates (paste the link there, not here), or set directly as longitude then latitude. Drives "near me" search and directions.',
+                  'Filled by the link above. Drives "near me" search and Google Maps directions.',
               },
-              validate: (value: unknown) =>
-                value === null || value === undefined || isValidPoint(value)
-                  ? true
-                  : 'The location must be a longitude (-180 to 180) and a latitude (-90 to 90).',
+              // Within Lebanon, as before Task 4: core isValidPoint applies
+              // isWithinLebanon, the one rule shared with the partner guard, the
+              // branch endpoint and hooks/fillLocationFromMapUrl. A value that is
+              // not two numbers at all is refused too (Task 4).
+              validate: (value: unknown) => {
+                if (value === null || value === undefined) return true
+                if (isValidPoint(value)) return true
+                const numbers = Array.isArray(value) && value.length === 2 ? value.map(Number) : []
+                return numbers.length === 2 && numbers.every(Number.isFinite)
+                  ? 'Coordinates fall outside Lebanon - check the lat/lng order.'
+                  : 'The location must be a longitude then a latitude.'
+              },
             },
             {
               name: 'openingHours',

@@ -282,12 +282,29 @@ describe('address, map link and location', () => {
     expect(typeof (await run('mapUrl', 'http://www.google.com/maps'))).toBe('string')
   })
 
-  it('checks a point for longitude -180..180 and latitude -90..90, not for Lebanon', async () => {
+  /**
+   * Restored in Task 4b: a point must lie within Lebanon, as before Task 4
+   * (isWithinLebanon), the one rule shared with the partner guard, the branch
+   * endpoint and the link hook.
+   */
+  it('refuses a point outside Lebanon, as before Task 4', async () => {
     expect(await run('location', null)).toBe(true)
-    expect(await run('location', [2.35, 48.85])).toBe(true) // Paris
+    expect(await run('location', [35.5018, 33.8938])).toBe(true) // Beirut
+    expect(await run('location', [2.35, 48.85])).toBe(
+      'Coordinates fall outside Lebanon - check the lat/lng order.',
+    ) // Paris
+    expect(await run('location', [33.8938, 35.5018])).toBe(
+      'Coordinates fall outside Lebanon - check the lat/lng order.',
+    ) // swapped
     expect(typeof (await run('location', [35.5, 91]))).toBe('string')
     expect(typeof (await run('location', [181, 33.9]))).toBe('string')
-    expect(typeof (await run('location', [35.5]))).toBe('string')
+    expect(await run('location', [35.5])).toBe('The location must be a longitude then a latitude.')
+  })
+
+  it('refuses a map link whose coordinates are outside Lebanon, on the link itself', async () => {
+    expect(await run('mapUrl', 'https://www.google.com/maps/@48.85,2.35,15z')).toMatch(
+      /outside Lebanon/,
+    )
   })
 
   it('fills location from the link before validation', () => {

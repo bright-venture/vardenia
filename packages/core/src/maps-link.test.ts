@@ -133,6 +133,21 @@ describe('mapsUrlProblem', () => {
     expect(mapsUrlProblem(url)).not.toBeNull()
   })
 
+  it('refuses a link whose coordinates are outside Lebanon, saying so', () => {
+    for (const url of [
+      'https://www.google.com/maps/@48.85,2.35,15z', // Paris
+      'https://www.google.com/maps/place/X/@33.89,35.50,17z/data=!3d48.85!4d2.35', // the pin wins
+      'https://maps.google.com/?q=35.50,33.89', // swapped
+    ]) {
+      expect(mapsUrlProblem(url)).toMatch(/outside Lebanon/)
+    }
+  })
+
+  it('accepts a link with no coordinates in it, and a short link', () => {
+    expect(mapsUrlProblem('https://www.google.com/maps/place/Le+Gray')).toBeNull()
+    expect(mapsUrlProblem('https://maps.app.goo.gl/AbC')).toBeNull()
+  })
+
   it('refuses a very long link', () => {
     expect(mapsUrlProblem(`https://www.google.com/maps/${'a'.repeat(3000)}`)).not.toBeNull()
   })
@@ -151,19 +166,38 @@ describe('pointFromMapsUrl', () => {
     expect(pointFromMapsUrl('https://goo.gl/maps/AbCdEf123')).toBeNull()
   })
 
+  it('gives nothing for a link whose point is outside Lebanon', () => {
+    expect(pointFromMapsUrl('https://www.google.com/maps/@48.85,2.35,15z')).toBeNull()
+  })
+
   it('gives nothing for a link with no coordinates or a hostile host', () => {
     expect(pointFromMapsUrl('https://www.google.com/maps/place/Le+Gray')).toBeNull()
     expect(pointFromMapsUrl('https://evil.com/maps/@33.89,35.50,17z')).toBeNull()
   })
 })
 
+/**
+ * Lebanon is the one rule for a point (Task 4b, restoring the rule the listing
+ * had before Task 4): the same bounds as isWithinLebanon in ./regions, for the
+ * listing field, the partner guard, the branch endpoint and the link hook.
+ */
 describe('isValidPoint', () => {
-  it.each([[[35.5, 33.9]], [[0, 0]], [[-180, -90]], [[180, 90]], [['35.5', '33.9']]])(
+  it.each([[[35.5, 33.9]], [[35.5018, 33.8938]], [['35.5', '33.9']], [[36.65, 34.7]]])(
     'accepts %j',
     (value) => {
       expect(isValidPoint(value)).toBe(true)
     },
   )
+
+  it.each([
+    [[2.35, 48.85]], // Paris
+    [[0, 0]],
+    [[-180, -90]],
+    [[180, 90]],
+    [[33.9, 35.5]], // a Lebanese point with longitude and latitude swapped
+  ])('refuses %j, which is outside Lebanon', (value) => {
+    expect(isValidPoint(value)).toBe(false)
+  })
 
   it.each([
     [[33.9]],

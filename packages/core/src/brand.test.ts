@@ -72,6 +72,12 @@ describe('branchRequestSchema', () => {
     expect(parse({ mapUrl: undefined, location: [35] }).success).toBe(false)
   })
 
+  it('refuses a point or a link outside Lebanon (the one rule, isWithinLebanon)', () => {
+    expect(parse({ mapUrl: undefined, location: [2.35, 48.85] }).success).toBe(false)
+    expect(parse({ mapUrl: undefined, location: [33.98, 35.61] }).success).toBe(false)
+    expect(parse({ mapUrl: 'https://www.google.com/maps/@48.85,2.35,15z' }).success).toBe(false)
+  })
+
   it('refuses a district of another governorate', () => {
     const r = parse({ governorate: 'beirut', district: 'keserwan' })
     expect(r.success).toBe(false)
