@@ -56,6 +56,7 @@ interface Stub {
   find: ReturnType<typeof vi.fn>
   create: ReturnType<typeof vi.fn>
   update: ReturnType<typeof vi.fn>
+  delete: ReturnType<typeof vi.fn>
 }
 
 /** A payload with one beirut range 10-20 in issue 7 and number 11 taken. */
@@ -93,7 +94,8 @@ function stub(
     if (opts.failUpdate) throw opts.failUpdate
     return { id: 555 }
   })
-  return { find, create, update } as unknown as Stub & Payload
+  const remove = vi.fn(async () => ({}))
+  return { find, create, update, delete: remove } as unknown as Stub & Payload
 }
 
 const created = (s: Stub, collection: string) =>
@@ -444,5 +446,57 @@ describe('createPlaceSubmission', () => {
       })
       expect(out.ok).toBe(true)
     })
+  })
+})
+
+/**
+ * A submission that fails after storing its photos deletes them again (21
+ * November 2026). Before, they stayed in the media library with nothing using
+ * them.
+ */
+describe('photos of a failed submission', () => {
+  const deleted = (s: Stub) =>
+    s.delete.mock.calls
+      .map((c) => c[0])
+      .filter((a) => a.collection === 'media')
+      .map((a) => a.id)
+
+  it('deletes all three photos when the number was lost in a race', async () => {
+    const raw = Object.assign(new Error('dup'), {
+      cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
+    })
+    const s = stub({ failListing: raw })
+    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(deleted(s)).toEqual([100, 101, 102])
+  })
+
+  it('deletes them when the listing fails to save for any other reason', async () => {
+    const s = stub({ failListing: new Error('database down') })
+    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+    expect(out).toMatchObject({ ok: false, code: 'error' })
+    expect(deleted(s)).toEqual([100, 101, 102])
+  })
+
+  it('keeps them when the submission succeeds', async () => {
+    const s = stub()
+    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+    expect(out).toMatchObject({ ok: true })
+    expect(s.delete).not.toHaveBeenCalled()
+  })
+
+  it('still answers the owner when a photo cannot be deleted, and reports it', async () => {
+    vi.mocked(reportError).mockClear()
+    const s = stub({ failListing: new Error('database down') })
+    s.delete.mockRejectedValue(new Error('storage down'))
+    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+    expect(out).toMatchObject({ ok: false, code: 'error' })
+    expect(
+      vi
+        .mocked(reportError)
+        .mock.calls.some(
+          (c) => (c[1] as { source?: string })?.source === 'place-submission.cleanup',
+        ),
+    ).toBe(true)
   })
 })

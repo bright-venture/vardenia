@@ -202,6 +202,14 @@ export async function createPlaceSubmission(args: {
 }): Promise<SubmissionOutcome> {
   const { payload, input, files } = args
 
+  /*
+   * Photos stored so far, deleted again if the submission then fails (21
+   * November 2026, authentication audit step 8). Before, a submission that lost
+   * the race for its number, or failed to save, left its photos in the media
+   * library with nothing using them.
+   */
+  const uploaded: (number | string)[] = []
+
   try {
     // The form checks all of this too; the server does not trust that. A
     // missing issue has no range, so it lands here as well.
@@ -243,6 +251,7 @@ export async function createPlaceSubmission(args: {
         locale: input.locale,
         overrideAccess: true,
       })
+      uploaded.push(media.id)
       return media.id
     }
     const heroImage = await upload(checked.hero)
@@ -337,11 +346,27 @@ export async function createPlaceSubmission(args: {
     }
     return { ok: true, listingId }
   } catch (error) {
+    await deleteUploaded(payload, uploaded)
     // Lost the race for the number between the check above and the insert.
     if (isListingNumberTaken(error)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     await reportError(error, { source: 'place-submission.create' })
     return { ok: false, code: 'error', message: COULD_NOT_SAVE }
+  }
+}
+
+/**
+ * Deletes the photos a failed submission stored. Through Payload, so the files
+ * go too. Best effort: a photo that cannot be deleted is reported, and the
+ * submission's own answer is not changed by it.
+ */
+async function deleteUploaded(payload: Payload, ids: readonly (number | string)[]): Promise<void> {
+  for (const id of ids) {
+    try {
+      await payload.delete({ collection: 'media', id, overrideAccess: true })
+    } catch (error) {
+      await reportError(error, { source: 'place-submission.cleanup', extra: { media: id } })
+    }
   }
 }
