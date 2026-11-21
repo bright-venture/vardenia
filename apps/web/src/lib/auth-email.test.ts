@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   PARTNER_INVITE_DAYS,
+  emailChangedEmail,
+  passwordChangedEmail,
   partnerResetEmail,
   passwordResetEmail,
   resetUrl,
@@ -139,5 +141,33 @@ describe('partner set-password links', () => {
       BusinessUsers.auth as { forgotPassword: { generateEmailHTML: (a: unknown) => string } }
     ).forgotPassword
     expect(fp.generateEmailHTML({ token: 't' })).toContain('1 hour')
+  })
+})
+
+/** Notices after an account change (21 November 2026). */
+describe('account change notices', () => {
+  it('tells the account its password changed, and whom to contact, in both languages', () => {
+    const mail = passwordChangedEmail('help@example.com')
+    expect(mail.subject).toContain('password was changed')
+    expect(mail.text).toContain('every other device was signed out')
+    expect(mail.text).toContain('help@example.com')
+    expect(mail.text).toContain('تواصل معنا')
+    expect(mail.text).not.toMatch(/reply to this/i)
+  })
+
+  it('tells the old address where the email went, and whom to contact', () => {
+    const mail = emailChangedEmail('new@example.com', 'help@example.com')
+    expect(mail.text).toContain('new@example.com')
+    expect(mail.text).toContain('help@example.com')
+    expect(mail.text).not.toMatch(/reply to this/i)
+    expect(mail.html).toContain('dir="rtl"')
+  })
+
+  it('does not let a typed address inject markup', () => {
+    expect(emailChangedEmail('"><script>x</script>@a.co').html).not.toContain('<script>')
+  })
+
+  it('names the public contact address by default', () => {
+    expect(passwordChangedEmail().text).toContain('contact@vardenia.com')
   })
 })

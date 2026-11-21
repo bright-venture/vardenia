@@ -31,6 +31,7 @@
  */
 
 import { emailPalette } from './email-palette'
+import { CONTACT } from './contact'
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -248,4 +249,57 @@ export function partnerResetEmail(
       `  <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid ${emailPalette.edge};font-size:13px;color:${emailPalette.quiet};">Sign in later at <a href="${escapeHtml(login)}" style="color:${emailPalette.accent};">${escapeHtml(login)}</a></p>\n  </div>\n</body>`,
     ),
   }
+}
+
+/**
+ * Notices after a change to the account (21 November 2026, authentication
+ * audit). Plain information, no button: the person only needs to know, and to
+ * know whom to contact if it was not them. Sent from a no-reply address, so the
+ * contact is named rather than "reply to this message".
+ */
+interface NoticeCopy {
+  subject: string
+  heading: string
+  en: string
+  ar: string
+}
+
+const contactEmail = (): string => CONTACT.email ?? 'contact@vardenia.com'
+
+function renderNotice(copy: NoticeCopy): AuthEmailContent {
+  const text = [copy.heading, '', copy.en, '', '---', '', copy.ar, '', 'Vardenia'].join('\n')
+  const html = `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
+  <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(copy.heading)}</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(copy.en)}</p>
+    <div dir="rtl" lang="ar" style="border-top:1px solid ${emailPalette.edge};padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
+      <p style="margin:0;font-size:15px;line-height:1.8;color:${emailPalette.body};">${escapeHtml(copy.ar)}</p>
+    </div>
+  </div>
+</body>
+</html>`
+  return { subject: copy.subject, html, text }
+}
+
+/** To the account, after its password was changed from the profile page. */
+export function passwordChangedEmail(contact = contactEmail()): AuthEmailContent {
+  return renderNotice({
+    subject: 'Your Vardenia password was changed - تم تغيير كلمة المرور',
+    heading: 'Your password was changed',
+    en: `The password of your Vardenia account was just changed, and every other device was signed out. If that was you, nothing else is needed. If it was not, contact us right away at ${contact} so we can secure your account.`,
+    ar: `تم للتو تغيير كلمة مرور حسابك في فاردينيا، وتم تسجيل الخروج من جميع الأجهزة الأخرى. إذا كنت أنت من قام بذلك، فلا حاجة لأي إجراء. وإن لم تكن أنت، تواصل معنا فوراً على ${contact} لنؤمّن حسابك.`,
+  })
+}
+
+/** To the old address, after the account's email was changed from the profile page. */
+export function emailChangedEmail(newAddress: string, contact = contactEmail()): AuthEmailContent {
+  return renderNotice({
+    subject: 'Your Vardenia email address was changed - تم تغيير البريد الإلكتروني',
+    heading: 'Your email address was changed',
+    en: `The email address on your Vardenia account was changed to ${newAddress}, and every other device was signed out. If that was you, nothing else is needed. If it was not, contact us right away at ${contact}: whoever made the change cannot sign in until the new address is confirmed.`,
+    ar: `تم تغيير البريد الإلكتروني لحسابك في فاردينيا إلى ${newAddress}، وتم تسجيل الخروج من جميع الأجهزة الأخرى. إذا كنت أنت من قام بذلك، فلا حاجة لأي إجراء. وإن لم تكن أنت، تواصل معنا فوراً على ${contact}، إذ لا يمكن لمن أجرى التغيير تسجيل الدخول قبل تأكيد العنوان الجديد.`,
+  })
 }
