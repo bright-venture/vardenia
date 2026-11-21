@@ -201,7 +201,9 @@ describe('the Media collection', () => {
     const ctx = (user: unknown) => ({ req: { user } }) as never
     expect(config.access?.delete!(ctx(partner))).toBe(false)
     expect(config.access?.update!(ctx(partner))).toBe(false)
-    expect(config.access?.delete!(ctx(staff))).toBe(true)
+    // Permanent deletes of photos are admin only (staging, 21 November 2026).
+    expect(config.access?.delete!(ctx(staff))).toBe(false)
+    expect(config.access?.delete!(ctx({ id: 2, collection: 'users', roles: ['admin'] }))).toBe(true)
   })
 
   it('reads through mediaRead', () => {

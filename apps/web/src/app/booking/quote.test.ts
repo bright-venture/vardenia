@@ -81,6 +81,7 @@ const fakePayload = (business: Record<string, unknown>, types: Record<string, un
   const create = vi.fn(async () => ({ id: 1, reference: 'REF00001', status: 'pending' }))
   const payload = {
     findByID: vi.fn(async () => business),
+    count: vi.fn(async () => ({ totalDocs: 0 })),
     find: vi.fn(async (args: { collection: string }) => {
       if (args.collection === 'room-types') return { docs: types, totalDocs: types.length }
       if (args.collection === 'room-availability') {

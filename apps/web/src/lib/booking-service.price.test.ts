@@ -34,7 +34,13 @@ const harness = (business: Record<string, unknown>, roomTypes: Record<string, un
     }
     return { docs: [], totalDocs: 0 }
   })
-  const payload = { findByID: vi.fn(async () => business), find, create } as unknown as Payload
+  const count = vi.fn(async () => ({ totalDocs: 0 }))
+  const payload = {
+    findByID: vi.fn(async () => business),
+    find,
+    count,
+    create,
+  } as unknown as Payload
   return { payload, create }
 }
 

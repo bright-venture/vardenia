@@ -821,14 +821,11 @@ async function createStayBooking({
   }
   const price = quote.ok ? priceSnapshotData(quote, now) : null
 
-  const pending = await pendingBookingCount(payload, customerId)
-  if (pending >= MAX_PENDING_PER_CUSTOMER) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${pending} upcoming bookings. Please cancel one before making another.`,
-    }
-  }
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
 
   try {
     const booking = await payload.create({

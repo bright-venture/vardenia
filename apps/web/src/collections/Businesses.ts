@@ -280,7 +280,6 @@ export const Businesses: CollectionConfig = {
     // listing existed. See hooks/revalidateListings.
     // A rejected submission cannot be published; publishing approves it in the
     // same write. See hooks/linkPartnerOnPublish.
-    beforeValidate: [refusePublishingRejected, requireContractToPublish],
     // Stay and features on guest houses only, facilities on hotels only, on
     // every save (the admin hides those tabs, which skips field validation).
     // See hooks/guardKindFields.
@@ -288,6 +287,7 @@ export const Businesses: CollectionConfig = {
     // (Task 8). See hooks/protectSeatingAreaBookings.
     beforeValidate: [
       refusePublishingRejected,
+      requireContractToPublish,
       fillLocationFromMapUrl,
       guardKindFields,
       protectSeatingAreaBookings,

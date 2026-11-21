@@ -445,7 +445,13 @@ describe('createBooking at a guest house', () => {
       }
       return { docs: [], totalDocs: 0 }
     })
-    const payload = { findByID: vi.fn(async () => getaway), find, create } as unknown as Payload
+    const count = vi.fn(async () => ({ totalDocs: 0 }))
+    const payload = {
+      findByID: vi.fn(async () => getaway),
+      find,
+      count,
+      create,
+    } as unknown as Payload
     return { payload, create, find }
   }
 
@@ -555,6 +561,7 @@ describe('createBooking at a guest house', () => {
     const payload = {
       findByID: vi.fn(async () => both),
       find: vi.fn(async () => ({ docs: [], totalDocs: 0 })),
+      count: vi.fn(async () => ({ totalDocs: 0 })),
       create,
     } as unknown as Payload
     const outcome = await createBooking({
@@ -647,7 +654,13 @@ describe('createBooking at a restaurant with seating areas', () => {
       }
       return { docs: [], totalDocs: 0 }
     })
-    const payload = { findByID: vi.fn(async () => business), find, create } as unknown as Payload
+    const count = vi.fn(async () => ({ totalDocs: 0 }))
+    const payload = {
+      findByID: vi.fn(async () => business),
+      find,
+      count,
+      create,
+    } as unknown as Payload
     return { payload, create, rows }
   }
 
