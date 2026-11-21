@@ -87,6 +87,19 @@ Section 10, Open items
 - After the release: in the live admin, set All Lebanon's total to 408 and enter the seven ranges.
 - In a few weeks: read the DMARC reports and move DMARC from `p=none` to `p=quarantine`.
 
+### Step 10: each PRD open item and what is left
+
+- Staging database: left to do, reword the PRD (A) and, after the release, enter the total and seven ranges on the live site (C).
+- Turnstile keys: production done. Left: the secret for Branch deploys (C) and an admin warning while keys are missing (B).
+- Race on a taken number: done (already fixed). Left: remove it from the PRD's open items (A).
+- Ranges can still be moved: done (fixed in step 8). Left: remove it from the PRD's open items (A).
+- Numbering-only issue: left: say in the PRD that All Lebanon is the real issue and stays public (A); decide on deleting "summer-2026" (B).
+- Admin two-step sign-in: left: decide on Cloudflare Access in front of `/admin` (B), then set it up in Cloudflare (C).
+- Partner after contract ends: answered by test. Left: write the answer into the PRD (A).
+- Extra listings for an existing partner: works today through the form. Left: the "Add another listing" button, later (D).
+- Other sign-in methods: left: decide with the mobile app (D).
+- Email deliverability: DKIM and SPF done. Left: `RESEND_API_KEY` for Branch deploys and tightening DMARC later (C).
+
 ### D. Later or in progress
 
 - Partner listing editing (in progress): re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
