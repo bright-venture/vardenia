@@ -20,6 +20,7 @@ import { LINK, NOTICE_INFO } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
 import { ChangeEmail, ChangeName, ChangePassword } from '../../../../components/ProfileForms'
+import { reviewEligibility } from '../../../../lib/review-eligibility'
 
 /**
  * What a customer sees of themselves: their bookings, and a way out.
@@ -79,8 +80,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   /*
    * One invitation per place, on its most recent finished booking. A guest can
    * review a place once, and four past dinners at Em Sherif offered the link
-   * four times. The rule is createReview's: completed, or confirmed and over,
-   * at a published listing not yet reviewed.
+   * four times. The rule is createReview's (lib/review-eligibility): a booking
+   * the business marked completed, at a published, bookable listing not yet
+   * reviewed.
    */
   const invite = new Set<string>()
   const offered = new Set<string>()
@@ -89,9 +91,14 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     if (typeof business !== 'object' || !business?.slug) continue
     const place = String(business.id)
     const published = (business as { _status?: string })._status !== 'draft'
-    const finished =
-      booking.status === 'completed' || (booking.status === 'confirmed' && booking.ended)
-    if (!published || !finished || reviewed.has(place) || offered.has(place)) continue
+    const verdict = reviewEligibility({
+      status: booking.status,
+      guestAnswer: booking.guestAnswer,
+      subcategories: (business as { subcategories?: string[] | null }).subcategories,
+      bookingEnabled: (business as { booking?: { enabled?: boolean } | null }).booking?.enabled,
+      alreadyReviewed: reviewed.has(place),
+    })
+    if (!published || !verdict.ok || offered.has(place)) continue
     offered.add(place)
     invite.add(String(booking.id))
   }

@@ -570,19 +570,27 @@ export async function sendBookingConfirmation({
  *                 nothing was ever reserved and the wording must not imply it was.
  *  - `cancelled`  a booking that *was* confirmed has been called off. Different
  *                 news, and worse, because they had planned around it.
+ *  - `completed`  the business marked the visit done: an invitation to review.
  *
- * `completed` and `no-show` are deliberately absent. Telling somebody they
- * turned up is noise; telling them they did not is an accusation, and one we
- * would be making from a button a busy person pressed at the end of a shift.
+ * `no-show` is deliberately absent: "you did not turn up" would be an accusation
+ * made from a button a busy person pressed at the end of a shift.
  */
 /**
  * `expired` is a request the venue never answered, declined automatically when
  * its time arrived (lib/booking-expiry). Never produced by `outcomeFor`, which
  * reads statuses alone and cannot tell silence from a refusal.
  */
-export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled' | 'expired'
+export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled' | 'expired' | 'completed'
 
-const OUTCOME_COPY: Record<Locale, Record<Exclude<BookingOutcomeKind, 'expired'>, Copy>> = {
+/**
+ * `completed` is the one visit-over message, and it is an invitation rather than
+ * a record: the business has marked the visit done, so the guest can now review
+ * it on the listing page (lib/review-service refuses a review before that).
+ * Never sent for a no-show.
+ */
+
+type CopiedKind = Exclude<BookingOutcomeKind, 'expired' | 'completed'>
+const OUTCOME_COPY: Record<Locale, Record<CopiedKind, Copy>> = {
   en: {
     confirmed: {
       subject: 'Your booking is confirmed',
@@ -1010,9 +1018,87 @@ const EXPIRED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro'>> 
   },
 }
 
+/**
+ * The review invitation: wording over the confirmed copy's labels, the way
+ * EXPIRED_COPY is laid over the declined copy's.
+ */
+const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' | 'closing'>> = {
+  en: {
+    subject: 'Thank you for your visit - tell others how it was',
+    heading: 'You can now write a review',
+    intro:
+      '{business} has marked your visit as done. You can now write a review of it on its Vardenia page; it helps other travellers choose.',
+    closing: 'Thank you for choosing Vardenia.',
+  },
+  ar: {
+    subject: 'شكرًا لزيارتك - شاركنا رأيك',
+    heading: 'يمكنك الآن كتابة تقييم',
+    intro:
+      'سجّل {business} أن زيارتك قد تمت. يمكنك الآن كتابة تقييم له على صفحته في فاردينيا، فهو يساعد المسافرين الآخرين على الاختيار.',
+    closing: 'شكرًا لاختيارك فاردينيا.',
+  },
+  fr: {
+    subject: "Merci de votre visite - dites aux autres comment c'était",
+    heading: 'Vous pouvez maintenant laisser un avis',
+    intro:
+      '{business} a marqué votre visite comme effectuée. Vous pouvez maintenant laisser un avis sur sa page Vardenia ; cela aide les autres voyageurs à choisir.',
+    closing: "Merci d'avoir choisi Vardenia.",
+  },
+  es: {
+    subject: 'Gracias por tu visita - cuenta a otros cómo fue',
+    heading: 'Ya puedes escribir una reseña',
+    intro:
+      '{business} ha marcado tu visita como realizada. Ya puedes escribir una reseña en su página de Vardenia; ayuda a otros viajeros a elegir.',
+    closing: 'Gracias por elegir Vardenia.',
+  },
+  pt: {
+    subject: 'Obrigado pela sua visita - conte aos outros como foi',
+    heading: 'Já pode escrever uma avaliação',
+    intro:
+      '{business} marcou a sua visita como concluída. Já pode escrever uma avaliação na sua página da Vardenia; ajuda outros viajantes a escolher.',
+    closing: 'Obrigado por escolher a Vardenia.',
+  },
+  ru: {
+    subject: 'Спасибо за визит - расскажите другим, как всё прошло',
+    heading: 'Теперь вы можете оставить отзыв',
+    intro:
+      'Заведение «{business}» отметило ваш визит как состоявшийся. Теперь вы можете оставить отзыв об этом месте на его странице Vardenia; это помогает другим путешественникам сделать выбор.',
+    closing: 'Спасибо, что выбрали Vardenia.',
+  },
+  zh: {
+    subject: '感谢您的光临 - 告诉大家体验如何',
+    heading: '您现在可以撰写评价了',
+    intro:
+      '{business} 已将您的这次到访标记为完成。您现在可以在其 Vardenia 页面上撰写评价，这能帮助其他旅行者做出选择。',
+    closing: '感谢您选择 Vardenia。',
+  },
+  hi: {
+    subject: 'आपकी यात्रा के लिए धन्यवाद - दूसरों को बताएँ कैसा रहा',
+    heading: 'अब आप समीक्षा लिख सकते हैं',
+    intro:
+      '{business} ने आपकी यात्रा को पूरा हुआ चिह्नित कर दिया है। अब आप उसके Vardenia पेज पर समीक्षा लिख सकते हैं; इससे दूसरे यात्रियों को चुनने में मदद मिलती है।',
+    closing: 'Vardenia चुनने के लिए धन्यवाद।',
+  },
+  bn: {
+    subject: 'আপনার আসার জন্য ধন্যবাদ - অন্যদের জানান কেমন ছিল',
+    heading: 'এখন আপনি রিভিউ লিখতে পারেন',
+    intro:
+      '{business} আপনার এই যাওয়াকে সম্পন্ন হিসেবে চিহ্নিত করেছে। এখন আপনি তাদের Vardenia পেজে রিভিউ লিখতে পারেন; এতে অন্য ভ্রমণকারীরা বেছে নিতে সাহায্য পান।',
+    closing: 'Vardenia বেছে নেওয়ার জন্য ধন্যবাদ।',
+  },
+  ur: {
+    subject: 'آپ کے دورے کا شکریہ - دوسروں کو بتائیں کیسا رہا',
+    heading: 'اب آپ جائزہ لکھ سکتے ہیں',
+    intro:
+      '{business} نے آپ کے دورے کو مکمل کے طور پر درج کر دیا ہے۔ اب آپ اس کے Vardenia صفحے پر جائزہ لکھ سکتے ہیں؛ اس سے دوسرے مسافروں کو انتخاب میں مدد ملتی ہے۔',
+    closing: 'Vardenia کو چننے کا شکریہ۔',
+  },
+}
+
 export function outcomeFor(from: BookingStatus, to: BookingStatus): BookingOutcomeKind | null {
   if (from === to) return null
   if (to === 'confirmed') return 'confirmed'
+  if (to === 'completed') return from === 'confirmed' ? 'completed' : null
   if (to === 'cancelled') return from === 'pending' ? 'declined' : 'cancelled'
   return null
 }
@@ -1033,6 +1119,8 @@ export interface BookingOutcomeArgs {
    * explain each one, and the message has to read properly without it.
    */
   reason?: string
+  /** Named in the review invitation (`completed`); text only, no link. */
+  businessName?: string
 }
 
 /** Pure, like the confirmation content, so the wording is testable. */
@@ -1045,11 +1133,22 @@ export function bookingOutcomeContent({
   partySize,
   locale,
   reason,
+  businessName,
 }: Omit<BookingOutcomeArgs, 'payload' | 'to'>): BookingEmailContent {
   const copy =
     outcome === 'expired'
       ? { ...OUTCOME_COPY[locale].declined, ...EXPIRED_COPY[locale] }
-      : OUTCOME_COPY[locale][outcome]
+      : outcome === 'completed'
+        ? {
+            ...OUTCOME_COPY[locale].confirmed,
+            ...COMPLETED_COPY[locale],
+            // Raw here: renderBookingEmail escapes the intro for html.
+            intro: COMPLETED_COPY[locale].intro.replaceAll(
+              '{business}',
+              () => businessName?.trim() || 'Vardenia',
+            ),
+          }
+        : OUTCOME_COPY[locale][outcome]
   return renderBookingEmail({
     copy,
     name,

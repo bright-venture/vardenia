@@ -224,19 +224,69 @@ describe('outcomeFor', () => {
   })
 
   /**
-   * Nobody needs an email saying they turned up, and "you did not turn up" is an
-   * accusation made from a button pressed at the end of a shift.
+   * "You did not turn up" is an accusation made from a button pressed at the end
+   * of a shift, so a no-show is never written about.
    */
-  it.each([
-    ['confirmed', 'completed'],
-    ['confirmed', 'no-show'],
-  ] as const)('says nothing about %s -> %s', (from, to) => {
-    expect(outcomeFor(from, to)).toBeNull()
+  it('says nothing about confirmed -> no-show', () => {
+    expect(outcomeFor('confirmed', 'no-show')).toBeNull()
+  })
+
+  /**
+   * The one exception to "nothing about completed": the visit is now over and
+   * only now can the guest review it, so they are told so (an invitation, not a
+   * statement of attendance). Only from confirmed, the one legal way in.
+   */
+  it('invites a review when the business marks a confirmed booking completed', () => {
+    expect(outcomeFor('confirmed', 'completed')).toBe('completed')
   })
 
   it('says nothing when the status did not change', () => {
     expect(outcomeFor('confirmed', 'confirmed')).toBeNull()
     expect(outcomeFor('pending', 'pending')).toBeNull()
+  })
+})
+
+describe('the review invitation, in every language', () => {
+  const LOCALES = ['en', 'ar', 'fr', 'es', 'pt', 'ru', 'zh', 'hi', 'bn', 'ur'] as const
+  const args = {
+    name: 'Sami',
+    reference: 'ABCD1234',
+    outcome: 'completed' as const,
+    start: new Date('2026-10-20T17:00:00.000Z'),
+    end: new Date('2026-10-20T19:00:00.000Z'),
+    partySize: 2,
+    businessName: 'Em <Sherif> & Sons',
+  }
+
+  it.each(LOCALES)('is written in %s, with its own subject and wording', (locale) => {
+    const content = bookingOutcomeContent({ ...args, locale })
+    expect(content.subject.length).toBeGreaterThan(3)
+    expect(content.text).toContain('ABCD1234')
+    expect(content.html).toContain(`lang="${locale}"`)
+    if (locale !== 'en') {
+      expect(content.subject).not.toBe(bookingOutcomeContent({ ...args, locale: 'en' }).subject)
+    }
+  })
+
+  it.each(LOCALES)('names the business, escaped, in %s', (locale) => {
+    const content = bookingOutcomeContent({ ...args, locale })
+    expect(content.text).toContain('Em <Sherif> & Sons')
+    expect(content.html).toContain('Em &lt;Sherif&gt; &amp; Sons')
+    expect(content.html).not.toContain('<Sherif>')
+  })
+
+  it('keeps right-to-left handling for Arabic and Urdu, and left-to-right for English', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'ar' }).html).toContain('dir="rtl"')
+    expect(bookingOutcomeContent({ ...args, locale: 'ur' }).html).toContain('dir="rtl"')
+    expect(bookingOutcomeContent({ ...args, locale: 'en' }).html).toContain('dir="ltr"')
+  })
+
+  it('tells the guest they can now review, in English', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'en' }).text).toMatch(/review/i)
+  })
+
+  it('is real Arabic', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'ar' }).subject).toMatch(/[\u0600-\u06FF]/)
   })
 })
 

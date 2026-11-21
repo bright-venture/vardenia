@@ -69,3 +69,72 @@ describe('an unanswered request declined automatically', () => {
     expect(sendVenueCancellation).toHaveBeenCalled()
   })
 })
+
+describe('a visit marked completed', () => {
+  beforeEach(() => {
+    sendBookingOutcome.mockClear()
+  })
+
+  const complete = (
+    from: string,
+    user?: unknown,
+    context: Record<string, unknown> = {},
+    extra: Record<string, unknown> = {},
+  ) =>
+    notifyBookingStatus({
+      operation: 'update',
+      doc: { ...booking, status: 'completed', ...extra },
+      previousDoc: { ...booking, status: from },
+      context,
+      req: {
+        user,
+        payload: {
+          findByID: vi.fn(async ({ collection }: { collection: string }) =>
+            collection === 'businesses'
+              ? { name: 'Em Sherif' }
+              : { email: 'guest@mail.com', name: 'Sami' },
+          ),
+        },
+      },
+    } as unknown as Args)
+
+  const owner = { id: 7, collection: 'business-users' }
+
+  it('names the business in the invitation', async () => {
+    await complete('confirmed', owner)
+    expect(sendBookingOutcome).toHaveBeenCalledWith(
+      expect.objectContaining({ businessName: 'Em Sherif' }),
+    )
+  })
+
+  it('does not invite on an automatic completion (the business marked nothing)', async () => {
+    await complete('confirmed', undefined, { autoCompleted: true })
+    expect(sendBookingOutcome).not.toHaveBeenCalled()
+  })
+
+  it('does not invite a guest who said they did not come', async () => {
+    await complete('confirmed', owner, {}, { guestAnswer: 'did-not-come' })
+    expect(sendBookingOutcome).not.toHaveBeenCalled()
+  })
+
+  it('tells the customer they can now review, when the business marks it', async () => {
+    await complete('confirmed', { id: 7, collection: 'business-users' })
+    expect(sendBookingOutcome).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'guest@mail.com', outcome: 'completed' }),
+    )
+  })
+
+  it('says nothing about a no-show', async () => {
+    await notifyBookingStatus({
+      operation: 'update',
+      doc: { ...booking, status: 'no-show' },
+      previousDoc: { ...booking, status: 'confirmed' },
+      context: {},
+      req: {
+        user: { id: 7, collection: 'business-users' },
+        payload: { findByID: vi.fn(async () => ({ email: 'guest@mail.com', name: 'Sami' })) },
+      },
+    } as unknown as Args)
+    expect(sendBookingOutcome).not.toHaveBeenCalled()
+  })
+})

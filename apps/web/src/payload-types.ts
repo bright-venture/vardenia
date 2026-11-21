@@ -363,7 +363,7 @@ export interface Business {
    */
   mapUrl?: string | null;
   /**
-   * Filled from the map link above when it carries coordinates (paste the link there, not here), or set directly as longitude then latitude. Drives "near me" search and directions.
+   * Filled by the link above. Drives "near me" search and Google Maps directions.
    *
    * @minItems 2
    * @maxItems 2
