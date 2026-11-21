@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { closedPeriods, createBooking, translateInsertError } from './booking-service'
+import { closedPeriods, createBooking, limitRefusal, translateInsertError } from './booking-service'
 import { unavailableMessage } from './availability'
 
 /**
@@ -48,6 +48,16 @@ describe('translateInsertError', () => {
     if (outcome.ok) return
     expect(outcome.code).toBe('rate-limited')
     expect(outcome.message).toMatch(/upcoming bookings/)
+  })
+
+  it('turns the waiting-requests refusal into the same answer the count gives', () => {
+    const outcome = translateInsertError(
+      pgError('This account already has the most booking requests waiting for an answer.'),
+    )
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.code).toBe('rate-limited')
+    expect(outcome.message).toMatch(/5 booking requests waiting/)
   })
 
   /**
@@ -166,6 +176,8 @@ describe('createBooking, before anything is written', () => {
           ? { docs: closures, totalDocs: closures.length }
           : { docs: [], totalDocs: 0 },
       ),
+      // The customer's upcoming bookings: none.
+      count: vi.fn(async () => ({ totalDocs: 0 })),
       create,
     } as unknown as Payload
     return { payload, create }
@@ -277,6 +289,7 @@ describe('createBooking, retried with the same attempt id', () => {
         }
         return { docs: [], totalDocs: 0 }
       }),
+      count: vi.fn(async () => ({ totalDocs: 0 })),
       create,
     } as unknown as Payload
     return { payload, create, lookups }
@@ -370,5 +383,34 @@ describe('closedPeriods', () => {
         { endsOn: { greater_than_equal: '2026-10-18' } },
       ],
     })
+  })
+})
+
+/**
+ * Two limits per customer (21 November 2026): 5 requests waiting for an answer,
+ * 15 upcoming bookings in total.
+ */
+describe('limitRefusal', () => {
+  it('lets a traveller hold more than 5 confirmed bookings', () => {
+    expect(limitRefusal({ pending: 0, upcoming: 9 }, true)).toBeNull()
+  })
+
+  it('refuses a sixth request waiting for an answer', () => {
+    expect(limitRefusal({ pending: 5, upcoming: 6 }, true)?.message).toMatch(
+      /5 booking requests waiting/,
+    )
+  })
+
+  it('still allows an instant booking while 5 requests wait, since it does not wait', () => {
+    expect(limitRefusal({ pending: 5, upcoming: 6 }, false)).toBeNull()
+  })
+
+  it('refuses a sixteenth upcoming booking, instant or not', () => {
+    expect(limitRefusal({ pending: 0, upcoming: 15 }, false)?.message).toMatch(
+      /15 upcoming bookings/,
+    )
+    expect(limitRefusal({ pending: 0, upcoming: 15 }, true)?.message).toMatch(
+      /15 upcoming bookings/,
+    )
   })
 })

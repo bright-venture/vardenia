@@ -70,6 +70,7 @@ import * as migration_20261118_094623_guest_questions from './20261118_094623_gu
 import * as migration_20261119_090456_magazine_places from './20261119_090456_magazine_places'
 import * as migration_20261119_131549_business_submissions from './20261119_131549_business_submissions'
 import * as migration_20261120_131807_remove_place_requests_add_expired from './20261120_131807_remove_place_requests_add_expired'
+import * as migration_20261121_120000_customer_booking_limits_two from './20261121_120000_customer_booking_limits_two'
 
 export const migrations = [
   {
@@ -431,5 +432,10 @@ export const migrations = [
     up: migration_20261120_131807_remove_place_requests_add_expired.up,
     down: migration_20261120_131807_remove_place_requests_add_expired.down,
     name: '20261120_131807_remove_place_requests_add_expired',
+  },
+  {
+    up: migration_20261121_120000_customer_booking_limits_two.up,
+    down: migration_20261121_120000_customer_booking_limits_two.down,
+    name: '20261121_120000_customer_booking_limits_two',
   },
 ]
