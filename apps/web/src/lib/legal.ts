@@ -66,7 +66,7 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-20'
+export const LEGAL_LAST_UPDATED = '2026-11-21'
 
 /**
  * Who runs the site, as both documents state it.
@@ -294,6 +294,7 @@ function englishPrivacyPolicy(): LegalDocument {
           '- **Receipts** and what was read from them: until you close your account.',
           '- **Records of printed-code scans**: 12 months.',
           '- **Error records**: 90 days.',
+          "- **Emails we send you**: kept in our email provider's delivery logs for 30 days, then deleted automatically.",
           '- **Your account**: until you close it.',
           '- **Reviews**: while they are published, until you ask us to take one down, or until you close your account.',
           '- **Questions you send from the Questions page**: until you close your account. **Event Staff requests** are kept as a record of the event, without your name or contact details once you close your account.',

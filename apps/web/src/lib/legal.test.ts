@@ -124,6 +124,7 @@ describe('what the policy claims about the code', () => {
     for (const kept of [
       'kept as the record of each visit',
       'error records**: 90 days',
+      'delivery logs for 30 days, then deleted automatically',
       'until you close it',
     ])
       expect(lines).toContain(kept)

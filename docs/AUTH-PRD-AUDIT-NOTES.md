@@ -40,15 +40,14 @@ These make the PRD describe what the product really does.
 
 ### 2. Decisions waiting for you
 
-- **Two-step sign-in for the team** (step 10): none exists. Recommended: Cloudflare Access in front of `/admin`, a one-time email code or Google sign-in before the admin loads, with no code change.
-- **Privacy policy line about sent emails** (step 4): emails already sent stay in the email provider's logs for a while; the policy could say so.
+- **Two-step sign-in for the team** (step 10): decided 21 November 2026, Cloudflare Access in front of `/admin` and `/api/users`; the steps are in `docs/CLOUDFLARE-ACCESS-ADMIN.md`. Left: refuse `/admin` and `/api/users` on Netlify's own `*.netlify.app` addresses, which skip Cloudflare (small code change, proposed).
 
 ### 3. Settings for you (no code)
 
 - **Netlify, Branch deploys: add `RESEND_API_KEY`** (step 10): without it staging writes emails to the server log, so staging sign-ups cannot be verified and invitations and resets never arrive.
 - **Netlify, Branch deploys: add `TURNSTILE_SECRET_KEY`, and the staging address in the Turnstile widget in Cloudflare** (step 10): staging shows the anti-bot box but nothing checks it.
 - **After the release, in the live admin: set All Lebanon's total to 408 and enter the seven ranges** (steps 8 and 10): the live database gets the tables from the migration, but not the numbers.
-- **Cloudflare Access for `/admin`**, if you choose it in group 2 (step 10).
+- **Set up Cloudflare Access** following `docs/CLOUDFLARE-ACCESS-ADMIN.md` (step 10).
 - **In a few weeks, DMARC from `p=none` to `p=quarantine`** (step 10): today fake emails claiming to come from vardenia.com are only reported, not blocked; read the reports first.
 
 ### 4. Later or in progress
@@ -129,7 +128,7 @@ Goal: remove the customer and all their personal data, but keep every record, es
 | Fixed                | Bookings are now kept for good as anonymous records (reference, place, dates, party size, status, rooms, amounts). The hourly job no longer deletes or cuts down bookings after 12 months; it still deletes scans after 12 months, error records after 90 days and receipts left without a booking after 12 months.                                                                                                                            |
 | Fixed                | Privacy policy updated to match, in English and the nine translations: bookings kept as anonymous records once the account closes; notes and receipts kept until the account closes; reviews and questions removed on closing; Event Staff requests kept without contact details. "Last updated" is now 20 November 2026.                                                                                                                      |
 | Missing from the PRD | The full list of what closing does: signs out every device, cancels upcoming bookings (the place is told), erases booking notes, deletes saved places, receipts, reviews and questions, erases Event Staff contact details, and anonymises the account.                                                                                                                                                                                        |
-| Open                 | Emails already sent stay in the email provider's logs until the provider deletes them; the privacy policy could say so.                                                                                                                                                                                                                                                                                                                        |
+| Fixed                | 21 November 2026: the privacy policy now says "Emails we send you: kept in our email provider's delivery logs for 30 days, then deleted automatically" (Resend keeps email data 30 days on every plan, then deletes it), in English and the nine translations; Last updated 21 November 2026.                                                                                                                                                  |
 | Open                 | `ContentPage.test.tsx` fails on this branch with "Caveat is not a function" (a design font in the tests); unrelated to these changes.                                                                                                                                                                                                                                                                                                          |
 
 ## Step 5. Business partners

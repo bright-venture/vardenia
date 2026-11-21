@@ -111,6 +111,7 @@ export const fr: LegalEdition = {
           "- **Les reçus** et ce qui en a été lu : jusqu'à la fermeture de votre compte.",
           '- **Les enregistrements de scans de codes imprimés** : 12 mois.',
           '- **Les enregistrements d’erreurs** : 90 jours.',
+          "- **Les e-mails que nous vous envoyons** : conservés 30 jours dans les journaux d'envoi de notre prestataire d'e-mails, puis supprimés automatiquement.",
           "- **Votre compte** : jusqu'à ce que vous le fermiez.",
           "- **Les avis** : tant qu'ils sont publiés, jusqu'à ce que vous nous demandiez d'en retirer un, ou jusqu'à la fermeture de votre compte.",
           "- **Les questions envoyées depuis la page Questions** : jusqu'à la fermeture de votre compte. **Les demandes de personnel pour un événement** sont conservées comme trace de l'événement, sans votre nom ni vos coordonnées une fois votre compte fermé.",

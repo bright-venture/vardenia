@@ -114,6 +114,7 @@ export const pt: LegalEdition = {
           '- **Recibos** e o que foi lido deles: até você encerrar a conta.',
           '- **Registros de leituras de códigos impressos**: 12 meses.',
           '- **Registros de erros**: 90 dias.',
+          '- **E-mails que enviamos a você**: ficam por 30 dias nos registros de envio do nosso provedor de e-mail e depois são apagados automaticamente.',
           '- **Sua conta**: até você encerrá-la.',
           '- **Avaliações**: enquanto estiverem publicadas, até você nos pedir para retirar uma, ou até você encerrar a conta.',
           '- **Perguntas que você envia pela página Perguntas**: até você encerrar a conta. **Pedidos de equipe para eventos** são guardados como registro do evento, sem o seu nome ou contatos depois que você encerra a conta.',

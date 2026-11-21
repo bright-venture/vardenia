@@ -111,6 +111,7 @@ export const es: LegalEdition = {
           '- **Los recibos** y lo que se leyó de ellos: hasta que cierres tu cuenta.',
           '- **Los registros de escaneos de códigos impresos**: 12 meses.',
           '- **Los registros de errores**: 90 días.',
+          '- **Los correos que te enviamos**: se guardan 30 días en los registros de envío de nuestro proveedor de correo y después se borran automáticamente.',
           '- **Tu cuenta**: hasta que la cierres.',
           '- **Las reseñas**: mientras estén publicadas, hasta que nos pidas retirar una, o hasta que cierres tu cuenta.',
           '- **Las preguntas que envías desde la página Preguntas**: hasta que cierres tu cuenta. **Las solicitudes de personal para eventos** se guardan como constancia del evento, sin tu nombre ni tus datos de contacto una vez cerrada tu cuenta.',
