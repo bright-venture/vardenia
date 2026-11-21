@@ -178,9 +178,9 @@ export const pt: LegalEdition = {
       {
         heading: 'Como os lugares são listados e ordenados',
         body: [
-          'Cada lugar aqui foi escolhido por nós. Pagar não coloca um lugar no guia: um lugar que escolhemos paga depois à Vardenia para ser listado, em um de três níveis: bronze, uma ficha no site; prata, que acrescenta uma página na revista impressa; e ouro, que acrescenta o primeiro lugar em cada lista e um espaço na página inicial.',
-          '- **A ordem de uma lista reflete esse nível.** Primeiro vêm os lugares ouro, depois prata, depois bronze, e os lugares do mesmo nível ficam em ordem alfabética. Um lugar mais acima numa lista pagou por um nível mais alto; ele não está classificado como melhor.',
-          '- **A faixa no topo da página inicial** mostra lugares ouro. É um espaço pago, e está identificado como escolhido pelos lugares que apoiam este guia.',
+          'Cada lugar aqui foi escolhido por nós. Pagar não coloca um lugar no guia: um lugar que escolhemos paga depois à Vardenia para ser listado, em um de quatro níveis: bronze, uma ficha no site; prata, que acrescenta uma página na revista impressa; ouro, que acrescenta o primeiro lugar na lista da sua própria categoria; e platina, que acrescenta um espaço na faixa no topo da página inicial.',
+          '- **A ordem de uma lista reflete esse nível.** Dentro de uma categoria, primeiro vêm os lugares ouro e platina, depois prata, depois bronze, e os lugares do mesmo nível ficam em ordem alfabética. Um lugar mais acima numa lista pagou por um nível mais alto; ele não está classificado como melhor.',
+          '- **A faixa no topo da página inicial** mostra lugares platina. É um espaço pago, e está identificado como escolhido pelos lugares que apoiam este guia.',
           '- **Cada lugar aqui foi visitado e verificado por nós pessoalmente** antes de aparecer.',
           '- **Os lugares também pagam uma comissão** sobre o que os clientes gastam nas visitas reservadas pela Vardenia. Isso não muda o que você paga.',
           'Os lugares sugeridos no fim de uma ficha são primeiro os mais próximos, qualquer que seja o nível.',

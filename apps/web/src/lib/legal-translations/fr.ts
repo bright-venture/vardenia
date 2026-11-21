@@ -175,9 +175,9 @@ export const fr: LegalEdition = {
       {
         heading: 'Comment les lieux sont référencés et classés',
         body: [
-          "Chaque lieu ici a été choisi par nous. Payer ne permet pas d'y entrer : un lieu que nous avons choisi paie ensuite Vardenia pour être référencé, à l'un de trois niveaux : bronze, une fiche sur le site ; argent, qui ajoute une page dans le magazine imprimé ; et or, qui ajoute la première place dans chaque liste et une place sur la page d'accueil.",
-          "- **L'ordre d'une liste reflète ce niveau.** Les lieux or viennent en premier, puis argent, puis bronze, et les lieux d'un même niveau sont classés par ordre alphabétique. Un lieu placé plus haut a payé pour un niveau supérieur ; il n'est pas classé comme meilleur.",
-          "- **Le bandeau en haut de la page d'accueil** présente des lieux or. Il s'agit d'un emplacement payant, signalé comme choisi par les lieux qui soutiennent ce guide.",
+          "Chaque lieu ici a été choisi par nous. Payer ne permet pas d'y entrer : un lieu que nous avons choisi paie ensuite Vardenia pour être référencé, à l'un de quatre niveaux : bronze, une fiche sur le site ; argent, qui ajoute une page dans le magazine imprimé ; or, qui ajoute la première place dans la liste de sa propre catégorie ; et platine, qui ajoute une place dans le bandeau en haut de la page d'accueil.",
+          "- **L'ordre d'une liste reflète ce niveau.** Dans une catégorie, les lieux or et platine viennent en premier, puis argent, puis bronze, et les lieux d'un même niveau sont classés par ordre alphabétique. Un lieu placé plus haut a payé pour un niveau supérieur ; il n'est pas classé comme meilleur.",
+          "- **Le bandeau en haut de la page d'accueil** présente des lieux platine. Il s'agit d'un emplacement payant, signalé comme choisi par les lieux qui soutiennent ce guide.",
           "- **Chaque lieu ici a été visité et vérifié par nous en personne** avant d'apparaître.",
           '- **Les lieux paient aussi une commission** sur ce que les clients dépensent lors des visites réservées par Vardenia. Cela ne change pas ce que vous payez.',
           "Les lieux suggérés en bas d'une fiche sont d'abord les plus proches, quel que soit leur niveau.",

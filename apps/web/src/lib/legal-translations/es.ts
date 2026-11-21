@@ -175,9 +175,9 @@ export const es: LegalEdition = {
       {
         heading: 'Cómo se incluyen y ordenan los lugares',
         body: [
-          'Cada lugar de aquí lo elegimos nosotros. Pagar no da entrada a un lugar: un lugar que hemos elegido paga después a Vardenia para aparecer, en uno de tres niveles: bronce, una ficha en el sitio web; plata, que añade una página en la revista impresa; y oro, que añade el primer puesto en cada lista y un lugar en la página de inicio.',
-          '- **El orden de una lista refleja ese nivel.** Primero van los lugares oro, luego plata y luego bronce, y los lugares del mismo nivel van en orden alfabético. Un lugar más arriba en una lista ha pagado un nivel superior; no está clasificado como mejor.',
-          '- **La franja de la parte superior de la página de inicio** muestra lugares oro. Es un espacio pagado, y está señalado como elegido por los lugares que respaldan esta guía.',
+          'Cada lugar de aquí lo elegimos nosotros. Pagar no da entrada a un lugar: un lugar que hemos elegido paga después a Vardenia para aparecer, en uno de cuatro niveles: bronce, una ficha en el sitio web; plata, que añade una página en la revista impresa; oro, que añade el primer puesto en la lista de su propia categoría; y platino, que añade un lugar en la franja de la parte superior de la página de inicio.',
+          '- **El orden de una lista refleja ese nivel.** Dentro de una categoría, primero van los lugares oro y platino, luego plata y luego bronce, y los lugares del mismo nivel van en orden alfabético. Un lugar más arriba en una lista ha pagado un nivel superior; no está clasificado como mejor.',
+          '- **La franja de la parte superior de la página de inicio** muestra lugares platino. Es un espacio pagado, y está señalado como elegido por los lugares que respaldan esta guía.',
           '- **Hemos visitado y comprobado en persona cada lugar de aquí** antes de que aparezca.',
           '- **Los lugares también pagan una comisión** sobre lo que gastan los clientes en las visitas reservadas a través de Vardenia. No cambia lo que pagas tú.',
           'Los lugares sugeridos al pie de una ficha son primero los más cercanos, sea cual sea su nivel.',
