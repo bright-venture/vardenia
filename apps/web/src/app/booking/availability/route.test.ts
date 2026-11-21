@@ -9,6 +9,8 @@ vi.mock('../../../lib/rate-limit', () => ({
   withRateLimit: (handler: (request: Request) => Promise<Response>) => handler,
 }))
 
+import { unavailableMessage } from '../../../lib/availability'
+
 const { GET } = await import('./route')
 const { getPayload } = await import('payload')
 
@@ -65,6 +67,17 @@ const ask = async (
   )
   return { status: response.status, body: (await response.json()) as Record<string, unknown> }
 }
+
+describe('availability refusal wording', () => {
+  it('is in the language asked for', async () => {
+    const { body } = await ask(restaurant(twoAreas), [booking('outdoor-smoking', 1)], {
+      area: 'outdoor-smoking',
+      locale: 'ar',
+    })
+    expect(body.message).toBe(unavailableMessage('at-capacity', 'ar'))
+    expect(body.message).not.toBe(unavailableMessage('at-capacity', 'en'))
+  })
+})
 
 describe('availability per seating area', () => {
   it('answers every area, with tables and taken, free when any area is', async () => {

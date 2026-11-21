@@ -192,12 +192,12 @@
     "promiseInstant": "সঙ্গে সঙ্গে নিশ্চিত, ইমেলে।",
     "promiseReviews": "এখানের রিভিউ শুধু সেই অতিথিদের, যাঁরা বুকিং করেছেন।",
     "promiseConfirmWithin": "{venue} সাধারণত {hours, plural, one {এক ঘণ্টার} other {# ঘণ্টার}} মধ্যে উত্তর দেয়, আর আমরা উত্তর ইমেলে পাঠাই।",
-    "seatingArea": "Where to sit",
-    "seatingAreaIndoor": "Indoor",
-    "seatingAreaIndoorSmoking": "Indoor, smoking",
-    "seatingAreaOutdoor": "Outdoor",
-    "seatingAreaOutdoorSmoking": "Outdoor, smoking",
-    "seatingAreaFull": "Fully booked at that time"
+    "seatingArea": "কোথায় বসবেন",
+    "seatingAreaIndoor": "ভেতরে",
+    "seatingAreaIndoorSmoking": "ভেতরে, ধূমপান",
+    "seatingAreaOutdoor": "বাইরে",
+    "seatingAreaOutdoorSmoking": "বাইরে, ধূমপান",
+    "seatingAreaFull": "ওই সময়ে পুরো বুক করা"
   },
   "account": {
     "title": "আপনার অ্যাকাউন্ট",
@@ -430,7 +430,8 @@
     "noUpcoming": "সামনে কোনো বুকিং নেই। আগের বুকিং আছে এখানে:",
     "tabRooms": "রুম",
     "tabBranches": "Branches",
-    "editDetails": "Edit listing details"
+    "editDetails": "Edit listing details",
+    "tabDetails": "Listing details"
   },
   "bookingStatus": {
     "pending": "নিশ্চিতকরণের অপেক্ষায়",
@@ -1221,5 +1222,63 @@
     "errEmail": "Enter a valid email address.",
     "errLink": "Enter an https:// link on that network, or just the handle.",
     "errInvalid": "Please check this."
+  },
+  "listingExtras": {
+    "contactTitle": "যোগাযোগ",
+    "phone": "ফোন",
+    "whatsapp": "WhatsApp",
+    "email": "ইমেইল",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "youtube": "YouTube",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "highlightsTitle": "বিশেষ আকর্ষণ",
+    "popularTitle": "সবচেয়ে জনপ্রিয় সুবিধা",
+    "facilitiesTitle": "সব সুবিধা",
+    "stayTitle": "থাকার বিবরণ",
+    "pricePerNight": "পুরো সম্পত্তির জন্য প্রতি রাতে {price}",
+    "includedGuests": "{count} জন অতিথি অন্তর্ভুক্ত",
+    "maxGuests": "সর্বোচ্চ {count} জন অতিথি",
+    "extraGuest": "প্রতিটি অতিরিক্ত অতিথি: প্রতি রাতে {price}",
+    "minStay": "ন্যূনতম থাকা: {count} রাত",
+    "childrenNotCounted": "শিশুরা অতিথির সংখ্যায় গণ্য হয় না।",
+    "packagesTitle": "প্যাকেজ",
+    "unitPerNight": "প্রতি রাতে",
+    "unitPerStay": "পুরো থাকার জন্য",
+    "unitPerPersonPerNight": "প্রতি জন প্রতি রাতে",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "জানা দরকার",
+    "featureMusicAllowed": "গান বাজানো যাবে",
+    "featureEventsHosted": "অনুষ্ঠান আয়োজন করা হয়",
+    "featurePartiesAllowed": "পার্টি করা যাবে",
+    "featureGardenAccess": "বাগানে প্রবেশ",
+    "featureBarbecue": "বারবিকিউ",
+    "featurePool": "সুইমিং পুল",
+    "seatingTitle": "বসার ব্যবস্থা",
+    "areaIndoor": "ভেতরে",
+    "areaIndoorSmoking": "ভেতরে, ধূমপান",
+    "areaOutdoor": "বাইরে",
+    "areaOutdoorSmoking": "বাইরে, ধূমপান"
+  },
+  "bookingExtras": {
+    "area": "বসার জায়গা",
+    "areaFull": "{name} (তখন পুরো বুক করা)",
+    "package": "প্যাকেজ",
+    "packageNone": "রাতের দাম, প্যাকেজ ছাড়া",
+    "total": "{nights}-এর আনুমানিক মোট",
+    "checking": "দাম হিসাব করা হচ্ছে...",
+    "note": "আপনি সরাসরি প্রতিষ্ঠানকে টাকা দেবেন। বুকিংয়ের সময় দাম নিশ্চিত হবে।",
+    "optionPrice": "প্রতি রাতে {price}",
+    "roomsTotal": "{nights}-এর আনুমানিক মোট"
+  },
+  "brandPage": {
+    "eyebrow": "রেস্তোরাঁ গ্রুপ",
+    "branches": "শাখা",
+    "viewBranch": "এই শাখা দেখুন",
+    "takesBookings": "Vardenia-র মাধ্যমে বুকিং নেয়",
+    "description": "লেবাননে আমাদের তালিকাভুক্ত {name}-এর সব শাখা।"
   }
 }

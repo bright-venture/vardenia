@@ -57,7 +57,7 @@ Text must clear 4.5:1 on **every** ground it can land on (base, raised, sunken, 
 - No hardcoded user-facing strings: add keys to `packages/i18n/src/messages/en.json` and `ar.json`, and to the other eight so no locale shows a raw key.
 - Short and concrete. Say what happens ("Request a table"), not system words ("Submit", "Check availability online").
 - A bookable place and an advertisement-only place must read differently. Never offer booking where `isBookableSubcategory` / `canTakeBookings` say no.
-- **No prices anywhere on the website.** Tier and fee prices live only in the PDFs.
+- **Guest-facing prices are public** (decided by the tech lead, 21 Nov 2026): room option prices, guest house stay pricing and packages, and booking quote totals are shown on listing pages and in the booking panel. Vardenia's own tier and partner fee prices still live only in the PDFs, never on the website. Show prices in the listing's currency, formatted for the locale, and render nothing when a price is empty.
 - Test with real long names: "Le Royal Hotels and Resorts Beirut", and the Arabic, which usually runs longer.
 
 **States.** Every list or page has empty, loading (see `PageSkeleton`) and error states, and every form a success state. This is half the work and the part most often missing.

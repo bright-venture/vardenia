@@ -45,6 +45,8 @@ import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
 import { listingReviews, reviewHighlights, SCORE_MIN_REVIEWS } from '../../../../../lib/reviews'
 import { listingAnswerHours } from '../../../../../lib/answer-time'
+import { ListingExtras } from '../../../../../components/listing/ListingExtras'
+import { bookingExtrasOf } from '../../../../../lib/listing-public'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -613,6 +615,9 @@ export default async function ListingPage({ params }: Params) {
               </ul>
             ) : null}
 
+            {/* Contact links, hotel facilities, guest house stay and features, restaurant seating areas. */}
+            <ListingExtras listing={listing} locale={locale as Locale} />
+
             {listing.description ? (
               <div dir="auto" className="prose-vardenia mt-14 max-w-2xl">
                 <RichText data={listing.description as never} />
@@ -757,6 +762,7 @@ export default async function ListingPage({ params }: Params) {
                   payments={(listing as { payments?: PaymentsAccepted | null }).payments}
                   answerHours={answerHours}
                   roomsOnPage={realRooms.length > 0}
+                  extras={bookingExtrasOf(listing)}
                 />
               </div>
             </aside>

@@ -192,12 +192,12 @@
     "promiseInstant": "Confirmada al instante, por correo.",
     "promiseReviews": "Las reseñas aquí son solo de clientes que reservaron.",
     "promiseConfirmWithin": "{venue} suele responder en menos de {hours, plural, one {una hora} other {# horas}} y te enviamos la respuesta por correo.",
-    "seatingArea": "Where to sit",
-    "seatingAreaIndoor": "Indoor",
-    "seatingAreaIndoorSmoking": "Indoor, smoking",
-    "seatingAreaOutdoor": "Outdoor",
-    "seatingAreaOutdoorSmoking": "Outdoor, smoking",
-    "seatingAreaFull": "Fully booked at that time"
+    "seatingArea": "Dónde sentarse",
+    "seatingAreaIndoor": "Interior",
+    "seatingAreaIndoorSmoking": "Interior, fumadores",
+    "seatingAreaOutdoor": "Exterior",
+    "seatingAreaOutdoorSmoking": "Exterior, fumadores",
+    "seatingAreaFull": "Completo a esa hora"
   },
   "account": {
     "title": "Tu cuenta",
@@ -430,7 +430,8 @@
     "noUpcoming": "Nada próximamente. Las reservas anteriores están en",
     "tabRooms": "Habitaciones",
     "tabBranches": "Branches",
-    "editDetails": "Edit listing details"
+    "editDetails": "Edit listing details",
+    "tabDetails": "Listing details"
   },
   "bookingStatus": {
     "pending": "A la espera de confirmación",
@@ -1221,5 +1222,63 @@
     "errEmail": "Enter a valid email address.",
     "errLink": "Enter an https:// link on that network, or just the handle.",
     "errInvalid": "Please check this."
+  },
+  "listingExtras": {
+    "contactTitle": "Contacto",
+    "phone": "Teléfono",
+    "whatsapp": "WhatsApp",
+    "email": "Correo electrónico",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "youtube": "YouTube",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "highlightsTitle": "Lo más destacado",
+    "popularTitle": "Servicios más populares",
+    "facilitiesTitle": "Todos los servicios",
+    "stayTitle": "La estancia",
+    "pricePerNight": "{price} por noche por toda la propiedad",
+    "includedGuests": "Incluye {count} huéspedes",
+    "maxGuests": "Hasta {count} huéspedes",
+    "extraGuest": "Cada huésped extra: {price} por noche",
+    "minStay": "Estancia mínima: {count} noches",
+    "childrenNotCounted": "Los niños no cuentan en el número de huéspedes.",
+    "packagesTitle": "Paquetes",
+    "unitPerNight": "por noche",
+    "unitPerStay": "por estancia",
+    "unitPerPersonPerNight": "por persona y noche",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "Conviene saber",
+    "featureMusicAllowed": "Se permite música",
+    "featureEventsHosted": "Se organizan eventos",
+    "featurePartiesAllowed": "Se permiten fiestas",
+    "featureGardenAccess": "Acceso al jardín",
+    "featureBarbecue": "Barbacoa",
+    "featurePool": "Piscina",
+    "seatingTitle": "Zonas de mesas",
+    "areaIndoor": "Interior",
+    "areaIndoorSmoking": "Interior, fumadores",
+    "areaOutdoor": "Exterior",
+    "areaOutdoorSmoking": "Exterior, fumadores"
+  },
+  "bookingExtras": {
+    "area": "Zona de mesas",
+    "areaFull": "{name} (completa a esa hora)",
+    "package": "Paquete",
+    "packageNone": "Precio por noche, sin paquete",
+    "total": "Total estimado para {nights}",
+    "checking": "Calculando el precio...",
+    "note": "Pagas directamente al local. El precio se confirma al reservar.",
+    "optionPrice": "{price} por noche",
+    "roomsTotal": "Total estimado para {nights}"
+  },
+  "brandPage": {
+    "eyebrow": "Grupo de restaurantes",
+    "branches": "Sucursales",
+    "viewBranch": "Ver esta sucursal",
+    "takesBookings": "Acepta reservas en Vardenia",
+    "description": "Todas las sucursales de {name} que listamos en el Líbano."
   }
 }

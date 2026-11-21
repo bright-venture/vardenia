@@ -202,6 +202,13 @@ export async function overlappingBookings(
   businessId: number,
   start: Date,
   end: Date,
+  /**
+   * Only bookings that hold no rooms: what counts against the listing's own
+   * capacity, as the database trigger counts it (room_count = 0, a null one
+   * too). Room bookings are counted against room types instead. Left off for a
+   * guest house, which deliberately counts any old room booking too.
+   */
+  { withoutRooms = false }: { withoutRooms?: boolean } = {},
 ): Promise<ExistingBooking[]> {
   const result = await payload.find({
     collection: 'bookings',
@@ -215,6 +222,9 @@ export async function overlappingBookings(
         { status: { in: [...OCCUPYING_STATUSES] } },
         { start: { less_than: end.toISOString() } },
         { end: { greater_than: start.toISOString() } },
+        ...(withoutRooms
+          ? [{ or: [{ roomCount: { equals: 0 } }, { roomCount: { exists: false } }] }]
+          : []),
       ],
     },
   })
@@ -496,8 +506,26 @@ export async function createBooking({
     return createStayBooking({ payload, request, customerId, now, business, rules })
   }
 
+  /*
+   * A hotel with room types is booked from its room lines. Without lines the
+   * booking would be judged only by the listing's single capacity: no room
+   * inventory and no price. Refused here (and in the guard); a hotel with no
+   * active room type books as it always did.
+   */
+  const subcategories = (business as { subcategories?: string[] | null }).subcategories ?? []
+  if (canHaveRoomTypes(subcategories)) {
+    const types = await roomTypesFor(payload, [Number(business.id)], { locale: request.locale })
+    if ((types.get(Number(business.id))?.length ?? 0) > 0) {
+      return {
+        ok: false,
+        code: 'unavailable',
+        message: unavailableMessage('no-rooms-chosen', request.locale ?? 'en'),
+      }
+    }
+  }
+
   const [existing, closures] = await Promise.all([
-    overlappingBookings(payload, business.id, start, end),
+    overlappingBookings(payload, business.id, start, end, { withoutRooms: true }),
     closedPeriods(payload, business.id, start, end),
   ])
 

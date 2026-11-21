@@ -48,6 +48,8 @@ const FIXED_SEGMENTS = [
   'add-your-business',
   'credits',
   'advertise',
+  // A restaurant brand and its branches, /brands/<slug> (Task 12).
+  'brands',
   'contact',
   'directory',
   // Event Staff, the request-form section (18 November 2026).

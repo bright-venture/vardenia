@@ -742,3 +742,69 @@ describe('createBooking at a restaurant with seating areas', () => {
     })
   })
 })
+
+describe('createBooking at a hotel with room types, without room lines', () => {
+  const NOW = new Date('2026-12-01T08:00:00.000Z')
+  const DAY = 86_400_000
+  const from = new Date(NOW.getTime() + 3 * DAY)
+  const hotel = {
+    id: 21,
+    _status: 'published',
+    subcategories: ['hotels'],
+    booking: { enabled: true, capacity: 5, leadTimeMinutes: 0, maxAdvanceDays: 365 },
+  }
+  const harness = (types: unknown[]) => {
+    const create = vi.fn(async () => ({ id: 3, reference: 'HTL00001', status: 'pending' }))
+    const find = vi.fn(async (args: { collection: string; where?: unknown }) => ({
+      docs: args.collection === 'room-types' ? types : [],
+      totalDocs: 0,
+    }))
+    const payload = {
+      findByID: vi.fn(async () => hotel),
+      find,
+      count: vi.fn(async () => ({ totalDocs: 0 })),
+      create,
+    } as unknown as Payload
+    return { payload, create, find }
+  }
+  const request = {
+    business: 21,
+    start: from.toISOString(),
+    end: new Date(from.getTime() + DAY).toISOString(),
+    partySize: 2,
+    locale: 'en' as const,
+  }
+
+  it('refuses, and writes nothing, when the hotel has active room types', async () => {
+    const h = harness([
+      { id: 1, business: 21, name: 'Deluxe', rooms: 2, sleepsAdults: 2, active: true, options: [] },
+    ])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('no-rooms-chosen'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('still books a hotel that has no room type, counting only bookings with no rooms', async () => {
+    const h = harness([])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toMatchObject({ ok: true })
+    const overlap = h.find.mock.calls.find(
+      ([args]) => args.collection === 'bookings' && JSON.stringify(args.where).includes('"end"'),
+    )
+    expect(JSON.stringify(overlap?.[0].where)).toContain('roomCount')
+  })
+})

@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { roomOptionLabel } from '@vardenia/core/hotel-options'
+import { roomLabel, type RoomsTranslator } from '../../lib/room-labels'
+import { OptionPrice, RoomsTotal } from './RoomPrices'
 import type { Locale } from '@vardenia/i18n'
 import { Link, usePathname } from '../../i18n/routing'
 import { trackEvent } from '../../lib/analytics'
@@ -459,8 +460,17 @@ export function RoomsSection({
                     {room.views.length + room.amenities.length > 0 ? (
                       <p className="text-ink-700 mt-2 text-sm">
                         {[
-                          ...room.views.map((view) => roomOptionLabel(view, locale)),
-                          ...room.amenities.map((amenity) => roomOptionLabel(amenity, locale)),
+                          ...room.views.map((view) =>
+                            roomLabel(t as unknown as RoomsTranslator, 'views', view, locale),
+                          ),
+                          ...room.amenities.map((amenity) =>
+                            roomLabel(
+                              t as unknown as RoomsTranslator,
+                              'amenities',
+                              amenity,
+                              locale,
+                            ),
+                          ),
                         ].join(' · ')}
                       </p>
                     ) : null}
@@ -525,6 +535,7 @@ export function RoomsSection({
                                 ? t('payInAdvance')
                                 : t('payAtProperty')}
                             </p>
+                            <OptionPrice price={option.price} />
                           </div>
                           <label className="flex items-center gap-2 text-sm">
                             <span className="text-ink-500">{t('quantity')}</span>
@@ -560,6 +571,18 @@ export function RoomsSection({
               ? t('selected', { count: totalRooms })
               : t('selectedOf', { count: totalRooms, wanted: roomsWanted })}
           </p>
+          <RoomsTotal
+            businessId={businessId}
+            date={date}
+            nights={nights}
+            guests={guests}
+            picks={lines.map((line) => ({
+              roomType: line.room.id,
+              option: line.option.id,
+              count: line.count,
+            }))}
+            locale={locale}
+          />
           {tooSmall ? (
             <p className="text-state-danger mt-1 text-sm">
               {totalSleeps < guests

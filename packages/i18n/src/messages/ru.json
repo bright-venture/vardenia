@@ -192,12 +192,12 @@
     "promiseInstant": "Подтверждается сразу, по почте.",
     "promiseReviews": "Отзывы здесь оставляют только гости, которые бронировали.",
     "promiseConfirmWithin": "{venue} обычно отвечает в течение {hours, plural, one {# часа} few {# часов} many {# часов} other {# часа}}, а мы присылаем ответ по почте.",
-    "seatingArea": "Where to sit",
-    "seatingAreaIndoor": "Indoor",
-    "seatingAreaIndoorSmoking": "Indoor, smoking",
-    "seatingAreaOutdoor": "Outdoor",
-    "seatingAreaOutdoorSmoking": "Outdoor, smoking",
-    "seatingAreaFull": "Fully booked at that time"
+    "seatingArea": "Где сесть",
+    "seatingAreaIndoor": "В помещении",
+    "seatingAreaIndoorSmoking": "В помещении, для курящих",
+    "seatingAreaOutdoor": "На улице",
+    "seatingAreaOutdoorSmoking": "На улице, для курящих",
+    "seatingAreaFull": "На это время всё занято"
   },
   "account": {
     "title": "Ваш аккаунт",
@@ -430,7 +430,8 @@
     "noUpcoming": "Ничего не запланировано. Прошлые бронирования в разделе",
     "tabRooms": "Номера",
     "tabBranches": "Branches",
-    "editDetails": "Edit listing details"
+    "editDetails": "Edit listing details",
+    "tabDetails": "Listing details"
   },
   "bookingStatus": {
     "pending": "Ожидает подтверждения",
@@ -1221,5 +1222,63 @@
     "errEmail": "Enter a valid email address.",
     "errLink": "Enter an https:// link on that network, or just the handle.",
     "errInvalid": "Please check this."
+  },
+  "listingExtras": {
+    "contactTitle": "Контакты",
+    "phone": "Телефон",
+    "whatsapp": "WhatsApp",
+    "email": "Эл. почта",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "youtube": "YouTube",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "highlightsTitle": "Главное",
+    "popularTitle": "Самые популярные удобства",
+    "facilitiesTitle": "Все удобства",
+    "stayTitle": "Проживание",
+    "pricePerNight": "{price} за ночь за весь дом",
+    "includedGuests": "Включает {count} гостей",
+    "maxGuests": "До {count} гостей",
+    "extraGuest": "Каждый дополнительный гость: {price} за ночь",
+    "minStay": "Минимальный срок: {count} ночей",
+    "childrenNotCounted": "Дети не учитываются в числе гостей.",
+    "packagesTitle": "Пакеты",
+    "unitPerNight": "за ночь",
+    "unitPerStay": "за весь срок",
+    "unitPerPersonPerNight": "с человека за ночь",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "Полезно знать",
+    "featureMusicAllowed": "Музыка разрешена",
+    "featureEventsHosted": "Проводятся мероприятия",
+    "featurePartiesAllowed": "Вечеринки разрешены",
+    "featureGardenAccess": "Доступ в сад",
+    "featureBarbecue": "Барбекю",
+    "featurePool": "Бассейн",
+    "seatingTitle": "Зоны посадки",
+    "areaIndoor": "В помещении",
+    "areaIndoorSmoking": "В помещении, для курящих",
+    "areaOutdoor": "На улице",
+    "areaOutdoorSmoking": "На улице, для курящих"
+  },
+  "bookingExtras": {
+    "area": "Зона посадки",
+    "areaFull": "{name} (на это время занято)",
+    "package": "Пакет",
+    "packageNone": "Цена за ночь, без пакета",
+    "total": "Ориентировочный итог за {nights}",
+    "checking": "Считаем цену...",
+    "note": "Вы платите напрямую заведению. Цена подтверждается при бронировании.",
+    "optionPrice": "{price} за ночь",
+    "roomsTotal": "Ориентировочный итог за {nights}"
+  },
+  "brandPage": {
+    "eyebrow": "Группа ресторанов",
+    "branches": "Филиалы",
+    "viewBranch": "Открыть филиал",
+    "takesBookings": "Принимает брони через Vardenia",
+    "description": "Все филиалы {name} в Ливане из нашего каталога."
   }
 }

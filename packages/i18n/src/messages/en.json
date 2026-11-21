@@ -430,7 +430,8 @@
     "noUpcoming": "Nothing coming up. Earlier bookings are under",
     "tabRooms": "Rooms",
     "tabBranches": "Branches",
-    "editDetails": "Edit listing details"
+    "editDetails": "Edit listing details",
+    "tabDetails": "Listing details"
   },
   "bookingStatus": {
     "pending": "Awaiting confirmation",
@@ -1221,5 +1222,63 @@
     "errEmail": "Enter a valid email address.",
     "errLink": "Enter an https:// link on that network, or just the handle.",
     "errInvalid": "Please check this."
+  },
+  "listingExtras": {
+    "contactTitle": "Contact",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "youtube": "YouTube",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "highlightsTitle": "Highlights",
+    "popularTitle": "Most popular facilities",
+    "facilitiesTitle": "All facilities",
+    "stayTitle": "The stay",
+    "pricePerNight": "{price} per night for the whole property",
+    "includedGuests": "Includes {count} guests",
+    "maxGuests": "Up to {count} guests",
+    "extraGuest": "Each extra guest: {price} per night",
+    "minStay": "Minimum stay: {count} nights",
+    "childrenNotCounted": "Children do not count toward the number of guests.",
+    "packagesTitle": "Packages",
+    "unitPerNight": "per night",
+    "unitPerStay": "per stay",
+    "unitPerPersonPerNight": "per person per night",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "Good to know",
+    "featureMusicAllowed": "Music allowed",
+    "featureEventsHosted": "Events hosted",
+    "featurePartiesAllowed": "Parties allowed",
+    "featureGardenAccess": "Garden access",
+    "featureBarbecue": "Barbecue",
+    "featurePool": "Pool",
+    "seatingTitle": "Seating",
+    "areaIndoor": "Indoor",
+    "areaIndoorSmoking": "Indoor, smoking",
+    "areaOutdoor": "Outdoor",
+    "areaOutdoorSmoking": "Outdoor, smoking"
+  },
+  "bookingExtras": {
+    "area": "Seating area",
+    "areaFull": "{name} (fully booked then)",
+    "package": "Package",
+    "packageNone": "Nightly price, no package",
+    "total": "Estimated total for {nights}",
+    "checking": "Working out the price...",
+    "note": "You pay the place directly. The price is confirmed when you book.",
+    "optionPrice": "{price} per night",
+    "roomsTotal": "Estimated total for {nights}"
+  },
+  "brandPage": {
+    "eyebrow": "Restaurant group",
+    "branches": "Branches",
+    "viewBranch": "View this branch",
+    "takesBookings": "Takes bookings through Vardenia",
+    "description": "Every {name} branch we list in Lebanon."
   }
 }

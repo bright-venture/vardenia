@@ -23,6 +23,7 @@ const pick = (messages: Tree): Record<string, string> => ({
   ...flat(messages.partnerDetails, 'partnerDetails.'),
   ...flat(messages.partnerBranches, 'partnerBranches.'),
   'partner.editDetails': String((messages.partner as Tree).editDetails ?? ''),
+  'partner.tabDetails': String((messages.partner as Tree).tabDetails ?? ''),
   'partner.tabBranches': String((messages.partner as Tree).tabBranches ?? ''),
 })
 
@@ -48,5 +49,6 @@ describe('partner details and branches messages', () => {
     expect(arabic['partnerDetails.title']).toMatch(ARABIC)
     expect(arabic['partnerBranches.success']).toMatch(ARABIC)
     expect(arabic['partner.editDetails']).toMatch(ARABIC)
+    expect(arabic['partner.tabDetails']).toMatch(ARABIC)
   })
 })

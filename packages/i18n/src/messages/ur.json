@@ -192,12 +192,12 @@
     "promiseInstant": "فوراً تصدیق، ای میل کے ذریعے۔",
     "promiseReviews": "یہاں جائزے صرف ان مہمانوں کے ہیں جنہوں نے بکنگ کی۔",
     "promiseConfirmWithin": "{venue} عموماً {hours, plural, one {ایک گھنٹے} other {# گھنٹوں}} میں جواب دیتا ہے، اور ہم جواب ای میل کرتے ہیں۔",
-    "seatingArea": "Where to sit",
-    "seatingAreaIndoor": "Indoor",
-    "seatingAreaIndoorSmoking": "Indoor, smoking",
-    "seatingAreaOutdoor": "Outdoor",
-    "seatingAreaOutdoorSmoking": "Outdoor, smoking",
-    "seatingAreaFull": "Fully booked at that time"
+    "seatingArea": "کہاں بیٹھنا ہے",
+    "seatingAreaIndoor": "اندر",
+    "seatingAreaIndoorSmoking": "اندر، سگریٹ نوشی",
+    "seatingAreaOutdoor": "باہر",
+    "seatingAreaOutdoorSmoking": "باہر، سگریٹ نوشی",
+    "seatingAreaFull": "اس وقت مکمل بُک"
   },
   "account": {
     "title": "آپ کا اکاؤنٹ",
@@ -430,7 +430,8 @@
     "noUpcoming": "آگے کوئی بکنگ نہیں۔ پچھلی بکنگز یہاں ہیں:",
     "tabRooms": "کمرے",
     "tabBranches": "Branches",
-    "editDetails": "Edit listing details"
+    "editDetails": "Edit listing details",
+    "tabDetails": "Listing details"
   },
   "bookingStatus": {
     "pending": "تصدیق کے منتظر",
@@ -1221,5 +1222,63 @@
     "errEmail": "Enter a valid email address.",
     "errLink": "Enter an https:// link on that network, or just the handle.",
     "errInvalid": "Please check this."
+  },
+  "listingExtras": {
+    "contactTitle": "رابطہ",
+    "phone": "فون",
+    "whatsapp": "WhatsApp",
+    "email": "ای میل",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "tiktok": "TikTok",
+    "snapchat": "Snapchat",
+    "youtube": "YouTube",
+    "x": "X",
+    "linkedin": "LinkedIn",
+    "highlightsTitle": "نمایاں خصوصیات",
+    "popularTitle": "سب سے مقبول سہولیات",
+    "facilitiesTitle": "تمام سہولیات",
+    "stayTitle": "قیام",
+    "pricePerNight": "پوری جائیداد کے لیے فی رات {price}",
+    "includedGuests": "{count} مہمان شامل",
+    "maxGuests": "زیادہ سے زیادہ {count} مہمان",
+    "extraGuest": "ہر اضافی مہمان: فی رات {price}",
+    "minStay": "کم از کم قیام: {count} راتیں",
+    "childrenNotCounted": "بچے مہمانوں کی تعداد میں شمار نہیں ہوتے۔",
+    "packagesTitle": "پیکجز",
+    "unitPerNight": "فی رات",
+    "unitPerStay": "فی قیام",
+    "unitPerPersonPerNight": "فی شخص فی رات",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "جاننا مفید",
+    "featureMusicAllowed": "موسیقی کی اجازت",
+    "featureEventsHosted": "تقریبات کی میزبانی",
+    "featurePartiesAllowed": "پارٹیوں کی اجازت",
+    "featureGardenAccess": "باغ تک رسائی",
+    "featureBarbecue": "باربی کیو",
+    "featurePool": "پول",
+    "seatingTitle": "بیٹھنے کی جگہیں",
+    "areaIndoor": "اندر",
+    "areaIndoorSmoking": "اندر، سگریٹ نوشی",
+    "areaOutdoor": "باہر",
+    "areaOutdoorSmoking": "باہر، سگریٹ نوشی"
+  },
+  "bookingExtras": {
+    "area": "بیٹھنے کی جگہ",
+    "areaFull": "{name} (اس وقت مکمل بُک)",
+    "package": "پیکج",
+    "packageNone": "فی رات قیمت، بغیر پیکج",
+    "total": "{nights} کا تخمینی کل",
+    "checking": "قیمت کا حساب لگایا جا رہا ہے...",
+    "note": "آپ براہِ راست جگہ کو ادائیگی کرتے ہیں۔ بکنگ کے وقت قیمت کی تصدیق ہوتی ہے۔",
+    "optionPrice": "فی رات {price}",
+    "roomsTotal": "{nights} کا تخمینی کل"
+  },
+  "brandPage": {
+    "eyebrow": "ریستوران گروپ",
+    "branches": "شاخیں",
+    "viewBranch": "یہ شاخ دیکھیں",
+    "takesBookings": "Vardenia کے ذریعے بکنگ لیتا ہے",
+    "description": "لبنان میں ہماری فہرست میں شامل {name} کی تمام شاخیں۔"
   }
 }

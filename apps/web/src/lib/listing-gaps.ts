@@ -49,7 +49,7 @@ export interface ListingGap {
   status: string
   category: string
   governorate: string
-  /** Bronze, silver or gold; gold carries the home page place. */
+  /** Bronze, silver, gold or platinum; platinum carries the home page place. */
   tier: string
   /** How many of the flags below are false. Sort on it, descending. */
   missing: number

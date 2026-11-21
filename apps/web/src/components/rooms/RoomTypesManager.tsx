@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { ROOM_AMENITIES, ROOM_VIEWS, roomOptionLabel } from '@vardenia/core/hotel-options'
+import { ROOM_AMENITIES, ROOM_VIEWS } from '@vardenia/core/hotel-options'
+import { roomLabel, type RoomsTranslator } from '../../lib/room-labels'
 import {
   HINT,
   INPUT,
@@ -84,6 +85,7 @@ export function RoomTypesManager({
   today: string
 }) {
   const t = useTranslations('partnerRooms')
+  const tRooms = useTranslations('rooms') as unknown as RoomsTranslator
   const router = useRouter()
   const [editing, setEditing] = useState<ManagedRoomType | null>(null)
   const [busy, setBusy] = useState(false)
@@ -468,7 +470,7 @@ export function RoomTypesManager({
                     checked={editing.views.includes(view)}
                     onChange={() => toggle('views', view)}
                   />
-                  {roomOptionLabel(view, locale)}
+                  {roomLabel(tRooms, 'views', view, locale)}
                 </label>
               ))}
             </div>
@@ -484,7 +486,7 @@ export function RoomTypesManager({
                     checked={editing.amenities.includes(amenity)}
                     onChange={() => toggle('amenities', amenity)}
                   />
-                  {roomOptionLabel(amenity, locale)}
+                  {roomLabel(tRooms, 'amenities', amenity, locale)}
                 </label>
               ))}
             </div>

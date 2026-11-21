@@ -419,6 +419,24 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   }
 
   /**
+   * A hotel with room types is booked from its room lines: a new booking
+   * without any would be judged only by the listing's single capacity, with no
+   * room inventory and no price. Refused for customers and the booking service;
+   * staff may still enter one in the admin.
+   */
+  if (
+    operation === 'create' &&
+    user?.collection !== 'users' &&
+    canHaveRoomTypes((business as { subcategories?: string[] | null }).subcategories ?? [])
+  ) {
+    const id = Number(businessId)
+    const typesBy = await roomTypesFor(payload, [id], { req })
+    if ((typesBy.get(id)?.length ?? 0) > 0) {
+      throw new APIError(unavailableMessage('no-rooms-chosen'), 400)
+    }
+  }
+
+  /**
    * Restaurant seating areas (Task 8, core/seating). A listing without areas
    * books as it always did, and an area sent to it is dropped (the database
    * trigger would refuse an area the listing does not have). A listing with
@@ -484,6 +502,12 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
         { status: { in: [...OCCUPYING_STATUSES] } },
         { start: { less_than: end.toISOString() } },
         { end: { greater_than: start.toISOString() } },
+        // As the database trigger counts: room bookings (room_count > 0) are
+        // counted against room types, not the listing's capacity. A guest house
+        // keeps counting every booking, as it always has.
+        ...(wholeProperty
+          ? []
+          : [{ or: [{ roomCount: { equals: 0 } }, { roomCount: { exists: false } }] }]),
       ],
     },
   })

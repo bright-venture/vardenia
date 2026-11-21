@@ -84,6 +84,7 @@ export default async function DashboardLayout({
         listing={t('tabListing')}
         scans={t('tabScans')}
         statements={t('tabStatements')}
+        {...(listings.length > 0 ? { details: t('tabDetails') } : {})}
         {...(listings.some((listing) => listing.hasRooms) ? { rooms: t('tabRooms') } : {})}
         {...(restaurant ? { branches: t('tabBranches') } : {})}
       />

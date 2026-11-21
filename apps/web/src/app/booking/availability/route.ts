@@ -220,7 +220,7 @@ export const GET = withRateLimit(async (request: Request) => {
   return json({
     ok: false,
     reason: verdict.reason,
-    message: unavailableMessage(verdict.reason),
+    message: unavailableMessage(verdict.reason, locale),
     ...(verdict.detail && verdict.reason !== 'at-capacity' ? { detail: verdict.detail } : {}),
     ...priced,
     ...perArea,

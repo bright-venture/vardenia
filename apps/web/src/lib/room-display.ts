@@ -4,9 +4,9 @@ import config from '../payload.config'
 import { resolvePhotograph, type ResolvedImage } from './media'
 
 /**
- * A hotel's room types as its page shows them: words, photos and options,
- * never prices (none on the website for now, decided 17 November 2026). The
- * rooms left are not here: the page is prerendered, and those are asked for
+ * A hotel's room types as its page shows them: words, photos, options and each
+ * option's price per night (prices are public from Task 5, 20 November 2026).
+ * The rooms left are not here: the page is prerendered, and those are asked for
  * live from /booking/rooms once the guest picks dates.
  */
 export interface RoomOptionView {
@@ -15,6 +15,8 @@ export interface RoomOptionView {
   cancellation: 'free' | 'non-refundable'
   freeCancellationDays: number | null
   payment: 'at-property' | 'in-advance'
+  /** USD per night for one room, as the owner set it; null when none is set. */
+  price: number | null
 }
 
 export interface RoomTypeView {
@@ -61,6 +63,8 @@ export async function listingRoomTypes(listingId: number, locale: Locale): Promi
         freeCancellationDays:
           typeof option.freeCancellationDays === 'number' ? option.freeCancellationDays : null,
         payment: option.payment === 'in-advance' ? 'in-advance' : 'at-property',
+        price:
+          typeof option.price === 'number' && Number.isFinite(option.price) ? option.price : null,
       }))
       return {
         id: Number(d.id),

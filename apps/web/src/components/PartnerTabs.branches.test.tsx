@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({ pathname: '/partner' }))
 vi.mock('next/navigation', () => ({ usePathname: () => state.pathname }))
 vi.mock('../i18n/routing', () => ({ Link: (props: ComponentProps<'a'>) => <a {...props} /> }))
 
-const render = (extra: { branches?: string }) =>
+const render = (extra: { branches?: string; details?: string }) =>
   renderToStaticMarkup(
     <PartnerTabs
       bookings="Bookings"
@@ -20,13 +20,14 @@ const render = (extra: { branches?: string }) =>
 
 describe('partner navigation: listing details and branches (Task 12a)', () => {
   it.each([
-    // The details page lives under the listing tab, which stays lit there.
-    ['/partner/listing/details', '/partner/listing'],
-    ['/ar/partner/listing/details/', '/partner/listing'],
+    // The details tab is its own tab; the listing tab is not lit there.
+    ['/partner/listing/details', '/partner/listing/details'],
+    ['/ar/partner/listing/details/', '/partner/listing/details'],
+    ['/partner/listing', '/partner/listing'],
     ['/ar/partner/branches', '/partner/branches'],
   ])('lights exactly one tab at %s', (pathname, expected) => {
     state.pathname = pathname
-    const markup = render({ branches: 'Branches' })
+    const markup = render({ branches: 'Branches', details: 'Details' })
     expect(markup).toContain(`href="${expected}" aria-current="page"`)
     expect(markup.match(/aria-current="page"/g)).toHaveLength(1)
   })

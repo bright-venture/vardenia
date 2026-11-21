@@ -21,13 +21,13 @@ const SITE_NAME = 'Vardenia'
  * an empty one, because structured data that overstates what you know is worse
  * than none. Google penalises markup that disagrees with the page.
  *
- * `telephone`, `email` and `sameAs` used to be here and are gone with the
- * contact fields themselves - bookings and enquiries go through Vardenia now,
- * so a listing holds no phone number, address book entry or social profile to
- * declare. That costs a little: `sameAs` is how Google ties a listing to the
- * business as a real-world entity. It is the price of the model, not an
- * oversight, and it is worth revisiting if listings ever carry a public profile
- * link again.
+ * `telephone`, `email` and `sameAs` used to be here and were removed when the
+ * contact fields went (bookings and enquiries went through Vardenia). Listings
+ * have public contact details again (the `contact` group, shown on the page by
+ * components/listing/ListingExtras), and they are still deliberately left out of
+ * this markup: declaring them is a separate SEO and privacy decision for the
+ * owner. `sameAs` is how Google ties a listing to the business as a real-world
+ * entity, so it is worth revisiting.
  */
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')

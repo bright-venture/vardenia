@@ -27,6 +27,7 @@ export function PartnerTabs({
   statements,
   rooms,
   branches,
+  details,
 }: {
   bookings: string
   listing: string
@@ -36,6 +37,8 @@ export function PartnerTabs({
   rooms?: string
   /** Shown only to a partner with a restaurant (Task 12a). */
   branches?: string
+  /** Edit listing details, under the listing path; shown to a partner with a listing. */
+  details?: string
 }) {
   const pathname = usePathname()
 
@@ -45,7 +48,8 @@ export function PartnerTabs({
    * `/ar/partner/listing` in Arabic. Comparing whole paths would leave the
    * Arabic dashboard with nothing highlighted.
    */
-  const onListing = /\/partner\/listing(\/|$)/.test(pathname)
+  const onDetails = /\/partner\/listing\/details(\/|$)/.test(pathname)
+  const onListing = /\/partner\/listing(\/|$)/.test(pathname) && !onDetails
   const onScans = /\/partner\/scans(\/|$)/.test(pathname)
   // Includes a single statement, /partner/statements/12, so the tab stays lit there.
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
@@ -59,13 +63,18 @@ export function PartnerTabs({
     >
       <Tab
         href="/partner"
-        active={!onListing && !onScans && !onStatements && !onRooms && !onBranches}
+        active={!onListing && !onDetails && !onScans && !onStatements && !onRooms && !onBranches}
       >
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
         {listing}
       </Tab>
+      {details ? (
+        <Tab href="/partner/listing/details" active={onDetails}>
+          {details}
+        </Tab>
+      ) : null}
       <Tab href="/partner/scans" active={onScans}>
         {scans}
       </Tab>

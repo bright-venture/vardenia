@@ -430,7 +430,8 @@
     "noUpcoming": "لا حجوزات قادمة. الحجوزات السابقة في",
     "tabRooms": "الغرف",
     "tabBranches": "الفروع",
-    "editDetails": "تعديل تفاصيل الصفحة"
+    "editDetails": "تعديل تفاصيل الصفحة",
+    "tabDetails": "تفاصيل الصفحة"
   },
   "bookingStatus": {
     "pending": "بانتظار التأكيد",
@@ -1221,5 +1222,63 @@
     "errEmail": "أدخل بريدًا إلكترونيًا صحيحًا.",
     "errLink": "أدخل رابطًا يبدأ بـ https:// على تلك الشبكة، أو اسم الحساب فقط.",
     "errInvalid": "يرجى التحقق من هذا الحقل."
+  },
+  "listingExtras": {
+    "contactTitle": "التواصل",
+    "phone": "الهاتف",
+    "whatsapp": "واتساب",
+    "email": "البريد الإلكتروني",
+    "instagram": "إنستغرام",
+    "facebook": "فيسبوك",
+    "tiktok": "تيك توك",
+    "snapchat": "سناب شات",
+    "youtube": "يوتيوب",
+    "x": "إكس",
+    "linkedin": "لينكدإن",
+    "highlightsTitle": "أبرز المزايا",
+    "popularTitle": "أكثر المرافق طلبًا",
+    "facilitiesTitle": "كل المرافق",
+    "stayTitle": "الإقامة",
+    "pricePerNight": "{price} لليلة للعقار بأكمله",
+    "includedGuests": "يشمل {count} ضيوف",
+    "maxGuests": "حتى {count} ضيوف",
+    "extraGuest": "كل ضيف إضافي: {price} لليلة",
+    "minStay": "الحد الأدنى للإقامة: {count} ليالٍ",
+    "childrenNotCounted": "لا يُحتسب الأطفال ضمن عدد الضيوف.",
+    "packagesTitle": "الباقات",
+    "unitPerNight": "لليلة",
+    "unitPerStay": "للإقامة",
+    "unitPerPersonPerNight": "للشخص لليلة",
+    "packagePrice": "{price} {unit}",
+    "featuresTitle": "معلومات مفيدة",
+    "featureMusicAllowed": "الموسيقى مسموحة",
+    "featureEventsHosted": "تُقام فيه المناسبات",
+    "featurePartiesAllowed": "الحفلات مسموحة",
+    "featureGardenAccess": "إمكانية الوصول إلى الحديقة",
+    "featureBarbecue": "شواء",
+    "featurePool": "مسبح",
+    "seatingTitle": "الجلوس",
+    "areaIndoor": "داخلي",
+    "areaIndoorSmoking": "داخلي، للمدخنين",
+    "areaOutdoor": "خارجي",
+    "areaOutdoorSmoking": "خارجي، للمدخنين"
+  },
+  "bookingExtras": {
+    "area": "منطقة الجلوس",
+    "areaFull": "{name} (محجوزة بالكامل في هذا الوقت)",
+    "package": "الباقة",
+    "packageNone": "سعر الليلة بدون باقة",
+    "total": "الإجمالي التقريبي لـ {nights}",
+    "checking": "جارٍ حساب السعر...",
+    "note": "تدفع للمكان مباشرة. يُؤكَّد السعر عند الحجز.",
+    "optionPrice": "{price} لليلة",
+    "roomsTotal": "الإجمالي التقريبي لـ {nights}"
+  },
+  "brandPage": {
+    "eyebrow": "مجموعة مطاعم",
+    "branches": "الفروع",
+    "viewBranch": "عرض هذا الفرع",
+    "takesBookings": "يقبل الحجوزات عبر فاردينيا",
+    "description": "جميع فروع {name} المدرجة لدينا في لبنان."
   }
 }
