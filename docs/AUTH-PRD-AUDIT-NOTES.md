@@ -17,6 +17,8 @@ Steps 1 to 10 grouped by what is left to do. Each item says what it is and why i
 
 ### 1. PRD wording to update (no code change)
 
+Done 21 November 2026: every item below is written into **version 2 of the PRD** (`Vardenia-Authentication-PRD-v2.pdf`, in the Vardenia folder). Kept here as the record of what changed from version 1.
+
 These make the PRD describe what the product really does.
 
 - **Sign-in limits** (section 2): two counters for sign-in, sign-up, forgot password, reset and verify: 10 a minute per internet connection and email, and 60 a minute per connection; requests with no email share 10 a minute per connection. "Forgot password" once per 15 seconds per account. The account lock (10 wrong for a customer, 5 for a partner or team member, 10 minutes, reset by a correct sign-in) is unchanged. The PRD only mentions the lock.
