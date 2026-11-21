@@ -557,3 +557,49 @@ describe('notifyVenueOfBooking', () => {
     )
   })
 })
+
+/**
+ * The quoted total (Task 7): one line when the booking stored a price
+ * snapshot, nothing otherwise (restaurants, unpriced stays).
+ */
+describe('the total, when a price was quoted', () => {
+  it('adds one "Total" line to the guest email, in the guest language', () => {
+    const en = bookingConfirmationContent({ ...BASE, status: 'confirmed', total: 1234.5 })!
+    expect(en.text).toContain('Total: $1,234.50')
+    expect(en.html).toContain('$1,234.50')
+    const fr = bookingConfirmationContent({
+      ...BASE,
+      status: 'confirmed',
+      locale: 'fr',
+      total: 450,
+    })!
+    expect(fr.text).toContain('Total: $450')
+    const ar = bookingConfirmationContent({ ...BASE, status: 'pending', locale: 'ar', total: 450 })!
+    expect(ar.text).toMatch(/الإجمالي: \$450/)
+  })
+
+  it('shows a total of 0, which is a real price', () => {
+    const mail = bookingConfirmationContent({ ...BASE, status: 'confirmed', total: 0 })!
+    expect(mail.text).toContain('Total: $0')
+  })
+
+  it('adds nothing without a total', () => {
+    const mail = bookingConfirmationContent({ ...BASE, status: 'confirmed' })!
+    expect(mail.text).not.toContain('Total')
+    expect(mail.html).not.toContain('$')
+  })
+
+  it('adds the total to the venue email too', () => {
+    const base = {
+      businessName: 'Beit Douma',
+      guestName: 'Sami',
+      reference: 'ABCD1234',
+      start: new Date('2026-09-01T12:00:00Z'),
+      end: new Date('2026-09-03T08:00:00Z'),
+      partySize: 2,
+      confirmed: false,
+    }
+    expect(venueRequestContent({ ...base, total: 300 }).text).toContain('Total: $300')
+    expect(venueRequestContent(base).text).not.toContain('Total')
+  })
+})

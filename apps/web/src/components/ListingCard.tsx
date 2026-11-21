@@ -3,7 +3,6 @@ import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import type { MediaField } from '../lib/media'
 import { categoryLabel, placeLabel } from '../lib/labels'
-import { SHOW_LOCATION } from '../lib/location-display'
 import { isOpenNow } from '../lib/hours'
 import { tripDayLabel, tripQuery, TRIP_DEFAULT_TIME, type Trip } from '../lib/trip'
 import type { TripVerdict } from '../lib/trip-availability'
@@ -108,8 +107,7 @@ export function ListingCard({
 }: Props) {
   const t = useTranslations('directory')
   const booking = useTranslations('booking')
-  // Hidden for now; see lib/location-display.
-  const place = SHOW_LOCATION ? placeLabel(governorate, district, locale) : null
+  const place = placeLabel(governorate, district, locale)
   // Only ever shown when confidently open. `null` (no hours) and `false`
   // (closed) both render nothing: a grid of "Closed" badges is noise, and a card
   // is a reason to visit, not a warning off. Computed at render, so it carries

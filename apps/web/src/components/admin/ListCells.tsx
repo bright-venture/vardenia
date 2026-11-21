@@ -13,13 +13,13 @@ import type { DefaultCellComponentProps } from 'payload'
 
 type Props = DefaultCellComponentProps
 
-/** "Gold", "Silver" or "Bronze", the higher rungs marked out. */
+/** "Platinum", "Gold", "Silver" or "Bronze", the higher rungs marked out. */
 export function TierCell({ cellData }: Props) {
   const tier = String(cellData ?? '')
   if (!tier) return null
   const name = tier.charAt(0).toUpperCase() + tier.slice(1)
   const pill =
-    tier === 'gold'
+    tier === 'platinum' || tier === 'gold'
       ? 'vd-pill vd-pill--warn'
       : tier === 'silver'
         ? 'vd-pill vd-pill--ok'

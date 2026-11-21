@@ -175,3 +175,91 @@ describe('verdictFrom', () => {
     expect(verdictFrom({ ok: false, reason: 'too-far-ahead' })).toEqual({ kind: 'other' })
   })
 })
+
+/**
+ * A guest house on the directory (Task 6): judged as the booking service books
+ * it, the whole property for the planned nights from check-in, one stay at a
+ * time, the owner's minimum nights and guest cap, and never its room types.
+ */
+describe('tripVerdictFor at a guest house', () => {
+  const getaway = (stay: Record<string, unknown> = {}) => ({
+    id: 2,
+    subcategories: ['getaways'],
+    // Sitting-shaped rules and a high capacity: neither applies to a guest house.
+    booking: { enabled: true, capacity: 6, minDurationMinutes: 90, maxPartySize: 2 },
+    openingHours: null,
+    stay,
+  })
+
+  it('is free for nights nobody holds, whatever the staff party limit', () => {
+    expect(tripVerdictFor(getaway(), trip({ nights: 2, party: 5 }), [], [], NOW)).toEqual({
+      kind: 'free',
+    })
+  })
+
+  it('is full when another stay holds one of the nights', () => {
+    const taken = [
+      {
+        start: new Date('2026-10-04T12:00:00Z'),
+        end: new Date('2026-10-05T08:00:00Z'),
+        status: 'pending' as const,
+      },
+    ]
+    expect(tripVerdictFor(getaway(), trip({ nights: 2 }), taken, [], NOW)).toEqual({
+      kind: 'full',
+    })
+  })
+
+  it('is not free for fewer nights than the minimum, nor more guests than the cap', () => {
+    expect(tripVerdictFor(getaway({ minNights: 3 }), trip({ nights: 2 }), [], [], NOW)).toEqual({
+      kind: 'other',
+    })
+    expect(
+      tripVerdictFor(getaway({ maxGuests: 4 }), trip({ party: 3, children: 2 }), [], [], NOW),
+    ).toEqual({ kind: 'party' })
+  })
+})
+
+/**
+ * A restaurant with seating areas on the directory (Task 8): free while any
+ * area has a table, full only when every area is.
+ */
+describe('tripVerdictFor at a restaurant with seating areas', () => {
+  const rules = { enabled: true, capacity: 1, minDurationMinutes: 90, maxPartySize: 6 }
+  const listing = {
+    id: 1,
+    booking: rules,
+    openingHours: null,
+    subcategories: ['restaurants'],
+    seatingAreas: [
+      { setting: 'indoor', tables: 2 },
+      { setting: 'outdoor', smoking: true, tables: 1 },
+    ],
+  }
+  const held = (area: string | null) => ({
+    start: new Date('2026-10-03T16:30:00Z'),
+    end: new Date('2026-10-03T18:30:00Z'),
+    status: 'confirmed' as const,
+    area,
+  })
+
+  it('is free while one area has a table, though the listing capacity is taken', () => {
+    expect(tripVerdictFor(listing, trip(), [held('outdoor-smoking'), held(null)], [], NOW)).toEqual(
+      {
+        kind: 'free',
+      },
+    )
+  })
+
+  it('is full when every area is', () => {
+    expect(
+      tripVerdictFor(
+        listing,
+        trip(),
+        [held('outdoor-smoking'), held('indoor'), held('indoor')],
+        [],
+        NOW,
+      ),
+    ).toEqual({ kind: 'full' })
+  })
+})

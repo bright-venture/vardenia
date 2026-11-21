@@ -221,8 +221,12 @@ export function suggestionsFor(b: Facts, flags: Flag[]): Suggestion[] {
   if (b.missing.description) add('Add a short description of what makes the place worth the trip.')
   if (b.missing.arabicName) add('Give us your name in Arabic, for Arabic readers.')
   if (b.missing.location) add('Send us your exact location, so the map and directions work.')
-  if ((flags.includes('low-scans') || flags.includes('looked-not-booked')) && b.tier !== 'gold') {
-    add('Offer Gold: first place in every list and a place on the home page.', true)
+  if (
+    (flags.includes('low-scans') || flags.includes('looked-not-booked')) &&
+    b.tier !== 'gold' &&
+    b.tier !== 'platinum'
+  ) {
+    add('Offer Gold: first place in its category.', true)
   }
   return out
 }

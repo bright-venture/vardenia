@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
-import { goldPlaces } from './gold-places'
+import { HOME_PAGE_TIERS, tierLimits } from './tier-limits'
 import type { Business } from '../payload-types'
 import { PUBLISHED_SQL } from '../access'
 import { rawDb } from './db'
@@ -727,10 +727,11 @@ async function countByPlace(
 /**
  * The listings a venue has paid to have shown.
  *
- * This is the visible half of what the gold tier buys - the home page draws a
- * band of these above everything else. The other half needs no query at all:
- * every listing grid sorts on `-tier` first, so a gold listing rises to the top
- * of its section without anything here. Gold includes the magazine page, so
+ * This is the visible half of what the platinum tier buys - the home page draws
+ * a band of these above everything else. The other half needs no query at all:
+ * every listing grid sorts on `-tier` first, so a platinum listing, then a gold
+ * one, rises to the top of its section without anything here. Platinum includes
+ * the magazine page, so
  * the band only ever holds magazine listings.
  *
  * # Why it is its own query rather than a filter on the homepage grid
@@ -751,18 +752,18 @@ export async function findFeaturedListings({
     const payload = await client()
     // As many places as the admin's Tiers page sets. Saving that page clears
     // this cache (globals/Settings), so a new number shows straight away.
-    const limit = await goldPlaces(payload)
+    const { maxPlatinum: limit } = await tierLimits(payload)
 
     const result = await payload.find({
       collection: 'businesses',
-      where: { tier: { equals: 'gold' } },
+      where: { tier: { in: HOME_PAGE_TIERS } },
       locale: dataLocale(locale),
       depth: 1,
       limit,
       pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
-      // All gold, so this orders the band by name.
+      // All platinum, so this orders the band by name.
       sort: ['name'],
     })
 

@@ -470,29 +470,6 @@
   color: var(--theme-elevation-800);
 }
 
-/* "Paste a Google Maps link" above a listing's location. */
-.vd-maps {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: var(--base);
-}
-
-.vd-maps__row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.vd-maps__row input {
-  flex: 1 1 18rem;
-}
-
-.vd-maps a {
-  color: var(--theme-elevation-900);
-  text-decoration: underline;
-}
-
 /*
  * Every list in the admin.
  *

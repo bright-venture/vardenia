@@ -391,3 +391,125 @@ describe('marking a visit as done', () => {
     ).resolves.toBeTruthy()
   })
 })
+
+/**
+ * A guest house, booked whole (Task 6). The guard is the rule for every path
+ * that writes a booking, so it refuses what the booking service refuses: a
+ * second stay over the same nights, a short stay, too many guests, and rooms.
+ */
+describe('a new booking at a guest house', () => {
+  const DAY = 86_400_000
+  const start = new Date(Date.now() + 5 * DAY)
+  const getaway = {
+    id: 12,
+    subcategories: ['getaways'],
+    booking: { enabled: true, capacity: 3 },
+    stay: { minNights: 2, maxGuests: 6, includedGuests: 2 },
+  }
+
+  const create = (data: Record<string, unknown>, existing: Record<string, unknown>[] = []) =>
+    guardBookingWrite({
+      data: { business: 12, customer: 5, partySize: 2, ...data },
+      req: {
+        user: customer,
+        payload: {
+          findByID: async () => getaway,
+          find: async (args: { collection: string }) =>
+            args.collection === 'bookings' ? { docs: existing } : { docs: [] },
+        },
+      },
+      operation: 'create',
+    } as unknown as Args)
+
+  const nights = (n: number, from = start) => ({
+    start: from.toISOString(),
+    end: new Date(from.getTime() + n * DAY - 4 * HOUR).toISOString(),
+  })
+
+  it('lets a free stay through', async () => {
+    await expect(create(nights(2))).resolves.toMatchObject({ status: 'pending' })
+  })
+
+  it('refuses a second stay over the same nights, though capacity says 3', async () => {
+    const error = await create(nights(2), [
+      { id: 1, status: 'confirmed', ...nights(3, new Date(start.getTime() - DAY)) },
+    ]).catch((e: Error) => e)
+    expect((error as Error).message).toMatch(/fully booked/i)
+  })
+
+  it('refuses a stay shorter than the minimum nights', async () => {
+    const error = await create(nights(1)).catch((e: Error) => e)
+    expect((error as Error).message).toMatch(/minimum number of nights/i)
+  })
+
+  it('refuses more guests than the cap, children included', async () => {
+    const error = await create({ ...nights(2), partySize: 7, children: 2 }).catch((e: Error) => e)
+    expect((error as Error).message).toMatch(/more people/i)
+  })
+
+  it('refuses room lines at a listing filed as a hotel too: whole property first', async () => {
+    const error = await guardBookingWrite({
+      data: {
+        business: 12,
+        customer: 5,
+        partySize: 2,
+        ...nights(2),
+        rooms: [{ roomType: 4, count: 1 }],
+      },
+      req: {
+        user: customer,
+        payload: {
+          findByID: async () => ({ ...getaway, subcategories: ['hotels', 'getaways'] }),
+          find: async () => ({ docs: [] }),
+        },
+      },
+      operation: 'create',
+    } as unknown as Args).catch((e: Error) => e)
+    expect((error as Error).message).toMatch(/no longer offered/i)
+  })
+
+  it('refuses room lines', async () => {
+    const error = await create({ ...nights(2), rooms: [{ roomType: 4, count: 1 }] }).catch(
+      (e: Error) => e,
+    )
+    expect((error as Error).message).toMatch(/no longer offered/i)
+  })
+})
+
+/**
+ * Children are part of the party and at least one guest is an adult: the same
+ * split the booking service makes (core splitParty), applied to every write so
+ * a direct create cannot store 5 children in a party of 2.
+ */
+describe('children within the party', () => {
+  const start = new Date(Date.now() + 48 * HOUR)
+  const write = (data: Record<string, unknown>) =>
+    guardBookingWrite({
+      data: {
+        business: 10,
+        customer: 5,
+        start: start.toISOString(),
+        end: new Date(start.getTime() + 2 * HOUR).toISOString(),
+        ...data,
+      },
+      req: {
+        user: staff,
+        payload: {
+          findByID: async () => ({
+            id: 10,
+            subcategories: ['restaurants'],
+            booking: { enabled: true, capacity: 5, maxDurationMinutes: 240 },
+          }),
+          find: async () => ({ docs: [] }),
+        },
+      },
+      operation: 'create',
+    } as unknown as Args)
+
+  it('clamps children to the party less one adult', async () => {
+    expect(await write({ partySize: 2, children: 5 })).toMatchObject({ partySize: 2, children: 1 })
+    expect(await write({ partySize: 1, children: 3 })).toMatchObject({ children: 0 })
+    expect(await write({ partySize: 4, children: -2 })).toMatchObject({ children: 0 })
+    expect(await write({ partySize: 4, children: 2 })).toMatchObject({ children: 2 })
+  })
+})

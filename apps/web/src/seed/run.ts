@@ -211,6 +211,8 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     contractStartsAt: fixture.contractStartsAt,
     contractEndsAt: fixture.contractEndsAt,
     internalNotes: fixture.internalNotes,
+    ...(fixture.stay ? { stay: fixture.stay } : {}),
+    ...(fixture.features ? { features: fixture.features } : {}),
     _status: fixture.status,
   }
 }

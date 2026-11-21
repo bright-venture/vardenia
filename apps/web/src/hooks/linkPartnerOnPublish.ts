@@ -6,6 +6,7 @@ import type {
   CollectionBeforeValidateHook,
 } from 'payload'
 import { reportError } from '../lib/report'
+import { advisoryLock, partnerLockKey } from '../lib/partner-lock'
 
 type Submission = {
   status?: string
@@ -133,7 +134,20 @@ export const linkPartnerOnPublish: CollectionAfterChangeHook = async ({
       return doc
     }
 
-    const current = (partner.businesses ?? []).map(idOf).filter((id) => id !== null)
+    // Under the partner lock the branch endpoint takes (lib/partner-lock),
+    // and read again once it is held, so a branch appended to this account
+    // in the meantime is kept rather than overwritten by the list read above.
+    await advisoryLock(req, partnerLockKey(partner.id))
+    const fresh = await payload.find({
+      collection: 'business-users',
+      where: { id: { equals: partner.id } },
+      limit: 1,
+      depth: 0,
+      req,
+      overrideAccess: true,
+    })
+    const latest = (fresh.docs[0] ?? partner) as { businesses?: unknown[] }
+    const current = (latest.businesses ?? []).map(idOf).filter((id) => id !== null)
     if (current.includes(doc.id)) return doc
 
     await payload.update({

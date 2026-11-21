@@ -26,11 +26,11 @@ import {
 import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
-import { SHOW_LOCATION } from '../../../../../lib/location-display'
-import { mapsLink } from '../../../../../lib/maps-link'
+import { hasMapTarget, mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
+import { isWholeProperty, stayConfigOf, stayFormRules } from '../../../../../lib/stay-booking'
 import { RoomsSection } from '../../../../../components/rooms/RoomsSection'
 import { listingRoomTypes } from '../../../../../lib/room-display'
 import { bookingFormModel } from '../../../../../lib/booking-form'
@@ -163,9 +163,8 @@ export default async function ListingPage({ params }: Params) {
     can(tierOf(listing.tier), 'galleryLimit'),
   )
   const place = placeLabel(listing.governorate, listing.district, locale as Locale)
-  // The area, the address and both map links are hidden for now; see
-  // lib/location-display. `place` is still computed for the related listings.
-  const address = SHOW_LOCATION ? listing.address : null
+  // Blank counts as none: spaces alone must not draw an empty address row.
+  const address = listing.address?.trim() || null
   const open = isOpenNow(listing.openingHours as never)
 
   const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
@@ -216,7 +215,7 @@ export default async function ListingPage({ params }: Params) {
       : null
 
   /**
-   * Real rooms, for a hotel or getaway with room types (17 November 2026).
+   * Real rooms, for a hotel with room types (17 November 2026).
    * When there are any, they replace the simple room labels and the stay form:
    * the guest picks dates and rooms in the list, and the sidebar points there.
    */
@@ -339,7 +338,7 @@ export default async function ListingPage({ params }: Params) {
             </Suspense>
 
             <Eyebrow inverse>
-              {[categoryLabel(listing.category, locale as Locale), SHOW_LOCATION ? place : null]
+              {[categoryLabel(listing.category, locale as Locale), place]
                 .filter(Boolean)
                 .join(' · ')}
             </Eyebrow>
@@ -438,15 +437,16 @@ export default async function ListingPage({ params }: Params) {
               </p>
             ) : null}
 
-            {/* Directions (only with coordinates) sits beside Save (always). A
-              listing with no location still offers the heart. */}
+            {/* Directions sit beside Save (always), and only when the listing has
+              a point, a map link or an address to send the reader to. */}
             <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-              {SHOW_LOCATION ? (
+              {hasMapTarget({ coordinates: point, mapUrl: listing.mapUrl, address }) ? (
                 <ActionBar
                   name={listing.name ?? ''}
-                  address={listing.address}
+                  address={address}
                   place={place}
                   coordinates={point}
+                  mapUrl={listing.mapUrl}
                 />
               ) : null}
               <SaveButton slug={slug} variant="button" />
@@ -517,6 +517,7 @@ export default async function ListingPage({ params }: Params) {
                           address,
                           place,
                           coordinates: point,
+                          mapUrl: listing.mapUrl,
                         })}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -739,7 +740,13 @@ export default async function ListingPage({ params }: Params) {
               <div className="lg:sticky lg:top-10">
                 <BookingPanel
                   businessId={listing.id}
-                  rules={listing.booking as never}
+                  rules={
+                    // A guest house books whole nights, at least its minimum,
+                    // up to its guest cap (lib/stay-booking, Task 6).
+                    (isWholeProperty(listing)
+                      ? stayFormRules(listing.booking as BookingRules | null, stayConfigOf(listing))
+                      : listing.booking) as never
+                  }
                   locale={locale as Locale}
                   venue={listing.name}
                   payments={(listing as { payments?: PaymentsAccepted | null }).payments}

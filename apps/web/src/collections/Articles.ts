@@ -2,6 +2,7 @@ import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 import { isStaff, publishedOrStaff } from '../access/index'
 import { slugField } from '../fields/slug'
 import { protectArticleWithPrintedCode } from '../hooks/protectPrintedCodes'
+import { markMediaAttached } from '../hooks/markMediaAttached'
 import { seoField } from '../fields/seo'
 import { categoryOptions, governorateOptions } from './options'
 
@@ -45,6 +46,8 @@ export const Articles: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 50 },
   hooks: {
     beforeChange: [datePublished],
+    // Staff may use a partner's photo; it becomes public with the article.
+    afterChange: [markMediaAttached],
     // An article whose code is in print is unpublished, never deleted.
     beforeDelete: [protectArticleWithPrintedCode],
   },

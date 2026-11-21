@@ -34,6 +34,8 @@ export interface RoomOption {
   cancellation?: 'free' | 'non-refundable' | null
   freeCancellationDays?: number | null
   payment?: 'at-property' | 'in-advance' | null
+  /** USD per room per night (Task 5). Null when the hotel set none. */
+  price?: number | null
 }
 
 /**

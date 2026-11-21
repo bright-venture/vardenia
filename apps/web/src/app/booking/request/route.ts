@@ -38,6 +38,8 @@ const STATUS_FOR = {
   unavailable: 409,
   'not-found': 404,
   'rate-limited': 429,
+  // A request that cannot be priced as sent: an unknown or inactive package.
+  invalid: 400,
   error: 500,
 } as const
 
@@ -156,6 +158,8 @@ export const POST = withRateLimit(
         partySize: parsed.data.partySize,
         locale: parsed.data.locale ?? 'en',
         ...(outcome.roomType ? { roomType: outcome.roomType } : {}),
+        // The server's own quote, as stored (Task 7); never the client's.
+        ...(outcome.total !== undefined ? { total: outcome.total } : {}),
       }).catch(async (error) => {
         /**
          * The most consequential silent failure in the product. The booking is real
@@ -185,6 +189,7 @@ export const POST = withRateLimit(
         end: new Date(outcome.end ?? parsed.data.end),
         partySize: parsed.data.partySize,
         roomType: outcome.roomType,
+        ...(outcome.total !== undefined ? { total: outcome.total } : {}),
         confirmed: outcome.status === 'confirmed',
       })
     }

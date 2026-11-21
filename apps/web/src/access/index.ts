@@ -33,7 +33,9 @@
  *    statements and QR codes, and switching a printed code off. And the
  *    commercial flags - tier, verified, booking fee - on create as
  *    well as on update.
- *  - business-users own nothing yet; they read their own listings.
+ *  - business-users read their own listings and, since Task 3 (20 November
+ *    2026), edit the allow-listed public fields of them (core
+ *    PARTNER_EDITABLE_FIELDS, enforced by hooks/guardPartnerListingWrite).
  */
 
 import type { Access, FieldAccess, Where } from 'payload'
@@ -256,3 +258,44 @@ export const selfOrStaff =
     if (!req.user || collectionOf(req.user) !== collection) return false
     return { id: { equals: req.user.id } }
   }
+
+/**
+ * Who may update a listing: staff, and a partner for the listings attached to
+ * their account.
+ *
+ * A query constraint, never `true`, so Payload filters in the database and a
+ * partner asking for somebody else's listing finds nothing to update. Which
+ * fields they may send is the guard's business (hooks/guardPartnerListingWrite);
+ * this only decides which rows. An owner with no listings, a customer and an
+ * anonymous caller get `false`.
+ */
+export const staffOrOwnedListing: Access = ({ req }) => {
+  if (isStaffUser(req.user)) return true
+  const owned = ownedBusinessIds(req.user)
+  if (owned.length === 0) return false
+  return { id: { in: owned } }
+}
+
+/**
+ * Who may read a media row.
+ *
+ * Staff see everything. Everyone else sees what the team uploaded (no
+ * `uploadedBy`) and anything already attached to a page (`attached`, set by
+ * hooks/markMediaAttached when a listing, room type, article or issue is saved
+ * pointing at it). A partner also sees their own uploads, so the dashboard can
+ * show a photo before it is attached. What nobody but staff and the uploader
+ * sees is a partner's upload that is not on any page yet - a menu draft, a
+ * photo they changed their mind about.
+ *
+ * The files themselves are served straight from the public bucket under an
+ * unguessable name (hooks/unguessableFilename); this keeps the name from being
+ * listed through the API.
+ */
+export const mediaRead: Access = ({ req }) => {
+  if (isStaffUser(req.user)) return true
+  const visible: Where[] = [{ uploadedBy: { exists: false } }, { attached: { equals: true } }]
+  if (collectionOf(req.user) === BUSINESS_USER_COLLECTION && req.user?.id != null) {
+    visible.push({ uploadedBy: { equals: req.user.id } })
+  }
+  return { or: visible }
+}

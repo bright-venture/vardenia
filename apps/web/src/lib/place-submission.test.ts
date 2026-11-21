@@ -41,7 +41,8 @@ const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
     amenities: ['wifi'],
     payments: { cash: true, card: false, whish: false, omt: false },
     publicPhone: '+9611',
-    website: undefined,
+    instagram: 'https://instagram.com/cafenour',
+    facebook: undefined,
     ownerName: 'Nour',
     ownerEmail: 'n@x.com',
     ownerPhone: '+9617',
@@ -191,6 +192,7 @@ describe('createPlaceSubmission', () => {
         'issue',
         'listingNumber',
         '_status',
+        'contact',
         'submission',
       ].sort(),
     )
@@ -207,6 +209,31 @@ describe('createPlaceSubmission', () => {
       pageTemplate: 'a',
     })
     expect(Number.isNaN(Date.parse(listing.data.submission.submittedAt))).toBe(false)
+    // The public contact is its own group; nothing public stays under the staff-only one.
+    expect(listing.data.contact).toEqual({
+      phone: '+9611',
+      instagram: 'https://instagram.com/cafenour',
+      facebook: undefined,
+    })
+    expect(listing.data.submission).not.toHaveProperty('publicPhone')
+    expect(listing.data.submission).not.toHaveProperty('website')
+  })
+
+  it('never copies a smuggled website or other contact field', async () => {
+    const s = stub()
+    await createPlaceSubmission({
+      payload: s,
+      input: {
+        ...input(),
+        website: 'https://x.com',
+        whatsapp: '+1',
+        email: 'a@b.c',
+      } as PlaceSubmission,
+      files: files(),
+    })
+    const [listing] = created(s, 'businesses')
+    expect(Object.keys(listing.data.contact).sort()).toEqual(['facebook', 'instagram', 'phone'])
+    expect(listing.data).not.toHaveProperty('website')
   })
 
   it('also writes name and address (only) in the default locale for a non-default owner locale', async () => {

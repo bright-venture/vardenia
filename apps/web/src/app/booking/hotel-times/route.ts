@@ -1,6 +1,6 @@
 import { headers as nextHeaders } from 'next/headers'
 import { getPayload } from 'payload'
-import { canHaveRoomTypes } from '@vardenia/core'
+import { canHaveRoomTypes, isWholePropertyStay } from '@vardenia/core'
 import config from '../../../payload.config'
 import { isStaffUser, ownedBusinessIds } from '../../../access/index'
 import { withRateLimit } from '../../../lib/rate-limit'
@@ -53,11 +53,10 @@ export const POST = withRateLimit(async (request: Request) => {
       select: { subcategories: true },
     })
     .catch(() => null)
-  if (
-    !business ||
-    !canHaveRoomTypes((business as { subcategories?: string[] }).subcategories ?? [])
-  ) {
-    return json({ ok: false, message: 'Only hotels and getaways have check-in times.' }, 400)
+  // Hotels, and guest houses booked whole (Task 6): both sell nights.
+  const kinds = (business as { subcategories?: string[] } | null)?.subcategories ?? []
+  if (!business || !(canHaveRoomTypes(kinds) || isWholePropertyStay(kinds))) {
+    return json({ ok: false, message: 'Only hotels and guest houses have check-in times.' }, 400)
   }
 
   await payload.update({

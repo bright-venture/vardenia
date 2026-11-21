@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Businesses, validTime } from './Businesses'
+import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 
 /**
  * The listing form offers only what fits: a category's own subcategories, a
@@ -96,16 +97,7 @@ describe('opening times', () => {
 })
 
 describe('submission fields', () => {
-  const names = [
-    'status',
-    'ownerName',
-    'ownerEmail',
-    'ownerPhone',
-    'publicPhone',
-    'website',
-    'pageTemplate',
-    'submittedAt',
-  ]
+  const names = ['status', 'ownerName', 'ownerEmail', 'ownerPhone', 'pageTemplate', 'submittedAt']
   const group = field('submission')
   const sub = (name: string) => (group.fields as Loose[]).find((f) => f.name === name)!
 
@@ -124,6 +116,68 @@ describe('submission fields', () => {
   it('offers the three review statuses and templates', () => {
     expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected'])
     expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
+  })
+})
+
+describe('public contact group', () => {
+  const group = field('contact')
+  const sub = (name: string) => (group.fields as Loose[]).find((f) => f.name === name)!
+  const NAMES = [
+    'phone',
+    'whatsapp',
+    'email',
+    'instagram',
+    'facebook',
+    'tiktok',
+    'snapchat',
+    'youtube',
+    'x',
+    'linkedin',
+  ]
+
+  it('holds exactly the ten optional contact fields', () => {
+    expect((group.fields as Loose[]).map((f) => f.name)).toEqual(NAMES)
+    for (const name of NAMES) expect(sub(name)).not.toHaveProperty('required', true)
+  })
+
+  it('is readable by everyone: no field restricts reading', () => {
+    expect(group.access?.read).toBeUndefined()
+    for (const name of NAMES) expect(sub(name).access?.read).toBeUndefined()
+  })
+
+  it('is not a staff-only group and not under submission', () => {
+    const submission = field('submission')
+    const names = (submission.fields as Loose[]).map((f) => f.name)
+    expect(names).not.toContain('publicPhone')
+    expect(names).not.toContain('website')
+    expect(names).not.toContain('contact')
+  })
+
+  it('has no website field anywhere', () => {
+    expect(all(Businesses.fields as unknown as Loose[]).some((f) => f.name === 'website')).toBe(
+      false,
+    )
+  })
+
+  it('validates phone, email and links', async () => {
+    const v = (name: string, value: unknown) => sub(name).validate!(value, { data: {} })
+    expect(await v('phone', '+961 70 000 000')).toBe(true)
+    expect(await v('whatsapp', 'abc')).not.toBe(true)
+    expect(await v('email', 'x@y.com')).toBe(true)
+    expect(await v('email', 'nope')).not.toBe(true)
+    expect(await v('instagram', 'https://instagram.com/a')).toBe(true)
+    expect(await v('instagram', 'javascript:alert(1)')).not.toBe(true)
+    expect(await v('facebook', 'https://evil.com/x')).not.toBe(true)
+    expect(await v('linkedin', null)).toBe(true)
+  })
+
+  it('turns a handle into a URL before validating', async () => {
+    type Hook = (a: { value: unknown }) => unknown
+    const hooks = (sub('instagram') as unknown as { hooks: { beforeValidate: Hook[] } }).hooks
+    expect(hooks.beforeValidate[0]!({ value: '@cafe' })).toBe('https://instagram.com/cafe')
+    expect(hooks.beforeValidate[0]!({ value: '' })).toBeUndefined()
+    const x = (sub('x') as unknown as { hooks: { beforeValidate: Hook[] } }).hooks
+    expect(x.beforeValidate[0]!({ value: 'cafe' })).toBe('https://x.com/cafe')
   })
 })
 
@@ -209,5 +263,35 @@ describe('listing number', () => {
 
   it('is unique per issue', () => {
     expect(Businesses.indexes).toContainEqual({ fields: ['issue', 'listingNumber'], unique: true })
+  })
+})
+
+describe('address, map link and location', () => {
+  const run = (name: string, value: unknown) => field(name).validate!(value, { data: {} })
+
+  it('keeps all three public and writable by the owner (no field access rule)', () => {
+    for (const name of ['address', 'mapUrl', 'location']) expect(field(name).access).toBeUndefined()
+  })
+
+  it('accepts an empty link and a Google Maps link, refuses anything else', async () => {
+    expect(await run('mapUrl', '')).toBe(true)
+    expect(await run('mapUrl', null)).toBe(true)
+    expect(await run('mapUrl', 'https://maps.app.goo.gl/AbC')).toBe(true)
+    expect(await run('mapUrl', 'https://www.google.com/maps/@33.89,35.5,15z')).toBe(true)
+    expect(typeof (await run('mapUrl', 'https://google.com.evil.com/maps'))).toBe('string')
+    expect(typeof (await run('mapUrl', 'http://www.google.com/maps'))).toBe('string')
+  })
+
+  it('checks a point for longitude -180..180 and latitude -90..90, not for Lebanon', async () => {
+    expect(await run('location', null)).toBe(true)
+    expect(await run('location', [2.35, 48.85])).toBe(true) // Paris
+    expect(typeof (await run('location', [35.5, 91]))).toBe('string')
+    expect(typeof (await run('location', [181, 33.9]))).toBe('string')
+    expect(typeof (await run('location', [35.5]))).toBe('string')
+  })
+
+  it('fills location from the link before validation', () => {
+    const hooks = (Businesses.hooks as { beforeValidate: unknown[] }).beforeValidate
+    expect(hooks).toContain(fillLocationFromMapUrl)
   })
 })

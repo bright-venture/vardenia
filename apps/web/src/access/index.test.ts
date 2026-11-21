@@ -13,6 +13,8 @@ import {
   publishedOrStaff,
   publishedStaffOrOwned,
   selfOrStaff,
+  staffOrOwnedListing,
+  mediaRead,
 } from './index'
 
 /**
@@ -361,5 +363,67 @@ describe('isBusinessUser and isCustomer', () => {
     expect(isCustomer(ctx(owner(1, [7])))).toBe(false)
     expect(isCustomer(ctx(staff))).toBe(false)
     expect(isCustomer(ctx(null))).toBe(false)
+  })
+})
+
+/**
+ * Who may update a listing (Task 3). Staff as before; a partner only the ids
+ * attached to their account, as a query constraint Payload applies in the
+ * database, never a yes that would open every listing.
+ */
+describe('staffOrOwnedListing', () => {
+  it('gives staff every listing', () => {
+    expect(staffOrOwnedListing(ctx(staff))).toBe(true)
+    expect(staffOrOwnedListing(ctx(admin))).toBe(true)
+  })
+
+  it('constrains a partner to the listings they own', () => {
+    expect(staffOrOwnedListing(ctx(owner(1, [7, 9])))).toEqual({ id: { in: [7, 9] } })
+  })
+
+  it('reads populated businesses as ids too', () => {
+    expect(staffOrOwnedListing(ctx(owner(1, [{ id: 7 }])))).toEqual({ id: { in: [7] } })
+  })
+
+  it('refuses a partner with no listings, a customer and an anonymous caller', () => {
+    expect(staffOrOwnedListing(ctx(owner(1, [])))).toBe(false)
+    expect(staffOrOwnedListing(ctx({ id: 1, collection: 'customers', businesses: [7] }))).toBe(
+      false,
+    )
+    expect(staffOrOwnedListing(ctx(null))).toBe(false)
+  })
+
+  it('is never a plain yes for anyone but staff', () => {
+    for (const user of [owner(1, [7]), owner(2, [{ id: 3 }]), null]) {
+      expect(staffOrOwnedListing(ctx(user))).not.toBe(true)
+    }
+  })
+})
+
+/**
+ * Media reads (Task 3). Team uploads and anything attached to a page stay
+ * public; a partner's upload is theirs and the team's until it is attached.
+ */
+describe('mediaRead', () => {
+  const PUBLIC = [{ uploadedBy: { exists: false } }, { attached: { equals: true } }]
+
+  it('gives staff everything', () => {
+    expect(mediaRead(ctx(staff))).toBe(true)
+  })
+
+  it('shows the public team uploads and attached media only', () => {
+    expect(mediaRead(ctx(null))).toEqual({ or: PUBLIC })
+    expect(mediaRead(ctx({ id: 4, collection: 'customers' }))).toEqual({ or: PUBLIC })
+  })
+
+  it("adds a partner's own uploads, and nobody else's", () => {
+    expect(mediaRead(ctx(owner(5, [7])))).toEqual({
+      or: [...PUBLIC, { uploadedBy: { equals: 5 } }],
+    })
+  })
+
+  it('does not take a customer with the same id for the uploader', () => {
+    const where = mediaRead(ctx({ id: 5, collection: 'customers' }))
+    expect(JSON.stringify(where)).not.toContain('"equals":5')
   })
 })

@@ -39,6 +39,9 @@ export function toInventory(doc: Record<string, unknown>): RoomTypeInventory {
       freeCancellationDays:
         typeof option.freeCancellationDays === 'number' ? option.freeCancellationDays : null,
       payment: option.payment === 'in-advance' ? 'in-advance' : 'at-property',
+      // Read at booking time for the price snapshot (Task 7); 0 is a price.
+      price:
+        typeof option.price === 'number' && Number.isFinite(option.price) ? option.price : null,
     })),
   }
 }

@@ -1,5 +1,6 @@
 import { z } from './zod'
 import { LOCALE_CODES } from './locales'
+import { SEATING_AREA_KEYS } from './seating'
 
 /**
  * What a customer sends to ask for a booking.
@@ -114,6 +115,24 @@ export const bookingRequestSchema = z
       .max(10)
       .optional(),
 
+    /**
+     * For a guest house: which of its packages the guest chose (Task 7). Checked
+     * against the listing's active packages on the server; an unknown or
+     * inactive one is refused, never priced as the nightly rate instead.
+     *
+     * There is no price field. The server quotes and stores the price itself,
+     * and Zod drops any key not named here, so a price, quote or total sent by
+     * a client never reaches the booking service.
+     */
+    packageId: z.string().trim().min(1).max(64).optional(),
+
+    /**
+     * For a restaurant with seating areas (Task 8): which area, by key. Required
+     * by the server when the listing has areas, and checked against them; a
+     * listing without areas ignores it. See core/seating.
+     */
+    area: z.enum(SEATING_AREA_KEYS).optional(),
+
     /** What the customer wants us to pass on: a dietary need, an anniversary. */
     notes: z.string().trim().max(1000, 'too long').optional(),
 
@@ -171,6 +190,12 @@ export const availabilityQuerySchema = z.object({
   start: isoDateTime,
   end: isoDateTime,
   partySize: z.coerce.number().int().min(1).max(500),
+  /** Of the party, how many are children: a guest house may not count them (Task 6). */
+  children: z.coerce.number().int().min(0).max(50).optional(),
+  /** A guest house package to quote (Task 7). */
+  packageId: z.string().trim().min(1).max(64).optional(),
+  /** A restaurant seating area to judge (Task 8); without it, every area is answered. */
+  area: z.enum(SEATING_AREA_KEYS).optional(),
 })
 
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>

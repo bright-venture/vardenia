@@ -34,6 +34,12 @@ describe('locale routing applies to', () => {
     '/scan/moved',
     // The token has a dot; it is still a page (16 November 2026).
     '/visit/104.csjY8qq9urzlxAqX4cVAnCXR',
+    // Page paths, not the Task 9 JSON endpoints (those are under -data).
+    '/brands/cafe-nour',
+    '/partner/branches',
+    '/partner',
+    '/partner/listing',
+    '/partner/rooms',
   ])('%s', (path) => {
     expect(routed(path)).toBe(true)
   })
@@ -49,6 +55,8 @@ describe('locale routing leaves alone', () => {
     ['/booking/availability', 'the same'],
     ['/place-submissions', 'a multipart POST: add-your-place submissions'],
     ['/place-submissions/numbers', 'JSON: the number picker'],
+    ['/brand-data/cafe-nour', 'JSON: a public restaurant brand (Task 9)'],
+    ['/partner-data/branches', 'JSON: a partner adds a branch (Task 9)'],
     ['/g/AB12CD3', 'a printed short link must stay short'],
     ['/qr/AB12CD3', 'serves an SVG; a rewrite returns HTML with an .svg name'],
     ['/qr/sheet', 'the print sheet'],
@@ -87,6 +95,8 @@ describe('a prefix is not a segment', () => {
     '/qrcodes',
     '/authors',
     '/place-submissionsx',
+    '/brand-datax',
+    '/partner-datax',
   ])('%s is a page, not an excluded prefix', (path) => {
     expect(routed(path)).toBe(true)
   })

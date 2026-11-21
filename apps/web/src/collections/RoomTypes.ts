@@ -1,13 +1,20 @@
-import type { Access, CollectionConfig, FieldAccess } from 'payload'
+import type { Access, CollectionConfig, Where } from 'payload'
+import {
+  ROOM_TYPE_SUBCATEGORIES,
+  roomAmenityOptions,
+  roomViewOptions,
+  validPrice,
+} from '@vardenia/core'
 import { fixedOnceCreated, isStaffUser, ownedBusinessIds } from '../access/index'
 import { guardRoomTypeWrite, blockRoomTypeWithBookings } from '../hooks/guardRoomTypeWrite'
+import { markMediaAttached } from '../hooks/markMediaAttached'
 import {
   revalidateRoomTypeAfterChange,
   revalidateRoomTypeAfterDelete,
 } from '../hooks/revalidateRoomTypes'
 
 /**
- * A kind of room a hotel or getaway sells, and how many of it there are.
+ * A kind of room a hotel sells, and how many of it there are.
  *
  * Modelled on how Booking.com shows a hotel (checked 17 November 2026): rooms
  * are not listed one by one, identical rooms are one row. "Deluxe Twin, 30 m²,
@@ -32,24 +39,38 @@ import {
  *
  * # Prices
  *
- * The partner enters a price per option, but the website shows no prices for
- * now (decided 17 November 2026). The field is readable only by the team and
- * the hotel's own partners, so it never reaches the public API either.
+ * The partner enters a price per option, in USD per night. Prices became
+ * public on 20 November 2026 (Task 5; they were staff and owner only before):
+ * the field has no read rule, so the API returns it. What stays hidden is the
+ * rooms of a hotel that is not published, or of a room type switched off, see
+ * roomTypesRead. Core fromPrice gives the lowest price of a type's options.
  *
  * # Restaurants
  *
- * Untouched. Only hotels and getaways can have room types (core
+ * Untouched. Only hotels can have room types (core
  * canHaveRoomTypes), and a hotel with none books exactly as before, with the
  * listing's single capacity number.
  */
 
-const roomTypesRead: Access = ({ req }) => {
+/**
+ * The public sees active room types of published, not-trashed listings, and nothing else:
+ * a hotel in draft or switched off must not leak its rooms or its prices.
+ * Owners also see all of their own, and the team sees everything.
+ */
+export const roomTypesRead: Access = ({ req }) => {
   const { user } = req
   if (isStaffUser(user)) return true
   const owned = ownedBusinessIds(user)
-  const active = { active: { equals: true } }
-  if (owned.length === 0) return active
-  return { or: [active, { business: { in: owned } }] }
+  const publicRule: Where = {
+    and: [
+      { active: { equals: true } },
+      { 'business._status': { equals: 'published' } },
+      // A listing in the trash keeps its rows and its status (Payload sets deletedAt).
+      { 'business.deletedAt': { exists: false } },
+    ],
+  }
+  if (owned.length === 0) return publicRule
+  return { or: [publicRule, { business: { in: owned } }] }
 }
 
 const roomTypesWrite: Access = ({ req }) => {
@@ -64,44 +85,6 @@ const roomTypesWrite: Access = ({ req }) => {
 const roomTypesCreate: Access = ({ req }) =>
   isStaffUser(req.user) || ownedBusinessIds(req.user).length > 0
 
-/** The team, or a partner of the hotel this room type belongs to. */
-const staffOrOwnerOfDoc: FieldAccess = ({ req, doc, siblingData }) => {
-  if (isStaffUser(req.user)) return true
-  const owned = ownedBusinessIds(req.user).map(String)
-  if (owned.length === 0) return false
-  const business = (doc as { business?: unknown } | undefined)?.business
-  const id =
-    typeof business === 'object' && business !== null ? (business as { id?: unknown }).id : business
-  // While a partner is creating one, the doc is not saved yet.
-  if (id === undefined && siblingData) return true
-  return owned.includes(String(id))
-}
-
-export const ROOM_VIEWS = [
-  { label: 'Sea view', value: 'sea' },
-  { label: 'Mountain view', value: 'mountain' },
-  { label: 'City view', value: 'city' },
-  { label: 'Garden view', value: 'garden' },
-  { label: 'Pool view', value: 'pool' },
-] as const
-
-export const ROOM_AMENITIES = [
-  { label: 'Private bathroom', value: 'private-bathroom' },
-  { label: 'Balcony', value: 'balcony' },
-  { label: 'Kitchenette', value: 'kitchenette' },
-  { label: 'Air conditioning', value: 'air-conditioning' },
-  { label: 'Heating', value: 'heating' },
-  { label: 'Free WiFi', value: 'wifi' },
-  { label: 'Flat-screen TV', value: 'tv' },
-  { label: 'Minibar', value: 'minibar' },
-  { label: 'Coffee machine', value: 'coffee-machine' },
-  { label: 'Bathtub', value: 'bathtub' },
-  { label: 'Work desk', value: 'work-desk' },
-  { label: 'Safe', value: 'safe' },
-  { label: 'Soundproofing', value: 'soundproofing' },
-  { label: 'Fireplace', value: 'fireplace' },
-] as const
-
 export const RoomTypes: CollectionConfig = {
   slug: 'room-types',
   labels: { singular: 'Room type', plural: 'Room types' },
@@ -110,7 +93,7 @@ export const RoomTypes: CollectionConfig = {
     defaultColumns: ['name', 'business', 'rooms', 'sleepsAdults', 'active'],
     group: 'Directory',
     description:
-      'The rooms a hotel or getaway sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.',
+      'The rooms a hotel sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.',
   },
   access: {
     read: roomTypesRead,
@@ -121,7 +104,8 @@ export const RoomTypes: CollectionConfig = {
   hooks: {
     beforeValidate: [guardRoomTypeWrite],
     beforeDelete: [blockRoomTypeWithBookings],
-    afterChange: [revalidateRoomTypeAfterChange],
+    // A partner's photo becomes public once a room type shows it.
+    afterChange: [markMediaAttached, revalidateRoomTypeAfterChange],
     afterDelete: [revalidateRoomTypeAfterDelete],
   },
   /**
@@ -139,8 +123,9 @@ export const RoomTypes: CollectionConfig = {
       required: true,
       index: true,
       access: { update: fixedOnceCreated },
-      // Only hotels and getaways sell rooms (core ROOM_TYPE_SUBCATEGORIES).
-      filterOptions: { subcategories: { in: ['hotels', 'getaways'] } },
+      // Only hotels sell rooms (core ROOM_TYPE_SUBCATEGORIES); a getaway is
+      // booked as a whole property since Task 6.
+      filterOptions: { subcategories: { in: [...ROOM_TYPE_SUBCATEGORIES] } },
     },
     { name: 'name', type: 'text', required: true, localized: true, maxLength: 120 },
     {
@@ -210,14 +195,14 @@ export const RoomTypes: CollectionConfig = {
       type: 'select',
       hasMany: true,
       index: true,
-      options: ROOM_VIEWS.map((view) => ({ ...view })),
+      options: roomViewOptions,
     },
     {
       name: 'amenities',
       type: 'select',
       hasMany: true,
       index: true,
-      options: ROOM_AMENITIES.map((amenity) => ({ ...amenity })),
+      options: roomAmenityOptions,
     },
     {
       /**
@@ -279,8 +264,9 @@ export const RoomTypes: CollectionConfig = {
               label: 'Price per night (USD)',
               type: 'number',
               min: 0,
-              access: { read: staffOrOwnerOfDoc },
-              admin: { description: 'Not shown on the website for now.' },
+              // Public (Task 5): no read rule. Zero is allowed; at most two decimals.
+              validate: (value: unknown) => validPrice(value),
+              admin: { description: 'USD, shown on the website. Optional; up to two decimals.' },
             },
           ],
         },

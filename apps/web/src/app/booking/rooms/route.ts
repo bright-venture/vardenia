@@ -1,4 +1,5 @@
 import { getPayload } from 'payload'
+import { canHaveRoomTypes } from '@vardenia/core'
 import config from '../../../payload.config'
 import { LOCALES, type Locale } from '@vardenia/i18n'
 import { isCalendarDay, unavailableMessage, type BookingRules } from '../../../lib/availability'
@@ -10,8 +11,10 @@ import {
   nightlyFree,
   roomStayInterval,
   roomsLeft,
+  type RoomTypeInventory,
 } from '../../../lib/room-availability'
 import { roomBookingsFor, roomTypesFor } from '../../../lib/room-booking'
+import { parseRoomsParam, quoteJson, roomQuote } from '../../../lib/booking-price'
 
 /**
  * Which of a hotel's room types are free for some nights, and how many left.
@@ -57,12 +60,20 @@ export const GET = withRateLimit(async (request: Request) => {
   const interval = roomStayInterval(date, nights, rules)
   if (!interval) return json({ ok: false, message: 'Choose a date.' }, 400)
 
+  // Only a hotel has rooms (core canHaveRoomTypes; never a getaway, even one
+  // with room types left from before 20 November 2026), so a stale page is not
+  // offered rooms the booking service would refuse.
+  const sellsRooms = canHaveRoomTypes(
+    (business as { subcategories?: string[] | null }).subcategories ?? [],
+  )
   const [typesBy, existingBy, closures] = await Promise.all([
-    roomTypesFor(payload, [businessId]),
+    // In the guest's language: the booking service reads them the same way,
+    // so the quote's labels are the ones it stores.
+    sellsRooms ? roomTypesFor(payload, [businessId], { locale }) : Promise.resolve(new Map()),
     roomBookingsFor(payload, [businessId], interval.start, interval.end),
     closedPeriods(payload, businessId, interval.start, interval.end),
   ])
-  const types = typesBy.get(businessId) ?? []
+  const types: RoomTypeInventory[] = typesBy.get(businessId) ?? []
   const existing = existingBy.get(businessId) ?? []
 
   // The hotel's own rules for these dates (closed, too soon, too far ahead).
@@ -74,8 +85,30 @@ export const GET = withRateLimit(async (request: Request) => {
     request: { interval, guests, lines: [{ roomType: -1, count: 1 }] },
   })
 
+  /*
+   * Prices (Task 7), from the function the booking service stores them with
+   * (lib/booking-price): each option for one room over these nights, and the
+   * whole selection when the page sends one in `rooms`
+   * ("type:count:option,..."). Hotels only; an unpriced option says
+   * 'no-price', and a selection with one is never a partial total.
+   */
+  const roomsParam = url.searchParams.get('rooms')
+  const selection = roomsParam === null ? null : parseRoomsParam(roomsParam)
+  const quote =
+    sellsRooms && roomsParam !== null
+      ? {
+          quote: quoteJson(
+            selection
+              ? roomQuote(types, selection, nights)
+              : { ok: false, reason: 'invalid-input' },
+            locale,
+          ),
+        }
+      : {}
+
   return json({
     ok: true,
+    ...quote,
     checkIn: interval.start.toISOString(),
     checkOut: interval.end.toISOString(),
     ...(general.ok
@@ -91,6 +124,14 @@ export const GET = withRateLimit(async (request: Request) => {
             free: Math.min(free, MAX_ROOMS_PER_BOOKING),
           }))
         : [],
+      options: type.options.map((option) => ({
+        id: option.id,
+        price: option.price ?? null,
+        quote: quoteJson(
+          roomQuote(types, [{ roomType: type.id, count: 1, option: option.id }], nights),
+          locale,
+        ),
+      })),
     })),
   })
 })

@@ -219,6 +219,13 @@ describe('availabilityQuerySchema', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('takes an optional number of children, for a guest house that counts them (Task 6)', () => {
+    const base = { business: '7', start: VALID.start, end: VALID.end, partySize: '3' }
+    expect(availabilityQuerySchema.parse({ ...base, children: '1' }).children).toBe(1)
+    expect(availabilityQuerySchema.parse(base).children).toBeUndefined()
+    expect(availabilityQuerySchema.safeParse({ ...base, children: '-1' }).success).toBe(false)
+  })
+
   it('does not ask for the personal details a lookup has no use for', () => {
     const parsed = availabilityQuerySchema.parse({
       business: '7',
@@ -377,5 +384,39 @@ describe('bookingRequestSchema requestId', () => {
     ]) {
       expect(bookingRequestSchema.safeParse({ ...VALID, requestId }).success, requestId).toBe(false)
     }
+  })
+})
+
+/**
+ * The price is the server's (Task 7). A guest house request may name a
+ * package; any price, quote or total the client sends is dropped by the
+ * schema, so nothing downstream can read it.
+ */
+describe('booking requests and prices (Task 7)', () => {
+  it('takes an optional package id', () => {
+    expect(bookingRequestSchema.parse({ ...VALID, packageId: 'abc123' }).packageId).toBe('abc123')
+    expect(bookingRequestSchema.parse(VALID).packageId).toBeUndefined()
+    expect(bookingRequestSchema.safeParse({ ...VALID, packageId: 'x'.repeat(65) }).success).toBe(
+      false,
+    )
+  })
+
+  it('strips a forged price, quote or total', () => {
+    const parsed = bookingRequestSchema.parse({
+      ...VALID,
+      price: { total: 1, currency: 'USD', lines: [{ label: 'cheap', amount: 1 }] },
+      quote: { ok: true, total: 1 },
+      total: 1,
+      amount: 1,
+    }) as Record<string, unknown>
+    for (const key of ['price', 'quote', 'total', 'amount']) {
+      expect(parsed, key).not.toHaveProperty(key)
+    }
+  })
+
+  it('lets an availability query name a package too', () => {
+    const base = { business: '7', start: VALID.start, end: VALID.end, partySize: '3' }
+    expect(availabilityQuerySchema.parse({ ...base, packageId: 'p1' }).packageId).toBe('p1')
+    expect(availabilityQuerySchema.parse(base).packageId).toBeUndefined()
   })
 })

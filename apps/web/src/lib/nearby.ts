@@ -3,7 +3,7 @@
  *
  * Distance when both places have coordinates, and the map's own units when
  * they do not. The coordinates come from the Google Maps link staff paste on a
- * listing (see lib/maps-paste), and in September 2026 production had none at
+ * listing (see core maps-link), and in September 2026 production had none at
  * all, so everything below the first rule is not a fallback for rare cases: it
  * is what almost every listing uses until the links are filled in. As they are,
  * suggestions move from "same district" to "1.2 km away" with no further change.

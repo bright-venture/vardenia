@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import type { BookingStatus } from '@vardenia/core'
+import { formatUsd, type BookingStatus } from '@vardenia/core'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { dateLocale } from './beirut'
 import { reportError } from './report'
@@ -35,7 +35,26 @@ export interface BookingConfirmationArgs {
   locale: Locale
   /** For a hotel booking: "2 × Deluxe Twin". */
   roomType?: string
+  /** The quoted total in USD, when the booking stored a price (Task 7). */
+  total?: number
 }
+
+/** The total row, when a price was quoted (hotels and guest houses, Task 7). */
+const TOTAL_LABEL: Record<Locale, string> = {
+  en: 'Total',
+  ar: 'الإجمالي',
+  fr: 'Total',
+  es: 'Total',
+  pt: 'Total',
+  ru: 'Итого',
+  zh: '总价',
+  hi: 'कुल',
+  bn: 'মোট',
+  ur: 'کل',
+}
+
+const hasTotal = (total: number | undefined): total is number =>
+  typeof total === 'number' && Number.isFinite(total)
 
 /** The rooms row in a guest's email (hotel bookings with room types). */
 const ROOMS_LABEL: Record<Locale, string> = {
@@ -386,11 +405,22 @@ export function bookingConfirmationContent({
   partySize,
   locale,
   roomType,
+  total,
 }: Omit<BookingConfirmationArgs, 'payload' | 'to'>): BookingEmailContent | null {
   const copy = copyFor(status, locale)
   if (!copy) return null
 
-  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale, roomType })
+  return renderBookingEmail({
+    copy,
+    name,
+    reference,
+    start,
+    end,
+    partySize,
+    locale,
+    roomType,
+    total,
+  })
 }
 
 /**
@@ -411,6 +441,7 @@ function renderBookingEmail({
   locale,
   reason,
   roomType,
+  total,
 }: {
   copy: Copy
   name: string
@@ -422,6 +453,7 @@ function renderBookingEmail({
   /** What the venue said, when they said anything. See `REASON_LABEL`. */
   reason?: string
   roomType?: string
+  total?: number
 }): BookingEmailContent {
   // From the language, not `=== 'ar'`: Urdu is right-to-left too, and an
   // Urdu email laid out left-to-right puts every label on the wrong side.
@@ -436,6 +468,9 @@ function renderBookingEmail({
     [copy.partyLabel, String(partySize)],
     ...(roomType
       ? ([[ROOMS_LABEL[locale] ?? ROOMS_LABEL.en, roomType]] as [string, string][])
+      : []),
+    ...(hasTotal(total)
+      ? ([[TOTAL_LABEL[locale] ?? TOTAL_LABEL.en, formatUsd(total)]] as [string, string][])
       : []),
     [copy.referenceLabel, reference],
   ]
@@ -1270,6 +1305,8 @@ export interface VenueRequestArgs {
   end: Date
   partySize: number
   roomType?: string
+  /** The quoted total in USD, when the booking stored a price (Task 7). */
+  total?: number
   /** Confirmed straight away by the venue's own auto-confirm setting. */
   confirmed: boolean
 }
@@ -1284,6 +1321,7 @@ export function venueRequestContent({
   end,
   partySize,
   roomType,
+  total,
   confirmed,
 }: VenueRequestArgs): BookingEmailContent {
   const whenAr = formatWhen(start, 'ar')
@@ -1305,6 +1343,7 @@ export function venueRequestContent({
       : []),
     ['People', String(partySize)],
     ...(roomType ? ([['Room', roomType]] as [string, string][]) : []),
+    ...(hasTotal(total) ? ([['Total', formatUsd(total)]] as [string, string][]) : []),
     ['Reference', reference],
   ]
 

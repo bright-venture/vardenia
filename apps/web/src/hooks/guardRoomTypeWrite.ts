@@ -5,6 +5,8 @@ import {
 } from 'payload'
 import { canHaveRoomTypes, OCCUPYING_STATUSES } from '@vardenia/core'
 import { isStaffUser, ownedBusinessIds } from '../access/index'
+import { ShapeProblem, checkAllowedBody, dataFields, mediaIdsIn } from '../lib/field-shape'
+import { assertOwnMedia } from '../lib/partner-media'
 
 const idOf = (value: unknown): string | number | null => {
   if (typeof value === 'string' || typeof value === 'number') return value
@@ -18,14 +20,16 @@ const idOf = (value: unknown): string | number | null => {
  * The same shape as guardClosureWrite: `create` access is boolean and cannot
  * see the document, so the hotel is checked here on every write. The team
  * writes for anybody; a partner only for a listing attached to their account.
- * A room type never moves to another hotel, and only hotels and getaways have
- * room types (core canHaveRoomTypes): a restaurant keeps its single capacity.
+ * A room type never moves to another hotel, and only hotels have room types
+ * (core canHaveRoomTypes): a restaurant keeps its single capacity, and a
+ * guest house is booked as a whole property (Task 6).
  */
 export const guardRoomTypeWrite: CollectionBeforeValidateHook = async ({
   data,
   req,
   operation,
   originalDoc,
+  collection,
 }) => {
   if (!data) return data
 
@@ -45,6 +49,35 @@ export const guardRoomTypeWrite: CollectionBeforeValidateHook = async ({
     if (!owned.includes(String(businessId))) {
       throw new APIError('You can only manage room types for your own listings.', 403)
     }
+
+    // Every key must be a field of the room type (a join, and anything the
+    // collection does not have, is refused), and inside it every option row
+    // key and every view, amenity and choice must be one on offer. Photos are
+    // left to the media rule below, which accepts a populated photo. Task 5.
+    const shaped: Record<string, unknown> = { ...data }
+    delete shaped.photos
+    const allowed = dataFields(collection.fields)
+      .filter((field) => field.type !== 'join' && field.type !== 'ui')
+      .map((field) => field.name)
+    try {
+      checkAllowedBody(shaped, collection.fields, allowed)
+    } catch (error) {
+      if (error instanceof ShapeProblem) throw new APIError(error.message, 400, null, true)
+      throw error
+    }
+
+    // Photos: only the partner's own uploads, or what the room type already
+    // shows (Task 3; the same rule as the listing, lib/partner-media).
+    const partnerId = (req.user as { id?: string | number }).id
+    const photos = mediaIdsIn(data, collection.fields)
+    if (photos.length > 0 && partnerId !== undefined) {
+      await assertOwnMedia({
+        req,
+        partnerId,
+        ids: photos,
+        alreadyOn: originalDoc ? mediaIdsIn(originalDoc, collection.fields) : [],
+      })
+    }
   }
 
   if (operation === 'create') {
@@ -61,7 +94,7 @@ export const guardRoomTypeWrite: CollectionBeforeValidateHook = async ({
     if (!business) throw new APIError('That listing does not exist.', 400)
     const kinds = (business as { subcategories?: string[] | null }).subcategories ?? []
     if (!canHaveRoomTypes(kinds)) {
-      throw new APIError('Only hotels and getaways have room types.', 400)
+      throw new APIError('Only hotels have room types.', 400)
     }
   }
 

@@ -145,7 +145,7 @@ export function bookingFormModel(
     nightOptions:
       mode === 'nights' ? nightChoices(config.minDurationMinutes, config.maxDurationMinutes) : [],
     // The old simple room labels are no longer offered (18 November 2026):
-    // hotels and getaways sell real room types now, booked from the room
+    // hotels sell real room types now, booked from the room
     // list on their page. The labels stay in the database, unused.
     roomTypes: [],
     leadTimeMinutes: config.leadTimeMinutes,

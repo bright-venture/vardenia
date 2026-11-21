@@ -3,10 +3,14 @@ import { sql } from '@payloadcms/db-postgres'
 import { APIError } from 'payload'
 import {
   canActorTransition,
+  canHaveRoomTypes,
   canTakeBookings,
   canTransition,
   isRetrospective,
+  splitParty,
   OCCUPYING_STATUSES,
+  resolveSeatingArea,
+  seatingAreasOf,
   type BookingActor,
   type BookingStatus,
 } from '@vardenia/core'
@@ -14,7 +18,10 @@ import { checkAvailability, unavailableMessage, type ExistingBooking } from '../
 import { closedPeriods } from '../lib/booking-service'
 import { checkRoomRequest } from '../lib/room-availability'
 import { roomBookingsFor, roomTypesFor } from '../lib/room-booking'
+import { checkStayRequest, isWholeProperty, stayConfigOf } from '../lib/stay-booking'
 import { transactionDb } from '../lib/transaction-db'
+import { lockBookingSlots } from '../lib/booking-lock'
+import { checkSeatingRequest } from '../lib/seating-booking'
 
 /**
  * Which collection a session came from, as a role.
@@ -75,11 +82,13 @@ const asDate = (value: unknown): Date | null => {
   return null
 }
 
-/** Whether an update changes when the booking is, or how many it seats. */
+/** Whether an update changes when the booking is, where it sits, or how many it seats. */
 function movesSlot(data: Record<string, unknown>, before: Record<string, unknown>): boolean {
   const time = (value: unknown) => asDate(value)?.getTime() ?? null
   if (data.start !== undefined && time(data.start) !== time(before.start)) return true
   if (data.end !== undefined && time(data.end) !== time(before.end)) return true
+  // A restaurant seating area (Task 8) is a capacity of its own.
+  if (data.area !== undefined && (data.area ?? null) !== (before.area ?? null)) return true
   return data.partySize !== undefined && Number(data.partySize) !== Number(before.partySize)
 }
 
@@ -95,6 +104,24 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const { payload, user } = req
 
   /**
+   * The price snapshot (Task 7) is the booking service's alone: it flags its
+   * own create in the server-only context. Any other create - staff in the
+   * admin or by REST, a script - has the field dropped. Every update - a
+   * guest, a venue or staff, by PATCH, the admin or a script - gets the
+   * stored snapshot back (a copy, the same thing Payload writes for a field
+   * an update leaves out), so it never drifts and is never recomputed, not
+   * even when staff move the dates. Field access refuses it through the API
+   * as well (collections/Bookings).
+   */
+  if (operation === 'update') {
+    const stored = (originalDoc as { price?: unknown } | undefined)?.price
+    if (stored !== undefined && stored !== null) data.price = structuredClone(stored)
+    else delete data.price
+  } else if (context?.priceSnapshot !== true) {
+    delete data.price
+  }
+
+  /**
    * How many rooms a hotel booking holds, kept in step with its lines on
    * every write that sends them. The database reads it before the lines exist
    * (see the roomCount field on Bookings).
@@ -104,6 +131,22 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
       (sum, line) => sum + Math.max(0, Math.floor(Number(line?.count ?? 0)) || 0),
       0,
     )
+  }
+
+  /**
+   * Children are part of the party, and at least one guest is an adult: the
+   * same split the booking service makes (core splitParty), so a direct write
+   * cannot store 5 children in a party of 2. Clamped rather than refused, as
+   * the service does. Applied whenever a write sets either number.
+   */
+  if (data.children !== undefined || data.partySize !== undefined) {
+    const party = Number(data.partySize ?? originalDoc?.partySize)
+    if (Number.isFinite(party) && party >= 1) {
+      data.children = splitParty(
+        party,
+        Number(data.children ?? originalDoc?.children ?? 0) || 0,
+      ).children
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -333,6 +376,17 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   })
 
   if (roomLines && roomLines.length > 0) {
+    /*
+     * Rooms only at a hotel (core ROOM_TYPE_SUBCATEGORIES; getaways stopped
+     * having room types on 20 November 2026). New bookings only: a booking
+     * made before that keeps its lines.
+     */
+    if (
+      operation === 'create' &&
+      !canHaveRoomTypes((business as { subcategories?: string[] | null }).subcategories ?? [])
+    ) {
+      throw new APIError(unavailableMessage('room-unknown'), 400)
+    }
     const id = Number(businessId)
     const [typesBy, existingBy, closures] = await Promise.all([
       roomTypesFor(payload, [id], { req }),
@@ -347,9 +401,10 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
       request: {
         interval: { start, end },
         guests: Number(data.partySize ?? originalDoc?.partySize ?? 1),
-        adults:
-          Number(data.partySize ?? originalDoc?.partySize ?? 1) -
-          Number(data.children ?? originalDoc?.children ?? 0),
+        adults: splitParty(
+          Number(data.partySize ?? originalDoc?.partySize ?? 1),
+          Number(data.children ?? originalDoc?.children ?? 0) || 0,
+        ).adults,
         lines: roomLines.map((line) => ({ ...line, option: null })),
         ...(self !== null ? { excludeBookingId: self } : {}),
       },
@@ -361,6 +416,52 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
       data.status = autoConfirm ? 'confirmed' : 'pending'
     }
     return data
+  }
+
+  /**
+   * Restaurant seating areas (Task 8, core/seating). A listing without areas
+   * books as it always did, and an area sent to it is dropped (the database
+   * trigger would refuse an area the listing does not have). A listing with
+   * areas counts a booking only against its area's tables, so its count is
+   * taken under the listing's booking lock (lib/booking-lock): two requests
+   * for the last table in an area queue here, and the second counts after
+   * the first has committed. The capacity trigger takes the same lock, so
+   * listings without areas keep exactly the guarantee they had.
+   */
+  const wholeProperty = isWholeProperty(business)
+  let areas = wholeProperty ? [] : seatingAreasOf(business as never)
+  const requestedArea = (data.area !== undefined ? data.area : originalDoc?.area) as
+    string | null | undefined
+  if (areas.length === 0) {
+    // On update too: an area on a listing without areas would be refused by
+    // the trigger and is meaningless to the venue.
+    if (operation === 'create' || data.area !== undefined) data.area = null
+  } else {
+    /*
+     * An area booking stays an area booking: clearing it would turn it into
+     * a booking judged only against the listing's capacity. Staff move it to
+     * another area instead.
+     */
+    if (originalDoc?.area && data.area !== undefined && !data.area) {
+      throw new APIError(
+        'A booking at a restaurant with seating areas keeps a seating area. Choose another area instead of clearing it.',
+        400,
+      )
+    }
+    await lockBookingSlots(req, businessId)
+    /*
+     * Read the areas again now that the lock is held: a partner's removal or
+     * shrink (hooks/protectSeatingAreaBookings takes the same lock) may have
+     * committed while this request waited, and the decision must be on what
+     * is stored now. Read on the pool, which sees everything committed.
+     */
+    const fresh = await payload
+      .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+      .catch(() => null)
+    if (!fresh) throw new APIError('That business does not exist.', 400)
+    areas = seatingAreasOf(fresh as never)
+    // Every area removed meanwhile: the listing books as one without areas.
+    if (areas.length === 0) data.area = null
   }
 
   /**
@@ -414,23 +515,68 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
         start: docStart,
         end: docEnd,
         status: (doc as { status: BookingStatus }).status,
+        area: ((doc as { area?: unknown }).area as string | null | undefined) ?? null,
       },
     ]
   })
 
-  const verdict = checkAvailability({
-    rules,
-    hours,
-    closures,
-    existing: occupied,
-    request: {
-      interval: { start, end },
-      partySize: Number(data.partySize ?? originalDoc?.partySize),
-    },
-  })
+  /**
+   * A guest house is one property: one stay at a time, at least the owner's
+   * minimum nights, at most their guest cap (lib/stay-booking, Task 6). The
+   * same overlapping bookings, read the same way, are counted against a
+   * capacity of 1.
+   */
+  const partySize = Number(data.partySize ?? originalDoc?.partySize)
+  const children = Number.isFinite(partySize)
+    ? splitParty(partySize, Number(data.children ?? originalDoc?.children ?? 0) || 0).children
+    : 0
+  /*
+   * A booking made before the listing had areas, moved by staff, stays
+   * without one: judged as the trigger judges it, against the listing's
+   * capacity and the other bookings without an area.
+   */
+  const legacyAtAreas = areas.length > 0 && self !== null && !requestedArea
+  const verdict = wholeProperty
+    ? checkStayRequest({
+        rules,
+        closures,
+        existing: occupied,
+        stay: stayConfigOf(business),
+        request: {
+          interval: { start, end },
+          adults: partySize - children,
+          children,
+          ...(self !== null ? { excludeBookingId: self } : {}),
+        },
+      })
+    : legacyAtAreas
+      ? checkAvailability({
+          rules,
+          hours,
+          closures,
+          existing: occupied.filter((booking) => !booking.area),
+          request: { interval: { start, end }, partySize },
+        })
+      : checkSeatingRequest({
+          rules,
+          hours,
+          closures,
+          existing: occupied,
+          areas,
+          area: requestedArea,
+          request: {
+            interval: { start, end },
+            partySize,
+          },
+        })
 
   if (!verdict.ok) {
     throw new APIError(unavailableMessage(verdict.reason), 400)
+  }
+
+  if (areas.length > 0 && !legacyAtAreas) {
+    const resolved = resolveSeatingArea(areas, requestedArea)
+    if (resolved.ok && resolved.area) data.area = resolved.area.key
   }
 
   /**

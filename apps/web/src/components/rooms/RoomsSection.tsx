@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import { roomOptionLabel } from '@vardenia/core/hotel-options'
 import type { Locale } from '@vardenia/i18n'
 import { Link, usePathname } from '../../i18n/routing'
 import { trackEvent } from '../../lib/analytics'
@@ -458,8 +459,8 @@ export function RoomsSection({
                     {room.views.length + room.amenities.length > 0 ? (
                       <p className="text-ink-700 mt-2 text-sm">
                         {[
-                          ...room.views.map((view) => t(`views.${view}` as never)),
-                          ...room.amenities.map((amenity) => t(`amenities.${amenity}` as never)),
+                          ...room.views.map((view) => roomOptionLabel(view, locale)),
+                          ...room.amenities.map((amenity) => roomOptionLabel(amenity, locale)),
                         ].join(' · ')}
                       </p>
                     ) : null}

@@ -21,7 +21,6 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
-import { MapsLinkField as MapsLinkField_c85d5e13167942a0bd1899616d39cc3e } from '../../../components/admin/MapsLinkField'
 import { OpeningHourLabel as OpeningHourLabel_f2fd9088dde216ffa28f89afe274464a } from '../../../components/admin/OpeningHourLabel'
 import { TierCell as TierCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ListingActivity as ListingActivity_a4adc9ff8ad04da0058736214f4b2411 } from '../../../components/admin/ListingActivity'
@@ -71,7 +70,6 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
-  "/components/admin/MapsLinkField#MapsLinkField": MapsLinkField_c85d5e13167942a0bd1899616d39cc3e,
   "/components/admin/OpeningHourLabel#OpeningHourLabel": OpeningHourLabel_f2fd9088dde216ffa28f89afe274464a,
   "/components/admin/ListCells#TierCell": TierCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ListingActivity#ListingActivity": ListingActivity_a4adc9ff8ad04da0058736214f4b2411,
