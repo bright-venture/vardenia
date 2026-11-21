@@ -11,15 +11,100 @@ Each note is one of:
 
 ---
 
+## Pending until the PRD and the product match
+
+Everything still open from steps 1 to 10, grouped by who does it. Tick an item off by deleting it once it is done; when this section is empty, the PRD is coherent. The step tables below keep the evidence.
+
+### A. PRD wording to update (no code change)
+
+Section 2, Who can do what
+
+- Password reset row: customer, a 1 hour emailed link; partner, a 1 hour emailed link, except the first invitation (3 days); team, the admin sign-in page's own "Forgot password", also 1 hour. Not "through admin".
+- Add: sign-in is limited to 10 requests per minute per internet connection, shared by sign-in, forgot password, reset, unlock and verify.
+- Add: "forgot password" works once per 15 seconds per account; the failed sign-in counter resets on a successful sign-in; a lock lifts by itself after 10 minutes.
+- Add: changing the password on the profile page signs out every other device.
+
+Section 3, Visitors
+
+- Add the other public forms that need no account: sign-up, forgot password, resend verification, the question form on the Questions page.
+- Add: requesting Event Staff needs a signed-in customer.
+- Add: the anti-bot check (Turnstile) is skipped when its keys are missing, and then the public forms accept anyone.
+
+Section 4, Customers
+
+- Sign-up limit: it is the shared sign-in budget (10 per minute per connection), not its own "10 per address".
+- Booking limit: 5 upcoming bookings (pending or confirmed), not 5 pending.
+- Closing an account: always anonymised, never removed, with or without bookings. List what it does: signs out every device, cancels upcoming bookings (the place is told), erases booking notes, deletes saved places, receipts and their photos, reviews and questions, erases Event Staff contact details.
+- Bookings are kept for good as anonymous records; the 12-month deletion is gone.
+- Add `/account/close` to the page list. Add: the reset link also verifies an unverified account.
+
+Section 5, Business partners
+
+- "The team never sees a password" is true only for partners created by publishing a submission; a partner created by staff in the admin starts with the password staff typed (accepted on 20 November 2026).
+- Partners do not edit their listing content yet (name, photos, description, hours); they manage bookings, closed dates, rooms and open dates, and hotel check-in and check-out times. Update when partner listing editing lands.
+- Staff-only fields: tier, verified status and the listing number are public by design; contract dates, commission and submission details are hidden; only the team changes any of them.
+
+Section 6, The team
+
+- "Booking fees" is the commission. Admin only: tier, verified status, commission.
+- Add the other admin-only deletes: bookings, customers, partners, team members, issues, editions, QR codes, statements, receipts, reviews, scan records, and (since 20 November 2026) articles, photos and areas.
+
+Section 7, Business sign-up request
+
+- An admin sets the tier, not staff.
+- A submitted listing needs a contract end date to be published; one already past is refused.
+- Rejected is final: it cannot be reopened or published; the business sends a new request.
+- The four statuses are shown as the listing's State: Draft, Published, Rejected, Expired. Expired is set when the contract ends; publishing again with a new end date renews it.
+- The old "place requests" are removed (not just "not used").
+- Add: a submitted listing starts as tier Silver; photos must be JPEG, PNG or WebP, checked by content.
+- Add: the daily and hourly jobs run only on the live site, never on staging.
+
+Section 8, Listing numbers
+
+- After the release, the issue total and the seven ranges are entered on the live site; staging already has them.
+- The total cannot drop below the highest range end (stricter than "highest number in use").
+- A range cannot be moved to another governorate or issue while its numbers are in use.
+
+Section 10, Open items
+
+- Remove "Race on a taken number" and "Ranges can still be moved" (both done).
+- Reword "Staging database" (it is the live database that needs the ranges).
+- "Numbering-only issue" does not apply: All Lebanon is the real printed issue and stays public.
+- "Partner after contract ends": answered; the partner still signs in and sees the listing, bookings are refused, the public page is hidden.
+
+### B. Decisions waiting for you
+
+- Delete the photos a submission uploaded when it fails at the last step (fix proposed, step 8).
+- Show a warning on the admin dashboard while the anti-bot keys are missing (fix proposed, steps 3 and 9).
+- Delete the leftover "summer-2026" issue on the test database (step 8).
+- Two-step sign-in for the team: Cloudflare Access in front of `/admin` (recommended, step 10).
+- Count sign-in attempts per connection and email, with a higher cap per connection, so people sharing one connection are not blocked (suggested, step 2).
+- Add to the privacy policy that emails already sent stay in the email provider's logs for a while (step 4).
+
+### C. Settings for you (no code)
+
+- Netlify, Branch deploys: add `RESEND_API_KEY` (so staging sends emails) and `TURNSTILE_SECRET_KEY`, and add the staging address to the Turnstile widget in Cloudflare.
+- After the release: in the live admin, set All Lebanon's total to 408 and enter the seven ranges.
+- In a few weeks: read the DMARC reports and move DMARC from `p=none` to `p=quarantine`.
+
+### D. Later or in progress
+
+- Partner listing editing (in progress): re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
+- An "Add another listing" button in the partner dashboard.
+- Google and Apple sign-in, decided with the mobile app (Apple requires Sign in with Apple if the iPhone app offers Google).
+- `ContentPage.test.tsx` fails on this branch ("Caveat is not a function"), unrelated to the audit.
+
+---
+
 ## Step 1. Summary
 
 All six claims hold (three account types, browsing without an account, booking needs a signed-in verified customer, no partner sign-up, admin panel for the team only, business form creates a hidden draft).
 
-| Type          | Note                                                                                                                                                                              |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fixed         | A signed-out booking attempt answered "Sign in to book a table." for every kind of place, hotels and chalets included. Now "Sign in to book."                                     |
-| Open (step 7) | The PRD says a rejected submission cannot be published. The code lets staff set it back to pending, then publish. Decide if that "reopen" is intended and say so in the PRD.      |
-| Open (step 9) | The public data address (`/api/businesses`) lists only a few listings while the database holds many more. Check whether this is a deliberate anti-scraping limit and document it. |
+| Type            | Note                                                                                                                                           |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fixed           | A signed-out booking attempt answered "Sign in to book a table." for every kind of place, hotels and chalets included. Now "Sign in to book."  |
+| Closed (step 7) | The PRD says a rejected submission cannot be published, but staff could set it back to pending and publish it. Now Rejected is final (step 7). |
+| Closed (step 9) | The public `/api/businesses` showed only a few listings: the test database simply has 9 published. Not a limit (step 9).                       |
 
 ## Step 2. Who can do what
 
@@ -129,11 +214,11 @@ Verified on the test database: All Lebanon has a total of 408 and the seven rang
 
 Verified live: sessions are on for all three account types (a test guards it); a password reset signed out every device, for a guest (site reset) and a partner (built-in reset); cookies are HttpOnly and SameSite Lax, and Secure in production; a visitor and a guest cannot list bookings at all, and a partner's count covers only their own listings; a partner cannot count customers, a guest cannot count statements, a visitor cannot count closed dates. Staff-only listing fields were checked in steps 3, 5 and 6.
 
-| Type                          | Note                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Correction                    | Closed from step 1: the public `/api/businesses` showed 9 listings because the test database has exactly 9 published (and 305 drafts). Visitors see every published listing; the only cap is 250 per page.                                                                                                                                                                                      |
-| Missing from the PRD          | Changing the password from the profile page keeps the device that made the change signed in and signs out every other device (tested).                                                                                                                                                                                                                                                          |
-| Open (to check, fix proposed) | The live site is still private (it answers 401 to the public), so whether its Turnstile keys are set could not be checked from outside. Check in Netlify that production has TURNSTILE_SECRET_KEY and NEXT_PUBLIC_TURNSTILE_SITE_KEY. Without them the public forms accept anyone, silently: no warning exists anywhere. Proposed: a warning on the admin dashboard while the keys are missing. |
+| Type                 | Note                                                                                                                                                                                                                                           |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Correction           | Closed from step 1: the public `/api/businesses` showed 9 listings because the test database has exactly 9 published (and 305 drafts). Visitors see every published listing; the only cap is 250 per page.                                     |
+| Missing from the PRD | Changing the password from the profile page keeps the device that made the change signed in and signs out every other device (tested).                                                                                                         |
+| Open (fix proposed)  | Checked in Netlify on 21 November 2026: production has both Turnstile keys and the email key. Branch deploys (staging) have neither secret (see step 10). Nothing warns when the keys are missing: proposed, a warning on the admin dashboard. |
 
 ## Step 10. Open items and decisions
 
