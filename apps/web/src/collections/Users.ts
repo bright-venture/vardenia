@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { STAFF_COLLECTION, isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
+import { enforcePasswordRule } from '../hooks/enforcePasswordRule'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -17,6 +18,8 @@ export const Users: CollectionConfig = {
     defaultColumns: ['name', 'email', 'roles'],
     group: 'People',
   },
+  // One password rule for every path that sets one. hooks/enforcePasswordRule.
+  hooks: { beforeValidate: [enforcePasswordRule] },
   access: {
     read: isStaff,
     create: isAdmin,

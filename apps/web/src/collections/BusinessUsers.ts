@@ -8,8 +8,9 @@ import {
   isStaffFieldLevel,
   selfOrStaff,
 } from '../access/index'
-import { PARTNER_LINK_DAYS, partnerResetEmail } from '../lib/auth-email'
+import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
+import { enforcePasswordRule } from '../hooks/enforcePasswordRule'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
@@ -57,9 +58,12 @@ export const BusinessUsers: CollectionConfig = {
      * nobody could ever use.
      */
     forgotPassword: {
-      // The invitation is this link, so it has to outlive Payload's default
-      // hour. See PARTNER_LINK_DAYS.
-      expiration: PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000,
+      // No `expiration` here on purpose (20 November 2026): set at collection
+      // level it would beat the one the invitation passes per call, so every
+      // ordinary reset link would live as long as an invitation. An ordinary
+      // reset keeps Payload's default hour; hooks/inviteBusinessUser asks for
+      // PARTNER_INVITE_DAYS and sends the invitation email itself, so the email
+      // built here is always the ordinary reset.
       generateEmailSubject: () => partnerResetEmail('').subject,
       generateEmailHTML: (args) => {
         if (!args?.token) throw new Error('No reset token to put in the partner email')
@@ -69,6 +73,8 @@ export const BusinessUsers: CollectionConfig = {
   },
 
   hooks: {
+    // One password rule for every path that sets one. hooks/enforcePasswordRule.
+    beforeValidate: [enforcePasswordRule],
     /**
      * A new partner is sent a link to choose their own password.
      *

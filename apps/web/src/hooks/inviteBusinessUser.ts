@@ -1,4 +1,5 @@
 import type { CollectionAfterChangeHook } from 'payload'
+import { PARTNER_INVITE_MS, partnerResetEmail } from '../lib/auth-email'
 import { reportError } from '../lib/report'
 
 /**
@@ -12,15 +13,25 @@ import { reportError } from '../lib/report'
  *
  * # Onboarding is a password reset wearing a different hat
  *
- * `forgotPassword` mints a token, stores it against the account and mails the
- * link. That is exactly what an invitation needs, so there is no second
- * mechanism to build or keep working. It also means the password staff typed
- * during creation is never the one that gets used: the owner replaces it before
- * they can sign in, and nobody has to remember to.
+ * `forgotPassword` mints a token and stores it against the account. That is
+ * exactly what an invitation needs, so there is no second token mechanism. It
+ * also means the password staff typed during creation is never the one that
+ * gets used: the owner replaces it before they can sign in.
  *
- * See lib/auth-email for the message, which deliberately reads the same whether
- * it is an invitation or a genuine reset - from the reader's side those are the
- * same act.
+ * # Why the email is sent here, not by Payload (20 November 2026)
+ *
+ * Payload's forgotPassword, when it sends the email itself, first reserves a
+ * "one request per 15 seconds" slot by looking the account up on a separate
+ * database connection. This hook runs inside the create, before it commits, so
+ * that connection cannot see the new account, finds nobody, and Payload then
+ * does nothing on purpose ("no such address" must look like "sent"). Every
+ * invitation was silently skipped: the account existed with no link and no
+ * email. Found in the authentication audit.
+ *
+ * So Payload is asked only for the token (`disableEmail`, which skips the
+ * reservation and looks the account up inside this transaction), with the
+ * invitation's longer lifetime, and the invitation email is sent here.
+ * An ordinary reset still goes through Payload and keeps the default hour.
  *
  * # Failure is reported, never thrown
  *
@@ -34,30 +45,35 @@ export const inviteBusinessUser: CollectionAfterChangeHook = async ({ doc, opera
 
   const email = String((doc as { email?: unknown }).email ?? '')
   if (!email) return doc
+  const businessUser = (doc as { id?: unknown }).id
 
   try {
-    await req.payload.forgotPassword({
+    const token = await req.payload.forgotPassword({
       collection: 'business-users',
       data: { email },
-      disableEmail: false,
-
-      /**
-       * Passed so this joins the transaction the create is still inside.
-       *
-       * Without it the lookup runs on its own connection, cannot see the row
-       * that has not been committed yet, and finds nobody - at which point
-       * Payload deliberately does nothing, because "no such address" must not be
-       * distinguishable from "sent". Correct behaviour, and here it meant the
-       * invitation silently never went out while the account was created
-       * perfectly. Found because a probe counted the emails.
-       */
+      disableEmail: true,
+      expiration: PARTNER_INVITE_MS,
+      // Joins the transaction the create is still inside, so the lookup sees
+      // the new account.
       req,
     })
-  } catch (error) {
-    await reportError(error, {
-      source: 'partner.invite',
-      extra: { businessUser: (doc as { id?: unknown }).id },
+    if (!token) {
+      await reportError(new Error('No invitation token for a new partner account'), {
+        source: 'partner.invite',
+        extra: { businessUser },
+      })
+      return doc
+    }
+
+    const mail = partnerResetEmail(token, undefined, { invite: true })
+    await req.payload.sendEmail({
+      to: email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
     })
+  } catch (error) {
+    await reportError(error, { source: 'partner.invite', extra: { businessUser } })
   }
 
   return doc

@@ -69,6 +69,7 @@ const CAPACITY_MESSAGE = 'fully booked'
 const ROOMS_MESSAGE = 'not enough rooms'
 /** Raised by the enforce_customer_booking_limit trigger; see translateInsertError. */
 const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
+const CUSTOMER_PENDING_MESSAGE = 'most booking requests waiting'
 
 /**
  * How many bookings one email may hold, awaiting confirmation, at one time.
@@ -83,6 +84,17 @@ const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
  * however many instances happen to be warm.
  */
 const MAX_PENDING_PER_CUSTOMER = 5
+
+/**
+ * Two limits per customer (21 November 2026, authentication audit, decided by
+ * the owner): at most MAX_PENDING_PER_CUSTOMER requests waiting for a place's
+ * answer, and at most MAX_UPCOMING_PER_CUSTOMER upcoming bookings in total
+ * (pending or confirmed). One limit of 5 upcoming stopped a real traveller
+ * planning a week (a hotel, three dinners, a tour); spamming requests is still
+ * capped at 5 unanswered. The database holds the same two numbers
+ * (migration customer_booking_limits_two).
+ */
+const MAX_UPCOMING_PER_CUSTOMER = 15
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -107,22 +119,52 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * this path.
  */
 
-/** Bookings this customer already holds that occupy a place. */
-export async function pendingBookingCount(payload: Payload, customerId: number): Promise<number> {
-  const result = await payload.find({
-    collection: 'bookings',
-    where: {
-      and: [
-        { customer: { equals: customerId } },
-        { status: { in: [...OCCUPYING_STATUSES] } },
-        { start: { greater_than: new Date().toISOString() } },
-      ],
-    },
-    limit: 0,
-    depth: 0,
-    overrideAccess: true,
-  })
-  return result.totalDocs
+/** This customer's upcoming bookings: waiting for an answer, and in total. */
+export async function upcomingBookingCounts(
+  payload: Payload,
+  customerId: number,
+): Promise<{ pending: number; upcoming: number }> {
+  const ahead = { start: { greater_than: new Date().toISOString() } }
+  const mine = { customer: { equals: customerId } }
+  const [pending, upcoming] = await Promise.all([
+    payload.count({
+      collection: 'bookings',
+      where: { and: [mine, { status: { equals: 'pending' } }, ahead] },
+      overrideAccess: true,
+    }),
+    payload.count({
+      collection: 'bookings',
+      where: { and: [mine, { status: { in: [...OCCUPYING_STATUSES] } }, ahead] },
+      overrideAccess: true,
+    }),
+  ])
+  return { pending: pending.totalDocs, upcoming: upcoming.totalDocs }
+}
+
+/**
+ * The refusal when a new booking would pass a limit, or null. `willWait` is
+ * false for a place that confirms on the spot: such a booking never waits, so
+ * only the total applies to it.
+ */
+export function limitRefusal(
+  counts: { pending: number; upcoming: number },
+  willWait: boolean,
+): { ok: false; code: 'rate-limited'; message: string } | null {
+  if (counts.upcoming >= MAX_UPCOMING_PER_CUSTOMER) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${MAX_UPCOMING_PER_CUSTOMER} upcoming bookings. Please cancel one before making another.`,
+    }
+  }
+  if (willWait && counts.pending >= MAX_PENDING_PER_CUSTOMER) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${MAX_PENDING_PER_CUSTOMER} booking requests waiting for an answer. Please wait for a reply, or cancel one, before making another.`,
+    }
+  }
+  return null
 }
 
 /**
@@ -317,11 +359,10 @@ export function translateInsertError(error: unknown, locale: Locale = 'en'): Boo
    * customer_booking_limit migration.
    */
   if (message.toLowerCase().includes(CUSTOMER_LIMIT_MESSAGE)) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${MAX_PENDING_PER_CUSTOMER} upcoming bookings. Please cancel one before making another.`,
-    }
+    return limitRefusal({ pending: 0, upcoming: MAX_UPCOMING_PER_CUSTOMER }, false)!
+  }
+  if (message.toLowerCase().includes(CUSTOMER_PENDING_MESSAGE)) {
+    return limitRefusal({ pending: MAX_PENDING_PER_CUSTOMER, upcoming: 0 }, true)!
   }
 
   return { ok: false, code: 'error', message: COULD_NOT_BOOK[locale] ?? COULD_NOT_BOOK.en }
@@ -427,14 +468,11 @@ export async function createBooking({
     }
   }
 
-  const pending = await pendingBookingCount(payload, customerId)
-  if (pending >= MAX_PENDING_PER_CUSTOMER) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${pending} upcoming bookings. Please cancel one before making another.`,
-    }
-  }
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
 
   /**
    * Keep the requested room type only if the listing actually offers it. The
@@ -579,14 +617,11 @@ async function createRoomBooking({
     return { ok: false, code: 'unavailable', message: unavailableMessage(verdict.reason, locale) }
   }
 
-  const pending = await pendingBookingCount(payload, customerId)
-  if (pending >= MAX_PENDING_PER_CUSTOMER) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${pending} upcoming bookings. Please cancel one before making another.`,
-    }
-  }
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
 
   const rows = lines.map((line) => {
     const type = types.find((candidate) => candidate.id === line.roomType)

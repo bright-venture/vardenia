@@ -11,8 +11,10 @@ import { PlaceSubmissionForm } from '../../../../components/places/PlaceSubmissi
  *
  * The magazine viewer is still an empty frame (a teammate's part). The form is
  * the "add your place" submission (components/places): it creates a draft
- * listing with a reserved page number, for the team to review. Requests are kept in the admin under
- * Magazine > Magazine place requests (Draft, Published, Rejected, Expired).
+ * listing with a reserved page number, for the team to review. The team finds
+ * them under Directory > Listings, where the State column reads Draft,
+ * Published, Rejected or Expired (20 November 2026; the separate "magazine
+ * place requests" it replaced were removed).
  * Not in the sitemap and not indexed: it is for businesses holding the code.
  */
 

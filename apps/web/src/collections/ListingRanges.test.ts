@@ -304,3 +304,39 @@ describe('deleting a range', () => {
     await expect(hook({ id: 7, req: s.req } as never)).resolves.toBeUndefined()
   })
 })
+
+/**
+ * Moving a range (21 November 2026): the numbers held in its old place must not
+ * be left outside any range.
+ */
+describe('moving a range', () => {
+  const hook = ListingRanges.hooks!.beforeValidate![0]!
+  const req = (heldIn: Record<string, number[]>) => ({
+    payload: {
+      findByID: vi.fn(async () => ({ id: 4, listingTotal: 20 })),
+      find: vi.fn(async ({ collection, where }: { collection: string; where: unknown }) => {
+        if (collection !== 'businesses') return { docs: [] }
+        const governorate =
+          JSON.stringify(where).match(/"governorate":\{"equals":"([^"]+)"/)?.[1] ?? ''
+        return { docs: (heldIn[governorate] ?? []).map((listingNumber) => ({ listingNumber })) }
+      }),
+    },
+  })
+  const original = { id: 8, issue: 4, governorate: 'beirut', from: 1, to: 5 }
+  const run = (data: Record<string, unknown>, held: Record<string, number[]>) =>
+    hook({ data, originalDoc: original, operation: 'update', req: req(held) } as never)
+
+  it('refuses moving it to another governorate while its numbers are in use', async () => {
+    await expect(run({ governorate: 'chouf' }, { beirut: [3, 4] })).rejects.toThrow(
+      /Listings in beirut already hold 3, 4/,
+    )
+  })
+
+  it('allows moving it once no listing holds a number in it', async () => {
+    await expect(run({ governorate: 'chouf' }, {})).resolves.toBeDefined()
+  })
+
+  it('does not stop ordinary edits that keep it in place', async () => {
+    await expect(run({ to: 6 }, { beirut: [3, 4] })).resolves.toBeDefined()
+  })
+})

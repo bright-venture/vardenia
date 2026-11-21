@@ -121,8 +121,8 @@ describe('submission fields', () => {
     expect(sub('status')).not.toHaveProperty('defaultValue')
   })
 
-  it('offers the three review statuses and templates', () => {
-    expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected'])
+  it('offers the four review statuses and templates', () => {
+    expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected', 'expired'])
     expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
   })
 })

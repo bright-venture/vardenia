@@ -107,3 +107,44 @@ export async function verifyTurnstile(
     return { ok: true, skipped: true }
   }
 }
+
+/**
+ * What the admin home says about the anti-bot check (21 November 2026,
+ * authentication audit). Both failures are silent everywhere else:
+ *
+ * - No secret: every check is skipped, so sign-up, the business form and the
+ *   Questions form accept anyone.
+ * - A secret but no site key: the page shows no widget, so no answer is ever
+ *   sent and every check fails: nobody can sign up or send the business form.
+ *
+ * Null when both keys are set. The site key is read as the build saw it, which
+ * is what the pages actually use.
+ */
+export interface TurnstileWarning {
+  title: string
+  detail: string
+  tone: 'warn' | 'error'
+}
+
+export function turnstileWarning(
+  secret = process.env.TURNSTILE_SECRET_KEY,
+  siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+): TurnstileWarning | null {
+  const hasSecret = isTurnstileConfigured(secret)
+  const hasSiteKey = Boolean(siteKey?.trim())
+  if (hasSecret && hasSiteKey) return null
+  if (hasSecret) {
+    return {
+      title: 'Anti-bot check cannot work',
+      detail:
+        'TURNSTILE_SECRET_KEY is set but NEXT_PUBLIC_TURNSTILE_SITE_KEY is not, so every sign-up and business form is refused. Set the site key in Netlify and deploy again.',
+      tone: 'error',
+    }
+  }
+  return {
+    title: 'Anti-bot check is off',
+    detail:
+      'TURNSTILE_SECRET_KEY is not set, so sign-up, the business form and the Questions form accept anyone, bots included. Set both Turnstile keys in Netlify.',
+    tone: 'warn',
+  }
+}

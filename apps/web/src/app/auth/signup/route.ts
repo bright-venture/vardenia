@@ -183,5 +183,6 @@ export const POST = withRateLimit(
     return json({ ok: true, message: CHECK_YOUR_EMAIL }, 202)
   },
   RATE_LIMIT.AUTH_PER_WINDOW,
-  { shared: true },
+  // Per connection and email, with a ceiling per connection. lib/rate-limit.
+  { shared: true, perEmail: true },
 )

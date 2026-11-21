@@ -23,37 +23,43 @@ const json = (body: unknown, status = 200) =>
 const text = (value: unknown, max: number) =>
   typeof value === 'string' ? value.trim().slice(0, max) : ''
 
-export const POST = withRateLimit(async (request: Request) => {
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
-  if (!body) return json({ ok: false }, 400)
+export const POST = withRateLimit(
+  async (request: Request) => {
+    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
+    if (!body) return json({ ok: false }, 400)
 
-  // The hidden field. A person never sees it; a bot fills every field.
-  if (text(body.website, 200)) return json({ ok: true }, 201)
+    // The hidden field. A person never sees it; a bot fills every field.
+    if (text(body.website, 200)) return json({ ok: true }, 201)
 
-  const verdict = await verifyTurnstile(body.turnstileToken, clientIp(request.headers))
-  if (!verdict.ok) return json({ ok: false, code: 'turnstile' }, 403)
+    const verdict = await verifyTurnstile(body.turnstileToken, clientIp(request.headers))
+    if (!verdict.ok) return json({ ok: false, code: 'turnstile' }, 403)
 
-  const name = text(body.name, 120)
-  const email = text(body.email, 254).toLowerCase()
-  const question = text(body.question, 2000)
-  const lang = text(body.locale, 5)
-  const locale: Locale = (LOCALES as readonly string[]).includes(lang) ? (lang as Locale) : 'en'
+    const name = text(body.name, 120)
+    const email = text(body.email, 254).toLowerCase()
+    const question = text(body.question, 2000)
+    const lang = text(body.locale, 5)
+    const locale: Locale = (LOCALES as readonly string[]).includes(lang) ? (lang as Locale) : 'en'
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  if (name.length < 2 || !emailOk || question.length < 5) {
-    return json({ ok: false, code: 'invalid' }, 400)
-  }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    if (name.length < 2 || !emailOk || question.length < 5) {
+      return json({ ok: false, code: 'invalid' }, 400)
+    }
 
-  try {
-    const payload = await getPayload({ config })
-    await payload.create({
-      collection: 'guest-questions',
-      overrideAccess: true,
-      data: { name, email, question, locale, status: 'new' },
-    })
-  } catch (error) {
-    await reportError(error, { source: 'guest-question', path: '/booking/question' })
-    return json({ ok: false }, 500)
-  }
-  return json({ ok: true }, 201)
-}, RATE_LIMIT.WRITE_PER_WINDOW)
+    try {
+      const payload = await getPayload({ config })
+      await payload.create({
+        collection: 'guest-questions',
+        overrideAccess: true,
+        data: { name, email, question, locale, status: 'new' },
+      })
+    } catch (error) {
+      await reportError(error, { source: 'guest-question', path: '/booking/question' })
+      return json({ ok: false }, 500)
+    }
+    return json({ ok: true }, 201)
+  },
+  RATE_LIMIT.WRITE_PER_WINDOW,
+  // Counted in the database, so the limit holds across every server, like the
+  // other public forms (21 November 2026, authentication audit).
+  { shared: true },
+)

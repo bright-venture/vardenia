@@ -81,7 +81,6 @@ export interface Config {
     'staff-requests': StaffRequest;
     areas: Area;
     'guest-questions': GuestQuestion;
-    'place-requests': PlaceRequest;
     articles: Article;
     issues: Issue;
     'listing-ranges': ListingRange;
@@ -121,7 +120,6 @@ export interface Config {
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
     areas: AreasSelect<false> | AreasSelect<true>;
     'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
-    'place-requests': PlaceRequestsSelect<false> | PlaceRequestsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
     'listing-ranges': ListingRangesSelect<false> | ListingRangesSelect<true>;
@@ -466,7 +464,7 @@ export interface Business {
   verified?: boolean | null;
   contractStartsAt?: string | null;
   /**
-   * The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Leave it empty for no end.
+   * The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Required to publish a listing that came through the business form; otherwise leave it empty for no end.
    */
   contractEndsAt?: string | null;
   salesOwner?: (number | null) | User;
@@ -492,7 +490,7 @@ export interface Business {
    */
   listingNumber?: number | null;
   submission?: {
-    status?: ('pending' | 'approved' | 'rejected') | null;
+    status?: ('pending' | 'approved' | 'rejected' | 'expired') | null;
     ownerName?: string | null;
     ownerEmail?: string | null;
     ownerPhone?: string | null;
@@ -501,6 +499,7 @@ export interface Business {
     pageTemplate?: ('a' | 'b' | 'c') | null;
     submittedAt?: string | null;
   };
+  state?: ('draft' | 'published' | 'rejected' | 'expired') | null;
   seo?: {
     /**
      * Falls back to the document title when empty.
@@ -1273,41 +1272,6 @@ export interface GuestQuestion {
   createdAt: string;
 }
 /**
- * Businesses asking for a place in the magazine. Draft, then Published (accepted, with a contract) or Rejected. Published becomes Expired after the contract ends, and can be Published again to renew.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "place-requests".
- */
-export interface PlaceRequest {
-  id: number;
-  /**
-   * Draft can become Published or Rejected. Published becomes Expired after the contract ends. To renew, set a new contract end date and choose Published again.
-   */
-  status: 'draft' | 'published' | 'rejected' | 'expired';
-  businessName: string;
-  issue?: (number | null) | Issue;
-  placeNumber?: number | null;
-  contactName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  /**
-   * The listing, once it exists.
-   */
-  listing?: (number | null) | Business;
-  contractStartsAt?: string | null;
-  /**
-   * Needed to publish. The morning after, the status becomes Expired.
-   */
-  contractEndsAt?: string | null;
-  notes?: string | null;
-  /**
-   * For the team only.
-   */
-  internalNotes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1519,10 +1483,6 @@ export interface PayloadLockedDocument {
         value: number | GuestQuestion;
       } | null)
     | ({
-        relationTo: 'place-requests';
-        value: number | PlaceRequest;
-      } | null)
-    | ({
         relationTo: 'articles';
         value: number | Article;
       } | null)
@@ -1726,6 +1686,7 @@ export interface BusinessesSelect<T extends boolean = true> {
         pageTemplate?: T;
         submittedAt?: T;
       };
+  state?: T;
   seo?:
     | T
     | {
@@ -1995,26 +1956,6 @@ export interface GuestQuestionsSelect<T extends boolean = true> {
   answer?: T;
   answeredAt?: T;
   locale?: T;
-  internalNotes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "place-requests_select".
- */
-export interface PlaceRequestsSelect<T extends boolean = true> {
-  status?: T;
-  businessName?: T;
-  issue?: T;
-  placeNumber?: T;
-  contactName?: T;
-  email?: T;
-  phone?: T;
-  listing?: T;
-  contractStartsAt?: T;
-  contractEndsAt?: T;
-  notes?: T;
   internalNotes?: T;
   updatedAt?: T;
   createdAt?: T;

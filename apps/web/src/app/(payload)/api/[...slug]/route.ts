@@ -9,6 +9,8 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes'
 import { withApiLimits } from '../../../../lib/api-limits'
+import { sameAnswerForForgotPassword } from '../../../../lib/forgot-password'
+import { passwordRuleOnReset } from '../../../../lib/password-rule'
 import { RATE_LIMIT, withRateLimit } from '../../../../lib/rate-limit'
 
 /**
@@ -76,7 +78,11 @@ const guardWrite = <T>(handler: T) => {
   // Shared, because these are the paths worth repeating: /api/customers/login,
   // /api/business-users/login, /api/users/login, and the forgot-password and
   // unlock endpoints beside them. A per-instance count on those is not a limit.
-  const auth = withRateLimit(handler as never, RATE_LIMIT.AUTH_PER_WINDOW, { shared: true })
+  const auth = withRateLimit(handler as never, RATE_LIMIT.AUTH_PER_WINDOW, {
+    shared: true,
+    // Per connection and email, with a ceiling per connection. lib/rate-limit.
+    perEmail: true,
+  })
 
   return (async (request: Request, context: unknown) =>
     isAuthPath(request.url)
@@ -88,7 +94,15 @@ export const GET = guardRead(REST_GET(config))
 // POST gets the page cap too: a POST carrying a method-override header is a read,
 // and was the way round the cap. Genuine writes pass through it untouched. See
 // withApiLimits.
-export const POST = guardWrite(withApiLimits(REST_POST(config) as never))
+// Forgot password answers the same whether or not the email could be sent, so
+// it never reveals which addresses have an account. See lib/forgot-password.
+export const POST = guardWrite(
+  // The password rule on the built-in reset, which skips collection hooks.
+  // See lib/password-rule.
+  passwordRuleOnReset(
+    sameAnswerForForgotPassword(withApiLimits(REST_POST(config) as never) as never),
+  ),
+)
 export const DELETE = guardWrite(REST_DELETE(config))
 export const PATCH = guardWrite(REST_PATCH(config))
 export const PUT = guardWrite(REST_PUT(config))

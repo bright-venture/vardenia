@@ -9,6 +9,7 @@ import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
   refusePublishingRejected,
+  requireContractToPublish,
 } from './linkPartnerOnPublish'
 
 vi.mock('../lib/report', () => ({ reportError: vi.fn(async () => {}) }))
@@ -249,6 +250,83 @@ describe('refusePublishingRejected', () => {
       { _status: 'draft', submission: { status: 'rejected' } },
     )
     expect((error as APIError).isPublic).toBe(true)
-    expect((error as APIError).message).toMatch(/back to pending/i)
+    expect((error as APIError).message).toMatch(/rejection is final/i)
+  })
+})
+
+/**
+ * A submitted listing needs a contract end date to go live (20 November 2026),
+ * or it never expires.
+ */
+describe('requireContractToPublish', () => {
+  const submitted = {
+    _status: 'draft',
+    submission: { ownerEmail: 'owner@example.com', status: 'pending' },
+  }
+  const DAY = 24 * 60 * 60 * 1000
+  const run = (data: Record<string, unknown>, originalDoc: Record<string, unknown>) =>
+    (requireContractToPublish as CollectionBeforeValidateHook)({
+      data,
+      originalDoc,
+      operation: 'update',
+    } as never)
+
+  it('refuses to publish a submitted listing with no contract end date', () => {
+    expect(() => run({ _status: 'published' }, submitted)).toThrow(/contract end date/)
+  })
+
+  it('refuses an end date already past, which the daily job would hide again', () => {
+    const past = new Date(Date.now() - 3 * DAY).toISOString()
+    expect(() => run({ _status: 'published', contractEndsAt: past }, submitted)).toThrow(
+      /has passed/,
+    )
+  })
+
+  it('publishes with a future end date, given now or already saved', () => {
+    const future = new Date(Date.now() + 365 * DAY).toISOString()
+    expect(() => run({ _status: 'published', contractEndsAt: future }, submitted)).not.toThrow()
+    expect(() =>
+      run({ _status: 'published' }, { ...submitted, contractEndsAt: future }),
+    ).not.toThrow()
+  })
+
+  it('renews: a lapsed listing republished with a new date', () => {
+    const future = new Date(Date.now() + 365 * DAY).toISOString()
+    const lapsed = {
+      ...submitted,
+      submission: { ownerEmail: 'owner@example.com', status: 'approved' },
+    }
+    expect(() => run({ _status: 'published', contractEndsAt: future }, lapsed)).not.toThrow()
+  })
+
+  it('leaves older listings that did not come through the form alone', () => {
+    expect(() => run({ _status: 'published' }, { _status: 'draft', submission: {} })).not.toThrow()
+  })
+
+  it('does not stop ordinary saves of a listing that is already live', () => {
+    expect(() => run({ name: 'Renamed' }, { ...submitted, _status: 'published' })).not.toThrow()
+  })
+})
+
+/** Rejected is final (20 November 2026): no reopening. */
+describe('a rejected submission cannot be reopened', () => {
+  const rejected = {
+    _status: 'draft',
+    submission: { ownerEmail: 'o@example.com', status: 'rejected' },
+  }
+  const run = (data: Record<string, unknown>) =>
+    (refusePublishingRejected as CollectionBeforeValidateHook)({
+      data,
+      originalDoc: rejected,
+      operation: 'update',
+    } as never)
+
+  it.each(['pending', 'approved', 'expired'])('refuses setting it back to %s', (status) => {
+    expect(() => run({ submission: { status } })).toThrow(/rejection is final/)
+  })
+
+  it('still lets staff edit the rejected record itself', () => {
+    expect(() => run({ name: 'Typo fixed' })).not.toThrow()
+    expect(() => run({ submission: { status: 'rejected' } })).not.toThrow()
   })
 })

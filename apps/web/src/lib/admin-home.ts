@@ -5,6 +5,7 @@ import { beirutDate, beirutInstant } from './beirut'
 import { dashboardCounts } from './dashboard-stats'
 import { emailWarning } from './email'
 import { indexingNotice } from './indexing'
+import { turnstileWarning } from './turnstile'
 
 /**
  * What the admin home page shows: a handful of numbers, and a to-do list
@@ -302,6 +303,9 @@ export async function adminHome(
       tone: email.includes('redirected') ? 'error' : 'warn',
     })
   }
+  // The anti-bot check: off, or unable to work (21 November 2026). lib/turnstile.
+  const antiBot = turnstileWarning()
+  if (antiBot) attention.push({ area: 'Site setup', ...antiBot })
 
   // Guests waiting for an answer come before money: they are people, now.
   for (const doc of waiting.docs as {

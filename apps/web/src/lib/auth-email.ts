@@ -31,6 +31,7 @@
  */
 
 import { emailPalette } from './email-palette'
+import { CONTACT } from './contact'
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -188,29 +189,49 @@ export const partnerLoginUrl = (origin = siteOrigin()) => `${origin}/partner`
  * message every one of them is guaranteed to receive.
  */
 /**
- * How long a partner's set-password link works.
+ * How long a partner's first set-password link, the invitation, works.
  *
- * The same link is the invitation, so it cannot be Payload's default hour: a
- * venue owner reads email when the evening is over, not within sixty minutes
- * of the team creating the account, and an invitation that has died before it
- * is opened is an account nobody can get into. Read by BusinessUsers'
- * `forgotPassword.expiration`, and stated in the email so the date is no
- * surprise.
+ * It cannot be Payload's default hour: a venue owner reads email when the
+ * evening is over, not within sixty minutes of the team creating the account,
+ * and an invitation that has died before it is opened is an account nobody can
+ * get into. Passed by hooks/inviteBusinessUser as the `expiration` of that one
+ * call, and stated in the email so the date is no surprise.
+ *
+ * An ordinary "forgot password" link keeps Payload's default hour (20 November
+ * 2026): a reset link that works for days is days in which a forwarded or
+ * leaked email opens the account.
  */
-export const PARTNER_LINK_DAYS = 3
+export const PARTNER_INVITE_DAYS = 3
+export const PARTNER_INVITE_MS = PARTNER_INVITE_DAYS * 24 * 60 * 60 * 1000
 
-const PARTNER_RESET: Copy = {
+const PARTNER_INVITE: Copy = {
   subject: 'Set your Vardenia password - تعيين كلمة المرور',
   heading: 'Set your password',
-  en: `Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings. The link works for ${PARTNER_LINK_DAYS} days; after that, ask for a new one from the sign-in page.`,
-  ar: `افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها. يعمل الرابط لمدة ${PARTNER_LINK_DAYS} أيام، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.`,
+  en: `Open the link below to choose a password for your Vardenia partner account. Afterwards you can sign in at any time to see and answer your bookings. The link works for ${PARTNER_INVITE_DAYS} days; after that, ask for a new one from the sign-in page.`,
+  ar: `افتح الرابط أدناه لاختيار كلمة مرور لحساب الشريك الخاص بك في فاردينيا. بعد ذلك يمكنك تسجيل الدخول في أي وقت لعرض حجوزاتك والرد عليها. يعمل الرابط لمدة ${PARTNER_INVITE_DAYS} أيام، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.`,
   action: 'Set a password',
   ignoreEn: 'If you were not expecting this, you can ignore this message and nothing will change.',
   ignoreAr: 'إذا لم تكن تتوقع هذه الرسالة، تجاهلها ولن يتغير شيء.',
 }
 
-export function partnerResetEmail(token: string, origin = siteOrigin()): AuthEmailContent {
-  const mail = render(PARTNER_RESET, partnerResetUrl(token, origin))
+const PARTNER_RESET: Copy = {
+  subject: 'Reset your Vardenia password - إعادة تعيين كلمة المرور',
+  heading: 'Reset your password',
+  en: 'Open the link below to choose a new password for your Vardenia partner account. The link works for 1 hour; after that, ask for a new one from the sign-in page.',
+  ar: 'افتح الرابط أدناه لاختيار كلمة مرور جديدة لحساب الشريك الخاص بك في فاردينيا. يعمل الرابط لمدة ساعة واحدة، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.',
+  action: 'Choose a new password',
+  ignoreEn:
+    'If you did not ask for this, you can ignore this message and your password will not change.',
+  ignoreAr: 'إذا لم تطلب ذلك، تجاهل هذه الرسالة ولن تتغير كلمة المرور.',
+}
+
+/** `invite` is the first set-password email; otherwise an ordinary reset. */
+export function partnerResetEmail(
+  token: string,
+  origin = siteOrigin(),
+  { invite = false }: { invite?: boolean } = {},
+): AuthEmailContent {
+  const mail = render(invite ? PARTNER_INVITE : PARTNER_RESET, partnerResetUrl(token, origin))
   const login = partnerLoginUrl(origin)
 
   /**
@@ -228,4 +249,57 @@ export function partnerResetEmail(token: string, origin = siteOrigin()): AuthEma
       `  <p style="margin:24px 0 0;padding-top:16px;border-top:1px solid ${emailPalette.edge};font-size:13px;color:${emailPalette.quiet};">Sign in later at <a href="${escapeHtml(login)}" style="color:${emailPalette.accent};">${escapeHtml(login)}</a></p>\n  </div>\n</body>`,
     ),
   }
+}
+
+/**
+ * Notices after a change to the account (21 November 2026, authentication
+ * audit). Plain information, no button: the person only needs to know, and to
+ * know whom to contact if it was not them. Sent from a no-reply address, so the
+ * contact is named rather than "reply to this message".
+ */
+interface NoticeCopy {
+  subject: string
+  heading: string
+  en: string
+  ar: string
+}
+
+const contactEmail = (): string => CONTACT.email ?? 'contact@vardenia.com'
+
+function renderNotice(copy: NoticeCopy): AuthEmailContent {
+  const text = [copy.heading, '', copy.en, '', '---', '', copy.ar, '', 'Vardenia'].join('\n')
+  const html = `<!doctype html>
+<html lang="en">
+<body style="margin:0;padding:24px;background:${emailPalette.page};font-family:Georgia,'Times New Roman',serif;color:${emailPalette.strong};">
+  <div style="max-width:520px;margin:0 auto;background:${emailPalette.card};border:1px solid ${emailPalette.edge};border-radius:8px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${emailPalette.accent};">Vardenia</p>
+    <h1 style="margin:0 0 20px;font-size:22px;font-weight:normal;">${escapeHtml(copy.heading)}</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:${emailPalette.body};">${escapeHtml(copy.en)}</p>
+    <div dir="rtl" lang="ar" style="border-top:1px solid ${emailPalette.edge};padding-top:24px;text-align:right;font-family:'Segoe UI',Tahoma,sans-serif;">
+      <p style="margin:0;font-size:15px;line-height:1.8;color:${emailPalette.body};">${escapeHtml(copy.ar)}</p>
+    </div>
+  </div>
+</body>
+</html>`
+  return { subject: copy.subject, html, text }
+}
+
+/** To the account, after its password was changed from the profile page. */
+export function passwordChangedEmail(contact = contactEmail()): AuthEmailContent {
+  return renderNotice({
+    subject: 'Your Vardenia password was changed - تم تغيير كلمة المرور',
+    heading: 'Your password was changed',
+    en: `The password of your Vardenia account was just changed, and every other device was signed out. If that was you, nothing else is needed. If it was not, contact us right away at ${contact} so we can secure your account.`,
+    ar: `تم للتو تغيير كلمة مرور حسابك في فاردينيا، وتم تسجيل الخروج من جميع الأجهزة الأخرى. إذا كنت أنت من قام بذلك، فلا حاجة لأي إجراء. وإن لم تكن أنت، تواصل معنا فوراً على ${contact} لنؤمّن حسابك.`,
+  })
+}
+
+/** To the old address, after the account's email was changed from the profile page. */
+export function emailChangedEmail(newAddress: string, contact = contactEmail()): AuthEmailContent {
+  return renderNotice({
+    subject: 'Your Vardenia email address was changed - تم تغيير البريد الإلكتروني',
+    heading: 'Your email address was changed',
+    en: `The email address on your Vardenia account was changed to ${newAddress}, and every other device was signed out. If that was you, nothing else is needed. If it was not, contact us right away at ${contact}: whoever made the change cannot sign in until the new address is confirmed.`,
+    ar: `تم تغيير البريد الإلكتروني لحسابك في فاردينيا إلى ${newAddress}، وتم تسجيل الخروج من جميع الأجهزة الأخرى. إذا كنت أنت من قام بذلك، فلا حاجة لأي إجراء. وإن لم تكن أنت، تواصل معنا فوراً على ${contact}، إذ لا يمكن لمن أجرى التغيير تسجيل الدخول قبل تأكيد العنوان الجديد.`,
+  })
 }

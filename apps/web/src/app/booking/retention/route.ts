@@ -3,7 +3,6 @@ import config from '../../../payload.config'
 import { isSchedulerRequest } from '../../../lib/booking-expiry'
 import { applyRetention } from '../../../lib/retention'
 import { hideLapsedListings } from '../../../lib/contract-lapse'
-import { expireEndedPlaces } from '../../../lib/place-requests'
 import { reportError } from '../../../lib/report'
 
 /**
@@ -49,26 +48,17 @@ export async function POST(request: Request) {
     await reportError(error, { source: 'contract.lapse', path: '/booking/retention' })
   }
 
-  // Magazine places whose contract ended become Expired (19 November 2026).
-  let placesExpired: Awaited<ReturnType<typeof expireEndedPlaces>> | null = null
-  try {
-    const payload = await getPayload({ config })
-    placesExpired = await expireEndedPlaces(payload, { dryRun })
-  } catch (error) {
-    await reportError(error, { source: 'place-requests.expire', path: '/booking/retention' })
-  }
-
   try {
     const payload = await getPayload({ config })
     const result = await applyRetention(payload, { dryRun })
     if (result.failed > 0) {
-      await reportError(new Error(`${result.failed} old booking(s) could not be cleared`), {
+      await reportError(new Error('Retention could not clear old receipts'), {
         source: 'booking.retention',
         level: 'warning',
         extra: { ...result },
       })
     }
-    return json({ ok: true, ...result, lapsed, placesExpired })
+    return json({ ok: true, ...result, lapsed })
   } catch (error) {
     await reportError(error, { source: 'booking.retention', path: '/booking/retention' })
     return json({ ok: false, lapsed }, 500)

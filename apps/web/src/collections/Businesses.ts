@@ -25,11 +25,13 @@ import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
   refusePublishingRejected,
+  requireContractToPublish,
 } from '../hooks/linkPartnerOnPublish'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { guardSort } from '../hooks/guardSort'
+import { LISTING_STATES, listingState } from '../lib/listing-state'
 import { autoTranslateListing } from '../hooks/autoTranslateListing'
 import {
   revalidateListingsAfterChange,
@@ -154,7 +156,8 @@ export const Businesses: CollectionConfig = {
     // code (see packages/core/src/tiers.ts). A lapsed listing keeps everything
     // it was paying for until someone notices, so the list has to make noticing
     // easy: sort by this column and the expired accounts come to the top.
-    defaultColumns: ['name', 'category', 'governorate', 'tier', 'contractEndsAt', '_status'],
+    // `state` reads Draft, Published, Rejected or Expired (lib/listing-state).
+    defaultColumns: ['name', 'category', 'governorate', 'tier', 'contractEndsAt', 'state'],
     group: 'Directory',
     listSearchableFields: ['name', 'slug', 'address'],
   },
@@ -198,7 +201,7 @@ export const Businesses: CollectionConfig = {
     // listing existed. See hooks/revalidateListings.
     // A rejected submission cannot be published; publishing approves it in the
     // same write. See hooks/linkPartnerOnPublish.
-    beforeValidate: [refusePublishingRejected],
+    beforeValidate: [refusePublishingRejected, requireContractToPublish],
     beforeChange: [approveSubmissionOnPublish, releaseListingNumber],
     afterChange: [
       ensureQrCode,
@@ -593,7 +596,7 @@ export const Businesses: CollectionConfig = {
               admin: {
                 date: { displayFormat: 'd MMM yyyy' },
                 description:
-                  'The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Leave it empty for no end.',
+                  'The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Required to publish a listing that came through the business form; otherwise leave it empty for no end.',
               },
             },
             {
@@ -745,7 +748,11 @@ export const Businesses: CollectionConfig = {
           options: [
             { label: 'Pending', value: 'pending' },
             { label: 'Approved', value: 'approved' },
+            // Final: a rejected submission cannot be reopened or published.
             { label: 'Rejected', value: 'rejected' },
+            // Set by the daily job when the contract ends (lib/contract-lapse).
+            // Publishing again with a new end date makes it Approved.
+            { label: 'Expired', value: 'expired' },
           ],
           access: submissionAccess,
         },
@@ -766,6 +773,25 @@ export const Businesses: CollectionConfig = {
         },
         { name: 'submittedAt', type: 'date', access: submissionAccess },
       ],
+    },
+    {
+      /**
+       * Draft, Published, Rejected or Expired, worked out on read and never
+       * stored (20 November 2026). The listing's own status is only Draft or
+       * Published, so an expired or rejected listing looked like a new draft.
+       * Staff only: it shows whether a contract has ended. lib/listing-state.
+       */
+      name: 'state',
+      label: 'State',
+      type: 'select',
+      virtual: true,
+      options: LISTING_STATES.map((value) => ({
+        label: value.charAt(0).toUpperCase() + value.slice(1),
+        value,
+      })),
+      access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+      admin: { position: 'sidebar', readOnly: true },
+      hooks: { afterRead: [({ data }) => listingState(data)] },
     },
     seoField,
   ],

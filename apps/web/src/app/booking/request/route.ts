@@ -81,7 +81,7 @@ export const POST = withRateLimit(
 
     const customer = auth.user
     if (!customer || customer.collection !== CUSTOMER_COLLECTION) {
-      return json({ ok: false, code: 'signed-out', message: 'Sign in to book a table.' }, 401)
+      return json({ ok: false, code: 'signed-out', message: 'Sign in to book.' }, 401)
     }
 
     if (!customer._verified) {

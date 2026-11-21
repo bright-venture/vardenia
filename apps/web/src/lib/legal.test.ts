@@ -122,8 +122,9 @@ describe('what the policy claims about the code', () => {
 
   it('states a period for each kind of data', () => {
     for (const kept of [
-      '12 months after the visit',
+      'kept as the record of each visit',
       'error records**: 90 days',
+      'delivery logs for 30 days, then deleted automatically',
       'until you close it',
     ])
       expect(lines).toContain(kept)
@@ -235,7 +236,7 @@ describe('pendingDecisions', () => {
   /**
    * Bills are kept ten years, the period Lebanese law sets for accounting
    * records (settled 9 November 2026), and a bill names no guest, so that
-   * length keeps nothing personal past a booking's 12 months.
+   * length keeps nothing personal.
    */
   it('keeps bills ten years, without guest names', () => {
     const lines = privacyPolicy()
