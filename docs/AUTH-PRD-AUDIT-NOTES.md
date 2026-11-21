@@ -23,7 +23,7 @@ These make the PRD describe what the product really does.
 - **Profile changes** (section 2): changing the password or the email asks for the current password and signs out every other device; a password change is confirmed by email to the account; an email change must be confirmed from the new address (until then the account cannot be used on any device), and the old address is told, with the contact address. The PRD does not describe profile changes.
 - **Public actions without an account** (section 3): sign-up and the business form (anti-bot check and limits); forgot password and resend verification (limits, always the same answer, one email per 15 seconds per account, no anti-bot check on purpose so a locked-out person is not slowed down); the Questions page form (anti-bot check, a hidden trap field, a limit counted across all servers; the team answers from the admin); links from emails (signed for one booking or account, single use, time-limited). The PRD only names the business form.
 - **Event Staff** (section 3): requesting hostesses or waiters needs a signed-in guest with a confirmed email; the confirmation goes to the account's own address, the request appears on the account page, and the team answers from the admin; a visitor is asked to sign in or create an account first. Decided 21 November 2026: keep requiring sign-in. The PRD does not mention Event Staff.
-- **Anti-bot check can switch off** (section 3): if its keys are missing, the forms accept anyone. The team should know this risk.
+- **Anti-bot check (Turnstile)** (section 3): sign-up, the business form and the Questions form are checked. If the keys are missing the check is skipped, and the admin home shows a Site setup warning ("Anti-bot check is off", or "Anti-bot check cannot work" when only the site key is missing, which would refuse every sign-up); if Cloudflare cannot be reached, people are let through and the outage is logged. Production has both keys (checked 21 November 2026, including that the build receives the site key).
 - **Sign-up limit wording** (section 4): sign-up uses the same two counters (10 a minute per connection and email, 60 per connection), not its own "10 per minute per address".
 - **Booking limit** (section 4): 5 upcoming bookings (pending or confirmed), not 5 pending.
 - **Closing an account** (section 4): always anonymised, never removed, and the list of what it removes; bookings kept for good. The PRD says only "one with bookings is closed".
@@ -41,7 +41,6 @@ These make the PRD describe what the product really does.
 ### 2. Decisions waiting for you
 
 - **Delete the photos of a failed submission** (step 8): a submission that loses the race for a number, or fails to save, leaves its uploaded photos behind with nothing using them. Fix proposed.
-- **Admin warning when the anti-bot keys are missing** (steps 3, 9 and 10): today nothing tells the team that the forms are unprotected. Fix proposed.
 - **Delete the "summer-2026" issue** (steps 8 and 10): a leftover test issue on the test database, with 408 numbers and no ranges.
 - **Two-step sign-in for the team** (step 10): none exists. Recommended: Cloudflare Access in front of `/admin`, a one-time email code or Google sign-in before the admin loads, with no code change.
 - **Privacy policy line about sent emails** (step 4): emails already sent stay in the email provider's logs for a while; the policy could say so.
@@ -191,6 +190,7 @@ Verified live: sessions are on for all three account types (a test guards it); a
 | Missing from the PRD | Changing the password from the profile page keeps the device that made the change signed in and signs out every other device (tested).                                                                                                                                                                                                                                                                                                                                                           |
 | Fixed                | 21 November 2026: a password change from the profile page now emails the account ("Your password was changed", English and Arabic, with the contact address); the email-change notice to the old address now names the contact address instead of "reply to this message" (emails come from a no-reply address) and is in English and Arabic; an email change now signs out every other device, as a password change does. Tested live: after an email change only the current session remained. |
 | Open (fix proposed)  | Checked in Netlify on 21 November 2026: production has both Turnstile keys and the email key. Branch deploys (staging) have neither secret (see step 10). Nothing warns when the keys are missing: proposed, a warning on the admin dashboard.                                                                                                                                                                                                                                                   |
+| Fixed                | 21 November 2026: the admin home Site setup box now warns "Anti-bot check is off" when TURNSTILE_SECRET_KEY is missing, and "Anti-bot check cannot work" (error) when the secret is set but NEXT_PUBLIC_TURNSTILE_SITE_KEY is not, which would refuse every sign-up. Checked live on the test setup (no keys): the warning shows. Also confirmed that the live build receives NEXT_PUBLIC_TURNSTILE_SITE_KEY (Turbo passes NEXT_PUBLIC_* settings automatically).                                |
 
 ## Step 10. Open items and decisions
 
@@ -213,7 +213,7 @@ Each PRD open item checked against the code, the tests and the live settings (Ne
 
 | Step    | Item                                                                                              |
 | ------- | ------------------------------------------------------------------------------------------------- |
-| 3 and 9 | Admin warning when the Turnstile keys are missing (proposed).                                     |
+| 3 and 9 | Admin warning when the Turnstile keys are missing: done 21 November 2026.                         |
 | 4       | Emails already sent stay in the email provider's logs; the privacy policy could say so.           |
 | 5       | Partner listing editing is being built; re-test access when it lands.                             |
 | 8       | A submission that fails at the last step leaves its uploaded photos behind (fix proposed).        |
