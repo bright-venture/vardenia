@@ -11,101 +11,55 @@ Each note is one of:
 
 ---
 
-## Pending until the PRD and the product match
+## What is left to do, decide or check
 
-Everything still open from steps 1 to 10, grouped by who does it. Tick an item off by deleting it once it is done; when this section is empty, the PRD is coherent. The step tables below keep the evidence.
+Steps 1 to 10 grouped by what is left to do. Each item says what it is and why it matters; the step tables below keep the evidence. When this list is empty, the PRD and the product match. What was fixed during the audit is in the step tables below.
 
-### A. PRD wording to update (no code change)
+### 1. PRD wording to update (no code change)
 
-Section 2, Who can do what
+These make the PRD describe what the product really does.
 
-- Password reset row: customer, a 1 hour emailed link; partner, a 1 hour emailed link, except the first invitation (3 days); team, the admin sign-in page's own "Forgot password", also 1 hour. Not "through admin".
-- Add: sign-in is limited to 10 requests per minute per internet connection, shared by sign-in, forgot password, reset, unlock and verify.
-- Add: "forgot password" works once per 15 seconds per account; the failed sign-in counter resets on a successful sign-in; a lock lifts by itself after 10 minutes.
-- Add: changing the password on the profile page signs out every other device.
+- **Sign-in limits** (section 2): two counters for sign-in, sign-up, forgot password, reset and verify: 10 a minute per internet connection and email, and 60 a minute per connection; requests with no email share 10 a minute per connection. "Forgot password" once per 15 seconds per account. The account lock (10 wrong for a customer, 5 for a partner or team member, 10 minutes, reset by a correct sign-in) is unchanged. The PRD only mentions the lock.
+- **Profile password change** (section 2): it signs out every other device. Worth stating, it is a safety feature.
+- **Other public forms** (section 3): sign-up, forgot password, resend verification and the Questions page form also need no account. The PRD only names the business form.
+- **Event Staff needs sign-in** (section 3): a visitor cannot request staff. The PRD does not say it.
+- **Anti-bot check can switch off** (section 3): if its keys are missing, the forms accept anyone. The team should know this risk.
+- **Sign-up limit wording** (section 4): sign-up uses the same two counters (10 a minute per connection and email, 60 per connection), not its own "10 per minute per address".
+- **Booking limit** (section 4): 5 upcoming bookings (pending or confirmed), not 5 pending.
+- **Closing an account** (section 4): always anonymised, never removed, and the list of what it removes; bookings kept for good. The PRD says only "one with bookings is closed".
+- **Customer pages** (section 4): add the "close account" page; the reset link also verifies an unverified account.
+- **"The team never sees a password"** (section 5): true only for partners created by publishing; a partner created by staff starts with the password staff typed (accepted as fine on 20 November 2026).
+- **What partners edit** (section 5): today bookings, closed dates, rooms, open dates and hotel times, not the listing content; update when listing editing lands.
+- **Which listing fields are hidden** (section 5): tier, verified and listing number are public by design; contract dates, commission and submission details are hidden.
+- **"Booking fees" means commission** (section 6), plus the full list of admin-only deletes, now including articles, photos and areas.
+- **Admin sets the tier** (section 7): the PRD says staff do it during review, but only an admin can.
+- **New submission rules** (section 7): contract end date required to publish; Rejected is final; the four statuses shown as State; old place requests removed; a submission starts as tier Silver; photos JPEG, PNG or WebP only.
+- **Scheduled jobs run only on the live site** (section 7): hiding expired contracts and expiring unanswered bookings never happen on staging, which matters when testing there.
+- **Listing numbers** (section 8): after the release, enter the total and ranges on the live site (staging already has them); the total cannot drop below the last range end; ranges cannot be moved while used.
+- **Open items list** (section 10): remove "race on a taken number" and "ranges can be moved" (both done); reword "staging database" (it is the live database that needs the ranges); "numbering-only issue" does not apply, All Lebanon is the real printed issue and stays public; write in the answer for "partner after contract ends" (still signs in and sees the listing, bookings refused, page hidden).
 
-Section 3, Visitors
+### 2. Decisions waiting for you
 
-- Add the other public forms that need no account: sign-up, forgot password, resend verification, the question form on the Questions page.
-- Add: requesting Event Staff needs a signed-in customer.
-- Add: the anti-bot check (Turnstile) is skipped when its keys are missing, and then the public forms accept anyone.
+- **Delete the photos of a failed submission** (step 8): a submission that loses the race for a number, or fails to save, leaves its uploaded photos behind with nothing using them. Fix proposed.
+- **Admin warning when the anti-bot keys are missing** (steps 3, 9 and 10): today nothing tells the team that the forms are unprotected. Fix proposed.
+- **Delete the "summer-2026" issue** (steps 8 and 10): a leftover test issue on the test database, with 408 numbers and no ranges.
+- **Two-step sign-in for the team** (step 10): none exists. Recommended: Cloudflare Access in front of `/admin`, a one-time email code or Google sign-in before the admin loads, with no code change.
+- **Privacy policy line about sent emails** (step 4): emails already sent stay in the email provider's logs for a while; the policy could say so.
 
-Section 4, Customers
+### 3. Settings for you (no code)
 
-- Sign-up limit: it is the shared sign-in budget (10 per minute per connection), not its own "10 per address".
-- Booking limit: 5 upcoming bookings (pending or confirmed), not 5 pending.
-- Closing an account: always anonymised, never removed, with or without bookings. List what it does: signs out every device, cancels upcoming bookings (the place is told), erases booking notes, deletes saved places, receipts and their photos, reviews and questions, erases Event Staff contact details.
-- Bookings are kept for good as anonymous records; the 12-month deletion is gone.
-- Add `/account/close` to the page list. Add: the reset link also verifies an unverified account.
+- **Netlify, Branch deploys: add `RESEND_API_KEY`** (step 10): without it staging writes emails to the server log, so staging sign-ups cannot be verified and invitations and resets never arrive.
+- **Netlify, Branch deploys: add `TURNSTILE_SECRET_KEY`, and the staging address in the Turnstile widget in Cloudflare** (step 10): staging shows the anti-bot box but nothing checks it.
+- **After the release, in the live admin: set All Lebanon's total to 408 and enter the seven ranges** (steps 8 and 10): the live database gets the tables from the migration, but not the numbers.
+- **Cloudflare Access for `/admin`**, if you choose it in group 2 (step 10).
+- **In a few weeks, DMARC from `p=none` to `p=quarantine`** (step 10): today fake emails claiming to come from vardenia.com are only reported, not blocked; read the reports first.
 
-Section 5, Business partners
+### 4. Later or in progress
 
-- "The team never sees a password" is true only for partners created by publishing a submission; a partner created by staff in the admin starts with the password staff typed (accepted on 20 November 2026).
-- Partners do not edit their listing content yet (name, photos, description, hours); they manage bookings, closed dates, rooms and open dates, and hotel check-in and check-out times. Update when partner listing editing lands.
-- Staff-only fields: tier, verified status and the listing number are public by design; contract dates, commission and submission details are hidden; only the team changes any of them.
-
-Section 6, The team
-
-- "Booking fees" is the commission. Admin only: tier, verified status, commission.
-- Add the other admin-only deletes: bookings, customers, partners, team members, issues, editions, QR codes, statements, receipts, reviews, scan records, and (since 20 November 2026) articles, photos and areas.
-
-Section 7, Business sign-up request
-
-- An admin sets the tier, not staff.
-- A submitted listing needs a contract end date to be published; one already past is refused.
-- Rejected is final: it cannot be reopened or published; the business sends a new request.
-- The four statuses are shown as the listing's State: Draft, Published, Rejected, Expired. Expired is set when the contract ends; publishing again with a new end date renews it.
-- The old "place requests" are removed (not just "not used").
-- Add: a submitted listing starts as tier Silver; photos must be JPEG, PNG or WebP, checked by content.
-- Add: the daily and hourly jobs run only on the live site, never on staging.
-
-Section 8, Listing numbers
-
-- After the release, the issue total and the seven ranges are entered on the live site; staging already has them.
-- The total cannot drop below the highest range end (stricter than "highest number in use").
-- A range cannot be moved to another governorate or issue while its numbers are in use.
-
-Section 10, Open items
-
-- Remove "Race on a taken number" and "Ranges can still be moved" (both done).
-- Reword "Staging database" (it is the live database that needs the ranges).
-- "Numbering-only issue" does not apply: All Lebanon is the real printed issue and stays public.
-- "Partner after contract ends": answered; the partner still signs in and sees the listing, bookings are refused, the public page is hidden.
-
-### B. Decisions waiting for you
-
-- Delete the photos a submission uploaded when it fails at the last step (fix proposed, step 8).
-- Show a warning on the admin dashboard while the anti-bot keys are missing (fix proposed, steps 3 and 9).
-- Delete the leftover "summer-2026" issue on the test database (step 8).
-- Two-step sign-in for the team: Cloudflare Access in front of `/admin` (recommended, step 10).
-- Count sign-in attempts per connection and email, with a higher cap per connection, so people sharing one connection are not blocked (suggested, step 2).
-- Add to the privacy policy that emails already sent stay in the email provider's logs for a while (step 4).
-
-### C. Settings for you (no code)
-
-- Netlify, Branch deploys: add `RESEND_API_KEY` (so staging sends emails) and `TURNSTILE_SECRET_KEY`, and add the staging address to the Turnstile widget in Cloudflare.
-- After the release: in the live admin, set All Lebanon's total to 408 and enter the seven ranges.
-- In a few weeks: read the DMARC reports and move DMARC from `p=none` to `p=quarantine`.
-
-### Step 10: each PRD open item and what is left
-
-- Staging database: left to do, reword the PRD (A) and, after the release, enter the total and seven ranges on the live site (C).
-- Turnstile keys: production done. Left: the secret for Branch deploys (C) and an admin warning while keys are missing (B).
-- Race on a taken number: done (already fixed). Left: remove it from the PRD's open items (A).
-- Ranges can still be moved: done (fixed in step 8). Left: remove it from the PRD's open items (A).
-- Numbering-only issue: left: say in the PRD that All Lebanon is the real issue and stays public (A); decide on deleting "summer-2026" (B).
-- Admin two-step sign-in: left: decide on Cloudflare Access in front of `/admin` (B), then set it up in Cloudflare (C).
-- Partner after contract ends: answered by test. Left: write the answer into the PRD (A).
-- Extra listings for an existing partner: works today through the form. Left: the "Add another listing" button, later (D).
-- Other sign-in methods: left: decide with the mobile app (D).
-- Email deliverability: DKIM and SPF done. Left: `RESEND_API_KEY` for Branch deploys and tightening DMARC later (C).
-
-### D. Later or in progress
-
-- Partner listing editing (in progress): re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
-- An "Add another listing" button in the partner dashboard.
-- Google and Apple sign-in, decided with the mobile app (Apple requires Sign in with Apple if the iPhone app offers Google).
-- `ContentPage.test.tsx` fails on this branch ("Caveat is not a function"), unrelated to the audit.
+- **Partner listing editing** (step 5, being built): when it lands, re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
+- **"Add another listing" button for partners** (step 10): today a partner adds a business by using the form again with the same email, which works.
+- **Google and Apple sign-in** (step 10): decide with the mobile app; Apple requires Sign in with Apple if the iPhone app offers Google.
+- **`ContentPage.test.tsx` fails** ("Caveat is not a function", seen in step 4): a design font in the tests, unrelated to the audit.
 
 ---
 
@@ -123,16 +77,18 @@ All six claims hold (three account types, browsing without an account, booking n
 
 Verified live: sign-in for all three types; sessions of 7 days (customer), 4 hours (partner), 8 hours (team); lockout after 10 / 5 / 5 wrong passwords for 10 minutes; each account reads only its own record; a partner cannot add a listing to themselves or change their password with a session alone; staff cannot make themselves admin; cookies are HttpOnly and SameSite Lax.
 
-| Type                 | Note                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fixed                | Partner invitations were never sent. Payload's anti-spam check for "forgot password" looks the account up outside the save that creates it, finds nobody and silently skips. Accounts created by staff or by publishing a submission had no link and no email. The invitation now creates its link inside the same save and sends the email itself.                                                                                                                                                |
-| Fixed                | A partner's ordinary "forgot password" link lasted 3 days, because it was the same setting as the invitation. Now: invitation 3 days, ordinary reset 1 hour, and each email states its own lifetime.                                                                                                                                                                                                                                                                                               |
-| Fixed                | "Forgot password" revealed that an account exists when the email could not be sent: the answer became an error showing the email provider's own message. It now always answers "Success" and records the failure on the server, for all three account types.                                                                                                                                                                                                                                       |
-| Correction           | Team password reset is not "through admin": the admin sign-in page has its own "Forgot password" email with a 1 hour link.                                                                                                                                                                                                                                                                                                                                                                         |
-| Correction           | Password reset row should read: customer 1 hour link; partner 1 hour link, except the first-time invitation (3 days); team 1 hour link.                                                                                                                                                                                                                                                                                                                                                            |
-| Missing from the PRD | Sign-in is also limited to 10 requests per minute per internet connection, shared across all sign-in, forgot-password, reset, unlock and verify requests. It stops password guessing spread over many accounts, mass lockouts and reset-email spam. Known downside: people sharing one connection (mobile carriers, hotel or office Wi-Fi) share the budget and may see "Too many requests" for up to a minute. Suggested later: count per connection and email, with a higher cap per connection. |
-| Missing from the PRD | "Forgot password" can be requested once per 15 seconds per account (Payload default).                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Missing from the PRD | A failed sign-in counter resets on a successful sign-in; the lock lifts by itself after 10 minutes.                                                                                                                                                                                                                                                                                                                                                                                                |
+| Type                 | Note                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fixed                | Partner invitations were never sent. Payload's anti-spam check for "forgot password" looks the account up outside the save that creates it, finds nobody and silently skips. Accounts created by staff or by publishing a submission had no link and no email. The invitation now creates its link inside the same save and sends the email itself.                                                                                                                                                                                                                                                                                                                                                         |
+| Fixed                | A partner's ordinary "forgot password" link lasted 3 days, because it was the same setting as the invitation. Now: invitation 3 days, ordinary reset 1 hour, and each email states its own lifetime.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Fixed                | "Forgot password" revealed that an account exists when the email could not be sent: the answer became an error showing the email provider's own message. It now always answers "Success" and records the failure on the server, for all three account types.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Correction           | Team password reset is not "through admin": the admin sign-in page has its own "Forgot password" email with a 1 hour link.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Correction           | Password reset row should read: customer 1 hour link; partner 1 hour link, except the first-time invitation (3 days); team 1 hour link.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Decided              | 21 November 2026: keep 1 hour for ordinary resets (customer, partner, team) and 3 days for a partner's first invitation (no resend button: the invitation says to use Forgot password). The team keeps Payload's plain reset email. PRD row: Customer, emailed link from Forgot password, valid 1 hour. Partner, the same, and the first-time invitation link is valid 3 days. Team, Forgot password on the admin sign-in page, emailed link valid 1 hour. All accounts: same answer whether or not the address has an account; new password at least 10 characters, spaces do not count; a link works once; a reset signs out every device. Team reset tested live 21 November (60 minutes, rule applied). |
+| Missing from the PRD | Sign-in is also limited to 10 requests per minute per internet connection, shared across all sign-in, forgot-password, reset, unlock and verify requests. It stops password guessing spread over many accounts, mass lockouts and reset-email spam. Known downside: people sharing one connection (mobile carriers, hotel or office Wi-Fi) share the budget and may see "Too many requests" for up to a minute. Suggested later: count per connection and email, with a higher cap per connection.                                                                                                                                                                                                          |
+| Fixed                | 21 November 2026: two counters instead of one. 10 a minute per connection and email, plus 60 a minute per connection, for sign-in, sign-up, forgot password, reset and verify on all three account types; requests with no email share 10 a minute per connection. People sharing one connection no longer block each other. Tested live from one connection: 20 different people all answered; the same email refused on its 11th try while another email still went through; spraying emails refused after 60 in the minute.                                                                                                                                                                              |
+| Missing from the PRD | "Forgot password" can be requested once per 15 seconds per account (Payload default).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Missing from the PRD | A failed sign-in counter resets on a successful sign-in; the lock lifts by itself after 10 minutes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ## Step 3. Visitors
 
