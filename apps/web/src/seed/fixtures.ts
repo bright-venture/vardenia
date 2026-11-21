@@ -1,4 +1,4 @@
-import type { ListingTier } from '@vardenia/core'
+import type { ListingTier, StayConfig, StayFeatures } from '@vardenia/core'
 
 /**
  * The fixture set, as plain data.
@@ -47,6 +47,9 @@ export interface BusinessFixture {
   contractStartsAt?: string
   contractEndsAt?: string
   internalNotes?: string
+  /** A guest house, booked as a whole property (Getaways only, Task 6). */
+  stay?: StayConfig
+  features?: StayFeatures
   status: 'published' | 'draft'
 }
 
@@ -80,7 +83,7 @@ export const BUSINESSES: BusinessFixture[] = [
       ar: 'شارع عبد الوهاب الإنكليزي، الأشرفية',
     },
     location: [35.5199, 33.8886],
-    tier: 'gold',
+    tier: 'platinum',
     verified: true,
     priceRange: '4',
     amenities: [
@@ -213,6 +216,24 @@ export const BUSINESSES: BusinessFixture[] = [
     priceRange: '2',
     amenities: ['mountain-view', 'free-parking', 'pet-friendly'],
     openingHours: daily('08:00', '22:00'),
+    stay: {
+      nightlyPrice: 220,
+      includedGuests: 6,
+      maxGuests: 12,
+      extraGuestFee: 25,
+      childrenCountAsGuests: true,
+      minNights: 2,
+      packages: [
+        {
+          label: 'Weekend with breakfast',
+          description: 'Two nights, breakfast on the terrace for everyone.',
+          price: 520,
+          unit: 'per-stay',
+          active: true,
+        },
+      ],
+    },
+    features: { gardenAccess: true, barbecue: true, musicAllowed: false },
     // Draft on purpose: proves publishedOrStaff hides it from anonymous callers.
     status: 'draft',
   },

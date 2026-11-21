@@ -62,6 +62,19 @@ describe('the list matches the routes that exist', () => {
     }
   })
 
+  /**
+   * Task 9's JSON endpoints live under their own -data prefixes, so the page
+   * paths /brands/<slug> and /partner/branches stay free for pages.
+   */
+  it('keeps the brand and branch data endpoints off page paths', () => {
+    expect(UNMATCHED_PREFIXES).toContain('brand-data')
+    expect(UNMATCHED_PREFIXES).toContain('partner-data')
+    expect(UNMATCHED_PREFIXES as readonly string[]).not.toContain('brands')
+    expect(UNMATCHED_PREFIXES as readonly string[]).not.toContain('partner')
+    expect(routeSegments(APP)).not.toContain('brands')
+    expect(routeSegments(APP)).not.toContain('partner')
+  })
+
   it('covers all six sections', () => {
     for (const section of SECTION_PATHS) {
       expect(KNOWN_SEGMENTS.has(section), `${section} is a section but not known`).toBe(true)

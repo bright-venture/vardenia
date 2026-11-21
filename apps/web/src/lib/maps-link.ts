@@ -26,7 +26,11 @@
  * the same function simply starts taking the first branch.
  */
 
+import { mapsUrlProblem } from '@vardenia/core/maps-link'
+
 export interface MapsTarget {
+  /** The link the owner pasted (`mapUrl`). Used as it is when it is a valid Google Maps link. */
+  mapUrl?: string | null
   name: string
   /** The address line, when the listing has one. */
   address?: string | null
@@ -47,6 +51,10 @@ const COUNTRY = 'Lebanon'
  * that has not been geocoded.
  */
 export function mapsLink(target: MapsTarget): string {
+  // The owner's own link wins, checked again here because a row saved before
+  // the field existed, or by script, never went through its validation.
+  const own = target.mapUrl?.trim()
+  if (own && mapsUrlProblem(own) === null) return own
   const query = mapsQuery(target)
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
 }
@@ -80,4 +88,20 @@ export function mapsQuery({ name, address, place, coordinates }: MapsTarget): st
   }
 
   return parts.join(', ')
+}
+
+/**
+ * Whether there is anything to send a reader to: a point, a valid pasted link
+ * or a non-blank address. Without one, "Get directions" would be a search for
+ * the name and region alone, which is not a direction.
+ */
+export function hasMapTarget({
+  coordinates,
+  mapUrl,
+  address,
+}: Pick<MapsTarget, 'coordinates' | 'mapUrl' | 'address'>): boolean {
+  if (coordinates) return true
+  const own = mapUrl?.trim()
+  if (own && mapsUrlProblem(own) === null) return true
+  return Boolean(address?.trim())
 }

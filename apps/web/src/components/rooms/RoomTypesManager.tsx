@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import { ROOM_AMENITIES, ROOM_VIEWS, roomOptionLabel } from '@vardenia/core/hotel-options'
 import {
   HINT,
   INPUT,
@@ -59,23 +60,8 @@ export interface ManagedHotel {
   checkOut: string
 }
 
-const VIEWS = ['sea', 'mountain', 'city', 'garden', 'pool'] as const
-const AMENITIES = [
-  'private-bathroom',
-  'balcony',
-  'kitchenette',
-  'air-conditioning',
-  'heating',
-  'wifi',
-  'tv',
-  'minibar',
-  'coffee-machine',
-  'bathtub',
-  'work-desk',
-  'safe',
-  'soundproofing',
-  'fireplace',
-] as const
+const VIEWS = ROOM_VIEWS.map((o) => o.slug)
+const AMENITIES = ROOM_AMENITIES.map((o) => o.slug)
 
 const blankOption = (): ManagedOption => ({
   breakfast: false,
@@ -98,7 +84,6 @@ export function RoomTypesManager({
   today: string
 }) {
   const t = useTranslations('partnerRooms')
-  const tr = useTranslations('rooms')
   const router = useRouter()
   const [editing, setEditing] = useState<ManagedRoomType | null>(null)
   const [busy, setBusy] = useState(false)
@@ -483,7 +468,7 @@ export function RoomTypesManager({
                     checked={editing.views.includes(view)}
                     onChange={() => toggle('views', view)}
                   />
-                  {tr(`views.${view}`)}
+                  {roomOptionLabel(view, locale)}
                 </label>
               ))}
             </div>
@@ -499,7 +484,7 @@ export function RoomTypesManager({
                     checked={editing.amenities.includes(amenity)}
                     onChange={() => toggle('amenities', amenity)}
                   />
-                  {tr(`amenities.${amenity}`)}
+                  {roomOptionLabel(amenity, locale)}
                 </label>
               ))}
             </div>

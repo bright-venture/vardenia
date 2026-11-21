@@ -60,8 +60,6 @@ export const PROTECTED_SORT_FIELDS = [
   'submission.ownerName',
   'submission.ownerEmail',
   'submission.ownerPhone',
-  'submission.publicPhone',
-  'submission.website',
   'submission.pageTemplate',
   'submission.submittedAt',
 ] as const

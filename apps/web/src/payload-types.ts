@@ -70,6 +70,7 @@ export interface Config {
   blocks: {};
   collections: {
     businesses: Business;
+    brands: Brand;
     'qr-codes': QrCode;
     reviews: Review;
     bookings: Booking;
@@ -109,6 +110,7 @@ export interface Config {
   };
   collectionsSelect: {
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    brands: BrandsSelect<false> | BrandsSelect<true>;
     'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
@@ -308,6 +310,10 @@ export interface Business {
       )[]
     | null;
   /**
+   * The restaurant brand this listing is a branch of. Restaurants only.
+   */
+  brand?: (number | null) | Brand;
+  /**
    * Free-form editorial tags ("sunset", "hidden gem"). Powers curated collections.
    */
   tags?: string[] | null;
@@ -351,6 +357,10 @@ export interface Business {
   area?: (number | null) | Area;
   address?: string | null;
   /**
+   * The listing on Google Maps. Shown as "View on map" and "Get directions". When the link carries coordinates the location below is filled from it; a short link (maps.app.goo.gl) is kept as it is.
+   */
+  mapUrl?: string | null;
+  /**
    * Filled by the link above. Drives "near me" search and Google Maps directions.
    *
    * @minItems 2
@@ -386,7 +396,7 @@ export interface Business {
      */
     autoConfirm?: boolean | null;
     /**
-     * How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel or getaway with room types: there, each room type has its own rooms and open dates (Rooms tab).
+     * How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel with room types: there, each room type has its own rooms and open dates (Rooms tab). A guest house (Getaways) is booked as a whole property, one stay at a time, so its capacity is 1.
      */
     capacity?: number | null;
     minPartySize?: number | null;
@@ -431,6 +441,102 @@ export interface Business {
      */
     cancellationPolicy?: string | null;
   };
+  facilities?:
+    | (
+        | 'free-wifi'
+        | 'parking-free'
+        | 'parking-paid'
+        | 'airport-shuttle'
+        | 'family-rooms'
+        | 'non-smoking-rooms'
+        | 'restaurant'
+        | 'bar'
+        | '24h-front-desk'
+        | 'room-service'
+        | 'fitness-centre'
+        | 'spa-wellness'
+        | 'outdoor-pool'
+        | 'indoor-pool'
+        | 'pets-allowed'
+        | 'accessible'
+        | 'breakfast'
+        | 'terrace'
+        | 'garden'
+        | 'beachfront'
+        | 'ev-charging'
+        | 'laundry'
+        | 'business-centre'
+        | 'meeting-rooms'
+        | 'kids-club'
+        | 'babysitting'
+        | 'currency-exchange'
+        | 'luggage-storage'
+        | 'concierge'
+        | 'bbq'
+        | 'elevator'
+        | 'heating'
+        | 'air-conditioning-public'
+      )[]
+    | null;
+  /**
+   * Up to 8, chosen from the facilities above.
+   */
+  popularFacilities?:
+    | (
+        | 'free-wifi'
+        | 'parking-free'
+        | 'parking-paid'
+        | 'airport-shuttle'
+        | 'family-rooms'
+        | 'non-smoking-rooms'
+        | 'restaurant'
+        | 'bar'
+        | '24h-front-desk'
+        | 'room-service'
+        | 'fitness-centre'
+        | 'spa-wellness'
+        | 'outdoor-pool'
+        | 'indoor-pool'
+        | 'pets-allowed'
+        | 'accessible'
+        | 'breakfast'
+        | 'terrace'
+        | 'garden'
+        | 'beachfront'
+        | 'ev-charging'
+        | 'laundry'
+        | 'business-centre'
+        | 'meeting-rooms'
+        | 'kids-club'
+        | 'babysitting'
+        | 'currency-exchange'
+        | 'luggage-storage'
+        | 'concierge'
+        | 'bbq'
+        | 'elevator'
+        | 'heating'
+        | 'air-conditioning-public'
+      )[]
+    | null;
+  /**
+   * Up to 6 headline strengths.
+   */
+  propertyHighlights?:
+    | (
+        | 'parking'
+        | 'wellness'
+        | 'breakfast'
+        | 'pool'
+        | 'beachfront'
+        | 'mountain-view'
+        | 'city-centre'
+        | 'family-friendly'
+        | 'romantic'
+        | 'business-friendly'
+        | 'pet-friendly'
+        | 'quiet-location'
+      )[]
+    | null;
   roomTypeList?: {
     docs?: (number | RoomType)[];
     hasNextPage?: boolean;
@@ -442,9 +548,80 @@ export interface Business {
     totalDocs?: number;
   };
   /**
-   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set in Settings, Commission and tiers. Every silver listing comes before every bronze one.
+   * A guest house is booked as a whole property: one stay at a time (the listing capacity is 1), for nights. Prices in USD. Only for Getaways.
    */
-  tier: 'bronze' | 'silver' | 'gold';
+  stay?: {
+    /**
+     * For the whole property.
+     */
+    nightlyPrice?: number | null;
+    /**
+     * Per guest above the included number, per night.
+     */
+    extraGuestFee?: number | null;
+    /**
+     * How many guests the nightly price covers.
+     */
+    includedGuests?: number | null;
+    /**
+     * The hard limit. Leave empty for none.
+     */
+    maxGuests?: number | null;
+    minNights?: number | null;
+    /**
+     * On: children count toward the guests included and the most guests. Off: only adults count.
+     */
+    childrenCountAsGuests?: boolean | null;
+    /**
+     * Optional offers that replace the nightly price, e.g. "Weekend with breakfast". The extra guest fee still applies. Up to 10.
+     */
+    packages?:
+      | {
+          label: string;
+          description?: string | null;
+          price: number;
+          unit: 'per-night' | 'per-stay' | 'per-person-per-night';
+          /**
+           * Off hides it from guests.
+           */
+          active?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Optional. Tick what the property offers. Only for Getaways.
+   */
+  features?: {
+    musicAllowed?: boolean | null;
+    eventsHosted?: boolean | null;
+    partiesAllowed?: boolean | null;
+    gardenAccess?: boolean | null;
+    barbecue?: boolean | null;
+    pool?: boolean | null;
+  };
+  /**
+   * Optional. When set, guests choose an area and each area has its own number of tables; the listing capacity is then not used for new bookings. One row per area (indoor, indoor smoking, outdoor, outdoor smoking). An area with upcoming bookings cannot be removed or given fewer tables than they need.
+   */
+  seatingAreas?:
+    | {
+        setting: 'indoor' | 'outdoor';
+        smoking?: boolean | null;
+        /**
+         * How many bookings may overlap in this area.
+         */
+        tables: number;
+        /**
+         * Optional name shown to guests, e.g. "Garden terrace".
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in its category, limited per category in Settings, Tiers. Platinum: gold, plus a place on the home page, limited overall in Settings, Tiers. Every silver listing comes before every bronze one.
+   */
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   /**
    * A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the rate in Settings, Commission and tiers. No-shows and cancellations are never charged.
    */
@@ -489,13 +666,23 @@ export interface Business {
    * The number in the printed magazine, from the range of this governorate in the chosen issue.
    */
   listingNumber?: number | null;
+  contact?: {
+    phone?: string | null;
+    whatsapp?: string | null;
+    email?: string | null;
+    instagram?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
+    snapchat?: string | null;
+    youtube?: string | null;
+    x?: string | null;
+    linkedin?: string | null;
+  };
   submission?: {
     status?: ('pending' | 'approved' | 'rejected' | 'expired') | null;
     ownerName?: string | null;
     ownerEmail?: string | null;
     ownerPhone?: string | null;
-    publicPhone?: string | null;
-    website?: string | null;
     pageTemplate?: ('a' | 'b' | 'c') | null;
     submittedAt?: string | null;
   };
@@ -538,6 +725,11 @@ export interface Media {
    * Track this. Reusing a supplied photo in a paid ad without rights is a real liability.
    */
   usageRights?: ('owned' | 'licensed' | 'supplied') | null;
+  uploadedBy?: (number | null) | BusinessUser;
+  /**
+   * Set automatically when a page uses this file. Tick it by hand only for a partner's file used inside article text.
+   */
+  attached?: boolean | null;
   _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -594,6 +786,60 @@ export interface Media {
   };
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-users".
+ */
+export interface BusinessUser {
+  id: number;
+  name: string;
+  /**
+   * Which listings this account manages. A group may hold several. Only staff can change this.
+   */
+  businesses: (number | Business)[];
+  phone?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'business-users';
+}
+/**
+ * Restaurant brands. Each branch is a listing with its Brand set. A brand is public while one of its branches is published.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  /**
+   * The brand page address, /brands/<slug>. Set once and never changed.
+   */
+  slug: string;
+  logo?: (number | null) | Media;
+  description?: string | null;
+  /**
+   * Set automatically: on while one of its branches is published.
+   */
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Neighbourhoods and towns guests filter by (Achrafieh, Faraya). Each belongs to one region.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -615,7 +861,7 @@ export interface Area {
   createdAt: string;
 }
 /**
- * The rooms a hotel or getaway sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
+ * The rooms a hotel sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "room-types".
@@ -641,7 +887,7 @@ export interface RoomType {
    * For example "1 large double bed" or "2 single beds".
    */
   beds?: string | null;
-  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool')[] | null;
+  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool' | 'landmark-view')[] | null;
   amenities?:
     | (
         | 'private-bathroom'
@@ -658,6 +904,23 @@ export interface RoomType {
         | 'safe'
         | 'soundproofing'
         | 'fireplace'
+        | 'shared-bathroom'
+        | 'shower'
+        | 'terrace'
+        | 'kettle'
+        | 'refrigerator'
+        | 'microwave'
+        | 'seating-area'
+        | 'dining-area'
+        | 'sofa'
+        | 'wardrobe'
+        | 'hairdryer'
+        | 'free-toiletries'
+        | 'bathrobes'
+        | 'slippers'
+        | 'iron'
+        | 'extra-bed-available'
+        | 'crib-available'
       )[]
     | null;
   /**
@@ -673,7 +936,7 @@ export interface RoomType {
         freeCancellationDays?: number | null;
         payment: 'at-property' | 'in-advance';
         /**
-         * Not shown on the website for now.
+         * USD, shown on the website. Optional; up to two decimals.
          */
         price?: number | null;
         id?: string | null;
@@ -1005,6 +1268,7 @@ export interface Booking {
   end: string;
   partySize: number;
   children?: number | null;
+  area?: ('indoor' | 'indoor-smoking' | 'outdoor' | 'outdoor-smoking') | null;
   /**
    * The room or unit type requested, for a stay. Empty for a table booking.
    */
@@ -1023,6 +1287,22 @@ export interface Booking {
       }[]
     | null;
   roomCount?: number | null;
+  /**
+   * The price quoted when the booking was made. Set automatically, never edited.
+   */
+  price?: {
+    total?: number | null;
+    currency?: string | null;
+    nights?: number | null;
+    lines?:
+      | {
+          label?: string | null;
+          amount?: number | null;
+          id?: string | null;
+        }[]
+      | null;
+    quotedAt?: string | null;
+  };
   /**
    * Change it with the buttons on the booking, then Save.
    */
@@ -1287,38 +1567,6 @@ export interface ListingRange {
   createdAt: string;
 }
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "business-users".
- */
-export interface BusinessUser {
-  id: number;
-  name: string;
-  /**
-   * Which listings this account manages. A group may hold several. Only staff can change this.
-   */
-  businesses: (number | Business)[];
-  phone?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'business-users';
-}
-/**
  * Every scan of a printed code, one by one, newest first. To see one listing only, use Filters, then Listing. For totals per listing: the Scans column in QR codes, the QR scans count on each listing (Activity tab), or the Scan report on the admin home page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1437,6 +1685,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'businesses';
         value: number | Business;
+      } | null)
+    | ({
+        relationTo: 'brands';
+        value: number | Brand;
       } | null)
     | ({
         relationTo: 'qr-codes';
@@ -1615,11 +1867,13 @@ export interface BusinessesSelect<T extends boolean = true> {
       };
   category?: T;
   subcategories?: T;
+  brand?: T;
   tags?: T;
   governorate?: T;
   district?: T;
   area?: T;
   address?: T;
+  mapUrl?: T;
   location?: T;
   openingHours?:
     | T
@@ -1655,8 +1909,50 @@ export interface BusinessesSelect<T extends boolean = true> {
         checkOutTime?: T;
         cancellationPolicy?: T;
       };
+  facilities?: T;
+  popularFacilities?: T;
+  propertyHighlights?: T;
   roomTypeList?: T;
   roomDateList?: T;
+  stay?:
+    | T
+    | {
+        nightlyPrice?: T;
+        extraGuestFee?: T;
+        includedGuests?: T;
+        maxGuests?: T;
+        minNights?: T;
+        childrenCountAsGuests?: T;
+        packages?:
+          | T
+          | {
+              label?: T;
+              description?: T;
+              price?: T;
+              unit?: T;
+              active?: T;
+              id?: T;
+            };
+      };
+  features?:
+    | T
+    | {
+        musicAllowed?: T;
+        eventsHosted?: T;
+        partiesAllowed?: T;
+        gardenAccess?: T;
+        barbecue?: T;
+        pool?: T;
+      };
+  seatingAreas?:
+    | T
+    | {
+        setting?: T;
+        smoking?: T;
+        tables?: T;
+        label?: T;
+        id?: T;
+      };
   tier?: T;
   commission?:
     | T
@@ -1674,6 +1970,20 @@ export interface BusinessesSelect<T extends boolean = true> {
   qrCode?: T;
   issue?: T;
   listingNumber?: T;
+  contact?:
+    | T
+    | {
+        phone?: T;
+        whatsapp?: T;
+        email?: T;
+        instagram?: T;
+        facebook?: T;
+        tiktok?: T;
+        snapchat?: T;
+        youtube?: T;
+        x?: T;
+        linkedin?: T;
+      };
   submission?:
     | T
     | {
@@ -1681,8 +1991,6 @@ export interface BusinessesSelect<T extends boolean = true> {
         ownerName?: T;
         ownerEmail?: T;
         ownerPhone?: T;
-        publicPhone?: T;
-        website?: T;
         pageTemplate?: T;
         submittedAt?: T;
       };
@@ -1698,6 +2006,19 @@ export interface BusinessesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  logo?: T;
+  description?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1746,6 +2067,7 @@ export interface BookingsSelect<T extends boolean = true> {
   end?: T;
   partySize?: T;
   children?: T;
+  area?: T;
   roomType?: T;
   rooms?:
     | T
@@ -1758,6 +2080,21 @@ export interface BookingsSelect<T extends boolean = true> {
         id?: T;
       };
   roomCount?: T;
+  price?:
+    | T
+    | {
+        total?: T;
+        currency?: T;
+        nights?: T;
+        lines?:
+          | T
+          | {
+              label?: T;
+              amount?: T;
+              id?: T;
+            };
+        quotedAt?: T;
+      };
   status?: T;
   notes?: T;
   locale?: T;
@@ -2054,6 +2391,8 @@ export interface MediaSelect<T extends boolean = true> {
   caption?: T;
   credit?: T;
   usageRights?: T;
+  uploadedBy?: T;
+  attached?: T;
   _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2312,9 +2651,13 @@ export interface Setting {
    */
   poundsPerDollar?: number | null;
   /**
-   * How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: 6.
+   * How many gold listings each category can hold at the top, and so how many can be sold per category. A listing cannot be moved to gold once its category is full, and the number cannot go below the gold listings in the fullest category. Platinum listings do not count. Empty: 6.
    */
-  goldPlaces?: number | null;
+  maxGoldPerCategory?: number | null;
+  /**
+   * How many platinum listings the home page shows, and so how many can be sold in all. A listing cannot be moved to platinum once they are all taken, and the number cannot go below the platinum listings there are. Empty: 6.
+   */
+  maxPlatinum?: number | null;
   /**
    * Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.
    */
@@ -2357,7 +2700,8 @@ export interface Setting {
 export interface SettingsSelect<T extends boolean = true> {
   defaultRate?: T;
   poundsPerDollar?: T;
-  goldPlaces?: T;
+  maxGoldPerCategory?: T;
+  maxPlatinum?: T;
   hiddenPages?: T;
   signupsPaused?: T;
   updatedAt?: T;

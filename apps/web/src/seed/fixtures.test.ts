@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
-  HOME_PAGE_PLACES,
+  DEFAULT_MAX_GOLD_PER_CATEGORY,
+  DEFAULT_MAX_PLATINUM,
   GOVERNORATES,
   LISTING_TIERS,
   TAXONOMY,
+  featuresProblem,
   isWithinLebanon,
+  quoteStay,
+  stayProblem,
 } from '@vardenia/core'
 import { ARTICLES, BUSINESSES, ISSUES, SCAN_CITIES, SEEDED_SLUGS } from './fixtures'
 import { richText } from './rich-text'
@@ -101,13 +105,40 @@ describe('business fixtures', () => {
 
   /**
    * Every tier has an example, so each rung can be seen on a fresh database.
-   * And no more gold listings than the home page shows, or the seed would build
-   * a state the admin refuses.
+   * And no more platinum listings than the home page shows, nor gold ones in a
+   * category than it can hold, or the seed would build a state the admin refuses.
    */
-  it('has a listing on every tier, and gold within the home page places', () => {
+  it('has a listing on every tier, within the platinum and per-category gold caps', () => {
     expect(new Set(BUSINESSES.map((b) => b.tier))).toEqual(new Set(LISTING_TIERS))
-    const gold = BUSINESSES.filter((b) => b.tier === 'gold')
-    expect(gold.length).toBeLessThanOrEqual(HOME_PAGE_PLACES)
+    const platinum = BUSINESSES.filter((b) => b.tier === 'platinum')
+    expect(platinum.length).toBeLessThanOrEqual(DEFAULT_MAX_PLATINUM)
+    const perCategory = new Map<string, number>()
+    for (const b of BUSINESSES.filter((x) => x.tier === 'gold')) {
+      perCategory.set(b.category, (perCategory.get(b.category) ?? 0) + 1)
+    }
+    for (const count of perCategory.values()) {
+      expect(count).toBeLessThanOrEqual(DEFAULT_MAX_GOLD_PER_CATEGORY)
+    }
+  })
+})
+
+describe('guest house fixtures (Task 6)', () => {
+  it('prices a getaway as a whole property, and nothing else', () => {
+    const getaways = BUSINESSES.filter((b) => b.subcategories.includes('getaways'))
+    expect(getaways.length).toBeGreaterThan(0)
+    for (const b of getaways) {
+      expect(b.stay, b.slug).toBeTruthy()
+      expect(stayProblem({ subcategories: b.subcategories, stay: b.stay }), b.slug).toBeNull()
+      expect(
+        featuresProblem({ subcategories: b.subcategories, features: b.features }),
+        b.slug,
+      ).toBeNull()
+      expect(quoteStay({ nights: 2, adults: 2, stay: b.stay }).ok, b.slug).toBe(true)
+    }
+    for (const b of BUSINESSES.filter((x) => !x.subcategories.includes('getaways'))) {
+      expect(b.stay, b.slug).toBeUndefined()
+      expect(b.features, b.slug).toBeUndefined()
+    }
   })
 })
 

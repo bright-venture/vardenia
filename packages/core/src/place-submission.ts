@@ -3,6 +3,7 @@ import { LOCALE_CODES } from './locales'
 import { LISTING_GOVERNORATES } from './listing-numbers'
 import { AMENITY_SLUGS, PRICE_SLUGS } from './attributes'
 import { GOVERNORATES } from './regions'
+import { CONTACT_FIELDS, normaliseContact, validContactValue, type ContactField } from './contact'
 import { CATEGORY_SLUGS, SUBCATEGORY_PARENT } from './taxonomy'
 
 /**
@@ -56,18 +57,43 @@ const optionalText = (max: number) =>
     .optional()
     .transform((v) => (v ? v : undefined))
 
-const httpUrl = z
-  .string()
-  .trim()
-  .max(300, 'too long')
-  .refine((value) => {
-    try {
-      const url = new URL(value)
-      return url.protocol === 'http:' || url.protocol === 'https:'
-    } catch {
-      return false
-    }
-  }, 'must start with http:// or https://')
+/** A public contact value: blank is absent, otherwise valid and normalised (handles become URLs). */
+const contactValue = (field: ContactField) =>
+  z.preprocess(
+    blankToUndefined,
+    z
+      .string()
+      .trim()
+      .superRefine((value, ctx) => {
+        const verdict = validContactValue(field, value)
+        if (verdict !== true) ctx.addIssue({ code: 'custom', message: verdict })
+      })
+      .transform((value) => normaliseContact(field, value) as string)
+      .optional(),
+  )
+
+/**
+ * The public contact group of a listing, every field optional and checked and
+ * normalised with the listing's own rules (core contact). Unknown keys are
+ * refused. Used by the partner branch request (core brand).
+ */
+export const contactInputSchema = z.strictObject(
+  Object.fromEntries(CONTACT_FIELDS.map((field) => [field, contactValue(field)])) as Record<
+    ContactField,
+    ReturnType<typeof contactValue>
+  >,
+)
+
+/** One day of a listing's opening hours, as the Businesses `openingHours` array stores it. */
+export const openingHourShape = {
+  day: z.enum(DAYS),
+  opens: hhmm,
+  closes: hhmm,
+  closed: z.boolean(),
+}
+
+/** A listing's opening hours (unknown keys in a row are stripped, zod's default). */
+export const openingHoursInputSchema = z.array(z.object(openingHourShape)).max(7)
 
 const oneOf = (values: readonly string[], message: string) =>
   z.string().refine((v) => values.includes(v), message)
@@ -83,17 +109,7 @@ export const placeSubmissionSchema = z
     district: optionalText(64),
     area: z.preprocess(blankToUndefined, z.coerce.number().int().positive().optional()),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
-    openingHours: z
-      .array(
-        z.object({
-          day: z.enum(DAYS),
-          opens: hhmm,
-          closes: hhmm,
-          closed: z.boolean(),
-        }),
-      )
-      .max(7)
-      .optional(),
+    openingHours: openingHoursInputSchema.optional(),
     priceRange: z.preprocess(
       blankToUndefined,
       oneOf(PRICE_SLUGS, 'unknown price range').optional(),
@@ -105,8 +121,10 @@ export const placeSubmissionSchema = z
       whish: z.boolean(),
       omt: z.boolean(),
     }),
-    publicPhone: optionalText(40),
-    website: z.preprocess(blankToUndefined, httpUrl.optional()),
+    // Public contact: stored in the listing's `contact` group.
+    publicPhone: contactValue('phone'),
+    instagram: contactValue('instagram'),
+    facebook: contactValue('facebook'),
     ownerName: z.string().trim().min(1, 'required').max(120, 'too long'),
     ownerEmail: emailAddress,
     ownerPhone: z.string().trim().min(1, 'required').max(40, 'too long'),

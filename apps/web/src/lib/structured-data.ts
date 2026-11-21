@@ -155,7 +155,7 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   const point = Array.isArray(listing.location) ? (listing.location as number[]) : null
   const [lng, lat] = point ?? []
 
-  const street = listing.address || undefined
+  const street = listing.address?.trim() || undefined
   const locality = districtLabel(listing.district, locale) || undefined
   const region = governorateLabel(listing.governorate, locale) || undefined
 

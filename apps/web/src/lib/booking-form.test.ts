@@ -126,7 +126,7 @@ describe('bookingFormModel', () => {
 
   /**
    * The old simple room labels are not offered any more (18 November 2026):
-   * hotels and getaways sell real room types from their page's room list.
+   * hotels sell real room types from their page's room list.
    */
   it('offers none of the old room labels, for a stay or a sitting', () => {
     const withRooms = {

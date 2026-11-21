@@ -68,7 +68,6 @@ export const businessDetailSchema = businessSummarySchema.extend({
   phone: z.string().nullable(),
   whatsapp: z.string().nullable(),
   email: z.string().email().nullable(),
-  website: z.string().url().nullable(),
   reservationUrl: z.string().url().nullable(),
   menuUrl: z.string().url().nullable(),
   socials: z.object({

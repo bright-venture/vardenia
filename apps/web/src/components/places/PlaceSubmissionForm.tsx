@@ -833,7 +833,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 {...control('publicPhone')}
                 type="tel"
                 dir="ltr"
-                maxLength={40}
+                maxLength={20}
                 autoComplete="tel"
                 value={state.publicPhone}
                 onChange={(e) => set({ publicPhone: e.target.value })}
@@ -842,23 +842,43 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             </div>
 
             <div>
-              <label className={LABEL} htmlFor={fid('website')}>
-                {t('form.website')}
+              <label className={LABEL} htmlFor={fid('instagram')}>
+                {t('form.instagram')}
               </label>
               <input
-                {...control('website', true)}
+                {...control('instagram', true)}
+                type="text"
+                dir="ltr"
+                maxLength={300}
+                autoComplete="off"
+                placeholder="@"
+                value={state.instagram}
+                onChange={(e) => set({ instagram: e.target.value })}
+              />
+              <p id={`${fid('instagram')}-hint`} className={HINT}>
+                {t('form.instagramHint')}
+              </p>
+              {errorLine('instagram')}
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('facebook')}>
+                {t('form.facebook')}
+              </label>
+              <input
+                {...control('facebook', true)}
                 type="url"
                 dir="ltr"
                 maxLength={300}
-                autoComplete="url"
+                autoComplete="off"
                 placeholder="https://"
-                value={state.website}
-                onChange={(e) => set({ website: e.target.value })}
+                value={state.facebook}
+                onChange={(e) => set({ facebook: e.target.value })}
               />
-              <p id={`${fid('website')}-hint`} className={HINT}>
-                {t('form.websiteHint')}
+              <p id={`${fid('facebook')}-hint`} className={HINT}>
+                {t('form.facebookHint')}
               </p>
-              {errorLine('website')}
+              {errorLine('facebook')}
             </div>
           </fieldset>
 
@@ -992,7 +1012,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 type="tel"
                 required
                 dir="ltr"
-                maxLength={40}
+                maxLength={20}
                 autoComplete="tel"
                 value={state.ownerPhone}
                 onChange={(e) => set({ ownerPhone: e.target.value })}

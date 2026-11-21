@@ -1,30 +1,59 @@
 import { describe, expect, it } from 'vitest'
-import { HOME_PAGE_PLACES } from '@vardenia/core'
-import { placesFloorCheck } from './Settings'
-import { placesOrDefault } from '../lib/gold-places'
+import { DEFAULT_MAX_GOLD_PER_CATEGORY, DEFAULT_MAX_PLATINUM } from '@vardenia/core'
+import { goldFloorCheck, highestPerCategory, platinumFloorCheck } from './Settings'
+import { limitOrDefault } from '../lib/tier-limits'
 
 /**
- * The number of gold places, which an admin sets: how many the home page band
- * shows, and so how many gold listings can be sold.
+ * The two numbers an admin sets: gold per category, and platinum overall (the
+ * home page band).
  */
-describe('gold places', () => {
-  it('uses the default while the setting is empty or unusable', () => {
+describe('tier limits', () => {
+  it('use the default while the setting is empty or unusable', () => {
     for (const value of [null, undefined, 0, -2, 2.5, '8']) {
-      expect(placesOrDefault(value), String(value)).toBe(HOME_PAGE_PLACES)
+      expect(limitOrDefault(value, DEFAULT_MAX_PLATINUM), String(value)).toBe(DEFAULT_MAX_PLATINUM)
     }
-    expect(placesOrDefault(10)).toBe(10)
+    expect(limitOrDefault(10, DEFAULT_MAX_GOLD_PER_CATEGORY)).toBe(10)
+  })
+})
+
+describe('lowering the platinum limit', () => {
+  it('can be raised, or lowered down to the platinum listings already sold', () => {
+    expect(platinumFloorCheck(10, 6)).toBe(true)
+    expect(platinumFloorCheck(4, 4)).toBe(true)
   })
 
-  it('can be raised, or lowered down to the gold listings already sold', () => {
-    expect(placesFloorCheck(10, 6)).toBe(true)
-    expect(placesFloorCheck(4, 4)).toBe(true)
-  })
-
-  /** Lower than that, and some paid gold listings would fall off the home page. */
-  it('cannot go below the gold listings there are, and says how to get there', () => {
-    const refusal = placesFloorCheck(4, 6)
+  it('cannot go below the platinum listings there are, and says how to get there', () => {
+    const refusal = platinumFloorCheck(4, 6)
     expect(refusal).not.toBe(true)
-    expect(refusal).toContain('6 gold listings')
-    expect(refusal).toContain('Move 2 of them to silver')
+    expect(refusal).toContain('6 platinum listings')
+    expect(refusal).toContain('Move 2 of them to gold')
+  })
+})
+
+describe('lowering the gold limit per category', () => {
+  it('can be lowered down to the fullest category', () => {
+    expect(goldFloorCheck(5, { category: 'hospitality', count: 5 })).toBe(true)
+    expect(goldFloorCheck(5, null)).toBe(true)
+  })
+
+  it('cannot go below the fullest category, naming it', () => {
+    const refusal = goldFloorCheck(2, { category: 'hospitality', count: 5 })
+    expect(refusal).not.toBe(true)
+    expect(refusal).toContain('hospitality')
+    expect(refusal).toContain('5 gold listings')
+    expect(refusal).toContain('Move 3 of them to silver')
+  })
+
+  it('finds the fullest category from a list of gold listings', () => {
+    expect(highestPerCategory([])).toBeNull()
+    expect(
+      highestPerCategory([
+        { category: 'tourism' },
+        { category: 'hospitality' },
+        { category: 'hospitality' },
+        { category: 'tourism' },
+        { category: 'hospitality' },
+      ]),
+    ).toEqual({ category: 'hospitality', count: 3 })
   })
 })

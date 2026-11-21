@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import config from '../../payload.config'
 import { siteOrigin } from '../../lib/auth-email'
 import { createPlaceSubmission } from '../../lib/place-submission'
-import { placeSubmissionEmails } from '../../lib/place-submission-email'
+import { placeSubmissionEmails, teamAlertAddress } from '../../lib/place-submission-email'
 import {
   bodySizeProblem,
   parseSubmission,
@@ -41,8 +41,7 @@ const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
 /** Team alerts go where error alerts go, unless a dedicated address is set. */
-const teamAddress = () =>
-  process.env.PLACE_SUBMISSION_ALERT_TO?.trim() || process.env.ERROR_ALERT_TO?.trim() || null
+const teamAddress = teamAlertAddress
 
 export const POST = withRateLimit(
   async (request: Request) => {

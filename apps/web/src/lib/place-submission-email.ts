@@ -13,6 +13,13 @@ import { emailPalette } from './email-palette'
  * English copy, laid out left to right to match it.
  */
 
+/**
+ * Where team alerts about new places and branches go: a dedicated address if
+ * set, else where error alerts go. Null when neither is configured.
+ */
+export const teamAlertAddress = (): string | null =>
+  process.env.PLACE_SUBMISSION_ALERT_TO?.trim() || process.env.ERROR_ALERT_TO?.trim() || null
+
 export interface PlaceSubmissionEmailArgs {
   businessId: number | string
   businessName: string
@@ -32,7 +39,8 @@ export interface PlaceSubmissionEmail {
   html: string
 }
 
-const escapeHtml = (value: string) =>
+/** Shared with lib/branch-email. */
+export const escapeHtml = (value: string) =>
   value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -41,11 +49,12 @@ const escapeHtml = (value: string) =>
     .replace(/'/g, '&#39;')
 
 /** Header values must not carry line breaks. */
-const oneLine = (value: string) => value.replace(/[\r\n]+/g, ' ').trim()
+export const oneLine = (value: string) => value.replace(/[\r\n]+/g, ' ').trim()
 
 const FONT = "Georgia,'Times New Roman',serif"
 
-function layout(opts: {
+/** The shared email layout (also lib/branch-email). */
+export function emailLayout(opts: {
   lang: string
   dir: 'ltr' | 'rtl'
   heading: string
@@ -124,7 +133,7 @@ export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
 
   const team: PlaceSubmissionEmail = {
     subject: `New place submitted: ${name}`,
-    html: layout({
+    html: emailLayout({
       lang: 'en',
       dir: 'ltr',
       heading: 'A new place was submitted',
@@ -149,7 +158,7 @@ export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
   const copy = OWNER_COPY[arabic ? 'ar' : 'en']
   const owner: PlaceSubmissionEmail = {
     subject: copy.subject,
-    html: layout({
+    html: emailLayout({
       lang: arabic ? 'ar' : 'en',
       dir: arabic ? dirFor('ar') : 'ltr',
       heading: copy.heading,

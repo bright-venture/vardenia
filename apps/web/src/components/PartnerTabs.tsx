@@ -31,7 +31,7 @@ export function PartnerTabs({
   listing: string
   scans: string
   statements: string
-  /** Shown only to a partner with a hotel or getaway. */
+  /** Shown only to a partner with a hotel. */
   rooms?: string
 }) {
   const pathname = usePathname()

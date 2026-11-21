@@ -1,6 +1,7 @@
 import { isUniqueViolation } from './db-errors'
 import type { Payload } from 'payload'
 import type { ReviewRequest } from '@vardenia/core'
+import { reviewEligibility } from './review-eligibility'
 
 /**
  * Turning a review request into a pending review.
@@ -20,7 +21,7 @@ export type ReviewOutcome =
   | { ok: true; reviewId: number }
   | {
       ok: false
-      code: 'not-eligible' | 'already-reviewed' | 'not-found' | 'error'
+      code: 'not-eligible' | 'already-reviewed' | 'not-found' | 'not-bookable' | 'error'
     }
 
 /**
@@ -66,19 +67,12 @@ export async function createReview({
   }
 
   /**
-   * Eligibility: a booking here, by this customer, that stood and is over.
-   *
-   * This asked for `completed` alone, and almost nobody could ever have
-   * satisfied it. Nothing moves a booking to `completed` on its own - a venue
-   * marks it by hand in the partner dashboard, and most never will. A guest who
-   * ate at a restaurant last week was told they had not booked there.
-   *
-   * So a confirmed booking whose end time has passed counts too. The two other
-   * past states are deliberately excluded and are the reason this is a status
-   * test rather than a date one: `cancelled` means they did not go, and
-   * `no-show` means they did not turn up. Neither is a visit, and a review from
-   * either is exactly the review this rule exists to refuse. `pending` is out
-   * as well, since the venue never accepted it.
+   * The rule lives in lib/review-eligibility, shared with the account page.
+   * Reviews exist only for bookable services, and only a booking the business
+   * marked `completed` counts (not `confirmed`, even once over; a guest who
+   * answered that they did not come is refused too). Checked on the listing
+   * first, so a booking row that should not exist does not make a cafe
+   * reviewable.
    */
   const stood = await payload.find({
     collection: 'bookings',
@@ -86,27 +80,16 @@ export async function createReview({
       and: [
         { customer: { equals: customerId } },
         { business: { equals: business.id } },
-        {
-          or: [
-            { status: { equals: 'completed' } },
-            {
-              and: [
-                { status: { equals: 'confirmed' } },
-                { end: { less_than: new Date().toISOString() } },
-              ],
-            },
-          ],
-        },
+        { status: { equals: 'completed' } },
       ],
     },
-    limit: 1,
+    limit: 20,
     depth: 0,
     overrideAccess: true,
   })
-  const booking = stood.docs[0]
-  if (!booking) return { ok: false, code: 'not-eligible' }
 
-  // One review per customer per listing.
+  // One review per customer per listing, which covers once per booking: the
+  // customer, the listing and the booking they review through all go together.
   const existing = await payload.find({
     collection: 'reviews',
     where: {
@@ -116,7 +99,37 @@ export async function createReview({
     depth: 0,
     overrideAccess: true,
   })
-  if (existing.docs[0]) return { ok: false, code: 'already-reviewed' }
+
+  const facts = {
+    subcategories: (business as { subcategories?: string[] | null }).subcategories,
+    bookingEnabled: (business as { booking?: { enabled?: boolean } | null }).booking?.enabled,
+    alreadyReviewed: Boolean(existing.docs[0]),
+  }
+  let booking: (typeof stood.docs)[number] | undefined
+  let refusal: Exclude<ReturnType<typeof reviewEligibility>, { ok: true }> = {
+    ok: false,
+    code: 'not-eligible',
+  }
+  for (const candidate of stood.docs) {
+    const verdict = reviewEligibility({
+      ...facts,
+      status: candidate.status,
+      guestAnswer: (candidate as { guestAnswer?: string | null }).guestAnswer,
+    })
+    if (verdict.ok) {
+      booking = candidate
+      break
+    }
+    refusal = verdict
+  }
+  if (!booking) {
+    // No booking at all still reads from the listing and review state.
+    if (stood.docs.length === 0) {
+      const verdict = reviewEligibility({ ...facts, status: undefined })
+      return { ok: false, code: verdict.ok ? 'not-eligible' : verdict.code }
+    }
+    return { ok: false, code: refusal.code }
+  }
 
   try {
     const review = await payload.create({

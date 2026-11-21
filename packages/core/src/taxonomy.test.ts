@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   CATEGORIES,
+  canHaveRoomTypes,
   canTakeBookings,
   categoryTakesBookings,
   isBookableSubcategory,
+  isWholePropertyStay,
+  ROOM_TYPE_SUBCATEGORIES,
   SUBCATEGORY_PARENT,
+  WHOLE_PROPERTY_SUBCATEGORIES,
 } from './taxonomy'
 
 const kinds = (category: string) =>
@@ -89,5 +93,23 @@ describe('which kinds of place take bookings', () => {
     expect(categoryTakesBookings('food-and-beverage')).toBe(true)
     expect(categoryTakesBookings('lifestyle')).toBe(false)
     expect(categoryTakesBookings(null)).toBe(false)
+  })
+})
+
+describe('rooms or a whole property (Task 6, 20 November 2026)', () => {
+  it('sells room types at hotels only', () => {
+    expect([...ROOM_TYPE_SUBCATEGORIES]).toEqual(['hotels'])
+    expect(canHaveRoomTypes(['hotels'])).toBe(true)
+    expect(canHaveRoomTypes(['getaways'])).toBe(false)
+    expect(canHaveRoomTypes(['restaurants', null])).toBe(false)
+    // A getaway is whole-property first, even filed as a hotel too.
+    expect(canHaveRoomTypes(['hotels', 'getaways'])).toBe(false)
+  })
+
+  it('sells a getaway as a whole property', () => {
+    expect([...WHOLE_PROPERTY_SUBCATEGORIES]).toEqual(['getaways'])
+    expect(isWholePropertyStay(['getaways'])).toBe(true)
+    expect(isWholePropertyStay(['hotels'])).toBe(false)
+    expect(isWholePropertyStay([undefined, 'restaurants'])).toBe(false)
   })
 })

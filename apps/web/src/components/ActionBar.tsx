@@ -35,12 +35,14 @@ interface Props {
   address?: string | null
   /** Localized place name, e.g. "Achrafieh, Beirut", to disambiguate a chain. */
   place?: string | null
+  /** The link the owner pasted; used as it is when valid. */
+  mapUrl?: string | null
 }
 
-export async function ActionBar({ coordinates, name, address, place }: Props) {
+export async function ActionBar({ coordinates, name, address, place, mapUrl }: Props) {
   const t = await getTranslations('directory')
 
-  const directions = mapsLink({ name, address, place, coordinates })
+  const directions = mapsLink({ name, address, place, coordinates, mapUrl })
 
   return (
     <div

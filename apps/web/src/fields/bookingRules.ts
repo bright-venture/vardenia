@@ -1,5 +1,5 @@
 import type { Field } from 'payload'
-import { canHaveRoomTypes, canTakeBookings } from '@vardenia/core'
+import { canHaveRoomTypes, canTakeBookings, isWholePropertyStay } from '@vardenia/core'
 import { isStaffFieldLevel } from '../access/index'
 
 /**
@@ -67,7 +67,22 @@ export const bookingRulesField: Field = {
       admin: {
         condition: (_, siblings) => siblings?.enabled === true,
         description:
-          'How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel or getaway with room types: there, each room type has its own rooms and open dates (Rooms tab).',
+          'How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel with room types: there, each room type has its own rooms and open dates (Rooms tab). A guest house (Getaways) is booked as a whole property, one stay at a time, so its capacity is 1.',
+      },
+      /*
+       * A guest house is one property (Task 6): one stay at a time. The
+       * booking check counts it as 1 whatever is stored (lib/stay-booking),
+       * and this keeps the stored number - the one the database trigger reads
+       * - at 1 too, so the guarantee and the check agree.
+       */
+      validate: (value: unknown, { data }: { data?: Partial<{ subcategories: string[] }> }) => {
+        if (value === null || value === undefined) return true
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) {
+          return 'Capacity is a number, 1 or more.'
+        }
+        return isWholePropertyStay(data?.subcategories) && value !== 1
+          ? 'A guest house is booked as a whole property, one stay at a time: its capacity is 1.'
+          : true
       },
     },
 
@@ -208,11 +223,13 @@ export const bookingRulesField: Field = {
        */
       type: 'row',
       admin: {
-        // For hotels and getaways (18 November 2026), and any listing that
-        // sells nights. Partners can also set these from their Rooms tab.
+        // For hotels, guest houses (whole-property stays, Task 6), and any
+        // listing that sells nights. Partners can also set these from their
+        // Rooms tab (hotels).
         condition: (data, siblings) =>
           siblings?.enabled === true &&
           (canHaveRoomTypes((data?.subcategories as string[]) ?? []) ||
+            isWholePropertyStay((data?.subcategories as string[]) ?? []) ||
             Number(siblings?.minDurationMinutes ?? 0) >= 1440),
       },
       fields: [

@@ -240,6 +240,11 @@ export default function proxy(request: NextRequest): NextResponse {
  * `/place-submissions/*` is JSON and multipart (the add-your-place submit and its
  * number picker), so it is excluded like `/booking`.
  *
+ * `/brand-data/*` (a public restaurant brand) and `/partner-data/*` (a partner
+ * adding a branch) are Task 9's JSON endpoints, excluded the same way. They
+ * have their own -data prefixes so the page paths `/brands/<slug>` and
+ * `/partner/*` keep their locale routing.
+ *
  * # A dot means a file, except in a visit link
  *
  * `.*\.` keeps files (`/favicon.ico`, `/sitemap.xml`) out of locale routing.
@@ -251,7 +256,7 @@ export default function proxy(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|brand-data|partner-data|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

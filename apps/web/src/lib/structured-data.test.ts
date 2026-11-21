@@ -113,6 +113,11 @@ describe('listingSchema', () => {
     expect(sparse).not.toHaveProperty('address')
   })
 
+  it('treats a whitespace-only address as none', () => {
+    const blank = listingSchema({ name: 'X', category: 'lifestyle', address: '   ' }, 'en')
+    expect(blank).not.toHaveProperty('address')
+  })
+
   it('produces JSON that survives a round trip', () => {
     const parsed = JSON.parse(JSON.stringify(listingSchema(LISTING, 'en')))
     expect(parsed['@context']).toBe('https://schema.org')

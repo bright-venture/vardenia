@@ -3,7 +3,7 @@
  * listing's name ("Food & drink · Chouf"), the address, "View on map" and the
  * "Get directions" button.
  *
- * Off since 6 November 2026, at the owner's request, until the locations are
+ * Off from 6 November 2026, at the owner's request, until the locations were
  * checked. Every address the catalogue held was only an area (Zahle,
  * Ashrafieh, Jiyeh), and with no coordinates on any listing the map links were
  * a Google search for the name and that area, which is not something to send a
@@ -14,6 +14,8 @@
  * for search engines go on working. The addresses themselves were emptied in
  * the database the same day, with a backup in backups/addresses.
  *
- * To show locations again, set this to true.
+ * On again since 21 November 2026 (core backend, Task 4b), at the tech lead's
+ * request to show the address and the map link. To hide every location again,
+ * set this to false.
  */
-export const SHOW_LOCATION = false
+export const SHOW_LOCATION = true

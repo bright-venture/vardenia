@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapsLink, mapsQuery } from './maps-link'
+import { hasMapTarget, mapsLink, mapsQuery } from './maps-link'
 
 /**
  * The link replaced an embedded map, so the thing worth testing is that it still
@@ -49,5 +49,43 @@ describe('mapsLink', () => {
     expect(decodeURIComponent(url.split('query=')[1] ?? '')).toBe(
       'Chez Sami & Co, Jal El Dib, Lebanon',
     )
+  })
+})
+
+describe("mapsLink with the owner's own link", () => {
+  const own = 'https://www.google.com/maps/place/Le+Gray/@33.8960,35.5040,17z'
+
+  it('uses a valid pasted link as it is', () => {
+    expect(mapsLink({ name: 'Le Gray', mapUrl: own, coordinates: [35.5, 33.9] })).toBe(own)
+  })
+
+  it('ignores a link that is not a Google Maps link', () => {
+    const url = mapsLink({
+      name: 'Le Gray',
+      mapUrl: 'https://google.com.evil.com/maps',
+      coordinates: [35.5018, 33.8938],
+    })
+    expect(url).toContain('query=33.8938%2C35.5018')
+  })
+
+  it('falls back to the point, then the search, when there is no link', () => {
+    expect(mapsLink({ name: 'Le Gray', mapUrl: '  ', coordinates: [35.5018, 33.8938] })).toContain(
+      '33.8938%2C35.5018',
+    )
+  })
+})
+
+describe('hasMapTarget', () => {
+  it('is false for a listing with nothing to point at', () => {
+    expect(hasMapTarget({})).toBe(false)
+    expect(hasMapTarget({ address: '   ', mapUrl: ' ', coordinates: null })).toBe(false)
+    // A link that is not Google Maps is not a target.
+    expect(hasMapTarget({ mapUrl: 'https://evil.com/maps' })).toBe(false)
+  })
+
+  it('is true with a point, a valid link or an address', () => {
+    expect(hasMapTarget({ coordinates: [35.5, 33.9] })).toBe(true)
+    expect(hasMapTarget({ mapUrl: 'https://maps.app.goo.gl/AbC' })).toBe(true)
+    expect(hasMapTarget({ address: ' Main street ' })).toBe(true)
   })
 })

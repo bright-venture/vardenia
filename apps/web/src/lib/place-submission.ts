@@ -282,13 +282,18 @@ export async function createPlaceSubmission(args: {
       issue: input.issue,
       listingNumber: input.listingNumber,
       _status: 'draft',
+      // Public contact: shown on the listing page. Only these three come from
+      // the form; the owner adds the rest later in the partner area.
+      contact: {
+        phone: input.publicPhone,
+        instagram: input.instagram,
+        facebook: input.facebook,
+      },
       submission: {
         status: 'pending',
         ownerName: input.ownerName,
         ownerEmail: input.ownerEmail,
         ownerPhone: input.ownerPhone,
-        publicPhone: input.publicPhone,
-        website: input.website,
         pageTemplate: input.pageTemplate,
         submittedAt: new Date().toISOString(),
       },

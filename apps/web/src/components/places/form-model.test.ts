@@ -142,10 +142,24 @@ describe('checkSubmission', () => {
     if (!result.ok) expect(result.errors['hours.wed.opens']).toBeDefined()
   })
 
-  it('catches a website without a scheme', () => {
-    const result = checkSubmission({ ...filled(), website: 'example.com' }, pick, 'en')
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(errorKind(result.errors.website!)).toBe('website')
+  it('catches a social link on the wrong site, and a bad phone', () => {
+    const link = checkSubmission({ ...filled(), facebook: 'https://evil.com/x' }, pick, 'en')
+    expect(link.ok).toBe(false)
+    if (!link.ok) expect(errorKind(link.errors.facebook!)).toBe('link')
+    const phone = checkSubmission({ ...filled(), publicPhone: 'call me' }, pick, 'en')
+    expect(phone.ok).toBe(false)
+    if (!phone.ok) expect(errorKind(phone.errors.publicPhone!)).toBe('phone')
+  })
+
+  it('sends the phone and the two social inputs, and no website', () => {
+    const { data } = buildSubmission(
+      { ...filled(), publicPhone: '+961 1 234 567', instagram: '@cafe', facebook: '' },
+      pick,
+      'en',
+    )
+    expect(data).toMatchObject({ publicPhone: '+961 1 234 567', instagram: '@cafe', facebook: '' })
+    expect(data).not.toHaveProperty('website')
+    expect(initialFormState()).not.toHaveProperty('website')
   })
 })
 
@@ -169,7 +183,8 @@ describe('error keys and kinds', () => {
     expect(errorKind('required')).toBe('required')
     expect(errorKind('too long')).toBe('tooLong')
     expect(errorKind('must be an email address')).toBe('email')
-    expect(errorKind('must start with http:// or https://')).toBe('website')
+    expect(errorKind('Enter an https:// link on facebook.com or fb.com.')).toBe('link')
+    expect(errorKind('Use 6 to 20 characters: digits, spaces, +, - and parentheses.')).toBe('phone')
     expect(errorKind('use 24-hour time like 09:00')).toBe('time')
     expect(errorKind('Invalid input: expected number, received undefined')).toBe('invalid')
   })

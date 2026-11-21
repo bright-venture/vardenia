@@ -2,6 +2,7 @@ import { APIError, type CollectionConfig } from 'payload'
 import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access/index'
 import { DEFAULT_LISTING_TOTAL, totalProblem } from '@vardenia/core'
 import { slugField } from '../fields/slug'
+import { markMediaAttached } from '../hooks/markMediaAttached'
 
 /** Why the listing total cannot drop to this value, given the issue's ranges. */
 export function checkListingTotal(total: number, ranges: readonly { to: number }[]): string | null {
@@ -39,6 +40,8 @@ export const Issues: CollectionConfig = {
         return data
       },
     ],
+    // Staff may use a partner's photo as a cover; it becomes public with it.
+    afterChange: [markMediaAttached],
   },
   fields: [
     { name: 'title', type: 'text', required: true, localized: true },

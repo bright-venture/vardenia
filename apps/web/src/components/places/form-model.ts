@@ -14,7 +14,7 @@ import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-
  * browser; PlaceSubmissionForm only renders it.
  *
  * The state is plain strings and booleans, NOT typed against the schema's input
- * type: zod 4 marks the preprocess-wrapped keys (area, website, priceRange,
+ * type: zod 4 marks the preprocess-wrapped keys (area, publicPhone, priceRange,
  * opens, closes) as required there. The object sent is built as `unknown` and
  * checked with safeParse, which is what the server does too.
  *
@@ -46,7 +46,8 @@ export interface FormState {
   amenities: string[]
   payments: Record<PaymentKey, boolean>
   publicPhone: string
-  website: string
+  instagram: string
+  facebook: string
   ownerName: string
   ownerEmail: string
   ownerPhone: string
@@ -77,7 +78,8 @@ export function initialFormState(): FormState {
     amenities: [],
     payments: { cash: false, card: false, whish: false, omt: false },
     publicPhone: '',
-    website: '',
+    instagram: '',
+    facebook: '',
     ownerName: '',
     ownerEmail: '',
     ownerPhone: '',
@@ -137,7 +139,8 @@ export function buildSubmission(
     amenities: state.amenities,
     payments: { ...state.payments },
     publicPhone: state.publicPhone,
-    website: state.website,
+    instagram: state.instagram,
+    facebook: state.facebook,
     ownerName: state.ownerName,
     ownerEmail: state.ownerEmail,
     ownerPhone: state.ownerPhone,
@@ -187,7 +190,7 @@ export function normaliseErrors(
   return out
 }
 
-export type ErrorKind = 'required' | 'tooLong' | 'email' | 'website' | 'time' | 'invalid'
+export type ErrorKind = 'required' | 'tooLong' | 'email' | 'link' | 'phone' | 'time' | 'invalid'
 
 /**
  * Which translated sentence a schema message stands for. The schema's own words
@@ -197,7 +200,8 @@ export function errorKind(message: string): ErrorKind {
   if (message === 'required') return 'required'
   if (message === 'too long') return 'tooLong'
   if (message.includes('email')) return 'email'
-  if (message.includes('http')) return 'website'
+  if (message.includes('https')) return 'link'
+  if (message.includes('6 to 20')) return 'phone'
   if (message.includes('24-hour')) return 'time'
   return 'invalid'
 }

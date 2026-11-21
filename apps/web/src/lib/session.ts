@@ -7,6 +7,8 @@ import { BUSINESS_USER_COLLECTION, CUSTOMER_COLLECTION, ownedBusinessIds } from 
 import { bookingFilterWhere, DEFAULT_FILTER, type BookingFilter } from './booking-filters'
 import { beirutDate } from './beirut'
 import { findEvery } from './find-every'
+import { brandSummaries, groupListingsByBrand, type BrandGroup } from './brands'
+import { DEFAULT_LOCALE, type Locale } from '@vardenia/i18n'
 import type { Booking } from '../payload-types'
 
 /**
@@ -295,8 +297,10 @@ export interface OwnerListing {
    * exists, and the only codes a partner is ever handed are their own.
    */
   code: string
-  /** A hotel or getaway: it can have room types (17 November 2026). */
+  /** A hotel: it can have room types (17 November 2026; hotels only since Task 6). */
   hasRooms: boolean
+  /** The restaurant brand this listing is a branch of, if any (Task 9). */
+  brandId: number | null
 }
 
 export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
@@ -313,7 +317,14 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
     // Published or not: an owner may manage a listing staff have not published
     // yet, and it is still theirs.
     overrideAccess: true,
-    select: { name: true, slug: true, _status: true, qrCode: true, subcategories: true },
+    select: {
+      name: true,
+      slug: true,
+      _status: true,
+      qrCode: true,
+      subcategories: true,
+      brand: true,
+    },
   })
 
   /**
@@ -360,9 +371,36 @@ export const ownerListings = cache(async (): Promise<OwnerListing[]> => {
       published: (doc as { _status?: unknown })._status !== 'draft',
       code: codeId === null ? '' : (codes.get(String(codeId)) ?? ''),
       hasRooms: canHaveRoomTypes((doc as { subcategories?: string[] | null }).subcategories ?? []),
+      brandId: brandIdOf((doc as { brand?: unknown }).brand),
     }
   })
 })
+
+const brandIdOf = (value: unknown): number | null => {
+  const id =
+    typeof value === 'number' || typeof value === 'string'
+      ? value
+      : (value as { id?: number | string } | null)?.id
+  const n = Number(id)
+  return id !== undefined && id !== null && id !== '' && Number.isFinite(n) ? n : null
+}
+
+/**
+ * This partner's listings grouped by restaurant brand, for the dashboard's
+ * branches view (Task 9): each brand with its listings, then the listings
+ * with no brand. Built on ownerListings, so it shows exactly what the
+ * partner already sees. See lib/brands groupListingsByBrand.
+ */
+export const ownerBrandGroups = cache(
+  async (locale: Locale = DEFAULT_LOCALE): Promise<BrandGroup<OwnerListing>[]> => {
+    const listings = await ownerListings()
+    if (listings.length === 0) return []
+    const brandIds = listings.map((l) => l.brandId).filter((id): id is number => id !== null)
+    const payload = await getPayload({ config })
+    const brands = await brandSummaries(payload, brandIds, locale)
+    return groupListingsByBrand(listings, brands)
+  },
+)
 
 /**
  * The days this owner's listings are shut, from today onwards.

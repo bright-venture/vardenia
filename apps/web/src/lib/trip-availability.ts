@@ -1,3 +1,5 @@
+import { seatingAreasOf } from '@vardenia/core'
+import { anyAreaVerdict } from './seating-booking'
 import { getPayload } from 'payload'
 import { OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
 import config from '../payload.config'
@@ -20,6 +22,7 @@ import {
   type RoomTypeInventory,
 } from './room-availability'
 import { roomBookingsFor, roomTypesFor } from './room-booking'
+import { checkStayRequest, isWholeProperty, stayConfigOf } from './stay-booking'
 
 /**
  * Whether each bookable place on a page could take a guest's plans.
@@ -127,6 +130,26 @@ export interface TripListing {
   id: number
   booking?: unknown
   openingHours?: unknown
+  /** A getaway is checked as a whole-property stay (Task 6). */
+  subcategories?: unknown
+  stay?: unknown
+  /** A restaurant's seating areas (Task 8): free while any area is. */
+  seatingAreas?: unknown
+}
+
+/**
+ * The interval the plan asks of this listing: a guest house's stay runs from
+ * its check-in for the planned nights (lib/stay-booking), anything else is
+ * what the Book form would send.
+ */
+function intervalFor(
+  listing: TripListing,
+  trip: Trip,
+  rules: BookingRules | null | undefined,
+  now: Date,
+): { start: Date; end: Date } | null {
+  if (isWholeProperty(listing)) return roomStayInterval(trip.date, trip.nights, rules)
+  return tripInterval(trip, rules, now)
 }
 
 /**
@@ -143,21 +166,37 @@ export function tripVerdictFor(
   const rules = listing.booking as BookingRules | null | undefined
   if (!resolveRules(rules).enabled) return null
 
-  const interval = tripInterval(trip, rules, now)
+  const interval = intervalFor(listing, trip, rules, now)
   if (!interval) return { kind: 'other' }
 
+  if (isWholeProperty(listing)) {
+    return verdictFrom(
+      checkStayRequest({
+        rules,
+        closures,
+        existing,
+        stay: stayConfigOf(listing),
+        // On the Stay search the party is the adults; children come on top.
+        request: { interval, adults: trip.party, children: trip.children ?? 0 },
+        now,
+      }),
+    )
+  }
+
+  const check = {
+    rules,
+    hours: listing.openingHours as OpeningHour[] | null | undefined,
+    closures,
+    existing,
+    request: {
+      interval: { start: interval.start, end: interval.end },
+      partySize: trip.party + (trip.children ?? 0),
+    },
+    now,
+  }
+  const areas = seatingAreasOf(listing as never)
   return verdictFrom(
-    checkAvailability({
-      rules,
-      hours: listing.openingHours as OpeningHour[] | null | undefined,
-      closures,
-      existing,
-      request: {
-        interval: { start: interval.start, end: interval.end },
-        partySize: trip.party + (trip.children ?? 0),
-      },
-      now,
-    }),
+    areas.length > 0 ? anyAreaVerdict({ ...check, areas }) : checkAvailability(check),
   )
 }
 
@@ -178,7 +217,7 @@ export async function tripVerdicts(
   const bookable = listings.flatMap((listing) => {
     const rules = listing.booking as BookingRules | null | undefined
     if (!resolveRules(rules).enabled) return []
-    const interval = tripInterval(trip, rules, now)
+    const interval = intervalFor(listing, trip, rules, now)
     return interval ? [{ listing, interval }] : []
   })
   if (bookable.length === 0) return verdicts
@@ -199,7 +238,7 @@ export async function tripVerdicts(
         pagination: false,
         limit: 2000,
         overrideAccess: true,
-        select: { business: true, start: true, end: true, status: true },
+        select: { business: true, start: true, end: true, status: true, area: true },
         where: {
           and: [
             { business: { in: ids } },
@@ -236,7 +275,12 @@ export async function tripVerdicts(
         continue
       }
       const list = existingBy.get(business) ?? []
-      list.push({ start, end, status: (doc as { status: BookingStatus }).status })
+      list.push({
+        start,
+        end,
+        status: (doc as { status: BookingStatus }).status,
+        area: ((doc as { area?: unknown }).area as string | null | undefined) ?? null,
+      })
       existingBy.set(business, list)
     }
 
@@ -252,8 +296,12 @@ export async function tripVerdicts(
       closuresBy.set(business, list)
     }
 
-    // Hotels with room types are answered from their rooms.
-    const typesBy = await roomTypesFor(payload, ids)
+    // Hotels with room types are answered from their rooms. A guest house
+    // never is, even if it still has room types from before Task 6.
+    const typesBy = await roomTypesFor(
+      payload,
+      bookable.filter(({ listing }) => !isWholeProperty(listing)).map(({ listing }) => listing.id),
+    )
     const hotelIds = [...typesBy.keys()]
     const roomBookingsBy = hotelIds.length
       ? await roomBookingsFor(payload, hotelIds, from, new Date(to.getTime() + 31 * 86_400_000))

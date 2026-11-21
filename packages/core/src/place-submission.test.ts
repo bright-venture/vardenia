@@ -68,20 +68,53 @@ describe('placeSubmissionSchema', () => {
     expect(parse({ pageTemplate: 'd' }).success).toBe(false)
   })
 
-  it('only allows http and https websites', () => {
-    expect(parse({ website: 'javascript:alert(1)' }).success).toBe(false)
-    expect(parse({ website: 'https://example.com' }).success).toBe(true)
+  it('no longer accepts a website: the key is stripped', () => {
+    const r = parse({ website: 'https://example.com' })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data).not.toHaveProperty('website')
   })
 
-  describe('blank optional fields', () => {
-    it('treats a blank website as absent', () => {
-      for (const website of ['', '   ']) {
-        const r = parse({ website })
-        expect(r.success).toBe(true)
-        if (r.success) expect(r.data.website).toBeUndefined()
+  describe('public contact', () => {
+    it('accepts a phone, and refuses junk', () => {
+      expect(parse({ publicPhone: '+961 1 234 567' }).success).toBe(true)
+      expect(parse({ publicPhone: 'call me maybe' }).success).toBe(false)
+      expect(parse({ publicPhone: '123' }).success).toBe(false)
+    })
+
+    it('turns an Instagram handle into a URL and keeps a good Facebook link', () => {
+      const r = parse({ instagram: '@cafe.nour', facebook: 'https://facebook.com/cafe' })
+      expect(r.success).toBe(true)
+      if (r.success) {
+        expect(r.data.instagram).toBe('https://instagram.com/cafe.nour')
+        expect(r.data.facebook).toBe('https://facebook.com/cafe')
       }
     })
 
+    it('refuses hostile and off-network links', () => {
+      for (const instagram of [
+        'javascript:alert(1)',
+        'data:text/html,x',
+        'http://instagram.com/a',
+        'https://evil.com/a',
+      ]) {
+        expect(parse({ instagram }).success).toBe(false)
+      }
+      expect(parse({ facebook: 'cafe' }).success).toBe(false)
+      expect(parse({ facebook: 'https://instagram.com/cafe' }).success).toBe(false)
+    })
+
+    it('treats blank phone and links as absent', () => {
+      const r = parse({ publicPhone: ' ', instagram: '', facebook: '  ' })
+      expect(r.success).toBe(true)
+      if (r.success) {
+        expect(r.data.publicPhone).toBeUndefined()
+        expect(r.data.instagram).toBeUndefined()
+        expect(r.data.facebook).toBeUndefined()
+      }
+    })
+  })
+
+  describe('blank optional fields', () => {
     it('treats blank times on a closed day as absent', () => {
       const r = parse({ openingHours: [{ day: 'mon', opens: '', closes: ' ', closed: true }] })
       expect(r.success).toBe(true)
@@ -113,7 +146,7 @@ describe('placeSubmissionSchema', () => {
     it('still requires required fields and rejects non-blank invalid values', () => {
       expect(parse({ name: '' }).success).toBe(false)
       expect(parse({ address: '  ' }).success).toBe(false)
-      expect(parse({ website: 'ftp://x' }).success).toBe(false)
+      expect(parse({ instagram: 'ftp://x' }).success).toBe(false)
       expect(parse({ openingHours: [{ day: 'mon', opens: '9am', closed: false }] }).success).toBe(
         false,
       )

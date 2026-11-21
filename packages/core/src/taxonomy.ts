@@ -171,16 +171,47 @@ export function canTakeBookings(subcategories: readonly (string | null | undefin
 /**
  * The kinds of place that sell rooms by room type (17 November 2026).
  *
- * A hotel or a getaway lists its room types (Standard, Deluxe, Suite), each
- * with a number of rooms, and a guest books rooms of those types for nights.
- * Every other bookable kind keeps the single capacity number it always had.
+ * A hotel lists its room types (Standard, Deluxe, Suite), each with a number
+ * of rooms, and a guest books rooms of those types for nights. Every other
+ * bookable kind keeps the single capacity number it always had.
+ *
+ * Getaways left this list on 20 November 2026 (Task 6): a guest house is sold
+ * as a whole property, see WHOLE_PROPERTY_SUBCATEGORIES and core/stay.
  */
-export const ROOM_TYPE_SUBCATEGORIES = ['hotels', 'getaways'] as const
+export const ROOM_TYPE_SUBCATEGORIES = ['hotels'] as const
 
-/** Whether a listing filed under these kinds of place may have room types. */
+/**
+ * Whether a listing filed under these kinds of place may have room types.
+ *
+ * Never for a getaway, even one also filed as a hotel: a whole-property stay
+ * comes first (Task 6), so its bookings are never split between rooms and the
+ * whole house, which would let both be sold for the same night. The Businesses
+ * collection refuses that combination on save as well (hooks/guardKindFields).
+ */
 export function canHaveRoomTypes(subcategories: readonly (string | null | undefined)[]): boolean {
-  return subcategories.some(
-    (slug) => !!slug && (ROOM_TYPE_SUBCATEGORIES as readonly string[]).includes(slug),
+  return (
+    !isWholePropertyStay(subcategories) &&
+    subcategories.some(
+      (slug) => !!slug && (ROOM_TYPE_SUBCATEGORIES as readonly string[]).includes(slug),
+    )
+  )
+}
+
+/**
+ * The kinds of place booked as one whole property (20 November 2026).
+ *
+ * A guest house, villa or chalet: one stay at a time for some nights, priced
+ * per night with an included-guest count and optional packages (the listing's
+ * `stay` group, core/stay). No room types.
+ */
+export const WHOLE_PROPERTY_SUBCATEGORIES = ['getaways'] as const
+
+/** Whether a listing filed under these kinds of place is booked as a whole property. */
+export function isWholePropertyStay(
+  subcategories: readonly (string | null | undefined)[] | null | undefined,
+): boolean {
+  return (subcategories ?? []).some(
+    (slug) => !!slug && (WHOLE_PROPERTY_SUBCATEGORIES as readonly string[]).includes(slug),
   )
 }
 

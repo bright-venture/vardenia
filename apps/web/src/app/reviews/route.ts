@@ -30,6 +30,7 @@ const STATUS_FOR = {
   'not-eligible': 403,
   'already-reviewed': 409,
   'not-found': 404,
+  'not-bookable': 403,
   error: 500,
 } as const
 

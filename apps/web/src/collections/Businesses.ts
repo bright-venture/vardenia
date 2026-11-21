@@ -1,10 +1,25 @@
-import { canHaveRoomTypes, isInRange, type NumberRange } from '@vardenia/core'
-import type { CollectionConfig, PayloadRequest } from 'payload'
+import {
+  CONTACT_FIELDS,
+  canHaveBrand,
+  canHaveRoomTypes,
+  facilityProblem,
+  isWholePropertyStay,
+  canHaveSeatingAreas,
+  hotelFacilityOptions,
+  propertyHighlightOptions,
+  isInRange,
+  normaliseContact,
+  validContactValue,
+  type ContactField,
+  type NumberRange,
+} from '@vardenia/core'
+import type { CollectionConfig, Field, PayloadRequest } from 'payload'
 import {
   GOVERNORATES,
   SUBCATEGORY_PARENT,
   amenityOptions,
-  isWithinLebanon,
+  isValidPoint,
+  mapsUrlProblem,
   priceRangeOptions,
 } from '@vardenia/core'
 import {
@@ -12,14 +27,20 @@ import {
   isStaff,
   isStaffFieldLevel,
   publishedStaffOrOwned,
+  staffOrOwnedListing,
 } from '../access/index'
 import { slugField } from '../fields/slug'
 import { seoField } from '../fields/seo'
 import { tierField } from '../fields/tier'
 import { commissionField } from '../fields/commission'
 import { bookingRulesField } from '../fields/bookingRules'
+import { featuresField, stayField } from '../fields/stay'
+import { guardKindFields } from '../hooks/guardKindFields'
+import { protectSeatingAreaBookings } from '../hooks/protectSeatingAreaBookings'
+import { seatingAreasField } from '../fields/seatingAreas'
 import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
+import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
 import {
   approveSubmissionOnPublish,
@@ -32,6 +53,9 @@ import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { guardSort } from '../hooks/guardSort'
 import { LISTING_STATES, listingState } from '../lib/listing-state'
+import { guardPartnerListingWrite } from '../hooks/guardPartnerListingWrite'
+import { markMediaAttached } from '../hooks/markMediaAttached'
+import { syncBrandPublished } from '../hooks/syncBrandPublished'
 import { autoTranslateListing } from '../hooks/autoTranslateListing'
 import {
   revalidateListingsAfterChange,
@@ -43,6 +67,53 @@ const submissionAccess = {
   read: isStaffFieldLevel,
   create: () => false,
   update: isStaffFieldLevel,
+}
+
+const CONTACT_LABELS: Record<ContactField, string> = {
+  phone: 'Phone',
+  whatsapp: 'WhatsApp',
+  email: 'Email',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  snapchat: 'Snapchat',
+  youtube: 'YouTube',
+  x: 'X',
+  linkedin: 'LinkedIn',
+}
+
+/**
+ * One public contact field. No `access.read`: contact details are shown on the
+ * listing page, so anyone may read them. A social handle is turned into its
+ * full URL before validation runs.
+ */
+const contactField = (name: ContactField): Field => {
+  const common = {
+    name,
+    label: CONTACT_LABELS[name],
+    hooks: { beforeValidate: [({ value }: { value?: unknown }) => normaliseContact(name, value)] },
+    validate: (value: unknown) => validContactValue(name, value),
+  }
+  return name === 'email'
+    ? { ...common, type: 'email' }
+    : { ...common, type: 'text', maxLength: 300 }
+}
+
+/**
+ * What facilityProblem needs to judge one facility field: the kinds of place,
+ * this field's own value, and the list a popular facility must be drawn from.
+ */
+const picksOf = (
+  data: Record<string, unknown>,
+  name: 'facilities' | 'popularFacilities' | 'propertyHighlights',
+  value: unknown,
+) => {
+  const list = (v: unknown) => (Array.isArray(v) ? (v as string[]) : null)
+  return {
+    subcategories: list(data?.subcategories),
+    ...(name === 'popularFacilities' ? { facilities: list(data?.facilities) } : {}),
+    [name]: list(value),
+  }
 }
 
 const idOf = (value: unknown): number | string | null => {
@@ -112,9 +183,11 @@ export const validListingNumber = async (
 /**
  * The directory listing - the central document in the whole platform.
  *
- * Only Vardenia staff edit these. An owner sees their own through a partner
- * account (business-users), which publishing a listing submitted through the
- * public form creates or links; that form only ever writes drafts. The split
+ * Staff edit everything. An owner sees their own through a partner account
+ * (business-users), which publishing a listing submitted through the public
+ * form creates or links; that form only ever writes drafts. Since Task 3 the
+ * owner also edits the public, allow-listed fields of their own listings, live
+ * at once (core PARTNER_EDITABLE_FIELDS, hooks/guardPartnerListingWrite). The split
  * that still matters is between the first four tabs, which describe what the
  * public sees, and the "Commercial" tab, whose contract fields carry field-level
  * read rules so they never reach an API response.
@@ -183,7 +256,10 @@ export const Businesses: CollectionConfig = {
   access: {
     read: publishedStaffOrOwned,
     create: isStaff,
-    update: isStaff,
+    // A partner updates the listings attached to their account, only the
+    // allow-listed fields (hooks/guardPartnerListingWrite). Creating and
+    // deleting a listing stay with the team.
+    update: staffOrOwnedListing,
     delete: isStaff,
   },
   hooks: {
@@ -192,7 +268,10 @@ export const Businesses: CollectionConfig = {
      * could order listings by `contractEndsAt` and read off the ranking of a
      * field whose values are correctly hidden. See hooks/guardSort.
      */
-    beforeOperation: [guardSort],
+    // A partner may change only core PARTNER_EDITABLE_FIELDS of their own
+    // listing, and attach only media they uploaded. See
+    // hooks/guardPartnerListingWrite.
+    beforeOperation: [guardSort, guardPartnerListingWrite],
     // Every listing on a printed tier gets a QR code automatically; bronze, the
     // website-only tier, gets none. Sales should never have to remember to press
     // a button before a print deadline.
@@ -202,14 +281,31 @@ export const Businesses: CollectionConfig = {
     // A rejected submission cannot be published; publishing approves it in the
     // same write. See hooks/linkPartnerOnPublish.
     beforeValidate: [refusePublishingRejected, requireContractToPublish],
+    // Stay and features on guest houses only, facilities on hotels only, on
+    // every save (the admin hides those tabs, which skips field validation).
+    // See hooks/guardKindFields.
+    // Seating areas are never removed or shrunk under upcoming bookings
+    // (Task 8). See hooks/protectSeatingAreaBookings.
+    beforeValidate: [
+      refusePublishingRejected,
+      fillLocationFromMapUrl,
+      guardKindFields,
+      protectSeatingAreaBookings,
+    ],
     beforeChange: [approveSubmissionOnPublish, releaseListingNumber],
     afterChange: [
       ensureQrCode,
       linkPartnerOnPublish,
       autoTranslateListing,
+      // A partner's photo becomes public once it is on a listing. See
+      // hooks/markMediaAttached and access mediaRead.
+      markMediaAttached,
+      // A brand is public while one of its listings is published (Task 9).
+      // See hooks/syncBrandPublished and collections/Brands.
+      syncBrandPublished,
       revalidateListingsAfterChange,
     ],
-    afterDelete: [revalidateListingsAfterDelete],
+    afterDelete: [syncBrandPublished, revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
     // listing mints a new one. Refused rather than warned about.
     // Bookings are the other thing that makes a listing undeletable, and the
@@ -366,6 +462,24 @@ export const Businesses: CollectionConfig = {
               admin: { description: 'Only the subcategories of the category above are offered.' },
             },
             {
+              /**
+               * The restaurant brand this listing is a branch of (Task 9).
+               * Restaurants only (hooks/guardKindFields). Staff set it; a
+               * partner cannot (not on core PARTNER_EDITABLE_FIELDS, and
+               * staff-only here): the branch endpoint sets it with
+               * overrideAccess. Public: the brand page lists its branches.
+               */
+              name: 'brand',
+              type: 'relationship',
+              relationTo: 'brands',
+              index: true,
+              access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+              admin: {
+                condition: (data) => canHaveBrand((data?.subcategories as string[]) ?? []),
+                description: 'The restaurant brand this listing is a branch of. Restaurants only.',
+              },
+            },
+            {
               name: 'tags',
               type: 'text',
               hasMany: true,
@@ -424,12 +538,28 @@ export const Businesses: CollectionConfig = {
             },
             { name: 'address', type: 'textarea', localized: true },
             {
+              // Public. A pasted Google Maps link; the point below is filled from
+              // it when it carries coordinates (hooks/fillLocationFromMapUrl).
+              name: 'mapUrl',
+              type: 'text',
+              maxLength: 2000,
+              admin: {
+                description:
+                  'The listing on Google Maps. Shown as "View on map" and "Get directions". When the link carries coordinates the location below is filled from it; a short link (maps.app.goo.gl) is kept as it is.',
+              },
+              validate: (value: unknown) =>
+                typeof value !== 'string' || value.trim() === ''
+                  ? true
+                  : mapsUrlProblem(value) || true,
+            },
+            {
               // Fills the point below from a pasted link. See components/admin/MapsLinkField.
               name: 'locationFromLink',
               type: 'ui',
               admin: { components: { Field: '/components/admin/MapsLinkField#MapsLinkField' } },
             },
             {
+              // Public: "near me" search and directions use it. [longitude, latitude].
               name: 'location',
               type: 'point',
               index: true,
@@ -437,14 +567,17 @@ export const Businesses: CollectionConfig = {
                 description:
                   'Filled by the link above. Drives "near me" search and Google Maps directions.',
               },
+              // Within Lebanon, as before Task 4: core isValidPoint applies
+              // isWithinLebanon, the one rule shared with the partner guard, the
+              // branch endpoint and hooks/fillLocationFromMapUrl. A value that is
+              // not two numbers at all is refused too (Task 4).
               validate: (value: unknown) => {
-                if (!Array.isArray(value)) return true
-                const [lng, lat] = value as [number, number]
-                if (typeof lat !== 'number' || typeof lng !== 'number') return true
-                return (
-                  isWithinLebanon(lat, lng) ||
-                  'Coordinates fall outside Lebanon - check the lat/lng order.'
-                )
+                if (value === null || value === undefined) return true
+                if (isValidPoint(value)) return true
+                const numbers = Array.isArray(value) && value.length === 2 ? value.map(Number) : []
+                return numbers.length === 2 && numbers.every(Number.isFinite)
+                  ? 'Coordinates fall outside Lebanon - check the lat/lng order.'
+                  : 'The location must be a longitude then a latitude.'
               },
             },
             {
@@ -525,7 +658,8 @@ export const Businesses: CollectionConfig = {
            * The hotel's rooms, in one place (18 November 2026): its room types
            * and the nights each is open, listed from their own collections
            * (join fields, nothing stored here) with Create new beside each.
-           * Only for hotels and getaways, the kinds that sell rooms.
+           * Only for hotels, the kind that sells rooms (getaways are sold
+           * whole since 20 November 2026: the Stay tab below).
            */
           label: 'Rooms',
           description:
@@ -534,6 +668,41 @@ export const Businesses: CollectionConfig = {
             condition: (data) => canHaveRoomTypes((data?.subcategories as string[]) ?? []),
           },
           fields: [
+            {
+              /**
+               * What the hotel offers, in Booking.com's standard facility names
+               * (core hotel-options; the lists still need the tech lead's
+               * confirmation, the Booking.com page could not be read). Public,
+               * and valid only on a listing that can have room types.
+               */
+              name: 'facilities',
+              label: 'Facilities',
+              type: 'select',
+              hasMany: true,
+              options: hotelFacilityOptions,
+              validate: (value: unknown, { data }: { data: Record<string, unknown> }) =>
+                facilityProblem(picksOf(data, 'facilities', value)) ?? true,
+            },
+            {
+              name: 'popularFacilities',
+              label: 'Most popular facilities',
+              type: 'select',
+              hasMany: true,
+              options: hotelFacilityOptions,
+              admin: { description: 'Up to 8, chosen from the facilities above.' },
+              validate: (value: unknown, { data }: { data: Record<string, unknown> }) =>
+                facilityProblem(picksOf(data, 'popularFacilities', value)) ?? true,
+            },
+            {
+              name: 'propertyHighlights',
+              label: 'Property highlights',
+              type: 'select',
+              hasMany: true,
+              options: propertyHighlightOptions,
+              admin: { description: 'Up to 6 headline strengths.' },
+              validate: (value: unknown, { data }: { data: Record<string, unknown> }) =>
+                facilityProblem(picksOf(data, 'propertyHighlights', value)) ?? true,
+            },
             {
               name: 'roomTypeList',
               label: 'Room types',
@@ -561,6 +730,34 @@ export const Businesses: CollectionConfig = {
               },
             },
           ],
+        },
+        {
+          /**
+           * A guest house, booked as a whole property (Task 6, 20 November
+           * 2026): its nightly price, guests, packages and features. Public,
+           * managed by the owner, only for Getaways (fields/stay).
+           */
+          label: 'Stay',
+          description:
+            'Booked as a whole property: one stay at a time, for nights. Partners manage the same from their dashboard.',
+          admin: {
+            condition: (data) => isWholePropertyStay((data?.subcategories as string[]) ?? []),
+          },
+          fields: [stayField, featuresField],
+        },
+        {
+          /**
+           * Restaurant seating areas (Task 8, 20 November 2026): indoor or
+           * outdoor, smoking or not, each with its own tables. Public, managed
+           * by the owner, only for restaurants (fields/seatingAreas).
+           */
+          label: 'Seating',
+          description:
+            'Where guests can sit, each area with its own tables. Partners manage the same from their dashboard.',
+          admin: {
+            condition: (data) => canHaveSeatingAreas((data?.subcategories as string[]) ?? []),
+          },
+          fields: [seatingAreasField],
         },
         {
           label: 'Commercial',
@@ -731,6 +928,15 @@ export const Businesses: CollectionConfig = {
     },
     {
       /**
+       * Public contact details the business manages: shown on its page. Every
+       * field is optional and public-readable; staff-only data lives elsewhere.
+       */
+      name: 'contact',
+      type: 'group',
+      fields: CONTACT_FIELDS.map(contactField),
+    },
+    {
+      /**
        * What the owner typed into the public submission form, and where staff
        * are in reviewing it. Staff-only at the field level: the public route
        * writes it with overrideAccess, and nobody else can create it, read it
@@ -759,8 +965,6 @@ export const Businesses: CollectionConfig = {
         { name: 'ownerName', type: 'text', access: submissionAccess },
         { name: 'ownerEmail', type: 'email', access: submissionAccess },
         { name: 'ownerPhone', type: 'text', access: submissionAccess },
-        { name: 'publicPhone', type: 'text', access: submissionAccess },
-        { name: 'website', type: 'text', access: submissionAccess },
         {
           name: 'pageTemplate',
           type: 'select',

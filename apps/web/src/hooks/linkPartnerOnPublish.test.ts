@@ -330,3 +330,77 @@ describe('a rejected submission cannot be reopened', () => {
     expect(() => run({ submission: { status: 'rejected' } })).not.toThrow()
   })
 })
+
+/**
+ * Publishing a branch a partner added (Task 9). The branch endpoint already
+ * appended it to the partner's listings and set `submission.ownerEmail` to the
+ * partner's address, so the publish finds that partner and links nothing new.
+ */
+describe('linkPartnerOnPublish: a branch from POST /partner-data/branches', () => {
+  const branch = {
+    id: 77,
+    _status: 'published',
+    submission: { status: 'approved', ownerEmail: 'owner@example.com', ownerName: 'Rita' },
+  }
+
+  it('creates no second partner and no invitation when the branch is already theirs', async () => {
+    const h = harness({ partners: [{ id: 3, email: 'owner@example.com', businesses: [10, 77] }] })
+    await h.run(branch, { _status: 'draft' })
+    expect(h.create).not.toHaveBeenCalled()
+    expect(h.update).not.toHaveBeenCalled()
+  })
+
+  it('adds the branch and keeps the source when it is somehow missing, still no new account', async () => {
+    const h = harness({
+      partners: [{ id: 3, email: 'owner@example.com', businesses: [10, { id: 30 }] }],
+    })
+    await h.run(branch, { _status: 'draft' })
+    expect(h.create).not.toHaveBeenCalled()
+    expect(h.update).toHaveBeenCalledTimes(1)
+    expect(h.update.mock.calls[0]![0]).toMatchObject({
+      collection: 'business-users',
+      id: 3,
+      data: { businesses: [10, 30, 77] },
+    })
+  })
+
+  it('does nothing on a later publish of the same branch', async () => {
+    const h = harness({ partners: [{ id: 3, email: 'owner@example.com', businesses: [10] }] })
+    await h.run(branch, { _status: 'published' })
+    expect(h.find).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * Task 9 fix round: the read-modify-write of the partner's listings runs
+ * under the partner lock the branch endpoint takes, and re-reads the row after
+ * taking it, so a branch appended in between is not dropped.
+ */
+describe('linkPartnerOnPublish: under the partner lock', () => {
+  it('takes the partner lock, then appends to the list as it is now', async () => {
+    const execute = vi.fn(async () => ({ rows: [] }))
+    let reads = 0
+    const find = vi.fn(async () => {
+      reads++
+      // The first read finds the account by email; by the time the lock is
+      // held, a branch (55) has been appended by POST /partner-data/branches.
+      return { docs: [{ id: 3, businesses: reads === 1 ? [10] : [10, 55] }] }
+    })
+    const update = vi.fn(async () => ({}))
+    const req = { payload: { find, create: vi.fn(), update, db: { drizzle: { execute } } } }
+    await (linkPartnerOnPublish as CollectionAfterChangeHook)({
+      doc: published,
+      previousDoc: { _status: 'draft' },
+      operation: 'update',
+      req,
+      context: {},
+    } as never)
+    expect(JSON.stringify((execute.mock.calls[0] as unknown[])[0])).toContain(
+      'vardenia.branches.partner:3',
+    )
+    expect(find).toHaveBeenCalledTimes(2)
+    expect((update.mock.calls[0] as unknown as [{ data: unknown }])[0].data).toEqual({
+      businesses: [10, 55, 9],
+    })
+  })
+})

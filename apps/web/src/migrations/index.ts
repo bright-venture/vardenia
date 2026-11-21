@@ -71,6 +71,7 @@ import * as migration_20261119_090456_magazine_places from './20261119_090456_ma
 import * as migration_20261119_131549_business_submissions from './20261119_131549_business_submissions'
 import * as migration_20261120_131807_remove_place_requests_add_expired from './20261120_131807_remove_place_requests_add_expired'
 import * as migration_20261121_120000_customer_booking_limits_two from './20261121_120000_customer_booking_limits_two'
+import * as migration_20261121_134843_core_backend from './20261121_134843_core_backend'
 
 export const migrations = [
   {
@@ -437,5 +438,10 @@ export const migrations = [
     up: migration_20261121_120000_customer_booking_limits_two.up,
     down: migration_20261121_120000_customer_booking_limits_two.down,
     name: '20261121_120000_customer_booking_limits_two',
+  },
+  {
+    up: migration_20261121_134843_core_backend.up,
+    down: migration_20261121_134843_core_backend.down,
+    name: '20261121_134843_core_backend',
   },
 ]

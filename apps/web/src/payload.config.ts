@@ -26,6 +26,7 @@ import { GuestQuestions } from './collections/GuestQuestions'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
+import { Brands } from './collections/Brands'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
 import { ListingRanges } from './collections/ListingRanges'
@@ -194,6 +195,7 @@ export default buildConfig({
   // Magazine, People, Reports. The last two are hidden from the menu.
   collections: [
     Businesses,
+    Brands,
     QrCodes,
     Reviews,
     Bookings,
