@@ -307,6 +307,22 @@ describe('createBooking, retried with the same attempt id', () => {
     expect(h.create).not.toHaveBeenCalled()
   })
 
+  it('replays the stored total of the booking the attempt made', async () => {
+    const h = harness({
+      earlier: { id: 41, reference: 'FIRST001', status: 'pending', price: { total: 240 } },
+    })
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({ ok: true, replayed: true, total: 240 })
+    const unpriced = harness({ earlier: { id: 41, reference: 'FIRST001', status: 'pending' } })
+    const again = await createBooking({
+      payload: unpriced.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(again).not.toHaveProperty('total')
+  })
+
   it('looks the attempt up for this customer only', async () => {
     const h = harness({})
     await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })

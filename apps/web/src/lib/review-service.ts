@@ -45,6 +45,11 @@ export interface CreateReviewArgs {
   customerName: string
 }
 
+/** Completed bookings read per query while looking for an eligible one. */
+const COMPLETED_PAGE = 20
+/** A bound on the paging (2,000 completed visits at one listing). */
+const MAX_COMPLETED_PAGES = 100
+
 export async function createReview({
   payload,
   request,
@@ -74,19 +79,22 @@ export async function createReview({
    * first, so a booking row that should not exist does not make a cafe
    * reviewable.
    */
-  const stood = await payload.find({
-    collection: 'bookings',
-    where: {
-      and: [
-        { customer: { equals: customerId } },
-        { business: { equals: business.id } },
-        { status: { equals: 'completed' } },
-      ],
-    },
-    limit: 20,
-    depth: 0,
-    overrideAccess: true,
-  })
+  const completedPage = (page: number) =>
+    payload.find({
+      collection: 'bookings',
+      where: {
+        and: [
+          { customer: { equals: customerId } },
+          { business: { equals: business.id } },
+          { status: { equals: 'completed' } },
+        ],
+      },
+      sort: 'id',
+      limit: COMPLETED_PAGE,
+      page,
+      depth: 0,
+      overrideAccess: true,
+    })
 
   // One review per customer per listing, which covers once per booking: the
   // customer, the listing and the booking they review through all go together.
@@ -105,26 +113,43 @@ export async function createReview({
     bookingEnabled: (business as { booking?: { enabled?: boolean } | null }).booking?.enabled,
     alreadyReviewed: Boolean(existing.docs[0]),
   }
-  let booking: (typeof stood.docs)[number] | undefined
+  type Candidate = Awaited<ReturnType<typeof completedPage>>['docs'][number]
+  let booking: Candidate | undefined
+  let seen = 0
   let refusal: Exclude<ReturnType<typeof reviewEligibility>, { ok: true }> = {
     ok: false,
     code: 'not-eligible',
   }
-  for (const candidate of stood.docs) {
-    const verdict = reviewEligibility({
-      ...facts,
-      status: candidate.status,
-      guestAnswer: (candidate as { guestAnswer?: string | null }).guestAnswer,
-    })
-    if (verdict.ok) {
-      booking = candidate
-      break
+  // Every completed booking of this customer at this listing, page by page,
+  // until one is eligible: a regular with many visits (some answered "did
+  // not come") is judged on all of them, not on the first page only.
+  // A refusal that is about the listing or an existing review, not about the
+  // booking, is the same for every booking: no need to read further.
+  let settled = false
+  for (let page = 1; !booking && !settled && page <= MAX_COMPLETED_PAGES; page++) {
+    const stood = await completedPage(page)
+    for (const candidate of stood.docs) {
+      seen++
+      const verdict = reviewEligibility({
+        ...facts,
+        status: candidate.status,
+        guestAnswer: (candidate as { guestAnswer?: string | null }).guestAnswer,
+      })
+      if (verdict.ok) {
+        booking = candidate
+        break
+      }
+      refusal = verdict
+      if (verdict.code !== 'not-eligible') {
+        settled = true
+        break
+      }
     }
-    refusal = verdict
+    if (!stood.hasNextPage) break
   }
   if (!booking) {
     // No booking at all still reads from the listing and review state.
-    if (stood.docs.length === 0) {
+    if (seen === 0) {
       const verdict = reviewEligibility({ ...facts, status: undefined })
       return { ok: false, code: verdict.ok ? 'not-eligible' : verdict.code }
     }

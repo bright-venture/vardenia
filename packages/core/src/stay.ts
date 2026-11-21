@@ -91,7 +91,7 @@ export interface StayQuoteLine {
   unitPrice: number
   /** Nights; 1 for a per-stay package; guests x nights; extra guests x nights. */
   quantity: number
-  /** unitPrice x quantity, rounded to cents. */
+  /** unitPrice (already rounded to cents) x quantity, rounded to cents. */
   amount: number
 }
 
@@ -233,33 +233,38 @@ export function quoteStay({
       : 'per-stay'
     const quantity = unit === 'per-night' ? nights : unit === 'per-stay' ? 1 : guests * nights
     if (unit === 'per-person-per-night') chargesExtraGuests = false
+    // Each unit price is rounded to cents once: the label shows it and the
+    // amount uses it (a legacy 33.335 is $33.34 in both).
+    const unitPrice = roundMoney(chosen.price)
     lines.push({
       kind: 'package',
       packageId,
       unit,
-      unitPrice: chosen.price,
+      unitPrice,
       quantity,
-      amount: roundMoney(chosen.price * quantity),
+      amount: roundMoney(unitPrice * quantity),
     })
   } else {
     const price = stay?.nightlyPrice
     if (!finite(price)) return { ok: false, reason: 'no-price' }
+    const unitPrice = roundMoney(price)
     lines.push({
       kind: 'nightly',
-      unitPrice: price,
+      unitPrice,
       quantity: nights,
-      amount: roundMoney(price * nights),
+      amount: roundMoney(unitPrice * nights),
     })
   }
 
   const fee = stay?.extraGuestFee
   if (chargesExtraGuests && extraGuests > 0 && finite(fee) && fee > 0) {
     const quantity = extraGuests * nights
+    const unitPrice = roundMoney(fee)
     lines.push({
       kind: 'extra-guests',
-      unitPrice: fee,
+      unitPrice,
       quantity,
-      amount: roundMoney(fee * quantity),
+      amount: roundMoney(unitPrice * quantity),
     })
   }
 

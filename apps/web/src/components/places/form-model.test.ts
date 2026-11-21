@@ -179,6 +179,25 @@ describe('error keys and kinds', () => {
     expect(normaliseErrors({ issue: 'a', listingNumber: 'b' }, [])).toEqual({ number: 'a' })
   })
 
+  it('names the kind of a contact message by its code, never by searching the text', () => {
+    // Text that merely mentions https or 6 to 20 is not a contact message.
+    expect(errorKind('Use https:// links please')).toBe('invalid')
+    expect(errorKind('between 6 to 20 people')).toBe('invalid')
+  })
+
+  it('refuses hotels and getaways together on the subcategories input', () => {
+    const both = checkSubmission(
+      { ...filled(), category: 'hospitality', subcategories: ['hotels', 'getaways'] },
+      pick,
+      'en',
+    )
+    expect(both.ok).toBe(false)
+    if (!both.ok) expect(errorKind(both.errors.subcategories!)).toBe('hotelAndGetaway')
+    // Through the server's field errors too (the same message crosses the network).
+    const server = normaliseErrors({ subcategories: both.ok ? '' : both.errors.subcategories! }, [])
+    expect(errorKind(server.subcategories!)).toBe('hotelAndGetaway')
+  })
+
   it('names the kind of each schema message, and never passes raw text through', () => {
     expect(errorKind('required')).toBe('required')
     expect(errorKind('too long')).toBe('tooLong')

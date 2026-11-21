@@ -127,3 +127,30 @@ describe('availability per seating area', () => {
     expect(status).toBe(400)
   })
 })
+
+describe('the guest house quote and the stay interval', () => {
+  const DAY = 24 * HOUR
+  const getaway = (booking: Record<string, unknown> = {}) => ({
+    id: 7,
+    _status: 'published',
+    subcategories: ['getaways'],
+    booking: { enabled: true, capacity: 1, leadTimeMinutes: 0, ...booking },
+    stay: { nightlyPrice: 150 },
+  })
+  const twoNights = {
+    start: new Date(start.getTime() + 5 * DAY).toISOString(),
+    end: new Date(start.getTime() + 7 * DAY).toISOString(),
+  }
+
+  it('quotes a stay the service would book', async () => {
+    const { body } = await ask(getaway(), [], twoNights)
+    expect(body.quote).toMatchObject({ ok: true, total: 300 })
+  })
+
+  it('does not quote when the stay has no interval (the service would refuse it)', async () => {
+    // A stored check-in time that is not a time: no check-in instant, so the
+    // booking service refuses the request; no price is shown for it.
+    const { body } = await ask(getaway({ checkInTime: 'later' }), [], twoNights)
+    expect(body).not.toHaveProperty('quote')
+  })
+})

@@ -204,6 +204,10 @@ export const POST = withRateLimit(
      * The address is echoed back so the success panel can say where the
      * confirmation went. The form no longer collects it - it belongs to the
      * account - so this is the only way it can name it.
+     *
+     * The price stored on the booking (Task 7) goes back too when there is
+     * one, so the page shows the total that was actually booked; it is the
+     * server's own quote, recomputed at booking time, never the client's.
      */
     return json(
       {
@@ -211,6 +215,9 @@ export const POST = withRateLimit(
         reference: outcome.reference,
         status: outcome.status,
         email: String(customer.email),
+        ...(outcome.total !== undefined
+          ? { price: { total: outcome.total, currency: 'USD' } }
+          : {}),
       },
       201,
     )

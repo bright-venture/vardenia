@@ -278,6 +278,8 @@ interface AttemptBooking {
   reference?: string | null
   status: BookingStatus
   roomType?: string | null
+  /** The price snapshot stored on it (Task 7), when there is one. */
+  price?: { total?: number | null } | null
 }
 
 /**
@@ -312,6 +314,8 @@ function replayOf(made: AttemptBooking, business: { id: unknown; name?: unknown 
     businessId: Number(business.id),
     businessName: String(business.name ?? ''),
     ...(made.roomType ? { roomType: made.roomType } : {}),
+    // The total stored the first time, so a retry shows the same price.
+    ...(typeof made.price?.total === 'number' ? { total: made.price.total } : {}),
   }
 }
 

@@ -98,19 +98,59 @@ export function normaliseContact(field: ContactField, value: unknown): string | 
   return v
 }
 
+/** What kind of problem a refused value has; the form shows a sentence per code. */
+export type ContactProblemCode = 'phone' | 'email' | 'link'
+
+export type ContactCheck = { ok: true } | { ok: false; code: ContactProblemCode; message: string }
+
+const PHONE_MESSAGE = 'Use 6 to 20 characters: digits, spaces, +, - and parentheses.'
+const EMAIL_MESSAGE = 'Enter a valid email address.'
+
+function linkMessage(field: SocialField): string {
+  return HANDLE_URL[field]
+    ? `Enter an https:// link on ${SOCIAL_HOSTS[field].join(' or ')}, or just the handle.`
+    : `Enter an https:// link on ${SOCIAL_HOSTS[field].join(' or ')}.`
+}
+
+/** A value judged, with a code and a readable reason when refused. Blank is fine. */
+export function checkContactValue(field: ContactField, value: unknown): ContactCheck {
+  const v = clean(value)
+  if (!v) return { ok: true }
+  if (field === 'phone' || field === 'whatsapp') {
+    return PHONE_RE.test(v) ? { ok: true } : { ok: false, code: 'phone', message: PHONE_MESSAGE }
+  }
+  if (field === 'email') {
+    return validEmailAddress(v)
+      ? { ok: true }
+      : { ok: false, code: 'email', message: EMAIL_MESSAGE }
+  }
+  if (isSocial(field) && !socialUrl(field, v)) {
+    return { ok: false, code: 'link', message: linkMessage(field) }
+  }
+  return { ok: true }
+}
+
 /** true, or a readable reason. Blank is fine (every field is optional). */
 export function validContactValue(field: ContactField, value: unknown): true | string {
-  const v = clean(value)
-  if (!v) return true
-  if (field === 'phone' || field === 'whatsapp') {
-    return PHONE_RE.test(v) ? true : 'Use 6 to 20 characters: digits, spaces, +, - and parentheses.'
-  }
-  if (field === 'email') return validEmailAddress(v) ? true : 'Enter a valid email address.'
-  if (isSocial(field)) {
-    if (socialUrl(field, v)) return true
-    return HANDLE_URL[field]
-      ? `Enter an https:// link on ${SOCIAL_HOSTS[field].join(' or ')}, or just the handle.`
-      : `Enter an https:// link on ${SOCIAL_HOSTS[field].join(' or ')}.`
-  }
-  return true
+  const verdict = checkContactValue(field, value)
+  return verdict.ok ? true : verdict.message
+}
+
+/** Every message checkContactValue can give, with its code. */
+const CODE_BY_MESSAGE: ReadonlyMap<string, ContactProblemCode> = new Map<
+  string,
+  ContactProblemCode
+>([
+  [PHONE_MESSAGE, 'phone'],
+  [EMAIL_MESSAGE, 'email'],
+  ...SOCIAL_FIELDS.map((field): [string, ContactProblemCode] => [linkMessage(field), 'link']),
+])
+
+/**
+ * The code of a message checkContactValue gave, matched exactly; undefined for
+ * any other text. For a message that crossed the network as a field error
+ * (the schema's field errors carry the message only).
+ */
+export function contactProblemCode(message: string): ContactProblemCode | undefined {
+  return CODE_BY_MESSAGE.get(message)
 }

@@ -11,6 +11,7 @@ import {
 import { partnerResetEmail } from '../lib/auth-email'
 import { inviteBusinessUser } from '../hooks/inviteBusinessUser'
 import { enforcePasswordRule } from '../hooks/enforcePasswordRule'
+import { deletePartnerPrivateMedia } from '../hooks/deletePartnerPrivateMedia'
 import { SESSION_COOKIES } from '../lib/auth-cookies'
 
 /**
@@ -88,6 +89,10 @@ export const BusinessUsers: CollectionConfig = {
     // with a session alone. hooks/guardSelfAccountUpdate. And only an admin
     // changes another person's email or password. hooks/guardAccountIdentity.
     beforeOperation: [guardSelfAccountUpdate, guardAccountIdentity],
+    // A partner's files that no page uses would turn public once the partner
+    // is gone (media.uploaded_by is set null); they are deleted first, in the
+    // same transaction. hooks/deletePartnerPrivateMedia.
+    beforeDelete: [deletePartnerPrivateMedia],
   },
 
   admin: {

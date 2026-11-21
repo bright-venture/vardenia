@@ -89,6 +89,38 @@ describe('POST /booking/request and the price', () => {
     expect(vi.mocked(notifyVenueOfBooking).mock.calls[0]![0]).toMatchObject({ total: 300 })
   })
 
+  it('returns the stored total with the reference, and no price when none was stored', async () => {
+    vi.mocked(createBooking).mockResolvedValue({
+      ok: true,
+      reference: 'REF00001',
+      status: 'pending',
+      bookingId: 1,
+      businessId: 20,
+      businessName: 'Beit Douma',
+      total: 300,
+    })
+    const priced = await post(body)
+    expect(priced.status).toBe(201)
+    expect(priced.body).toEqual({
+      ok: true,
+      reference: 'REF00001',
+      status: 'pending',
+      email: 'a@b.co',
+      price: { total: 300, currency: 'USD' },
+    })
+    vi.mocked(createBooking).mockResolvedValue({
+      ok: true,
+      reference: 'REF00002',
+      status: 'confirmed',
+      bookingId: 2,
+      businessId: 20,
+      businessName: 'Beit Douma',
+    })
+    const unpriced = await post(body)
+    expect(unpriced.body).not.toHaveProperty('price')
+    expect(unpriced.body).toMatchObject({ ok: true, reference: 'REF00002' })
+  })
+
   it('answers an unpriceable request (an unknown package) with 400', async () => {
     vi.mocked(createBooking).mockResolvedValue({
       ok: false,

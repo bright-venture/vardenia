@@ -59,10 +59,32 @@ function setup(opts: {
       if (!business) throw new Error('not found')
       return business
     }),
-    find: vi.fn(async ({ collection, where }: { collection: string; where: Clause }) => {
-      const rows = (collection === 'bookings' ? opts.bookings : opts.reviews) ?? []
-      return { docs: rows.filter((r) => matches(r as never, where)).slice(0, 1) }
-    }),
+    // Honours limit and page, as Payload does (default limit 10, page 1).
+    find: vi.fn(
+      async ({
+        collection,
+        where,
+        limit = 10,
+        page = 1,
+      }: {
+        collection: string
+        where: Clause
+        limit?: number
+        page?: number
+      }) => {
+        const rows = (collection === 'bookings' ? opts.bookings : opts.reviews) ?? []
+        const all = rows.filter((r) => matches(r as never, where))
+        const docs = all.slice((page - 1) * limit, page * limit)
+        const hasNextPage = page * limit < all.length
+        return {
+          docs,
+          totalDocs: all.length,
+          page,
+          hasNextPage,
+          nextPage: hasNextPage ? page + 1 : null,
+        }
+      },
+    ),
     create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
       created.push(data)
       return { id: 99 }
@@ -98,6 +120,36 @@ describe('who may review a listing', () => {
       status: 'pending',
       authorName: 'Rania H.',
     })
+  })
+
+  it('finds the eligible booking among many completed ones at the listing (past the first page)', async () => {
+    // 25 completed bookings; the guest said they did not come to all but #23.
+    const bookings: BookingRow[] = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      customer: 5,
+      business: 10,
+      status: 'completed',
+      end: past,
+      guestAnswer: i + 1 === 23 ? 'came' : 'did-not-come',
+    }))
+    const { run, created } = setup({ bookings })
+    expect(await run()).toEqual({ ok: true, reviewId: 99 })
+    expect(created[0]).toMatchObject({ booking: 23 })
+  })
+
+  it('still refuses with the reason when none of many completed bookings is eligible', async () => {
+    const bookings: BookingRow[] = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      customer: 5,
+      business: 10,
+      status: 'completed',
+      end: past,
+      guestAnswer: 'did-not-come',
+    }))
+    const { run, created } = setup({ bookings })
+    const outcome = await run()
+    expect(outcome.ok).toBe(false)
+    expect(created).toHaveLength(0)
   })
 
   it('refuses a customer with no booking at that listing', async () => {

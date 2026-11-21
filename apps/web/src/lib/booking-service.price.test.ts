@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Payload } from 'payload'
-import { bookingRequestSchema } from '@vardenia/core'
+import type { CollectionBeforeValidateHook, Payload } from 'payload'
+import { bookingRequestSchema, quoteRooms } from '@vardenia/core'
 import { createBooking } from './booking-service'
 import { unavailableMessage } from './availability'
+import { guardBookingWrite } from '../hooks/guardBookingWrite'
 
 /**
  * The price snapshot the booking service stores (Task 7). Recomputed on the
@@ -135,7 +136,7 @@ describe('price snapshot: hotel', () => {
     expect(createdOf(h.create).data).not.toHaveProperty('price')
   })
 
-  it('keeps the snapshot it stored when the hotel changes its price afterwards', async () => {
+  it('keeps the snapshot it stored when the hotel changes its price and the booking is updated', async () => {
     const rooms = types()
     const h = harness(hotel, rooms)
     await createBooking({
@@ -144,12 +145,33 @@ describe('price snapshot: hotel', () => {
       customerId: 5,
       now: NOW,
     })
-    const stored = createdOf(h.create).data.price as { total: number; lines: { amount: number }[] }
-    const before = JSON.parse(JSON.stringify(stored))
-    // The hotel edits its price after the booking.
+    const created = createdOf(h.create).data
+    const snapshot = structuredClone(created.price) as { total: number }
+    expect(snapshot.total).toBe(200)
+
+    // The hotel raises the option to 300 after the booking.
     ;(rooms[0]!.options[0] as { price: number }).price = 300
-    expect(stored).toEqual(before)
-    expect(stored.total).toBe(200)
+    const requoted = quoteRooms({
+      nights: 2,
+      lines: [{ roomName: 'Deluxe Twin', price: 300, count: 1 }],
+    })
+    if (!requoted.ok) throw new Error('expected a quote')
+    expect(requoted.total).toBe(600)
+
+    // An update of the stored booking goes through the collection's own
+    // beforeValidate guard, the way Payload runs it: staff confirm it and the
+    // body carries a price re-quoted at the new rate (as an admin form or a
+    // script might send). The stored snapshot comes back unchanged.
+    const stored = { ...structuredClone(created), id: 3, reference: 'REF00001', status: 'pending' }
+    const out = (await guardBookingWrite({
+      data: { status: 'confirmed', price: { ...requoted, quotedAt: NOW.toISOString() } },
+      req: { payload: h.payload, user: { id: 1, collection: 'users', roles: ['staff'] } },
+      operation: 'update',
+      originalDoc: stored,
+      context: {},
+    } as unknown as Parameters<CollectionBeforeValidateHook>[0])) as Record<string, unknown>
+    expect(out.price).toEqual(snapshot)
+    expect((out.price as { total: number }).total).toBe(200)
   })
 })
 

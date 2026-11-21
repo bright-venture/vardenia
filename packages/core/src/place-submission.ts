@@ -3,8 +3,8 @@ import { LOCALE_CODES } from './locales'
 import { LISTING_GOVERNORATES } from './listing-numbers'
 import { AMENITY_SLUGS, PRICE_SLUGS } from './attributes'
 import { GOVERNORATES } from './regions'
-import { CONTACT_FIELDS, normaliseContact, validContactValue, type ContactField } from './contact'
-import { CATEGORY_SLUGS, SUBCATEGORY_PARENT } from './taxonomy'
+import { CONTACT_FIELDS, checkContactValue, normaliseContact, type ContactField } from './contact'
+import { CATEGORY_SLUGS, SUBCATEGORY_PARENT, isWholePropertyStay } from './taxonomy'
 
 /**
  * What a business owner submits on the public "add your place" form.
@@ -18,6 +18,19 @@ export const PAGE_TEMPLATES = ['a', 'b', 'c'] as const
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
+/**
+ * The schema's own messages that the form tells apart (form-model errorKind
+ * matches them exactly). English, never shown: the form translates by kind.
+ */
+export const SUBMISSION_EMAIL_MESSAGE = 'must be an email address'
+export const SUBMISSION_TIME_MESSAGE = 'use 24-hour time like 09:00'
+/**
+ * A listing is never both a hotel and a guest house (Getaways): the Businesses
+ * collection refuses it on save (hooks/guardKindFields), so the form refuses
+ * it first, before any photo is uploaded.
+ */
+export const HOTEL_AND_GETAWAY_MESSAGE = 'cannot be both hotels and getaways'
+
 /** 24-hour HH:MM; "24:00" is allowed (closing at midnight). Same rule as the Businesses collection. */
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/
 
@@ -30,7 +43,7 @@ const blankToUndefined = (value: unknown) =>
 
 const hhmm = z.preprocess(
   blankToUndefined,
-  z.string().trim().regex(TIME_RE, 'use 24-hour time like 09:00').optional(),
+  z.string().trim().regex(TIME_RE, SUBMISSION_TIME_MESSAGE).optional(),
 )
 
 /** Same loose, lowercased rule as booking-request.ts. */
@@ -46,7 +59,7 @@ const emailAddress = z
     const [local, domain] = parts
     if (!local || !domain) return false
     return domain.includes('.') && !/\s/.test(value)
-  }, 'must be an email address')
+  }, SUBMISSION_EMAIL_MESSAGE)
 
 /** Optional text: an empty string counts as absent. */
 const optionalText = (max: number) =>
@@ -65,8 +78,8 @@ const contactValue = (field: ContactField) =>
       .string()
       .trim()
       .superRefine((value, ctx) => {
-        const verdict = validContactValue(field, value)
-        if (verdict !== true) ctx.addIssue({ code: 'custom', message: verdict })
+        const verdict = checkContactValue(field, value)
+        if (!verdict.ok) ctx.addIssue({ code: 'custom', message: verdict.message })
       })
       .transform((value) => normaliseContact(field, value) as string)
       .optional(),
@@ -143,6 +156,9 @@ export const placeSubmissionSchema = z
         })
       }
     })
+    if (isWholePropertyStay(value.subcategories) && value.subcategories.includes('hotels')) {
+      ctx.addIssue({ code: 'custom', path: ['subcategories'], message: HOTEL_AND_GETAWAY_MESSAGE })
+    }
     if (value.district) {
       const gov = GOVERNORATES.find((g) => g.slug === value.governorate)
       if (!gov || !gov.districts.some((d) => d.slug === value.district)) {

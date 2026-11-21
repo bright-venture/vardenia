@@ -6,7 +6,7 @@ import {
   type MemoryPayload,
   type Row,
 } from './__fixtures__/memory-payload'
-import { createBranch, type BranchPartner } from './branches'
+import { BRAND_NAME_MAX, capName, createBranch, type BranchPartner } from './branches'
 
 /**
  * A partner adds a branch of their restaurant (Task 9). Runs the real service
@@ -16,6 +16,13 @@ import { createBranch, type BranchPartner } from './branches'
 
 const NOW = new Date('2026-11-21T12:00:00Z')
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString()
+
+/** The submission group the branch flow writes on every branch it makes. */
+const branchSubmission = (h: number) => ({
+  status: 'pending',
+  ownerEmail: 'owner@example.com',
+  submittedAt: hoursAgo(h),
+})
 
 const richText = (text: string) => ({
   root: { type: 'root', children: [{ type: 'paragraph', children: [{ type: 'text', text }] }] },
@@ -512,6 +519,7 @@ describe('createBranch: refusals', () => {
       brand: 7,
       _status: 'draft',
       createdAt: hoursAgo(h),
+      submission: branchSubmission(h),
       ...extra,
     })
     const ids = [201, 202, 203, 204, 205, 206]
@@ -545,6 +553,7 @@ describe('createBranch: refusals', () => {
       brand: 7,
       _status: 'draft',
       createdAt: hoursAgo(1),
+      submission: branchSubmission(1),
     }))
     const { run } = setup({
       brands: [{ id: 7, name: 'Cafe Nour', slug: 'cafe-nour', published: true }],
@@ -705,7 +714,48 @@ describe('createBranch: long names', () => {
     expect(await run()).toMatchObject({ ok: true })
     const brand = payload.calls.find((c) => c.op === 'create' && c.args.collection === 'brands')!
     const name = (brand.args.data as { name: string }).name
-    expect(name).toBe('\u{1F600}'.repeat(160))
+    // 160 is Payload's maxLength, counted in UTF-16 units: 80 emoji.
+    expect(name).toBe('\u{1F600}'.repeat(80))
+  })
+})
+
+describe('capName counts what Payload maxLength counts (UTF-16 units)', () => {
+  const lone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
+
+  it('caps 170 emoji at 160 units without splitting a surrogate pair', () => {
+    const out = capName('\u{1F600}'.repeat(170))
+    expect(out.length).toBeLessThanOrEqual(BRAND_NAME_MAX)
+    expect(out).toBe('\u{1F600}'.repeat(80))
+    expect(lone.test(out)).toBe(false)
+  })
+
+  it('keeps an odd boundary whole: one ASCII letter then emoji', () => {
+    const out = capName('a' + '\u{1F600}'.repeat(100))
+    expect(out).toBe('a' + '\u{1F600}'.repeat(79))
+    expect(lone.test(out)).toBe(false)
+  })
+
+  it('never cuts a combining mark off its base (300-unit Arabic with vowel marks, no spaces)', () => {
+    // ba + fatha, repeated: 150 pairs = 300 UTF-16 units.
+    const marked = '\u0628\u064E'.repeat(150)
+    const out = capName(marked)
+    expect(out.length).toBeLessThanOrEqual(BRAND_NAME_MAX)
+    expect(marked.startsWith(out)).toBe(true)
+    expect(/\p{M}/u.test(marked.charAt(out.length))).toBe(false)
+    expect(out.length % 2).toBe(0)
+  })
+
+  it('cuts a 300-character Arabic name with spaces at a word boundary within 160 units', () => {
+    const words = Array.from({ length: 50 }, () => '\u0645\u0637\u0639\u0645\u0020').join('')
+    const name = words.repeat(2).slice(0, 300)
+    const out = capName(name)
+    expect(out.length).toBeLessThanOrEqual(BRAND_NAME_MAX)
+    expect(out.endsWith(' ')).toBe(false)
+    expect(name.charAt(out.length)).toBe(' ')
+  })
+
+  it('leaves a short name as it is, trimmed', () => {
+    expect(capName('  Cafe Nour  ')).toBe('Cafe Nour')
   })
 })
 
@@ -718,6 +768,7 @@ describe('createBranch: the daily limit counts branches only', () => {
     brand: 7,
     _status: 'draft',
     createdAt: hoursAgo(h),
+    submission: branchSubmission(h),
     ...extra,
   })
   const brand7 = [{ id: 7, name: 'Cafe Nour', slug: 'cafe-nour', published: true }]
@@ -755,11 +806,40 @@ describe('createBranch: the daily limit counts branches only', () => {
     expect(await run()).toMatchObject({ ok: true })
   })
 
+  it('does not count a staff-made restaurant (no issue) that became a source today', async () => {
+    // Staff made it an hour ago: no issue, no submission. Its first branch
+    // request gave it a brand; it is not a branch.
+    const staffMade = source({ brand: 7, issue: null, submission: null, createdAt: hoursAgo(1) })
+    const { run } = setup({
+      brands: brand7,
+      businesses: [staffMade, ...four.map((id) => branchRow(id, 2))],
+      partner: partnerRow([10, ...four]),
+    })
+    expect(await run()).toMatchObject({ ok: true })
+  })
+
+  it('does not count another staff-made restaurant that was a source earlier today', async () => {
+    const other = source({
+      id: 12,
+      slug: 'cafe-nour-staff',
+      brand: 8,
+      issue: null,
+      submission: null,
+      createdAt: hoursAgo(3),
+    })
+    const { run } = setup({
+      brands: [...brand7, { id: 8, name: 'Other', slug: 'other-brand', published: true }],
+      businesses: [source({ brand: 7 }), other, ...four.map((id) => branchRow(id, 2))],
+      partner: partnerRow([10, 12, ...four]),
+    })
+    expect(await run()).toMatchObject({ ok: true })
+  })
+
   it('still counts a branch staff already published', async () => {
     const published = (id: number) =>
       branchRow(id, 2, {
         _status: 'published',
-        submission: { status: 'approved', ownerEmail: 'owner@example.com' },
+        submission: { ...branchSubmission(2), status: 'approved' },
       })
     const five = [...four, 205]
     const { run } = setup({
@@ -810,6 +890,7 @@ describe('createBranch: two requests at once', () => {
           brand: 7,
           _status: 'draft',
           createdAt: hoursAgo(2),
+          submission: branchSubmission(2),
         })),
       ],
       partner: partnerRow([10, ...four]),

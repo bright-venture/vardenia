@@ -50,6 +50,21 @@ describe('PlaceSubmissionForm, first paint', () => {
     expect(page.body.textContent).toContain(getMessages('en').magazinePlaces.form.submitNeeds)
   })
 
+  it('lets the owner phone take 40 characters (the schema limit) and the public phone 20', () => {
+    const page = doc(renderToStaticMarkup(wrap('en')))
+    expect(page.querySelector('input[name="ownerPhone"]')!.getAttribute('maxlength')).toBe('40')
+    expect(page.querySelector('input[name="publicPhone"]')!.getAttribute('maxlength')).toBe('20')
+  })
+
+  it('has a translated hotels-and-getaways error in every locale', () => {
+    const en = getMessages('en').magazinePlaces.errors as Record<string, string>
+    for (const locale of ['en', 'ar', 'fr', 'es', 'pt', 'ru', 'zh', 'hi', 'bn', 'ur'] as const) {
+      const errors = getMessages(locale).magazinePlaces.errors as Record<string, string>
+      expect(errors.hotelAndGetaway, locale).toBeTruthy()
+      if (locale !== 'en') expect(errors.hotelAndGetaway, locale).not.toBe(en.hotelAndGetaway)
+    }
+  })
+
   it('has no visible string left as a raw key', () => {
     const text = doc(renderToStaticMarkup(wrap('ar'))).body.textContent ?? ''
     expect(text).not.toMatch(/magazinePlaces\.|form\.[a-z]/)

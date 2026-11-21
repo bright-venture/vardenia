@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { placeSubmissionSchema } from './place-submission'
+import { HOTEL_AND_GETAWAY_MESSAGE, placeSubmissionSchema } from './place-submission'
 
 const valid = {
   name: 'Cafe Example',
@@ -33,6 +33,17 @@ describe('placeSubmissionSchema', () => {
       expect(r.data).not.toHaveProperty('tier')
       expect(r.data).not.toHaveProperty('_status')
     }
+  })
+
+  it('refuses hotels and getaways together, on subcategories', () => {
+    const r = parse({ category: 'hospitality', subcategories: ['hotels', 'getaways'] })
+    expect(r.success).toBe(false)
+    if (!r.success) {
+      const issue = r.error.issues.find((i) => i.message === HOTEL_AND_GETAWAY_MESSAGE)
+      expect(issue?.path).toEqual(['subcategories'])
+    }
+    expect(parse({ category: 'hospitality', subcategories: ['hotels'] }).success).toBe(true)
+    expect(parse({ category: 'hospitality', subcategories: ['getaways'] }).success).toBe(true)
   })
 
   it('rejects a subcategory of another category', () => {

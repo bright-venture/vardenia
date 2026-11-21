@@ -942,15 +942,6 @@ const OUTCOME_COPY: Record<Locale, Record<CopiedKind, Copy>> = {
 }
 
 /**
- * Which outcome, if any, a status change should be written about.
- *
- * Takes both statuses because `cancelled` means two different things depending
- * on where it came from: from `pending` the business declined a request that was
- * never held, and from `confirmed` it called off something the customer had
- * planned around. Sending the same sentence for both would tell one of them
- * something untrue.
- */
-/**
  * A request nobody answered. Labelled like a decline, but honest about why:
  * the venue did not refuse, it did not reply, and the guest should not read
  * that as a verdict on their evening.
@@ -1022,12 +1013,20 @@ const EXPIRED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro'>> 
  * The review invitation: wording over the confirmed copy's labels, the way
  * EXPIRED_COPY is laid over the declined copy's.
  */
-const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' | 'closing'>> = {
+const COMPLETED_COPY: Record<
+  Locale,
+  Pick<Copy, 'subject' | 'heading' | 'intro' | 'closing'> & {
+    /** The intro when the business name could not be read: names nobody. */
+    introUnnamed: string
+  }
+> = {
   en: {
     subject: 'Thank you for your visit - tell others how it was',
     heading: 'You can now write a review',
     intro:
       '{business} has marked your visit as done. You can now write a review of it on its Vardenia page; it helps other travellers choose.',
+    introUnnamed:
+      "Your visit has been marked as done. You can now write a review on the place's Vardenia page; it helps other travellers choose.",
     closing: 'Thank you for choosing Vardenia.',
   },
   ar: {
@@ -1035,6 +1034,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'يمكنك الآن كتابة تقييم',
     intro:
       'سجّل {business} أن زيارتك قد تمت. يمكنك الآن كتابة تقييم له على صفحته في فاردينيا، فهو يساعد المسافرين الآخرين على الاختيار.',
+    introUnnamed:
+      'تم تسجيل زيارتك على أنها تمت. يمكنك الآن كتابة تقييم للمكان على صفحته في فاردينيا، فهو يساعد المسافرين الآخرين على الاختيار.',
     closing: 'شكرًا لاختيارك فاردينيا.',
   },
   fr: {
@@ -1042,6 +1043,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'Vous pouvez maintenant laisser un avis',
     intro:
       '{business} a marqué votre visite comme effectuée. Vous pouvez maintenant laisser un avis sur sa page Vardenia ; cela aide les autres voyageurs à choisir.',
+    introUnnamed:
+      "Votre visite a été marquée comme effectuée. Vous pouvez maintenant laisser un avis sur la page Vardenia de l'établissement ; cela aide les autres voyageurs à choisir.",
     closing: "Merci d'avoir choisi Vardenia.",
   },
   es: {
@@ -1049,6 +1052,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'Ya puedes escribir una reseña',
     intro:
       '{business} ha marcado tu visita como realizada. Ya puedes escribir una reseña en su página de Vardenia; ayuda a otros viajeros a elegir.',
+    introUnnamed:
+      'Tu visita se ha marcado como realizada. Ya puedes escribir una reseña en la página de Vardenia del lugar; ayuda a otros viajeros a elegir.',
     closing: 'Gracias por elegir Vardenia.',
   },
   pt: {
@@ -1056,6 +1061,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'Já pode escrever uma avaliação',
     intro:
       '{business} marcou a sua visita como concluída. Já pode escrever uma avaliação na sua página da Vardenia; ajuda outros viajantes a escolher.',
+    introUnnamed:
+      'A sua visita foi marcada como concluída. Já pode escrever uma avaliação na página da Vardenia do local; ajuda outros viajantes a escolher.',
     closing: 'Obrigado por escolher a Vardenia.',
   },
   ru: {
@@ -1063,6 +1070,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'Теперь вы можете оставить отзыв',
     intro:
       'Заведение «{business}» отметило ваш визит как состоявшийся. Теперь вы можете оставить отзыв об этом месте на его странице Vardenia; это помогает другим путешественникам сделать выбор.',
+    introUnnamed:
+      'Ваш визит отмечен как состоявшийся. Теперь вы можете оставить отзыв об этом месте на его странице Vardenia; это помогает другим путешественникам сделать выбор.',
     closing: 'Спасибо, что выбрали Vardenia.',
   },
   zh: {
@@ -1070,6 +1079,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: '您现在可以撰写评价了',
     intro:
       '{business} 已将您的这次到访标记为完成。您现在可以在其 Vardenia 页面上撰写评价，这能帮助其他旅行者做出选择。',
+    introUnnamed:
+      '您的这次到访已被标记为完成。您现在可以在该地点的 Vardenia 页面上撰写评价，这能帮助其他旅行者做出选择。',
     closing: '感谢您选择 Vardenia。',
   },
   hi: {
@@ -1077,6 +1088,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'अब आप समीक्षा लिख सकते हैं',
     intro:
       '{business} ने आपकी यात्रा को पूरा हुआ चिह्नित कर दिया है। अब आप उसके Vardenia पेज पर समीक्षा लिख सकते हैं; इससे दूसरे यात्रियों को चुनने में मदद मिलती है।',
+    introUnnamed:
+      'आपकी यात्रा को पूरा हुआ चिह्नित कर दिया गया है। अब आप उस जगह के Vardenia पेज पर समीक्षा लिख सकते हैं; इससे दूसरे यात्रियों को चुनने में मदद मिलती है।',
     closing: 'Vardenia चुनने के लिए धन्यवाद।',
   },
   bn: {
@@ -1084,6 +1097,8 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'এখন আপনি রিভিউ লিখতে পারেন',
     intro:
       '{business} আপনার এই যাওয়াকে সম্পন্ন হিসেবে চিহ্নিত করেছে। এখন আপনি তাদের Vardenia পেজে রিভিউ লিখতে পারেন; এতে অন্য ভ্রমণকারীরা বেছে নিতে সাহায্য পান।',
+    introUnnamed:
+      'আপনার এই যাওয়াকে সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে। এখন আপনি জায়গাটির Vardenia পেজে রিভিউ লিখতে পারেন; এতে অন্য ভ্রমণকারীরা বেছে নিতে সাহায্য পান।',
     closing: 'Vardenia বেছে নেওয়ার জন্য ধন্যবাদ।',
   },
   ur: {
@@ -1091,10 +1106,21 @@ const COMPLETED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro' 
     heading: 'اب آپ جائزہ لکھ سکتے ہیں',
     intro:
       '{business} نے آپ کے دورے کو مکمل کے طور پر درج کر دیا ہے۔ اب آپ اس کے Vardenia صفحے پر جائزہ لکھ سکتے ہیں؛ اس سے دوسرے مسافروں کو انتخاب میں مدد ملتی ہے۔',
+    introUnnamed:
+      'آپ کے دورے کو مکمل کے طور پر درج کر دیا گیا ہے۔ اب آپ اس جگہ کے Vardenia صفحے پر جائزہ لکھ سکتے ہیں؛ اس سے دوسرے مسافروں کو انتخاب میں مدد ملتی ہے۔',
     closing: 'Vardenia کو چننے کا شکریہ۔',
   },
 }
 
+/**
+ * Which outcome, if any, a status change should be written about.
+ *
+ * Takes both statuses because `cancelled` means two different things depending
+ * on where it came from: from `pending` the business declined a request that was
+ * never held, and from `confirmed` it called off something the customer had
+ * planned around. Sending the same sentence for both would tell one of them
+ * something untrue.
+ */
 export function outcomeFor(from: BookingStatus, to: BookingStatus): BookingOutcomeKind | null {
   if (from === to) return null
   if (to === 'confirmed') return 'confirmed'
@@ -1123,6 +1149,22 @@ export interface BookingOutcomeArgs {
   businessName?: string
 }
 
+/**
+ * The review invitation's copy. The intro names the business; when its name
+ * could not be read, a neutral sentence that names nobody (not "Vardenia has
+ * marked your visit", which is not true: the business marked it).
+ */
+function completedCopy(locale: Locale, businessName: string | undefined): Copy {
+  const { introUnnamed, ...completed } = COMPLETED_COPY[locale]
+  const name = businessName?.trim()
+  return {
+    ...OUTCOME_COPY[locale].confirmed,
+    ...completed,
+    // Raw here: renderBookingEmail escapes the intro for html.
+    intro: name ? completed.intro.replaceAll('{business}', () => name) : introUnnamed,
+  }
+}
+
 /** Pure, like the confirmation content, so the wording is testable. */
 export function bookingOutcomeContent({
   name,
@@ -1139,15 +1181,7 @@ export function bookingOutcomeContent({
     outcome === 'expired'
       ? { ...OUTCOME_COPY[locale].declined, ...EXPIRED_COPY[locale] }
       : outcome === 'completed'
-        ? {
-            ...OUTCOME_COPY[locale].confirmed,
-            ...COMPLETED_COPY[locale],
-            // Raw here: renderBookingEmail escapes the intro for html.
-            intro: COMPLETED_COPY[locale].intro.replaceAll(
-              '{business}',
-              () => businessName?.trim() || 'Vardenia',
-            ),
-          }
+        ? completedCopy(locale, businessName)
         : OUTCOME_COPY[locale][outcome]
   return renderBookingEmail({
     copy,

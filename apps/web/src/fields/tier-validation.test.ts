@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateTier } from './tier'
-import { goldFloorCheck } from '../globals/Settings'
-import { validateMaxGold, validateMaxPlatinum } from '../globals/Settings'
+import { goldFloorCheck, validateMaxGold, validateMaxPlatinum } from '../globals/Settings'
 
 type Doc = { id: number; tier: string; category: string }
 type Where = Record<string, unknown>
@@ -36,13 +35,29 @@ const gold = (n: number, category: string, from = 1): Doc[] =>
 const platinum = (n: number, from = 100): Doc[] =>
   Array.from({ length: n }, (_, i) => ({ id: from + i, tier: 'platinum', category: 'tourism' }))
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const run = (value: string, docs: Doc[], opts: Record<string, unknown>, settings = {}): any =>
-  (validateTier as any)(value, {
-    req: stub(docs, settings),
-    options: [{ label: 'x', value }],
-    ...opts,
-  })
+/**
+ * A Payload field validator as these tests call it: the value and a partial
+ * options object (only what the validators read), answering true or a reason.
+ */
+type Validator = (
+  value: unknown,
+  options: Record<string, unknown>,
+) => true | string | Promise<true | string>
+const asValidator = (validate: unknown) => validate as Validator
+
+const run = (
+  value: string,
+  docs: Doc[],
+  opts: Record<string, unknown>,
+  settings = {},
+): Promise<true | string> =>
+  Promise.resolve(
+    asValidator(validateTier)(value, {
+      req: stub(docs, settings),
+      options: [{ label: 'x', value }],
+      ...opts,
+    }),
+  )
 
 describe('validateTier, gold per category', () => {
   const full = gold(6, 'hospitality')
@@ -149,12 +164,10 @@ describe('validateTier, platinum overall', () => {
 })
 
 describe('settings validators refuse lowering below the number sold', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const gv = (v: number, docs: Doc[]): any =>
-    (validateMaxGold as any)(v, { req: stub(docs), required: false })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pv = (v: number, docs: Doc[]): any =>
-    (validateMaxPlatinum as any)(v, { req: stub(docs), required: false })
+  const gv = (v: number, docs: Doc[]) =>
+    Promise.resolve(asValidator(validateMaxGold)(v, { req: stub(docs), required: false }))
+  const pv = (v: number, docs: Doc[]) =>
+    Promise.resolve(asValidator(validateMaxPlatinum)(v, { req: stub(docs), required: false }))
 
   it('gold: measured against the fullest category, platinum ignored', async () => {
     const docs = [...gold(4, 'hospitality'), ...gold(2, 'tourism', 20), ...platinum(9)]

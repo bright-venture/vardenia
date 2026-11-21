@@ -1,7 +1,13 @@
 import type { Locale } from '@vardenia/i18n'
 import { fieldErrors } from '@vardenia/core/booking-request'
 import { LISTING_GOVERNORATES } from '@vardenia/core/listing-numbers'
-import { placeSubmissionSchema } from '@vardenia/core/place-submission'
+import { contactProblemCode } from '@vardenia/core/contact'
+import {
+  HOTEL_AND_GETAWAY_MESSAGE,
+  SUBMISSION_EMAIL_MESSAGE,
+  SUBMISSION_TIME_MESSAGE,
+  placeSubmissionSchema,
+} from '@vardenia/core/place-submission'
 import { GOVERNORATES, type District } from '@vardenia/core/regions'
 import { CATEGORIES, type SubCategory } from '@vardenia/core/taxonomy'
 import { DAY_ORDER, type DayKey } from '../../lib/hours'
@@ -190,19 +196,24 @@ export function normaliseErrors(
   return out
 }
 
-export type ErrorKind = 'required' | 'tooLong' | 'email' | 'link' | 'phone' | 'time' | 'invalid'
+export type ErrorKind =
+  'required' | 'tooLong' | 'email' | 'link' | 'phone' | 'time' | 'hotelAndGetaway' | 'invalid'
 
 /**
  * Which translated sentence a schema message stands for. The schema's own words
- * are English and never shown; anything unrecognised is "check this".
+ * are English and never shown; anything unrecognised is "check this". Every
+ * match is exact: a contact message is read back to its code by core contact
+ * (contactProblemCode), the others are the schema's exported messages. The
+ * message is what both the local check and the server's field errors carry.
  */
 export function errorKind(message: string): ErrorKind {
   if (message === 'required') return 'required'
   if (message === 'too long') return 'tooLong'
-  if (message.includes('email')) return 'email'
-  if (message.includes('https')) return 'link'
-  if (message.includes('6 to 20')) return 'phone'
-  if (message.includes('24-hour')) return 'time'
+  const contact = contactProblemCode(message)
+  if (contact) return contact
+  if (message === SUBMISSION_EMAIL_MESSAGE) return 'email'
+  if (message === SUBMISSION_TIME_MESSAGE) return 'time'
+  if (message === HOTEL_AND_GETAWAY_MESSAGE) return 'hotelAndGetaway'
   return 'invalid'
 }
 

@@ -288,6 +288,28 @@ describe('the review invitation, in every language', () => {
   it('is real Arabic', () => {
     expect(bookingOutcomeContent({ ...args, locale: 'ar' }).subject).toMatch(/[\u0600-\u06FF]/)
   })
+
+  it.each(LOCALES)('names nobody when the business name could not be read, in %s', (locale) => {
+    const named = bookingOutcomeContent({ ...args, locale })
+    for (const businessName of [undefined, '', '   ']) {
+      const content = bookingOutcomeContent({ ...args, locale, businessName })
+      // Not "Vardenia has marked your visit as done": Vardenia did not mark it.
+      expect(content.text).not.toContain('Vardenia has marked')
+      expect(content.text).not.toContain('{business}')
+      expect(content.text).not.toContain('Em <Sherif>')
+      expect(content.text).toContain('ABCD1234')
+      expect(content.subject).toBe(named.subject)
+    }
+    // The sentence that names the business is not used with an empty name.
+    const intro = (businessName: string | undefined) =>
+      bookingOutcomeContent({ ...args, locale, businessName }).text
+    expect(intro(undefined)).not.toBe(intro('Vardenia'))
+  })
+
+  it('says in English that the visit was marked as done, without naming anyone', () => {
+    const content = bookingOutcomeContent({ ...args, locale: 'en', businessName: undefined })
+    expect(content.text).toContain('Your visit has been marked as done.')
+  })
 })
 
 describe('bookingOutcomeContent', () => {

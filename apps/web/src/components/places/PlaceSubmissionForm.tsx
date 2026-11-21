@@ -1012,7 +1012,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 type="tel"
                 required
                 dir="ltr"
-                maxLength={20}
+                maxLength={40}
                 autoComplete="tel"
                 value={state.ownerPhone}
                 onChange={(e) => set({ ownerPhone: e.target.value })}

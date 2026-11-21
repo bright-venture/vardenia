@@ -41,6 +41,16 @@ describe('quoteRooms (hotel price snapshot, Task 7)', () => {
     if (quote.ok) expect(quote.lines.map((l) => l.amount)).toEqual([99.99, 0.9])
   })
 
+  it('rounds an uncentable unit price once and uses it for the label and the amount', () => {
+    // A legacy price of 33.335: shown as $33.34, so 3 nights cost 3 x 33.34.
+    const quote = quoteRooms({ nights: 3, lines: [{ roomName: 'A', price: 33.335, count: 1 }] })
+    expect(quote).toMatchObject({
+      ok: true,
+      total: 100.02,
+      lines: [{ label: '1 x A, 3 nights at $33.34', amount: 100.02 }],
+    })
+  })
+
   it('a price of 0 is a real price', () => {
     expect(
       quoteRooms({ nights: 2, lines: [{ roomName: 'Free', price: 0, count: 1 }] }),
@@ -100,6 +110,30 @@ describe('stayPriceQuote (guest house price snapshot, Task 7)', () => {
       { id: 'old', label: 'Old', price: 10, unit: 'per-stay' as const, active: false },
     ],
   }
+
+  it('rounds an uncentable nightly price, fee or package price once, as its label shows', () => {
+    const odd = { ...stay, nightlyPrice: 33.335, extraGuestFee: 10.005 }
+    const quote = stayPriceQuote(quoteStay({ nights: 3, adults: 5, stay: odd }), odd)
+    expect(quote).toMatchObject({
+      ok: true,
+      lines: [
+        { label: 'Nightly price, 3 nights at $33.34', amount: 100.02 },
+        { label: 'Extra guests, 1 guest x 3 nights at $10.01', amount: 30.03 },
+      ],
+      total: 130.05,
+    })
+    const pkg = {
+      ...stay,
+      packages: [{ id: 'p', label: 'P', price: 33.335, unit: 'per-night' as const }],
+    }
+    const withPackage = stayPriceQuote(
+      quoteStay({ nights: 3, adults: 2, stay: pkg, packageId: 'p' }),
+      pkg,
+    )
+    expect(withPackage).toMatchObject({
+      lines: [{ label: 'P, 3 nights at $33.34', amount: 100.02 }],
+    })
+  })
 
   it('nightly price with extra guests', () => {
     const quote = stayPriceQuote(quoteStay({ nights: 2, adults: 5, children: 1, stay }), stay)

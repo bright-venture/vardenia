@@ -72,6 +72,20 @@ describe('parseSubmission', () => {
     const r = parseSubmission(form(DATA, { hero: [png()], gallery: [empty], logo: [empty] }))
     expect(r.ok && r.files.gallery.length === 0 && r.files.logo === undefined).toBe(true)
   })
+  it('400s with a subcategories field error for hotels and getaways together, before any upload', () => {
+    // parseSubmission runs before createPlaceSubmission (the only code that
+    // uploads), so a refusal here leaves no media behind.
+    const r = parseSubmission(
+      form({ ...DATA, category: 'hospitality', subcategories: ['hotels', 'getaways'] }),
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.status).toBe(400)
+      expect((r.body as { errors: Record<string, string> }).errors.subcategories).toBe(
+        'cannot be both hotels and getaways',
+      )
+    }
+  })
   it('400s with field errors when the data is invalid', () => {
     const r = parseSubmission(form({ ...DATA, name: '' }))
     expect(!r.ok && r.status).toBe(400)

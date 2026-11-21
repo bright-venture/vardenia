@@ -26,6 +26,7 @@ export function PartnerTabs({
   scans,
   statements,
   rooms,
+  branches,
 }: {
   bookings: string
   listing: string
@@ -33,6 +34,8 @@ export function PartnerTabs({
   statements: string
   /** Shown only to a partner with a hotel. */
   rooms?: string
+  /** Shown only to a partner with a restaurant (Task 12a). */
+  branches?: string
 }) {
   const pathname = usePathname()
 
@@ -47,13 +50,17 @@ export function PartnerTabs({
   // Includes a single statement, /partner/statements/12, so the tab stays lit there.
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
   const onRooms = /\/partner\/rooms(\/|$)/.test(pathname)
+  const onBranches = /\/partner\/branches(\/|$)/.test(pathname)
 
   return (
     <nav
       className={`${styles.navigation} vd-partner-tabs border-ink-100 mt-8 gap-6 border-b`}
       aria-label={bookings}
     >
-      <Tab href="/partner" active={!onListing && !onScans && !onStatements && !onRooms}>
+      <Tab
+        href="/partner"
+        active={!onListing && !onScans && !onStatements && !onRooms && !onBranches}
+      >
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
@@ -68,6 +75,11 @@ export function PartnerTabs({
       {rooms ? (
         <Tab href="/partner/rooms" active={onRooms}>
           {rooms}
+        </Tab>
+      ) : null}
+      {branches ? (
+        <Tab href="/partner/branches" active={onBranches}>
+          {branches}
         </Tab>
       ) : null}
     </nav>

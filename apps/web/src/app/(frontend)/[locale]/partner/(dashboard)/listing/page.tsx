@@ -98,6 +98,14 @@ export default async function PartnerListingPage({ params }: Props) {
         ) : null}
       </section>
 
+      {listings.length > 0 ? (
+        <p className="mt-4 text-sm">
+          <Link href="/partner/listing/details" className={LINK}>
+            {t('editDetails')}
+          </Link>
+        </p>
+      ) : null}
+
       <QrCodePanel
         listings={listings.map((listing) => ({
           id: listing.id,

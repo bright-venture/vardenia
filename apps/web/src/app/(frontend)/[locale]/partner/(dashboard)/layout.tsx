@@ -5,6 +5,7 @@ import { Link } from '../../../../../i18n/routing'
 import { currentOwner, ownerListings } from '../../../../../lib/session'
 import { SignOutButton } from '../../../../../components/SignOutButton'
 import { PartnerTabs } from '../../../../../components/PartnerTabs'
+import { ownsRestaurant } from '../../../../../lib/partner-listing-details'
 
 /**
  * The chrome around the partner dashboard: who you are, and which part of it.
@@ -52,7 +53,7 @@ export default async function DashboardLayout({
    */
   if (!owner) return children
 
-  const listings = await ownerListings()
+  const [listings, restaurant] = await Promise.all([ownerListings(), ownsRestaurant()])
 
   return (
     <main data-ui className="vd-partner-page mx-auto max-w-4xl px-6 py-16">
@@ -84,6 +85,7 @@ export default async function DashboardLayout({
         scans={t('tabScans')}
         statements={t('tabStatements')}
         {...(listings.some((listing) => listing.hasRooms) ? { rooms: t('tabRooms') } : {})}
+        {...(restaurant ? { branches: t('tabBranches') } : {})}
       />
 
       {/* An account staff have not yet attached a listing to. It authenticates

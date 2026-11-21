@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { CONTACT_FIELDS, normaliseContact, validContactValue } from './contact'
+import {
+  CONTACT_FIELDS,
+  checkContactValue,
+  contactProblemCode,
+  normaliseContact,
+  validContactValue,
+} from './contact'
 
 describe('phone and whatsapp', () => {
   it.each(['+961 70 000 000', '(01) 234-567', '0096170000000', '123456'])('accepts %s', (v) => {
@@ -72,6 +78,61 @@ describe('social links', () => {
   it('treats blank as absent', () => {
     expect(validContactValue('instagram', '')).toBe(true)
     expect(normaliseContact('instagram', '  ')).toBeUndefined()
+  })
+})
+
+describe('literal edge cases (fix wave)', () => {
+  it('refuses https://instagram.com@evil.com (userinfo trick)', () => {
+    expect(validContactValue('instagram', 'https://instagram.com@evil.com')).not.toBe(true)
+  })
+
+  it('accepts an uppercase scheme and host, kept as typed', () => {
+    expect(validContactValue('instagram', 'HTTPS://WWW.INSTAGRAM.COM/x')).toBe(true)
+    expect(normaliseContact('instagram', 'HTTPS://WWW.INSTAGRAM.COM/x')).toBe(
+      'HTTPS://WWW.INSTAGRAM.COM/x',
+    )
+  })
+
+  it('accepts a link with a trailing space, stored trimmed', () => {
+    expect(validContactValue('instagram', 'https://instagram.com/cafe ')).toBe(true)
+    expect(normaliseContact('instagram', 'https://instagram.com/cafe ')).toBe(
+      'https://instagram.com/cafe',
+    )
+  })
+
+  it('refuses a bare handle with spaces', () => {
+    expect(validContactValue('instagram', 'cafe nour')).not.toBe(true)
+    expect(validContactValue('x', '@cafe nour')).not.toBe(true)
+  })
+})
+
+describe('checkContactValue and contactProblemCode', () => {
+  it('gives a code with each refusal', () => {
+    expect(checkContactValue('phone', 'call me')).toMatchObject({ ok: false, code: 'phone' })
+    expect(checkContactValue('whatsapp', '1')).toMatchObject({ ok: false, code: 'phone' })
+    expect(checkContactValue('email', 'nope')).toMatchObject({ ok: false, code: 'email' })
+    expect(checkContactValue('facebook', 'https://evil.com/x')).toMatchObject({
+      ok: false,
+      code: 'link',
+    })
+    expect(checkContactValue('instagram', 'cafe')).toEqual({ ok: true })
+    expect(checkContactValue('phone', '')).toEqual({ ok: true })
+  })
+
+  it('keeps validContactValue as true or the same message', () => {
+    const verdict = checkContactValue('x', 'https://evil.com/x')
+    if (verdict.ok) throw new Error('expected a refusal')
+    expect(validContactValue('x', 'https://evil.com/x')).toBe(verdict.message)
+  })
+
+  it('maps every message it can produce back to its code, exactly', () => {
+    for (const field of CONTACT_FIELDS) {
+      const bad = field === 'phone' || field === 'whatsapp' ? 'x' : field === 'email' ? 'x' : 'a b'
+      const verdict = checkContactValue(field, bad)
+      if (verdict.ok) throw new Error(`expected a refusal for ${field}`)
+      expect(contactProblemCode(verdict.message)).toBe(verdict.code)
+    }
+    expect(contactProblemCode('something about https and 6 to 20')).toBeUndefined()
   })
 })
 

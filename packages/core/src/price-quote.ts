@@ -15,9 +15,11 @@ import { roundMoney, type StayConfig, type StayQuote, type StayRefusal } from '.
  *  - Guest house: the quoteStay result (core/stay), with labels.
  *  - Restaurants: never priced.
  *
- * Each line is rounded half away from zero to cents and the total is the sum
- * of the rounded lines. Labels are English, like the option wording copied on
- * a booking line: the venue reads them, and they do not change afterwards.
+ * A unit price is rounded to cents once (the label shows that price and the
+ * amount uses it), each line is rounded half away from zero to cents and the
+ * total is the sum of the rounded lines. Labels are English, like the option
+ * wording copied on a booking line: the venue reads them, and they do not
+ * change afterwards.
  */
 
 export interface PriceLine {
@@ -81,7 +83,9 @@ export function quoteRooms({
     return { ok: false, reason: 'no-price' }
   }
   const priced = lines.map((line) => {
-    const price = line.price as number
+    // Rounded once, so the label and the amount use the same unit price
+    // (a legacy 33.335 is $33.34 in both).
+    const price = roundMoney(line.price as number)
     const name = line.roomName || 'Room'
     const option = line.optionLabel ? ` (${line.optionLabel})` : ''
     return {

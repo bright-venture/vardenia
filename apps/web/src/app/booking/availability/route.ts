@@ -93,9 +93,13 @@ export const GET = withRateLimit(async (request: Request) => {
    * property from check-in to check-out (lib/stay-booking, Task 6).
    */
   const wholeProperty = isWholeProperty(business)
+  let stayHasInterval = false
   if (wholeProperty) {
     const interval = stayInterval(start, end, (business as { booking?: never }).booking)
-    if (interval) ({ start, end } = interval)
+    if (interval) {
+      ;({ start, end } = interval)
+      stayHasInterval = true
+    }
   }
 
   /*
@@ -161,7 +165,10 @@ export const GET = withRateLimit(async (request: Request) => {
    */
   const subcategories = (business as { subcategories?: string[] | null }).subcategories ?? []
   let quote: ReturnType<typeof quoteJson> | undefined
-  if (wholeProperty) {
+  // A guest house without a stay interval (no nights, or a stored check-in or
+  // check-out time that is not a time) is refused by the booking service, so
+  // it gets no price on the raw dates.
+  if (wholeProperty && stayHasInterval) {
     quote = quoteJson(
       stayQuote({
         stay: stayConfigOf(business),
@@ -172,7 +179,11 @@ export const GET = withRateLimit(async (request: Request) => {
       }),
       locale,
     )
-  } else if (canHaveRoomTypes(subcategories) && url.searchParams.get('rooms') !== null) {
+  } else if (
+    !wholeProperty &&
+    canHaveRoomTypes(subcategories) &&
+    url.searchParams.get('rooms') !== null
+  ) {
     const selection = parseRoomsParam(url.searchParams.get('rooms'))
     const nights = stayNights(start, end).length
     const interval = roomStayInterval(

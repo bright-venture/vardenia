@@ -206,14 +206,14 @@ const rows: Row[] = [
     total: 100,
   },
   {
-    name: 'rounding: each line rounds half away from zero, then the total from the lines',
+    name: 'rounding: the unit price and each line round half away from zero, then the total from the lines',
     nights: 1,
     adults: 2,
     stay: { nightlyPrice: 33.335, includedGuests: 1, extraGuestFee: 0.125 },
     total: 33.47,
     lines: [
-      { kind: 'nightly', unitPrice: 33.335, quantity: 1, amount: 33.34 },
-      { kind: 'extra-guests', unitPrice: 0.125, quantity: 1, amount: 0.13 },
+      { kind: 'nightly', unitPrice: 33.34, quantity: 1, amount: 33.34 },
+      { kind: 'extra-guests', unitPrice: 0.13, quantity: 1, amount: 0.13 },
     ],
   },
   {

@@ -51,7 +51,8 @@ import { advisoryLock, partnerLockKey } from './partner-lock'
  *
  * At most MAX_BRANCHES_PER_BRAND listings per brand (the source included) and
  * MAX_NEW_BRANCHES_PER_DAY new branches per partner in any 24 hours (counted
- * by createdAt among the partner's listings, trashed ones included). Each
+ * by createdAt among the partner's listings that this flow made, trashed ones
+ * included; see step 3). Each
  * count runs after a transaction-scoped advisory lock: the partner's, then
  * the source's, then the brand's, always in that order (so two requests
  * cannot deadlock). Two requests of one partner therefore queue and the
@@ -248,18 +249,42 @@ const hex = () => randomBytes(2).toString('hex')
 export const BRAND_NAME_MAX = 160
 
 /**
- * A name cut to BRAND_NAME_MAX characters (code points, so a cut never splits
- * a surrogate pair). At a word boundary: the last space within the cap, when
- * that keeps at least half of it; otherwise a hard cut. Listing names have no
- * cap, so a long source name must not fail the brand's save.
+ * The characters a reader sees (grapheme clusters: an emoji with its
+ * modifiers, a letter with its combining marks), or code points where the
+ * runtime has no Intl.Segmenter.
+ */
+function graphemes(text: string): string[] {
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+    return Array.from(segmenter.segment(text), (part) => part.segment)
+  }
+  return Array.from(text)
+}
+
+/**
+ * A name cut to BRAND_NAME_MAX UTF-16 units, which is what Payload's
+ * `maxLength` counts (`.length`), so 160 emoji (320 units) no longer fail the
+ * brand's save. The cut falls between whole characters: never inside a
+ * surrogate pair, and never between a letter and its combining marks. At a
+ * word boundary: the last space within the cap, when that keeps at least half
+ * of it; otherwise a hard cut. Listing names have no cap, so a long source
+ * name must not fail the brand's save.
  */
 export function capName(name: string): string {
-  const chars = Array.from(name.trim())
-  if (chars.length <= BRAND_NAME_MAX) return chars.join('')
-  const head = chars.slice(0, BRAND_NAME_MAX)
-  if (chars[BRAND_NAME_MAX] === ' ') return head.join('').trimEnd()
+  const trimmed = name.trim()
+  if (trimmed.length <= BRAND_NAME_MAX) return trimmed
+  let head = ''
+  let next = ''
+  for (const part of graphemes(trimmed)) {
+    if (head.length + part.length > BRAND_NAME_MAX) {
+      next = part
+      break
+    }
+    head += part
+  }
+  if (next === ' ') return head.trimEnd()
   const space = head.lastIndexOf(' ')
-  return (space >= BRAND_NAME_MAX / 2 ? head.slice(0, space) : head).join('').trimEnd()
+  return (space >= BRAND_NAME_MAX / 2 ? head.slice(0, space) : head).trimEnd()
 }
 
 /**
@@ -391,12 +416,16 @@ async function attemptBranch(opts: {
   if (!canHaveBrand(source.subcategories)) throw new Refusal('not-restaurant')
 
   // 3. At most so many new branches a day. A branch is told apart by what
-  // this flow writes and the others never do: a brand from birth and no
-  // magazine issue. The public form always sets `issue` (its schema requires
-  // it), so a restaurant submitted today that just got its brand as a source
-  // is not counted; staff-made listings get a brand only when staff set one.
-  // Publishing does not change either, so a branch staff published today
-  // still counts. Trashed ones count too.
+  // this flow writes and the others never do together: a brand from birth,
+  // no magazine issue, and a submission date (submission.submittedAt). The
+  // public form always sets `issue` (its schema requires it), so a
+  // restaurant submitted today that just got its brand as a source is not
+  // counted; a staff-made restaurant has no issue but no submission date
+  // either, so it is not counted after its first branch request gave it a
+  // brand. The source is not excluded by id: a branch published today and
+  // used as a source is still one of today's branches. Publishing changes
+  // none of the three, so a branch staff published today still counts.
+  // Trashed ones count too.
   const recent = await payload.count({
     collection: 'businesses',
     where: {
@@ -405,6 +434,7 @@ async function attemptBranch(opts: {
         { createdAt: { greater_than: new Date(now.getTime() - DAY_MS).toISOString() } },
         { brand: { exists: true } },
         { issue: { exists: false } },
+        { 'submission.submittedAt': { exists: true } },
       ],
     },
     trash: true,

@@ -6248,248 +6248,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "payload.place_requests": {
-      "name": "place_requests",
-      "schema": "payload",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "enum_place_requests_status",
-          "typeSchema": "payload",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
-        "business_name": {
-          "name": "business_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "issue_id": {
-          "name": "issue_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "place_number": {
-          "name": "place_number",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "contact_name": {
-          "name": "contact_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "email": {
-          "name": "email",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "phone": {
-          "name": "phone",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "listing_id": {
-          "name": "listing_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "contract_starts_at": {
-          "name": "contract_starts_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "contract_ends_at": {
-          "name": "contract_ends_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "notes": {
-          "name": "notes",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "internal_notes": {
-          "name": "internal_notes",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "place_requests_status_idx": {
-          "name": "place_requests_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_issue_idx": {
-          "name": "place_requests_issue_idx",
-          "columns": [
-            {
-              "expression": "issue_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_place_number_idx": {
-          "name": "place_requests_place_number_idx",
-          "columns": [
-            {
-              "expression": "place_number",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_listing_idx": {
-          "name": "place_requests_listing_idx",
-          "columns": [
-            {
-              "expression": "listing_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_contract_ends_at_idx": {
-          "name": "place_requests_contract_ends_at_idx",
-          "columns": [
-            {
-              "expression": "contract_ends_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_updated_at_idx": {
-          "name": "place_requests_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "place_requests_created_at_idx": {
-          "name": "place_requests_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "place_requests_issue_id_issues_id_fk": {
-          "name": "place_requests_issue_id_issues_id_fk",
-          "tableFrom": "place_requests",
-          "tableTo": "issues",
-          "schemaTo": "payload",
-          "columnsFrom": [
-            "issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "place_requests_listing_id_businesses_id_fk": {
-          "name": "place_requests_listing_id_businesses_id_fk",
-          "tableFrom": "place_requests",
-          "tableTo": "businesses",
-          "schemaTo": "payload",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "payload.articles": {
       "name": "articles",
       "schema": "payload",
@@ -10744,12 +10502,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "place_requests_id": {
-          "name": "place_requests_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "articles_id": {
           "name": "articles_id",
           "type": "integer",
@@ -11054,21 +10806,6 @@
           "columns": [
             {
               "expression": "guest_questions_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "payload_locked_documents_rels_place_requests_id_idx": {
-          "name": "payload_locked_documents_rels_place_requests_id_idx",
-          "columns": [
-            {
-              "expression": "place_requests_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11450,20 +11187,6 @@
           "schemaTo": "payload",
           "columnsFrom": [
             "guest_questions_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_place_requests_fk": {
-          "name": "payload_locked_documents_rels_place_requests_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "place_requests",
-          "schemaTo": "payload",
-          "columnsFrom": [
-            "place_requests_id"
           ],
           "columnsTo": [
             "id"
@@ -12450,7 +12173,8 @@
       "values": [
         "pending",
         "approved",
-        "rejected"
+        "rejected",
+        "expired"
       ]
     },
     "payload.enum_businesses_submission_page_template": {
@@ -12752,16 +12476,6 @@
       "values": [
         "new",
         "answered"
-      ]
-    },
-    "payload.enum_place_requests_status": {
-      "name": "enum_place_requests_status",
-      "schema": "payload",
-      "values": [
-        "draft",
-        "published",
-        "rejected",
-        "expired"
       ]
     },
     "payload.enum_articles_kind": {

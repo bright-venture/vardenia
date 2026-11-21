@@ -24,6 +24,12 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
  * never had to ask whether gold_places or the submission columns were renamed.
  * They were not.
  *
+ * The base is the snapshot of 20261120_131807_remove_place_requests_add_expired
+ * (place_requests removed, submission status 'expired'), the latest one before
+ * this migration; 20261121_120000_customer_booking_limits_two changes only a
+ * function. Nothing below touches what those two own. This file's .json is the
+ * whole current schema, theirs included.
+ *
  * ADD VALUE runs inside the migration's transaction. Postgres (12 and later)
  * allows that as long as the new value is not used before commit, and nothing
  * below uses it.
