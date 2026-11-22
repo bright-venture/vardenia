@@ -21,6 +21,35 @@ export const isResetPasswordRequest = (request: Request): boolean => {
   }
 }
 
+const passwordOf = (body: unknown): unknown => (body as { password?: unknown } | null)?.password
+
+/**
+ * The new password, whichever shape the body has.
+ *
+ * The partner page sends JSON. The admin's own reset page (/admin/reset) sends
+ * a form, with the fields as JSON inside a `_payload` entry - Payload's Form
+ * component does that for every submit, and Payload reads it back the same
+ * way. Reading only JSON let the admin page set a 7-character password (QA
+ * case R9, 22 November 2026).
+ */
+async function readPassword(request: Request): Promise<unknown> {
+  const type = request.headers.get('content-type') ?? ''
+  try {
+    if (
+      type.includes('multipart/form-data') ||
+      type.includes('application/x-www-form-urlencoded')
+    ) {
+      const form = await request.formData()
+      const wrapped = form.get('_payload')
+      if (typeof wrapped === 'string') return passwordOf(JSON.parse(wrapped))
+      return form.get('password') ?? undefined
+    }
+    return passwordOf(await request.json())
+  } catch {
+    return undefined
+  }
+}
+
 type Handler = (request: Request, context: unknown) => Promise<Response>
 
 export function passwordRuleOnReset<H extends Handler>(handler: H): H {
@@ -28,11 +57,7 @@ export function passwordRuleOnReset<H extends Handler>(handler: H): H {
     if (!isResetPasswordRequest(request)) return handler(request, context)
 
     // Read from a copy: Payload still needs the original body.
-    const password = await request
-      .clone()
-      .json()
-      .then((body: unknown) => (body as { password?: unknown } | null)?.password)
-      .catch(() => undefined)
+    const password = await readPassword(request.clone())
 
     // A missing password is Payload's to answer; a weak one is ours.
     if (typeof password === 'string' && password !== '') {
