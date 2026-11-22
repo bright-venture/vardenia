@@ -132,8 +132,8 @@ export const POST = withRateLimit(
     return json({ ok: true, reference, email }, 201)
   },
   RATE_LIMIT.WRITE_PER_WINDOW,
-  // 20 a minute, counted in the database, like the other forms that write
-  // something. It used the default of 300 a minute per server (21 November
-  // 2026, authentication audit).
-  { shared: true },
+  // Counted in the database (21 November 2026, authentication audit). Its own
+  // counters since 22 November 2026: 20 a minute per account, 120 per
+  // connection (lib/rate-limit).
+  { action: 'staff-request', perAccount: true },
 )

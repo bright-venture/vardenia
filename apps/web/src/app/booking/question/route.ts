@@ -60,6 +60,8 @@ export const POST = withRateLimit(
   },
   RATE_LIMIT.WRITE_PER_WINDOW,
   // Counted in the database, so the limit holds across every server, like the
-  // other public forms (21 November 2026, authentication audit).
-  { shared: true },
+  // other public forms (21 November 2026, authentication audit). No account is
+  // involved, so 20 a minute per connection, on a counter of its own since
+  // 22 November 2026: spam here cannot use up bookings (lib/rate-limit).
+  { action: 'question' },
 )

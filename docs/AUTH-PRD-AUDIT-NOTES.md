@@ -27,7 +27,7 @@ What changed from version 2:
 - **Account emails** (section 2): the customer reset email now says the link lasts 1 hour (it said "expires shortly"); the two business sign-up emails have a plain-text version and the team one names the governorate ("Keserwan", not the slug).
 - **Contract end** (section 7): bookings are accepted until the morning job hides the listing. Decided 22 November 2026: kept, it matches "the day after the end date".
 - **Restoring from the trash** (section 8): the listing number is not given back. New open item.
-- **Shared limit for forms** (sections 3 and 4): version 2 gave the Questions form and Event Staff 20 a minute each. Tested 22 November 2026: they share one budget of 20 a minute per connection with booking requests, saves, reviews, receipts, "Did you go?" answers and bill disputes (`RATE_LIMIT.WRITE_PER_WINDOW`, one counter per connection). Twenty Questions sends, then the first Event Staff request was refused. Unlike sign-in, it is not split per email. New open item.
+- **Shared limit for forms** (sections 3 and 4): version 2 gave the Questions form and Event Staff 20 a minute each. Tested 22 November 2026: they share one budget of 20 a minute per connection with booking requests, saves, reviews, receipts, "Did you go?" answers and bill disputes (`RATE_LIMIT.WRITE_PER_WINDOW`, one counter per connection). Twenty Questions sends, then the first Event Staff request was refused. Unlike sign-in, it was not split per person. **Fixed the same day** (lib/rate-limit, `checkRatePerAccount`): each form now has its own counters. Signed in: 20 a minute per account and 120 a minute per connection. Signed out (the Questions form, links opened signed out): 20 a minute per connection. Re-tested: 21 Questions sends refused the 21st and left Event Staff, bookings and saves untouched; one account's 20 Event Staff requests did not block another account.
 - **Also tested 22 November 2026, from the code before**: a partner cannot change `_status`, category, subcategories, governorate, district, slug, issue, brand, SEO or booking settings (each refused, naming the field); cannot use a photo from another listing; cannot edit a listing in the trash; at most 5 branch requests a day (the 6th refused); the business form allows 5 sends a minute per connection (the 6th refused).
 - **Open items** (section 10): staging email settings done, anti-bot keys left; live-site checks; test data kept for now; partner listing editing resolved.
 
@@ -59,7 +59,6 @@ These make the PRD describe what the product really does.
 ### 2. Decisions waiting for you
 
 - **Restoring a listing from the trash** (PRD v3 sections 8 and 10): trashing releases the listing number, and restoring does not take it back. Decide whether a restore should take the number back when it is still free.
-- **Shared limit for forms** (PRD v3 sections 3 and 10): 20 writes a minute per connection, shared by the Questions form, Event Staff, booking requests, saves, reviews, receipts, "Did you go?" answers and bill disputes. Decide whether that is enough for many guests on one hotel or office Wi-Fi, or whether it should be counted per account, as sign-in is.
 
 ### 3. Settings for you (no code)
 
