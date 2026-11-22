@@ -15,6 +15,20 @@ Each note is one of:
 
 Steps 1 to 10 grouped by what is left to do. Each item says what it is and why it matters; the step tables below keep the evidence. When this list is empty, the PRD and the product match. What was fixed during the audit is in the step tables below.
 
+### 0. Version 3 of the PRD (22 November 2026)
+
+Written into **version 3 of the PRD** (`Vardenia-Authentication-PRD-v3.pdf`, in the Vardenia folder) after the full test run of 22 November 2026: every case of the authentication test checklist, run in a browser against the development database, plus the parts that usually need staging (anti-bot check with Cloudflare's test keys, the secure cookie in production mode, session expiry, the real contract-end job, two separate browsers, real emails reaching a Gmail inbox). Results: `Vardenia-Authentication-Test-Results.pdf`; QA plan: `Vardenia-Authentication-QA-Guide.pdf`.
+
+What changed from version 2:
+
+- **Partners edit their own listing content** (section 5): name, tagline, description, photos, logo, menu, hours and seasons, address, map link and pin, contact details, payments, amenities, facilities, features, stay prices and packages, seating areas, tags. They can never change publishing, tier, verified, listing number, contract, commission, category, governorate, slug, QR code, magazine fields or submission details. Re-tested 22 November 2026 on the page and through the API: every forbidden field refused, nothing changed, no other listing reachable, no listing added to their own account.
+- **Password rule on the admin reset page** (section 2): `/admin/reset` accepted a 7-character password, because Payload's admin form sends its fields inside `_payload` and the guard read JSON only. Fixed 22 November 2026 (lib/password-rule).
+- **Trash first on every path** (section 6): a DELETE request (API, or the admin's "Delete permanently") removed a listing at once. Fixed 22 November 2026 (hooks/requireTrashFirst): a signed-in person can delete for good only a listing already in the trash. Scripts with no signed-in user are unchanged.
+- **Account emails** (section 2): the customer reset email now says the link lasts 1 hour (it said "expires shortly"); the two business sign-up emails have a plain-text version and the team one names the governorate ("Keserwan", not the slug).
+- **Contract end** (section 7): bookings are accepted until the morning job hides the listing. Decided 22 November 2026: kept, it matches "the day after the end date".
+- **Restoring from the trash** (section 8): the listing number is not given back. New open item.
+- **Open items** (section 10): staging email settings done, anti-bot keys left; live-site checks; test data kept for now; partner listing editing resolved.
+
 ### 1. PRD wording to update (no code change)
 
 Done 21 November 2026: every item below is written into **version 2 of the PRD** (`Vardenia-Authentication-PRD-v2.pdf`, in the Vardenia folder). Kept here as the record of what changed from version 1.
@@ -42,17 +56,21 @@ These make the PRD describe what the product really does.
 
 ### 2. Decisions waiting for you
 
+- **Restoring a listing from the trash** (PRD v3 sections 8 and 10): trashing releases the listing number, and restoring does not take it back. Decide whether a restore should take the number back when it is still free.
+
 ### 3. Settings for you (no code)
 
-- **Netlify, Branch deploys: add `RESEND_API_KEY`** (step 10): without it staging writes emails to the server log, so staging sign-ups cannot be verified and invitations and resets never arrive.
-- **Netlify, Branch deploys: add `TURNSTILE_SECRET_KEY`, and the staging address in the Turnstile widget in Cloudflare** (step 10): staging shows the anti-bot box but nothing checks it.
+- **Netlify, Branch deploys: `RESEND_API_KEY` and `NEXT_PUBLIC_SITE_URL`**: done 22 November 2026. Staging sends real emails, and their links open staging.
+- **Netlify, Branch deploys: add `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (both together), the staging address in the Turnstile widget in Cloudflare, then redeploy staging** (step 10): until then staging has no anti-bot check.
+- **When the live site opens**: a short look at the anti-bot box, the secure sign-in cookie and one real email. All three passed on the development setup on 22 November 2026.
 - **After the release, in the live admin: set All Lebanon's total to 408 and enter the seven ranges** (steps 8 and 10): the live database gets the tables from the migration, but not the numbers.
 - **In a few weeks, DMARC from `p=none` to `p=quarantine`** (step 10): today fake emails claiming to come from vardenia.com are only reported, not blocked; read the reports first.
 
 ### 4. Later or in progress
 
 - **Two-step sign-in for the team** (step 10): postponed 21 November 2026 (Cloudflare's free plan needs a card authorisation for usage beyond free limits). The steps are ready in `docs/CLOUDFLARE-ACCESS-ADMIN.md`. When it is set up, also make the site refuse `/admin` and `/api/users` on Netlify's own `*.netlify.app` addresses, which skip Cloudflare. Until then the team signs in with a password alone.
-- **Partner listing editing** (step 5, being built): when it lands, re-test that a partner edits only their own listings and still cannot change tier, verified, listing number, contract, commission or submission details.
+- **Partner listing editing** (step 5): built, and re-tested 22 November 2026: a partner edits only their own listings and cannot change tier, verified, listing number, contract, commission or submission details. Done.
+- **Test data on the development database**: the qa accounts, listings and bookings of the 22 November 2026 test run are kept for now; delete them later.
 - **"Add another listing" button for partners** (step 10): today a partner adds a business by using the form again with the same email, which works.
 - **Google and Apple sign-in** (step 10): decide with the mobile app; Apple requires Sign in with Apple if the iPhone app offers Google.
 - **`ContentPage.test.tsx` fails** ("Caveat is not a function", seen in step 4): a design font in the tests, unrelated to the audit.
@@ -213,7 +231,7 @@ Each PRD open item checked against the code, the tests and the live settings (Ne
 | ------- | ------------------------------------------------------------------------------------------------- |
 | 3 and 9 | Admin warning when the Turnstile keys are missing: done 21 November 2026.                         |
 | 4       | Emails already sent stay in the email provider's logs; the privacy policy could say so.           |
-| 5       | Partner listing editing is being built; re-test access when it lands.                             |
+| 5       | Partner listing editing: built and re-tested 22 November 2026 (PRD v3 section 5).                 |
 | 8       | Photos of a failed submission: fixed 21 November 2026.                                            |
 | 8       | "summer-2026": not a leftover, keep it (corrected 21 November 2026).                              |
 | 4       | `ContentPage.test.tsx` fails on this branch ("Caveat is not a function"), unrelated to the audit. |
