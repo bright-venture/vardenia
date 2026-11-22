@@ -333,9 +333,13 @@ export function RoomTypesManager({
               ))}
             </ul>
           )}
-          <button type="button" className={`${PRIMARY_BUTTON} mt-6`} onClick={startNew}>
-            {t('add')}
-          </button>
+          {/* Only a partner with a hotel can add a room type; for anyone else the
+              button led to a form that always ended in a confusing refusal. */}
+          {hotels.length > 0 ? (
+            <button type="button" className={`${PRIMARY_BUTTON} mt-6`} onClick={startNew}>
+              {t('add')}
+            </button>
+          ) : null}
         </>
       ) : (
         <form

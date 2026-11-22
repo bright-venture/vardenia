@@ -56,6 +56,17 @@ export const guardRoomTypeWrite: CollectionBeforeValidateHook = async ({
     // left to the media rule below, which accepts a populated photo. Task 5.
     const shaped: Record<string, unknown> = { ...data }
     delete shaped.photos
+    // A join (openDates, the nights this room type is open) and a ui field
+    // hold nothing: Payload stores no value for them and ignores one sent, and
+    // it puts the key into the data of a room type itself. Refusing the key
+    // made every partner save fail with "openDates cannot be changed" (Nov 22
+    // QA, N3). It is dropped from the check, not trusted: nothing written to it
+    // reaches the database, and the nights are still opened only through the
+    // room-availability collection and its own access rules.
+    const virtual = dataFields(collection.fields)
+      .filter((field) => field.type === 'join' || field.type === 'ui')
+      .map((field) => field.name)
+    for (const name of virtual) delete shaped[name]
     const allowed = dataFields(collection.fields)
       .filter((field) => field.type !== 'join' && field.type !== 'ui')
       .map((field) => field.name)
