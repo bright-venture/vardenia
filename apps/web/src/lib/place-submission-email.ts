@@ -1,5 +1,6 @@
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { emailPalette } from './email-palette'
+import { governorateLabel } from './labels'
 
 /**
  * The two messages sent after a place is submitted: one to the team, one to the
@@ -37,6 +38,8 @@ export interface PlaceSubmissionEmailArgs {
 export interface PlaceSubmissionEmail {
   subject: string
   html: string
+  /** The plain-text part, which some phones and watches show instead of the HTML. */
+  text: string
 }
 
 /** Shared with lib/branch-email. */
@@ -92,6 +95,23 @@ export function emailLayout(opts: {
 </html>`
 }
 
+/**
+ * The plain-text twin of emailLayout: the same words, rows and link, in the
+ * same order. Both emails were sent as HTML only (QA, 22 November 2026).
+ */
+export function emailText(opts: {
+  heading: string
+  paragraphs: string[]
+  rows?: [string, string][]
+  link?: { href: string; label: string }
+}): string {
+  // "Vardenia" first, as the kicker above the HTML heading.
+  const lines = ['Vardenia', '', opts.heading, '', ...opts.paragraphs.flatMap((p) => [p, ''])]
+  if (opts.rows?.length) lines.push(...opts.rows.map(([label, value]) => `${label}: ${value}`), '')
+  if (opts.link) lines.push(`${opts.link.label}: ${opts.link.href}`)
+  return lines.join('\n').trimEnd()
+}
+
 interface OwnerCopy {
   subject: string
   heading: string
@@ -131,44 +151,49 @@ export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
 } {
   const name = oneLine(args.businessName)
 
+  // The slug ("keserwan") reads as a typo in an email; the team reads English.
+  const teamBody = {
+    heading: 'A new place was submitted',
+    paragraphs: ['It is saved as a draft and waits for review. Nothing is public.'],
+    rows: [
+      ['Business', args.businessName],
+      ['Governorate', governorateLabel(args.governorate, 'en')],
+      ['Listing number', String(args.listingNumber)],
+      ['Issue', args.issueTitle],
+      ['Owner', args.ownerName],
+      ['Email', args.ownerEmail],
+      ['Phone', args.ownerPhone],
+    ] as [string, string][],
+    link: {
+      href: `${args.origin}/admin/collections/businesses/${encodeURIComponent(String(args.businessId))}`,
+      label: 'Open in the admin',
+    },
+  }
   const team: PlaceSubmissionEmail = {
     subject: `New place submitted: ${name}`,
-    html: emailLayout({
-      lang: 'en',
-      dir: 'ltr',
-      heading: 'A new place was submitted',
-      paragraphs: ['It is saved as a draft and waits for review. Nothing is public.'],
-      rows: [
-        ['Business', args.businessName],
-        ['Governorate', args.governorate],
-        ['Listing number', String(args.listingNumber)],
-        ['Issue', args.issueTitle],
-        ['Owner', args.ownerName],
-        ['Email', args.ownerEmail],
-        ['Phone', args.ownerPhone],
-      ],
-      link: {
-        href: `${args.origin}/admin/collections/businesses/${encodeURIComponent(String(args.businessId))}`,
-        label: 'Open in the admin',
-      },
-    }),
+    html: emailLayout({ lang: 'en', dir: 'ltr', ...teamBody }),
+    text: emailText(teamBody),
   }
 
   const arabic = args.locale === 'ar'
   const copy = OWNER_COPY[arabic ? 'ar' : 'en']
+  const ownerBody = {
+    heading: copy.heading,
+    paragraphs: [
+      copy.hello(args.ownerName),
+      copy.received(args.businessName),
+      copy.review,
+      copy.closing,
+    ],
+  }
   const owner: PlaceSubmissionEmail = {
     subject: copy.subject,
     html: emailLayout({
       lang: arabic ? 'ar' : 'en',
       dir: arabic ? dirFor('ar') : 'ltr',
-      heading: copy.heading,
-      paragraphs: [
-        copy.hello(args.ownerName),
-        copy.received(args.businessName),
-        copy.review,
-        copy.closing,
-      ],
+      ...ownerBody,
     }),
+    text: emailText(ownerBody),
   }
 
   return { team, owner }

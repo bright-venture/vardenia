@@ -112,7 +112,12 @@ export const POST = withRateLimit(
     const team = teamAddress()
     if (team) {
       try {
-        await payload.sendEmail({ to: team, subject: emails.team.subject, html: emails.team.html })
+        await payload.sendEmail({
+          to: team,
+          subject: emails.team.subject,
+          html: emails.team.html,
+          text: emails.team.text,
+        })
       } catch (error) {
         await reportError(error, { source: 'place-submission.email.team', extra })
       }
@@ -122,6 +127,7 @@ export const POST = withRateLimit(
         to: input.ownerEmail,
         subject: emails.owner.subject,
         html: emails.owner.html,
+        text: emails.owner.text,
       })
     } catch (error) {
       await reportError(error, { source: 'place-submission.email.owner', extra })
