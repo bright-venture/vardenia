@@ -50,6 +50,7 @@ import {
 } from '../hooks/linkPartnerOnPublish'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
+import { requireTrashFirst } from '../hooks/requireTrashFirst'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { guardSort } from '../hooks/guardSort'
 import { LISTING_STATES, listingState } from '../lib/listing-state'
@@ -248,6 +249,8 @@ export const Businesses: CollectionConfig = {
    * `deletedAt` set, hidden everywhere Payload reads, and it can be restored.
    * Its bookings, receipts and statements keep pointing at it. Deleting from
    * the trash is the permanent delete, and the guards below still apply to it.
+   * A permanent delete of a listing that is not in the trash is refused for a
+   * signed-in person (hooks/requireTrashFirst).
    */
   trash: true,
   // Numbers are per issue. Many listings have none (NULLs do not collide), and
@@ -315,6 +318,8 @@ export const Businesses: CollectionConfig = {
     // delete through, and it clears the saves that would otherwise fail the
     // delete on a not-null foreign key. See hooks/cleanupSavedListings.
     beforeDelete: [
+      // Trash first, then the guards on the permanent delete. PRD v2 section 6.
+      requireTrashFirst,
       protectBusinessWithPrintedCode,
       blockBusinessWithBookings,
       cleanupSavedListings('listing'),
