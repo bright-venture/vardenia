@@ -163,9 +163,24 @@ describe('options and prices from the owner', () => {
     await expect(bad.promise).rejects.toMatchObject({ status: 400 })
   })
 
-  it('refuses a join field and an option sent as something else', async () => {
-    const join = run({ user: partner, data: { business: 10, openDates: [1] } })
-    await expect(join.promise).rejects.toMatchObject({ status: 400 })
+  it('does not trip over the openDates join that Payload puts in a room type (QA N3)', async () => {
+    // Whatever shape Payload gives the virtual join, a partner save must pass.
+    for (const openDates of [undefined, null, [], [1], { docs: [], hasNextPage: false }]) {
+      const created = run({ user: partner, data: { business: 10, options: [option], openDates } })
+      await expect(created.promise).resolves.toBeTruthy()
+      const updated = run({
+        user: partner,
+        operation: 'update',
+        originalDoc: { business: 10 },
+        data: { options: [option], openDates },
+      })
+      await expect(updated.promise).resolves.toBeTruthy()
+    }
+  })
+
+  it('still refuses an unknown field and an option sent as something else', async () => {
+    const unknown = run({ user: partner, data: { business: 10, tier: 'gold' } })
+    await expect(unknown.promise).rejects.toMatchObject({ status: 400 })
     const rows = run({ user: partner, data: { business: 10, options: 'cheap' } })
     await expect(rows.promise).rejects.toMatchObject({ status: 400 })
   })

@@ -99,6 +99,17 @@ describe.each([
   })
 })
 
+/** The customer reset email said "expires shortly" (QA case M2, 22 November 2026). */
+describe('the customer reset email', () => {
+  it('says the link lasts 1 hour, in both languages', () => {
+    const mail = passwordResetEmail('tok123')
+    expect(mail.text).toContain('for 1 hour')
+    expect(mail.text).toContain('لمدة ساعة واحدة')
+    expect(mail.html).toContain('for 1 hour')
+    expect(mail.text).not.toContain('shortly')
+  })
+})
+
 describe('escaping', () => {
   it('does not let a token inject markup', () => {
     const mail = verificationEmail('"><script>alert(1)</script>', ORIGIN)

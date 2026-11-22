@@ -94,8 +94,9 @@ const VERIFY: Copy = {
 const RESET: Copy = {
   subject: 'Set your password - تعيين كلمة المرور',
   heading: 'Set your password',
-  en: 'Open the link below to choose a password for your Vardenia account. The link works once and expires shortly.',
-  ar: 'افتح الرابط أدناه لاختيار كلمة مرور لحسابك في فاردينيا. الرابط يعمل مرة واحدة وينتهي بعد فترة قصيرة.',
+  // 1 hour: Payload's default reset expiration, which customers keep (PRD v2).
+  en: 'Open the link below to choose a password for your Vardenia account. The link works once, for 1 hour; after that, ask for a new one from the sign-in page.',
+  ar: 'افتح الرابط أدناه لاختيار كلمة مرور لحسابك في فاردينيا. يعمل الرابط مرة واحدة ولمدة ساعة واحدة، وبعدها يمكنك طلب رابط جديد من صفحة تسجيل الدخول.',
   action: 'Set a password',
   ignoreEn: 'If you did not ask for this, you can ignore this message and nothing will change.',
   ignoreAr: 'إذا لم تطلب ذلك، تجاهل هذه الرسالة ولن يتغير شيء.',

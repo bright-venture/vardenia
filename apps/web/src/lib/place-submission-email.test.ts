@@ -21,7 +21,7 @@ describe('the team email', () => {
     expect(team.subject).toContain('Cafe Cedar')
     for (const text of [
       'Cafe Cedar',
-      'beirut',
+      'Beirut',
       '17',
       'Summer 2027',
       'Sami Khoury',
@@ -30,6 +30,23 @@ describe('the team email', () => {
     ]) {
       expect(team.html).toContain(text)
     }
+  })
+
+  it('names the governorate, not its slug (QA, 22 November 2026)', () => {
+    expect(placeSubmissionEmails({ ...BASE, governorate: 'keserwan' }).team.html).toContain(
+      'Keserwan',
+    )
+    expect(placeSubmissionEmails({ ...BASE, governorate: 'keserwan' }).team.html).not.toContain(
+      'keserwan',
+    )
+  })
+
+  it('has a plain-text part with the same details and link', () => {
+    for (const text of ['Cafe Cedar', 'Beirut', '17', 'Summer 2027', 'sami@example.com']) {
+      expect(team.text).toContain(text)
+    }
+    expect(team.text).toContain('https://vardenia.example/admin/collections/businesses/42')
+    expect(team.text).not.toContain('<')
   })
 
   it('links to the listing in the admin', () => {
@@ -45,6 +62,15 @@ describe('the owner email', () => {
     expect(owner.html).not.toContain('/admin')
     expect(owner.html).toContain('dir="ltr"')
     expect(owner.html).toContain('lang="en"')
+  })
+
+  it('has a plain-text part, in its language, with no admin link', () => {
+    const en = placeSubmissionEmails(BASE).owner.text
+    expect(en).toMatch(/under review/i)
+    expect(en).not.toContain('/admin')
+    const ar = placeSubmissionEmails({ ...BASE, locale: 'ar' }).owner.text
+    expect(ar).toContain('قيد المراجعة')
+    expect(ar).not.toMatch(/under review/i)
   })
 
   it('is right to left in Arabic', () => {
