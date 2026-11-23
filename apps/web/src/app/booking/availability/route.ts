@@ -10,8 +10,8 @@ import config from '../../../payload.config'
 import { checkAvailability, unavailableMessage } from '../../../lib/availability'
 import { parseRoomsParam, quoteJson, roomQuote, stayQuote } from '../../../lib/booking-price'
 import { beirutDate } from '../../../lib/beirut'
-import { roomStayInterval, stayNights } from '../../../lib/room-availability'
-import { roomTypesFor } from '../../../lib/room-booking'
+import { checkRoomRequest, roomStayInterval, stayNights } from '../../../lib/room-availability'
+import { roomBookingsFor, roomTypesFor } from '../../../lib/room-booking'
 import { closedPeriods, overlappingBookings } from '../../../lib/booking-service'
 import {
   checkStayRequest,
@@ -135,25 +135,83 @@ export const GET = withRateLimit(async (request: Request) => {
   }
   const perArea = areas.length > 0 ? { areas: areaAvailability(seatingCheck) } : {}
 
-  const verdict = wholeProperty
-    ? checkStayRequest({
-        rules: (business as { booking?: never }).booking,
-        closures,
-        existing,
-        stay: stayConfigOf(business),
-        request: { interval: { start, end }, adults: partySize - children, children },
-      })
-    : areas.length > 0
-      ? parsed.data.area
-        ? checkSeatingRequest({ ...seatingCheck, area: parsed.data.area })
-        : anyAreaVerdict(seatingCheck)
-      : checkAvailability({
+  /*
+   * A hotel with room types is judged as the booking service judges it
+   * (checkRoomRequest): in nights, against its room types, with no opening
+   * hours or single capacity. Judged as a sitting it was answered "That
+   * booking is too long" for any stay over the 4 hours the rules default to.
+   */
+  const subcategoriesOf = (business as { subcategories?: string[] | null }).subcategories ?? []
+  const hotelTypes =
+    !wholeProperty && canHaveRoomTypes(subcategoriesOf)
+      ? ((await roomTypesFor(payload, [Number(business.id)], { locale })).get(
+          Number(business.id),
+        ) ?? [])
+      : []
+  let hotelVerdict: ReturnType<typeof checkRoomRequest> | null = null
+  if (hotelTypes.length > 0) {
+    const bookingRules = (business as { booking?: never }).booking
+    const roomInterval = roomStayInterval(
+      beirutDate(start),
+      stayNights(start, end).length,
+      bookingRules,
+    ) ?? {
+      start,
+      end,
+    }
+    const picked = parseRoomsParam(url.searchParams.get('rooms'))
+    const roomBookings = await roomBookingsFor(
+      payload,
+      [Number(business.id)],
+      roomInterval.start,
+      roomInterval.end,
+    )
+    hotelVerdict = checkRoomRequest({
+      rules: bookingRules,
+      closures,
+      // Without a selection, only the hotel's own rules and the party are asked.
+      types:
+        picked && picked.length > 0
+          ? hotelTypes
+          : [{ id: -1, rooms: 1, sleepsAdults: 50, options: [], active: true }],
+      existing: picked && picked.length > 0 ? (roomBookings.get(Number(business.id)) ?? []) : [],
+      request: {
+        interval: roomInterval,
+        guests: partySize,
+        adults: partySize - children,
+        lines:
+          picked && picked.length > 0
+            ? picked.map((line) => ({
+                roomType: line.roomType,
+                count: line.count,
+                option: line.option ?? null,
+              }))
+            : [{ roomType: -1, count: 1 }],
+      },
+    })
+  }
+
+  const verdict = hotelVerdict
+    ? hotelVerdict
+    : wholeProperty
+      ? checkStayRequest({
           rules: (business as { booking?: never }).booking,
-          hours: (business as { openingHours?: never }).openingHours,
           closures,
           existing,
-          request: { interval: { start, end }, partySize },
+          stay: stayConfigOf(business),
+          request: { interval: { start, end }, adults: partySize - children, children },
         })
+      : areas.length > 0
+        ? parsed.data.area
+          ? checkSeatingRequest({ ...seatingCheck, area: parsed.data.area })
+          : anyAreaVerdict(seatingCheck)
+        : checkAvailability({
+            rules: (business as { booking?: never }).booking,
+            hours: (business as { openingHours?: never }).openingHours,
+            closures,
+            existing,
+            request: { interval: { start, end }, partySize },
+          })
 
   /*
    * The price the booking would store (Task 7), from the same functions the

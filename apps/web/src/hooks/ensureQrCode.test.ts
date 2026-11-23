@@ -57,6 +57,16 @@ function harness({ codesForBusiness = [] as Doc[] }: { codesForBusiness?: Doc[] 
 }
 
 describe('ensureQrCode', () => {
+  it('does nothing for a listing that has just been moved to the trash (AUTH-T8b)', async () => {
+    const { run, created, updated } = harness()
+    // A new public submission has no code (the create skips minting) and a
+    // printed tier by default. Trashing it must not mint one: the link-back
+    // update cannot find a trashed listing ("Not Found") and rolls the trash back.
+    await run({ id: 7, tier: 'silver', deletedAt: '2026-11-23T10:00:00.000Z' })
+    expect(created).toHaveLength(0)
+    expect(updated).toHaveLength(0)
+  })
+
   it('mints a code for a listing that has none', async () => {
     const h = harness()
     await h.run({ id: 1, tier: 'silver' })

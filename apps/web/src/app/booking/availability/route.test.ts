@@ -167,3 +167,75 @@ describe('the guest house quote and the stay interval', () => {
     expect(body).not.toHaveProperty('quote')
   })
 })
+
+/**
+ * QA: a multi-night stay under the stored defaults (60 to 240 minutes) was
+ * answered "That booking is too long" at a hotel. A hotel's stay is counted in
+ * nights (lib/room-availability), as the booking service counts it.
+ */
+describe('a multi-night stay at a hotel and a guest house', () => {
+  const DAY = 86_400_000
+  const stored = { enabled: true, minDurationMinutes: 60, maxDurationMinutes: 240, capacity: 1 }
+  const nights = {
+    start: new Date(start.getTime() + 5 * DAY).toISOString(),
+    end: new Date(start.getTime() + 7 * DAY).toISOString(),
+  }
+  const roomType = {
+    id: 3,
+    business: 7,
+    name: 'Deluxe Twin',
+    rooms: 5,
+    sleepsAdults: 2,
+    active: true,
+    options: [
+      { id: 'ro', breakfast: false, cancellation: 'free', payment: 'at-property', price: 100 },
+    ],
+  }
+
+  const askNights = async (business: Record<string, unknown>) => {
+    vi.mocked(getPayload).mockResolvedValue({
+      findByID: vi.fn(async () => business),
+      find: vi.fn(async (args: { collection: string }) => {
+        if (args.collection === 'room-types') return { docs: [roomType], totalDocs: 1 }
+        if (args.collection === 'room-availability') {
+          return {
+            docs: [{ id: 1, roomType: 3, startsOn: '2026-01-01', endsOn: '2030-12-31', rooms: 5 }],
+            totalDocs: 1,
+          }
+        }
+        return { docs: [], totalDocs: 0 }
+      }),
+    } as never)
+    const url = new URL('http://x/booking/availability')
+    url.searchParams.set('business', '7')
+    url.searchParams.set('start', nights.start)
+    url.searchParams.set('end', nights.end)
+    url.searchParams.set('partySize', '2')
+    url.searchParams.set('rooms', '3:1:ro')
+    const response = await (GET as unknown as (request: Request) => Promise<Response>)(
+      new Request(url),
+    )
+    return (await response.json()) as Record<string, unknown>
+  }
+
+  it('is free at a guest house', async () => {
+    const body = await askNights({
+      id: 7,
+      _status: 'published',
+      subcategories: ['getaways'],
+      booking: stored,
+      stay: { nightlyPrice: 100 },
+    })
+    expect(body.reason).not.toBe('too-long')
+  })
+
+  it('is not "too long" at a hotel with room types', async () => {
+    const body = await askNights({
+      id: 7,
+      _status: 'published',
+      subcategories: ['hotels'],
+      booking: stored,
+    })
+    expect(body.reason).not.toBe('too-long')
+  })
+})

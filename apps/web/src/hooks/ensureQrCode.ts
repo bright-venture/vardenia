@@ -26,6 +26,11 @@ export const ensureQrCode: CollectionAfterChangeHook = async ({ doc, req, contex
   // The link-back update below re-triggers this hook; this flag stops the loop.
   if (context.skipQrGeneration) return doc
   if (doc.qrCode) return doc
+  // A listing in the trash is not printed. Minting would also write the code
+  // back with payload.update by id, which cannot find a trashed document
+  // ("Not Found") and rolls the whole trash back: a brand-new submission, which
+  // has no code yet, could not be trashed (AUTH-T8b).
+  if (doc.deletedAt) return doc
 
   const { payload } = req
 

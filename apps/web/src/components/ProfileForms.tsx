@@ -46,7 +46,14 @@ function useAction() {
   const [errors, setErrors] = useState<Errors>({})
   const [done, setDone] = useState<string | null>(null)
 
-  const submit = async (body: Record<string, unknown>, onSuccess?: () => void) => {
+  const submit = async (
+    body: Record<string, unknown>,
+    onSuccess?: () => void,
+    // False when the change signs this very session out of use (an email
+    // change): rendering the page again would show "Sign in" and unmount the
+    // confirmation before it is read.
+    refreshPage = true,
+  ) => {
     setBusy(true)
     setErrors({})
     setDone(null)
@@ -70,7 +77,7 @@ function useAction() {
         onSuccess?.()
         // The page is a server component reading the session, so the new name
         // or address only appears after the server renders again.
-        router.refresh()
+        if (refreshPage) router.refresh()
         return
       }
 
@@ -186,10 +193,17 @@ export function ChangeEmail({ current }: { current: string }) {
         aria-busy={busy}
         onSubmit={(event) => {
           event.preventDefault()
-          void submit({ action: 'email', email, currentPassword }, () => {
-            setEmail('')
-            setCurrentPassword('')
-          })
+          void submit(
+            { action: 'email', email, currentPassword },
+            () => {
+              setEmail('')
+              setCurrentPassword('')
+            },
+            // The account cannot be used until the new address is confirmed,
+            // so a refresh would replace this message with "Sign in to see
+            // your bookings" (AUTH-P6).
+            false,
+          )
         }}
       >
         <label className={LABEL} htmlFor="profile-email">

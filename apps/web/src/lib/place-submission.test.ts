@@ -302,6 +302,27 @@ describe('createPlaceSubmission', () => {
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
   })
 
+  it('maps the number field validation refusing a number a rival just took', async () => {
+    const refusal = Object.assign(new Error('The following field is invalid: listingNumber'), {
+      name: 'ValidationError',
+      data: {
+        errors: [
+          {
+            message: 'Number 5 is already held by "Other" (listing 9) in this issue.',
+            path: 'listingNumber',
+          },
+        ],
+      },
+    })
+    const out = await createPlaceSubmission({
+      payload: stub({ failListing: refusal }),
+      input: input(),
+      files: files(),
+    })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(JSON.stringify(out)).not.toContain('Other')
+  })
+
   it('also maps the raw driver error naming the index', async () => {
     const raw = Object.assign(new Error('dup'), {
       cause: { code: '23505', constraint: 'issue_listingNumber_idx' },

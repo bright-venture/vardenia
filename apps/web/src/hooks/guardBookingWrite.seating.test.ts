@@ -16,6 +16,9 @@ vi.mock('../lib/booking-lock', () => ({
   lockBookingSlots: vi.fn(
     async (req: { release?: () => void }, businessId: string | number): Promise<void> => {
       lockCalls.push(businessId)
+      // Re-entrant, like an advisory lock: a save already holding it (the
+      // duplicate guard took it first) is not queued behind itself.
+      if (req.release && !lockMode.off) return
       if (lockMode.off) {
         req.release = () => {}
         return
@@ -123,9 +126,9 @@ describe('a new booking at a restaurant with seating areas', () => {
     expect((error as Error).message).toMatch(/fully booked/i)
   })
 
-  it('takes the booking lock for an area booking', async () => {
+  it('takes the booking lock for an area booking (once for the duplicate guard, once for the area count)', async () => {
     await run({ data: { area: 'indoor' }, business: restaurant(twoAreas) })
-    expect(lockCalls).toEqual([7])
+    expect(lockCalls).toEqual([7, 7])
   })
 
   it('re-checks when staff move a booking to another area', async () => {
@@ -164,6 +167,8 @@ describe('a restaurant without seating areas (unchanged)', () => {
     })
     expect(data).toMatchObject({ status: 'pending' })
     expect((data as Record<string, unknown>).area).toBeNull()
+    // The first save's transaction ends before the next begins.
+    for (const req of held.splice(0)) req.release?.()
     const error = await run({
       data: {},
       business: restaurant([], 2),
@@ -172,9 +177,9 @@ describe('a restaurant without seating areas (unchanged)', () => {
     expect((error as Error).message).toMatch(/fully booked/i)
   })
 
-  it('takes no new lock: the database trigger is the guarantee, as before', async () => {
+  it('takes no area lock: only the duplicate guard locks, the trigger counts as before', async () => {
     await run({ data: {}, business: restaurant([], 2) })
-    expect(lockCalls).toEqual([])
+    expect(lockCalls).toEqual([7])
   })
 })
 

@@ -168,7 +168,30 @@ export async function listNumbersFor(
  */
 export function isListingNumberTaken(error: unknown): boolean {
   const named = uniqueViolation(error)
-  return named === 'issue_id, listing_number' || named === 'issue_listingNumber_idx'
+  if (named === 'issue_id, listing_number' || named === 'issue_listingNumber_idx') return true
+  return isListingNumberFieldRefusal(error)
+}
+
+/**
+ * The number field's own validation (validListingNumber) refusing the number.
+ * When a rival's insert commits between this request's pre-check and the
+ * field validation inside create, the loser is refused here, as a
+ * ValidationError on the `listingNumber` path (no table name, unlike the
+ * database's refusal), not at the unique index. Same outcome for the owner.
+ */
+function isListingNumberFieldRefusal(error: unknown): boolean {
+  for (let current: unknown = error, depth = 0; current && depth < 5; depth++) {
+    const value = current as {
+      name?: unknown
+      data?: { errors?: { path?: unknown }[] }
+      cause?: unknown
+    }
+    if (value.name === 'ValidationError' && Array.isArray(value.data?.errors)) {
+      return value.data.errors.some((entry) => entry?.path === 'listingNumber')
+    }
+    current = value.cause
+  }
+  return false
 }
 
 /**

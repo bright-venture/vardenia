@@ -1,3 +1,4 @@
+import { duplicateOf } from './duplicate-booking'
 import type { Payload } from 'payload'
 
 import type { BookingRequest } from '@vardenia/core'
@@ -329,6 +330,24 @@ function replayOf(made: AttemptBooking, business: { id: unknown; name?: unknown 
   }
 }
 
+/**
+ * The booking an identical request made moments ago already holds (the guard
+ * refused this one as its duplicate, lib/duplicate-booking): answered as a
+ * replay, so no second confirmation goes out. Null for any other error.
+ */
+async function replayOfDuplicate(
+  payload: Payload,
+  error: unknown,
+  business: { id: unknown; name?: unknown },
+): Promise<BookingOutcome | null> {
+  const id = duplicateOf(error)
+  if (id === null) return null
+  const made = await payload
+    .findByID({ collection: 'bookings', id, depth: 0, overrideAccess: true })
+    .catch(() => null)
+  return made ? replayOf(made as unknown as AttemptBooking, business) : null
+}
+
 /** The honest failure: we do not know what went wrong, so we do not guess. */
 const COULD_NOT_BOOK: Record<Locale, string> = {
   en: 'We could not complete that booking. Please try again.',
@@ -631,6 +650,8 @@ export async function createBooking({
       const made = await bookingForAttempt(payload, customerId, request.requestId)
       if (made) return replayOf(made, business)
     }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
     return translateInsertError(error, request.locale ?? 'en')
   }
 }
@@ -773,6 +794,8 @@ async function createRoomBooking({
       const made = await bookingForAttempt(payload, customerId, request.requestId)
       if (made) return replayOf(made, business)
     }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
     return translateInsertError(error, locale)
   }
 }
@@ -896,6 +919,8 @@ async function createStayBooking({
       const made = await bookingForAttempt(payload, customerId, request.requestId)
       if (made) return replayOf(made, business)
     }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
     return translateInsertError(error, locale)
   }
 }

@@ -22,6 +22,7 @@ import { checkStayRequest, isWholeProperty, stayConfigOf } from '../lib/stay-boo
 import { transactionDb } from '../lib/transaction-db'
 import { lockBookingSlots } from '../lib/booking-lock'
 import { checkSeatingRequest } from '../lib/seating-booking'
+import { DuplicateBookingError, findRecentTwin } from '../lib/duplicate-booking'
 
 /**
  * Which collection a session came from, as a role.
@@ -80,6 +81,30 @@ const asDate = (value: unknown): Date | null => {
     return Number.isNaN(date.getTime()) ? null : date
   }
   return null
+}
+
+/**
+ * Whether a request's price differs from the stored snapshot: its total,
+ * currency, night count or any line's amount. A body that repeats the stored
+ * values, or sends nothing, is not a change.
+ */
+function priceChangeAsked(asked: unknown, stored: unknown): boolean {
+  if (asked === undefined || asked === null || typeof asked !== 'object') return false
+  const want = asked as Record<string, unknown>
+  const have = (stored ?? {}) as Record<string, unknown>
+  for (const key of ['total', 'currency', 'nights'] as const) {
+    if (want[key] === undefined || want[key] === null || want[key] === '') continue
+    if (String(want[key]) !== String(have[key] ?? '')) return true
+  }
+  if (Array.isArray(want.lines)) {
+    const lines = (Array.isArray(have.lines) ? have.lines : []) as { amount?: unknown }[]
+    const sent = want.lines as { amount?: unknown }[]
+    if (sent.length !== lines.length) return true
+    if (sent.some((line, i) => String(line?.amount ?? '') !== String(lines[i]?.amount ?? ''))) {
+      return true
+    }
+  }
+  return false
 }
 
 /** Whether an update changes when the booking is, where it sits, or how many it seats. */
@@ -224,6 +249,33 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
     }
 
     /**
+     * A change to the price or the dates, asked for by someone who may not make
+     * it, is refused with a message (QA CORE-H5, H9, X5). Field access already
+     * keeps the stored values - Payload drops a field the caller may not update
+     * before this hook runs - but it does so without a word, and the refusal
+     * came back to the caller as a server error. `req.data` is the request as
+     * sent, so what the caller asked for can be compared with what is stored.
+     * Only a value that differs is refused: the admin form posts the whole
+     * document back, price and dates included, unchanged.
+     */
+    const asked = (req as { data?: Record<string, unknown> }).data
+    if (asked && typeof asked === 'object') {
+      if (priceChangeAsked(asked.price, (originalDoc as { price?: unknown }).price)) {
+        throw new APIError('The price is set when the booking is made and cannot be edited.', 403)
+      }
+      const staffMoves = actor === 'staff'
+      const moved = (field: 'start' | 'end') =>
+        asked[field] !== undefined &&
+        asDate(asked[field])?.getTime() !== asDate(originalDoc[field])?.getTime()
+      if (!staffMoves && (moved('start') || moved('end'))) {
+        throw new APIError(
+          'The date of a booking cannot be changed. Cancel it and make a new booking.',
+          403,
+        )
+      }
+    }
+
+    /**
      * A venue marking a visit as done says what the guest spent, in the same
      * save. The commission is taken of that amount (core/booking-fees), and a
      * venue that could mark visits without one would never be billed. Staff
@@ -256,6 +308,26 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
       if (Number.isFinite(end) && end > Date.now()) {
         throw new APIError(
           'This booking has not happened yet, so it cannot be marked as done or as a no-show.',
+          400,
+        )
+      }
+    }
+
+    /**
+     * Staff are exempt from the end-time rule above, because the end on a row
+     * somebody is repairing proves nothing. They are not exempt from this one:
+     * a booking that has not even started cannot be marked done or a no-show,
+     * by anyone (QA CORE-B6 - an admin save could complete a future booking).
+     * A booking already completed or no-show is untouched: this only guards
+     * the move into an outcome. Staff still need no amount; the guest's own
+     * figure covers the bookings they close out.
+     */
+    if (actor === 'staff' && isRetrospective(to) && !isRetrospective(from)) {
+      const begins = new Date(String((data.start ?? originalDoc.start) as string)).getTime()
+
+      if (Number.isFinite(begins) && begins > Date.now()) {
+        throw new APIError(
+          'This booking has not started yet, so it cannot be marked as done or as a no-show.',
           400,
         )
       }
@@ -331,6 +403,21 @@ export const guardBookingWrite: CollectionBeforeValidateHook = async ({
   const start = asDate(data.start ?? originalDoc?.start)
   const end = asDate(data.end ?? originalDoc?.end)
   if (!start || !end) return data
+
+  /**
+   * The same booking sent twice (QA CORE-R11). A request with no attempt id has
+   * nothing else to tell it from a repeat, so under the listing's booking lock
+   * - a second identical request waits here until the first has committed - a
+   * customer's identical pending or confirmed booking made in the last two
+   * minutes is refused as a duplicate, and the booking service answers with
+   * that booking instead (lib/duplicate-booking). Staff entering bookings in
+   * the admin are not asked.
+   */
+  if (operation === 'create' && user?.collection !== 'users' && data.customer) {
+    await lockBookingSlots(req, businessId)
+    const twin = await findRecentTwin(payload, { ...data, business: businessId, start, end })
+    if (twin) throw new DuplicateBookingError(twin.id)
+  }
 
   const business = await payload
     .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })

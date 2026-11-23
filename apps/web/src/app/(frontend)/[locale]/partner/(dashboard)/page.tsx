@@ -18,6 +18,7 @@ import {
 } from '../../../../../lib/booking-filters'
 import { addDays, beirutDate, beirutDayLabel, beirutTime } from '../../../../../lib/beirut'
 import { LINK, NOTICE_INFO } from '../../../../../components/formStyles'
+import { seatingAreaLabel } from '../../../../../lib/seating-label'
 import { BookingActions } from '../../../../../components/BookingActions'
 
 /**
@@ -483,6 +484,12 @@ async function BookingList({
               const business = row.business
               const name = typeof business === 'object' && business ? (business.name ?? '') : ''
               const cancelled = row.status === 'cancelled'
+              const areaName = seatingAreaLabel(business, row.area, {
+                indoor: booking('seatingAreaIndoor'),
+                'indoor-smoking': booking('seatingAreaIndoorSmoking'),
+                outdoor: booking('seatingAreaOutdoor'),
+                'outdoor-smoking': booking('seatingAreaOutdoorSmoking'),
+              })
 
               /**
                * From `guest`, not from the populated relationship, which an owner
@@ -609,6 +616,9 @@ async function BookingList({
                         {row.roomType ?? ''}
                       </p>
                     ) : null}
+
+                    {/* Where they asked to sit, for a restaurant with seating areas. */}
+                    {areaName ? <p className="text-ink-700 mt-1 text-sm">{areaName}</p> : null}
 
                     {row.status === 'pending' && requested ? (
                       <p className="text-gold-700 mt-1 text-xs">
