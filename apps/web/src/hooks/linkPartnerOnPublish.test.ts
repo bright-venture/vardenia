@@ -9,6 +9,7 @@ import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
   refusePublishingRejected,
+  refusePublishingUnfinished,
   requireContractToPublish,
 } from './linkPartnerOnPublish'
 
@@ -402,5 +403,94 @@ describe('linkPartnerOnPublish: under the partner lock', () => {
     expect((update.mock.calls[0] as unknown as [{ data: unknown }])[0].data).toEqual({
       businesses: [10, 55, 9],
     })
+  })
+})
+
+describe('refusePublishingUnfinished', () => {
+  const run = (data: Record<string, unknown>, originalDoc: Record<string, unknown> = {}) =>
+    (refusePublishingUnfinished as CollectionBeforeValidateHook)({
+      data,
+      originalDoc,
+      operation: 'update',
+    } as never)
+
+  it.each(['incomplete', 'abandoned', 'lapsed'])('refuses to publish a %s submission', (status) => {
+    expect(() =>
+      run({ _status: 'published' }, { _status: 'draft', submission: { status } }),
+    ).toThrow(APIError)
+    expect(() =>
+      run({ _status: 'published', submission: { status } }, { _status: 'draft' }),
+    ).toThrow(APIError)
+  })
+
+  it('refuses an accepted submission until it is paid, then lets it through', () => {
+    const accepted = { _status: 'draft', submission: { status: 'accepted' } }
+    expect(() => run({ _status: 'published' }, accepted)).toThrow(/not paid/)
+    expect(() =>
+      run(
+        { _status: 'published' },
+        { ...accepted, submission: { status: 'accepted', payment: { status: 'unpaid' } } },
+      ),
+    ).toThrow(APIError)
+    const data = { _status: 'published' }
+    expect(
+      run(data, { ...accepted, submission: { status: 'accepted', payment: { status: 'paid' } } }),
+    ).toBe(data)
+  })
+
+  it('leaves everything that could be published before exactly as it was', () => {
+    for (const status of ['pending', 'approved', 'expired', undefined]) {
+      const data = { _status: 'published' }
+      expect(run(data, { _status: 'draft', submission: { status } })).toBe(data)
+    }
+  })
+
+  it('does not block saving a draft, or an already published listing', () => {
+    const draft = { name: 'x' }
+    expect(run(draft, { _status: 'draft', submission: { status: 'incomplete' } })).toBe(draft)
+    const live = { name: 'x' }
+    expect(run(live, { _status: 'published', submission: { status: 'lapsed' } })).toBe(live)
+  })
+})
+
+describe('approveSubmissionOnPublish after payment', () => {
+  it('still approves a paid, accepted submission when it is published', () => {
+    const out = (approveSubmissionOnPublish as CollectionBeforeChangeHook)({
+      data: { _status: 'published' },
+      originalDoc: {
+        _status: 'draft',
+        submission: { status: 'accepted', ownerEmail: 'a@b.c', payment: { status: 'paid' } },
+      },
+      operation: 'update',
+    } as never) as { submission: { status: string } }
+    expect(out.submission.status).toBe('approved')
+  })
+})
+
+describe('refusePublishingUnfinished: a live listing cannot become a form state', () => {
+  it.each(['incomplete', 'abandoned'])('refuses setting %s on a published listing', (status) => {
+    expect(() =>
+      refusePublishingUnfinished({
+        data: { submission: { status } },
+        originalDoc: { _status: 'published', submission: { status: 'approved' } },
+      } as never),
+    ).toThrow(/published listing cannot be set/)
+    // Also when the same save publishes it.
+    expect(() =>
+      refusePublishingUnfinished({
+        data: { _status: 'published', submission: { status } },
+        originalDoc: { _status: 'draft' },
+      } as never),
+    ).toThrow()
+  })
+
+  it('still lets a draft move between form states', () => {
+    const data = { submission: { status: 'abandoned' } }
+    expect(
+      refusePublishingUnfinished({
+        data,
+        originalDoc: { _status: 'draft', submission: { status: 'incomplete' } },
+      } as never),
+    ).toBe(data)
   })
 })

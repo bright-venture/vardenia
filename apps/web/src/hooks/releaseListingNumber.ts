@@ -1,9 +1,12 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
+/** Rejected, and the two ways a form submission ends without payment (abandoned: hold ran out; lapsed: not paid in time). */
+const FREES_NUMBER = new Set(['rejected', 'abandoned', 'lapsed'])
+
 /**
  * Gives a listing's magazine number back when the listing will not use it.
  *
- * A rejected submission stays in the admin as a draft record, and a trashed
+ * A rejected, abandoned or lapsed submission stays in the admin as a draft record, and a trashed
  * listing stays in the table; either would keep its number for ever and leave
  * a hole in the governorate's range. Clearing the number makes it free for the
  * next business. The unique index on (issue, listingNumber) ignores nulls, so
@@ -23,6 +26,6 @@ import type { CollectionBeforeChangeHook } from 'payload'
  */
 export const releaseListingNumber: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   const status = (data?.submission?.status ?? originalDoc?.submission?.status) as string | undefined
-  if (status === 'rejected' || data?.deletedAt) return { ...data, listingNumber: null }
+  if (FREES_NUMBER.has(status ?? '') || data?.deletedAt) return { ...data, listingNumber: null }
   return data
 }

@@ -29,7 +29,7 @@ export const PHOTO_ACCEPT = ACCEPTED_PHOTO_TYPES.join(',')
 
 export const MAX_EDGE = 1600
 export const TOTAL_PHOTO_BUDGET = 4 * 1024 * 1024
-/** The route's MAX_GALLERY_FILES (lib/place-submission, server-only, so repeated here). */
+/** Gallery photos the form still takes (superseded by the phone upload session). */
 export const MAX_GALLERY_PHOTOS = 6
 /** Main photo + gallery + logo. */
 export const MAX_PHOTOS = 1 + MAX_GALLERY_PHOTOS + 1

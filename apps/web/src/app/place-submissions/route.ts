@@ -1,57 +1,40 @@
 import { getPayload } from 'payload'
 import config from '../../payload.config'
 import { siteOrigin } from '../../lib/auth-email'
-import { createPlaceSubmission } from '../../lib/place-submission'
-import { placeSubmissionEmails, teamAlertAddress } from '../../lib/place-submission-email'
-import {
-  bodySizeProblem,
-  parseSubmission,
-  readForm,
-  statusForOutcome,
-} from '../../lib/place-submission-request'
+import { startPlaceSubmission } from '../../lib/place-submission'
+import { placeUploadUrl } from '../../lib/place-upload-url'
+import { parseSubmission, readBody, statusForOutcome } from '../../lib/place-submission-request'
 import { withRateLimit } from '../../lib/rate-limit'
-import { reportError } from '../../lib/report'
 import { clientIp } from '../../lib/scan-guard'
 import { verifyTurnstile } from '../../lib/turnstile'
 
 /**
- * The public "add your place" endpoint: the only way an anonymous visitor
- * creates a listing. `businesses.create` and `media.create` stay staff-only;
+ * The public "add your place" endpoint, step 1 ("Next"): the only way an
+ * anonymous visitor creates a listing. `businesses.create` stays staff-only;
  * lib/place-submission is the access rule, and this is the door to it.
+ *
+ * It starts a submission: a hidden draft with its number held, and the token
+ * of the phone upload session. No emails go out here; they go when the owner
+ * finishes. The listing id never leaves the server: the browser gets the
+ * reference (VD-n) and the session token.
  *
  * Not under /api, which Payload owns (see /booking/request).
  *
- * Order, cheapest refusal first: rate limit, body size (a header check, before
- * the body is read), Turnstile, JSON and schema, then the write, then the mail.
- *
- * The emails are sent after the draft exists and cannot undo it: a failure is
- * reported and the visitor still gets a 201.
+ * Order, cheapest refusal first: rate limit, JSON body, Turnstile, schema, then
+ * the write.
  */
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Per minute, per address. Its own number so it counts in its own bucket (the
- * bucket key includes the budget): a submission uploads photos and sends two
- * emails, and nobody legitimately submits more than a couple a minute.
- */
-const SUBMISSIONS_PER_WINDOW = 5
-
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
-/** Team alerts go where error alerts go, unless a dedicated address is set. */
-const teamAddress = teamAlertAddress
-
 export const POST = withRateLimit(
   async (request: Request) => {
-    const tooBig = bodySizeProblem(request.headers)
-    if (tooBig) return json(tooBig.body, tooBig.status)
+    const read = await readBody(request)
+    if (!read.ok) return json(read.body, read.status)
 
-    const form = await readForm(request)
-    if (!form) return json({ ok: false, message: 'Expected a form submission.' }, 400)
-
-    const verdict = await verifyTurnstile(form.get('turnstileToken'), clientIp(request.headers))
+    const verdict = await verifyTurnstile(read.body.turnstileToken, clientIp(request.headers))
     if (!verdict.ok) {
       return json(
         {
@@ -63,15 +46,11 @@ export const POST = withRateLimit(
       )
     }
 
-    const parsed = parseSubmission(form)
+    const parsed = parseSubmission(read.body)
     if (!parsed.ok) return json(parsed.body, parsed.status)
 
     const payload = await getPayload({ config })
-    const outcome = await createPlaceSubmission({
-      payload,
-      input: parsed.input,
-      files: parsed.files,
-    })
+    const outcome = await startPlaceSubmission({ payload, input: parsed.input })
 
     if (!outcome.ok) {
       return json(
@@ -80,61 +59,22 @@ export const POST = withRateLimit(
       )
     }
 
-    // Everything below is best effort: the draft exists, whatever happens.
-    const { input } = parsed
-    let issueTitle = `#${input.issue}`
-    try {
-      const issue = await payload.findByID({
-        collection: 'issues',
-        id: input.issue,
-        depth: 0,
-        overrideAccess: true,
-      })
-      if (issue?.title) issueTitle = String(issue.title)
-    } catch {
-      // The number is enough for the team to go on.
-    }
-
-    const emails = placeSubmissionEmails({
-      businessId: outcome.listingId,
-      businessName: input.name,
-      governorate: input.governorate,
-      listingNumber: input.listingNumber,
-      issueTitle,
-      ownerName: input.ownerName,
-      ownerEmail: input.ownerEmail,
-      ownerPhone: input.ownerPhone,
-      locale: input.locale,
-      origin: siteOrigin(),
-    })
-
-    const extra = { listingId: outcome.listingId }
-    const team = teamAddress()
-    if (team) {
-      try {
-        await payload.sendEmail({
-          to: team,
-          subject: emails.team.subject,
-          html: emails.team.html,
-          text: emails.team.text,
-        })
-      } catch (error) {
-        await reportError(error, { source: 'place-submission.email.team', extra })
-      }
-    }
-    try {
-      await payload.sendEmail({
-        to: input.ownerEmail,
-        subject: emails.owner.subject,
-        html: emails.owner.html,
-        text: emails.owner.text,
-      })
-    } catch (error) {
-      await reportError(error, { source: 'place-submission.email.owner', extra })
-    }
-
-    return json({ ok: true }, 201)
+    return json(
+      {
+        ok: true,
+        reference: outcome.reference,
+        sessionToken: outcome.sessionToken,
+        expiresAt: outcome.expiresAt,
+        // For the QR code on the big screen. The token is in the fragment, so
+        // it never reaches a log; do not log or report this response either.
+        uploadUrl: placeUploadUrl(siteOrigin(), outcome.sessionToken, parsed.input.locale),
+      },
+      201,
+    )
   },
-  SUBMISSIONS_PER_WINDOW,
-  { shared: true },
+  // Its own counters (action 'place-start'), counted in the database per
+  // connection: the per-action budget is WRITE_PER_WINDOW (lib/rate-limit
+  // checkRatePerAccount), separate from the finish form and every other.
+  undefined,
+  { action: 'place-start' },
 )

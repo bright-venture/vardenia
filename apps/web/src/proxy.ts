@@ -237,8 +237,9 @@ export default function proxy(request: NextRequest): NextResponse {
  * sign-up *page* wants the readable URL, and the two cannot share a path once
  * this file stops rewriting one of them into the other.
  *
- * `/place-submissions/*` is JSON and multipart (the add-your-place submit and its
- * number picker), so it is excluded like `/booking`.
+ * `/place-submissions/*` is JSON (the add-your-place start, finish, status and its
+ * number picker), and `/place-uploads` is the phone's multipart photo upload, so
+ * both are excluded like `/booking`.
  *
  * `/brand-data/*` (a public restaurant brand) and `/partner-data/*` (a partner
  * adding a branch) are Task 9's JSON endpoints, excluded the same way. They
@@ -256,7 +257,7 @@ export default function proxy(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|brand-data|partner-data|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|place-uploads|brand-data|partner-data|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

@@ -1,7 +1,7 @@
 import type { GlobalConfig, NumberFieldSingleValidation } from 'payload'
 import { number } from 'payload/shared'
 import { DEFAULT_MAX_GOLD_PER_CATEGORY, DEFAULT_MAX_PLATINUM } from '@vardenia/core'
-import { isAdmin, isStaff } from '../access/index'
+import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { clearListingsCache } from '../hooks/revalidateListings'
 import { HIDEABLE_LABELS, HIDEABLE_PAGES } from '../lib/hideable-pages'
 
@@ -229,6 +229,40 @@ export const Settings: GlobalConfig = {
                 description:
                   'Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.',
               },
+            },
+          ],
+        },
+        {
+          label: 'Magazine places',
+          description:
+            'The Magazine Places form: what a place pays, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price and term are copied onto each submission when the owner accepts the terms, so changing them never rewrites an accepted one.',
+          fields: [
+            {
+              name: 'magazinePlaces',
+              type: 'group',
+              // Only an admin reads or changes these (the global itself is
+              // staff-readable).
+              access: { read: isAdminFieldLevel, update: isAdminFieldLevel },
+              fields: [
+                { name: 'pricePerYear', type: 'number', min: 0, defaultValue: 20 },
+                { name: 'currency', type: 'text', defaultValue: 'USD' },
+                { name: 'termMonths', type: 'number', min: 1, defaultValue: 12 },
+                { name: 'paymentDeadlineDays', type: 'number', min: 1, defaultValue: 7 },
+                {
+                  name: 'holdMinutes',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 30,
+                  admin: { description: 'How long an unfinished form keeps its listing number.' },
+                },
+                {
+                  name: 'whishNumber',
+                  type: 'text',
+                  defaultValue: '+96179300350',
+                  admin: { description: 'Used for Whish payments and WhatsApp.' },
+                },
+                { name: 'termsVersion', type: 'text', defaultValue: '2026-11' },
+              ],
             },
           ],
         },

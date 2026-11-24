@@ -55,6 +55,10 @@ describe('locale routing leaves alone', () => {
     ['/booking/availability', 'the same'],
     ['/place-submissions', 'a multipart POST: add-your-place submissions'],
     ['/place-submissions/numbers', 'JSON: the number picker'],
+    ['/place-submissions/status', 'JSON: the big screen polls the photo upload status'],
+    ['/place-submissions/terms', 'JSON: the price and term shown before the owner submits'],
+    ['/place-submissions/finish', 'JSON: the owner accepts the terms and submits'],
+    ['/place-uploads', 'a multipart POST: the phone sends the logo and main photo'],
     ['/brand-data/cafe-nour', 'JSON: a public restaurant brand (Task 9)'],
     ['/partner-data/branches', 'JSON: a partner adds a branch (Task 9)'],
     ['/g/AB12CD3', 'a printed short link must stay short'],
@@ -95,6 +99,7 @@ describe('a prefix is not a segment', () => {
     '/qrcodes',
     '/authors',
     '/place-submissionsx',
+    '/place-uploadsx',
     '/brand-datax',
     '/partner-datax',
   ])('%s is a page, not an excluded prefix', (path) => {

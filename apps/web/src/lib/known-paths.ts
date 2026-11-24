@@ -98,6 +98,8 @@ export const UNMATCHED_PREFIXES = [
   // The public "add your place" endpoints (a multipart POST and the number
   // picker's JSON), actions rather than pages. Excluded from the matcher.
   'place-submissions',
+  // The phone's photo upload for that form (multipart POST). Excluded from the matcher.
+  'place-uploads',
   // Task 9's JSON endpoints, actions rather than pages: a public restaurant
   // brand (/brand-data/<slug>) and a partner adding a branch
   // (/partner-data/branches). Under -data prefixes so the page paths

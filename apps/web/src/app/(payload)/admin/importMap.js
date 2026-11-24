@@ -25,6 +25,9 @@ import { MapsLinkField as MapsLinkField_c85d5e13167942a0bd1899616d39cc3e } from 
 import { OpeningHourLabel as OpeningHourLabel_f2fd9088dde216ffa28f89afe274464a } from '../../../components/admin/OpeningHourLabel'
 import { TierCell as TierCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ListingActivity as ListingActivity_a4adc9ff8ad04da0058736214f4b2411 } from '../../../components/admin/ListingActivity'
+import { SubmissionReview as SubmissionReview_de02de5be9294640905de785ace5f0e0 } from '../../../components/admin/SubmissionReview'
+import { RejectSubmission as RejectSubmission_87422cb5d0b7631e3419d2931103b35a } from '../../../components/admin/RejectSubmission'
+import { SubmissionQueues as SubmissionQueues_e746050342d6d529749c8085914f7669 } from '../../../components/admin/SubmissionQueues'
 import { QrPreview as QrPreview_63c83128da94d6b39963c25535130a97 } from '../../../components/admin/QrPreview'
 import { ActiveCell as ActiveCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { FolderListView as FolderListView_cd05df67b980cd74ed008187e07c7615 } from '../../../components/admin/FolderListView'
@@ -75,6 +78,9 @@ export const importMap = {
   "/components/admin/OpeningHourLabel#OpeningHourLabel": OpeningHourLabel_f2fd9088dde216ffa28f89afe274464a,
   "/components/admin/ListCells#TierCell": TierCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ListingActivity#ListingActivity": ListingActivity_a4adc9ff8ad04da0058736214f4b2411,
+  "/components/admin/SubmissionReview#SubmissionReview": SubmissionReview_de02de5be9294640905de785ace5f0e0,
+  "/components/admin/RejectSubmission#RejectSubmission": RejectSubmission_87422cb5d0b7631e3419d2931103b35a,
+  "/components/admin/SubmissionQueues#SubmissionQueues": SubmissionQueues_e746050342d6d529749c8085914f7669,
   "/components/admin/QrPreview#QrPreview": QrPreview_63c83128da94d6b39963c25535130a97,
   "/components/admin/ListCells#ActiveCell": ActiveCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/FolderListView#FolderListView": FolderListView_cd05df67b980cd74ed008187e07c7615,

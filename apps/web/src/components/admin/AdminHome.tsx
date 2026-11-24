@@ -7,6 +7,7 @@ import {
   type AttentionArea,
   type AttentionItem,
 } from '../../lib/admin-home'
+import { queueHref } from '../../lib/submission-queues'
 
 /**
  * The admin home page.
@@ -215,6 +216,16 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
                 value={dollars(home.numbers.feesOwed)}
                 label="Commissions awaiting payment"
               />
+              <NumberCard
+                value={home.numbers.submissionsToReview.toLocaleString('en')}
+                label="Submissions to review"
+                href={queueHref('pending')}
+              />
+              <NumberCard
+                value={home.numbers.incompleteForms.toLocaleString('en')}
+                label="Incomplete forms"
+                href={queueHref('incomplete')}
+              />
             </section>
           ) : null}
 
@@ -273,13 +284,30 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
   )
 }
 
-function NumberCard({ value, label, note }: { value: string; label: string; note?: string }) {
-  return (
-    <div style={styles.card}>
+function NumberCard({
+  value,
+  label,
+  note,
+  href,
+}: {
+  value: string
+  label: string
+  note?: string
+  href?: string
+}) {
+  const body = (
+    <>
       <div style={styles.value}>{value}</div>
       <div style={styles.label}>{label}</div>
       {note ? <div style={styles.hint}>{note}</div> : null}
-    </div>
+    </>
+  )
+  return href ? (
+    <Link href={href} style={{ ...styles.card, display: 'block', textDecoration: 'none' }}>
+      {body}
+    </Link>
+  ) : (
+    <div style={styles.card}>{body}</div>
   )
 }
 

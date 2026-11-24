@@ -1,115 +1,79 @@
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 
-import { isInRange, type NumberRange, type PlaceSubmission } from '@vardenia/core'
+import {
+  categoryOfKind,
+  isInRange,
+  isSubmittableKind,
+  type NumberRange,
+  type PlaceSubmission,
+} from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { heldNumbers } from '../collections/ListingRanges'
 import { slugify } from '../fields/slug'
-import { PHOTO_MAX_BYTES } from '../hooks/limitUploadSize'
+import { runInTransaction } from './branches'
+import { advisoryLock } from './partner-lock'
+import { hardCapFrom } from './place-session'
 import { uniqueViolation } from './db-errors'
+import { getPlaceSettings } from './place-settings'
 import { richText } from './rich-text'
 import { reportError } from './report'
+import { formatSubmissionReference } from './submission-reference'
 
 /**
- * The one public door that creates a listing.
+ * The one public door that creates a listing: step 1 ("Next") of the Magazine
+ * Places form.
  *
- * `businesses.create` and `media.create` are staff-only. This is the only code
- * that writes them for an anonymous visitor, and it does so with
- * `overrideAccess: true` - so it is the access rule. Two consequences:
+ * `businesses.create` is staff-only. This is the only code that writes it for
+ * an anonymous visitor, and it does so with `overrideAccess: true` - so it is
+ * the access rule. Two consequences:
  *
  * - The listing is built from an explicit allow-list, field by field, never by
- *   spreading the input. A smuggled `tier`, `verified`, `_status`, commission or
- *   contract date cannot reach the record, because nothing here copies it.
- * - Everything checkable is checked before the first write, and the files are
- *   checked before any media exists.
+ *   spreading the input. A smuggled `tier`, `verified`, `_status`, payment,
+ *   commission or contract date cannot reach the record, because nothing here
+ *   copies it.
+ * - Everything checkable is checked before the first write.
  *
- * Not transactional: if the listing fails after its photos were stored, the
- * photos stay behind as orphans. Accepted for v1; staff can delete them in the
- * Media library, and there is no cleanup job. A slug clash is not such a
- * failure: the listing is retried with the same photos (see below).
+ * What a start makes: ONE hidden draft business (submission.status
+ * `incomplete`, so it is neither public nor pending staff work), with its
+ * listing number held, its reference (VD-<id>) and the phone upload session
+ * whose token the owner scans from the QR code. No photos and no emails: the
+ * photos arrive from the phone, and the emails go out when the owner finishes.
+ *
+ * The business, its reference and the session are written in ONE transaction,
+ * so a failure at any point (a rival taking the number, a clash on the slug,
+ * a database error) leaves nothing behind: no draft without a session, no
+ * session without a draft.
  */
 
-export type SubmissionFiles = { hero: File; gallery: File[]; logo?: File }
-
+/**
+ * `expiresAt` is the ABSOLUTE end of the upload session (start + 24 hours,
+ * lib/place-session), the latest the QR link can work; it is not the idle
+ * time-out, which is shorter (Settings holdMinutes) and moves with activity.
+ */
 export type SubmissionOutcome =
-  | { ok: true; listingId: number }
+  | { ok: true; listingId: number; reference: string; sessionToken: string; expiresAt: string }
   | {
       ok: false
-      code: 'number-unavailable' | 'no-range' | 'invalid-files' | 'error'
+      code: 'number-unavailable' | 'no-range' | 'kind-unavailable' | 'too-many-open' | 'error'
       message: string
     }
 
-export const MAX_GALLERY_FILES = 6
+/**
+ * How many unfinished forms (submission.status `incomplete`) one owner email may
+ * hold at once. Each holds a listing number, so without a cap anyone could pin
+ * a whole range for as long as they keep starting. Checked inside the start's
+ * transaction under a per-email advisory lock, so two starts at once cannot
+ * both slip under it.
+ */
+export const MAX_OPEN_STARTS_PER_EMAIL = 3
 
 const COULD_NOT_SAVE = 'We could not save that. Please try again.'
 const NUMBER_UNAVAILABLE = 'That number is no longer available. Please choose another.'
 
-/** JPEG, PNG and WebP only: narrower than Media, which also takes avif, mp4 and pdf. */
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
-type AllowedType = (typeof ALLOWED_TYPES)[number]
-
-const startsWith = (bytes: Uint8Array, signature: number[], offset = 0) =>
-  signature.every((byte, i) => bytes[offset + i] === byte)
-
-/** What the leading bytes say the file is, whatever its name or declared type. */
-function sniffType(bytes: Uint8Array): AllowedType | null {
-  if (startsWith(bytes, [0xff, 0xd8, 0xff])) return 'image/jpeg'
-  if (startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return 'image/png'
-  // RIFF....WEBP
-  if (
-    startsWith(bytes, [0x52, 0x49, 0x46, 0x46]) &&
-    startsWith(bytes, [0x57, 0x45, 0x42, 0x50], 8)
-  ) {
-    return 'image/webp'
-  }
-  return null
-}
-
-interface CheckedFile {
-  data: Buffer
-  mimetype: AllowedType
-  name: string
-  size: number
-}
-
-/** A readable reason, or the file's bytes when it passes. */
-async function checkFile(file: File | undefined, label: string): Promise<CheckedFile | string> {
-  if (!file || typeof file.arrayBuffer !== 'function') return `The ${label} photo is missing.`
-  if (file.size === 0) return `The ${label} photo is empty.`
-  if (file.size > PHOTO_MAX_BYTES) {
-    return `The ${label} photo is over ${PHOTO_MAX_BYTES / (1024 * 1024)} MB. Please choose a smaller one.`
-  }
-  if (!(ALLOWED_TYPES as readonly string[]).includes(file.type)) {
-    return `The ${label} photo must be a JPEG, PNG or WebP image.`
-  }
-  const data = Buffer.from(await file.arrayBuffer())
-  if (sniffType(data) !== file.type) {
-    return `The ${label} photo must be a JPEG, PNG or WebP image.`
-  }
-  return { data, mimetype: file.type as AllowedType, name: file.name || 'photo', size: data.length }
-}
-
-async function checkFiles(
-  files: SubmissionFiles,
-): Promise<{ hero: CheckedFile; gallery: CheckedFile[]; logo?: CheckedFile } | string> {
-  if (!Array.isArray(files.gallery) || files.gallery.length > MAX_GALLERY_FILES) {
-    return `Please add at most ${MAX_GALLERY_FILES} gallery photos.`
-  }
-  const hero = await checkFile(files.hero, 'main')
-  if (typeof hero === 'string') return hero
-  const gallery: CheckedFile[] = []
-  for (const [i, file] of files.gallery.entries()) {
-    const checked = await checkFile(file, `gallery ${i + 1}`)
-    if (typeof checked === 'string') return checked
-    gallery.push(checked)
-  }
-  let logo: CheckedFile | undefined
-  if (files.logo) {
-    const checked = await checkFile(files.logo, 'logo')
-    if (typeof checked === 'string') return checked
-    logo = checked
-  }
-  return { hero, gallery, logo }
+/** The SHA-256 of a session token, as hex: the only form of it that is stored. */
+export function hashSessionToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
 }
 
 /** Plain text to paragraphs: a blank line starts a new one. */
@@ -218,22 +182,41 @@ function slugAttempts(name: string, listingNumber: number): (string | undefined)
   return [undefined, base, random(), random()]
 }
 
-export async function createPlaceSubmission(args: {
+/**
+ * What the write right after the create sends: the reference, and name and
+ * address for the default locale when the owner wrote in another one. Nothing
+ * else, in particular not the owner's details or the status: the update-time
+ * hooks of businesses (hooks/startUpdateShape.test.ts checks each) read those
+ * from the stored draft, which is incomplete, so none of them refuses, frees
+ * the number or publishes.
+ */
+export function followUpData(input: PlaceSubmission, reference: string) {
+  return {
+    ...(input.locale === DEFAULT_LOCALE ? {} : { name: input.name, address: input.address }),
+    submission: { reference },
+  }
+}
+
+/**
+ * Starts a submission. The plain session token is in the result exactly once;
+ * only its hash is stored. Never log or report the result.
+ */
+export async function startPlaceSubmission(args: {
   payload: Payload
   input: PlaceSubmission
-  files: SubmissionFiles
 }): Promise<SubmissionOutcome> {
-  const { payload, input, files } = args
-
-  /*
-   * Photos stored so far, deleted again if the submission then fails (21
-   * November 2026, authentication audit step 8). Before, a submission that lost
-   * the race for its number, or failed to save, left its photos in the media
-   * library with nothing using them.
-   */
-  const uploaded: (number | string)[] = []
+  const { payload, input } = args
 
   try {
+    // The schema refuses a hidden kind too; the service does not rely on it.
+    if (!isSubmittableKind(input.kind)) {
+      return {
+        ok: false,
+        code: 'kind-unavailable',
+        message: 'That kind of place is not available yet.',
+      }
+    }
+
     // The form checks all of this too; the server does not trust that. A
     // missing issue has no range, so it lands here as well.
     const found = await payload.find({
@@ -250,7 +233,7 @@ export async function createPlaceSubmission(args: {
       return {
         ok: false,
         code: 'no-range',
-        message: 'Listings in that area are not open for this issue yet.',
+        message: 'Listings in that region are not open for this issue yet.',
       }
     }
     if (!isInRange(input.listingNumber, range)) {
@@ -261,46 +244,27 @@ export async function createPlaceSubmission(args: {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
 
-    const checked = await checkFiles(files)
-    if (typeof checked === 'string') {
-      return { ok: false, code: 'invalid-files', message: checked }
-    }
+    const settings = await getPlaceSettings(payload)
+    const sessionToken = randomBytes(32).toString('base64url')
+    // The absolute end of the session (see lib/place-session): what the browser
+    // is shown as expiresAt. The idle time-out (holdMinutes) is separate and
+    // moves with activity.
+    const expiresAt = hardCapFrom(new Date())
 
-    const upload = async (file: CheckedFile) => {
-      const media = await payload.create({
-        collection: 'media',
-        data: { alt: input.name, usageRights: 'supplied' },
-        file,
-        locale: input.locale,
-        overrideAccess: true,
-      })
-      uploaded.push(media.id)
-      return media.id
-    }
-    const heroImage = await upload(checked.hero)
-    const gallery: number[] = []
-    for (const photo of checked.gallery) gallery.push(await upload(photo))
-    const logo = checked.logo ? await upload(checked.logo) : undefined
-
-    // The allow-list. Tier is left to its default; nothing commercial,
-    // verified, contract, QR or staff-only is ever set here, and the slug only
-    // when the automatic one clashes.
+    // The allow-list. Tier is left to its default (silver); nothing
+    // commercial, verified, contract, payment, QR or staff-only is ever set
+    // here, and the slug only when the automatic one clashes. submittedAt is
+    // set when the owner finishes, not now.
     const data = {
       name: input.name,
       tagline: input.tagline,
       description: input.description ? richText(paragraphs(input.description)) : undefined,
-      category: input.category,
-      subcategories: input.subcategories,
+      category: categoryOfKind(input.kind),
+      subcategories: [input.kind],
       governorate: input.governorate,
       district: input.district,
       address: input.address,
-      openingHours: input.openingHours,
-      priceRange: input.priceRange,
-      amenities: input.amenities,
-      payments: input.payments,
-      heroImage,
-      gallery,
-      logo,
+      payments: { cash: false, card: false, whish: input.acceptsWhish, omt: false },
       issue: input.issue,
       listingNumber: input.listingNumber,
       _status: 'draft',
@@ -312,88 +276,115 @@ export async function createPlaceSubmission(args: {
         facebook: input.facebook,
       },
       submission: {
-        status: 'pending',
+        status: 'incomplete',
         ownerName: input.ownerName,
         ownerEmail: input.ownerEmail,
         ownerPhone: input.ownerPhone,
         pageTemplate: input.pageTemplate,
-        submittedAt: new Date().toISOString(),
       },
     }
 
-    // A slug clash is retried with the photos already stored; any other
-    // failure, or the last clash, goes to the catch below.
-    let listingId: number | undefined
+    // A slug clash aborts the whole transaction (Payload ends the one it is
+    // given when a write fails), so each attempt is a transaction of its own.
+    // Any other failure, or the last clash, goes to the catch below.
     const attempts = slugAttempts(input.name, input.listingNumber)
     for (const [i, slug] of attempts.entries()) {
       try {
-        const listing = await payload.create({
-          collection: 'businesses',
-          data: (slug ? { ...data, slug } : data) as never,
-          // Name, tagline, description and address are localized: they are
-          // saved in the language the owner wrote them in.
-          locale: input.locale,
-          overrideAccess: true,
-          // Two afterChange hooks must not act on an anonymous create.
-          // skipQrGeneration: the default tier is silver, a printed tier, so
-          // ensureQrCode would otherwise mint a QR code for every public
-          // submission; staff get it when they set the tier and save or publish.
-          // skipAutoTranslate: an anonymous request must not call the translation
-          // engine (cost, abuse), and staff review the owner's text first.
-          context: { skipQrGeneration: true, skipAutoTranslate: true },
+        const started = await runInTransaction(payload, async (req) => {
+          // One lock per owner email, then count: exact, not just race-tolerant.
+          await advisoryLock(req, `vardenia.place-start-email:${input.ownerEmail}`)
+          const open = await payload.find({
+            collection: 'businesses',
+            where: {
+              and: [
+                { 'submission.ownerEmail': { equals: input.ownerEmail } },
+                { 'submission.status': { equals: 'incomplete' } },
+              ],
+            },
+            limit: 1,
+            depth: 0,
+            req,
+            overrideAccess: true,
+          })
+          if ((open.totalDocs ?? 0) >= MAX_OPEN_STARTS_PER_EMAIL) return null
+          const listing = await payload.create({
+            collection: 'businesses',
+            data: (slug ? { ...data, slug } : data) as never,
+            // Name, tagline, description and address are localized: they are
+            // saved in the language the owner wrote them in.
+            locale: input.locale,
+            req,
+            overrideAccess: true,
+            // Two afterChange hooks must not act on an anonymous create.
+            // skipQrGeneration: the default tier is silver, a printed tier, so
+            // ensureQrCode would otherwise mint a QR code for every public
+            // submission; staff get it when they set the tier and save or
+            // publish. skipAutoTranslate: an anonymous request must not call
+            // the translation engine (cost, abuse), and staff review the
+            // owner's text first.
+            context: { skipQrGeneration: true, skipAutoTranslate: true },
+          })
+          const id = listing.id as number
+
+          // The reference is made from the record id, which is unique and
+          // handed out by the database, so no counter is needed and two
+          // starts at once can never share one. Written in the same
+          // transaction, and the column is unique as a backstop.
+          const reference = formatSubmissionReference(id)
+          // Name and address are a proper noun and a street, so they are also
+          // written into the default locale: otherwise staff browsing in
+          // English see a blank draft they cannot identify. Tagline and
+          // description are prose and are NOT copied: the auto-translate hook
+          // treats default-locale text as the English source and would
+          // translate Arabic as if it were English. The same write carries
+          // the reference (see followUpData for why that is safe). A failure here
+          // fails the whole start: inside a transaction it cannot be swallowed.
+          await payload.update({
+            collection: 'businesses',
+            id,
+            data: followUpData(input, reference) as never,
+            locale: DEFAULT_LOCALE,
+            depth: 0,
+            req,
+            overrideAccess: true,
+            context: { skipAutoTranslate: true, skipQrGeneration: true },
+          })
+
+          await payload.create({
+            collection: 'place-upload-sessions',
+            data: {
+              tokenHash: hashSessionToken(sessionToken),
+              business: id,
+              expiresAt,
+              logoReceived: false,
+              heroReceived: false,
+            },
+            req,
+            overrideAccess: true,
+          })
+          return { listingId: id, reference }
         })
-        listingId = listing.id as number
-        break
+        if (!started) {
+          return {
+            ok: false,
+            code: 'too-many-open',
+            message:
+              'You already have unfinished forms open. Please finish or wait for them to expire.',
+          }
+        }
+        const { listingId, reference } = started
+        return { ok: true, listingId, reference, sessionToken, expiresAt }
       } catch (error) {
         if (!isSlugTaken(error) || i === attempts.length - 1) throw error
       }
     }
-    if (listingId === undefined) throw new Error('unreachable: no listing and no error')
-
-    // Name and address are a proper noun and a street, so they are also written
-    // into the default locale: otherwise staff browsing in English see a blank
-    // draft they cannot identify. Tagline and description are prose and are NOT
-    // copied: the auto-translate hook treats default-locale text as the English
-    // source and would translate Arabic as if it were English. The draft already
-    // exists, so a failure here is reported but does not fail the submission.
-    if (input.locale !== DEFAULT_LOCALE) {
-      try {
-        await payload.update({
-          collection: 'businesses',
-          id: listingId,
-          data: { name: input.name, address: input.address } as never,
-          locale: DEFAULT_LOCALE,
-          depth: 0,
-          overrideAccess: true,
-          context: { skipAutoTranslate: true, skipQrGeneration: true },
-        })
-      } catch (error) {
-        await reportError(error, { source: 'place-submission.default-locale' })
-      }
-    }
-    return { ok: true, listingId }
+    throw new Error('unreachable: no listing and no error')
   } catch (error) {
-    await deleteUploaded(payload, uploaded)
     // Lost the race for the number between the check above and the insert.
     if (isListingNumberTaken(error)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     await reportError(error, { source: 'place-submission.create' })
     return { ok: false, code: 'error', message: COULD_NOT_SAVE }
-  }
-}
-
-/**
- * Deletes the photos a failed submission stored. Through Payload, so the files
- * go too. Best effort: a photo that cannot be deleted is reported, and the
- * submission's own answer is not changed by it.
- */
-async function deleteUploaded(payload: Payload, ids: readonly (number | string)[]): Promise<void> {
-  for (const id of ids) {
-    try {
-      await payload.delete({ collection: 'media', id, overrideAccess: true })
-    } catch (error) {
-      await reportError(error, { source: 'place-submission.cleanup', extra: { media: id } })
-    }
   }
 }

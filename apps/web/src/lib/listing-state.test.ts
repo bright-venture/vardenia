@@ -50,3 +50,28 @@ describe('listingState', () => {
     expect(listingState(null, NOW)).toBe('draft')
   })
 })
+
+describe('unfinished Magazine Places forms', () => {
+  it('reads Incomplete and Abandoned, not Draft', () => {
+    expect(listingState({ _status: 'draft', submission: { status: 'incomplete' } }, NOW)).toBe(
+      'incomplete',
+    )
+    expect(listingState({ _status: 'draft', submission: { status: 'abandoned' } }, NOW)).toBe(
+      'abandoned',
+    )
+  })
+
+  it('a pending submission is still Draft', () => {
+    expect(listingState({ _status: 'draft', submission: { status: 'pending' } }, NOW)).toBe('draft')
+  })
+
+  it('isUnfinishedForm is true only for incomplete and abandoned', async () => {
+    const { isUnfinishedForm } = await import('./listing-state')
+    expect(isUnfinishedForm({ submission: { status: 'incomplete' } })).toBe(true)
+    expect(isUnfinishedForm({ submission: { status: 'abandoned' } })).toBe(true)
+    for (const status of ['pending', 'accepted', 'approved', 'rejected', undefined]) {
+      expect(isUnfinishedForm({ submission: { status } })).toBe(false)
+    }
+    expect(isUnfinishedForm(null)).toBe(false)
+  })
+})

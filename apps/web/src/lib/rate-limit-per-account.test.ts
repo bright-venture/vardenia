@@ -29,7 +29,8 @@ vi.mock('./rate-limit-store', () => ({
   sweepExpired: vi.fn(async () => {}),
 }))
 
-const { RATE_LIMIT, checkRatePerAccount, withRateLimit } = await import('./rate-limit')
+const { RATE_LIMIT, checkRatePerAccount, checkRatePerKey, withRateLimit } =
+  await import('./rate-limit')
 
 const send = (account: string | null, ip = '203.0.113.7') =>
   new Request('http://localhost:3000/booking/request', {
@@ -96,5 +97,40 @@ describe('forms that write', () => {
     for (let i = 0; i < 20; i++) expect((await wrapped(send('sara'), {} as never)).status).toBe(200)
     expect((await wrapped(send('sara'), {} as never)).status).toBe(429)
     expect((await wrapped(send('karim'), {} as never)).status).toBe(200)
+  })
+})
+
+describe('a polled or multi-file form (perMinute) and a counter per secret value', () => {
+  it('perMinute raises one form per connection ceiling above 20, on its own counters', async () => {
+    for (let i = 0; i < 40; i++) {
+      expect((await checkRatePerAccount(send(null), NOW, 'place-status', false, 60)).allowed).toBe(
+        true,
+      )
+    }
+    for (let i = 0; i < 20; i++)
+      await checkRatePerAccount(send(null), NOW, 'place-status', false, 60)
+    const over = await checkRatePerAccount(send(null), NOW, 'place-status', false, 60)
+    expect(over.allowed).toBe(false)
+    expect(over.limit).toBe(60)
+    // Another form on the same connection is untouched.
+    expect((await checkRatePerAccount(send(null), NOW, 'place-upload', false)).allowed).toBe(true)
+  })
+
+  it('withRateLimit passes perMinute through', async () => {
+    const wrapped = withRateLimit((async () => new Response('ok')) as never, undefined, {
+      action: 'place-status',
+      perMinute: 30,
+    })
+    for (let i = 0; i < 30; i++) expect((await wrapped(send(null), {} as never)).status).toBe(200)
+    expect((await wrapped(send(null), {} as never)).status).toBe(429)
+  })
+
+  it('checkRatePerKey counts one secret value on its own, whatever the connection', async () => {
+    for (let i = 0; i < 5; i++) {
+      expect((await checkRatePerKey('place-upload', 'token-a', 5, NOW)).allowed).toBe(true)
+    }
+    expect((await checkRatePerKey('place-upload', 'token-a', 5, NOW)).allowed).toBe(false)
+    expect((await checkRatePerKey('place-upload', 'token-b', 5, NOW)).allowed).toBe(true)
+    expect((await checkRatePerKey('place-status', 'token-a', 5, NOW)).allowed).toBe(true)
   })
 })

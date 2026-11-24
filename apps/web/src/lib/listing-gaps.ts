@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import type { Business } from '../payload-types'
+import { isUnfinishedForm } from './listing-state'
 import { PLACEHOLDER_STEM } from './media'
 import { FIND_EVERY_CEILING, findEvery } from './find-every'
 
@@ -186,57 +187,61 @@ export async function listingGaps(payload: Payload): Promise<ListingGap[]> {
     arabicNames.set(String(doc.id), text(doc.name))
   }
 
-  const rows = english.docs.map((doc) => {
-    /**
-     * The generated `Business` type rather than `Record<string, unknown>`.
-     *
-     * A cast to a loose record would have compiled with `doc.openningHours` in
-     * it and reported every listing as missing its hours - the exact class of
-     * silent wrong answer lib/qr-doc was written to stop. Here it matters twice
-     * over, because nobody checks a worklist against the truth; they work it.
-     */
-    const hero = doc.heroImage
-    const heroId = typeof hero === 'object' && hero ? String(hero.id) : String(hero ?? '')
+  // An unfinished or abandoned Magazine Places form is not a listing anyone owes
+  // work on (see isUnfinishedForm), so it stays off the worklist.
+  const rows = english.docs
+    .filter((doc) => !isUnfinishedForm(doc))
+    .map((doc) => {
+      /**
+       * The generated `Business` type rather than `Record<string, unknown>`.
+       *
+       * A cast to a loose record would have compiled with `doc.openningHours` in
+       * it and reported every listing as missing its hours - the exact class of
+       * silent wrong answer lib/qr-doc was written to stop. Here it matters twice
+       * over, because nobody checks a worklist against the truth; they work it.
+       */
+      const hero = doc.heroImage
+      const heroId = typeof hero === 'object' && hero ? String(hero.id) : String(hero ?? '')
 
-    const gap: ListingGap = {
-      name: text(doc.name),
-      slug: text(doc.slug),
-      status: doc._status ?? 'published',
-      category: text(doc.category),
-      governorate: text(doc.governorate),
-      tier: text(doc.tier),
-      missing: 0,
-      // A photograph of this place, so the shared stand-in does not count. Only
-      // the placeholder case looks finished on the page, which is why it is the
-      // one worth catching.
-      hasPhotograph: Boolean(heroId) && !placeholders.has(heroId),
-      hasGallery: count(doc.gallery) > 0,
-      hasHours: count(doc.openingHours) > 0,
-      hasDescription: !emptyRichText(doc.description),
-      hasTagline: text(doc.tagline) !== '',
-      hasArabicName: !isUntranslated(arabicNames.get(String(doc.id)), doc.name),
-      // The map pin. Contact fields were dropped deliberately; see the
-      // drop_contact_fields migration.
-      hasLocation: Boolean(doc.location),
-      bookingsOn: doc.booking?.enabled === true,
-    }
+      const gap: ListingGap = {
+        name: text(doc.name),
+        slug: text(doc.slug),
+        status: doc._status ?? 'published',
+        category: text(doc.category),
+        governorate: text(doc.governorate),
+        tier: text(doc.tier),
+        missing: 0,
+        // A photograph of this place, so the shared stand-in does not count. Only
+        // the placeholder case looks finished on the page, which is why it is the
+        // one worth catching.
+        hasPhotograph: Boolean(heroId) && !placeholders.has(heroId),
+        hasGallery: count(doc.gallery) > 0,
+        hasHours: count(doc.openingHours) > 0,
+        hasDescription: !emptyRichText(doc.description),
+        hasTagline: text(doc.tagline) !== '',
+        hasArabicName: !isUntranslated(arabicNames.get(String(doc.id)), doc.name),
+        // The map pin. Contact fields were dropped deliberately; see the
+        // drop_contact_fields migration.
+        hasLocation: Boolean(doc.location),
+        bookingsOn: doc.booking?.enabled === true,
+      }
 
-    // Counted off the same flags the file prints, so the number and the columns
-    // can never disagree - a mismatch there is the one thing that would make
-    // somebody stop trusting the sort.
-    gap.missing = [
-      gap.hasPhotograph,
-      gap.hasGallery,
-      gap.hasHours,
-      gap.hasDescription,
-      gap.hasTagline,
-      gap.hasArabicName,
-      gap.hasLocation,
-      gap.bookingsOn,
-    ].filter((has) => !has).length
+      // Counted off the same flags the file prints, so the number and the columns
+      // can never disagree - a mismatch there is the one thing that would make
+      // somebody stop trusting the sort.
+      gap.missing = [
+        gap.hasPhotograph,
+        gap.hasGallery,
+        gap.hasHours,
+        gap.hasDescription,
+        gap.hasTagline,
+        gap.hasArabicName,
+        gap.hasLocation,
+        gap.bookingsOn,
+      ].filter((has) => !has).length
 
-    return gap
-  })
+      return gap
+    })
 
   /**
    * Emptiest first, and published before drafts within that.

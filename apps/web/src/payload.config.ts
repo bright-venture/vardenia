@@ -33,11 +33,13 @@ import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
+import { PlaceUploadSessions } from './collections/PlaceUploadSessions'
 import { Settings } from './globals/Settings'
 import { EDITION_MAX_BYTES, Editions } from './collections/Editions'
 import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/storage-base'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
+import { rejectSubmissionEndpoint } from './submissions/reject-endpoint'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
@@ -188,7 +190,7 @@ export default buildConfig({
    * the admin cookie. A hand-rolled route would have to repeat that, and the
    * repetition is where an auth check goes missing.
    */
-  endpoints: [importListingsEndpoint],
+  endpoints: [importListingsEndpoint, rejectSubmissionEndpoint],
 
   // The admin menu follows this order, group by group: Directory, Bookings,
   // Magazine, People, Reports. The last two are hidden from the menu.
@@ -217,6 +219,7 @@ export default buildConfig({
     ErrorEvents,
     SavedListings,
     RateLimits,
+    PlaceUploadSessions,
   ],
 
   globals: [Settings],

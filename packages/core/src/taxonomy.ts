@@ -220,3 +220,47 @@ export function categoryTakesBookings(category: string | null | undefined): bool
   const found = category ? findCategory(category) : undefined
   return (found?.children ?? []).some((child) => isBookableSubcategory(child.slug))
 }
+
+/**
+ * The kinds of place a business owner may submit on the public "add your place"
+ * form (23 November 2026). One shared list: the schema refuses anything else and
+ * the form offers exactly these.
+ *
+ * The other six kinds (guided-tours, activities, event-planners, car-rental,
+ * airport-transfers, private-drivers) are coming soon: still in the taxonomy,
+ * not yet submittable. Adding one later means adding its slug here.
+ */
+export const SUBMITTABLE_KIND_SLUGS = [
+  'hotels',
+  'getaways',
+  'restaurants',
+  'cafes',
+  'pools',
+  'nightlife',
+  'historic-sites',
+  'festivals',
+  'malls',
+  'gyms',
+] as const
+
+export type SubmittableKindSlug = (typeof SUBMITTABLE_KIND_SLUGS)[number]
+
+export function isSubmittableKind(slug: unknown): slug is SubmittableKindSlug {
+  return typeof slug === 'string' && (SUBMITTABLE_KIND_SLUGS as readonly string[]).includes(slug)
+}
+
+/** The category a kind of place belongs to, or undefined for an unknown slug. */
+export function categoryOfKind(slug: string): CategorySlug | undefined {
+  return SUBCATEGORY_PARENT[slug]
+}
+
+/** The submittable kinds grouped by category, in taxonomy order; empty categories are left out. */
+export function submittableKindsByCategory(): Array<{
+  category: Category
+  kinds: SubCategory[]
+}> {
+  return CATEGORIES.map((category) => ({
+    category,
+    kinds: category.children.filter((child) => isSubmittableKind(child.slug)),
+  })).filter((group) => group.kinds.length > 0)
+}

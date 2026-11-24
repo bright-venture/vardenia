@@ -116,6 +116,10 @@ export interface AdminHome {
     bookingsThisMonth: number
     scans: number
     feesOwed: number
+    /** Magazine Places forms the owner finished, waiting for staff. */
+    submissionsToReview: number
+    /** Forms started and not finished (the number is held for a short while). */
+    incompleteForms: number
   }
   attention: AttentionItem[]
 }
@@ -167,6 +171,8 @@ export async function adminHome(
     reviews,
     waiting,
     visitDisputes,
+    toReview,
+    incomplete,
   ] = await Promise.all([
     dashboardCounts(payload, windowStart),
     payload.count({
@@ -285,6 +291,22 @@ export async function adminHome(
       sort: 'end',
       select: { reference: true, status: true, guestAnswer: true, business: true },
       populate: { businesses: { name: true } },
+    }),
+
+    // Magazine Places forms: finished and waiting for staff, and still being
+    // filled in. Two counts with the staff member's own access (the submission
+    // fields are staff-only), no rows read.
+    payload.count({
+      collection: 'businesses',
+      where: { 'submission.status': { equals: 'pending' } },
+      overrideAccess: false,
+      user,
+    }),
+    payload.count({
+      collection: 'businesses',
+      where: { 'submission.status': { equals: 'incomplete' } },
+      overrideAccess: false,
+      user,
     }),
   ])
 
@@ -447,6 +469,17 @@ export async function adminHome(
     })
   }
 
+  if (toReview.totalDocs > 0) {
+    attention.push({
+      area: 'Listings',
+      title: `${toReview.totalDocs} submission${toReview.totalDocs === 1 ? '' : 's'} to review`,
+      detail:
+        'Businesses that finished the Magazine Places form. Open each one to review or reject it.',
+      href: '/admin/collections/businesses?where[submission.status][equals]=pending',
+      tone: 'warn',
+    })
+  }
+
   const feesOwed = (owed.docs as { total?: number | null }[]).reduce(
     (sum, doc) => sum + Number(doc.total ?? 0),
     0,
@@ -459,6 +492,8 @@ export async function adminHome(
       bookingsThisMonth: bookings.totalDocs,
       scans: counts.recentScans,
       feesOwed,
+      submissionsToReview: toReview.totalDocs,
+      incompleteForms: incomplete.totalDocs,
     },
     attention,
   }

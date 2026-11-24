@@ -13,7 +13,8 @@ import {
   type ContactField,
   type NumberRange,
 } from '@vardenia/core'
-import type { CollectionConfig, Field, PayloadRequest } from 'payload'
+import { upload } from 'payload/shared'
+import type { CollectionConfig, Field, PayloadRequest, UploadFieldSingleValidation } from 'payload'
 import {
   GOVERNORATES,
   SUBCATEGORY_PARENT,
@@ -42,17 +43,24 @@ import { categoryOptions, districtOptions, governorateOptions, subcategoryOption
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
+import { syncOwnerPhoneSearch } from '../hooks/syncOwnerPhoneSearch'
+import { staffSearch } from '../hooks/staffSearch'
+import { HISTORY_STEPS, recordSubmissionHistory } from '../hooks/recordSubmissionHistory'
+import { requireRejectionReason } from '../hooks/requireRejectionReason'
 import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
   refusePublishingRejected,
+  refusePublishingUnfinished,
   requireContractToPublish,
 } from '../hooks/linkPartnerOnPublish'
 import { protectBusinessWithPrintedCode } from '../hooks/protectPrintedCodes'
 import { blockBusinessWithBookings } from '../hooks/blockBusinessWithBookings'
 import { requireTrashFirst } from '../hooks/requireTrashFirst'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
+import { cleanupPlaceSessions } from '../hooks/cleanupPlaceSessions'
 import { guardSort } from '../hooks/guardSort'
+import { normaliseLebanesePhone } from '../lib/lebanese-phone'
 import { LISTING_STATES, listingState } from '../lib/listing-state'
 import { guardPartnerListingWrite } from '../hooks/guardPartnerListingWrite'
 import { markMediaAttached } from '../hooks/markMediaAttached'
@@ -121,6 +129,25 @@ const idOf = (value: unknown): number | string | null => {
   if (typeof value === 'number' || typeof value === 'string') return value
   const id = (value as { id?: unknown } | null)?.id
   return typeof id === 'number' || typeof id === 'string' ? id : null
+}
+
+/** Submission states in which a listing may have no main photo yet. */
+const PHOTO_OPTIONAL_STATUSES = new Set(['incomplete', 'abandoned'])
+
+/**
+ * The main photo is required for every listing (staff-created ones, and every
+ * submission state from pending on), except while the owner's form is
+ * incomplete or after it was abandoned. `data` is the whole document being
+ * saved (an update is merged with the stored one first), so a write that only
+ * touches the status is judged against the stored photo.
+ */
+export const validHeroImage: UploadFieldSingleValidation = async (value, options) => {
+  const status = (options.data as { submission?: { status?: unknown } | null } | undefined)
+    ?.submission?.status
+  if (typeof status === 'string' && PHOTO_OPTIONAL_STATUSES.has(status)) return true
+  // Payload's own upload validation, now with `required` switched on: the
+  // required message, a valid id, and the field's filter options.
+  return upload(value, { ...options, required: true })
 }
 
 /**
@@ -233,7 +260,29 @@ export const Businesses: CollectionConfig = {
     // `state` reads Draft, Published, Rejected or Expired (lib/listing-state).
     defaultColumns: ['name', 'category', 'governorate', 'tier', 'contractEndsAt', 'state'],
     group: 'Directory',
-    listSearchableFields: ['name', 'slug', 'address'],
+    // Staff find a submission by what they have in hand: its reference
+    // (VD-123), the page number, the owner's name, email or phone. The phone is
+    // searched in one normalised shape (submission.ownerPhoneSearch, see
+    // lib/owner-phone-search); the raw phone is kept for rows saved before that
+    // column existed. These are staff-only fields: Payload refuses a query on
+    // one for anybody else, so adding them here discloses nothing.
+    listSearchableFields: [
+      'name',
+      'slug',
+      'address',
+      'listingNumber',
+      'submission.reference',
+      'submission.ownerName',
+      'submission.ownerEmail',
+      'submission.ownerPhone',
+      'submission.ownerPhoneSearch',
+    ],
+    components: {
+      // Links to the submission queues (Submitted, Incomplete, Abandoned,
+      // Rejected) above the list. Plain filters on submission.status: nothing
+      // is hidden from the default view.
+      beforeListTable: ['/components/admin/SubmissionQueues#SubmissionQueues'],
+    },
   },
   /**
    * No versions, and a trash (17 November 2026).
@@ -274,7 +323,7 @@ export const Businesses: CollectionConfig = {
     // A partner may change only core PARTNER_EDITABLE_FIELDS of their own
     // listing, and attach only media they uploaded. See
     // hooks/guardPartnerListingWrite.
-    beforeOperation: [guardSort, guardPartnerListingWrite],
+    beforeOperation: [guardSort, staffSearch, guardPartnerListingWrite],
     // Every listing on a printed tier gets a QR code automatically; bronze, the
     // website-only tier, gets none. Sales should never have to remember to press
     // a button before a print deadline.
@@ -290,12 +339,19 @@ export const Businesses: CollectionConfig = {
     // (Task 8). See hooks/protectSeatingAreaBookings.
     beforeValidate: [
       refusePublishingRejected,
+      requireRejectionReason,
+      refusePublishingUnfinished,
       requireContractToPublish,
       fillLocationFromMapUrl,
       guardKindFields,
       protectSeatingAreaBookings,
     ],
-    beforeChange: [approveSubmissionOnPublish, releaseListingNumber],
+    beforeChange: [
+      approveSubmissionOnPublish,
+      releaseListingNumber,
+      syncOwnerPhoneSearch,
+      recordSubmissionHistory,
+    ],
     afterChange: [
       ensureQrCode,
       linkPartnerOnPublish,
@@ -323,6 +379,9 @@ export const Businesses: CollectionConfig = {
       protectBusinessWithPrintedCode,
       blockBusinessWithBookings,
       cleanupSavedListings('listing'),
+      // Form-created businesses own upload sessions whose business_id is not
+      // null; they must go before the row does (hooks/cleanupPlaceSessions).
+      cleanupPlaceSessions,
     ],
   },
   fields: [
@@ -345,7 +404,14 @@ export const Businesses: CollectionConfig = {
               name: 'heroImage',
               type: 'upload',
               relationTo: 'media',
-              required: true,
+              // Required, except while a Magazine Places form is unfinished
+              // (the photo comes later, from the phone) or given up. The
+              // column is nullable to match (migration 20261124_120000).
+              validate: validHeroImage,
+              admin: {
+                description:
+                  'Required for every listing except a submission that is still incomplete or abandoned.',
+              },
             },
             {
               name: 'gallery',
@@ -508,6 +574,8 @@ export const Businesses: CollectionConfig = {
             },
             {
               name: 'district',
+              // Shown as "Town": the stored field name stays `district`.
+              label: 'Town',
               type: 'select',
               index: true,
               options: districtOptions,
@@ -521,10 +589,10 @@ export const Businesses: CollectionConfig = {
               validate: (value: unknown, { data }: { data: Partial<{ governorate: string }> }) =>
                 !value || DISTRICT_PARENT[String(value)] === data?.governorate
                   ? true
-                  : 'That district is not in the chosen governorate.',
+                  : 'That town is not in the chosen governorate.',
               admin: {
                 description:
-                  'The town or place guests filter by (Jounieh, Faqra / Faraya). Only the districts of the governorate above are offered.',
+                  'The town or place guests filter by (Jounieh, Faqra / Faraya). Only the towns of the governorate above are offered.',
               },
             },
             { name: 'address', type: 'textarea', localized: true },
@@ -938,12 +1006,35 @@ export const Businesses: CollectionConfig = {
       admin: { condition: (_, __, { user }) => hasStaffRole(user) },
       fields: [
         {
+          // One readable place for the review: owner, layout, dates, terms,
+          // reference and the two photos. Display only; see the component.
+          name: 'review',
+          type: 'ui',
+          admin: { components: { Field: '/components/admin/SubmissionReview#SubmissionReview' } },
+        },
+        {
+          // The Reject control (reason required). Server-checked endpoint.
+          name: 'rejectAction',
+          type: 'ui',
+          admin: { components: { Field: '/components/admin/RejectSubmission#RejectSubmission' } },
+        },
+        {
           name: 'status',
           type: 'select',
           // No default on purpose: a listing staff create themselves has no
           // status. The public submission service sets 'pending' itself.
           options: [
+            // The Magazine Places form: incomplete (form started, photos or
+            // terms still to do, number held) -> pending (terms accepted,
+            // waiting for staff) -> accepted (staff said yes, awaiting payment)
+            // -> paid, then published => approved. incomplete -> abandoned when
+            // the hold runs out; accepted -> lapsed when not paid in time; any
+            // -> rejected.
+            { label: 'Incomplete', value: 'incomplete' },
+            { label: 'Abandoned', value: 'abandoned' },
             { label: 'Pending', value: 'pending' },
+            { label: 'Accepted (awaiting payment)', value: 'accepted' },
+            { label: 'Lapsed (not paid in time)', value: 'lapsed' },
             { label: 'Approved', value: 'approved' },
             // Final: a rejected submission cannot be reopened or published.
             { label: 'Rejected', value: 'rejected' },
@@ -957,6 +1048,14 @@ export const Businesses: CollectionConfig = {
         { name: 'ownerEmail', type: 'email', access: submissionAccess },
         { name: 'ownerPhone', type: 'text', access: submissionAccess },
         {
+          // The phone in one shape for the admin search, written by
+          // hooks/syncOwnerPhoneSearch on every save. Never typed by hand.
+          name: 'ownerPhoneSearch',
+          type: 'text',
+          access: submissionAccess,
+          admin: { readOnly: true, hidden: true },
+        },
+        {
           name: 'pageTemplate',
           type: 'select',
           options: [
@@ -967,6 +1066,128 @@ export const Businesses: CollectionConfig = {
           access: submissionAccess,
         },
         { name: 'submittedAt', type: 'date', access: submissionAccess },
+        {
+          // VD-<n>, made by lib/submission-reference. Unique where set (Postgres
+          // lets any number of empty values sit in a unique column).
+          name: 'reference',
+          type: 'text',
+          unique: true,
+          access: submissionAccess,
+          admin: { readOnly: true },
+        },
+        { name: 'acceptedAt', type: 'date', access: submissionAccess },
+        {
+          // Set only by the Reject action (lib/place-rejection), with who and
+          // when. Staff only; the owner sees the reason only when it was shared.
+          name: 'rejectionReason',
+          type: 'textarea',
+          access: submissionAccess,
+          admin: { readOnly: true, description: 'Why it was rejected. Set by Reject submission.' },
+        },
+        {
+          name: 'rejectionReasonShared',
+          type: 'checkbox',
+          access: submissionAccess,
+          admin: { readOnly: true, description: 'Whether the reason was sent to the owner.' },
+        },
+        { name: 'rejectedAt', type: 'date', access: submissionAccess, admin: { readOnly: true } },
+        {
+          name: 'rejectedBy',
+          type: 'relationship',
+          relationTo: 'users',
+          access: submissionAccess,
+          admin: { readOnly: true },
+        },
+        {
+          // Each step of the submission: what, when, who. Append only, written
+          // by hooks/recordSubmissionHistory. Holds no owner details.
+          name: 'history',
+          type: 'array',
+          access: submissionAccess,
+          admin: {
+            readOnly: true,
+            description: 'Each step of this submission, with who and when. Cannot be edited.',
+          },
+          fields: [
+            {
+              name: 'step',
+              type: 'select',
+              options: HISTORY_STEPS.map((o) => ({ label: o.label, value: o.value })),
+              required: true,
+            },
+            { name: 'at', type: 'date', required: true },
+            { name: 'by', type: 'relationship', relationTo: 'users' },
+          ],
+        },
+        { name: 'paymentDeadline', type: 'date', access: submissionAccess },
+        {
+          // Staff only, never partner-editable (not in PARTNER_EDITABLE_FIELDS).
+          // The partial unique index on (senderNumber, whishAt) where paid lives
+          // in the migration 20261124_120000_magazine_places_form.
+          name: 'payment',
+          type: 'group',
+          access: submissionAccess,
+          fields: [
+            {
+              name: 'status',
+              type: 'select',
+              defaultValue: 'unpaid',
+              options: [
+                { label: 'Unpaid', value: 'unpaid' },
+                { label: 'Paid', value: 'paid' },
+              ],
+              access: submissionAccess,
+            },
+            { name: 'amount', type: 'number', min: 0, access: submissionAccess },
+            { name: 'currency', type: 'text', access: submissionAccess },
+            {
+              name: 'method',
+              type: 'select',
+              options: [
+                { label: 'Whish', value: 'whish' },
+                { label: 'Cash', value: 'cash' },
+                { label: 'Desk', value: 'desk' },
+              ],
+              access: submissionAccess,
+            },
+            {
+              name: 'senderNumber',
+              type: 'text',
+              access: submissionAccess,
+              admin: { description: 'Normalised Lebanese format (lib/lebanese-phone).' },
+              hooks: {
+                beforeValidate: [
+                  ({ value }) => {
+                    if (typeof value !== 'string' || !value.trim()) return value
+                    return normaliseLebanesePhone(value) ?? value.trim()
+                  },
+                ],
+              },
+            },
+            { name: 'whishAt', type: 'date', access: submissionAccess },
+            { name: 'paidAt', type: 'date', access: submissionAccess },
+            {
+              name: 'markedBy',
+              type: 'relationship',
+              relationTo: 'users',
+              access: submissionAccess,
+            },
+          ],
+        },
+        {
+          // What the owner agreed to, copied at acceptance so a later price
+          // change never rewrites it.
+          name: 'terms',
+          type: 'group',
+          access: submissionAccess,
+          fields: [
+            { name: 'version', type: 'text', access: submissionAccess },
+            { name: 'priceAtAcceptance', type: 'number', min: 0, access: submissionAccess },
+            { name: 'currency', type: 'text', access: submissionAccess },
+            { name: 'termMonths', type: 'number', min: 1, access: submissionAccess },
+            { name: 'acceptedAt', type: 'date', access: submissionAccess },
+          ],
+        },
       ],
     },
     {

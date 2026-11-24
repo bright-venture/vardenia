@@ -93,6 +93,7 @@ export interface Config {
     'error-events': ErrorEvent;
     'saved-listings': SavedListing;
     'rate-limits': RateLimit;
+    'place-upload-sessions': PlaceUploadSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -132,6 +133,7 @@ export interface Config {
     'error-events': ErrorEventsSelect<false> | ErrorEventsSelect<true>;
     'saved-listings': SavedListingsSelect<false> | SavedListingsSelect<true>;
     'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
+    'place-upload-sessions': PlaceUploadSessionsSelect<false> | PlaceUploadSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -243,7 +245,10 @@ export interface Business {
     };
     [k: string]: unknown;
   } | null;
-  heroImage: number | Media;
+  /**
+   * Required for every listing except a submission that is still incomplete or abandoned.
+   */
+  heroImage?: (number | null) | Media;
   /**
    * Gallery size is capped by listing tier - extra images are hidden, not deleted.
    */
@@ -317,7 +322,7 @@ export interface Business {
   tags?: string[] | null;
   governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
   /**
-   * The town or place guests filter by (Jounieh, Faqra / Faraya). Only the districts of the governorate above are offered.
+   * The town or place guests filter by (Jounieh, Faqra / Faraya). Only the towns of the governorate above are offered.
    */
   district?:
     | (
@@ -686,14 +691,60 @@ export interface Business {
     linkedin?: string | null;
   };
   submission?: {
-    status?: ('pending' | 'approved' | 'rejected' | 'expired') | null;
+    status?:
+      ('incomplete' | 'abandoned' | 'pending' | 'accepted' | 'lapsed' | 'approved' | 'rejected' | 'expired') | null;
     ownerName?: string | null;
     ownerEmail?: string | null;
     ownerPhone?: string | null;
+    ownerPhoneSearch?: string | null;
     pageTemplate?: ('a' | 'b' | 'c') | null;
     submittedAt?: string | null;
+    reference?: string | null;
+    acceptedAt?: string | null;
+    /**
+     * Why it was rejected. Set by Reject submission.
+     */
+    rejectionReason?: string | null;
+    /**
+     * Whether the reason was sent to the owner.
+     */
+    rejectionReasonShared?: boolean | null;
+    rejectedAt?: string | null;
+    rejectedBy?: (number | null) | User;
+    /**
+     * Each step of this submission, with who and when. Cannot be edited.
+     */
+    history?:
+      | {
+          step: 'incomplete' | 'pending' | 'rejected' | 'approved' | 'abandoned' | 'accepted' | 'lapsed' | 'expired';
+          at: string;
+          by?: (number | null) | User;
+          id?: string | null;
+        }[]
+      | null;
+    paymentDeadline?: string | null;
+    payment?: {
+      status?: ('unpaid' | 'paid') | null;
+      amount?: number | null;
+      currency?: string | null;
+      method?: ('whish' | 'cash' | 'desk') | null;
+      /**
+       * Normalised Lebanese format (lib/lebanese-phone).
+       */
+      senderNumber?: string | null;
+      whishAt?: string | null;
+      paidAt?: string | null;
+      markedBy?: (number | null) | User;
+    };
+    terms?: {
+      version?: string | null;
+      priceAtAcceptance?: number | null;
+      currency?: string | null;
+      termMonths?: number | null;
+      acceptedAt?: string | null;
+    };
   };
-  state?: ('draft' | 'published' | 'rejected' | 'expired') | null;
+  state?: ('draft' | 'published' | 'rejected' | 'expired' | 'incomplete' | 'abandoned') | null;
   seo?: {
     /**
      * Falls back to the document title when empty.
@@ -1646,6 +1697,30 @@ export interface RateLimit {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions".
+ */
+export interface PlaceUploadSession {
+  id: number;
+  tokenHash: string;
+  business: number | Business;
+  expiresAt: string;
+  logoReceived?: boolean | null;
+  heroReceived?: boolean | null;
+  closedAt?: string | null;
+  mediaIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1763,6 +1838,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rate-limits';
         value: number | RateLimit;
+      } | null)
+    | ({
+        relationTo: 'place-upload-sessions';
+        value: number | PlaceUploadSession;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1972,8 +2051,45 @@ export interface BusinessesSelect<T extends boolean = true> {
         ownerName?: T;
         ownerEmail?: T;
         ownerPhone?: T;
+        ownerPhoneSearch?: T;
         pageTemplate?: T;
         submittedAt?: T;
+        reference?: T;
+        acceptedAt?: T;
+        rejectionReason?: T;
+        rejectionReasonShared?: T;
+        rejectedAt?: T;
+        rejectedBy?: T;
+        history?:
+          | T
+          | {
+              step?: T;
+              at?: T;
+              by?: T;
+              id?: T;
+            };
+        paymentDeadline?: T;
+        payment?:
+          | T
+          | {
+              status?: T;
+              amount?: T;
+              currency?: T;
+              method?: T;
+              senderNumber?: T;
+              whishAt?: T;
+              paidAt?: T;
+              markedBy?: T;
+            };
+        terms?:
+          | T
+          | {
+              version?: T;
+              priceAtAcceptance?: T;
+              currency?: T;
+              termMonths?: T;
+              acceptedAt?: T;
+            };
       };
   state?: T;
   seo?:
@@ -2565,6 +2681,21 @@ export interface RateLimitsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions_select".
+ */
+export interface PlaceUploadSessionsSelect<T extends boolean = true> {
+  tokenHash?: T;
+  business?: T;
+  expiresAt?: T;
+  logoReceived?: T;
+  heroReceived?: T;
+  closedAt?: T;
+  mediaIds?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2655,6 +2786,21 @@ export interface Setting {
         | 'credits'
       )[]
     | null;
+  magazinePlaces?: {
+    pricePerYear?: number | null;
+    currency?: string | null;
+    termMonths?: number | null;
+    paymentDeadlineDays?: number | null;
+    /**
+     * How long an unfinished form keeps its listing number.
+     */
+    holdMinutes?: number | null;
+    /**
+     * Used for Whish payments and WhatsApp.
+     */
+    whishNumber?: string | null;
+    termsVersion?: string | null;
+  };
   /**
    * Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.
    */
@@ -2672,6 +2818,17 @@ export interface SettingsSelect<T extends boolean = true> {
   maxGoldPerCategory?: T;
   maxPlatinum?: T;
   hiddenPages?: T;
+  magazinePlaces?:
+    | T
+    | {
+        pricePerYear?: T;
+        currency?: T;
+        termMonths?: T;
+        paymentDeadlineDays?: T;
+        holdMinutes?: T;
+        whishNumber?: T;
+        termsVersion?: T;
+      };
   signupsPaused?: T;
   updatedAt?: T;
   createdAt?: T;

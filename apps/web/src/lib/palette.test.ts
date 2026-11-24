@@ -52,9 +52,10 @@ const paletteRgb = new Set(
 /**
  * The public surface only. Payload's admin panel is styled separately and
  * deliberately excluded from the Tailwind content globs, so its colours are not
- * ours to police; the printed QR sheet sets its own ink for a printer.
+ * ours to police; the printed QR sheet sets its own ink for a printer, and the
+ * place form's QR code is pure black on white so a phone camera reads it.
  */
-const EXCLUDED = ['components/admin/', 'app/(payload)/', 'app/qr/']
+const EXCLUDED = ['components/admin/', 'app/(payload)/', 'app/qr/', 'components/places/PlaceQr.tsx']
 
 const files = execFileSync('git', ['ls-files', 'apps/web/src/components', 'apps/web/src/app'], {
   cwd: path.resolve(here, '../../../..'),

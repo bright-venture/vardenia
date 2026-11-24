@@ -10,6 +10,7 @@ import { advisoryLock, partnerLockKey } from '../lib/partner-lock'
 
 type Submission = {
   status?: string
+  payment?: { status?: string } | null
   ownerName?: string
   ownerEmail?: string
   ownerPhone?: string
@@ -61,6 +62,54 @@ export const refusePublishingRejected: CollectionBeforeValidateHook = ({ data, o
   }
   throw new APIError(
     'A published listing cannot be rejected, because rejecting gives its listing number away while the page is still live. Set the listing to Draft first, then reject it.',
+    400,
+    null,
+    true,
+  )
+}
+
+/**
+ * Statuses of the Magazine Places form that must never reach the website:
+ * incomplete (still being filled in), abandoned and lapsed (given up). An
+ * accepted submission may be published only once it is marked paid. Only ever
+ * stricter than before: it refuses, it never allows.
+ */
+export const refusePublishingUnfinished: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
+  // The other direction: a live listing cannot be knocked back into a form
+  // state (incomplete or abandoned), which would free its number and drop its
+  // photo requirement while the page is still on the website.
+  const asked = (data?.submission as Submission | undefined)?.status
+  const live = (data?._status ?? originalDoc?._status) === 'published'
+  if (live && (asked === 'incomplete' || asked === 'abandoned')) {
+    throw new APIError(
+      `A published listing cannot be set to ${asked}. Set the listing to Draft first.`,
+      400,
+      null,
+      true,
+    )
+  }
+
+  const publishing = data?._status === 'published' && originalDoc?._status !== 'published'
+  if (!publishing) return data
+  const merged = {
+    ...((originalDoc?.submission as Submission | undefined) ?? {}),
+    ...((data?.submission as Submission | undefined) ?? {}),
+  }
+  const payment = {
+    ...((originalDoc?.submission as Submission | undefined)?.payment ?? {}),
+    ...((data?.submission as Submission | undefined)?.payment ?? {}),
+  }
+  const status = merged.status
+  const blocked =
+    status === 'incomplete' ||
+    status === 'abandoned' ||
+    status === 'lapsed' ||
+    (status === 'accepted' && payment.status !== 'paid')
+  if (!blocked) return data
+  throw new APIError(
+    status === 'accepted'
+      ? 'This submission is accepted but not paid yet. Mark it paid before publishing.'
+      : `This submission is ${status}, so it cannot be published.`,
     400,
     null,
     true,

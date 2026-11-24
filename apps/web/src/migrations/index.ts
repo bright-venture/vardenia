@@ -73,6 +73,7 @@ import * as migration_20261120_131807_remove_place_requests_add_expired from './
 import * as migration_20261121_120000_customer_booking_limits_two from './20261121_120000_customer_booking_limits_two'
 import * as migration_20261121_134843_core_backend from './20261121_134843_core_backend'
 import * as migration_20261124_100000_districts from './20261124_100000_districts'
+import * as migration_20261124_120000_magazine_places_form from './20261124_120000_magazine_places_form'
 
 export const migrations = [
   {
@@ -449,5 +450,10 @@ export const migrations = [
     up: migration_20261124_100000_districts.up,
     down: migration_20261124_100000_districts.down,
     name: '20261124_100000_districts',
+  },
+  {
+    up: migration_20261124_120000_magazine_places_form.up,
+    down: migration_20261124_120000_magazine_places_form.down,
+    name: '20261124_120000_magazine_places_form',
   },
 ]
