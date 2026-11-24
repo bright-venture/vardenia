@@ -1,4 +1,4 @@
-import type { CategorySlug } from '@vardenia/core'
+import { districtForPlace, type CategorySlug } from '@vardenia/core'
 import { slugify } from '../fields/slug'
 
 /**
@@ -107,61 +107,52 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
 }
 
 /**
- * The district headings the files use, each paired with the magazine region it
- * sits in (see core/regions). Region travels with the district rather than
- * being one constant, because one file can reach into several: the North file
- * carries Akkar, the South file Nabatieh. The neighbourhood (Ashrafieh,
- * Gemmayzeh, Sodeco) rides in the Location column and becomes the address, not
- * the district.
+ * The district headings the files use (the official cazas), each paired with
+ * the magazine region it sits in (see core/regions). Region travels with the
+ * heading rather than being one constant, because one file can reach into
+ * several: the North file carries Akkar, the South file Nabatieh.
+ *
+ * Since 24 November 2026 the site's districts are towns and places (Jounieh,
+ * Faqra / Faraya), so the district comes from the Location column first
+ * (core districtForPlace). `district` here is only for a heading that is itself
+ * one of those places (Aley, Batroun, Zahle), used when the Location does not
+ * name one.
  */
-const DISTRICT_BY_HEADING: Record<string, { district: string; governorate: string }> = {
-  'Keserwan District': { district: 'keserwan', governorate: 'keserwan' },
-  'Byblos / Jbeil District': { district: 'jbeil', governorate: 'keserwan' },
-  // Six rows span both. Keserwan wins because the directory is a Keserwan one,
-  // and the row is flagged so a person can split it later if it matters.
-  'Keserwan + Byblos / Jbeil Districts': { district: 'keserwan', governorate: 'keserwan' },
-  // The Chouf file. One district, no towns split across two.
-  'Chouf District': { district: 'chouf', governorate: 'chouf' },
-  // The Matn, Baabda and Aley files: all three are the Matn edition. The town
-  // rides in the Location column and becomes the address, as everywhere else.
-  'Matn District': { district: 'matn', governorate: 'matn' },
-  'Baabda District': { district: 'baabda', governorate: 'matn' },
-  'Aley District': { district: 'aley', governorate: 'matn' },
-  // The Beirut file. Beirut is a region of one district of the same name; the
-  // neighbourhoods are addresses, not districts.
-  'Beirut District': { district: 'beirut', governorate: 'beirut' },
-  // The North Lebanon file: the first collection outside Mount Lebanon and
-  // Beirut. Seven cazas, Akkar included, one region.
-  'Batroun District': { district: 'batroun', governorate: 'north-lebanon' },
-  'Bsharri District': { district: 'bsharri', governorate: 'north-lebanon' },
-  'Koura District': { district: 'koura', governorate: 'north-lebanon' },
-  'Miniyeh-Danniyeh District': { district: 'miniyeh-danniyeh', governorate: 'north-lebanon' },
-  'Tripoli District': { district: 'tripoli', governorate: 'north-lebanon' },
-  'Zgharta District': { district: 'zgharta', governorate: 'north-lebanon' },
-  'Akkar District': { district: 'akkar', governorate: 'north-lebanon' },
-  // The South Lebanon file: Sidon, Tyre and Jezzine. Before these existed every
-  // row in it would have fallen to DEFAULT_GOVERNORATE and been filed in the
-  // wrong region - the fallback warns, but a hundred and fifty warnings read as
-  // noise.
-  'Sidon District': { district: 'sidon', governorate: 'south-lebanon' },
-  'Tyre District': { district: 'tyre', governorate: 'south-lebanon' },
-  'Jezzine District': { district: 'jezzine', governorate: 'south-lebanon' },
-  // The South file reaches into Nabatieh's cazas too: towns like Jbaa sit on
-  // the Jezzine road but in Nabatieh District. All four, so the next file from
-  // the south finds them already here.
-  'Nabatieh District': { district: 'nabatieh', governorate: 'south-lebanon' },
-  'Marjeyoun District': { district: 'marjeyoun', governorate: 'south-lebanon' },
-  'Hasbaya District': { district: 'hasbaya', governorate: 'south-lebanon' },
-  'Bint Jbeil District': { district: 'bint-jbeil', governorate: 'south-lebanon' },
-  // The Bekaa file: Zahle, West Bekaa and Rachaya, and Baalbek-Hermel to the
-  // north, one region. Both spellings of West Bekaa are accepted, because the
-  // sheets use one and the map the other.
-  'Zahle District': { district: 'zahle', governorate: 'beqaa' },
-  'West Bekaa District': { district: 'western-beqaa', governorate: 'beqaa' },
-  'Western Beqaa District': { district: 'western-beqaa', governorate: 'beqaa' },
-  'Rachaya District': { district: 'rachaya', governorate: 'beqaa' },
-  'Baalbek District': { district: 'baalbek', governorate: 'beqaa' },
-  'Hermel District': { district: 'hermel', governorate: 'beqaa' },
+const REGION_BY_HEADING: Record<string, { governorate: string; district?: string }> = {
+  'Keserwan District': { governorate: 'keserwan' },
+  'Byblos / Jbeil District': { governorate: 'keserwan', district: 'jbeil' },
+  // Six rows span both, and are flagged so a person can check them.
+  'Keserwan + Byblos / Jbeil Districts': { governorate: 'keserwan' },
+  'Chouf District': { governorate: 'chouf' },
+  // The Matn, Baabda and Aley files: all three are the Matn edition.
+  'Matn District': { governorate: 'matn' },
+  'Baabda District': { governorate: 'matn', district: 'baabda' },
+  'Aley District': { governorate: 'matn', district: 'aley' },
+  'Beirut District': { governorate: 'beirut', district: 'beirut' },
+  // The North Lebanon file, Akkar included: one region.
+  'Batroun District': { governorate: 'north-lebanon', district: 'batroun' },
+  'Bsharri District': { governorate: 'north-lebanon', district: 'bsharri' },
+  'Koura District': { governorate: 'north-lebanon', district: 'koura' },
+  'Miniyeh-Danniyeh District': { governorate: 'north-lebanon' },
+  'Tripoli District': { governorate: 'north-lebanon', district: 'tripoli' },
+  'Zgharta District': { governorate: 'north-lebanon', district: 'zgharta' },
+  'Akkar District': { governorate: 'north-lebanon', district: 'akkar' },
+  // The South Lebanon file, which reaches into Nabatieh's cazas too.
+  'Sidon District': { governorate: 'south-lebanon', district: 'sidon' },
+  'Tyre District': { governorate: 'south-lebanon', district: 'tyre' },
+  'Jezzine District': { governorate: 'south-lebanon', district: 'jezzine' },
+  'Nabatieh District': { governorate: 'south-lebanon' },
+  'Marjeyoun District': { governorate: 'south-lebanon' },
+  'Hasbaya District': { governorate: 'south-lebanon' },
+  'Bint Jbeil District': { governorate: 'south-lebanon' },
+  // The Bekaa file: Zahle, West Bekaa and Rachaya, and Baalbek-Hermel, one
+  // region. Both spellings of West Bekaa are accepted.
+  'Zahle District': { governorate: 'beqaa', district: 'zahle' },
+  'West Bekaa District': { governorate: 'beqaa', district: 'western-beqaa' },
+  'Western Beqaa District': { governorate: 'beqaa', district: 'western-beqaa' },
+  'Rachaya District': { governorate: 'beqaa', district: 'western-beqaa' },
+  'Baalbek District': { governorate: 'beqaa', district: 'baalbek' },
+  'Hermel District': { governorate: 'beqaa', district: 'hermel' },
 }
 
 /** Where a row lands when its District heading is not one we know. */
@@ -415,11 +406,15 @@ export function toListing(
   if (disagreement) warnings.push(disagreement)
 
   const districtHeading = value(row, 'District')
-  const region = DISTRICT_BY_HEADING[districtHeading] ?? null
-  const district = region?.district ?? null
+  const region = REGION_BY_HEADING[districtHeading] ?? null
   // A known heading names its governorate; anything else falls back and is
   // flagged, so an unrecognised region never silently mislabels the listing.
   const governorate = region?.governorate ?? DEFAULT_GOVERNORATE
+  // The town in the Location column, when it is one of the region's districts;
+  // else the heading's own place (Aley, Zahle) when it is one.
+  const district = region
+    ? (districtForPlace(location, governorate) ?? region.district ?? null)
+    : null
 
   if (!region) {
     warnings.push(
@@ -429,6 +424,12 @@ export function toListing(
     )
   } else if (districtHeading.includes('+')) {
     warnings.push('spans two districts, filed under Keserwan')
+  } else if (!district) {
+    warnings.push(
+      location
+        ? `"${location}" is not one of the districts, left blank`
+        : 'no location given, district left blank',
+    )
   }
 
   // Every hotel is Hotels now. The star rating used to split boutique from

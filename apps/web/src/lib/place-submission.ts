@@ -293,7 +293,6 @@ export async function createPlaceSubmission(args: {
       subcategories: input.subcategories,
       governorate: input.governorate,
       district: input.district,
-      area: input.area,
       address: input.address,
       openingHours: input.openingHours,
       priceRange: input.priceRange,

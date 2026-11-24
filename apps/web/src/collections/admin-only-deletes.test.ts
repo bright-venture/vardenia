@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { isAdmin } from '../access/index'
-import { Areas } from './Areas'
 import { Articles } from './Articles'
 import { Media } from './Media'
 
@@ -13,7 +12,6 @@ describe('deletes that cannot be undone', () => {
   it.each([
     ['articles', Articles],
     ['media', Media],
-    ['areas', Areas],
   ])('%s: only an admin can delete', (_, collection) => {
     expect(collection.access?.delete).toBe(isAdmin)
   })

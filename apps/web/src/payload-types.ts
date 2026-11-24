@@ -80,7 +80,6 @@ export interface Config {
     'room-types': RoomType;
     'room-availability': RoomAvailability;
     'staff-requests': StaffRequest;
-    areas: Area;
     'guest-questions': GuestQuestion;
     articles: Article;
     issues: Issue;
@@ -120,7 +119,6 @@ export interface Config {
     'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
     'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
-    areas: AreasSelect<false> | AreasSelect<true>;
     'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
@@ -319,42 +317,51 @@ export interface Business {
   tags?: string[] | null;
   governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
   /**
-   * Only the districts of the governorate above are offered.
+   * The town or place guests filter by (Jounieh, Faqra / Faraya). Only the districts of the governorate above are offered.
    */
   district?:
     | (
         | 'beirut'
-        | 'aley'
+        | 'dbayeh'
+        | 'broummana'
+        | 'bikfaya'
         | 'baabda'
-        | 'matn'
+        | 'hammana'
+        | 'aley'
+        | 'bassour'
+        | 'jounieh'
+        | 'harissa'
+        | 'kaslik'
+        | 'ghazir'
+        | 'tabarja'
+        | 'faqra-faraya'
         | 'jbeil'
-        | 'keserwan'
-        | 'akkar'
         | 'batroun'
-        | 'bsharri'
+        | 'chekka'
         | 'koura'
-        | 'miniyeh-danniyeh'
         | 'tripoli'
         | 'zgharta'
-        | 'chouf'
-        | 'baalbek'
-        | 'hermel'
-        | 'rachaya'
-        | 'western-beqaa'
+        | 'bsharri'
+        | 'akkar'
+        | 'deir-el-qamar'
+        | 'beiteddine'
+        | 'baakline'
+        | 'moukhtara'
+        | 'barouk'
+        | 'jiyeh'
+        | 'damour'
         | 'zahle'
-        | 'bint-jbeil'
-        | 'hasbaya'
-        | 'jezzine'
-        | 'marjeyoun'
-        | 'nabatieh'
+        | 'baalbek'
+        | 'western-beqaa'
+        | 'hermel'
+        | 'chtoura'
+        | 'saghbine'
+        | 'masnaa'
         | 'sidon'
         | 'tyre'
+        | 'jezzine'
       )
     | null;
-  /**
-   * The neighbourhood or town, for the directory filter. Only the region above is offered.
-   */
-  area?: (number | null) | Area;
   address?: string | null;
   /**
    * The listing on Google Maps. Shown as "View on map" and "Get directions". When the link carries coordinates the location below is filled from it; a short link (maps.app.goo.gl) is kept as it is.
@@ -836,27 +843,6 @@ export interface Brand {
    * Set automatically: on while one of its branches is published.
    */
   published?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Neighbourhoods and towns guests filter by (Achrafieh, Faraya). Each belongs to one region.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "areas".
- */
-export interface Area {
-  id: number;
-  name: string;
-  /**
-   * In the web address (?area=mar-mikhael). Keep it once set.
-   */
-  slug: string;
-  governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
-  /**
-   * Lower first.
-   */
-  order?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1727,10 +1713,6 @@ export interface PayloadLockedDocument {
         value: number | StaffRequest;
       } | null)
     | ({
-        relationTo: 'areas';
-        value: number | Area;
-      } | null)
-    | ({
         relationTo: 'guest-questions';
         value: number | GuestQuestion;
       } | null)
@@ -1871,7 +1853,6 @@ export interface BusinessesSelect<T extends boolean = true> {
   tags?: T;
   governorate?: T;
   district?: T;
-  area?: T;
   address?: T;
   mapUrl?: T;
   location?: T;
@@ -2266,18 +2247,6 @@ export interface StaffRequestsSelect<T extends boolean = true> {
   notes?: T;
   locale?: T;
   internalNotes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "areas_select".
- */
-export interface AreasSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  governorate?: T;
-  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -20,11 +20,9 @@ import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-
  * browser; PlaceSubmissionForm only renders it.
  *
  * The state is plain strings and booleans, NOT typed against the schema's input
- * type: zod 4 marks the preprocess-wrapped keys (area, publicPhone, priceRange,
+ * type: zod 4 marks the preprocess-wrapped keys (publicPhone, priceRange,
  * opens, closes) as required there. The object sent is built as `unknown` and
  * checked with safeParse, which is what the server does too.
- *
- * `area` is not asked: it is an id from the Areas collection, and staff set it.
  */
 
 export interface HoursRow {

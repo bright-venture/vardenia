@@ -33,10 +33,10 @@ describe('buildBranchBody', () => {
   it('sends only the contact fields that were filled in', () => {
     const draft = filled()
     draft.contact.phone = ' 03 123 456 '
-    draft.district = 'keserwan'
+    draft.district = 'jounieh'
     const body = buildBranchBody(draft, 'en')
     expect(body.contact).toEqual({ phone: '03 123 456' })
-    expect(body.district).toBe('keserwan')
+    expect(body.district).toBe('jounieh')
     expect(branchRequestSchema.safeParse(body).success).toBe(true)
   })
 

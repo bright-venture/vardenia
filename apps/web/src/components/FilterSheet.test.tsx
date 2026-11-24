@@ -14,7 +14,7 @@ let root: Root
 const initial: FilterState = {
   subcategory: 'boutique-hotels',
   governorate: 'mount-lebanon',
-  district: 'keserwan',
+  district: 'jounieh',
   amenities: ['wifi'],
   openNow: true,
   bookable: true,

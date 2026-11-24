@@ -30,7 +30,7 @@ const body = {
   sourceListingId: 10,
   name: 'Cafe Nour Jounieh',
   governorate: 'keserwan',
-  district: 'keserwan',
+  district: 'jounieh',
   address: 'Main road, Jounieh',
   mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
 }

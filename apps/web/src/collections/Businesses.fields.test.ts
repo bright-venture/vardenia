@@ -71,7 +71,15 @@ describe('district', () => {
       options: optionsOf('district'),
       data: { governorate: 'beqaa' },
     }).map((o) => o.value)
-    expect(offered.sort()).toEqual(['baalbek', 'hermel', 'rachaya', 'western-beqaa', 'zahle'])
+    expect(offered.sort()).toEqual([
+      'baalbek',
+      'chtoura',
+      'hermel',
+      'masnaa',
+      'saghbine',
+      'western-beqaa',
+      'zahle',
+    ])
   })
 
   it('refuses a district from another governorate', () => {

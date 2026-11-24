@@ -55,7 +55,7 @@ describe('choices', () => {
   })
 
   it('offers only the districts of the chosen governorate', () => {
-    expect(districtsFor('keserwan').map((d) => d.slug)).toEqual(['jbeil', 'keserwan'])
+    expect(districtsFor('south-lebanon').map((d) => d.slug)).toEqual(['sidon', 'tyre', 'jezzine'])
     expect(districtsFor('')).toEqual([])
   })
 

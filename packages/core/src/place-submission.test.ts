@@ -135,16 +135,6 @@ describe('placeSubmissionSchema', () => {
       }
     })
 
-    it('treats blank or null area as absent and keeps a real one', () => {
-      for (const area of ['', null]) {
-        const r = parse({ area })
-        expect(r.success).toBe(true)
-        if (r.success) expect(r.data.area).toBeUndefined()
-      }
-      const r = parse({ area: 3 })
-      expect(r.success && r.data.area).toBe(3)
-    })
-
     it('treats blank district and priceRange as absent', () => {
       const r = parse({ district: '', priceRange: '' })
       expect(r.success).toBe(true)

@@ -15,9 +15,8 @@ import {
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { areaOptions } from '../../../../lib/areas'
 import {
-  countByArea,
+  countByDistrict,
   countByGovernorate,
   countBySubcategory,
   findListings,
@@ -191,13 +190,11 @@ async function SectionResults({
    * second Frankfurt round trip does not sit in front of the render. The tile
    * counts are only fetched when the tiles are actually being drawn.
    */
-  // The regions' areas for the Filters, cached (lib/areas).
-  const areas = await areaOptions(locale as Locale)
-  const [counts, result, subcategoryCounts, areaCounts] = await Promise.all([
+  const [counts, result, subcategoryCounts, districtCounts] = await Promise.all([
     countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
     countBySubcategory({ category: section.category }),
-    countByArea({ category: section.category, subcategory: state.subcategory }),
+    countByDistrict({ category: section.category, subcategory: state.subcategory }),
   ])
 
   const base = `/${section.path}`
@@ -223,7 +220,10 @@ async function SectionResults({
     : null
 
   const emptyWeddings =
-    locale === 'en' && section.path === 'weddings' && !anyFilterApplied(state) && result?.totalDocs === 0
+    locale === 'en' &&
+    section.path === 'weddings' &&
+    !anyFilterApplied(state) &&
+    result?.totalDocs === 0
 
   return (
     <>
@@ -231,7 +231,9 @@ async function SectionResults({
         <section className="vd-weddings-empty" aria-labelledby="wedding-planners-title">
           <h2 id="wedding-planners-title">Wedding planners</h2>
           <p>No wedding planners are listed yet.</p>
-          <Link className="vd-text-link" href="/directory">Explore the directory <span aria-hidden>↗</span></Link>
+          <Link className="vd-text-link" href="/directory">
+            Explore the directory <span aria-hidden>↗</span>
+          </Link>
         </section>
       )}
       <div className={emptyWeddings ? 'vd-weddings-standard' : 'contents'}>
@@ -275,8 +277,7 @@ async function SectionResults({
           state={state}
           locale={locale}
           counts={counts}
-          areas={areas}
-          areaCounts={areaCounts}
+          districtCounts={districtCounts}
         />
 
         <ListingGrid

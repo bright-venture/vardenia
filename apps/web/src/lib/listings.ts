@@ -64,8 +64,6 @@ export interface ListingQuery {
   governorate?: string
   /** One of the selected governorate's own districts. */
   district?: string
-  /** An area slug (Achrafieh, Faraya), from the Areas collection. */
-  area?: string
   /** Every one of these, not any. See the query below. */
   amenities?: string[]
   /**
@@ -172,12 +170,11 @@ async function buildListingWhere(
     subcategory,
     governorate,
     district,
-    area,
     amenities,
     bookable,
   }: Pick<
     ListingQuery,
-    'category' | 'subcategory' | 'governorate' | 'district' | 'area' | 'amenities' | 'bookable'
+    'category' | 'subcategory' | 'governorate' | 'district' | 'amenities' | 'bookable'
   >,
 ): Promise<Where> {
   const where: Where = {}
@@ -195,7 +192,6 @@ async function buildListingWhere(
   if (subcategory) where.subcategories = { in: [subcategory] }
   if (governorate) where.governorate = { equals: governorate }
   if (district) where.district = { equals: district }
-  if (area) where['area.slug'] = { equals: area }
   // The same switch the Book panel reads; public, like the rest of the rules.
   if (bookable) where['booking.enabled'] = { equals: true }
 
@@ -426,7 +422,6 @@ export async function findListings({
   subcategory,
   governorate,
   district,
-  area,
   amenities,
   openNow,
   bookable,
@@ -441,7 +436,6 @@ export async function findListings({
       subcategory,
       governorate,
       district,
-      area,
       amenities,
       bookable,
     })
@@ -460,7 +454,7 @@ export async function findListings({
        */
       const filters = { category, subcategory, governorate }
       const candidates =
-        !district && !area && !amenities?.length && !bookable
+        !district && !amenities?.length && !bookable
           ? await openNowCandidates({ locale, ...filters })
           : await readOpenNowCandidates(payload, where, locale, filters)
 
@@ -531,7 +525,7 @@ export async function findListings({
    */
   // openNow is excluded too: its answer changes by the minute, so caching it for
   // an hour would show a closed place as open for most of that hour.
-  const cacheable = !district && !area && !amenities?.length && !openNow
+  const cacheable = !district && !amenities?.length && !openNow
 
   if (!cacheable) return run()
 
@@ -581,7 +575,7 @@ export async function findListings({
  */
 async function countPublished(
   source: string,
-  build: (tables: { businesses: string; subcategories: string; areas: string }) => {
+  build: (tables: { businesses: string; subcategories: string }) => {
     sql: string
     values: unknown[]
   },
@@ -592,7 +586,6 @@ async function countPublished(
     const { sql, values } = build({
       businesses: `"${db.schema}"."${db.table('businesses')}"`,
       subcategories: `"${db.schema}"."${db.table('businesses_subcategories')}"`,
-      areas: `"${db.schema}"."${db.table('areas')}"`,
     })
     const { rows } = await db.pool.query(sql, values)
 
@@ -652,18 +645,18 @@ export async function countByGovernorate(filter: {
 }
 
 /**
- * The same counts per area (18 November 2026), keyed by area slug, so the
- * Filters sheet can show every area of a region with its number, 0 included.
+ * The same counts per district, so the Filters sheet can show every district
+ * of a region with its number, 0 included.
  */
-export async function countByArea(filter: {
+export async function countByDistrict(filter: {
   category?: string
   subcategory?: string
 }): Promise<Record<string, number> | undefined> {
-  return countByPlace('area', filter)
+  return countByPlace('district', filter)
 }
 
 async function countByPlace(
-  column: 'governorate' | 'area',
+  column: 'governorate' | 'district',
   {
     category,
     subcategory,
@@ -675,12 +668,9 @@ async function countByPlace(
   const run = () =>
     countPublished(
       `listings.${column}-counts`,
-      ({ businesses, subcategories, areas }) => {
+      ({ businesses, subcategories }) => {
         const values: unknown[] = []
-        const where = [
-          PUBLISHED_SQL,
-          column === 'area' ? 'b.area_id is not null' : 'b.governorate is not null',
-        ]
+        const where = [PUBLISHED_SQL, `b.${column} is not null`]
 
         if (category) {
           values.push(category)
@@ -696,10 +686,7 @@ async function countByPlace(
         }
 
         return {
-          sql:
-            column === 'area'
-              ? `select a.slug as key, count(*)::int as n from ${businesses} b join ${areas} a on a.id = b.area_id where ${where.join(' and ')} group by 1`
-              : `select b.governorate::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
+          sql: `select b.${column}::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
           values,
         }
       },

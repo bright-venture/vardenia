@@ -120,7 +120,6 @@ export const placeSubmissionSchema = z
     subcategories: z.array(oneOf(Object.keys(SUBCATEGORY_PARENT), 'unknown subcategory')).max(20),
     governorate: z.enum(LISTING_GOVERNORATES),
     district: optionalText(64),
-    area: z.preprocess(blankToUndefined, z.coerce.number().int().positive().optional()),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
     openingHours: openingHoursInputSchema.optional(),
     priceRange: z.preprocess(
