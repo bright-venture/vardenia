@@ -10,7 +10,6 @@
     "magazine": "杂志",
     "regions": "地区",
     "about": "关于",
-    "advertise": "在我们这里投放广告",
     "saved": "已收藏的地点",
     "search": "搜索",
     "menu": "菜单",
@@ -29,7 +28,7 @@
     "aboutMenuBody": "谁在制作这份指南、地点如何挑选，以及如何联系我们。",
     "business": "商户",
     "businessMenuTitle": "与 Vardenia 一起成长。",
-    "businessMenuBody": "在印刷版和网站上向读者介绍您的商户，接受预订，或投放广告。",
+    "businessMenuBody": "在印刷版和网站上向读者介绍您的商户，并接受预订。",
     "language": "语言",
     "magazinePlacesNote": "在印刷版杂志中预订位置",
     "applyMagazine": "申请登上杂志"

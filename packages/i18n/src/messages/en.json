@@ -10,7 +10,6 @@
     "magazine": "Magazine",
     "regions": "Regions",
     "about": "About",
-    "advertise": "Advertise with us",
     "saved": "Saved places",
     "search": "Search",
     "menu": "Menu",
@@ -29,7 +28,7 @@
     "aboutMenuBody": "Who makes the guide, how places are chosen, and how to reach us.",
     "business": "Business",
     "businessMenuTitle": "Grow with Vardenia.",
-    "businessMenuBody": "Bring your place to readers in print and online, take bookings, or advertise.",
+    "businessMenuBody": "Bring your place to readers in print and online, and take bookings.",
     "language": "Language",
     "magazinePlacesNote": "Book a place in the printed magazine",
     "applyMagazine": "Apply for the magazine"
