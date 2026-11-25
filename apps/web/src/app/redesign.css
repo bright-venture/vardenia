@@ -105,6 +105,27 @@
     display: none;
   }
 }
+/*
+ * Every page's header as on the home page (25 November 2026, the owner's
+ * choice): the wordmark at the start, the menu centred, the tools at the end.
+ * It used to be the menu at the start and the wordmark centred everywhere but
+ * the English home page. Desktop widths only, as on the home page; phones and
+ * tablets keep their own header. In Arabic and Urdu the grid mirrors, so the
+ * wordmark sits on the right.
+ */
+@media (min-width: 1051px) {
+  .vd-header .vd-brand {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .vd-header nav.vd-desktop-nav {
+    grid-column: 2;
+    justify-content: center;
+  }
+  .vd-header .vd-header-tools {
+    gap: 12px;
+  }
+}
 .vd-header-tools {
   grid-column: 3;
   grid-row: 1;
