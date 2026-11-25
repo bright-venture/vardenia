@@ -1303,5 +1303,13 @@
     "viewBranch": "Ver esta filial",
     "takesBookings": "Aceita reservas pela Vardenia",
     "description": "Todas as filiais de {name} que listamos no Líbano."
+  },
+  "announce": {
+    "label": "Avisos",
+    "followUs": "Siga a Vardenia nas redes sociais",
+    "allLinks": "Todos os nossos links num só lugar",
+    "newIssue": "Descubra a nova edição da revista",
+    "previous": "Mensagem anterior",
+    "next": "Mensagem seguinte"
   }
 }

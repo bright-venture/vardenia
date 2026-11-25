@@ -1303,5 +1303,13 @@
     "viewBranch": "View this branch",
     "takesBookings": "Takes bookings through Vardenia",
     "description": "Every {name} branch we list in Lebanon."
+  },
+  "announce": {
+    "label": "Announcements",
+    "followUs": "Follow Vardenia on social media",
+    "allLinks": "All our links in one place",
+    "newIssue": "Explore the new magazine issue",
+    "previous": "Previous message",
+    "next": "Next message"
   }
 }

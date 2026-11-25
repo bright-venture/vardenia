@@ -1303,5 +1303,13 @@
     "viewBranch": "查看此分店",
     "takesBookings": "支持通过 Vardenia 预订",
     "description": "我们收录的 {name} 在黎巴嫩的所有分店。"
+  },
+  "announce": {
+    "label": "公告",
+    "followUs": "在社交媒体上关注 Vardenia",
+    "allLinks": "我们的所有链接，一处尽览",
+    "newIssue": "探索新一期杂志",
+    "previous": "上一条",
+    "next": "下一条"
   }
 }

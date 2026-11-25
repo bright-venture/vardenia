@@ -1303,5 +1303,13 @@
     "viewBranch": "Ver esta sucursal",
     "takesBookings": "Acepta reservas en Vardenia",
     "description": "Todas las sucursales de {name} que listamos en el Líbano."
+  },
+  "announce": {
+    "label": "Anuncios",
+    "followUs": "Sigue a Vardenia en redes sociales",
+    "allLinks": "Todos nuestros enlaces en un solo lugar",
+    "newIssue": "Descubre el nuevo número de la revista",
+    "previous": "Mensaje anterior",
+    "next": "Mensaje siguiente"
   }
 }

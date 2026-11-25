@@ -1303,5 +1303,13 @@
     "viewBranch": "Voir cette adresse",
     "takesBookings": "Accepte les réservations via Vardenia",
     "description": "Toutes les adresses {name} que nous référençons au Liban."
+  },
+  "announce": {
+    "label": "Annonces",
+    "followUs": "Suivez Vardenia sur les réseaux sociaux",
+    "allLinks": "Tous nos liens au même endroit",
+    "newIssue": "Découvrez le nouveau numéro du magazine",
+    "previous": "Message précédent",
+    "next": "Message suivant"
   }
 }

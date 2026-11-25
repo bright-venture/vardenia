@@ -7,6 +7,7 @@ import { dirFor, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
 import { PageMotion } from '../../../components/editorial/PageMotion'
 import { CinematicGrade } from '../../../components/journey/CinematicGrade'
 import { SiteHeader } from '../../../components/SiteHeader'
+import { SiteAnnouncements } from '../../../components/header/SiteAnnouncements'
 import { SiteFooter } from '../../../components/SiteFooter'
 import { WhatsAppButton } from '../../../components/WhatsAppButton'
 import { SavedProvider } from '../../../components/SavedProvider'
@@ -167,6 +168,9 @@ export default async function FrontendLayout({
             per route - `messages={null}` is the opt-out if that ever changes. */}
         <NextIntlClientProvider locale={locale}>
           <SavedProvider loginPath={loginPath} saveLabel={t('save')} savedLabel={t('saved')}>
+            {/* The slim strip of messages above the header; it scrolls away, the
+                header stays (components/header/AnnouncementBar). */}
+            <SiteAnnouncements />
             <SiteHeader locale={locale as Locale} />
             <div id="vd-content" className="flex-1" tabIndex={-1}>
               <PageMotion>{children}</PageMotion>
