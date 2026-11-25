@@ -12,10 +12,12 @@ import {
   sectionForPath,
   type SiteSection,
   type SubCategory,
+  isComingSoonCategory,
 } from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
+import { ComingSoonNotice } from '../../../../components/ComingSoonNotice'
 import {
   countByDistrict,
   countByGovernorate,
@@ -122,22 +124,35 @@ export default async function SectionPage({ params, searchParams }: Props) {
   await notFoundIfHidden(section.path as HideablePage)
 
   const t = await getTranslations('directory')
+  // Weddings and Getting Around are not open yet (core COMING_SOON_CATEGORIES,
+  // 25 November 2026): the heading stays, a Coming soon notice replaces the
+  // listings, and the listings themselves are not public (access/index).
+  const comingSoon = isComingSoonCategory(section.category)
 
   const englishDining = locale === 'en' && section.category === 'food-and-beverage'
   const inJbeil = englishDining && parseFilterState(await searchParams, []).district === 'jbeil'
 
   return (
     <main className="vd-category-page" data-section={section.path}>
-      <EnglishPageSchema locale={locale} path={`/${section.path}`} name={nameFor(section, locale)}
-        description={sectionSummary(section, locale)} type="CollectionPage" />
+      <EnglishPageSchema
+        locale={locale}
+        path={`/${section.path}`}
+        name={nameFor(section, locale)}
+        description={sectionSummary(section, locale)}
+        type="CollectionPage"
+      />
       <PageHero
         title={inJbeil ? 'Eat & Drink in Jbeil' : nameFor(section, locale)}
-        intro={inJbeil
-          ? 'Planning a meal around Byblos? This view covers the whole Jbeil district, from the old town to villages inland.'
-          : sectionSummary(section, locale)}
-        body={inJbeil
-          ? 'Check the address before setting out from the harbour. A place listed in Jbeil may be outside walking distance of the souk.'
-          : t(`sectionIntro.${section.path}` as 'sectionIntro.stay')}
+        intro={
+          inJbeil
+            ? 'Planning a meal around Byblos? This view covers the whole Jbeil district, from the old town to villages inland.'
+            : sectionSummary(section, locale)
+        }
+        body={
+          inJbeil
+            ? 'Check the address before setting out from the harbour. A place listed in Jbeil may be outside walking distance of the souk.'
+            : t(`sectionIntro.${section.path}` as 'sectionIntro.stay')
+        }
         locale={locale}
         place={
           (
@@ -152,23 +167,24 @@ export default async function SectionPage({ params, searchParams }: Props) {
           )[path] ?? 0
         }
       >
-        <a className="vd-button" href="#section-results">
-          {inJbeil ? 'See Jbeil listings' : t('chooseType')} <span aria-hidden>↓</span>
-        </a>
-        {englishDining && (
-          <Link className="vd-text-link" href={BYBLOS_GUIDE_PATH}>
-            {inJbeil ? 'Back to the Byblos guide' : 'Explore Byblos (Jbeil)'}
-          </Link>
+        {comingSoon ? null : (
+          <a className="vd-button" href="#section-results">
+            {t('chooseType')} <span aria-hidden>↓</span>
+          </a>
         )}
       </PageHero>
-      <div className="vd-category-results" id="section-results">
-        {/* Same arrangement as the directory: `searchParams` is what makes a route
-          dynamic, so it is handed over unawaited and only this boundary blocks
-          on it. The heading above ships from the static build. */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <SectionResults locale={locale} section={section} searchParams={searchParams} />
-        </Suspense>
-      </div>
+      {comingSoon ? (
+        <ComingSoonNotice body="sectionBody" />
+      ) : (
+        <div className="vd-category-results" id="section-results">
+          {/* Same arrangement as the directory: `searchParams` is what makes a
+            route dynamic, so it is handed over unawaited and only this boundary
+            blocks on it. The heading above ships from the static build. */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <SectionResults locale={locale} section={section} searchParams={searchParams} />
+          </Suspense>
+        </div>
+      )}
     </main>
   )
 }
@@ -214,14 +230,17 @@ async function SectionResults({
   ])
 
   const englishDining = locale === 'en' && section.category === 'food-and-beverage'
-  const jbeilOnly = englishDining && state.district === 'jbeil' &&
+  const jbeilOnly =
+    englishDining &&
+    state.district === 'jbeil' &&
     !anyFilterApplied({ ...state, governorate: undefined, district: undefined })
   // These tab totals are nationwide, so omit them when a dining search is narrowed.
   const omitDiningTotals = englishDining && anyFilterApplied({ ...state, subcategory: undefined })
   // Use the published entry's own description, and only feature it when it is in these results.
-  const diningExample = englishDining && !anyFilterApplied(state) && !state.trip && (result?.page === 1)
-    ? result.docs.find((place) => place.slug === 'em-sherif' && place.name && place.tagline)
-    : undefined
+  const diningExample =
+    englishDining && !anyFilterApplied(state) && !state.trip && result?.page === 1
+      ? result.docs.find((place) => place.slug === 'em-sherif' && place.name && place.tagline)
+      : undefined
   const base = `/${section.path}`
 
   /**
@@ -256,7 +275,9 @@ async function SectionResults({
         <p className="mb-5 text-base">
           <Link className={LINK} href={`/directory/${diningExample.slug}`}>
             {diningExample.name}
-          </Link>{' · '}{diningExample.tagline}
+          </Link>
+          {' · '}
+          {diningExample.tagline}
         </p>
       )}
       {emptyWeddings && (
@@ -319,12 +340,20 @@ async function SectionResults({
           eager
           trip={state.trip}
           verdicts={verdicts}
-          empty={jbeilOnly && total === 0 ? 'No Eat & Drink listings in Jbeil yet' : t('resultCount', { count: 0 })}
+          empty={
+            jbeilOnly && total === 0
+              ? 'No Eat & Drink listings in Jbeil yet'
+              : t('resultCount', { count: 0 })
+          }
           // Says which way out exists, rather than restating the problem. See
           // ui/EmptyState: the title is what happened, the body is what to do.
-          emptyBody={jbeilOnly && total === 0
-            ? 'Browse the Lebanon directory for places to eat and drink in other regions.'
-            : anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
+          emptyBody={
+            jbeilOnly && total === 0
+              ? 'Browse the Lebanon directory for places to eat and drink in other regions.'
+              : anyFilterApplied(state)
+                ? t('emptyFiltered')
+                : t('emptySection')
+          }
           emptyAction={
             anyFilterApplied(state) ? (
               <Link

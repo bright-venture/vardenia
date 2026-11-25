@@ -2,7 +2,7 @@ import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 import { adminRedirectFor, PAYLOAD_COOKIE, tokenCollection } from './lib/admin-guard'
-import { legacyCategoryRedirect } from './lib/legacy-urls'
+import { legacyCategoryRedirect, mergedPageRedirect } from './lib/legacy-urls'
 import { isUnknownTopLevelPath } from './lib/known-paths'
 import { HINT_VALUE, SESSION_HINT } from './lib/session-hint'
 
@@ -142,6 +142,12 @@ export default function proxy(request: NextRequest): NextResponse {
   const moved = legacyCategoryRedirect(request.nextUrl.pathname, request.nextUrl.searchParams)
   if (moved) {
     return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
+  }
+
+  // A standing page merged into another (lib/legacy-urls), same real 308.
+  const merged = mergedPageRedirect(request.nextUrl.pathname)
+  if (merged) {
+    return NextResponse.redirect(new URL(merged, request.nextUrl), 308)
   }
 
   const response = syncSessionHint(request, intl(request) as NextResponse)

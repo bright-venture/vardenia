@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { can, tierOf } from '@vardenia/core'
+import { can, canTakeBookings, hasBookingComingSoon, tierOf } from '@vardenia/core'
 import { DEFAULT_LOCALE, dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import {
   findListingBySlug,
@@ -134,10 +134,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: editorial?.title ?? listing.name,
     // The tagline when there is one, else the opening of the description: the
     // October cleaning emptied every tagline (lib/plain-text).
-    description: editorial?.description ?? (locale === 'en'
-      ? englishListingSummary(listing, categoryLabel(listing.category, locale))
-      : listingSummary(listing)),
-    fallbackImage: editorial ? emSherifPhoto(listing.heroImage as MediaField) : listing.heroImage as MediaField,
+    description:
+      editorial?.description ??
+      (locale === 'en'
+        ? englishListingSummary(listing, categoryLabel(listing.category, locale))
+        : listingSummary(listing)),
+    fallbackImage: editorial
+      ? emSherifPhoto(listing.heroImage as MediaField)
+      : (listing.heroImage as MediaField),
     path: `/directory/${slug}`,
     locale,
   })
@@ -164,7 +168,9 @@ export default async function ListingPage({ params }: Params) {
    * masthead falls back to the flat navy ground and shortens. See lib/media.
    */
   const editorial = emSherifProfile(listing, locale)
-  const photo = editorial ? emSherifPhoto(listing.heroImage as MediaField) : listing.heroImage as MediaField
+  const photo = editorial
+    ? emSherifPhoto(listing.heroImage as MediaField)
+    : (listing.heroImage as MediaField)
   const hero = resolvePhotograph(photo, 'hero')
   // Gallery size is what a listing tier actually buys. TIER_CAPABILITIES has
   // described this since the beginning and nothing read it, so every listing -
@@ -184,7 +190,8 @@ export default async function ListingPage({ params }: Params) {
   const publicHours = editorial ? null : listing.openingHours
   const open = isOpenNow(publicHours as never)
 
-  const point = !editorial && Array.isArray(listing.location) ? (listing.location as [number, number]) : null
+  const point =
+    !editorial && Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
   /**
    * The Google rating, if somebody has looked it up.
@@ -207,11 +214,17 @@ export default async function ListingPage({ params }: Params) {
    * every listing that does not take bookings - which is most of them - in
    * exchange for a column of white space.
    */
-  const bookable = resolveRules(listing.booking as BookingRules | null).enabled
-
   const subcategories = Array.isArray(listing.subcategories)
     ? (listing.subcategories as string[])
     : []
+  // Booking is open only for the kinds that book today (core
+  // isBookableSubcategory): an activity whose switch was left on shows no form,
+  // since the request would be refused anyway (lib/booking-service).
+  const bookable =
+    resolveRules(listing.booking as BookingRules | null).enabled && canTakeBookings(subcategories)
+  // Activities and Guided Tours: listed, booking coming soon (25 November 2026).
+  const bookingSoon = hasBookingComingSoon(subcategories)
+  const tSoon = await getTranslations('comingSoon')
   const amenities = Array.isArray(listing.amenities) ? (listing.amenities as string[]) : []
   const hours = Array.isArray(publicHours) ? publicHours : []
 
@@ -274,21 +287,26 @@ export default async function ListingPage({ params }: Params) {
   // its region still gets three suggestions, but not the word.
   const anyNear = related.some((entry) => entry.nearby.near)
 
-  const schema = listingSchema({
-    ...listing,
-    address: streetAddress,
-    location: point,
-    openingHours: publicHours,
-    heroImage: photo,
-  }, locale)
-  const restaurantSchema = editorial ? {
-    ...schema,
-    '@type': 'Restaurant',
-    name: editorial.name,
-    description: editorial.description,
-    servesCuisine: 'Lebanese',
-    hasMenu: editorial.menuUrl,
-  } : schema
+  const schema = listingSchema(
+    {
+      ...listing,
+      address: streetAddress,
+      location: point,
+      openingHours: publicHours,
+      heroImage: photo,
+    },
+    locale,
+  )
+  const restaurantSchema = editorial
+    ? {
+        ...schema,
+        '@type': 'Restaurant',
+        name: editorial.name,
+        description: editorial.description,
+        servesCuisine: 'Lebanese',
+        hasMenu: editorial.menuUrl,
+      }
+    : schema
 
   return (
     <main>
@@ -463,6 +481,12 @@ export default async function ListingPage({ params }: Params) {
           }`}
         >
           <div className={bookable ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
+            {bookingSoon ? (
+              <p className="vd-booking-soon border-gold-300 bg-surface-raised text-ink-700 mb-8 border-s-2 px-4 py-3 text-sm">
+                <span className="vd-soon-badge !ms-0 me-3">{tSoon('label')}</span>
+                {tSoon('bookingNote')}
+              </p>
+            ) : null}
             {/*
             The tagline set as display type, which is the design's call and a
             good one: it is one line saying what the place is, and at body size
@@ -572,8 +596,12 @@ export default async function ListingPage({ params }: Params) {
                       <Row label="Cuisine">Lebanese</Row>
                       <Row label="Plan your visit">
                         <div className="flex flex-wrap gap-x-5 gap-y-2">
-                          <a className="underline underline-offset-4" href={editorial.menuUrl}>Read the Beirut menu</a>
-                          <a className="underline underline-offset-4" href={editorial.hoursUrl}>Check service hours with Em Sherif</a>
+                          <a className="underline underline-offset-4" href={editorial.menuUrl}>
+                            Read the Beirut menu
+                          </a>
+                          <a className="underline underline-offset-4" href={editorial.hoursUrl}>
+                            Check service hours with Em Sherif
+                          </a>
                         </div>
                       </Row>
                     </>

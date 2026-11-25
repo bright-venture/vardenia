@@ -1,4 +1,5 @@
 import { filmOrigin } from './film'
+import { sentryIngestOrigin } from './sentry'
 /**
  * The response headers, and the Content-Security-Policy that used to be missing.
  *
@@ -137,6 +138,7 @@ export function publicCsp(
   analyticsSrc = process.env.NEXT_PUBLIC_ANALYTICS_SRC,
   isProduction = process.env.NODE_ENV === 'production',
   turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+  sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN,
 ): string {
   const analytics = analyticsOrigins(analyticsSrc)
   const turnstile = turnstileOrigin(turnstileSiteKey)
@@ -166,7 +168,13 @@ export function publicCsp(
     'media-src': ["'self'", ...filmOrigin()],
     // Where a script may send data. Named explicitly, because this is what turns
     // a successful injection into a failed exfiltration.
-    'connect-src': ["'self'", ...analytics.connect, ...turnstile],
+    // Sentry's intake for browser errors (lib/sentry), when a DSN is set.
+    'connect-src': [
+      "'self'",
+      ...analytics.connect,
+      ...turnstile,
+      ...sentryIngestOrigin(sentryDsn ?? ''),
+    ],
     /**
      * Turnstile renders its challenge in an iframe from Cloudflare. Without this
      * the widget mounts, loads nothing and shows an empty box - and because
@@ -202,7 +210,12 @@ export function adminCsp(env: Record<string, string | undefined> = process.env):
     'font-src': ["'self'", 'data:'],
     // Storage, for the one upload that goes straight from the browser to the
     // bucket: magazine PDFs (collections/Editions), too large for the server.
-    'connect-src': ["'self'", ...storageOrigin(env)],
+    // And Sentry's intake for the panel's browser errors (lib/sentry).
+    'connect-src': [
+      "'self'",
+      ...storageOrigin(env),
+      ...sentryIngestOrigin(env.NEXT_PUBLIC_SENTRY_DSN ?? ''),
+    ],
     'frame-ancestors': ["'none'"],
     'form-action': ["'self'"],
     'base-uri': ["'self'"],

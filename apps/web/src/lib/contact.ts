@@ -43,6 +43,13 @@ export const CONTACT: ContactDetails = {
 }
 
 /**
+ * Vardenia's Linktree, given by the owner on 25 November 2026. It holds the
+ * Instagram, Facebook and other social accounts, so the site links to it rather
+ * than to each network: one address to keep right instead of five.
+ */
+export const LINKTREE_URL = 'https://linktr.ee/vardenia'
+
+/**
  * Vardenia's commercial registration number, given by the owner on 9 November
  * 2026. Here rather than in lib/legal so the translated legal documents
  * (lib/legal-translations) can name it without importing the English one.

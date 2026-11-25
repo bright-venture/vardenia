@@ -1,6 +1,12 @@
 import { findPublicBrandSlugs } from '../lib/brand-slugs'
 import type { MetadataRoute } from 'next'
-import { EVENT_STAFF_ROLES, EVENT_STAFF_SECTION, SECTIONS } from '@vardenia/core'
+import {
+  EVENT_STAFF_COMING_SOON,
+  EVENT_STAFF_ROLES,
+  EVENT_STAFF_SECTION,
+  SECTIONS,
+  isComingSoonCategory,
+} from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
 import { BYBLOS_GUIDE_PATH } from '../components/journey/destinations'
 import { alternatesFor } from '../lib/seo'
@@ -121,11 +127,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * Ranked with the directory rather than below it: a section is a better answer
    * to a real search than "every listing in Lebanon" is.
    */
-  for (const section of SECTIONS) push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+  // Not the sections that are coming soon (core COMING_SOON_CATEGORIES): a
+  // page with no listings yet is not worth offering to search engines.
+  for (const section of SECTIONS) {
+    if (!isComingSoonCategory(section.category)) {
+      push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+    }
+  }
   // Event Staff and its two request forms (18 November 2026).
-  push(`/${EVENT_STAFF_SECTION.path}`, CHANGE_FREQUENCY.index, 0.7)
-  for (const role of EVENT_STAFF_ROLES) {
-    push(`/${EVENT_STAFF_SECTION.path}/${role.slug}`, CHANGE_FREQUENCY.index, 0.6)
+  // Event Staff is coming soon (core EVENT_STAFF_COMING_SOON): its forms send
+  // readers back to the section page, so none of it is listed until it opens.
+  if (!EVENT_STAFF_COMING_SOON) {
+    push(`/${EVENT_STAFF_SECTION.path}`, CHANGE_FREQUENCY.index, 0.7)
+    for (const role of EVENT_STAFF_ROLES) {
+      push(`/${EVENT_STAFF_SECTION.path}/${role.slug}`, CHANGE_FREQUENCY.index, 0.6)
+    }
   }
 
   push('/magazine', CHANGE_FREQUENCY.index, 0.9)

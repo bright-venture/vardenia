@@ -92,7 +92,7 @@ export const pt: LegalEdition = {
         body: [
           '- **O estabelecimento onde você reserva** vê seu nome, seu telefone se você informou, os detalhes da reserva e suas observações. Ele precisa disso para guardar sua mesa e ligar para você se algo mudar. Ele não vê seu endereço de e-mail, seu recibo nem sua resposta depois da visita.',
           '- **Todos que leem o site** veem uma avaliação depois que a publicamos, com seu primeiro nome e a inicial, nunca seu nome completo nem qualquer outra coisa sobre você.',
-          '- **Nossos fornecedores**, que tratam os dados em nosso nome e não podem usá-los para mais nada: a hospedagem do nosso banco de dados e arquivos, a hospedagem do nosso site, a rede que protege o site e mede a velocidade de carregamento, o serviço que envia nossos e-mails, o serviço que hospeda nossa caixa de entrada, o serviço que conta as visitas às páginas e o serviço que lê os recibos. Você pode nos perguntar quem são.',
+          '- **Nossos fornecedores**, que tratam os dados em nosso nome e não podem usá-los para mais nada: a hospedagem do nosso banco de dados e arquivos, a hospedagem do nosso site, a rede que protege o site e mede a velocidade de carregamento, o serviço que envia nossos e-mails, o serviço que hospeda nossa caixa de entrada, o serviço que conta as visitas às páginas, o serviço que lê os recibos e o serviço que registra os erros técnicos para que possamos corrigi-los. Você pode nos perguntar quem são.',
           '- **WhatsApp**, se você nos escrever pelo botão do WhatsApp. A conversa passa pelo WhatsApp, que a trata conforme a política de privacidade dele.',
           'Não vendemos suas informações nem as compartilhamos para o marketing de mais ninguém.',
         ],

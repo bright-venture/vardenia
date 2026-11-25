@@ -5,12 +5,10 @@ import {
   CarFront,
   CircleHelp,
   FileText,
-  Handshake,
   Heart,
   Info,
   LogIn,
   Mail,
-  Megaphone,
   Mountain,
   Newspaper,
   Scale,
@@ -56,8 +54,6 @@ export const ISSUE_ICON = BookOpen
 export const ARTICLE_ICON = FileText
 export const ABOUT_ICON = Info
 export const HELP_ICON = CircleHelp
-export const PARTNER_ICON = Handshake
-export const ADVERTISE_ICON = Megaphone
 export const SIGN_IN_ICON = LogIn
 export const PRIVACY_ICON = ShieldCheck
 export const TERMS_ICON = Scale

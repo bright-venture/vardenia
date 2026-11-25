@@ -90,8 +90,6 @@ describe('every indexable public page declares its alternates', () => {
     'about/page.tsx',
     'contact/page.tsx',
     'faq/page.tsx',
-    'partner-with-us/page.tsx',
-    'advertise/page.tsx',
     'add-your-business/page.tsx',
     'directory/[slug]/page.tsx',
     'magazine/articles/[slug]/page.tsx',

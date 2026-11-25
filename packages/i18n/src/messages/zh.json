@@ -10,7 +10,6 @@
     "magazine": "杂志",
     "regions": "地区",
     "about": "关于",
-    "advertise": "在我们这里投放广告",
     "saved": "已收藏的地点",
     "search": "搜索",
     "menu": "菜单",
@@ -29,11 +28,10 @@
     "aboutMenuBody": "谁在制作这份指南、地点如何挑选，以及如何联系我们。",
     "business": "商户",
     "businessMenuTitle": "与 Vardenia 一起成长。",
-    "businessMenuBody": "在印刷版和网站上向读者介绍您的商户，接受预订，或投放广告。",
-    "partnerWithUsNote": "通过 Vardenia 接受预订和请求",
-    "advertiseNote": "杂志和网站上的版面",
+    "businessMenuBody": "在印刷版和网站上向读者介绍您的商户，并接受预订。",
     "language": "语言",
-    "magazinePlacesNote": "在印刷版杂志中预订位置"
+    "magazinePlacesNote": "在印刷版杂志中预订位置",
+    "applyMagazine": "申请登上杂志"
   },
   "home": {
     "eyebrow": "发现黎巴嫩",
@@ -466,8 +464,6 @@
     "questions": "常见问题",
     "contact": "联系",
     "addBusiness": "添加您的商户",
-    "partnerWithUs": "成为合作伙伴",
-    "advertise": "投放广告",
     "partnerSignIn": "合作伙伴登录",
     "rights": "版权所有。",
     "legal": "法律",
@@ -1303,5 +1299,21 @@
     "viewBranch": "查看此分店",
     "takesBookings": "支持通过 Vardenia 预订",
     "description": "我们收录的 {name} 在黎巴嫩的所有分店。"
+  },
+  "announce": {
+    "label": "公告",
+    "followUs": "在社交媒体上关注 Vardenia",
+    "allLinks": "我们的所有链接，一处尽览",
+    "newIssue": "探索新一期杂志",
+    "previous": "上一条",
+    "next": "下一条"
+  },
+  "comingSoon": {
+    "label": "即将推出",
+    "title": "即将登陆 Vardenia",
+    "sectionBody": "我们正在筹备这一栏目。开放之前，欢迎浏览目录中已有的地点。",
+    "eventStaffBody": "礼仪人员和服务员的预约即将开放。在此之前，欢迎浏览目录中已有的地点。",
+    "explore": "浏览目录",
+    "bookingNote": "通过 Vardenia 预订此地点的功能即将推出。"
   }
 }

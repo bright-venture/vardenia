@@ -4,10 +4,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { EVENT_STAFF_SECTION, staffRoleForSlug } from '@vardenia/core'
+import { EVENT_STAFF_SECTION, staffRoleForSlug, EVENT_STAFF_COMING_SOON } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import config from '../../../../../payload.config'
-import { Link } from '../../../../../i18n/routing'
+import { Link, redirect } from '../../../../../i18n/routing'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import { StaffRequestForm } from '../../../../../components/StaffRequestForm'
 import {
@@ -41,8 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'eventStaff' })
   return buildMetadata({
     seo: null,
-    title: locale === 'en' ? publicPageCopy[`/event-staff/${role.slug}`].title : t('requestTitle', { role: t(`role_${role.slug}`) }),
-    description: locale === 'en' ? publicPageCopy[`/event-staff/${role.slug}`].description : t('formIntro'),
+    title:
+      locale === 'en'
+        ? publicPageCopy[`/event-staff/${role.slug}`].title
+        : t('requestTitle', { role: t(`role_${role.slug}`) }),
+    description:
+      locale === 'en' ? publicPageCopy[`/event-staff/${role.slug}`].description : t('formIntro'),
     path: `/${EVENT_STAFF_SECTION.path}/${role.slug}`,
     locale,
   })
@@ -52,6 +56,8 @@ export default async function StaffRequestPage({ params }: Props) {
   const { locale, role: slug } = await params
   const role = staffRoleForSlug(slug)
   if (!isLocale(locale) || !role) notFound()
+  // Coming soon (25 November 2026): the forms wait; the section page says so.
+  if (EVENT_STAFF_COMING_SOON) redirect({ href: `/${EVENT_STAFF_SECTION.path}`, locale })
   setRequestLocale(locale)
 
   const t = await getTranslations('eventStaff')
@@ -71,7 +77,13 @@ export default async function StaffRequestPage({ params }: Props) {
 
   return (
     <main>
-      <EnglishPageSchema locale={locale} path={`/event-staff/${role.slug}`} name={publicPageCopy[`/event-staff/${role.slug}`].title} description={publicPageCopy[`/event-staff/${role.slug}`].description} type="WebPage" />
+      <EnglishPageSchema
+        locale={locale}
+        path={`/event-staff/${role.slug}`}
+        name={publicPageCopy[`/event-staff/${role.slug}`].title}
+        description={publicPageCopy[`/event-staff/${role.slug}`].description}
+        type="WebPage"
+      />
       <PageHero
         title={t('requestTitle', { role: roleName })}
         intro={t('formIntro')}

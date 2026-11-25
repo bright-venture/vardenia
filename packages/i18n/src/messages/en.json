@@ -10,7 +10,6 @@
     "magazine": "Magazine",
     "regions": "Regions",
     "about": "About",
-    "advertise": "Advertise with us",
     "saved": "Saved places",
     "search": "Search",
     "menu": "Menu",
@@ -29,11 +28,10 @@
     "aboutMenuBody": "Who makes the guide, how places are chosen, and how to reach us.",
     "business": "Business",
     "businessMenuTitle": "Grow with Vardenia.",
-    "businessMenuBody": "Bring your place to readers in print and online, take bookings, or advertise.",
-    "partnerWithUsNote": "Take bookings and requests through Vardenia",
-    "advertiseNote": "Space in the magazine and on the site",
+    "businessMenuBody": "Bring your place to readers in print and online, and take bookings.",
     "language": "Language",
-    "magazinePlacesNote": "Book a place in the printed magazine"
+    "magazinePlacesNote": "Book a place in the printed magazine",
+    "applyMagazine": "Apply for the magazine"
   },
   "home": {
     "eyebrow": "Discover Lebanon",
@@ -466,8 +464,6 @@
     "questions": "Questions",
     "contact": "Contact",
     "addBusiness": "Add your business",
-    "partnerWithUs": "Partner with us",
-    "advertise": "Advertise",
     "partnerSignIn": "Partner sign in",
     "rights": "All rights reserved.",
     "legal": "Legal",
@@ -1303,5 +1299,21 @@
     "viewBranch": "View this branch",
     "takesBookings": "Takes bookings through Vardenia",
     "description": "Every {name} branch we list in Lebanon."
+  },
+  "announce": {
+    "label": "Announcements",
+    "followUs": "Follow Vardenia on social media",
+    "allLinks": "All our links in one place",
+    "newIssue": "Explore the new magazine issue",
+    "previous": "Previous message",
+    "next": "Next message"
+  },
+  "comingSoon": {
+    "label": "Coming soon",
+    "title": "Coming soon to Vardenia",
+    "sectionBody": "We are preparing this section. Until it opens, explore the places already in the directory.",
+    "eventStaffBody": "Requests for hostesses and waiters open soon. Until then, explore the places already in the directory.",
+    "explore": "Explore the directory",
+    "bookingNote": "Booking through Vardenia is coming soon for this place."
   }
 }

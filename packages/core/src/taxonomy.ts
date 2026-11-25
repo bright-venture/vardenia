@@ -151,9 +151,52 @@ export function isActiveCategory(slug: string): boolean {
 
 const SUBCATEGORIES: readonly SubCategory[] = CATEGORIES.flatMap((c) => c.children)
 
-/** True for a kind of place that can take bookings through Vardenia. */
+/**
+ * Coming soon (25 November 2026, the owner's decision): booking is built for
+ * hotels, getaways and restaurants only, so the other kinds marked `bookable`
+ * wait.
+ *
+ * - `BOOKING_COMING_SOON_KINDS`: kinds whose booking is not open yet. They do
+ *   not take bookings (isBookableSubcategory); Activities and Guided Tours are
+ *   in the printed magazine, so their listings stay visible, with a "Booking
+ *   coming soon" note on the page.
+ * - `COMING_SOON_CATEGORIES`: whole categories not open yet (Weddings, Getting
+ *   Around). Their listings are hidden from the public (access/index,
+ *   PUBLISHED_SQL) and their section page shows a Coming soon banner.
+ *
+ * To open one later, take it out of its list.
+ */
+export const BOOKING_COMING_SOON_KINDS: readonly string[] = [
+  'guided-tours',
+  'activities',
+  'event-planners',
+  'car-rental',
+  'airport-transfers',
+  'private-drivers',
+]
+
+export const COMING_SOON_CATEGORIES: readonly CategorySlug[] = ['weddings', 'transportation']
+
+export function isComingSoonCategory(slug: string | null | undefined): boolean {
+  return Boolean(slug) && (COMING_SOON_CATEGORIES as readonly string[]).includes(slug as string)
+}
+
+/** A listing with a kind whose booking is coming soon and no kind that books today. */
+export function hasBookingComingSoon(
+  subcategories: readonly (string | null | undefined)[],
+): boolean {
+  return (
+    !canTakeBookings(subcategories) &&
+    subcategories.some(
+      (slug) => Boolean(slug) && BOOKING_COMING_SOON_KINDS.includes(slug as string),
+    )
+  )
+}
+
+/** True for a kind of place that can take bookings through Vardenia today. */
 export function isBookableSubcategory(slug: string | null | undefined): boolean {
   if (!slug) return false
+  if (BOOKING_COMING_SOON_KINDS.includes(slug)) return false
   const found = SUBCATEGORIES.find((child) => child.slug === slug)
   return found?.bookable === true && found.retired !== true
 }

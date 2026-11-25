@@ -1,4 +1,6 @@
 'use client'
+import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import Link from 'next/link'
 import { FONT_VARIABLES } from './fonts'
 import { RecoveryView } from '../components/editorial/RecoveryView'
@@ -12,6 +14,12 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // The last-resort boundary: the error stops here, so Sentry is told by hand
+  // (lib/sentry; inert without a DSN).
+  useEffect(() => {
+    Sentry.captureException(error)
+  }, [error])
+
   return (
     <html lang="en" className={FONT_VARIABLES}>
       <head>

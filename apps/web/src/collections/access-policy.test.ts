@@ -160,14 +160,25 @@ describe('QrCodes: switching a code off', () => {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * The public rule for listings: published and not in a coming-soon category
+ * (core COMING_SOON_CATEGORIES, 25 November 2026).
+ */
+const PUBLIC_LISTINGS = {
+  and: [
+    { _status: { equals: 'published' } },
+    { category: { not_in: ['weddings', 'transportation'] } },
+  ],
+}
+
 describe('collection read access', () => {
   it('hides unpublished listings and articles from the public', () => {
     for (const config of [Businesses, Articles]) {
       const read = config.access?.read
       expect(read, `${config.slug} has no read rule`).toBeDefined()
-      expect(read!(ctx(null)), `${config.slug} should constrain anonymous reads`).toEqual({
-        _status: { equals: 'published' },
-      })
+      expect(read!(ctx(null)), `${config.slug} should constrain anonymous reads`).toEqual(
+        config === Businesses ? PUBLIC_LISTINGS : { _status: { equals: 'published' } },
+      )
       expect(read!(ctx(staff))).toBe(true)
     }
   })
@@ -402,13 +413,13 @@ describe('account collections', () => {
  */
 describe('Businesses read access with owners in play', () => {
   it('still constrains the public to published listings', () => {
-    expect(Businesses.access?.read!(ctx(null))).toEqual({ _status: { equals: 'published' } })
+    expect(Businesses.access?.read!(ctx(null))).toEqual(PUBLIC_LISTINGS)
   })
 
   it('gives an owner their own listings on top of the published ones', () => {
     const owner = { id: 20, collection: 'business-users', businesses: [7] }
     expect(Businesses.access?.read!(ctx(owner))).toEqual({
-      or: [{ _status: { equals: 'published' } }, { id: { in: [7] } }],
+      or: [PUBLIC_LISTINGS, { id: { in: [7] } }],
     })
   })
 

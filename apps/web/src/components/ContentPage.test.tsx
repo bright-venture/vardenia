@@ -24,14 +24,7 @@ vi.mock('next-intl/server', () => ({
 
 for (const locale of ['en', 'ar'] as const) {
   describe(`standing-page composition in ${locale}`, () => {
-    for (const slug of [
-      'about',
-      'contact',
-      'faq',
-      'add-your-business',
-      'partner-with-us',
-      'advertise',
-    ] as const) {
+    for (const slug of ['about', 'contact', 'faq', 'add-your-business'] as const) {
       it(`preserves the ${slug} sections and offers a next step after reading`, async () => {
         const page = contentPage(slug, locale)!
         const view = await ContentPageView({ page, slug, locale })
@@ -75,7 +68,7 @@ for (const locale of ['en', 'ar'] as const) {
  */
 describe('standing pages and the pages an admin has hidden', () => {
   const links = async (
-    slug: 'about' | 'faq' | 'advertise',
+    slug: 'about' | 'faq' | 'add-your-business',
     hidden: ('faq' | 'about' | 'contact')[],
   ) => {
     const view = await ContentPageView({
@@ -99,7 +92,7 @@ describe('standing pages and the pages an admin has hidden', () => {
   })
 
   it('sends readers to the directory when Contact is hidden', async () => {
-    const hrefs = await links('advertise', ['contact'])
+    const hrefs = await links('add-your-business', ['contact'])
     expect(hrefs.some((href) => href?.endsWith('/contact'))).toBe(false)
     expect(hrefs.some((href) => href?.endsWith('/directory'))).toBe(true)
   })

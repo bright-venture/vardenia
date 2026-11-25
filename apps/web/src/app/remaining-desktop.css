@@ -51,8 +51,8 @@
   html:lang(en) .vd-standing-about .vd-inner-hero-copy :is(h1,p) { color: var(--vd-ink); }
   html:lang(en) .vd-standing-about .vd-inner-hero-copy h1 { font-size: clamp(62px, 6vw, 96px); }
   html:lang(en) .vd-standing-about .vd-inner-hero-copy .vd-button { background: var(--vd-ink); color: var(--vd-paper); }
-  html:lang(en) :is(.vd-standing-add-your-business,.vd-standing-partner-with-us) .vd-inner-hero { align-items: center; padding-block: clamp(42px, 4.6vw, 75px); }
-  html:lang(en) :is(.vd-standing-add-your-business,.vd-standing-partner-with-us) .vd-inner-hero-copy h1 { font-size: clamp(56px, 5.4vw, 86px); }
+  html:lang(en) .vd-standing-add-your-business .vd-inner-hero { align-items: center; padding-block: clamp(42px, 4.6vw, 75px); }
+  html:lang(en) .vd-standing-add-your-business .vd-inner-hero-copy h1 { font-size: clamp(56px, 5.4vw, 86px); }
   html:lang(en) .vd-business-chapters { display: grid; gap: 0; width: min(100%, 44ch); }
   html:lang(en) .vd-business-chapters a {
     display: flex; justify-content: space-between; gap: 14px; align-items: center;
@@ -66,8 +66,6 @@
   }
   html:lang(en) .vd-standing-add-your-business .vd-story-section > :not(.vd-story-subsection) { grid-column: 1/-1; }
   html:lang(en) .vd-standing-add-your-business .vd-story-subsection { margin-top: 24px; padding-top: 18px; border-top: 1px solid theme('colors.ink.100'); }
-  html:lang(en) .vd-standing-partner-with-us .vd-story-body > ul { padding: 0; list-style: none; }
-  html:lang(en) .vd-standing-partner-with-us .vd-story-body > ul > li { margin: 0; padding: 13px 0; border-top: 1px solid theme('colors.ink.100'); }
 
   /* The credits are a contact sheet. Each photograph stays with its original attribution. */
   html:lang(en) .vd-credits-page { max-width: 1350px; padding-inline: var(--vd-gutter); }

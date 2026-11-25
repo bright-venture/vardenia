@@ -10,7 +10,6 @@
     "magazine": "Magazine",
     "regions": "Régions",
     "about": "À propos",
-    "advertise": "Annoncez chez nous",
     "saved": "Lieux enregistrés",
     "search": "Rechercher",
     "menu": "Menu",
@@ -29,11 +28,10 @@
     "aboutMenuBody": "Qui fait le guide, comment les lieux sont choisis, et comment nous joindre.",
     "business": "Entreprises",
     "businessMenuTitle": "Grandir avec Vardenia.",
-    "businessMenuBody": "Présentez votre établissement aux lecteurs, sur papier et en ligne, recevez des réservations ou faites de la publicité.",
-    "partnerWithUsNote": "Recevez réservations et demandes via Vardenia",
-    "advertiseNote": "Un espace dans le magazine et sur le site",
+    "businessMenuBody": "Présentez votre établissement aux lecteurs, sur papier et en ligne, et recevez des réservations.",
     "language": "Langue",
-    "magazinePlacesNote": "Réservez une place dans le magazine imprimé"
+    "magazinePlacesNote": "Réservez une place dans le magazine imprimé",
+    "applyMagazine": "Postuler pour le magazine"
   },
   "home": {
     "eyebrow": "Découvrir le Liban",
@@ -466,8 +464,6 @@
     "questions": "Questions",
     "contact": "Contact",
     "addBusiness": "Ajouter votre établissement",
-    "partnerWithUs": "Devenir partenaire",
-    "advertise": "Annoncer",
     "partnerSignIn": "Espace partenaire",
     "rights": "Tous droits réservés.",
     "legal": "Mentions légales",
@@ -1303,5 +1299,21 @@
     "viewBranch": "Voir cette adresse",
     "takesBookings": "Accepte les réservations via Vardenia",
     "description": "Toutes les adresses {name} que nous référençons au Liban."
+  },
+  "announce": {
+    "label": "Annonces",
+    "followUs": "Suivez Vardenia sur les réseaux sociaux",
+    "allLinks": "Tous nos liens au même endroit",
+    "newIssue": "Découvrez le nouveau numéro du magazine",
+    "previous": "Message précédent",
+    "next": "Message suivant"
+  },
+  "comingSoon": {
+    "label": "Bientôt",
+    "title": "Bientôt sur Vardenia",
+    "sectionBody": "Nous préparons cette rubrique. En attendant son ouverture, découvrez les adresses déjà présentes dans l'annuaire.",
+    "eventStaffBody": "Les demandes d'hôtesses et de serveurs ouvrent bientôt. En attendant, découvrez les adresses déjà présentes dans l'annuaire.",
+    "explore": "Explorer l'annuaire",
+    "bookingNote": "La réservation via Vardenia arrive bientôt pour cet établissement."
   }
 }

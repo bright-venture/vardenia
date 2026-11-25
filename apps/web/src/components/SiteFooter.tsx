@@ -9,14 +9,12 @@ import { sectionName } from '../lib/labels'
 import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 import {
   ABOUT_ICON,
-  ADVERTISE_ICON,
   ARTICLE_ICON,
   BUSINESS_ICON,
   CONTACT_ICON,
   HELP_ICON,
   ISSUE_ICON,
   MAGAZINE_ICON,
-  PARTNER_ICON,
   SECTION_ICONS,
   EVENT_STAFF_ICON,
   SIGN_IN_ICON,
@@ -71,7 +69,11 @@ function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) 
       <h3 className="text-ink-900 text-xs font-semibold uppercase tracking-wider">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map(({ href, label, icon: Icon, directorySlot }) => (
-          <li key={href} data-directory-slot={directorySlot} className={directorySlot === 'desktop' ? 'hidden' : undefined}>
+          <li
+            key={href}
+            data-directory-slot={directorySlot}
+            className={directorySlot === 'desktop' ? 'hidden' : undefined}
+          >
             <Link
               href={href}
               className="vd-footer-link text-ink-500 hover:text-ink-900 group inline-flex items-center gap-2 text-sm transition-colors"
@@ -134,8 +136,6 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
       label: t('footer.addBusiness'),
       icon: BUSINESS_ICON,
     },
-    { href: '/partner-with-us', label: t('footer.partnerWithUs'), icon: PARTNER_ICON },
-    { href: '/advertise', label: t('footer.advertise'), icon: ADVERTISE_ICON },
     { href: '/magazine-places', label: t('magazinePlaces.title'), icon: MAGAZINE_ICON },
     // Last, and in this column rather than orphaned under the editorial links.
     { href: '/partner', label: t('footer.partnerSignIn'), icon: SIGN_IN_ICON },
@@ -145,8 +145,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
     <footer id="footer" className="vd-footer">
       <div className="vd-footer-top">
         <h2>
-          {j('footerA')}{' '}
-          <br />
+          {j('footerA')} <br />
           {j('footerB')}
         </h2>
         {/* Not while the admin has the directory hidden (lib/hidden-pages). */}

@@ -66,7 +66,7 @@ export interface LegalDocument {
  * Set by hand rather than from the file's git date: what matters to a reader is
  * when the *meaning* last changed, not when somebody fixed a typo.
  */
-export const LEGAL_LAST_UPDATED = '2026-11-21'
+export const LEGAL_LAST_UPDATED = '2026-11-25'
 
 /**
  * Who runs the site, as both documents state it.
@@ -252,11 +252,12 @@ function englishPrivacyPolicy(): LegalDocument {
            * names is kept in this comment so a request for it can be answered:
            * Supabase (database, files), Netlify (hosting), Cloudflare (network,
            * sign-up check), Resend (email), Google Workspace (the contact@
-           * inbox, added 10 November 2026), Umami (page visits) and Anthropic
-           * (reading receipts). WhatsApp has its own line below: it is not our
+           * inbox, added 10 November 2026), Umami (page visits), Anthropic
+           * (reading receipts) and Sentry (technical errors, EU region, added 25
+           * November 2026). WhatsApp has its own line below: it is not our
            * processor, it runs the conversation under its own policy.
            */
-          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site and measures how fast it loads, the service that sends our email, the service that holds our email inbox, the service that counts page visits, and the service that reads receipts. You can ask us who they are.',
+          '- **Our suppliers**, who process data on our behalf and are not allowed to use it for anything else: our database and file storage host, our website host, the network that protects the site and measures how fast it loads, the service that sends our email, the service that holds our email inbox, the service that counts page visits, the service that reads receipts, and the service that records technical errors so we can fix them. You can ask us who they are.',
           '- **WhatsApp**, if you write to us through the WhatsApp button. The conversation passes through WhatsApp, which handles it under its own privacy policy.',
           "We do not sell your information, and we do not share it for anyone else's marketing.",
         ],

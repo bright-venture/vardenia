@@ -2,7 +2,12 @@ import { MobileMenu } from './header/MobileMenu'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ChevronDown, Heart } from 'lucide-react'
-import { EVENT_STAFF_SECTION, SECTIONS } from '@vardenia/core'
+import {
+  EVENT_STAFF_COMING_SOON,
+  EVENT_STAFF_SECTION,
+  SECTIONS,
+  isComingSoonCategory,
+} from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LinkArrow } from './LinkArrow'
@@ -19,6 +24,8 @@ import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
+  // Sections not open yet carry a "Coming soon" label (25 November 2026).
+  const soon = t('comingSoon.label')
   // Pages an admin has hidden (lib/hidden-pages) are left out of the menus.
   const hidden = await hiddenPages()
   // The header's sign-in and account links, which Settings can hide.
@@ -40,6 +47,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         href: `/${section.path}`,
         name: sectionName(section, locale),
         description: sectionSummary(section, locale),
+        badge: isComingSoonCategory(section.category) ? soon : undefined,
         destination: categoryPhotos[section.path] ?? 0,
       })),
       // The seventh section: a request form, not listings (18 November 2026).
@@ -47,6 +55,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         href: `/${EVENT_STAFF_SECTION.path}`,
         name: sectionName(EVENT_STAFF_SECTION, locale),
         description: sectionSummary(EVENT_STAFF_SECTION, locale),
+        badge: EVENT_STAFF_COMING_SOON ? soon : undefined,
         destination: 5,
       },
     ],
@@ -155,22 +164,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           name: t('home.addBusiness'),
           description: t('nav.addBusinessNote'),
           destination: 2,
-        }
-      : null,
-    shown('partner-with-us')
-      ? {
-          href: '/partner-with-us',
-          name: t('footer.partnerWithUs'),
-          description: t('nav.partnerWithUsNote'),
-          destination: 1,
-        }
-      : null,
-    shown('advertise')
-      ? {
-          href: '/advertise',
-          name: t('footer.advertise'),
-          description: t('nav.advertiseNote'),
-          destination: 3,
         }
       : null,
     // Booking a place in the printed magazine (19 November 2026).
@@ -297,7 +290,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                       <li key={item.href}>
                         <Link href={item.href} className="vd-mobile-link">
                           <span>
-                            <strong>{item.name}</strong>
+                            <strong>
+                              {item.name}
+                              {item.badge ? (
+                                <span className="vd-soon-badge">{item.badge}</span>
+                              ) : null}
+                            </strong>
                             <span>{item.description}</span>
                           </span>
                           <LinkArrow />

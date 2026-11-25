@@ -10,7 +10,6 @@
     "magazine": "Revista",
     "regions": "Regiones",
     "about": "Acerca de",
-    "advertise": "Anúnciate con nosotros",
     "saved": "Lugares guardados",
     "search": "Buscar",
     "menu": "Menú",
@@ -29,11 +28,10 @@
     "aboutMenuBody": "Quién hace la guía, cómo se eligen los lugares y cómo contactarnos.",
     "business": "Empresas",
     "businessMenuTitle": "Crece con Vardenia.",
-    "businessMenuBody": "Presenta tu negocio a los lectores, en papel y en línea, recibe reservas o anúnciate.",
-    "partnerWithUsNote": "Recibe reservas y solicitudes a través de Vardenia",
-    "advertiseNote": "Espacio en la revista y en el sitio",
+    "businessMenuBody": "Presenta tu negocio a los lectores, en papel y en línea, y recibe reservas.",
     "language": "Idioma",
-    "magazinePlacesNote": "Reserva un lugar en la revista impresa"
+    "magazinePlacesNote": "Reserva un lugar en la revista impresa",
+    "applyMagazine": "Solicita tu lugar en la revista"
   },
   "home": {
     "eyebrow": "Descubre el Líbano",
@@ -466,8 +464,6 @@
     "questions": "Preguntas",
     "contact": "Contacto",
     "addBusiness": "Añade tu negocio",
-    "partnerWithUs": "Colabora con nosotros",
-    "advertise": "Anunciar",
     "partnerSignIn": "Acceso de socios",
     "rights": "Todos los derechos reservados.",
     "legal": "Legal",
@@ -1303,5 +1299,21 @@
     "viewBranch": "Ver esta sucursal",
     "takesBookings": "Acepta reservas en Vardenia",
     "description": "Todas las sucursales de {name} que listamos en el Líbano."
+  },
+  "announce": {
+    "label": "Anuncios",
+    "followUs": "Sigue a Vardenia en redes sociales",
+    "allLinks": "Todos nuestros enlaces en un solo lugar",
+    "newIssue": "Descubre el nuevo número de la revista",
+    "previous": "Mensaje anterior",
+    "next": "Mensaje siguiente"
+  },
+  "comingSoon": {
+    "label": "Próximamente",
+    "title": "Próximamente en Vardenia",
+    "sectionBody": "Estamos preparando esta sección. Hasta que abra, explora los lugares que ya están en el directorio.",
+    "eventStaffBody": "Las solicitudes de azafatas y camareros abren pronto. Mientras tanto, explora los lugares que ya están en el directorio.",
+    "explore": "Explorar el directorio",
+    "bookingNote": "La reserva a través de Vardenia llegará pronto para este lugar."
   }
 }

@@ -53,10 +53,10 @@ describe('hideable pages', () => {
   })
 
   it('takes the partner sign-in link out of a list', () => {
-    const links = [{ href: '/about' }, { href: '/partner' }, { href: '/advertise' }]
+    const links = [{ href: '/about' }, { href: '/partner' }, { href: '/add-your-business' }]
     expect(withoutHidden(links, ['partner-sign-in']).map((l) => l.href)).toEqual([
       '/about',
-      '/advertise',
+      '/add-your-business',
     ])
   })
 
