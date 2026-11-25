@@ -2,44 +2,58 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
 import type { PlaceSubmission } from '@vardenia/core'
 
+const locks = vi.hoisted(() => [] as string[])
+vi.mock('./partner-lock', () => ({
+  advisoryLock: async (_req: unknown, key: string) => {
+    locks.push(key)
+  },
+}))
 vi.mock('./report', () => ({ reportError: vi.fn(async () => {}) }))
 
+// The transaction helper is replaced by one with the same contract: writes made
+// with its `req` are undone when the work throws, and a thrown error is passed on.
+type Row = Record<string, unknown> & { id: number; collection: string }
+const store = vi.hoisted(() => ({ rows: [] as unknown[], tx: [] as unknown[] }))
+vi.mock('./branches', () => ({
+  runInTransaction: async (
+    _payload: unknown,
+    fn: (req: { transactionID: string }) => Promise<unknown>,
+  ) => {
+    const before = store.rows.length
+    try {
+      return await fn({ transactionID: 'tx' })
+    } catch (error) {
+      store.rows.length = before
+      throw error
+    }
+  },
+}))
+
 import { reportError } from './report'
-import { createPlaceSubmission, listNumbersFor, type SubmissionFiles } from './place-submission'
+import { statusForOutcome } from './place-submission-request'
+import {
+  hashSessionToken,
+  isListingNumberTaken,
+  listNumbersFor,
+  MAX_OPEN_STARTS_PER_EMAIL,
+  startPlaceSubmission,
+} from './place-submission'
 
 /**
  * The one public door that writes a listing. It writes with overrideAccess, so
  * these tests pin what it is willing to write and what it refuses first.
  */
 
-const JPEG = [0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]
-const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]
-const WEBP = [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]
-
-const file = (bytes: number[], type: string, name = 'a.jpg') =>
-  new File([new Uint8Array(bytes)], name, { type })
-
-const files = (): SubmissionFiles => ({
-  hero: file(JPEG, 'image/jpeg', 'hero.jpg'),
-  gallery: [file(PNG, 'image/png', 'g.png')],
-  logo: file(WEBP, 'image/webp', 'logo.webp'),
-})
-
 const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
   ({
     name: 'Cafe Nour',
     tagline: 'Good coffee',
     description: 'First line.\n\nSecond line.',
-    category: 'eat-drink',
-    subcategories: ['cafe'],
+    kind: 'cafes',
     governorate: 'beirut',
-    district: undefined,
-    area: undefined,
+    district: 'beirut',
     address: 'Hamra St',
-    openingHours: [],
-    priceRange: undefined,
-    amenities: ['wifi'],
-    payments: { cash: true, card: false, whish: false, omt: false },
+    acceptsWhish: true,
     publicPhone: '+9611',
     instagram: 'https://instagram.com/cafenour',
     facebook: undefined,
@@ -57,21 +71,24 @@ interface Stub {
   find: ReturnType<typeof vi.fn>
   create: ReturnType<typeof vi.fn>
   update: ReturnType<typeof vi.fn>
-  delete: ReturnType<typeof vi.fn>
+  findGlobal: ReturnType<typeof vi.fn>
 }
 
 /** A payload with one beirut range 10-20 in issue 7 and number 11 taken. */
 function stub(
   opts: {
     range?: boolean
-    failListing?: unknown
-    /** One error per listing create, in order; creates after the last succeed. */
+    holdMinutes?: number
+    /** One error per business create, in order; creates after the last succeed. */
     listingErrors?: unknown[]
+    failListing?: unknown
+    failSession?: unknown
     failUpdate?: unknown
   } = {},
 ): Stub & Payload {
-  let mediaId = 100
+  store.rows = []
   const listingErrors = [...(opts.listingErrors ?? [])]
+  let nextId = 555
   const find = vi.fn(async ({ collection }: { collection: string }) => {
     if (collection === 'listing-ranges') {
       return {
@@ -84,23 +101,35 @@ function stub(
     if (collection === 'businesses') return { docs: [{ listingNumber: 11 }] }
     return { docs: [] }
   })
-  const create = vi.fn(async ({ collection }: { collection: string }) => {
-    if (collection === 'media') return { id: mediaId++ }
-    if (opts.failListing) throw opts.failListing
-    const next = listingErrors.shift()
-    if (next) throw next
-    return { id: 555 }
-  })
+  const create = vi.fn(
+    async ({ collection, data }: { collection: string; data: Record<string, unknown> }) => {
+      if (collection === 'businesses') {
+        if (opts.failListing) throw opts.failListing
+        const next = listingErrors.shift()
+        if (next) throw next
+      } else if (opts.failSession) {
+        throw opts.failSession
+      }
+      const row = { id: nextId++, collection, data: structuredClone(data) }
+      store.rows.push(row)
+      return { id: row.id }
+    },
+  )
   const update = vi.fn(async () => {
     if (opts.failUpdate) throw opts.failUpdate
     return { id: 555 }
   })
-  const remove = vi.fn(async () => ({}))
-  return { find, create, update, delete: remove } as unknown as Stub & Payload
+  const findGlobal = vi.fn(async () => ({
+    magazinePlaces: opts.holdMinutes ? { holdMinutes: opts.holdMinutes } : {},
+  }))
+  return { find, create, update, findGlobal } as unknown as Stub & Payload
 }
 
 const created = (s: Stub, collection: string) =>
   s.create.mock.calls.map((c) => c[0]).filter((a) => a.collection === collection)
+
+const stored = (collection: string) =>
+  (store.rows as Row[]).filter((row) => row.collection === collection)
 
 describe('listNumbersFor', () => {
   it('returns the range and what is taken, never who holds it', async () => {
@@ -119,39 +148,65 @@ describe('listNumbersFor', () => {
   })
 })
 
-describe('createPlaceSubmission', () => {
-  it('refuses a number outside the range, creating no media', async () => {
+describe('startPlaceSubmission', () => {
+  it('refuses a number outside the range, writing nothing', async () => {
     const s = stub()
-    const out = await createPlaceSubmission({
-      payload: s,
-      input: input({ listingNumber: 99 }),
-      files: files(),
-    })
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 99 }) })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('refuses a number another listing holds, creating no media', async () => {
+  it('refuses a number another listing holds, writing nothing', async () => {
     const s = stub()
-    const out = await createPlaceSubmission({
-      payload: s,
-      input: input({ listingNumber: 11 }),
-      files: files(),
-    })
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 11 }) })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
     expect(s.create).not.toHaveBeenCalled()
   })
 
   it('refuses a governorate with no range', async () => {
     const s = stub({ range: false })
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
     expect(out).toMatchObject({ ok: false, code: 'no-range' })
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('writes only the allow-list, as a pending draft, in the owner locale', async () => {
+  it('refuses a hidden kind even if the schema was bypassed', async () => {
+    for (const kind of ['car-rental', 'guided-tours', 'nonsense']) {
+      const s = stub()
+      const out = await startPlaceSubmission({
+        payload: s,
+        input: input({ kind: kind as never }),
+      })
+      expect(out).toMatchObject({ ok: false, code: 'kind-unavailable' })
+      expect(s.create).not.toHaveBeenCalled()
+    }
+  })
+
+  it('creates one hidden incomplete draft, one session, once', async () => {
     const s = stub()
-    const out = await createPlaceSubmission({
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toMatchObject({ ok: true, listingId: 555, reference: 'VD-555' })
+    expect(created(s, 'businesses')).toHaveLength(1)
+    expect(created(s, 'place-upload-sessions')).toHaveLength(1)
+    expect(stored('businesses')).toHaveLength(1)
+    expect(stored('place-upload-sessions')).toHaveLength(1)
+    expect(s.update).toHaveBeenCalledTimes(1)
+
+    const [listing] = created(s, 'businesses')
+    expect(listing.overrideAccess).toBe(true)
+    expect(listing.locale).toBe('ar')
+    expect(listing.req).toEqual({ transactionID: 'tx' })
+    expect(listing.context).toEqual({ skipQrGeneration: true, skipAutoTranslate: true })
+    // Never public, never pending staff work.
+    expect(listing.data._status).toBe('draft')
+    expect(listing.data.submission.status).toBe('incomplete')
+    // Not yet submitted: submittedAt is set when the owner finishes.
+    expect(listing.data.submission).not.toHaveProperty('submittedAt')
+  })
+
+  it('writes only the allow-list; smuggled fields never reach the record', async () => {
+    const s = stub()
+    await startPlaceSubmission({
       payload: s,
       input: {
         ...input(),
@@ -163,16 +218,15 @@ describe('createPlaceSubmission', () => {
         slug: 'mine',
         salesOwner: 1,
         internalNotes: 'hi',
-      } as PlaceSubmission,
-      files: files(),
+        contractEndsAt: '2099-01-01',
+        payment: { status: 'paid' },
+        heroImage: 9,
+        logo: 9,
+        reference: 'VD-1',
+        submissionStatus: 'approved',
+      } as unknown as PlaceSubmission,
     })
-    expect(out).toEqual({ ok: true, listingId: 555 })
-
     const [listing] = created(s, 'businesses')
-    expect(listing.overrideAccess).toBe(true)
-    expect(listing.locale).toBe('ar')
-    expect(listing.draft).toBeUndefined()
-    expect(listing.context).toEqual({ skipQrGeneration: true, skipAutoTranslate: true })
     expect(Object.keys(listing.data).sort()).toEqual(
       [
         'name',
@@ -182,15 +236,8 @@ describe('createPlaceSubmission', () => {
         'subcategories',
         'governorate',
         'district',
-        'area',
         'address',
-        'openingHours',
-        'priceRange',
-        'amenities',
         'payments',
-        'heroImage',
-        'gallery',
-        'logo',
         'issue',
         'listingNumber',
         '_status',
@@ -198,49 +245,138 @@ describe('createPlaceSubmission', () => {
         'submission',
       ].sort(),
     )
-    expect(listing.data._status).toBe('draft')
-    expect(listing.data.heroImage).toBe(100)
-    expect(listing.data.gallery).toEqual([101])
-    expect(listing.data.logo).toBe(102)
+    expect(Object.keys(listing.data.submission).sort()).toEqual([
+      'ownerEmail',
+      'ownerName',
+      'ownerPhone',
+      'pageTemplate',
+      'status',
+    ])
+    expect(listing.data).not.toHaveProperty('tier')
     expect(listing.data.description.root.children).toHaveLength(2)
-    expect(listing.data.submission).toMatchObject({
-      status: 'pending',
-      ownerName: 'Nour',
-      ownerEmail: 'n@x.com',
-      ownerPhone: '+9617',
-      pageTemplate: 'a',
-    })
-    expect(Number.isNaN(Date.parse(listing.data.submission.submittedAt))).toBe(false)
-    // The public contact is its own group; nothing public stays under the staff-only one.
+    // Category comes from the one kind; payments hold only Whish.
+    expect(listing.data.category).toBe('food-and-beverage')
+    expect(listing.data.subcategories).toEqual(['cafes'])
+    // The district is stored as the slug the Businesses district select takes.
+    expect(listing.data.governorate).toBe('beirut')
+    expect(listing.data.district).toBe('beirut')
+    expect(listing.data.payments).toEqual({ cash: false, card: false, whish: true, omt: false })
     expect(listing.data.contact).toEqual({
       phone: '+9611',
       instagram: 'https://instagram.com/cafenour',
       facebook: undefined,
     })
-    expect(listing.data.submission).not.toHaveProperty('publicPhone')
-    expect(listing.data.submission).not.toHaveProperty('website')
+    // The follow-up write carries the reference and nothing of the owner's.
+    const write = s.update.mock.calls[0]![0]
+    expect(write.data.submission).toEqual({ reference: 'VD-555' })
+    for (const key of ['tier', '_status', 'payment', 'contractEndsAt', 'slug']) {
+      expect(write.data).not.toHaveProperty(key)
+    }
   })
 
-  it('never copies a smuggled website or other contact field', async () => {
+  it('leaves the tier to its default (silver): it is never set', async () => {
     const s = stub()
-    await createPlaceSubmission({
+    await startPlaceSubmission({
       payload: s,
-      input: {
-        ...input(),
-        website: 'https://x.com',
-        whatsapp: '+1',
-        email: 'a@b.c',
-      } as PlaceSubmission,
-      files: files(),
+      input: { ...input(), tier: 'platinum' } as unknown as PlaceSubmission,
     })
-    const [listing] = created(s, 'businesses')
-    expect(Object.keys(listing.data.contact).sort()).toEqual(['facebook', 'instagram', 'phone'])
-    expect(listing.data).not.toHaveProperty('website')
+    expect(JSON.stringify(created(s, 'businesses')[0].data)).not.toContain('platinum')
+    expect(created(s, 'businesses')[0].data).not.toHaveProperty('tier')
+  })
+
+  it('stores a payments.whish of false when the box is not ticked', async () => {
+    const s = stub()
+    await startPlaceSubmission({ payload: s, input: input({ acceptsWhish: false }) })
+    expect(created(s, 'businesses')[0].data.payments.whish).toBe(false)
+  })
+
+  it('returns the plain token once and stores only its hash', async () => {
+    const s = stub()
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    if (!out.ok) throw new Error('expected ok')
+    expect(out.sessionToken).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    const [session] = created(s, 'place-upload-sessions')
+    expect(session.overrideAccess).toBe(true)
+    expect(session.data.tokenHash).toBe(hashSessionToken(out.sessionToken))
+    expect(session.data.tokenHash).toMatch(/^[0-9a-f]{64}$/)
+    expect(session.data).toMatchObject({
+      business: 555,
+      logoReceived: false,
+      heroReceived: false,
+    })
+    // The plain token is nowhere in anything written, or in the reference.
+    expect(JSON.stringify(store.rows)).not.toContain(out.sessionToken)
+    expect(JSON.stringify(s.update.mock.calls)).not.toContain(out.sessionToken)
+    expect(out.reference).not.toContain(out.sessionToken)
+  })
+
+  it('makes a different token for every start', async () => {
+    const a = await startPlaceSubmission({ payload: stub(), input: input() })
+    const b = await startPlaceSubmission({ payload: stub(), input: input() })
+    expect(a.ok && b.ok && a.sessionToken !== b.sessionToken).toBe(true)
+  })
+
+  it('sets the hard cap of the session to 24 hours after the start, whatever holdMinutes says', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-23T10:00:00.000Z'))
+    try {
+      for (const holdMinutes of [undefined, 90]) {
+        const s = stub({ holdMinutes })
+        const out = await startPlaceSubmission({ payload: s, input: input() })
+        expect(out).toMatchObject({ ok: true, expiresAt: '2026-11-24T10:00:00.000Z' })
+        expect(created(s, 'place-upload-sessions')[0].data.expiresAt).toBe(
+          '2026-11-24T10:00:00.000Z',
+        )
+      }
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  describe('the cap on open forms per owner email', () => {
+    const withOpen = (count: number) => {
+      const s = stub()
+      const find = s.find.getMockImplementation()!
+      s.find.mockImplementation(async (args: { collection: string; where?: unknown }) => {
+        if (
+          args.collection === 'businesses' &&
+          JSON.stringify(args.where).includes('submission.ownerEmail')
+        ) {
+          return { docs: [], totalDocs: count }
+        }
+        return find(args)
+      })
+      return s
+    }
+
+    it('refuses a fourth open form with too-many-open, and writes nothing', async () => {
+      const s = withOpen(MAX_OPEN_STARTS_PER_EMAIL)
+      const out = await startPlaceSubmission({ payload: s, input: input() })
+      expect(out).toMatchObject({ ok: false, code: 'too-many-open' })
+      expect(s.create).not.toHaveBeenCalled()
+      expect(statusForOutcome('too-many-open')).toBe(429)
+    })
+
+    it('allows the start while under the cap, counting only incomplete forms of that email', async () => {
+      const s = withOpen(MAX_OPEN_STARTS_PER_EMAIL - 1)
+      expect(await startPlaceSubmission({ payload: s, input: input() })).toMatchObject({ ok: true })
+      const where = JSON.stringify(
+        s.find.mock.calls.find((c) => JSON.stringify(c[0].where).includes('ownerEmail'))![0].where,
+      )
+      expect(where).toContain('n@x.com')
+      expect(where).toContain('incomplete')
+    })
+
+    it('counts inside the start transaction, under a lock per email', async () => {
+      const s = withOpen(0)
+      await startPlaceSubmission({ payload: s, input: input() })
+      expect(locks).toContain('vardenia.place-start-email:n@x.com')
+    })
   })
 
   it('also writes name and address (only) in the default locale for a non-default owner locale', async () => {
     const s = stub()
-    await createPlaceSubmission({ payload: s, input: input({ locale: 'ar' }), files: files() })
+    await startPlaceSubmission({ payload: s, input: input({ locale: 'ar' }) })
     expect(s.update).toHaveBeenCalledTimes(1)
     const call = s.update.mock.calls[0]![0]
     expect(call).toMatchObject({
@@ -249,39 +385,27 @@ describe('createPlaceSubmission', () => {
       locale: 'en',
       depth: 0,
       overrideAccess: true,
-      data: { name: 'Cafe Nour', address: 'Hamra St' },
+      req: { transactionID: 'tx' },
     })
-    expect(Object.keys(call.data).sort()).toEqual(['address', 'name'])
+    expect(Object.keys(call.data).sort()).toEqual(['address', 'name', 'submission'])
+    expect(call.data.submission).toEqual({ reference: 'VD-555' })
+    expect(call.data).toMatchObject({ name: 'Cafe Nour', address: 'Hamra St' })
     expect(call.context.skipAutoTranslate).toBe(true)
     expect(call.context.skipQrGeneration).toBe(true)
   })
 
-  it('makes no second write when the owner wrote in the default locale', async () => {
+  it('writes only the reference group for a default-locale owner', async () => {
     const s = stub()
-    await createPlaceSubmission({ payload: s, input: input({ locale: 'en' }), files: files() })
-    expect(s.update).not.toHaveBeenCalled()
+    await startPlaceSubmission({ payload: s, input: input({ locale: 'en' }) })
+    expect(Object.keys(s.update.mock.calls[0]![0].data)).toEqual(['submission'])
   })
 
-  it('still returns ok and reports when the default-locale write fails', async () => {
-    vi.mocked(reportError).mockClear()
-    const s = stub({ failUpdate: new Error('boom') })
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    expect(out).toEqual({ ok: true, listingId: 555 })
-    expect(reportError).toHaveBeenCalledTimes(1)
+  it('derives a unique reference from the record id', async () => {
+    const out = await startPlaceSubmission({ payload: stub(), input: input() })
+    expect(out).toMatchObject({ ok: true, reference: 'VD-555' })
   })
 
-  it('creates media as supplied by the business, named after it, with access override', async () => {
-    const s = stub()
-    await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    const media = created(s, 'media')
-    expect(media).toHaveLength(3)
-    for (const m of media) {
-      expect(m.overrideAccess).toBe(true)
-      expect(m.data).toEqual({ alt: 'Cafe Nour', usageRights: 'supplied' })
-    }
-  })
-
-  it('maps a unique refusal on (issue, listing_number) to number-unavailable', async () => {
+  it('maps a unique refusal on (issue, listing_number) to number-unavailable, leaving nothing', async () => {
     const refusal = Object.assign(new Error('Value must be unique'), {
       name: 'ValidationError',
       data: {
@@ -294,12 +418,11 @@ describe('createPlaceSubmission', () => {
         ],
       },
     })
-    const out = await createPlaceSubmission({
-      payload: stub({ failListing: refusal }),
-      input: input(),
-      files: files(),
-    })
+    const s = stub({ failListing: refusal })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(store.rows).toEqual([])
+    expect(created(s, 'place-upload-sessions')).toHaveLength(0)
   })
 
   it('maps the number field validation refusing a number a rival just took', async () => {
@@ -314,34 +437,48 @@ describe('createPlaceSubmission', () => {
         ],
       },
     })
-    const out = await createPlaceSubmission({
+    const out = await startPlaceSubmission({
       payload: stub({ failListing: refusal }),
       input: input(),
-      files: files(),
     })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
     expect(JSON.stringify(out)).not.toContain('Other')
+    expect(store.rows).toEqual([])
   })
 
   it('also maps the raw driver error naming the index', async () => {
     const raw = Object.assign(new Error('dup'), {
       cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
     })
-    const out = await createPlaceSubmission({
+    const out = await startPlaceSubmission({
       payload: stub({ failListing: raw }),
       input: input(),
-      files: files(),
     })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(isListingNumberTaken(raw)).toBe(true)
+  })
+
+  it('rolls the draft back when the session cannot be created: no orphan draft', async () => {
+    vi.mocked(reportError).mockClear()
+    const s = stub({ failSession: new Error('db down') })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toMatchObject({ ok: false, code: 'error' })
+    expect(store.rows).toEqual([])
+    expect(reportError).toHaveBeenCalledTimes(1)
+  })
+
+  it('rolls everything back when the reference write fails', async () => {
+    const s = stub({ failUpdate: new Error('boom') })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toMatchObject({ ok: false, code: 'error' })
+    expect(store.rows).toEqual([])
   })
 
   /**
    * The slug comes from the name, and the slug is unique, so a second "Cafe
-   * Nour" (or two Arabic names that transliterate alike) used to fail for good.
+   * Nour" (or two Arabic names that transliterate alike) must not fail for good.
    */
   describe('a name whose slug is taken', () => {
-    // The two shapes a slug refusal arrives in: Payload's, where the adapter
-    // maps the index businesses_slug_idx back to the field, and the raw one.
     const slugTaken = () =>
       Object.assign(new Error('Value must be unique'), {
         name: 'ValidationError',
@@ -355,31 +492,29 @@ describe('createPlaceSubmission', () => {
 
     it('tries the automatic slug first, then the name with the listing number', async () => {
       const s = stub({ listingErrors: [slugTaken()] })
-      const out = await createPlaceSubmission({
-        payload: s,
-        input: input({ name: 'Cafe Nour' }),
-        files: files(),
-      })
-      expect(out).toEqual({ ok: true, listingId: 555 })
+      const out = await startPlaceSubmission({ payload: s, input: input({ name: 'Cafe Nour' }) })
+      expect(out).toMatchObject({ ok: true, listingId: 555 })
       const calls = listingCreates(s)
       expect(calls).toHaveLength(2)
       expect(calls[0].data).not.toHaveProperty('slug')
       expect(calls[1].data.slug).toBe('cafe-nour-12')
+      // One draft and one session survive the retry.
+      expect(stored('businesses')).toHaveLength(1)
+      expect(stored('place-upload-sessions')).toHaveLength(1)
     })
 
     it('uses the transliterated name for an Arabic name', async () => {
       const s = stub({ listingErrors: [rawSlugTaken()] })
-      await createPlaceSubmission({
+      await startPlaceSubmission({
         payload: s,
-        input: input({ name: '\u0645\u0637\u0639\u0645' }),
-        files: files(),
+        input: input({ name: 'مطعم' }),
       })
       expect(listingCreates(s)[1].data.slug).toBe('mtam-12')
     })
 
     it('then adds four random hex characters, fresh each time', async () => {
       const s = stub({ listingErrors: [slugTaken(), slugTaken(), slugTaken()] })
-      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      const out = await startPlaceSubmission({ payload: s, input: input() })
       expect(out.ok).toBe(true)
       const slugs = listingCreates(s).map((c) => c.data.slug)
       expect(slugs).toHaveLength(4)
@@ -387,23 +522,12 @@ describe('createPlaceSubmission', () => {
       expect(slugs[3]).toMatch(/^cafe-nour-12-[0-9a-f]{4}$/)
     })
 
-    it('reuses the photos already stored: no new media on a retry', async () => {
-      const s = stub({ listingErrors: [slugTaken(), slugTaken()] })
-      await createPlaceSubmission({ payload: s, input: input(), files: files() })
-      expect(created(s, 'media')).toHaveLength(3)
-      for (const call of listingCreates(s)) {
-        expect(call.data.heroImage).toBe(100)
-        expect(call.data.gallery).toEqual([101])
-        expect(call.data.logo).toBe(102)
-      }
-    })
-
     it('does not retry a taken listing number', async () => {
       const number = Object.assign(new Error('dup'), {
         cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
       })
       const s = stub({ listingErrors: [number] })
-      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      const out = await startPlaceSubmission({ payload: s, input: input() })
       expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
       expect(listingCreates(s)).toHaveLength(1)
     })
@@ -411,30 +535,29 @@ describe('createPlaceSubmission', () => {
     it('gives up after three retries with the generic error, and reports it', async () => {
       vi.mocked(reportError).mockClear()
       const s = stub({ failListing: slugTaken() })
-      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      const out = await startPlaceSubmission({ payload: s, input: input() })
       expect(out).toEqual({
         ok: false,
         code: 'error',
         message: 'We could not save that. Please try again.',
       })
       expect(listingCreates(s)).toHaveLength(4)
-      expect(created(s, 'media')).toHaveLength(3)
+      expect(store.rows).toEqual([])
       expect(reportError).toHaveBeenCalledTimes(1)
     })
 
     it('does not retry any other failure', async () => {
       const s = stub({ listingErrors: [new Error('boom')] })
-      const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
+      const out = await startPlaceSubmission({ payload: s, input: input() })
       expect(out).toMatchObject({ ok: false, code: 'error' })
       expect(listingCreates(s)).toHaveLength(1)
     })
   })
 
   it('reports any other failure and leaks nothing', async () => {
-    const out = await createPlaceSubmission({
+    const out = await startPlaceSubmission({
       payload: stub({ failListing: new Error('connection to db.secret.internal refused') }),
       input: input(),
-      files: files(),
     })
     expect(out).toEqual({
       ok: false,
@@ -442,109 +565,5 @@ describe('createPlaceSubmission', () => {
       message: 'We could not save that. Please try again.',
     })
     expect(reportError).toHaveBeenCalled()
-  })
-
-  describe('files are checked before anything is created', () => {
-    const refused = async (f: SubmissionFiles) => {
-      const s = stub()
-      const out = await createPlaceSubmission({ payload: s, input: input(), files: f })
-      expect(out).toMatchObject({ ok: false, code: 'invalid-files' })
-      if (!out.ok) expect(out.message.length).toBeGreaterThan(5)
-      expect(s.create).not.toHaveBeenCalled()
-    }
-
-    it('refuses an oversized file', async () => {
-      const big = file(JPEG, 'image/jpeg')
-      Object.defineProperty(big, 'size', { value: 25 * 1024 * 1024 + 1 })
-      await refused({ ...files(), hero: big })
-    })
-
-    it('refuses a type that Media allows but the form does not', async () => {
-      await refused({ ...files(), hero: file(JPEG, 'image/avif') })
-      await refused({ ...files(), gallery: [file(JPEG, 'application/pdf')] })
-    })
-
-    it('refuses a renamed file whose bytes are not an image', async () => {
-      const fake = file([0x25, 0x50, 0x44, 0x46, 0x2d, 0, 0, 0, 0, 0, 0, 0], 'image/jpeg')
-      await refused({ ...files(), hero: fake })
-    })
-
-    it('refuses a declared type that disagrees with the bytes', async () => {
-      await refused({ ...files(), hero: file(PNG, 'image/jpeg') })
-    })
-
-    it('refuses more than six gallery files', async () => {
-      await refused({
-        ...files(),
-        gallery: Array.from({ length: 7 }, () => file(JPEG, 'image/jpeg')),
-      })
-    })
-
-    it('refuses a missing hero and an empty file', async () => {
-      await refused({ ...files(), hero: undefined as unknown as File })
-      await refused({ ...files(), hero: file([], 'image/jpeg') })
-    })
-
-    it('accepts six gallery files', async () => {
-      const s = stub()
-      const out = await createPlaceSubmission({
-        payload: s,
-        input: input(),
-        files: { ...files(), gallery: Array.from({ length: 6 }, () => file(JPEG, 'image/jpeg')) },
-      })
-      expect(out.ok).toBe(true)
-    })
-  })
-})
-
-/**
- * A submission that fails after storing its photos deletes them again (21
- * November 2026). Before, they stayed in the media library with nothing using
- * them.
- */
-describe('photos of a failed submission', () => {
-  const deleted = (s: Stub) =>
-    s.delete.mock.calls
-      .map((c) => c[0])
-      .filter((a) => a.collection === 'media')
-      .map((a) => a.id)
-
-  it('deletes all three photos when the number was lost in a race', async () => {
-    const raw = Object.assign(new Error('dup'), {
-      cause: { code: '23505', constraint: 'issue_listingNumber_idx' },
-    })
-    const s = stub({ failListing: raw })
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
-    expect(deleted(s)).toEqual([100, 101, 102])
-  })
-
-  it('deletes them when the listing fails to save for any other reason', async () => {
-    const s = stub({ failListing: new Error('database down') })
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    expect(out).toMatchObject({ ok: false, code: 'error' })
-    expect(deleted(s)).toEqual([100, 101, 102])
-  })
-
-  it('keeps them when the submission succeeds', async () => {
-    const s = stub()
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    expect(out).toMatchObject({ ok: true })
-    expect(s.delete).not.toHaveBeenCalled()
-  })
-
-  it('still answers the owner when a photo cannot be deleted, and reports it', async () => {
-    vi.mocked(reportError).mockClear()
-    const s = stub({ failListing: new Error('database down') })
-    s.delete.mockRejectedValue(new Error('storage down'))
-    const out = await createPlaceSubmission({ payload: s, input: input(), files: files() })
-    expect(out).toMatchObject({ ok: false, code: 'error' })
-    expect(
-      vi
-        .mocked(reportError)
-        .mock.calls.some(
-          (c) => (c[1] as { source?: string })?.source === 'place-submission.cleanup',
-        ),
-    ).toBe(true)
   })
 })

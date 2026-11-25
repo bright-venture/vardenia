@@ -8,7 +8,7 @@ const args = {
   brandName: 'Cafe Nour',
   brandCreated: true,
   governorate: 'keserwan',
-  district: 'keserwan',
+  district: 'jounieh',
   address: 'Main road & sea',
   partnerName: 'Rita <script>',
   partnerEmail: 'owner@example.com',

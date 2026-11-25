@@ -162,7 +162,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'tourism',
     subcategories: ['activities'],
     governorate: 'keserwan',
-    district: 'keserwan',
+    district: 'faqra-faraya',
     address: { en: 'Kfardebian, Keserwan', ar: 'كفردبيان، كسروان' },
     location: [35.8422, 34.0086],
     // Website only: a bronze listing, which can never be bought onto the home page.

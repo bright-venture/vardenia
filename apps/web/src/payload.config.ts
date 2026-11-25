@@ -21,7 +21,6 @@ import { Closures } from './collections/Closures'
 import { RoomTypes } from './collections/RoomTypes'
 import { RoomAvailability } from './collections/RoomAvailability'
 import { StaffRequests } from './collections/StaffRequests'
-import { Areas } from './collections/Areas'
 import { GuestQuestions } from './collections/GuestQuestions'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
@@ -34,11 +33,14 @@ import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
+import { PlaceUploadSessions } from './collections/PlaceUploadSessions'
 import { Settings } from './globals/Settings'
 import { EDITION_MAX_BYTES, Editions } from './collections/Editions'
 import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/storage-base'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
+import { rejectSubmissionEndpoint } from './submissions/reject-endpoint'
+import { paymentEndpoints, resendPaymentEmailEndpoint } from './submissions/payment-endpoints'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
@@ -179,6 +181,12 @@ export default buildConfig({
           path: '/import-listings',
           Component: '/components/admin/ImportListings#ImportListings',
         },
+        // Magazine Places money reports, admin only (role checked in the
+        // view and in lib/place-reports before anything is read).
+        placeReports: {
+          path: '/place-reports',
+          Component: '/components/admin/PlaceReports#PlaceReports',
+        },
       },
     },
   },
@@ -189,7 +197,12 @@ export default buildConfig({
    * the admin cookie. A hand-rolled route would have to repeat that, and the
    * repetition is where an auth check goes missing.
    */
-  endpoints: [importListingsEndpoint],
+  endpoints: [
+    importListingsEndpoint,
+    rejectSubmissionEndpoint,
+    ...paymentEndpoints,
+    resendPaymentEmailEndpoint,
+  ],
 
   // The admin menu follows this order, group by group: Directory, Bookings,
   // Magazine, People, Reports. The last two are hidden from the menu.
@@ -205,7 +218,6 @@ export default buildConfig({
     RoomTypes,
     RoomAvailability,
     StaffRequests,
-    Areas,
     GuestQuestions,
     Articles,
     Issues,
@@ -219,6 +231,7 @@ export default buildConfig({
     ErrorEvents,
     SavedListings,
     RateLimits,
+    PlaceUploadSessions,
   ],
 
   globals: [Settings],

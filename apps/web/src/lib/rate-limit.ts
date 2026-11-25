@@ -403,12 +403,14 @@ export async function checkRatePerAccount(
   now: number,
   action: string,
   perAccount: boolean,
+  /** A form that is polled or sends several files needs more than WRITE_PER_WINDOW. */
+  perMinute: number = WRITE_PER_WINDOW,
 ): Promise<RateVerdict> {
   const ip = clientIp(request.headers)
   const unlimited: RateVerdict = {
     allowed: true,
-    limit: WRITE_PER_WINDOW,
-    remaining: WRITE_PER_WINDOW,
+    limit: perMinute,
+    remaining: perMinute,
     retryAfter: 0,
   }
   if (!ip) return unlimited
@@ -418,7 +420,7 @@ export async function checkRatePerAccount(
 
   if (!account) {
     const key = store.counterKey(`write:${action}`, ip)
-    return countShared(payload, store, key, `write:${action}:${key}`, now, WRITE_PER_WINDOW)
+    return countShared(payload, store, key, `write:${action}:${key}`, now, perMinute)
   }
 
   const personKey = store.counterKey(`write-account:${action}`, account)
@@ -446,6 +448,23 @@ export async function checkRatePerAccount(
 }
 
 /**
+ * One named counter in the database for a secret value (a session token): at
+ * most `budget` a minute per `action` and value. The value is hashed with the
+ * server secret (counterKey), so the token is never stored. Fails open to the
+ * in-memory count like the others.
+ */
+export async function checkRatePerKey(
+  action: string,
+  value: string,
+  budget: number,
+  now = Date.now(),
+): Promise<RateVerdict> {
+  const { payload, store } = await loadStore()
+  const key = store.counterKey(`key:${action}`, value)
+  return countShared(payload, store, key, `key:${action}:${key}`, now, budget)
+}
+
+/**
  * Wrap a handler so repeated calls from one address are bounded.
  *
  * Pass `{ shared: true }` for anything an attacker would want to repeat -
@@ -466,12 +485,15 @@ export function withRateLimit(
     perEmail = false,
     action,
     perAccount = false,
+    perMinute,
   }: {
     shared?: boolean
     perEmail?: boolean
     /** A form that writes: its own counters, always shared. See checkRatePerAccount. */
     action?: string
     perAccount?: boolean
+    /** With `action` and no account: requests a minute per connection (default WRITE_PER_WINDOW). */
+    perMinute?: number
   } = {},
 ): Handler {
   return async (request, context) => {
@@ -480,7 +502,7 @@ export function withRateLimit(
     const verdict = perEmail
       ? await checkRatePerEmail(request, now)
       : action
-        ? await checkRatePerAccount(request, now, action, perAccount)
+        ? await checkRatePerAccount(request, now, action, perAccount, perMinute)
         : shared
           ? await checkRateShared(request.headers, now, budget)
           : checkRate(request.headers, now, budget)

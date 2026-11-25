@@ -8,12 +8,16 @@ import { APIError } from 'payload'
 import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
+  notifyPublished,
   refusePublishingRejected,
+  refusePublishingUnfinished,
   requireContractToPublish,
 } from './linkPartnerOnPublish'
 
 vi.mock('../lib/report', () => ({ reportError: vi.fn(async () => {}) }))
+vi.mock('../lib/place-payment-notify', () => ({ notifyAfterChange: vi.fn(async () => {}) }))
 import { reportError } from '../lib/report'
+import { notifyAfterChange } from '../lib/place-payment-notify'
 
 function harness({ partners = [] as Record<string, unknown>[], failCreate = false } = {}) {
   const find = vi.fn(async (_args: Record<string, unknown>) => ({ docs: partners }))
@@ -259,9 +263,10 @@ describe('refusePublishingRejected', () => {
  * or it never expires.
  */
 describe('requireContractToPublish', () => {
+  // A renewal: the first publish of a paid submission sets its own dates.
   const submitted = {
     _status: 'draft',
-    submission: { ownerEmail: 'owner@example.com', status: 'pending' },
+    submission: { ownerEmail: 'owner@example.com', status: 'expired' },
   }
   const DAY = 24 * 60 * 60 * 1000
   const run = (data: Record<string, unknown>, originalDoc: Record<string, unknown>) =>
@@ -301,6 +306,11 @@ describe('requireContractToPublish', () => {
 
   it('leaves older listings that did not come through the form alone', () => {
     expect(() => run({ _status: 'published' }, { _status: 'draft', submission: {} })).not.toThrow()
+  })
+
+  it('asks no date on the first publish of a paid submission (set automatically)', () => {
+    const paid = { _status: 'draft', submission: { ownerEmail: 'o@e.com', status: 'paid' } }
+    expect(() => run({ _status: 'published' }, paid)).not.toThrow()
   })
 
   it('does not stop ordinary saves of a listing that is already live', () => {
@@ -402,5 +412,202 @@ describe('linkPartnerOnPublish: under the partner lock', () => {
     expect((update.mock.calls[0] as unknown as [{ data: unknown }])[0].data).toEqual({
       businesses: [10, 55, 9],
     })
+  })
+})
+
+describe('refusePublishingUnfinished', () => {
+  const run = (data: Record<string, unknown>, originalDoc: Record<string, unknown> = {}) =>
+    (refusePublishingUnfinished as CollectionBeforeValidateHook)({
+      data,
+      originalDoc,
+      operation: 'update',
+    } as never)
+
+  it.each(['incomplete', 'abandoned', 'lapsed'])('refuses to publish a %s submission', (status) => {
+    expect(() =>
+      run({ _status: 'published' }, { _status: 'draft', submission: { status } }),
+    ).toThrow(APIError)
+    expect(() =>
+      run({ _status: 'published', submission: { status } }, { _status: 'draft' }),
+    ).toThrow(APIError)
+  })
+
+  it.each(['awaiting_downpayment', 'pending', 'accepted'])(
+    'refuses a %s submission until it is paid, with a plain message',
+    (status) => {
+      const doc = { _status: 'draft', submission: { status } }
+      expect(() => run({ _status: 'published' }, doc)).toThrow(APIError)
+      expect(() => run({ _status: 'published' }, doc)).toThrow(/paid|downpayment/)
+    },
+  )
+
+  it('lets a fully paid submission through', () => {
+    const data = { _status: 'published' }
+    expect(run(data, { _status: 'draft', submission: { status: 'paid' } })).toBe(data)
+  })
+
+  it.each(['awaiting_downpayment', 'pending', 'accepted'])(
+    'refuses a %s submission even with an old override timestamp on file (no exception)',
+    (status) => {
+      const doc = {
+        _status: 'draft',
+        submission: { status, payment: { publishOverrideAt: '2026-11-24T10:00:00.000Z' } },
+      }
+      expect(() => run({ _status: 'published' }, doc)).toThrow(APIError)
+    },
+  )
+
+  it('the old single "paid" flag no longer opens the door', () => {
+    const doc = {
+      _status: 'draft',
+      submission: { status: 'accepted', payment: { status: 'paid' } },
+    }
+    expect(() => run({ _status: 'published' }, doc)).toThrow(APIError)
+  })
+
+  it('leaves renewals and listings without a submission as they were', () => {
+    for (const status of ['approved', 'expired', undefined]) {
+      const data = { _status: 'published' }
+      expect(run(data, { _status: 'draft', submission: { status } })).toBe(data)
+    }
+  })
+
+  it('does not block saving a draft, or an already published listing', () => {
+    const draft = { name: 'x' }
+    expect(run(draft, { _status: 'draft', submission: { status: 'incomplete' } })).toBe(draft)
+    const live = { name: 'x' }
+    expect(run(live, { _status: 'published', submission: { status: 'lapsed' } })).toBe(live)
+  })
+})
+
+describe('approveSubmissionOnPublish after payment', () => {
+  const run = (originalDoc: Record<string, unknown>, data: Record<string, unknown> = {}) =>
+    (approveSubmissionOnPublish as CollectionBeforeChangeHook)({
+      data: { _status: 'published', ...data },
+      originalDoc,
+      operation: 'update',
+    } as never) as Record<string, unknown> & {
+      submission: { status: string; payment?: Record<string, unknown> }
+    }
+
+  it('approves a paid submission, starts the contract today for the agreed term, keeps the stage', () => {
+    const before = Date.now()
+    const out = run({
+      _status: 'draft',
+      contractEndsAt: '2020-01-01T00:00:00.000Z',
+      submission: {
+        status: 'paid',
+        ownerEmail: 'a@b.c',
+        terms: { termMonths: 6 },
+        payment: { stage: 'fully_paid' },
+      },
+    })
+    expect(out.submission.status).toBe('approved')
+    expect(out.submission.payment).toEqual({ stage: 'fully_paid' })
+    const start = new Date(String(out.contractStartsAt))
+    expect(start.getTime()).toBeGreaterThanOrEqual(before)
+    const end = new Date(String(out.contractEndsAt))
+    const expected = new Date(start)
+    expected.setUTCMonth(expected.getUTCMonth() + 6)
+    expect(Math.abs(end.getTime() - expected.getTime())).toBeLessThan(4 * 24 * 3600 * 1000)
+  })
+
+  it('uses 12 months when the term is missing', () => {
+    const out = run({ _status: 'draft', submission: { status: 'paid', ownerEmail: 'a@b.c' } })
+    const months =
+      (new Date(String(out.contractEndsAt)).getUTCFullYear() -
+        new Date(String(out.contractStartsAt)).getUTCFullYear()) *
+        12 +
+      new Date(String(out.contractEndsAt)).getUTCMonth() -
+      new Date(String(out.contractStartsAt)).getUTCMonth()
+    expect(months).toBe(12)
+  })
+
+  it('does not touch the dates of a renewal', () => {
+    const out = run(
+      { _status: 'draft', submission: { status: 'expired', ownerEmail: 'a@b.c' } },
+      { contractEndsAt: '2027-12-01T00:00:00.000Z' },
+    )
+    expect(out.submission.status).toBe('approved')
+    expect(out.contractEndsAt).toBe('2027-12-01T00:00:00.000Z')
+    expect(out.contractStartsAt).toBeUndefined()
+  })
+})
+
+describe('notifyPublished (E8)', () => {
+  const doc = { id: 9, _status: 'published', submission: { status: 'approved' } }
+  const previous = { _status: 'draft', submission: { status: 'paid' } }
+
+  const harnessE8 = (stored: Record<string, unknown> | null) => {
+    const req = {
+      transactionID: 1 as number | undefined,
+      payload: { findByID: vi.fn(async () => stored) },
+    }
+    return req
+  }
+  const settle = () => new Promise((r) => setTimeout(r, 80))
+
+  it('waits for the commit, re-reads, and asks for E8 once', async () => {
+    vi.mocked(notifyAfterChange).mockClear()
+    const req = harnessE8(doc)
+    ;(notifyPublished as CollectionAfterChangeHook)({ doc, previousDoc: previous, req } as never)
+    await settle()
+    expect(notifyAfterChange).not.toHaveBeenCalled()
+    req.transactionID = undefined
+    await settle()
+    expect(notifyAfterChange).toHaveBeenCalledTimes(1)
+    expect(notifyAfterChange).toHaveBeenCalledWith('E8', expect.objectContaining({ businessId: 9 }))
+  })
+
+  it('sends nothing when the publish rolled back (the listing is still a draft)', async () => {
+    vi.mocked(notifyAfterChange).mockClear()
+    const req = harnessE8({ ...doc, _status: 'draft' })
+    req.transactionID = undefined
+    ;(notifyPublished as CollectionAfterChangeHook)({ doc, previousDoc: previous, req } as never)
+    await settle()
+    expect(notifyAfterChange).not.toHaveBeenCalled()
+  })
+
+  it('ignores renewals, other saves and listings without a submission', async () => {
+    vi.mocked(notifyAfterChange).mockClear()
+    for (const prev of [
+      { _status: 'draft', submission: { status: 'expired' } },
+      { _status: 'published', submission: { status: 'approved' } },
+      { _status: 'draft' },
+    ]) {
+      const req = harnessE8(doc)
+      req.transactionID = undefined
+      ;(notifyPublished as CollectionAfterChangeHook)({ doc, previousDoc: prev, req } as never)
+    }
+    await settle()
+    expect(notifyAfterChange).not.toHaveBeenCalled()
+  })
+})
+
+describe('refusePublishingUnfinished: a live listing cannot become a form state', () => {
+  it.each(['incomplete', 'abandoned'])('refuses setting %s on a published listing', (status) => {
+    expect(() =>
+      refusePublishingUnfinished({
+        data: { submission: { status } },
+        originalDoc: { _status: 'published', submission: { status: 'approved' } },
+      } as never),
+    ).toThrow(/published listing cannot be set/)
+    // Also when the same save publishes it.
+    expect(() =>
+      refusePublishingUnfinished({
+        data: { _status: 'published', submission: { status } },
+        originalDoc: { _status: 'draft' },
+      } as never),
+    ).toThrow()
+  })
+
+  it('still lets a draft move between form states', () => {
+    const data = { submission: { status: 'abandoned' } }
+    expect(
+      refusePublishingUnfinished({
+        data,
+        originalDoc: { _status: 'draft', submission: { status: 'incomplete' } },
+      } as never),
+    ).toBe(data)
   })
 })

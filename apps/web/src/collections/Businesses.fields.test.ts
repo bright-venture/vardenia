@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { GOVERNORATES } from '@vardenia/core/regions'
 import { Businesses, validTime } from './Businesses'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 
@@ -71,7 +72,25 @@ describe('district', () => {
       options: optionsOf('district'),
       data: { governorate: 'beqaa' },
     }).map((o) => o.value)
-    expect(offered.sort()).toEqual(['baalbek', 'hermel', 'rachaya', 'western-beqaa', 'zahle'])
+    expect(offered.sort()).toEqual([
+      'baalbek',
+      'chtoura',
+      'hermel',
+      'masnaa',
+      'saghbine',
+      'western-beqaa',
+      'zahle',
+    ])
+  })
+
+  it('takes every district the place form accepts, under the same governorate', () => {
+    const values = new Set(optionsOf('district').map((o) => o.value))
+    for (const gov of GOVERNORATES) {
+      for (const d of gov.districts) {
+        expect(values.has(d.slug), d.slug).toBe(true)
+        expect(district.validate!(d.slug, { data: { governorate: gov.slug } })).toBe(true)
+      }
+    }
   })
 
   it('refuses a district from another governorate', () => {
@@ -113,8 +132,19 @@ describe('submission fields', () => {
     expect(sub('status')).not.toHaveProperty('defaultValue')
   })
 
-  it('offers the four review statuses and templates', () => {
-    expect(optionsOf2(sub('status'))).toEqual(['pending', 'approved', 'rejected', 'expired'])
+  it('offers the review and form statuses, and the templates', () => {
+    expect(optionsOf2(sub('status'))).toEqual([
+      'incomplete',
+      'abandoned',
+      'awaiting_downpayment',
+      'pending',
+      'accepted',
+      'paid',
+      'lapsed',
+      'approved',
+      'rejected',
+      'expired',
+    ])
     expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
   })
 })

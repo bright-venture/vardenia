@@ -1,10 +1,9 @@
 import { z } from './zod'
 import { LOCALE_CODES } from './locales'
 import { LISTING_GOVERNORATES } from './listing-numbers'
-import { AMENITY_SLUGS, PRICE_SLUGS } from './attributes'
 import { GOVERNORATES } from './regions'
 import { CONTACT_FIELDS, checkContactValue, normaliseContact, type ContactField } from './contact'
-import { CATEGORY_SLUGS, SUBCATEGORY_PARENT, isWholePropertyStay } from './taxonomy'
+import { isSubmittableKind, type SubmittableKindSlug } from './taxonomy'
 
 /**
  * What a business owner submits on the public "add your place" form.
@@ -24,13 +23,6 @@ const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
  */
 export const SUBMISSION_EMAIL_MESSAGE = 'must be an email address'
 export const SUBMISSION_TIME_MESSAGE = 'use 24-hour time like 09:00'
-/**
- * A listing is never both a hotel and a guest house (Getaways): the Businesses
- * collection refuses it on save (hooks/guardKindFields), so the form refuses
- * it first, before any photo is uploaded.
- */
-export const HOTEL_AND_GETAWAY_MESSAGE = 'cannot be both hotels and getaways'
-
 /** 24-hour HH:MM; "24:00" is allowed (closing at midnight). Same rule as the Businesses collection. */
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/
 
@@ -108,32 +100,24 @@ export const openingHourShape = {
 /** A listing's opening hours (unknown keys in a row are stripped, zod's default). */
 export const openingHoursInputSchema = z.array(z.object(openingHourShape)).max(7)
 
-const oneOf = (values: readonly string[], message: string) =>
-  z.string().refine((v) => values.includes(v), message)
+/** The message for a kind that is unknown or not open to submissions yet (hidden, coming soon). */
+export const UNAVAILABLE_KIND_MESSAGE = 'this kind of place is not available yet'
 
 export const placeSubmissionSchema = z
   .object({
     name: z.string().trim().min(1, 'required').max(160, 'too long'),
     tagline: optionalText(120),
     description: optionalText(2000),
-    category: oneOf(CATEGORY_SLUGS, 'unknown category'),
-    subcategories: z.array(oneOf(Object.keys(SUBCATEGORY_PARENT), 'unknown subcategory')).max(20),
+    // One kind of place. The server derives the category from it (categoryOfKind).
+    kind: z.custom<SubmittableKindSlug>(isSubmittableKind, UNAVAILABLE_KIND_MESSAGE),
     governorate: z.enum(LISTING_GOVERNORATES),
-    district: optionalText(64),
-    area: z.preprocess(blankToUndefined, z.coerce.number().int().positive().optional()),
+    // Required: since 24 November 2026 the districts are the towns readers
+    // know (core regions) and every governorate has at least one. Never
+    // decides which numbers are offered or valid; display only.
+    district: z.string().trim().min(1, 'required').max(64, 'too long'),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
-    openingHours: openingHoursInputSchema.optional(),
-    priceRange: z.preprocess(
-      blankToUndefined,
-      oneOf(PRICE_SLUGS, 'unknown price range').optional(),
-    ),
-    amenities: z.array(oneOf(AMENITY_SLUGS, 'unknown amenity')).max(50),
-    payments: z.object({
-      cash: z.boolean(),
-      card: z.boolean(),
-      whish: z.boolean(),
-      omt: z.boolean(),
-    }),
+    // Stored as the listing's payments.whish; the other methods are never asked.
+    acceptsWhish: z.boolean().default(false),
     // Public contact: stored in the listing's `contact` group.
     publicPhone: contactValue('phone'),
     instagram: contactValue('instagram'),
@@ -147,18 +131,6 @@ export const placeSubmissionSchema = z
     locale: z.enum(LOCALE_CODES),
   })
   .superRefine((value, ctx) => {
-    value.subcategories.forEach((sub, index) => {
-      if (SUBCATEGORY_PARENT[sub] !== value.category) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['subcategories', index],
-          message: 'does not belong to the chosen category',
-        })
-      }
-    })
-    if (isWholePropertyStay(value.subcategories) && value.subcategories.includes('hotels')) {
-      ctx.addIssue({ code: 'custom', path: ['subcategories'], message: HOTEL_AND_GETAWAY_MESSAGE })
-    }
     if (value.district) {
       const gov = GOVERNORATES.find((g) => g.slug === value.governorate)
       if (!gov || !gov.districts.some((d) => d.slug === value.district)) {

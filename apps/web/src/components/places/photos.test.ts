@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { MAX_GALLERY_FILES } from '../../lib/place-submission'
 import {
   EDGE_STEPS,
-  MAX_GALLERY_PHOTOS,
   MAX_EDGE,
   MAX_PHOTOS,
   PER_PHOTO_BUDGET,
@@ -44,10 +42,6 @@ describe('budget', () => {
     expect(TOTAL_PHOTO_BUDGET).toBeLessThanOrEqual(4 * MB)
     expect(MAX_PHOTOS).toBe(8) // hero + 6 gallery + logo
     expect(PER_PHOTO_BUDGET * MAX_PHOTOS).toBeLessThanOrEqual(TOTAL_PHOTO_BUDGET)
-  })
-
-  it('allows as many gallery photos as the route does', () => {
-    expect(MAX_GALLERY_PHOTOS).toBe(MAX_GALLERY_FILES)
   })
 
   it('adds up sizes and checks them against the budget', () => {

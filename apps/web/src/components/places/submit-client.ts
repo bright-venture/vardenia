@@ -13,37 +13,29 @@
 export const SUBMISSION_URL = '/place-submissions'
 
 export interface SubmissionParts {
-  /** The object checked by placeSubmissionSchema; sent as the `data` JSON string. */
+  /** The object checked by placeSubmissionSchema; sent as `data` in the JSON body. */
   data: unknown
-  hero: File
-  gallery: File[]
-  logo: File | null
   turnstileToken: string | null
 }
 
 export type SubmitResult =
-  | { kind: 'ok' }
+  | { kind: 'ok'; reference: string; sessionToken: string; uploadUrl: string; expiresAt: string }
   | { kind: 'field-errors'; errors: Record<string, string> }
   | { kind: 'number-taken' }
   | { kind: 'no-range' }
   | { kind: 'too-large' }
   | { kind: 'rate-limited' }
+  /** This person already has the most unfinished forms open (the hold is ~30 minutes). */
+  | { kind: 'too-many-open' }
   | { kind: 'turnstile' }
-  | { kind: 'photos' }
   | { kind: 'invalid' }
   | { kind: 'network' }
   | { kind: 'unknown' }
 
 export type SubmitKind = SubmitResult['kind']
 
-export function buildSubmissionForm(parts: SubmissionParts): FormData {
-  const form = new FormData()
-  form.append('data', JSON.stringify(parts.data))
-  form.append('hero', parts.hero, parts.hero.name)
-  for (const photo of parts.gallery) form.append('gallery', photo, photo.name)
-  if (parts.logo) form.append('logo', parts.logo, parts.logo.name)
-  if (parts.turnstileToken) form.append('turnstileToken', parts.turnstileToken)
-  return form
+export function buildSubmissionBody(parts: SubmissionParts): string {
+  return JSON.stringify({ data: parts.data, turnstileToken: parts.turnstileToken })
 }
 
 /** The body as JSON when it is JSON, otherwise null. Never throws. */
@@ -73,25 +65,40 @@ export async function postSubmission(
 ): Promise<SubmitResult> {
   let response: Response
   try {
-    // No content-type header: the browser writes the multipart boundary, and
-    // the Content-Length the route requires, itself.
     response = await fetchImpl(SUBMISSION_URL, {
       method: 'POST',
-      body: buildSubmissionForm(parts),
+      headers: { 'content-type': 'application/json' },
+      body: buildSubmissionBody(parts),
       credentials: 'same-origin',
     })
   } catch {
     return { kind: 'network' }
   }
 
-  if (response.ok) return { kind: 'ok' }
+  if (response.ok) {
+    const body = await readJson(response)
+    if (
+      typeof body?.reference === 'string' &&
+      typeof body.sessionToken === 'string' &&
+      typeof body.uploadUrl === 'string' &&
+      typeof body.expiresAt === 'string'
+    ) {
+      return {
+        kind: 'ok',
+        reference: body.reference,
+        sessionToken: body.sessionToken,
+        uploadUrl: body.uploadUrl,
+        expiresAt: body.expiresAt,
+      }
+    }
+    return { kind: 'unknown' }
+  }
 
   switch (response.status) {
     case 400: {
       const body = await readJson(response)
       const errors = stringErrors(body?.errors)
       if (errors) return { kind: 'field-errors', errors }
-      if (body?.code === 'invalid-files') return { kind: 'photos' }
       return { kind: 'invalid' }
     }
     case 403:
@@ -102,8 +109,12 @@ export async function postSubmission(
       return { kind: 'too-large' }
     case 422:
       return { kind: 'no-range' }
-    case 429:
-      return { kind: 'rate-limited' }
+    case 429: {
+      // The rate limiter answers plain text; the route's own "too many open
+      // forms" refusal is JSON with a code.
+      const body = await readJson(response)
+      return { kind: body?.code === 'too-many-open' ? 'too-many-open' : 'rate-limited' }
+    }
     default:
       return { kind: 'unknown' }
   }

@@ -373,7 +373,7 @@ function filterForm(
       ),
     ),
   )}
-  ${field('District', select('district', districtOptions))}
+  ${field('Town', select('district', districtOptions))}
   ${field('Category', select('category', categoryOptions))}
   ${field(
     'Tier',

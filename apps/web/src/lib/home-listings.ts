@@ -4,7 +4,12 @@ import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
 import type { Business } from '../payload-types'
 import { findEvery } from './find-every'
-import { HOME_PLACES_LIMIT, isHomeCandidate, selectHomePlaces, type HomeCandidate } from './home-selection'
+import {
+  HOME_PLACES_LIMIT,
+  isHomeCandidate,
+  selectHomePlaces,
+  type HomeCandidate,
+} from './home-selection'
 import { reportError } from './report'
 
 export type HomeListing = Pick<

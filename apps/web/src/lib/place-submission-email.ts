@@ -3,15 +3,16 @@ import { emailPalette } from './email-palette'
 import { governorateLabel } from './labels'
 
 /**
- * The two messages sent after a place is submitted: one to the team, one to the
- * owner. Pure builders so the wording and the escaping can be tested without
- * sending anything. The route sends them (see app/place-submissions/route.ts).
+ * The team alert sent after a place is submitted (E1b), and the plain
+ * rejection notice. Pure builders so the wording and the escaping can be tested
+ * without sending anything. Finish (lib/place-submission-finish) sends the
+ * alert.
  *
- * Every user-supplied string goes through escapeHtml. The owner email carries no
- * link at all, and above all no admin link: nothing is public yet.
+ * The owner's own email on a finish is E1, "pay the downpayment"
+ * (lib/place-payment-email, spec v4): it replaced the first version's
+ * confirmation, so the owner gets one email, not two.
  *
- * The owner copy exists in English and Arabic; any other language gets the
- * English copy, laid out left to right to match it.
+ * Every user-supplied string goes through escapeHtml.
  */
 
 /**
@@ -30,7 +31,8 @@ export interface PlaceSubmissionEmailArgs {
   ownerName: string
   ownerEmail: string
   ownerPhone: string
-  locale: Locale
+  /** VD-<n>. */
+  reference: string
   /** siteOrigin() */
   origin: string
 }
@@ -112,50 +114,19 @@ export function emailText(opts: {
   return lines.join('\n').trimEnd()
 }
 
-interface OwnerCopy {
-  subject: string
-  heading: string
-  hello: (name: string) => string
-  received: (business: string) => string
-  review: string
-  closing: string
-}
-
-const OWNER_COPY: Record<'en' | 'ar', OwnerCopy> = {
-  en: {
-    subject: 'We have received your listing',
-    heading: 'Thank you for your submission',
-    hello: (name) => `${name},`,
-    received: (business) => `Thank you for adding ${business} to Vardenia.`,
-    review:
-      'Your listing is under review by our team. Nothing is public yet; we will write to you once it has been checked.',
-    closing: 'The Vardenia team',
-  },
-  ar: {
-    subject:
-      '\u0648\u0635\u0644\u0646\u0627 \u0637\u0644\u0628 \u0625\u062f\u0631\u0627\u062c \u0645\u0643\u0627\u0646\u0643',
-    heading:
-      '\u0634\u0643\u0631\u0627\u064b \u0639\u0644\u0649 \u0625\u0631\u0633\u0627\u0644\u0643',
-    hello: (name) => `${name}\u060c`,
-    received: (business) =>
-      `\u0634\u0643\u0631\u0627\u064b \u0644\u0625\u0636\u0627\u0641\u0629 ${business} \u0625\u0644\u0649 \u0641\u0627\u0631\u062f\u064a\u0646\u064a\u0627.`,
-    review:
-      '\u0625\u062f\u0631\u0627\u062c\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0644\u062f\u0649 \u0641\u0631\u064a\u0642\u0646\u0627. \u0644\u0627 \u0634\u064a\u0621 \u0645\u0646\u0634\u0648\u0631 \u0628\u0639\u062f\u060c \u0648\u0633\u0646\u0643\u062a\u0628 \u0625\u0644\u064a\u0643 \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646\u0647.',
-    closing: '\u0641\u0631\u064a\u0642 \u0641\u0627\u0631\u062f\u064a\u0646\u064a\u0627',
-  },
-}
-
 export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
   team: PlaceSubmissionEmail
-  owner: PlaceSubmissionEmail
 } {
   const name = oneLine(args.businessName)
 
   // The slug ("keserwan") reads as a typo in an email; the team reads English.
   const teamBody = {
     heading: 'A new place was submitted',
-    paragraphs: ['It is saved as a draft and waits for review. Nothing is public.'],
+    paragraphs: [
+      'The owner accepted the terms. It waits for the downpayment, then for review. Nothing is public.',
+    ],
     rows: [
+      ['Reference', args.reference],
       ['Business', args.businessName],
       ['Governorate', governorateLabel(args.governorate, 'en')],
       ['Listing number', String(args.listingNumber)],
@@ -175,26 +146,90 @@ export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
     text: emailText(teamBody),
   }
 
+  return { team }
+}
+
+export interface PlaceRejectionEmailArgs {
+  ownerName: string
+  businessName: string
+  /** VD-<n>. */
+  reference: string
+  /** Staff's reason. Used only when `shareReason` is true. */
+  reason: string
+  shareReason: boolean
+  locale: Locale
+  /** siteOrigin() */
+  origin: string
+}
+
+interface RejectionCopy {
+  subject: string
+  heading: string
+  hello: (name: string) => string
+  notAccepted: (business: string) => string
+  reasonIntro: string
+  again: string
+  link: string
+  closing: string
+  reference: string
+}
+
+const REJECTION_COPY: Record<'en' | 'ar', RejectionCopy> = {
+  en: {
+    subject: 'About your Vardenia listing',
+    heading: 'We could not accept your listing',
+    hello: (name) => `${name},`,
+    notAccepted: (business) =>
+      `Thank you for sending ${business}. We are sorry, but we could not accept it this time.`,
+    reasonIntro: 'The reason:',
+    again: 'You are welcome to apply again. The form is on the Magazine Places page.',
+    link: 'Apply again',
+    closing: 'The Vardenia team',
+    reference: 'Reference',
+  },
+  ar: {
+    subject: 'بخصوص إدراج مكانك في فارديينيا',
+    heading: 'لم نتمكن من قبول طلبك',
+    hello: (name) => `${name}،`,
+    notAccepted: (business) => `شكراً لإرسال ${business}. نأسف، لم نتمكن من قبوله هذه المرة.`,
+    reasonIntro: 'السبب:',
+    again: 'يسعدنا أن تقدّم من جديد. النموذج في صفحة أماكن المجلة.',
+    link: 'قدّم من جديد',
+    closing: 'فريق فارديينيا',
+    reference: 'المرجع',
+  },
+}
+
+/**
+ * The short notice the owner gets when staff reject a submission. Plain: that
+ * it was not accepted, the reference, the reason only when staff chose to share
+ * it, and where to apply again. Nothing about payment. The reason is staff text
+ * and is escaped by the shared layout like every other string.
+ */
+export function placeRejectionEmail(args: PlaceRejectionEmailArgs): PlaceSubmissionEmail {
   const arabic = args.locale === 'ar'
-  const copy = OWNER_COPY[arabic ? 'ar' : 'en']
-  const ownerBody = {
+  const copy = REJECTION_COPY[arabic ? 'ar' : 'en']
+  const reason = args.shareReason ? args.reason.trim() : ''
+  const body = {
     heading: copy.heading,
     paragraphs: [
       copy.hello(args.ownerName),
-      copy.received(args.businessName),
-      copy.review,
+      copy.notAccepted(args.businessName),
+      ...(reason ? [`${copy.reasonIntro} ${reason}`] : []),
+      copy.again,
       copy.closing,
     ],
+    rows: [[copy.reference, args.reference]] as [string, string][],
+    // English is the unprefixed address (localePrefix: as-needed).
+    link: { href: `${args.origin}${arabic ? '/ar' : ''}/magazine-places`, label: copy.link },
   }
-  const owner: PlaceSubmissionEmail = {
+  return {
     subject: copy.subject,
     html: emailLayout({
       lang: arabic ? 'ar' : 'en',
       dir: arabic ? dirFor('ar') : 'ltr',
-      ...ownerBody,
+      ...body,
     }),
-    text: emailText(ownerBody),
+    text: emailText(body),
   }
-
-  return { team, owner }
 }

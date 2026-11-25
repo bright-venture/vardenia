@@ -1,22 +1,12 @@
 'use client'
 
-/* eslint-disable @next/next/no-img-element -- thumbnails of browser object URLs (blob:), which next/image cannot load */
-
-import { useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { dirFor, taxonomyLabel, type Locale } from '@vardenia/i18n'
-import { AMENITIES, PRICE_RANGES } from '@vardenia/core/attributes'
+import { dirFor, type Locale } from '@vardenia/i18n'
 import { PAGE_TEMPLATES } from '@vardenia/core/place-submission'
-import { CATEGORIES } from '@vardenia/core/taxonomy'
-import type { DayKey } from '../../lib/hours'
-import {
-  amenityLabel,
-  categoryLabel,
-  districtLabel,
-  governorateLabel,
-  subcategoryLabel,
-} from '../../lib/labels'
-import { Turnstile, type TurnstileHandle } from '../Turnstile'
+import { submittableKindsByCategory } from '@vardenia/core/taxonomy'
+import { categoryLabel, districtLabel, governorateLabel, subcategoryLabel } from '../../lib/labels'
+import { Turnstile, isTurnstileEnabled, type TurnstileHandle } from '../Turnstile'
 import {
   ERROR_TEXT,
   HINT,
@@ -24,11 +14,12 @@ import {
   INPUT_ERROR,
   LABEL,
   NOTICE_ERROR,
-  NOTICE_SUCCESS,
+  NOTICE_INFO,
   PRIMARY_BUTTON,
   SECONDARY_BUTTON,
 } from '../formStyles'
 import { BusinessPagePreview } from './BusinessPagePreview'
+import { postFinish, type FinishResult } from './flow-client'
 import {
   checkSubmission,
   districtsFor,
@@ -36,77 +27,63 @@ import {
   GOVERNORATE_ORDER,
   initialFormState,
   normaliseErrors,
-  PAYMENT_KEYS,
   previewDataFrom,
-  subcategoriesFor,
-  toggle,
-  withCategory,
   withGovernorate,
   type FormState,
   type NumberPick,
 } from './form-model'
 import { NumberPicker } from './NumberPicker'
-import {
-  MAX_GALLERY_PHOTOS,
-  PHOTO_ACCEPT,
-  PhotoError,
-  isAcceptedPhoto,
-  preparePhoto,
-  withinBudget,
-} from './photos'
+import { PhoneStep } from './PhoneStep'
 import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
 import { postSubmission, type SubmitResult } from './submit-client'
+import { TermsStep } from './TermsStep'
+import { ThanksStep } from './ThanksStep'
+import { useKioskIdle } from './use-kiosk-idle'
 import { usePlaceNumbers } from './use-place-numbers'
 
 /**
  * "Add your place" on /magazine-places: a business owner lays out their page in
- * the printed magazine, picks its number, and sends it for review.
+ * the printed magazine, picks its number, adds the logo and main photo from
+ * their phone, and sends it for review. Four steps on the big screen:
  *
- * The preview sits above the fields and redraws from the form state as the
- * owner types; photos are shown from local object URLs. Nothing is saved until
- * Submit, which creates a draft the team reviews (app/place-submissions).
+ *   1 details      the fields and the number; "Next" starts the submission
+ *   2 phone upload a QR code for the phone, live ticks as the photos arrive
+ *   3 price/terms  the price and the terms, "Submit" finishes it
+ *   4 thank you    clears itself after a minute
+ *
+ * The preview sits above the fields on step 1 and redraws from the form state
+ * as the owner types; it shows placeholders where the photos go, because the
+ * photos come from the phone later. Nothing is public until staff accept.
+ *
+ * # The session lives in memory only
+ *
+ * `session` (the token and the phone link) is React state: never localStorage,
+ * sessionStorage, the URL or a log. This screen is shared, so `reset` clears
+ * EVERYTHING (the fields, the number, the session, the reference) on "Start a
+ * new one", after the thank-you, when the session expires, and when the
+ * kiosk has been idle (use-kiosk-idle). Nothing about the owner is left in the
+ * DOM afterwards.
  *
  * The client check runs the same schema the route runs, so most mistakes are
- * shown next to their input before anything is uploaded. The route stays the
+ * shown next to their input before anything is sent. The route stays the
  * judge: its field errors come back through the same path, and its other
  * refusals become a sentence in the page language (submit-client). The owner's
  * input is never cleared by an error.
+ *
+ * # Two Turnstile tokens
+ *
+ * A token works once. Step 1 uses one for "Next" and the widget is reset
+ * afterwards; step 3 draws its own widget and "Submit" uses that fresh token.
  */
 
-type PhotoSlot = 'hero' | 'gallery' | 'logo'
+type Step = 1 | 2 | 3 | 4 | 'expired'
 
-interface Photo {
-  file: File
-  url: string
+interface Session {
+  token: string
+  uploadUrl: string
 }
-
-interface Photos {
-  hero: Photo | null
-  gallery: Photo[]
-  logo: Photo | null
-}
-
-const NO_PHOTOS: Photos = { hero: null, gallery: [], logo: null }
-
-const urlsOf = (photos: Photos) =>
-  [photos.hero, ...photos.gallery, photos.logo].flatMap((photo) => (photo ? [photo.url] : []))
 
 const templateKey = { a: 'A', b: 'B', c: 'C' } as const
-
-/** Price bands in words (no symbols: the site shows no prices). */
-const priceLabel = (entry: (typeof PRICE_RANGES)[number], locale: Locale) =>
-  locale === 'ar'
-    ? entry.ar
-    : locale === 'en'
-      ? entry.en
-      : (taxonomyLabel(entry.slug, locale) ?? entry.en)
-
-const PAYMENT_LABEL = {
-  cash: 'paymentCash',
-  card: 'paymentCard',
-  whish: 'paymentWhish',
-  omt: 'paymentOmt',
-} as const satisfies Record<(typeof PAYMENT_KEYS)[number], string>
 
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
@@ -115,121 +92,80 @@ const CHECK = 'accent-cedar-900 size-4 shrink-0'
 
 export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const t = useTranslations('magazinePlaces')
-  const days = useTranslations('days')
   const ids = useId()
   const fid = (key: string) => `${ids}-${key}`
 
+  const [step, setStep] = useState<Step>(1)
+  const [session, setSession] = useState<Session | null>(null)
+  const [reference, setReference] = useState<string | null>(null)
   const [state, setState] = useState<FormState>(initialFormState)
   const [pick, setPick] = useState<NumberPick | null>(null)
-  const [photos, setPhotos] = useState<Photos>(NO_PHOTOS)
-  const [preparing, setPreparing] = useState(0)
-  const [photoErrors, setPhotoErrors] = useState<Partial<Record<PhotoSlot, string>>>({})
   /** Raw schema messages, keyed by input; translated when shown. */
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [problem, setProblem] = useState<string | null>(null)
+  const [finishProblem, setFinishProblem] = useState<string | null>(null)
   const [numberNotice, setNumberNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [sentTo, setSentTo] = useState<string | null>(null)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
 
   const turnstile = useRef<TurnstileHandle | null>(null)
   const submitting = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
-  const successRef = useRef<HTMLDivElement>(null)
-  /**
-   * The photos whose object URLs are alive. Mirrors `photos` so a replaced or
-   * removed photo can be revoked at once, and everything on unmount; `mounted`
-   * stops a photo that finishes preparing after unmount from leaking a URL.
-   */
-  const livePhotos = useRef<Photos>(NO_PHOTOS)
   const mounted = useRef(false)
+  /** Bumped by every reset: an answer that arrives for an older generation is dropped. */
+  const generation = useRef(0)
+  const stayRef = useRef<HTMLButtonElement>(null)
 
   const numbers = usePlaceNumbers(state.governorate)
 
   useEffect(() => {
     mounted.current = true
-    const live = livePhotos
     return () => {
       mounted.current = false
-      for (const url of urlsOf(live.current)) URL.revokeObjectURL(url)
-      live.current = NO_PHOTOS
     }
   }, [])
-
-  useEffect(() => {
-    if (sentTo) successRef.current?.focus()
-  }, [sentTo])
 
   useEffect(() => {
     formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
   }, [errors])
 
-  function commitPhotos(update: (current: Photos) => Photos) {
-    const previous = livePhotos.current
-    const next = update(previous)
-    livePhotos.current = next
-    setPhotos(next)
-    const kept = new Set(urlsOf(next))
-    for (const url of urlsOf(previous)) if (!kept.has(url)) URL.revokeObjectURL(url)
-  }
+  /** Forget everything: the owner's details, the number and the session token. */
+  const reset = useCallback(() => {
+    generation.current += 1
+    turnstile.current?.reset()
+    setState(initialFormState())
+    setPick(null)
+    setErrors({})
+    setProblem(null)
+    setFinishProblem(null)
+    setNumberNotice(null)
+    setSession(null)
+    setReference(null)
+    setTurnstileToken(null)
+    setBusy(false)
+    submitting.current = false
+    setStep(1)
+  }, [])
+
+  /** The session ended (expired, closed, or unknown): the token is useless now. */
+  const expire = useCallback(() => {
+    generation.current += 1
+    setSession(null)
+    setStep('expired')
+  }, [])
+
+  const idle = useKioskIdle({
+    active: step === 1 || step === 2 || step === 3,
+    onExpire: reset,
+  })
+
+  const warningShown = idle.secondsLeft !== null
+  useEffect(() => {
+    if (warningShown) stayRef.current?.focus()
+  }, [warningShown])
 
   const set = (patch: Partial<FormState>) => setState((current) => ({ ...current, ...patch }))
-
-  async function addPhotos(slot: PhotoSlot, chosen: File[]) {
-    if (chosen.length === 0) return
-    setPhotoErrors((current) => ({ ...current, [slot]: undefined }))
-
-    const room = slot === 'gallery' ? MAX_GALLERY_PHOTOS - livePhotos.current.gallery.length : 1
-    if (room <= 0) {
-      setPhotoErrors((current) => ({
-        ...current,
-        gallery: t('errors.galleryFull', { max: MAX_GALLERY_PHOTOS }),
-      }))
-      return
-    }
-    const files = chosen.slice(0, room)
-    if (files.some((file) => !isAcceptedPhoto(file))) {
-      setPhotoErrors((current) => ({ ...current, [slot]: t('errors.photoType') }))
-      return
-    }
-
-    setPreparing((n) => n + 1)
-    let ready: File[]
-    try {
-      ready = await Promise.all(files.map((file) => preparePhoto(file)))
-    } catch (error) {
-      if (mounted.current) {
-        const kind =
-          error instanceof PhotoError && error.problem === 'type' ? 'photoType' : 'photoFailed'
-        setPhotoErrors((current) => ({ ...current, [slot]: t(`errors.${kind}`) }))
-      }
-      return
-    } finally {
-      if (mounted.current) setPreparing((n) => n - 1)
-    }
-    if (!mounted.current) return
-
-    const made = ready.map((file) => ({ file, url: URL.createObjectURL(file) }))
-    commitPhotos((current) =>
-      slot === 'gallery'
-        ? { ...current, gallery: [...current.gallery, ...made].slice(0, MAX_GALLERY_PHOTOS) }
-        : { ...current, [slot]: made[0] ?? null },
-    )
-    if (chosen.length > room) {
-      setPhotoErrors((current) => ({
-        ...current,
-        gallery: t('errors.galleryFull', { max: MAX_GALLERY_PHOTOS }),
-      }))
-    }
-  }
-
-  function onPhotoInput(slot: PhotoSlot, event: React.ChangeEvent<HTMLInputElement>) {
-    const files = event.target.files ? Array.from(event.target.files) : []
-    // Cleared so choosing the same file again still fires a change.
-    event.target.value = ''
-    void addPhotos(slot, files)
-  }
 
   function choose(issueId: number, n: number) {
     setPick({ issue: issueId, number: n })
@@ -256,10 +192,10 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         return t('errors.tooLarge')
       case 'rate-limited':
         return t('errors.rateLimited')
+      case 'too-many-open':
+        return t('flow.tooManyOpen')
       case 'turnstile':
         return t('errors.botCheck')
-      case 'photos':
-        return t('errors.photos')
       case 'invalid':
         return t('errors.rejected')
       case 'network':
@@ -269,7 +205,8 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     }
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  /** Step 1 "Next": start the submission, keep the session in memory. */
+  async function next(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting.current) return
     setProblem(null)
@@ -281,35 +218,25 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       return
     }
     setErrors({})
-    const current = livePhotos.current
-    if (!current.hero || !pick) return
-    const files = [current.hero.file, ...current.gallery.map((p) => p.file)]
-    if (current.logo) files.push(current.logo.file)
-    if (!withinBudget(files)) {
-      setProblem(t('errors.tooLarge'))
-      return
-    }
+    if (!pick) return
 
     submitting.current = true
     setBusy(true)
+    const mine = generation.current
     try {
-      const result = await postSubmission({
-        data: checked.data,
-        hero: current.hero.file,
-        gallery: current.gallery.map((p) => p.file),
-        logo: current.logo?.file ?? null,
-        turnstileToken,
-      })
-      if (!mounted.current) return
+      const result = await postSubmission({ data: checked.data, turnstileToken })
+      if (!mounted.current || mine !== generation.current) return
+      // A Turnstile token is single use, and the route checks it before
+      // anything else, so every answer needs a fresh one (step 3 draws its own).
+      turnstile.current?.reset()
       if (result.kind === 'ok') {
-        setSentTo(state.ownerEmail.trim())
+        setSession({ token: result.sessionToken, uploadUrl: result.uploadUrl })
+        setReference(result.reference)
+        setStep(2)
         return
       }
-      // A Turnstile token is single use, and the route checks it before
-      // anything else, so every refusal needs a fresh one.
-      turnstile.current?.reset()
       if (result.kind === 'field-errors') {
-        setErrors(normaliseErrors(result.errors, checked.hourDays))
+        setErrors(normaliseErrors(result.errors))
         setProblem(t('errors.check'))
         return
       }
@@ -320,8 +247,63 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       }
       setProblem(failure(result))
     } finally {
-      submitting.current = false
-      if (mounted.current) setBusy(false)
+      if (mine === generation.current) {
+        submitting.current = false
+        if (mounted.current) setBusy(false)
+      }
+    }
+  }
+
+  function finishFailure(result: Exclude<FinishResult, { kind: 'ok' | 'gone' }>): string {
+    switch (result.kind) {
+      case 'terms-not-accepted':
+        return t('flow.termsNotAccepted')
+      case 'photos-missing':
+        return t('flow.photosMissing')
+      case 'turnstile':
+        return t('errors.botCheck')
+      case 'rate-limited':
+        return t('errors.rateLimited')
+      case 'network':
+        return t('errors.network')
+      default:
+        return t('errors.generic')
+    }
+  }
+
+  /** Step 3 "Submit": finish with a FRESH Turnstile token. */
+  async function finish() {
+    if (submitting.current || !session) return
+    setFinishProblem(null)
+    submitting.current = true
+    setBusy(true)
+    const mine = generation.current
+    try {
+      const result = await postFinish({
+        token: session.token,
+        turnstileToken,
+        locale,
+      })
+      if (!mounted.current || mine !== generation.current) return
+      if (result.kind === 'ok') {
+        // The token is spent: drop it with the rest of the session.
+        setSession(null)
+        setReference(result.reference)
+        setStep(4)
+        return
+      }
+      turnstile.current?.reset()
+      if (result.kind === 'gone') {
+        expire()
+        return
+      }
+      if (result.kind === 'photos-missing') setStep(2)
+      setFinishProblem(finishFailure(result))
+    } finally {
+      if (mine === generation.current) {
+        submitting.current = false
+        if (mounted.current) setBusy(false)
+      }
     }
   }
 
@@ -334,20 +316,78 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   }
 
   const dir = dirFor(locale)
-  const dayName = (day: DayKey) => days(day)
 
-  if (sentTo !== null) {
-    return (
-      <div data-place-form dir={dir} lang={locale} className="mt-4">
-        <div
-          ref={successRef}
-          tabIndex={-1}
-          role="status"
-          className={`${NOTICE_SUCCESS} ${FOCUS_RING}`}
-        >
-          <p className="font-semibold">{t('form.successTitle')}</p>
-          <p className="mt-2">{t('form.success', { email: sentTo })}</p>
+  const warning =
+    idle.secondsLeft !== null ? (
+      <div
+        role="alertdialog"
+        aria-labelledby={fid('idle-title')}
+        aria-describedby={fid('idle-body')}
+        className={`${NOTICE_INFO} fixed inset-x-4 top-4 z-50 flex flex-wrap items-center justify-between gap-3 shadow-lg`}
+      >
+        <div>
+          <p id={fid('idle-title')} className="text-ink-900 font-semibold">
+            {t('flow.idleTitle')}
+          </p>
+          <p id={fid('idle-body')}>{t('flow.idleBody', { seconds: idle.secondsLeft })}</p>
         </div>
+        <button ref={stayRef} type="button" className={PRIMARY_BUTTON} onClick={idle.stay}>
+          {t('flow.idleStay')}
+        </button>
+      </div>
+    ) : null
+
+  const progress =
+    typeof step === 'number' ? (
+      <p className="text-ink-500 text-xs font-semibold uppercase tracking-wider" data-step={step}>
+        {t('flow.progress', { n: step, total: 4 })}
+      </p>
+    ) : null
+
+  if (step !== 1) {
+    return (
+      <div data-place-form dir={dir} lang={locale} className="mt-4 flex flex-col gap-6">
+        {warning}
+        {progress}
+        {step === 2 && session ? (
+          <PhoneStep
+            token={session.token}
+            uploadUrl={session.uploadUrl}
+            problem={finishProblem}
+            onContinue={() => {
+              setFinishProblem(null)
+              setStep(3)
+            }}
+            onGone={expire}
+            onActivity={idle.stay}
+          />
+        ) : null}
+        {step === 3 ? (
+          <TermsStep
+            locale={locale}
+            busy={busy}
+            problem={finishProblem}
+            canSubmit={!isTurnstileEnabled() || turnstileToken !== null}
+            turnstile={
+              /* Renders nothing until a site key is set. See components/Turnstile. */
+              <Turnstile onToken={setTurnstileToken} handle={turnstile} locale={locale} />
+            }
+            onSubmit={() => void finish()}
+          />
+        ) : null}
+        {step === 4 && reference ? <ThanksStep reference={reference} onDone={reset} /> : null}
+        {step === 'expired' ? (
+          <div className="flex flex-col gap-4">
+            <p className={NOTICE_ERROR} role="alert">
+              {t('flow.expired')}
+            </p>
+            <div>
+              <button type="button" className={PRIMARY_BUTTON} onClick={reset}>
+                {t('flow.startAgain')}
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     )
   }
@@ -359,24 +399,14 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     category: t('form.category'),
     governorate: t('form.governorate'),
     address: t('form.address'),
-    hours: t('form.hoursLegend'),
     phone: t('form.publicPhone'),
-    amenities: t('form.amenities'),
     photo: t('form.hero'),
   }
-  const preview = previewDataFrom(
-    state,
-    {
-      heroUrl: photos.hero?.url,
-      galleryUrls: photos.gallery.map((p) => p.url),
-      logoUrl: photos.logo?.url,
-      listingNumber: pick?.number,
-    },
-    locale,
-    dayName,
-  )
+  // No photos yet: they come from the phone in step 2, so the preview shows
+  // its placeholders.
+  const preview = previewDataFrom(state, { galleryUrls: [], listingNumber: pick?.number }, locale)
 
-  const canSubmit = Boolean(pick && photos.hero) && !busy && preparing === 0
+  const canNext = Boolean(pick) && !busy
 
   /** Props shared by every text input, select and textarea. */
   const control = (key: string, hint = false) => {
@@ -406,11 +436,12 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     t('form.counter', { count: Array.from(value).length, max })
 
   const legend = 'font-display text-ink-900 text-xl'
-  const subcategories = subcategoriesFor(state.category)
+  const kindGroups = submittableKindsByCategory()
   const districts = districtsFor(state.governorate)
 
   return (
     <div data-place-form dir={dir} lang={locale} className="mt-4 flex flex-col gap-8">
+      {warning}
       <section aria-labelledby={fid('preview-title')} className="flex flex-col gap-3">
         <div>
           <h3 id={fid('preview-title')} className={legend}>
@@ -429,7 +460,9 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy}>
+      {progress}
+
+      <form ref={formRef} onSubmit={next} noValidate aria-busy={busy}>
         <p className="text-ink-700 text-sm">{t('form.intro')}</p>
 
         <fieldset disabled={busy} className="m-0 mt-6 flex min-w-0 flex-col gap-10 border-0 p-0">
@@ -524,58 +557,28 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             </div>
 
             <div>
-              <label className={LABEL} htmlFor={fid('category')}>
+              <label className={LABEL} htmlFor={fid('kind')}>
                 {t('form.category')}
               </label>
               <select
-                {...control('category')}
+                {...control('kind')}
                 required
-                value={state.category}
-                onChange={(e) => setState((current) => withCategory(current, e.target.value))}
+                value={state.kind}
+                onChange={(e) => set({ kind: e.target.value })}
               >
                 <option value="">{t('form.chooseCategory')}</option>
-                {CATEGORIES.filter((c) => !c.retired).map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {categoryLabel(c.slug, locale)}
-                  </option>
+                {kindGroups.map(({ category, kinds }) => (
+                  <optgroup key={category.slug} label={categoryLabel(category.slug, locale)}>
+                    {kinds.map((kind) => (
+                      <option key={kind.slug} value={kind.slug}>
+                        {subcategoryLabel(kind.slug, locale)}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
-              {errorLine('category')}
+              {errorLine('kind')}
             </div>
-
-            <fieldset
-              className="m-0 min-w-0 border-0 p-0"
-              aria-describedby={
-                message('subcategories') ? `${fid('subcategories')}-error` : undefined
-              }
-            >
-              <legend className={LABEL}>{t('form.subcategories')}</legend>
-              {subcategories.length === 0 ? (
-                <p className={HINT}>{t('form.subcategoriesHint')}</p>
-              ) : (
-                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
-                  {subcategories.map((sub) => (
-                    <label
-                      key={sub.slug}
-                      className="text-ink-900 flex min-h-11 items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        name="subcategories"
-                        value={sub.slug}
-                        checked={state.subcategories.includes(sub.slug)}
-                        onChange={() =>
-                          set({ subcategories: toggle(state.subcategories, sub.slug) })
-                        }
-                        className={CHECK}
-                      />
-                      {subcategoryLabel(sub.slug, locale)}
-                    </label>
-                  ))}
-                </div>
-              )}
-              {errorLine('subcategories')}
-            </fieldset>
           </fieldset>
 
           {/* Where */}
@@ -615,11 +618,13 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
               </label>
               <select
                 {...control('district')}
+                required
                 disabled={districts.length === 0}
                 value={state.district}
+                // Only the district: the page numbers depend on the region alone.
                 onChange={(e) => set({ district: e.target.value })}
               >
-                <option value="">{t('form.noDistrict')}</option>
+                <option value="">{t('form.chooseDistrict')}</option>
                 {districts.map((d) => (
                   <option key={d.slug} value={d.slug}>
                     {districtLabel(d.slug, locale)}
@@ -694,136 +699,20 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             ) : null}
           </fieldset>
 
-          {/* Hours */}
-          <fieldset className="m-0 min-w-0 border-0 p-0">
-            <legend className={legend}>{t('form.hoursLegend')}</legend>
-            <p className={HINT}>{t('form.hoursHint')}</p>
-            <div className="mt-3 flex flex-col gap-3">
-              {state.hours.map((row, index) => {
-                const update = (patch: Partial<typeof row>) =>
-                  setState((current) => ({
-                    ...current,
-                    hours: current.hours.map((r, i) => (i === index ? { ...r, ...patch } : r)),
-                  }))
-                const opensKey = `hours.${row.day}.opens`
-                const closesKey = `hours.${row.day}.closes`
-                const rowError = message(opensKey) ?? message(closesKey)
-                return (
-                  <div key={row.day}>
-                    <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2 sm:grid-cols-[7rem_1fr_1fr_auto]">
-                      <p className="text-ink-900 col-span-3 text-sm font-semibold sm:col-span-1 sm:self-center">
-                        {dayName(row.day)}
-                      </p>
-                      <input
-                        {...control(opensKey)}
-                        type="time"
-                        dir="ltr"
-                        aria-label={`${dayName(row.day)}: ${t('form.opens')}`}
-                        aria-describedby={rowError ? `${fid(row.day)}-hours-error` : undefined}
-                        disabled={row.closed}
-                        value={row.opens}
-                        onChange={(e) => update({ opens: e.target.value })}
-                      />
-                      <input
-                        {...control(closesKey)}
-                        type="time"
-                        dir="ltr"
-                        aria-label={`${dayName(row.day)}: ${t('form.closes')}`}
-                        aria-describedby={rowError ? `${fid(row.day)}-hours-error` : undefined}
-                        disabled={row.closed}
-                        value={row.closes}
-                        onChange={(e) => update({ closes: e.target.value })}
-                      />
-                      <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={row.closed}
-                          onChange={(e) => update({ closed: e.target.checked })}
-                          className={CHECK}
-                        />
-                        {t('form.closed')}
-                      </label>
-                    </div>
-                    {rowError ? (
-                      <p id={`${fid(row.day)}-hours-error`} className={ERROR_TEXT}>
-                        {rowError}
-                      </p>
-                    ) : null}
-                  </div>
-                )
-              })}
-            </div>
-            {errorLine('hours')}
-          </fieldset>
-
           {/* Details */}
           <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
             <legend className={`${legend} mb-1`}>{t('form.detailsLegend')}</legend>
 
-            <div>
-              <label className={LABEL} htmlFor={fid('priceRange')}>
-                {t('form.priceRange')}
-              </label>
-              <select
-                {...control('priceRange')}
-                value={state.priceRange}
-                onChange={(e) => set({ priceRange: e.target.value })}
-              >
-                <option value="">{t('form.noPriceRange')}</option>
-                {PRICE_RANGES.map((p) => (
-                  <option key={p.slug} value={p.slug}>
-                    {priceLabel(p, locale)}
-                  </option>
-                ))}
-              </select>
-              {errorLine('priceRange')}
-            </div>
-
-            <fieldset className="m-0 min-w-0 border-0 p-0">
-              <legend className={LABEL}>{t('form.amenities')}</legend>
-              <div className="mt-2 grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-                {AMENITIES.map((a) => (
-                  <label
-                    key={a.slug}
-                    className="text-ink-900 flex min-h-11 items-center gap-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      name="amenities"
-                      value={a.slug}
-                      checked={state.amenities.includes(a.slug)}
-                      onChange={() => set({ amenities: toggle(state.amenities, a.slug) })}
-                      className={CHECK}
-                    />
-                    {amenityLabel(a.slug, locale)}
-                  </label>
-                ))}
-              </div>
-              {errorLine('amenities')}
-            </fieldset>
-
-            <fieldset className="m-0 min-w-0 border-0 p-0">
-              <legend className={LABEL}>{t('form.payments')}</legend>
-              <div className="mt-2 grid grid-cols-2 gap-x-4">
-                {PAYMENT_KEYS.map((key) => (
-                  <label
-                    key={key}
-                    className="text-ink-900 flex min-h-11 items-center gap-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      name={`payments.${key}`}
-                      checked={state.payments[key]}
-                      onChange={(e) =>
-                        set({ payments: { ...state.payments, [key]: e.target.checked } })
-                      }
-                      className={CHECK}
-                    />
-                    {t(`form.${PAYMENT_LABEL[key]}`)}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="acceptsWhish"
+                checked={state.acceptsWhish}
+                onChange={(e) => set({ acceptsWhish: e.target.checked })}
+                className={CHECK}
+              />
+              {t('form.paymentWhish')}
+            </label>
 
             <div>
               <label className={LABEL} htmlFor={fid('publicPhone')}>
@@ -880,88 +769,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
               </p>
               {errorLine('facebook')}
             </div>
-          </fieldset>
-
-          {/* Photos */}
-          <fieldset className="m-0 flex min-w-0 flex-col gap-6 border-0 p-0">
-            <legend className={legend}>{t('form.photosLegend')}</legend>
-            <p className={`${HINT} -mt-4`}>{t('form.photosHint')}</p>
-
-            <PhotoInput
-              id={fid('hero')}
-              name="hero"
-              label={t('form.hero')}
-              hint={t('form.heroHint')}
-              error={photoErrors.hero}
-              onChange={(event) => onPhotoInput('hero', event)}
-            >
-              {photos.hero ? <Thumb photo={photos.hero} /> : null}
-            </PhotoInput>
-
-            <PhotoInput
-              id={fid('gallery')}
-              name="gallery"
-              multiple
-              label={t('form.gallery')}
-              hint={t('form.galleryHint', {
-                max: MAX_GALLERY_PHOTOS,
-                count: photos.gallery.length,
-              })}
-              error={photoErrors.gallery}
-              disabled={photos.gallery.length >= MAX_GALLERY_PHOTOS}
-              onChange={(event) => onPhotoInput('gallery', event)}
-            >
-              {photos.gallery.length > 0 ? (
-                <ul className="mt-3 grid grid-cols-3 gap-2">
-                  {photos.gallery.map((photo, index) => (
-                    <li key={photo.url} className="flex flex-col gap-1">
-                      <Thumb photo={photo} />
-                      <button
-                        type="button"
-                        className={`text-ink-700 hover:text-ink-900 min-h-11 text-sm underline underline-offset-4 ${FOCUS_RING}`}
-                        aria-label={t('form.removeGalleryPhoto', { n: index + 1 })}
-                        onClick={() =>
-                          commitPhotos((current) => ({
-                            ...current,
-                            gallery: current.gallery.filter((p) => p.url !== photo.url),
-                          }))
-                        }
-                      >
-                        {t('form.removePhoto')}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </PhotoInput>
-
-            <PhotoInput
-              id={fid('logo')}
-              name="logo"
-              label={t('form.logo')}
-              hint={t('form.logoHint')}
-              error={photoErrors.logo}
-              onChange={(event) => onPhotoInput('logo', event)}
-            >
-              {photos.logo ? (
-                <div className="mt-3 flex items-center gap-3">
-                  <Thumb photo={photos.logo} />
-                  <button
-                    type="button"
-                    className={`text-ink-700 hover:text-ink-900 min-h-11 text-sm underline underline-offset-4 ${FOCUS_RING}`}
-                    onClick={() => commitPhotos((current) => ({ ...current, logo: null }))}
-                  >
-                    {t('form.removePhoto')}
-                  </button>
-                </div>
-              ) : null}
-            </PhotoInput>
-
-            {preparing > 0 ? (
-              <p className="text-ink-500 text-sm" role="status">
-                {t('form.preparing')}
-              </p>
-            ) : null}
           </fieldset>
 
           {/* The owner */}
@@ -1037,82 +844,21 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
               </button>
               <button
                 type="submit"
-                disabled={!canSubmit}
-                aria-describedby={canSubmit ? undefined : fid('submit-needs')}
+                disabled={!canNext}
+                aria-describedby={canNext ? undefined : fid('next-needs')}
                 className={PRIMARY_BUTTON}
               >
-                {busy ? t('form.sending') : t('form.submit')}
+                {busy ? t('form.sending') : t('flow.next')}
               </button>
             </div>
-            {!pick || !photos.hero ? (
-              <p id={fid('submit-needs')} className={HINT}>
-                {t('form.submitNeeds')}
+            {!pick ? (
+              <p id={fid('next-needs')} className={HINT}>
+                {t('flow.nextNeeds')}
               </p>
             ) : null}
           </div>
         </fieldset>
       </form>
     </div>
-  )
-}
-
-function PhotoInput({
-  id,
-  name,
-  label,
-  hint,
-  error,
-  multiple = false,
-  disabled = false,
-  onChange,
-  children,
-}: {
-  id: string
-  name: string
-  label: string
-  hint: string
-  error?: string
-  multiple?: boolean
-  disabled?: boolean
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  children?: React.ReactNode
-}) {
-  return (
-    <div>
-      <label className={LABEL} htmlFor={id}>
-        {label}
-      </label>
-      <input
-        id={id}
-        name={name}
-        type="file"
-        accept={PHOTO_ACCEPT}
-        multiple={multiple}
-        disabled={disabled}
-        aria-invalid={Boolean(error)}
-        aria-describedby={`${id}-hint${error ? ` ${id}-error` : ''}`}
-        onChange={onChange}
-        className="text-ink-700 file:bg-cedar-900 file:text-surface-base hover:file:bg-cedar-700 mt-1.5 block w-full text-sm file:me-3 file:min-h-11 file:cursor-pointer file:border-0 file:px-4 file:text-sm file:font-semibold disabled:opacity-60"
-      />
-      <p id={`${id}-hint`} className={HINT}>
-        {hint}
-      </p>
-      {error ? (
-        <p id={`${id}-error`} className={ERROR_TEXT} role="alert">
-          {error}
-        </p>
-      ) : null}
-      {children}
-    </div>
-  )
-}
-
-function Thumb({ photo }: { photo: Photo }) {
-  return (
-    <img
-      src={photo.url}
-      alt=""
-      className="border-ink-100 bg-surface-sunken mt-3 aspect-[4/3] w-full max-w-40 border object-cover"
-    />
   )
 }

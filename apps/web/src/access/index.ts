@@ -95,6 +95,9 @@ export const isStaffUser = (user: unknown): boolean =>
 
 export const isAdmin: Access = ({ req }) => rolesOf(req.user).includes('admin')
 
+/** The same question as `isAdmin`, for code holding a user rather than a req. */
+export const isAdminUser = (user: unknown): boolean => rolesOf(user).includes('admin')
+
 export const isStaff: Access = ({ req }) => isStaffUser(req.user)
 
 export const isAdminFieldLevel: FieldAccess = ({ req }) => rolesOf(req.user).includes('admin')

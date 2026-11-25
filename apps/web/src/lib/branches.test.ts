@@ -61,7 +61,6 @@ const source = (over: Partial<Row> = {}): Row => ({
   ],
   governorate: 'beirut',
   district: 'beirut',
-  area: 5,
   mapUrl: 'https://www.google.com/maps/@33.89,35.48,17z',
   location: [35.48, 33.89],
   openingHours: [{ id: 'h1', day: 'mon', opens: '08:00', closes: '22:00', closed: false }],
@@ -102,7 +101,7 @@ const input = (over: Partial<BranchRequest> = {}): BranchRequest => ({
   sourceListingId: 10,
   name: 'Cafe Nour Jounieh',
   governorate: 'keserwan',
-  district: 'keserwan',
+  district: 'jounieh',
   address: 'Main road, Jounieh',
   mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
   openingHours: [{ day: 'tue', opens: '09:00', closes: '23:00', closed: false }],
@@ -215,7 +214,7 @@ describe('createBranch: the first branch', () => {
       brand: outcome.brandId,
       _status: 'draft',
       governorate: 'keserwan',
-      district: 'keserwan',
+      district: 'jounieh',
       address: 'Main road, Jounieh',
       mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
       booking: { enabled: false },
@@ -284,7 +283,6 @@ describe('createBranch: the first branch', () => {
       'listingNumber',
       'importBatch',
       'tags',
-      'area',
       'location',
       'priceRange',
       'seo',
@@ -580,7 +578,7 @@ describe('createBranch: slugs', () => {
     const outcome = await run()
     if (!outcome.ok) throw new Error('expected ok')
     const branch = payload.db.businesses!.find((r) => r.id === outcome.listingId)!
-    expect(branch.slug).toBe('cafe-nour-jounieh-keserwan')
+    expect(branch.slug).toBe('cafe-nour-jounieh-jounieh')
   })
 
   it('counts a trashed listing slug as taken', async () => {

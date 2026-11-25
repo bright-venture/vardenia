@@ -37,3 +37,15 @@ describe('releaseListingNumber', () => {
     expect(run({ deletedAt: null }, { listingNumber: null }).listingNumber).toBeUndefined()
   })
 })
+
+describe('releaseListingNumber, form submissions', () => {
+  it.each(['abandoned', 'lapsed'])('clears the number when the submission is %s', (status) => {
+    expect(run({ submission: { status } }, { listingNumber: 12 }).listingNumber).toBe(null)
+    expect(run({}, { listingNumber: 12, submission: { status } }).listingNumber).toBe(null)
+  })
+
+  it.each(['incomplete', 'pending', 'accepted'])('keeps the number while %s', (status) => {
+    const data = { submission: { status } }
+    expect(run(data, { listingNumber: 12 })).toBe(data)
+  })
+})

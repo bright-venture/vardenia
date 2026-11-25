@@ -80,7 +80,6 @@ export interface Config {
     'room-types': RoomType;
     'room-availability': RoomAvailability;
     'staff-requests': StaffRequest;
-    areas: Area;
     'guest-questions': GuestQuestion;
     articles: Article;
     issues: Issue;
@@ -94,6 +93,7 @@ export interface Config {
     'error-events': ErrorEvent;
     'saved-listings': SavedListing;
     'rate-limits': RateLimit;
+    'place-upload-sessions': PlaceUploadSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -120,7 +120,6 @@ export interface Config {
     'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
     'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
     'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
-    areas: AreasSelect<false> | AreasSelect<true>;
     'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
@@ -134,6 +133,7 @@ export interface Config {
     'error-events': ErrorEventsSelect<false> | ErrorEventsSelect<true>;
     'saved-listings': SavedListingsSelect<false> | SavedListingsSelect<true>;
     'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
+    'place-upload-sessions': PlaceUploadSessionsSelect<false> | PlaceUploadSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -245,7 +245,10 @@ export interface Business {
     };
     [k: string]: unknown;
   } | null;
-  heroImage: number | Media;
+  /**
+   * Required for every listing except a submission that is still incomplete or abandoned.
+   */
+  heroImage?: (number | null) | Media;
   /**
    * Gallery size is capped by listing tier - extra images are hidden, not deleted.
    */
@@ -319,42 +322,51 @@ export interface Business {
   tags?: string[] | null;
   governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
   /**
-   * Only the districts of the governorate above are offered.
+   * The town or place guests filter by (Jounieh, Faqra / Faraya). Only the towns of the governorate above are offered.
    */
   district?:
     | (
         | 'beirut'
-        | 'aley'
+        | 'dbayeh'
+        | 'broummana'
+        | 'bikfaya'
         | 'baabda'
-        | 'matn'
+        | 'hammana'
+        | 'aley'
+        | 'bassour'
+        | 'jounieh'
+        | 'harissa'
+        | 'kaslik'
+        | 'ghazir'
+        | 'tabarja'
+        | 'faqra-faraya'
         | 'jbeil'
-        | 'keserwan'
-        | 'akkar'
         | 'batroun'
-        | 'bsharri'
+        | 'chekka'
         | 'koura'
-        | 'miniyeh-danniyeh'
         | 'tripoli'
         | 'zgharta'
-        | 'chouf'
-        | 'baalbek'
-        | 'hermel'
-        | 'rachaya'
-        | 'western-beqaa'
+        | 'bsharri'
+        | 'akkar'
+        | 'deir-el-qamar'
+        | 'beiteddine'
+        | 'baakline'
+        | 'moukhtara'
+        | 'barouk'
+        | 'jiyeh'
+        | 'damour'
         | 'zahle'
-        | 'bint-jbeil'
-        | 'hasbaya'
-        | 'jezzine'
-        | 'marjeyoun'
-        | 'nabatieh'
+        | 'baalbek'
+        | 'western-beqaa'
+        | 'hermel'
+        | 'chtoura'
+        | 'saghbine'
+        | 'masnaa'
         | 'sidon'
         | 'tyre'
+        | 'jezzine'
       )
     | null;
-  /**
-   * The neighbourhood or town, for the directory filter. Only the region above is offered.
-   */
-  area?: (number | null) | Area;
   address?: string | null;
   /**
    * The listing on Google Maps. Shown as "View on map" and "Get directions". When the link carries coordinates the location below is filled from it; a short link (maps.app.goo.gl) is kept as it is.
@@ -679,14 +691,133 @@ export interface Business {
     linkedin?: string | null;
   };
   submission?: {
-    status?: ('pending' | 'approved' | 'rejected' | 'expired') | null;
+    /**
+     * Changed only by the actions on this page (payments, accept, reject).
+     */
+    status?:
+      | (
+          | 'incomplete'
+          | 'abandoned'
+          | 'awaiting_downpayment'
+          | 'pending'
+          | 'accepted'
+          | 'paid'
+          | 'lapsed'
+          | 'approved'
+          | 'rejected'
+          | 'expired'
+        )
+      | null;
     ownerName?: string | null;
     ownerEmail?: string | null;
     ownerPhone?: string | null;
+    ownerPhoneSearch?: string | null;
     pageTemplate?: ('a' | 'b' | 'c') | null;
     submittedAt?: string | null;
+    reference?: string | null;
+    acceptedAt?: string | null;
+    /**
+     * Why it was rejected. Set by Reject submission.
+     */
+    rejectionReason?: string | null;
+    rejectionKind?: ('not_accepted' | 'unpaid') | null;
+    /**
+     * Whether the reason was sent to the owner.
+     */
+    rejectionReasonShared?: boolean | null;
+    rejectedAt?: string | null;
+    rejectedBy?: (number | null) | User;
+    /**
+     * Each step of this submission, with who and when. Cannot be edited.
+     */
+    history?:
+      | {
+          step:
+            | 'incomplete'
+            | 'awaiting_downpayment'
+            | 'pending'
+            | 'rejected'
+            | 'approved'
+            | 'abandoned'
+            | 'accepted'
+            | 'paid'
+            | 'lapsed'
+            | 'expired'
+            | 'downpayment_received'
+            | 'balance_received'
+            | 'refund_sent'
+            | 'downpayment_waived'
+            | 'payment_undone'
+            | 'deadline_extended'
+            | 'email_resent';
+          at: string;
+          by?: (number | null) | User;
+          note?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Money received and refunded. Recorded with the buttons on this page; cannot be edited.
+     */
+    payments?:
+      | {
+          type: 'downpayment' | 'balance' | 'refund';
+          amount: number;
+          currency?: string | null;
+          senderNumber?: string | null;
+          whishAt?: string | null;
+          method?: ('whish' | 'desk' | 'cash') | null;
+          note?: string | null;
+          recordedBy?: (number | null) | User;
+          recordedAt?: string | null;
+          voided?: boolean | null;
+          voidedBy?: (number | null) | User;
+          voidedAt?: string | null;
+          voidReason?: string | null;
+          forfeited?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    payment?: {
+      stage?: ('none' | 'downpayment_paid' | 'waived' | 'fully_paid' | 'refund_due' | 'refunded' | 'kept') | null;
+      /**
+       * The full price, as it was when the form was sent.
+       */
+      price?: number | null;
+      /**
+       * What is paid first.
+       */
+      downpaymentAmount?: number | null;
+      currency?: string | null;
+      /**
+       * Downpayment and rest received (undone lines not counted).
+       */
+      received?: number | null;
+      refunded?: number | null;
+      stillToPay?: number | null;
+      downpaymentDueAt?: string | null;
+      balanceDeadlineDays?: number | null;
+      balanceDueAt?: string | null;
+      downpaymentReminderSentAt?: string | null;
+      balanceReminderSentAt?: string | null;
+      submittedEmailSentAt?: string | null;
+      downpaymentEmailSentAt?: string | null;
+      acceptedEmailSentAt?: string | null;
+      notAcceptedEmailSentAt?: string | null;
+      unpaidEmailSentAt?: string | null;
+      lapsedEmailSentAt?: string | null;
+      publishedEmailSentAt?: string | null;
+      lapsedListingNumber?: number | null;
+    };
+    terms?: {
+      version?: string | null;
+      priceAtAcceptance?: number | null;
+      currency?: string | null;
+      termMonths?: number | null;
+      acceptedAt?: string | null;
+    };
   };
-  state?: ('draft' | 'published' | 'rejected' | 'expired') | null;
+  state?: ('draft' | 'published' | 'rejected' | 'expired' | 'incomplete' | 'abandoned') | null;
   seo?: {
     /**
      * Falls back to the document title when empty.
@@ -836,27 +967,6 @@ export interface Brand {
    * Set automatically: on while one of its branches is published.
    */
   published?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Neighbourhoods and towns guests filter by (Achrafieh, Faraya). Each belongs to one region.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "areas".
- */
-export interface Area {
-  id: number;
-  name: string;
-  /**
-   * In the web address (?area=mar-mikhael). Keep it once set.
-   */
-  slug: string;
-  governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
-  /**
-   * Lower first.
-   */
-  order?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1660,6 +1770,30 @@ export interface RateLimit {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions".
+ */
+export interface PlaceUploadSession {
+  id: number;
+  tokenHash: string;
+  business: number | Business;
+  expiresAt: string;
+  logoReceived?: boolean | null;
+  heroReceived?: boolean | null;
+  closedAt?: string | null;
+  mediaIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1727,10 +1861,6 @@ export interface PayloadLockedDocument {
         value: number | StaffRequest;
       } | null)
     | ({
-        relationTo: 'areas';
-        value: number | Area;
-      } | null)
-    | ({
         relationTo: 'guest-questions';
         value: number | GuestQuestion;
       } | null)
@@ -1781,6 +1911,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rate-limits';
         value: number | RateLimit;
+      } | null)
+    | ({
+        relationTo: 'place-upload-sessions';
+        value: number | PlaceUploadSession;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1871,7 +2005,6 @@ export interface BusinessesSelect<T extends boolean = true> {
   tags?: T;
   governorate?: T;
   district?: T;
-  area?: T;
   address?: T;
   mapUrl?: T;
   location?: T;
@@ -1991,8 +2124,77 @@ export interface BusinessesSelect<T extends boolean = true> {
         ownerName?: T;
         ownerEmail?: T;
         ownerPhone?: T;
+        ownerPhoneSearch?: T;
         pageTemplate?: T;
         submittedAt?: T;
+        reference?: T;
+        acceptedAt?: T;
+        rejectionReason?: T;
+        rejectionKind?: T;
+        rejectionReasonShared?: T;
+        rejectedAt?: T;
+        rejectedBy?: T;
+        history?:
+          | T
+          | {
+              step?: T;
+              at?: T;
+              by?: T;
+              note?: T;
+              id?: T;
+            };
+        payments?:
+          | T
+          | {
+              type?: T;
+              amount?: T;
+              currency?: T;
+              senderNumber?: T;
+              whishAt?: T;
+              method?: T;
+              note?: T;
+              recordedBy?: T;
+              recordedAt?: T;
+              voided?: T;
+              voidedBy?: T;
+              voidedAt?: T;
+              voidReason?: T;
+              forfeited?: T;
+              id?: T;
+            };
+        payment?:
+          | T
+          | {
+              stage?: T;
+              price?: T;
+              downpaymentAmount?: T;
+              currency?: T;
+              received?: T;
+              refunded?: T;
+              stillToPay?: T;
+              downpaymentDueAt?: T;
+              balanceDeadlineDays?: T;
+              balanceDueAt?: T;
+              downpaymentReminderSentAt?: T;
+              balanceReminderSentAt?: T;
+              submittedEmailSentAt?: T;
+              downpaymentEmailSentAt?: T;
+              acceptedEmailSentAt?: T;
+              notAcceptedEmailSentAt?: T;
+              unpaidEmailSentAt?: T;
+              lapsedEmailSentAt?: T;
+              publishedEmailSentAt?: T;
+              lapsedListingNumber?: T;
+            };
+        terms?:
+          | T
+          | {
+              version?: T;
+              priceAtAcceptance?: T;
+              currency?: T;
+              termMonths?: T;
+              acceptedAt?: T;
+            };
       };
   state?: T;
   seo?:
@@ -2266,18 +2468,6 @@ export interface StaffRequestsSelect<T extends boolean = true> {
   notes?: T;
   locale?: T;
   internalNotes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "areas_select".
- */
-export interface AreasSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  governorate?: T;
-  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2596,6 +2786,21 @@ export interface RateLimitsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions_select".
+ */
+export interface PlaceUploadSessionsSelect<T extends boolean = true> {
+  tokenHash?: T;
+  business?: T;
+  expiresAt?: T;
+  logoReceived?: T;
+  heroReceived?: T;
+  closedAt?: T;
+  mediaIds?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2686,6 +2891,52 @@ export interface Setting {
         | 'credits'
       )[]
     | null;
+  magazinePlaces?: {
+    /**
+     * The full price of one year in the magazine. At least 1.
+     */
+    pricePerYear?: number | null;
+    /**
+     * The currency of the price, as a three-letter code. USD is shown as $ in the emails.
+     */
+    currency?: string | null;
+    /**
+     * How long a published place stays listed. The contract starts the day it is published.
+     */
+    termMonths?: number | null;
+    /**
+     * Percent of the price paid first, before the team reviews the place. 50 = half.
+     */
+    downpaymentPercent?: number | null;
+    /**
+     * Days after the form is sent to pay the downpayment. After that the number is released.
+     */
+    downpaymentDeadlineDays?: number | null;
+    /**
+     * On which day after the form is sent the one downpayment reminder goes out. 0: no reminder.
+     */
+    downpaymentReminderDay?: number | null;
+    /**
+     * Days after the place is accepted to pay the rest. After that it is rejected for not paying.
+     */
+    balanceDeadlineDays?: number | null;
+    /**
+     * How many days before the deadline for the rest the reminder goes out. 0: no reminder.
+     */
+    balanceReminderDaysBefore?: number | null;
+    /**
+     * How long an unfinished form keeps its page number while nobody touches it. After that the number is released.
+     */
+    holdMinutes?: number | null;
+    /**
+     * Owners send their payments here by Whish, and the WhatsApp link in the emails opens a chat with it. Write it with the country code, like +96179300350.
+     */
+    whishNumber?: string | null;
+    /**
+     * A label for the terms owners agree to, copied onto each form when it is sent. Change it whenever the terms text changes, for example to the date of the change.
+     */
+    termsVersion?: string | null;
+  };
   /**
    * Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.
    */
@@ -2703,6 +2954,21 @@ export interface SettingsSelect<T extends boolean = true> {
   maxGoldPerCategory?: T;
   maxPlatinum?: T;
   hiddenPages?: T;
+  magazinePlaces?:
+    | T
+    | {
+        pricePerYear?: T;
+        currency?: T;
+        termMonths?: T;
+        downpaymentPercent?: T;
+        downpaymentDeadlineDays?: T;
+        downpaymentReminderDay?: T;
+        balanceDeadlineDays?: T;
+        balanceReminderDaysBefore?: T;
+        holdMinutes?: T;
+        whishNumber?: T;
+        termsVersion?: T;
+      };
   signupsPaused?: T;
   updatedAt?: T;
   createdAt?: T;

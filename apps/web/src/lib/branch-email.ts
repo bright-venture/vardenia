@@ -84,7 +84,7 @@ export function branchRequestEmails(args: BranchEmailArgs): {
         ['Copied from', args.sourceName],
         ['Brand', args.brandName],
         ['Governorate', args.governorate],
-        ['District', args.district ?? ''],
+        ['Town', args.district ?? ''],
         ['Address', args.address],
         ['Partner', args.partnerName],
         ['Email', args.partnerEmail],

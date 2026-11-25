@@ -25,3 +25,12 @@ export async function advisoryLock(req: PayloadRequest, key: string): Promise<vo
   if (!db) return
   await db.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${key}))`)
 }
+
+/**
+ * The lock on one Magazine Places submission (finish and the abandon job).
+ * Both take it in their own transaction, then re-read the business status and
+ * the upload session before writing, so a finish and an abandon (or two
+ * finishes) queue instead of one overwriting the other.
+ */
+export const placeSubmissionLockKey = (businessId: number | string) =>
+  `vardenia.place-submission:${String(businessId)}`

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_MAX_GOLD_PER_CATEGORY, DEFAULT_MAX_PLATINUM } from '@vardenia/core'
-import { goldFloorCheck, highestPerCategory, platinumFloorCheck } from './Settings'
+import { goldFloorCheck, highestPerCategory, placePriceCheck, platinumFloorCheck } from './Settings'
 import { limitOrDefault } from '../lib/tier-limits'
 
 /**
@@ -55,5 +55,17 @@ describe('lowering the gold limit per category', () => {
         { category: 'hospitality' },
       ]),
     ).toEqual({ category: 'hospitality', count: 3 })
+  })
+})
+
+describe('the price of a magazine place', () => {
+  it('is at least 1: no free places, with a plain message', () => {
+    for (const value of [0, 0.5, -1, null, undefined, Number.NaN]) {
+      expect(placePriceCheck(value), String(value)).toBe(
+        'Enter the price of one year: 1 or more. Places are never free.',
+      )
+    }
+    expect(placePriceCheck(1)).toBe(true)
+    expect(placePriceCheck(1000)).toBe(true)
   })
 })

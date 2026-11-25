@@ -1,14 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { HOTEL_AND_GETAWAY_MESSAGE, placeSubmissionSchema } from './place-submission'
+import { UNAVAILABLE_KIND_MESSAGE, placeSubmissionSchema } from './place-submission'
+import { GOVERNORATES } from './regions'
+import { LISTING_GOVERNORATES } from './listing-numbers'
+import { SUBMITTABLE_KIND_SLUGS, categoryOfKind, submittableKindsByCategory } from './taxonomy'
+
+const HIDDEN_KINDS = [
+  'guided-tours',
+  'activities',
+  'event-planners',
+  'car-rental',
+  'airport-transfers',
+  'private-drivers',
+]
 
 const valid = {
   name: 'Cafe Example',
-  category: 'food-and-beverage',
-  subcategories: ['cafes'],
+  kind: 'cafes',
   governorate: 'beirut',
+  district: 'beirut',
   address: 'Hamra Street, Beirut',
-  amenities: [],
-  payments: { cash: true, card: false, whish: false, omt: false },
   ownerName: 'Sami',
   ownerEmail: 'sami@example.com',
   ownerPhone: '+96170000000',
@@ -27,29 +37,130 @@ describe('placeSubmissionSchema', () => {
   })
 
   it('strips unknown keys', () => {
-    const r = parse({ tier: 'premium', _status: 'published' })
+    const r = parse({
+      tier: 'premium',
+      _status: 'published',
+      payments: { cash: true, card: true, whish: true, omt: true },
+      contractEndsAt: '2030-01-01',
+    })
     expect(r.success).toBe(true)
     if (r.success) {
-      expect(r.data).not.toHaveProperty('tier')
-      expect(r.data).not.toHaveProperty('_status')
+      for (const key of ['tier', '_status', 'payments', 'contractEndsAt']) {
+        expect(r.data).not.toHaveProperty(key)
+      }
     }
   })
 
-  it('refuses hotels and getaways together, on subcategories', () => {
-    const r = parse({ category: 'hospitality', subcategories: ['hotels', 'getaways'] })
-    expect(r.success).toBe(false)
-    if (!r.success) {
-      const issue = r.error.issues.find((i) => i.message === HOTEL_AND_GETAWAY_MESSAGE)
-      expect(issue?.path).toEqual(['subcategories'])
-    }
-    expect(parse({ category: 'hospitality', subcategories: ['hotels'] }).success).toBe(true)
-    expect(parse({ category: 'hospitality', subcategories: ['getaways'] }).success).toBe(true)
+  describe('kind', () => {
+    it.each(SUBMITTABLE_KIND_SLUGS)('accepts %s', (kind) => {
+      const r = parse({ kind })
+      expect(r.success && r.data.kind).toBe(kind)
+    })
+
+    it.each(HIDDEN_KINDS)('refuses the hidden kind %s with a clear message', (kind) => {
+      const r = parse({ kind })
+      expect(r.success).toBe(false)
+      if (!r.success) {
+        const issue = r.error.issues.find((i) => i.path[0] === 'kind')
+        expect(issue?.message).toBe(UNAVAILABLE_KIND_MESSAGE)
+      }
+    })
+
+    it('refuses an unknown, missing, empty, list or category-slug kind', () => {
+      for (const kind of ['spaceport', '', ['cafes'], 'hospitality', 42, null]) {
+        expect(parse({ kind }).success).toBe(false)
+      }
+      const without: Record<string, unknown> = { ...valid }
+      delete without.kind
+      expect(placeSubmissionSchema.safeParse(without).success).toBe(false)
+    })
+
+    it('has exactly ten submittable kinds, none hidden, every one with a category', () => {
+      expect(SUBMITTABLE_KIND_SLUGS).toHaveLength(10)
+      for (const hidden of HIDDEN_KINDS) {
+        expect(SUBMITTABLE_KIND_SLUGS).not.toContain(hidden)
+      }
+      for (const kind of SUBMITTABLE_KIND_SLUGS) expect(categoryOfKind(kind)).toBeDefined()
+      expect(categoryOfKind('cafes')).toBe('food-and-beverage')
+      expect(categoryOfKind('hotels')).toBe('hospitality')
+      expect(categoryOfKind('nope')).toBeUndefined()
+    })
+
+    it('groups the submittable kinds by category without hidden ones', () => {
+      const groups = submittableKindsByCategory()
+      const flat = groups.flatMap((g) => g.kinds.map((k) => k.slug))
+      expect([...flat].sort()).toEqual([...SUBMITTABLE_KIND_SLUGS].sort())
+      expect(groups.map((g) => g.category.slug)).not.toContain('weddings')
+      expect(groups.map((g) => g.category.slug)).not.toContain('transportation')
+    })
+
+    it('no longer takes category or subcategories: the keys are stripped', () => {
+      const r = parse({ category: 'hospitality', subcategories: ['hotels', 'getaways'] })
+      expect(r.success).toBe(true)
+      if (r.success) {
+        expect(r.data).not.toHaveProperty('category')
+        expect(r.data).not.toHaveProperty('subcategories')
+        expect(r.data.kind).toBe('cafes')
+      }
+    })
   })
 
-  it('rejects a subcategory of another category', () => {
-    const r = parse({ subcategories: ['hotels'] })
-    expect(r.success).toBe(false)
-    if (!r.success) expect(r.error.issues.some((i) => i.path[0] === 'subcategories')).toBe(true)
+  describe('acceptsWhish', () => {
+    it('defaults to false and keeps true', () => {
+      const r = parse()
+      expect(r.success && r.data.acceptsWhish).toBe(false)
+      const t = parse({ acceptsWhish: true })
+      expect(t.success && t.data.acceptsWhish).toBe(true)
+    })
+
+    it('refuses a non-boolean', () => {
+      expect(parse({ acceptsWhish: 'yes' }).success).toBe(false)
+    })
+  })
+
+  it('drops the removed inputs: hours, price range, amenities, payments, area, photos', () => {
+    const r = parse({
+      openingHours: [{ day: 'mon', opens: '9am', closes: '17:00', closed: false }],
+      priceRange: 'nonsense',
+      amenities: ['nonsense'],
+      payments: { cash: true },
+      area: 'x',
+      hero: 'a.jpg',
+      gallery: ['b.jpg'],
+      logo: 'c.png',
+    })
+    expect(r.success).toBe(true)
+    if (r.success) {
+      for (const key of [
+        'openingHours',
+        'priceRange',
+        'amenities',
+        'payments',
+        'area',
+        'hero',
+        'gallery',
+        'logo',
+      ]) {
+        expect(r.data).not.toHaveProperty(key)
+      }
+    }
+  })
+
+  it('district never changes whether the issue and listing number are valid', () => {
+    // Every district of a governorate gives the same numbers.
+    const keserwan = GOVERNORATES.find((g) => g.slug === 'keserwan')!
+    for (const district of keserwan.districts) {
+      const r = parse({ governorate: 'keserwan', district: district.slug })
+      expect(r.success).toBe(true)
+      if (r.success) {
+        expect(r.data.issue).toBe(valid.issue)
+        expect(r.data.listingNumber).toBe(valid.listingNumber)
+      }
+    }
+    // A bad district fails on district alone, never on the numbers.
+    const bad = parse({ district: 'tyre' })
+    expect(bad.success).toBe(false)
+    if (!bad.success) expect(bad.error.issues.every((i) => i.path[0] === 'district')).toBe(true)
   })
 
   it('rejects a district outside the governorate', () => {
@@ -65,14 +176,6 @@ describe('placeSubmissionSchema', () => {
   it('lowercases the owner email', () => {
     const r = parse({ ownerEmail: 'A@B.com' })
     expect(r.success && r.data.ownerEmail).toBe('a@b.com')
-  })
-
-  it('rejects a bad opening time and accepts 24:00 as closing', () => {
-    const day = { day: 'mon', closed: false }
-    expect(parse({ openingHours: [{ ...day, opens: '9am', closes: '17:00' }] }).success).toBe(false)
-    expect(parse({ openingHours: [{ ...day, opens: '09:00', closes: '24:00' }] }).success).toBe(
-      true,
-    )
   })
 
   it('rejects an unknown page template', () => {
@@ -125,42 +228,46 @@ describe('placeSubmissionSchema', () => {
     })
   })
 
+  describe('district is required', () => {
+    it('every governorate a place can be in has at least one district', () => {
+      for (const slug of LISTING_GOVERNORATES) {
+        const gov = GOVERNORATES.find((g) => g.slug === slug)
+        expect(gov?.districts.length, slug).toBeGreaterThan(0)
+      }
+    })
+
+    it.each(['', '   '])('refuses a blank district (%j) as required', (district) => {
+      const r = parse({ district })
+      expect(r.success).toBe(false)
+      if (!r.success) {
+        const issue = r.error.issues.find((i) => i.path[0] === 'district')
+        expect(issue?.message).toBe('required')
+      }
+    })
+
+    it('refuses a missing district, on district alone', () => {
+      const without: Record<string, unknown> = { ...valid }
+      delete without.district
+      const r = placeSubmissionSchema.safeParse(without)
+      expect(r.success).toBe(false)
+      if (!r.success) expect(r.error.issues.every((i) => i.path[0] === 'district')).toBe(true)
+    })
+
+    it('accepts every district of every governorate, keeping the slug', () => {
+      for (const gov of GOVERNORATES) {
+        for (const district of gov.districts) {
+          const r = parse({ governorate: gov.slug, district: district.slug })
+          expect(r.success && r.data.district).toBe(district.slug)
+        }
+      }
+    })
+  })
+
   describe('blank optional fields', () => {
-    it('treats blank times on a closed day as absent', () => {
-      const r = parse({ openingHours: [{ day: 'mon', opens: '', closes: ' ', closed: true }] })
-      expect(r.success).toBe(true)
-      if (r.success) {
-        expect(r.data.openingHours?.[0]?.opens).toBeUndefined()
-        expect(r.data.openingHours?.[0]?.closes).toBeUndefined()
-      }
-    })
-
-    it('treats blank or null area as absent and keeps a real one', () => {
-      for (const area of ['', null]) {
-        const r = parse({ area })
-        expect(r.success).toBe(true)
-        if (r.success) expect(r.data.area).toBeUndefined()
-      }
-      const r = parse({ area: 3 })
-      expect(r.success && r.data.area).toBe(3)
-    })
-
-    it('treats blank district and priceRange as absent', () => {
-      const r = parse({ district: '', priceRange: '' })
-      expect(r.success).toBe(true)
-      if (r.success) {
-        expect(r.data.district).toBeUndefined()
-        expect(r.data.priceRange).toBeUndefined()
-      }
-    })
-
     it('still requires required fields and rejects non-blank invalid values', () => {
       expect(parse({ name: '' }).success).toBe(false)
       expect(parse({ address: '  ' }).success).toBe(false)
       expect(parse({ instagram: 'ftp://x' }).success).toBe(false)
-      expect(parse({ openingHours: [{ day: 'mon', opens: '9am', closed: false }] }).success).toBe(
-        false,
-      )
     })
   })
 })

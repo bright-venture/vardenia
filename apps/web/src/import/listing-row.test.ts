@@ -154,10 +154,24 @@ describe('the whole file', () => {
 })
 
 describe('the rows that need a person', () => {
-  it('flags a listing that spans two districts and files it under Keserwan', () => {
+  it('flags a listing that spans two districts, files it under Keserwan and its town', () => {
     const listing = byName('Seaview Halat')
-    expect(listing?.district).toBe('keserwan')
+    expect(listing?.governorate).toBe('keserwan')
+    expect(listing?.district).toBe('kaslik')
     expect(listing?.warnings.join(' ')).toContain('spans two districts')
+  })
+
+  it('takes the district from the Location column, in any of its spellings', () => {
+    expect(byName('Pinegrove Chalets')?.district).toBe('faqra-faraya')
+    expect(byName('Stonehouse Faqra')?.district).toBe('faqra-faraya')
+    expect(byName('Harbour Music Festival')?.district).toBe('jbeil')
+    expect(byName('Skyline Cableway')?.district).toBe('jounieh')
+  })
+
+  it('flags a town that is not one of the districts and leaves it blank', () => {
+    const listing = byName('Another Guide')
+    expect(listing?.district).toBeNull()
+    expect(listing?.warnings.join(' ')).toContain('is not one of the districts')
   })
 
   it('flags a listing with no district and leaves it blank', () => {
@@ -204,7 +218,7 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
     Malls: ['lifestyle', 'malls'],
   }
 
-  it('sends each heading to its intended category, subcategory and the Chouf district', () => {
+  it('sends each heading to its intended category, subcategory and its Chouf town', () => {
     for (const [heading, [category, subcategory]] of Object.entries(EXPECTED)) {
       const listing = toListing({
         ID: 'X',
@@ -221,7 +235,7 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
       // The subcategory really is a child of the category it was filed under.
       expect(SUBCATEGORY_PARENT[subcategory], heading).toBe(category)
       expect(listing!.governorate, heading).toBe('chouf')
-      expect(listing!.district, heading).toBe('chouf')
+      expect(listing!.district, heading).toBe('deir-el-qamar')
       // A clean Chouf row needs nobody: known district, known category, no season.
       expect(listing!.warnings, heading).toHaveLength(0)
     }
@@ -265,22 +279,22 @@ describe('the Beirut file, its own governorate', () => {
  * unknown-district warning.
  */
 describe('the Matn region', () => {
-  const CASES: Record<string, string> = {
-    'Matn District': 'matn',
-    'Baabda District': 'baabda',
-    'Aley District': 'aley',
+  const CASES: Record<string, [string, string]> = {
+    'Matn District': ['Broummana', 'broummana'],
+    'Baabda District': ['Some Town', 'baabda'],
+    'Aley District': ['Some Town', 'aley'],
   }
 
   it('files Matn, Baabda and Aley under Matn, cleanly', () => {
     const matn = GOVERNORATES.find((g) => g.slug === 'matn')
     const known = new Set(matn?.districts.map((d) => d.slug))
 
-    for (const [heading, slug] of Object.entries(CASES)) {
+    for (const [heading, [location, slug]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
         Category: 'Restaurants',
         'Name / Listing': 'A Mount Lebanon Place',
-        Location: 'Some Town',
+        Location: location,
         District: heading,
       })
 
@@ -299,11 +313,11 @@ describe('the Matn region', () => {
  * edition, so it files under North Lebanon with its own district.
  */
 describe('North Lebanon, and Akkar alongside it', () => {
-  const CASES: Record<string, [string, string]> = {
+  const CASES: Record<string, [string, string | null]> = {
     'Batroun District': ['north-lebanon', 'batroun'],
     'Bsharri District': ['north-lebanon', 'bsharri'],
     'Koura District': ['north-lebanon', 'koura'],
-    'Miniyeh-Danniyeh District': ['north-lebanon', 'miniyeh-danniyeh'],
+    'Miniyeh-Danniyeh District': ['north-lebanon', null],
     'Tripoli District': ['north-lebanon', 'tripoli'],
     'Zgharta District': ['north-lebanon', 'zgharta'],
     'Akkar District': ['north-lebanon', 'akkar'],
@@ -324,6 +338,10 @@ describe('North Lebanon, and Akkar alongside it', () => {
       expect(listing!.district, heading).toBe(district)
 
       // The district belongs to that governorate in the shared taxonomy.
+      if (district === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+        continue
+      }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
         owner?.districts.map((d) => d.slug),
@@ -341,14 +359,14 @@ describe('North Lebanon, and Akkar alongside it', () => {
  * first case, and the magazine's South edition carries them all.
  */
 describe('South Lebanon, and Nabatieh beside it', () => {
-  const CASES: Record<string, [string, string]> = {
+  const CASES: Record<string, [string, string | null]> = {
     'Sidon District': ['south-lebanon', 'sidon'],
     'Tyre District': ['south-lebanon', 'tyre'],
     'Jezzine District': ['south-lebanon', 'jezzine'],
-    'Nabatieh District': ['south-lebanon', 'nabatieh'],
-    'Marjeyoun District': ['south-lebanon', 'marjeyoun'],
-    'Hasbaya District': ['south-lebanon', 'hasbaya'],
-    'Bint Jbeil District': ['south-lebanon', 'bint-jbeil'],
+    'Nabatieh District': ['south-lebanon', null],
+    'Marjeyoun District': ['south-lebanon', null],
+    'Hasbaya District': ['south-lebanon', null],
+    'Bint Jbeil District': ['south-lebanon', null],
   }
 
   it('files each caza under the region that carries it', () => {
@@ -365,6 +383,10 @@ describe('South Lebanon, and Nabatieh beside it', () => {
       expect(listing!.governorate, heading).toBe(governorate)
       expect(listing!.district, heading).toBe(district)
 
+      if (district === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+        continue
+      }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
         owner?.districts.map((d) => d.slug),
@@ -385,7 +407,7 @@ describe('the Bekaa, one region', () => {
     'Zahle District': ['beqaa', 'zahle'],
     'West Bekaa District': ['beqaa', 'western-beqaa'],
     'Western Beqaa District': ['beqaa', 'western-beqaa'],
-    'Rachaya District': ['beqaa', 'rachaya'],
+    'Rachaya District': ['beqaa', 'western-beqaa'],
     'Baalbek District': ['beqaa', 'baalbek'],
     'Hermel District': ['beqaa', 'hermel'],
   }
@@ -404,6 +426,10 @@ describe('the Bekaa, one region', () => {
       expect(listing!.governorate, heading).toBe(governorate)
       expect(listing!.district, heading).toBe(district)
 
+      if (district === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+        continue
+      }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
         owner?.districts.map((d) => d.slug),

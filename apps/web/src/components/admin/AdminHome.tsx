@@ -7,6 +7,8 @@ import {
   type AttentionArea,
   type AttentionItem,
 } from '../../lib/admin-home'
+import { isAdminUser } from '../../access/index'
+import { queueHref } from '../../lib/submission-queues'
 
 /**
  * The admin home page.
@@ -36,6 +38,8 @@ interface Destination {
   hint: string
   /** A file or a printable page outside the admin, opened in a new tab. */
   external?: boolean
+  /** Listed for admins only; the page itself checks the role again. */
+  adminOnly?: boolean
 }
 
 /** The jobs somebody does every week, one click away. */
@@ -130,6 +134,12 @@ const AREAS: { title: string; items: Destination[] }[] = [
     title: 'Reports',
     items: [
       {
+        label: 'Magazine places',
+        href: '/admin/place-reports',
+        hint: 'Money by week against Whish, refunds to send, downpayments kept, contracts ending',
+        adminOnly: true,
+      },
+      {
         label: 'Listing gaps',
         href: '/reports/listings',
         hint: 'What each listing is missing (CSV)',
@@ -165,6 +175,7 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
   const { req } = initPageResult
 
   const home = req.user ? await adminHome(req.payload, req.user) : null
+  const isAdmin = isAdminUser(req.user)
   const name = String((req.user as { name?: unknown } | null)?.name ?? '').split(' ')[0]
   const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'long',
@@ -218,6 +229,30 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
             </section>
           ) : null}
 
+          {home?.places ? (
+            <section aria-labelledby="places-heading">
+              <h2 id="places-heading" style={styles.heading}>
+                Magazine places forms
+              </h2>
+              <div style={styles.numbers}>
+                {home.places.map((counter) => (
+                  <NumberCard
+                    key={counter.key}
+                    value={counter.value.toLocaleString('en')}
+                    label={counter.label}
+                    href={counter.href}
+                    urgent={counter.urgent && counter.value > 0}
+                  />
+                ))}
+                <NumberCard
+                  value={home.numbers.incompleteForms.toLocaleString('en')}
+                  label="Incomplete forms"
+                  href={queueHref('incomplete')}
+                />
+              </div>
+            </section>
+          ) : null}
+
           <section style={styles.card}>
             <h2 style={styles.heading}>
               To do {tasks > 0 ? <span style={styles.count}>{tasks}</span> : null}
@@ -254,14 +289,16 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
                 <div key={area.title} style={styles.card}>
                   <h3 style={styles.areaTitle}>{area.title}</h3>
                   <ul style={styles.areaList}>
-                    {area.items.map((item) => (
-                      <li key={item.href}>
-                        <Go destination={item} style={styles.areaLink}>
-                          {item.label}
-                        </Go>
-                        <span style={styles.hint}>{item.hint}</span>
-                      </li>
-                    ))}
+                    {area.items
+                      .filter((item) => isAdmin || !item.adminOnly)
+                      .map((item) => (
+                        <li key={item.href}>
+                          <Go destination={item} style={styles.areaLink}>
+                            {item.label}
+                          </Go>
+                          <span style={styles.hint}>{item.hint}</span>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               ))}
@@ -273,13 +310,35 @@ export async function AdminHome({ initPageResult }: AdminViewServerProps) {
   )
 }
 
-function NumberCard({ value, label, note }: { value: string; label: string; note?: string }) {
-  return (
-    <div style={styles.card}>
-      <div style={styles.value}>{value}</div>
+function NumberCard({
+  value,
+  label,
+  note,
+  href,
+  urgent,
+}: {
+  value: string
+  label: string
+  note?: string
+  href?: string
+  /** Something waits on the team: the number in warning colours. */
+  urgent?: boolean
+}) {
+  const body = (
+    <>
+      <div style={urgent ? { ...styles.value, color: 'var(--theme-warning-700)' } : styles.value}>
+        {value}
+      </div>
       <div style={styles.label}>{label}</div>
       {note ? <div style={styles.hint}>{note}</div> : null}
-    </div>
+    </>
+  )
+  return href ? (
+    <Link href={href} style={{ ...styles.card, display: 'block', textDecoration: 'none' }}>
+      {body}
+    </Link>
+  ) : (
+    <div style={styles.card}>{body}</div>
   )
 }
 
