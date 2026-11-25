@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { DropdownNav } from './DropdownNav'
+import { DropdownNav, HOVER_CLOSE_DELAY_MS } from './DropdownNav'
 
 const route = vi.hoisted(() => ({ pathname: '/faq' }))
 vi.mock('../../i18n/routing', () => ({ usePathname: () => route.pathname }))
@@ -95,13 +95,59 @@ describe('desktop discovery disclosure', () => {
   })
 
   it('enhances mouse hover but does not treat touch as hover', () => {
+    vi.useFakeTimers()
     render()
     pointer(disclosure(), 'pointerover', 'touch')
     expect(disclosure().open).toBe(false)
     pointer(disclosure(), 'pointerover')
     expect(disclosure().open).toBe(true)
     pointer(disclosure(), 'pointerout')
+    act(() => vi.advanceTimersByTime(HOVER_CLOSE_DELAY_MS))
     expect(disclosure().open).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('stays open while the pointer crosses the gap between the trigger and the panel', () => {
+    vi.useFakeTimers()
+    render()
+    pointer(disclosure(), 'pointerover')
+    pointer(disclosure(), 'pointerout')
+    act(() => vi.advanceTimersByTime(HOVER_CLOSE_DELAY_MS - 100))
+    expect(disclosure().open).toBe(true)
+    pointer(container.querySelector('a')!, 'pointerover')
+    act(() => vi.advanceTimersByTime(HOVER_CLOSE_DELAY_MS * 2))
+    expect(disclosure().open).toBe(true)
+    vi.useRealTimers()
+  })
+
+  it('keeps a clicked menu open when the pointer leaves, and a second click closes it', () => {
+    vi.useFakeTimers()
+    render()
+    // With a mouse, hover opens it first; the click then pins it instead of closing it.
+    pointer(disclosure(), 'pointerover')
+    open()
+    expect(disclosure().open).toBe(true)
+    pointer(disclosure(), 'pointerout')
+    act(() => vi.advanceTimersByTime(HOVER_CLOSE_DELAY_MS * 5))
+    expect(disclosure().open).toBe(true)
+    open()
+    expect(disclosure().open).toBe(false)
+    vi.useRealTimers()
+  })
+
+  it('forgets the pin once the menu is closed, so hover works normally again', async () => {
+    vi.useFakeTimers()
+    render()
+    open()
+    pointer(document.body, 'pointerdown')
+    expect(disclosure().open).toBe(false)
+    await act(async () => vi.advanceTimersByTime(0)) // the native toggle event
+    pointer(disclosure(), 'pointerover')
+    expect(disclosure().open).toBe(true)
+    pointer(disclosure(), 'pointerout')
+    act(() => vi.advanceTimersByTime(HOVER_CLOSE_DELAY_MS))
+    expect(disclosure().open).toBe(false)
+    vi.useRealTimers()
   })
   it('opens only one menu during mixed keyboard and mouse use without hiding focus', () => {
     act(() =>

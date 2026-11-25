@@ -3,6 +3,9 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { usePathname } from '../../i18n/routing'
 
+/** How long the pointer may be outside the menu before a hover-opened menu closes. */
+export const HOVER_CLOSE_DELAY_MS = 300
+
 /** Native disclosure works without scripts; hover is an optional enhancement. */
 export function DropdownNav({
   label,
@@ -21,6 +24,15 @@ export function DropdownNav({
   className?: string
 }) {
   const root = useRef<HTMLDetailsElement>(null)
+  // Opened on purpose (click, tap or keyboard): stays open when the pointer
+  // leaves, until an outside click, Escape, a link, focus leaving or another
+  // menu closes it. A menu opened by hover alone is not pinned.
+  const pinned = useRef(false)
+  // Hover-out waits a moment before closing: the wide panel sits below the
+  // header, so the pointer crosses a strip that is outside the disclosure on
+  // its way from the trigger to the panel.
+  const closeTimer = useRef<number | undefined>(undefined)
+  const cancelClose = () => window.clearTimeout(closeTimer.current)
   const panelId = useId()
   const pathname = usePathname()
   const previousPath = useRef(pathname)
@@ -39,7 +51,10 @@ export function DropdownNav({
       if (root.current && !root.current.contains(event.target as Node)) root.current.open = false
     }
     document.addEventListener('pointerdown', outside)
-    return () => document.removeEventListener('pointerdown', outside)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      window.clearTimeout(closeTimer.current)
+    }
   }, [])
 
   const closePeers = () => {
@@ -63,15 +78,28 @@ export function DropdownNav({
       suppressHydrationWarning={preserveInitialOpen}
       data-vd-desktop-dropdown
       className={`${wide ? 'vd-discovery-dropdown group' : 'group relative'} ${className}`.trim()}
+      onToggle={(event) => {
+        // Every way of closing (outside click, Escape, a link, focus leaving,
+        // navigation, another menu) ends the pin.
+        if (!event.currentTarget.open) {
+          pinned.current = false
+          cancelClose()
+        }
+      }}
       onPointerEnter={(event) => {
-        if (event.pointerType === 'mouse' && root.current) {
+        cancelClose()
+        if (event.pointerType === 'mouse' && root.current && !root.current.open) {
           closePeers()
           root.current.open = true
         }
       }}
       onPointerLeave={() => {
-        if (root.current && !root.current.contains(document.activeElement))
-          root.current.open = false
+        if (!root.current?.open || pinned.current) return
+        cancelClose()
+        closeTimer.current = window.setTimeout(() => {
+          if (root.current && !pinned.current && !root.current.contains(document.activeElement))
+            root.current.open = false
+        }, HOVER_CLOSE_DELAY_MS)
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -91,8 +119,17 @@ export function DropdownNav({
       }}
     >
       <summary
-        onClick={() => {
-          if (!root.current?.open) closePeers()
+        onClick={(event) => {
+          cancelClose()
+          if (!root.current?.open) {
+            closePeers()
+            pinned.current = true
+          } else if (!pinned.current) {
+            // Hover opened it a moment ago: the click means "keep it open",
+            // not "close it". A second click closes it.
+            event.preventDefault()
+            pinned.current = true
+          }
         }}
         aria-controls={panelId}
         className="text-ink-700 hover:text-ink-900 group-open:text-ink-900 flex h-full cursor-pointer list-none items-center gap-1 px-2 py-1.5 text-sm transition-colors [&::-webkit-details-marker]:hidden"
