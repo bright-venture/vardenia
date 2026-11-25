@@ -270,7 +270,18 @@ export async function ContentPageView({
             <AskQuestionForm locale={locale} topic={slug === 'contact' ? 'contact' : 'faq'} />
           )}
           <nav className="vd-story-next" aria-label={page.title}>
-            <Link href={next.href} className="vd-button">
+            {/* Add your business ends on the sign-up form (25 November 2026):
+                the one main button, with Contact and Questions beside it. */}
+            {slug === 'add-your-business' ? (
+              <Link href="/magazine-places" className="vd-button">
+                {t('nav.applyMagazine')}
+                <LinkArrow />
+              </Link>
+            ) : null}
+            <Link
+              href={next.href}
+              className={slug === 'add-your-business' ? 'vd-text-link' : 'vd-button'}
+            >
               {next.label}
               <LinkArrow />
             </Link>
