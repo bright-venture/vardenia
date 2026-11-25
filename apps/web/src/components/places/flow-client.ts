@@ -28,7 +28,16 @@ export interface Terms {
   currency: string
   termMonths: number
   termsVersion: string
+  /** Two-stage payment (spec v4): the part paid first, to keep the page number. */
+  downpaymentPercent: number
+  downpaymentAmount: number
+  /** Days to pay the downpayment after sending the form. */
+  downpaymentDeadlineDays: number
+  /** Days to pay the rest after the business is accepted. */
+  balanceDeadlineDays: number
 }
+
+const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
 export async function fetchTerms(fetchImpl: typeof fetch = fetch): Promise<Terms | null> {
   try {
@@ -36,16 +45,26 @@ export async function fetchTerms(fetchImpl: typeof fetch = fetch): Promise<Terms
     if (!response.ok) return null
     const body = await readJson(response)
     if (
-      typeof body?.price === 'number' &&
+      isNumber(body?.price) &&
       typeof body.currency === 'string' &&
-      typeof body.termMonths === 'number' &&
-      typeof body.termsVersion === 'string'
+      isNumber(body.termMonths) &&
+      typeof body.termsVersion === 'string' &&
+      isNumber(body.downpaymentPercent) &&
+      isNumber(body.downpaymentAmount) &&
+      isNumber(body.downpaymentDeadlineDays) &&
+      isNumber(body.balanceDeadlineDays)
     ) {
+      // Without the payment terms the step cannot say what is paid when: it
+      // reads as "could not load the price" and offers Try again.
       return {
         price: body.price,
         currency: body.currency,
         termMonths: body.termMonths,
         termsVersion: body.termsVersion,
+        downpaymentPercent: body.downpaymentPercent,
+        downpaymentAmount: body.downpaymentAmount,
+        downpaymentDeadlineDays: body.downpaymentDeadlineDays,
+        balanceDeadlineDays: body.balanceDeadlineDays,
       }
     }
     return null

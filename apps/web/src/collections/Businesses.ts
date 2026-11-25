@@ -50,6 +50,7 @@ import { requireRejectionReason } from '../hooks/requireRejectionReason'
 import {
   approveSubmissionOnPublish,
   linkPartnerOnPublish,
+  notifyPublished,
   refusePublishingRejected,
   refusePublishingUnfinished,
   requireContractToPublish,
@@ -60,12 +61,12 @@ import { requireTrashFirst } from '../hooks/requireTrashFirst'
 import { cleanupSavedListings } from '../hooks/cleanupSavedListings'
 import { cleanupPlaceSessions } from '../hooks/cleanupPlaceSessions'
 import { guardSort } from '../hooks/guardSort'
-import { normaliseLebanesePhone } from '../lib/lebanese-phone'
 import { LISTING_STATES, listingState } from '../lib/listing-state'
 import { guardPartnerListingWrite } from '../hooks/guardPartnerListingWrite'
 import { markMediaAttached } from '../hooks/markMediaAttached'
 import { syncBrandPublished } from '../hooks/syncBrandPublished'
 import { autoTranslateListing } from '../hooks/autoTranslateListing'
+import { LIST_COLUMNS, LIST_DEFAULT_COLUMNS } from './businesses-list-columns'
 import {
   revalidateListingsAfterChange,
   revalidateListingsAfterDelete,
@@ -77,6 +78,40 @@ const submissionAccess = {
   create: () => false,
   update: isStaffFieldLevel,
 }
+
+/**
+ * Written only by the payment engine (lib/place-payments) and the form's own
+ * services, with overrideAccess inside their transaction, and by collection
+ * hooks (publishing approves). Staff read them; nobody, staff included, sets
+ * them through the admin form or the REST/GraphQL API: Payload drops such a
+ * value in field-level beforeValidate and keeps the stored one. The admin
+ * buttons call the action endpoints (submissions/payment-endpoints) instead.
+ */
+const engineAccess = {
+  read: isStaffFieldLevel,
+  create: () => false,
+  update: () => false,
+}
+
+/** A money amount: dollars with cents, never negative. */
+const moneyField = (name: string, description?: string): Field => ({
+  name,
+  type: 'number',
+  min: 0,
+  access: engineAccess,
+  admin: { readOnly: true, step: 0.01, ...(description ? { description } : {}) },
+})
+
+const engineDate = (name: string, description?: string): Field => ({
+  name,
+  type: 'date',
+  access: engineAccess,
+  admin: {
+    readOnly: true,
+    date: { pickerAppearance: 'dayAndTime' },
+    ...(description ? { description } : {}),
+  },
+})
 
 const CONTACT_LABELS: Record<ContactField, string> = {
   phone: 'Phone',
@@ -253,12 +288,12 @@ export const Businesses: CollectionConfig = {
   labels: { singular: 'Listing', plural: 'Listings' },
   admin: {
     useAsTitle: 'name',
-    // `contractEndsAt` is here because expiry is handled by a person, not by
-    // code (see packages/core/src/tiers.ts). A lapsed listing keeps everything
-    // it was paying for until someone notices, so the list has to make noticing
-    // easy: sort by this column and the expired accounts come to the top.
-    // `state` reads Draft, Published, Rejected or Expired (lib/listing-state).
-    defaultColumns: ['name', 'category', 'governorate', 'tier', 'contractEndsAt', 'state'],
+    // The Magazine Places work columns (PRD v4 7.1, Task 11a): reference,
+    // issue and page, form status, payment, money, days left, submitted. See
+    // ./businesses-list-columns. Tier, contract end and State stay one click
+    // away in the Columns picker (contract end is how expired accounts are
+    // found: packages/core/src/tiers.ts).
+    defaultColumns: LIST_DEFAULT_COLUMNS,
     group: 'Directory',
     // Staff find a submission by what they have in hand: its reference
     // (VD-123), the page number, the owner's name, email or phone. The phone is
@@ -278,9 +313,9 @@ export const Businesses: CollectionConfig = {
       'submission.ownerPhoneSearch',
     ],
     components: {
-      // Links to the submission queues (Submitted, Incomplete, Abandoned,
-      // Rejected) above the list. Plain filters on submission.status: nothing
-      // is hidden from the default view.
+      // The quick filters with counts, and the deadline filters, above the
+      // list (lib/submission-queues). Plain filters in the address: nothing is
+      // hidden from the default view.
       beforeListTable: ['/components/admin/SubmissionQueues#SubmissionQueues'],
     },
   },
@@ -363,6 +398,9 @@ export const Businesses: CollectionConfig = {
       // See hooks/syncBrandPublished and collections/Brands.
       syncBrandPublished,
       revalidateListingsAfterChange,
+      // E8 once a paid submission's publish has committed. Last, so a
+      // failure above (the partner link) rolls back first and nothing is sent.
+      notifyPublished,
     ],
     afterDelete: [syncBrandPublished, revalidateListingsAfterDelete],
     // Deleting a listing strands its printed code, because recreating the
@@ -1013,28 +1051,39 @@ export const Businesses: CollectionConfig = {
           admin: { components: { Field: '/components/admin/SubmissionReview#SubmissionReview' } },
         },
         {
-          // The Reject control (reason required). Server-checked endpoint.
-          name: 'rejectAction',
+          // "Payment and review" (Task 11b): status, money, the buttons valid
+          // now (each posts to a server-checked endpoint), money list, history.
+          // It holds the Reject: not accepted control (RejectSubmission), so
+          // there is one Reject button. A ui field: nothing is stored.
+          name: 'paymentPanel',
           type: 'ui',
-          admin: { components: { Field: '/components/admin/RejectSubmission#RejectSubmission' } },
+          admin: {
+            components: { Field: '/components/admin/PaymentReviewPanel#PaymentReviewPanel' },
+          },
         },
         {
           name: 'status',
           type: 'select',
           // No default on purpose: a listing staff create themselves has no
-          // status. The public submission service sets 'pending' itself.
+          // status. The public form's services set it themselves.
           options: [
-            // The Magazine Places form: incomplete (form started, photos or
-            // terms still to do, number held) -> pending (terms accepted,
-            // waiting for staff) -> accepted (staff said yes, awaiting payment)
-            // -> paid, then published => approved. incomplete -> abandoned when
-            // the hold runs out; accepted -> lapsed when not paid in time; any
-            // -> rejected.
+            // The Magazine Places form (spec v4, two-stage payment):
+            // incomplete (form started, photos or terms still to do, number
+            // held) -> awaiting_downpayment (sent, downpayment due within the
+            // deadline) -> pending (downpayment received or waived: in review)
+            // -> accepted (staff said yes, the rest is due) -> paid (fully
+            // paid, ready to publish) -> approved (published).
+            // incomplete -> abandoned when the hold runs out;
+            // awaiting_downpayment -> lapsed when the downpayment is late;
+            // accepted -> rejected (did not pay the rest); pending or
+            // awaiting_downpayment -> rejected (not accepted).
             { label: 'Incomplete', value: 'incomplete' },
             { label: 'Abandoned', value: 'abandoned' },
-            { label: 'Pending', value: 'pending' },
-            { label: 'Accepted (awaiting payment)', value: 'accepted' },
-            { label: 'Lapsed (not paid in time)', value: 'lapsed' },
+            { label: 'Awaiting downpayment', value: 'awaiting_downpayment' },
+            { label: 'In review (downpayment received)', value: 'pending' },
+            { label: 'Accepted (awaiting the rest)', value: 'accepted' },
+            { label: 'Fully paid (ready to publish)', value: 'paid' },
+            { label: 'Lapsed (downpayment not paid in time)', value: 'lapsed' },
             { label: 'Approved', value: 'approved' },
             // Final: a rejected submission cannot be reopened or published.
             { label: 'Rejected', value: 'rejected' },
@@ -1042,7 +1091,11 @@ export const Businesses: CollectionConfig = {
             // Publishing again with a new end date makes it Approved.
             { label: 'Expired', value: 'expired' },
           ],
-          access: submissionAccess,
+          access: engineAccess,
+          admin: {
+            readOnly: true,
+            description: 'Changed only by the actions on this page (payments, accept, reject).',
+          },
         },
         { name: 'ownerName', type: 'text', access: submissionAccess },
         { name: 'ownerEmail', type: 'email', access: submissionAccess },
@@ -1085,6 +1138,18 @@ export const Businesses: CollectionConfig = {
           admin: { readOnly: true, description: 'Why it was rejected. Set by Reject submission.' },
         },
         {
+          // Why a submission ended rejected: staff did not accept it, or the
+          // owner did not pay the rest in time. Written by lib/place-payments.
+          name: 'rejectionKind',
+          type: 'select',
+          options: [
+            { label: 'Not accepted', value: 'not_accepted' },
+            { label: 'Did not pay the rest', value: 'unpaid' },
+          ],
+          access: engineAccess,
+          admin: { readOnly: true },
+        },
+        {
           name: 'rejectionReasonShared',
           type: 'checkbox',
           access: submissionAccess,
@@ -1117,66 +1182,146 @@ export const Businesses: CollectionConfig = {
             },
             { name: 'at', type: 'date', required: true },
             { name: 'by', type: 'relationship', relationTo: 'users' },
+            // What was done, in a line: an amount, a reason. No owner details.
+            { name: 'note', type: 'text' },
           ],
         },
-        { name: 'paymentDeadline', type: 'date', access: submissionAccess },
         {
-          // Staff only, never partner-editable (not in PARTNER_EDITABLE_FIELDS).
-          // The partial unique index on (senderNumber, whishAt) where paid lives
-          // in the migration 20261124_120000_magazine_places_form.
-          name: 'payment',
-          type: 'group',
-          access: submissionAccess,
+          // Every amount received or refunded, one line each. Append only: a
+          // line is never edited or removed, only voided (with who, when and
+          // why) by an admin's Undo. Written only by lib/place-payments. The
+          // same Whish transfer (sender and time) can be recorded once across
+          // all businesses: checked there under a lock.
+          name: 'payments',
+          type: 'array',
+          access: engineAccess,
+          admin: {
+            readOnly: true,
+            description:
+              'Money received and refunded. Recorded with the buttons on this page; cannot be edited.',
+          },
           fields: [
             {
-              name: 'status',
+              name: 'type',
               type: 'select',
-              defaultValue: 'unpaid',
+              required: true,
               options: [
-                { label: 'Unpaid', value: 'unpaid' },
-                { label: 'Paid', value: 'paid' },
+                { label: 'Downpayment', value: 'downpayment' },
+                { label: 'Rest of the price', value: 'balance' },
+                { label: 'Refund', value: 'refund' },
               ],
-              access: submissionAccess,
             },
-            { name: 'amount', type: 'number', min: 0, access: submissionAccess },
-            { name: 'currency', type: 'text', access: submissionAccess },
+            { name: 'amount', type: 'number', min: 0, required: true },
+            { name: 'currency', type: 'text' },
+            {
+              // The number the money came from (or a refund went to), in the
+              // normalised Lebanese shape (lib/lebanese-phone).
+              name: 'senderNumber',
+              type: 'text',
+            },
+            {
+              name: 'whishAt',
+              type: 'date',
+              admin: { date: { pickerAppearance: 'dayAndTime' } },
+            },
             {
               name: 'method',
               type: 'select',
               options: [
                 { label: 'Whish', value: 'whish' },
+                { label: 'At the desk', value: 'desk' },
                 { label: 'Cash', value: 'cash' },
-                { label: 'Desk', value: 'desk' },
               ],
-              access: submissionAccess,
             },
+            { name: 'note', type: 'textarea' },
+            { name: 'recordedBy', type: 'relationship', relationTo: 'users' },
             {
-              name: 'senderNumber',
-              type: 'text',
-              access: submissionAccess,
-              admin: { description: 'Normalised Lebanese format (lib/lebanese-phone).' },
-              hooks: {
-                beforeValidate: [
-                  ({ value }) => {
-                    if (typeof value !== 'string' || !value.trim()) return value
-                    return normaliseLebanesePhone(value) ?? value.trim()
-                  },
-                ],
-              },
+              name: 'recordedAt',
+              type: 'date',
+              admin: { date: { pickerAppearance: 'dayAndTime' } },
             },
-            { name: 'whishAt', type: 'date', access: submissionAccess },
-            { name: 'paidAt', type: 'date', access: submissionAccess },
+            { name: 'voided', type: 'checkbox', defaultValue: false },
+            { name: 'voidedBy', type: 'relationship', relationTo: 'users' },
+            { name: 'voidedAt', type: 'date', admin: { date: { pickerAppearance: 'dayAndTime' } } },
+            { name: 'voidReason', type: 'textarea' },
             {
-              name: 'markedBy',
-              type: 'relationship',
-              relationTo: 'users',
-              access: submissionAccess,
+              // A downpayment kept because the owner did not pay the rest.
+              name: 'forfeited',
+              type: 'checkbox',
+              defaultValue: false,
             },
           ],
         },
         {
-          // What the owner agreed to, copied at acceptance so a later price
-          // change never rewrites it.
+          // The money summary, worked out from the lines above and the
+          // snapshot taken when the form was sent. Written only by
+          // lib/place-payments. Staff only, never partner-editable.
+          name: 'payment',
+          type: 'group',
+          access: engineAccess,
+          fields: [
+            {
+              name: 'stage',
+              type: 'select',
+              defaultValue: 'none',
+              options: [
+                { label: 'Nothing paid', value: 'none' },
+                { label: 'Downpayment paid', value: 'downpayment_paid' },
+                { label: 'Downpayment waived', value: 'waived' },
+                { label: 'Fully paid', value: 'fully_paid' },
+                { label: 'Refund to send', value: 'refund_due' },
+                { label: 'Refunded', value: 'refunded' },
+                { label: 'Downpayment kept', value: 'kept' },
+              ],
+              access: engineAccess,
+              admin: { readOnly: true },
+            },
+            moneyField('price', 'The full price, as it was when the form was sent.'),
+            moneyField('downpaymentAmount', 'What is paid first.'),
+            {
+              name: 'currency',
+              type: 'text',
+              access: engineAccess,
+              admin: { readOnly: true },
+            },
+            moneyField('received', 'Downpayment and rest received (undone lines not counted).'),
+            moneyField('refunded'),
+            moneyField('stillToPay'),
+            engineDate('downpaymentDueAt'),
+            {
+              // Copied from the settings when the form is sent: accepting
+              // sets balanceDueAt this many days later.
+              name: 'balanceDeadlineDays',
+              type: 'number',
+              min: 1,
+              access: engineAccess,
+              admin: { readOnly: true },
+            },
+            engineDate('balanceDueAt'),
+            // When each email went out, so a job or a retry never sends one
+            // twice (lib/place-payment-notify).
+            engineDate('downpaymentReminderSentAt'),
+            engineDate('balanceReminderSentAt'),
+            engineDate('submittedEmailSentAt'),
+            engineDate('downpaymentEmailSentAt'),
+            engineDate('acceptedEmailSentAt'),
+            engineDate('notAcceptedEmailSentAt'),
+            engineDate('unpaidEmailSentAt'),
+            engineDate('lapsedEmailSentAt'),
+            engineDate('publishedEmailSentAt'),
+            {
+              // The page number a lapsed submission gave back, so extending its
+              // deadline can give it back again while nobody else holds it.
+              name: 'lapsedListingNumber',
+              type: 'number',
+              access: engineAccess,
+              admin: { readOnly: true },
+            },
+          ],
+        },
+        {
+          // What the owner agreed to, copied when the form is sent so a later
+          // price change never rewrites it.
           name: 'terms',
           type: 'group',
           access: submissionAccess,
@@ -1209,6 +1354,8 @@ export const Businesses: CollectionConfig = {
       admin: { position: 'sidebar', readOnly: true },
       hooks: { afterRead: [({ data }) => listingState(data)] },
     },
+    // List columns only: store nothing, draw nothing on the form.
+    ...LIST_COLUMNS,
     seoField,
   ],
 }

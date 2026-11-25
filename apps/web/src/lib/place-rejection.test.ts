@@ -3,6 +3,14 @@ import { fakePayload, type FakePayload } from './place-submission-fake'
 
 vi.mock('./report', () => ({ reportError: vi.fn(async () => {}) }))
 vi.mock('./auth-email', () => ({ siteOrigin: () => 'https://vardenia.example' }))
+vi.mock('./branches', async () => ({
+  runInTransaction: (await import('./place-submission-fake')).runInFakeTransaction,
+}))
+vi.mock('./partner-lock', async () => ({
+  advisoryLock: (await import('./place-submission-fake')).fakeAdvisoryLock,
+  placeSubmissionLockKey: (id: number | string) => `lock-${id}`,
+}))
+vi.mock('./place-payment-notify', () => ({ notifyAfterChange: vi.fn(async () => {}) }))
 
 const { rejectSubmission, MAX_REASON_LENGTH } = await import('./place-rejection')
 
@@ -86,7 +94,9 @@ describe('which states may be rejected', () => {
       f = fakePayload({ businesses: [business({}, status)] })
       const result = await reject()
       expect(result).toMatchObject({ ok: false, status: 409 })
-      expect((result as { message: string }).message).toMatch(/waiting for review/)
+      expect((result as { message: string }).message).toMatch(
+        /in review, waiting for the downpayment/,
+      )
       expect(f.updates).toHaveLength(0)
       expect(f.row('businesses').submission).toMatchObject({ status })
     },
@@ -107,10 +117,13 @@ describe('which states may be rejected', () => {
     expect(f.updates).toHaveLength(0)
   })
 
-  it.each(['pending', 'incomplete'])('rejects a %s submission', async (status) => {
-    f = fakePayload({ businesses: [business({}, status)] })
-    expect((await reject()).ok).toBe(true)
-  })
+  it.each(['pending', 'incomplete', 'awaiting_downpayment'])(
+    'rejects a %s submission',
+    async (status) => {
+      f = fakePayload({ businesses: [business({}, status)] })
+      expect((await reject()).ok).toBe(true)
+    },
+  )
 })
 
 describe('the rejection', () => {
@@ -186,13 +199,76 @@ describe('the owner email', () => {
   it('does not stop the rejection when sending fails', async () => {
     f.failSend.value = true
     const result = await reject()
-    expect(result).toEqual({ ok: true, emailed: false })
+    expect(result).toEqual({ ok: true, emailed: false, refundDue: false })
     expect(f.row('businesses').submission).toMatchObject({ status: 'rejected' })
   })
 
   it('sends nothing when there is no owner email', async () => {
     f = fakePayload({ businesses: [business({ submission: { status: 'pending' } })] })
-    expect(await reject()).toEqual({ ok: true, emailed: false })
+    expect(await reject()).toEqual({ ok: true, emailed: false, refundDue: false })
     expect(f.emails).toHaveLength(0)
+  })
+})
+
+describe('not accepted after a downpayment (spec v4)', () => {
+  it('sets the kind and refund due, asks for E5, and sends no plain email', async () => {
+    const { notifyAfterChange } = await import('./place-payment-notify')
+    vi.mocked(notifyAfterChange).mockClear()
+    f = fakePayload({
+      businesses: [
+        {
+          ...business(),
+          submission: {
+            ...business().submission,
+            payments: [{ id: 'd1', type: 'downpayment', amount: 500, voided: false }],
+            payment: { stage: 'downpayment_paid', price: 1000 },
+          },
+        },
+      ],
+    })
+    expect(await reject()).toEqual({ ok: true, emailed: false, refundDue: true })
+    expect(f.row('businesses').submission).toMatchObject({
+      status: 'rejected',
+      rejectionKind: 'not_accepted',
+      payment: { stage: 'refund_due', received: 500 },
+    })
+    expect(f.emails).toHaveLength(0)
+    expect(notifyAfterChange).toHaveBeenCalledWith('E5', expect.objectContaining({ businessId: 7 }))
+  })
+
+  it('passes the language staff chose to E5; automatic or unknown leaves it to the owner name', async () => {
+    const { notifyAfterChange } = await import('./place-payment-notify')
+    const paid = () =>
+      fakePayload({
+        businesses: [
+          {
+            ...business(),
+            submission: {
+              ...business().submission,
+              payments: [{ id: 'd1', type: 'downpayment', amount: 500, voided: false }],
+              payment: { stage: 'downpayment_paid', price: 1000 },
+            },
+          },
+        ],
+      })
+    for (const [given, expected] of [
+      ['ar', 'ar'],
+      ['en', 'en'],
+      [undefined, undefined],
+      ['fr', undefined],
+    ] as const) {
+      vi.mocked(notifyAfterChange).mockClear()
+      f = paid()
+      await reject(given === undefined ? {} : { locale: given })
+      const ctx = vi.mocked(notifyAfterChange).mock.calls[0]![1]
+      expect(ctx.locale, String(given)).toBe(expected)
+    }
+  })
+
+  it('records the rejection in the history, by the staff member, with the reason', async () => {
+    await reject()
+    expect((f.row('businesses').submission as { history: unknown[] }).history).toMatchObject([
+      { step: 'rejected', by: 2, note: 'Not accepted: We could not verify the address.' },
+    ])
   })
 })

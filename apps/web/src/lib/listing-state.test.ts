@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { listingState } from './listing-state'
+import { isUnfinishedForm as isUnfinishedFormSync, listingState } from './listing-state'
 
 const NOW = new Date('2026-11-20T12:00:00Z')
 const past = '2026-11-01T00:00:00.000Z'
@@ -73,5 +73,12 @@ describe('unfinished Magazine Places forms', () => {
       expect(isUnfinishedForm({ submission: { status } })).toBe(false)
     }
     expect(isUnfinishedForm(null)).toBe(false)
+  })
+
+  it('the payment stages (spec v4) are all still Draft until published', () => {
+    for (const status of ['awaiting_downpayment', 'pending', 'accepted', 'paid', 'lapsed']) {
+      expect(listingState({ _status: 'draft', submission: { status } }, NOW), status).toBe('draft')
+      expect(isUnfinishedFormSync({ submission: { status } }), status).toBe(false)
+    }
   })
 })

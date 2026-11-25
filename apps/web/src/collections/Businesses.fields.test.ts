@@ -136,8 +136,10 @@ describe('submission fields', () => {
     expect(optionsOf2(sub('status'))).toEqual([
       'incomplete',
       'abandoned',
+      'awaiting_downpayment',
       'pending',
       'accepted',
+      'paid',
       'lapsed',
       'approved',
       'rejected',

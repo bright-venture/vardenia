@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CollectionBeforeChangeHook } from 'payload'
-import { recordSubmissionHistory } from './recordSubmissionHistory'
+import { HISTORY_STEPS, recordSubmissionHistory } from './recordSubmissionHistory'
 
 const run = (
   data: Record<string, unknown>,
@@ -94,5 +94,90 @@ describe('recordSubmissionHistory', () => {
   it('leaves a save without a submission alone', () => {
     const data = { name: 'x' }
     expect(run(data, {})).toBe(data)
+  })
+})
+
+describe('recordSubmissionHistory: engine lines', () => {
+  const runWith = (
+    data: Record<string, unknown>,
+    originalDoc: Record<string, unknown> | undefined,
+    context: Record<string, unknown>,
+    user: unknown = null,
+  ) =>
+    (recordSubmissionHistory as CollectionBeforeChangeHook)({
+      data,
+      originalDoc,
+      operation: 'update',
+      req: { user, context },
+    } as never) as { submission?: { history?: Record<string, unknown>[] } }
+
+  it('adds the engine line with its note and actor, then the status line', () => {
+    const context = {
+      placeSubmissionHistory: {
+        entries: [{ step: 'downpayment_received', note: '$500 by Whish' }],
+        by: 7,
+      },
+    }
+    const out = runWith(
+      { submission: { status: 'pending' } },
+      {
+        submission: { status: 'awaiting_downpayment', history: [{ step: 'incomplete', at: 'x' }] },
+      },
+      context,
+    )
+    expect(out.submission?.history).toMatchObject([
+      { step: 'incomplete' },
+      { step: 'downpayment_received', note: '$500 by Whish', by: 7 },
+      { step: 'pending', by: 7 },
+    ])
+    // Read once: a second write on the same request adds nothing.
+    expect('placeSubmissionHistory' in context).toBe(false)
+  })
+
+  it('records an engine action that does not change the status', () => {
+    const out = runWith(
+      { submission: { status: 'accepted', history: [{ step: 'forged', at: 'x' }] } },
+      { submission: { status: 'accepted', history: [{ step: 'accepted', at: 'y', by: 2 }] } },
+      { placeSubmissionHistory: { entries: [{ step: 'balance_received', note: '$200' }], by: 3 } },
+    )
+    expect(out.submission?.history).toMatchObject([
+      { step: 'accepted', at: 'y', by: 2 },
+      { step: 'balance_received', note: '$200', by: 3 },
+    ])
+    expect(out.submission?.history).toHaveLength(2)
+  })
+
+  it('does not repeat the status when the engine line already names it', () => {
+    const out = runWith(
+      { submission: { status: 'accepted' } },
+      { submission: { status: 'pending' } },
+      {
+        placeSubmissionHistory: { entries: [{ step: 'accepted', note: 'rest due 24 Dec' }], by: 3 },
+      },
+    )
+    expect(out.submission?.history).toMatchObject([{ step: 'accepted', note: 'rest due 24 Dec' }])
+    expect(out.submission?.history).toHaveLength(1)
+  })
+
+  it('keeps the notes of earlier lines', () => {
+    const out = run(
+      { submission: { status: 'rejected' } },
+      {
+        submission: {
+          status: 'pending',
+          history: [{ step: 'downpayment_received', at: 'a', note: '$500' }],
+        },
+      },
+      staff,
+    )
+    expect(out.submission?.history?.[0]).toMatchObject({ note: '$500' })
+  })
+
+  it('every step has a label and the new statuses are steps', () => {
+    const values = HISTORY_STEPS.map((s) => s.value)
+    for (const v of ['awaiting_downpayment', 'paid', 'downpayment_received', 'refund_sent']) {
+      expect(values).toContain(v)
+    }
+    expect(new Set(values).size).toBe(values.length)
   })
 })

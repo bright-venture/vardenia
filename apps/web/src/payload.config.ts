@@ -40,6 +40,7 @@ import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/stora
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
 import { rejectSubmissionEndpoint } from './submissions/reject-endpoint'
+import { paymentEndpoints, resendPaymentEmailEndpoint } from './submissions/payment-endpoints'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
@@ -180,6 +181,12 @@ export default buildConfig({
           path: '/import-listings',
           Component: '/components/admin/ImportListings#ImportListings',
         },
+        // Magazine Places money reports, admin only (role checked in the
+        // view and in lib/place-reports before anything is read).
+        placeReports: {
+          path: '/place-reports',
+          Component: '/components/admin/PlaceReports#PlaceReports',
+        },
       },
     },
   },
@@ -190,7 +197,12 @@ export default buildConfig({
    * the admin cookie. A hand-rolled route would have to repeat that, and the
    * repetition is where an auth check goes missing.
    */
-  endpoints: [importListingsEndpoint, rejectSubmissionEndpoint],
+  endpoints: [
+    importListingsEndpoint,
+    rejectSubmissionEndpoint,
+    ...paymentEndpoints,
+    resendPaymentEmailEndpoint,
+  ],
 
   // The admin menu follows this order, group by group: Directory, Bookings,
   // Magazine, People, Reports. The last two are hidden from the menu.

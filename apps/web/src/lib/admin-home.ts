@@ -6,6 +6,13 @@ import { dashboardCounts } from './dashboard-stats'
 import { emailWarning } from './email'
 import { indexingNotice } from './indexing'
 import { turnstileWarning } from './turnstile'
+import {
+  DEADLINE_SOON_DAYS,
+  deadlineFilters,
+  listHref,
+  loadQueueCounts,
+  queueHref,
+} from './submission-queues'
 
 /**
  * What the admin home page shows: a handful of numbers, and a to-do list
@@ -109,6 +116,15 @@ export interface AttentionItem {
   tone: 'info' | 'warn' | 'error'
 }
 
+export interface PlaceCounter {
+  key: string
+  label: string
+  value: number
+  href: string
+  /** Shown in warning colours when above zero: the team has to act. */
+  urgent: boolean
+}
+
 export interface AdminHome {
   numbers: {
     listingsLive: number
@@ -116,11 +132,16 @@ export interface AdminHome {
     bookingsThisMonth: number
     scans: number
     feesOwed: number
-    /** Magazine Places forms the owner finished, waiting for staff. */
+    /** Magazine Places forms whose downpayment was received (or waived): to review. */
     submissionsToReview: number
     /** Forms started and not finished (the number is held for a short while). */
     incompleteForms: number
   }
+  /**
+   * The Magazine Places counters (PRD A15), each with the filtered list it
+   * opens. Null when the counts could not be read; the page still renders.
+   */
+  places: PlaceCounter[] | null
   attention: AttentionItem[]
 }
 
@@ -144,6 +165,62 @@ export function overdueDetail(dueAt: string | undefined, sentAt: string | undefi
   return switchOff.getTime() <= now.getTime()
     ? `${unpaidSince} More than ${SWITCH_OFF_DAYS} days since it was sent: the venue's booking button can be switched off.`
     : `${unpaidSince} Contact the venue. The booking button can be switched off from ${formatDate(switchOff)}.`
+}
+
+/**
+ * The six Magazine Places counters of PRD A15, each linking to the same
+ * filtered list its number counts (lib/submission-queues).
+ */
+export function placeCounters(
+  counts: Record<string, number> | null | undefined,
+  now: Date,
+): PlaceCounter[] | null {
+  if (!counts) return null
+  const due = deadlineFilters(now)['due-within']
+  return [
+    {
+      key: 'awaiting-downpayment',
+      label: 'Awaiting downpayment',
+      value: counts['awaiting-downpayment'] ?? 0,
+      href: queueHref('awaiting-downpayment'),
+      urgent: false,
+    },
+    {
+      key: 'to-review',
+      label: 'To review',
+      value: counts['to-review'] ?? 0,
+      href: queueHref('to-review'),
+      urgent: true,
+    },
+    {
+      key: 'awaiting-rest',
+      label: 'Awaiting the rest',
+      value: counts['awaiting-rest'] ?? 0,
+      href: queueHref('awaiting-rest'),
+      urgent: false,
+    },
+    {
+      key: 'ready-to-publish',
+      label: 'Ready to publish',
+      value: counts['ready-to-publish'] ?? 0,
+      href: queueHref('ready-to-publish'),
+      urgent: true,
+    },
+    {
+      key: 'refunds',
+      label: 'Refunds to send',
+      value: counts.refunds ?? 0,
+      href: queueHref('refunds'),
+      urgent: true,
+    },
+    {
+      key: 'due-within',
+      label: `Deadlines within ${DEADLINE_SOON_DAYS} days`,
+      value: counts['due-within'] ?? 0,
+      href: listHref(due.where, due.sort),
+      urgent: true,
+    },
+  ]
 }
 
 export async function adminHome(
@@ -171,8 +248,7 @@ export async function adminHome(
     reviews,
     waiting,
     visitDisputes,
-    toReview,
-    incomplete,
+    placeCounts,
   ] = await Promise.all([
     dashboardCounts(payload, windowStart),
     payload.count({
@@ -293,20 +369,12 @@ export async function adminHome(
       populate: { businesses: { name: true } },
     }),
 
-    // Magazine Places forms: finished and waiting for staff, and still being
-    // filled in. Two counts with the staff member's own access (the submission
-    // fields are staff-only), no rows read.
-    payload.count({
-      collection: 'businesses',
-      where: { 'submission.status': { equals: 'pending' } },
-      overrideAccess: false,
-      user,
-    }),
-    payload.count({
-      collection: 'businesses',
-      where: { 'submission.status': { equals: 'incomplete' } },
-      overrideAccess: false,
-      user,
+    // Magazine Places counters (PRD A15): every chip of the Listings list in
+    // one SQL statement, staff only (lib/submission-queues). A failure leaves
+    // the counters out rather than the whole page.
+    loadQueueCounts(payload, user, now).catch((error: unknown) => {
+      payload.logger.error({ err: error, msg: 'Admin home: Magazine Places counts failed' })
+      return null
     }),
   ])
 
@@ -469,14 +537,37 @@ export async function adminHome(
     })
   }
 
-  if (toReview.totalDocs > 0) {
+  const toReview = placeCounts?.['to-review'] ?? 0
+  if (toReview > 0) {
     attention.push({
       area: 'Listings',
-      title: `${toReview.totalDocs} submission${toReview.totalDocs === 1 ? '' : 's'} to review`,
+      title: `${toReview} submission${toReview === 1 ? '' : 's'} to review`,
       detail:
-        'Businesses that finished the Magazine Places form. Open each one to review or reject it.',
-      href: '/admin/collections/businesses?where[submission.status][equals]=pending',
+        'Magazine Places forms whose downpayment was received (or waived). Open each one to accept or reject it.',
+      href: queueHref('to-review'),
       tone: 'warn',
+    })
+  }
+  const refunds = placeCounts?.refunds ?? 0
+  if (refunds > 0) {
+    attention.push({
+      area: 'Listings',
+      title: `${refunds} refund${refunds === 1 ? '' : 's'} to send`,
+      detail:
+        'Not accepted after paying. Send the money back by Whish to the number it came from, then press Refund sent on the listing.',
+      href: queueHref('refunds'),
+      tone: 'error',
+    })
+  }
+  const deadlinesPassed = placeCounts?.overdue ?? 0
+  if (deadlinesPassed > 0) {
+    attention.push({
+      area: 'Listings',
+      title: `${deadlinesPassed} payment deadline${deadlinesPassed === 1 ? '' : 's'} passed and not closed`,
+      detail:
+        'The payment job closes these every 15 minutes. If they stay, check that the scheduled job is running.',
+      href: listHref(deadlineFilters(now).overdue.where, deadlineFilters(now).overdue.sort),
+      tone: 'error',
     })
   }
 
@@ -492,9 +583,10 @@ export async function adminHome(
       bookingsThisMonth: bookings.totalDocs,
       scans: counts.recentScans,
       feesOwed,
-      submissionsToReview: toReview.totalDocs,
-      incompleteForms: incomplete.totalDocs,
+      submissionsToReview: toReview,
+      incompleteForms: placeCounts?.incomplete ?? 0,
     },
+    places: placeCounters(placeCounts, now),
     attention,
   }
 }

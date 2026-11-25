@@ -155,7 +155,17 @@ describe('PlaceSubmissionForm, the four steps', () => {
   const status = (logo: boolean, hero: boolean, live = true) =>
     json({ ok: true, logoReceived: logo, heroReceived: hero, live })
   const termsReply = () =>
-    json({ ok: true, price: 20, currency: 'USD', termMonths: 12, termsVersion: '2026-11' })
+    json({
+      ok: true,
+      price: 1000,
+      currency: 'USD',
+      termMonths: 12,
+      termsVersion: '2026-11-24',
+      downpaymentPercent: 50,
+      downpaymentAmount: 500,
+      downpaymentDeadlineDays: 7,
+      balanceDeadlineDays: 30,
+    })
 
   const q = <T extends Element>(selector: string) => container.querySelector<T>(selector)!
   const nextButton = () => q<HTMLButtonElement>('button[type="submit"]')
@@ -570,20 +580,43 @@ describe('PlaceSubmissionForm, the four steps', () => {
   })
 
   describe('step 3: price and terms', () => {
-    it('shows the price, what it includes and the one-year term, and no payment', async () => {
+    it('shows the price, what it includes, the one-year term and the two-stage payment', async () => {
       await toStep3()
       expect(q('[data-step]').textContent).toBe('Step 3 of 4')
-      expect(q('[data-price]').textContent).toBe('$20 per year')
-      for (const key of [
-        'includeMagazine',
-        'includeListing',
-        'includeQr',
-        'termLine',
-        'payOnlyIf',
-      ]) {
-        expect(container.textContent).toContain(m.flow[key as 'termLine'])
+      expect(q('[data-price]').textContent).toBe('$1,000 per year')
+      for (const key of ['includeMagazine', 'includeListing', 'includeQr']) {
+        expect(container.textContent).toContain(m.flow[key as 'includeQr'])
       }
-      expect(container.textContent).not.toMatch(/whish|96179300350|pay now|pay by/i)
+      expect(container.textContent).toContain(
+        'One year, starting when we publish your page. You pay in two parts: $500 first, then $500 if we accept your business.',
+      )
+      // The real flow, with the Settings values: 50% by Whish within 7 days to
+      // keep the number, returned if not accepted, the rest within 1 month.
+      expect(q('[data-payment-terms]').textContent).toBe(
+        'Pay the 50% downpayment ($500) by Whish within 7 days to keep your page number. If we do not accept your business, we return the downpayment by Whish to the number it was paid from. If we accept it, the rest ($500) is due within 1 month of acceptance.',
+      )
+      expect(container.textContent).not.toMatch(/pay only if we accept/i)
+      // The company number is never on the shared screen: it goes by email.
+      expect(container.textContent).not.toMatch(/96179300350/)
+    })
+
+    it('takes every payment number from the Settings, never from the copy', async () => {
+      routes['/place-submissions/terms'] = () =>
+        json({
+          ok: true,
+          price: 1200,
+          currency: 'USD',
+          termMonths: 12,
+          termsVersion: '2026-11-24',
+          downpaymentPercent: 25,
+          downpaymentAmount: 300,
+          downpaymentDeadlineDays: 1,
+          balanceDeadlineDays: 45,
+        })
+      await toStep3()
+      expect(q('[data-payment-terms]').textContent).toBe(
+        'Pay the 25% downpayment ($300) by Whish within 1 day to keep your page number. If we do not accept your business, we return the downpayment by Whish to the number it was paid from. If we accept it, the rest ($900) is due within 45 days of acceptance.',
+      )
     })
 
     it('holds Submit until the box is ticked, then finishes with a FRESH token and the locale', async () => {
@@ -613,6 +646,8 @@ describe('PlaceSubmissionForm, the four steps', () => {
       await click(button(m.flow.submit))
       expect(q('[data-step]').textContent).toBe('Step 4 of 4')
       expect(q('[role="status"]').textContent).toContain(m.flow.thanks)
+      // The owner is sent to their inbox: the downpayment comes before the review.
+      expect(m.flow.thanks).toMatch(/check your email to pay the downpayment/i)
       expect(container.textContent).toContain('VD-12')
     })
 
@@ -656,7 +691,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(button(m.flow.submit).disabled).toBe(true)
       routes['/place-submissions/terms'] = termsReply
       await click(button(m.numbers.retry))
-      expect(q('[data-price]').textContent).toBe('$20 per year')
+      expect(q('[data-price]').textContent).toBe('$1,000 per year')
     })
   })
 

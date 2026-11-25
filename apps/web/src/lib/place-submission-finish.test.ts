@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('./report', () => ({ reportError: vi.fn(async () => {}) }))
+vi.mock('./place-payment-notify', () => ({ notifyAfterChange: vi.fn(async () => {}) }))
 vi.mock('./branches', async () => ({
   runInTransaction: (await import('./place-submission-fake')).runInFakeTransaction,
 }))
@@ -10,6 +11,7 @@ vi.mock('./partner-lock', async () => ({
 }))
 
 import { reportError } from './report'
+import { notifyAfterChange } from './place-payment-notify'
 import { bindFakeLog, fakePayload, type FakePayload } from './place-submission-fake'
 import { finishPlaceSubmission } from './place-submission-finish'
 import { hashSessionToken } from './place-submission'
@@ -74,6 +76,7 @@ const finish = (f: FakePayload, over: Record<string, unknown> = {}) =>
 
 beforeEach(() => {
   vi.mocked(reportError).mockClear()
+  vi.mocked(notifyAfterChange).mockClear()
   process.env.PLACE_SUBMISSION_ALERT_TO = 'team@example.com'
 })
 
@@ -98,33 +101,33 @@ describe('finishPlaceSubmission', () => {
     expect(await finish(f)).toEqual({ ok: false, code: 'photos-missing' })
   })
 
-  it('moves the business to pending, stamps the terms, closes the session and sends both emails', async () => {
+  it('moves the business to awaiting_downpayment, stamps the terms, closes the session, alerts the team and asks for E1', async () => {
     const f = world()
     const r = await finish(f)
     expect(r).toEqual({ ok: true, reference: 'VD-5' })
 
     const s = sub(f)
     expect(s).toMatchObject({
-      status: 'pending',
+      status: 'awaiting_downpayment',
       submittedAt: NOW.toISOString(),
       reference: 'VD-5',
       ownerEmail: 'nour@example.com',
       terms: {
-        version: '2026-11',
-        priceAtAcceptance: 20,
+        version: '2026-11-24',
+        priceAtAcceptance: 1000,
         currency: 'USD',
         termMonths: 12,
         acceptedAt: NOW.toISOString(),
       },
     })
     expect(f.row('place-upload-sessions').closedAt).toBe(NOW.toISOString())
-    // The number stays with a pending submission.
+    // The number stays reserved while the downpayment is awaited.
     expect(f.row('businesses').listingNumber).toBe(12)
 
-    expect(f.emails.map((e) => e.to).sort()).toEqual(['nour@example.com', 'team@example.com'])
-    const owner = f.emails.find((e) => e.to === 'nour@example.com')!
-    expect(owner.html).toContain('$20 a year')
-    expect(owner.html).toContain('VD-5')
+    // The owner's only email is E1 (lib/place-payment-notify): the first
+    // version's confirmation is no longer sent here.
+    expect(f.emails.map((e) => e.to)).toEqual(['team@example.com'])
+    expect(notifyAfterChange).toHaveBeenCalledWith('E1', expect.objectContaining({ businessId: 5 }))
     const team = f.emails.find((e) => e.to === 'team@example.com')!
     expect(team.html).toContain('/admin/collections/businesses/5')
     expect(team.html).toContain('Summer 2027')
@@ -145,7 +148,8 @@ describe('finishPlaceSubmission', () => {
     await finish(f)
     const again = await finish(f)
     expect(again).toEqual({ ok: true, reference: 'VD-5' })
-    expect(f.emails).toHaveLength(2)
+    expect(f.emails).toHaveLength(1)
+    expect(notifyAfterChange).toHaveBeenCalledTimes(1)
   })
 
   it('two finishes at once: only the one that claims the business sends emails', async () => {
@@ -154,7 +158,8 @@ describe('finishPlaceSubmission', () => {
     // Both are told the same thing; only the one that claimed it sent emails.
     expect(a).toEqual({ ok: true, reference: 'VD-5' })
     expect(b).toEqual({ ok: true, reference: 'VD-5' })
-    expect(f.emails).toHaveLength(2)
+    expect(f.emails).toHaveLength(1)
+    expect(notifyAfterChange).toHaveBeenCalledTimes(1)
   })
 
   it('refuses without accepted terms and changes nothing', async () => {
@@ -186,7 +191,7 @@ describe('finishPlaceSubmission', () => {
     expect(await finish(world({ session: { closedAt: '2026-11-23T11:00:00.000Z' } }))).toEqual(
       notFound,
     )
-    for (const status of ['pending', 'abandoned', 'accepted', 'rejected']) {
+    for (const status of ['awaiting_downpayment', 'pending', 'abandoned', 'accepted', 'rejected']) {
       const f = world({ business: { submission: { status } } })
       expect(await finish(f)).toEqual(notFound)
       expect(f.emails).toHaveLength(0)
@@ -215,13 +220,63 @@ describe('finishPlaceSubmission', () => {
     })
     f.settings.value = { magazinePlaces: { pricePerYear: 99 } }
     expect(sub(f).terms.priceAtAcceptance).toBe(35)
-    expect(f.emails.find((e) => e.to === 'nour@example.com')!.html).toContain('35 EUR a year')
   })
 
-  it('sends the owner email in Arabic when asked, without storing the language', async () => {
+  it('snapshots the two-stage payment: price, downpayment, deadlines, no money yet', async () => {
+    const f = world()
+    f.settings.value = {
+      magazinePlaces: {
+        pricePerYear: 999.99,
+        downpaymentPercent: 50,
+        downpaymentDeadlineDays: 10,
+        balanceDeadlineDays: 45,
+      },
+    }
+    await finish(f)
+    const s = f.row('businesses').submission as Record<string, unknown>
+    expect(s.payments).toEqual([])
+    expect(s.payment).toEqual({
+      stage: 'none',
+      price: 999.99,
+      downpaymentAmount: 500,
+      currency: 'USD',
+      received: 0,
+      refunded: 0,
+      stillToPay: 999.99,
+      downpaymentDueAt: '2026-12-03T12:00:00.000Z',
+      balanceDeadlineDays: 45,
+    })
+    // Changing the settings later does not touch it.
+    f.settings.value = { magazinePlaces: { pricePerYear: 5 } }
+    expect((f.row('businesses').submission as { payment: { price: number } }).payment.price).toBe(
+      999.99,
+    )
+  })
+
+  it('asks for E1 once, after the write, and never on a replay', async () => {
     const f = world()
     await finish(f, { locale: 'ar' })
-    expect(f.emails.find((e) => e.to === 'nour@example.com')!.html).toContain('dir="rtl"')
+    expect(notifyAfterChange).toHaveBeenCalledTimes(1)
+    expect(notifyAfterChange).toHaveBeenCalledWith(
+      'E1',
+      expect.objectContaining({ businessId: 5, locale: 'ar' }),
+    )
+    await finish(f)
+    expect(notifyAfterChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('records the step in the history, with nobody as the actor', async () => {
+    const f = world()
+    await finish(f)
+    const history = (f.row('businesses').submission as { history: Record<string, unknown>[] })
+      .history
+    expect(history).toMatchObject([{ step: 'awaiting_downpayment', by: null }])
+  })
+
+  it('passes the language to the owner email (E1) without storing it', async () => {
+    const f = world()
+    await finish(f, { locale: 'ar' })
+    expect(notifyAfterChange).toHaveBeenCalledWith('E1', expect.objectContaining({ locale: 'ar' }))
     expect(JSON.stringify(f.row('businesses'))).not.toContain('"ar"')
   })
 
@@ -229,7 +284,7 @@ describe('finishPlaceSubmission', () => {
     const f = world()
     f.failSend.value = true
     expect(await finish(f)).toEqual({ ok: true, reference: 'VD-5' })
-    expect(f.row('businesses').submission).toMatchObject({ status: 'pending' })
+    expect(f.row('businesses').submission).toMatchObject({ status: 'awaiting_downpayment' })
     expect(reportError).toHaveBeenCalled()
   })
 
@@ -273,7 +328,7 @@ describe('finishPlaceSubmission', () => {
   })
 
   describe('replay', () => {
-    it.each(['pending', 'accepted', 'approved', 'expired'])(
+    it.each(['awaiting_downpayment', 'pending', 'accepted', 'paid', 'approved', 'expired'])(
       'a closed session whose business is %s answers ok with the reference, sending nothing',
       async (status) => {
         const f = world({

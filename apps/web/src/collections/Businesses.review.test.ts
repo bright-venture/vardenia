@@ -102,10 +102,10 @@ describe('rejection and history fields', () => {
     },
   )
 
-  it('the history is read-only in the admin and holds step, time and who, never owner details', () => {
+  it('the history is read-only in the admin and holds step, time, who and a short note, never owner details', () => {
     const history = submission('history')
     expect(history.admin?.readOnly).toBe(true)
-    expect((history.fields ?? []).map((f) => f.name)).toEqual(['step', 'at', 'by'])
+    expect((history.fields ?? []).map((f) => f.name)).toEqual(['step', 'at', 'by', 'note'])
   })
 
   it('is never partner-editable', () => {
@@ -119,13 +119,18 @@ describe('rejection and history fields', () => {
   })
 })
 
-describe('review view and reject control', () => {
+describe('review view and the payment and review panel', () => {
   it('are components on the Submission group, which only staff see', () => {
     expect(submission('review').admin?.components?.Field).toBe(
       '/components/admin/SubmissionReview#SubmissionReview',
     )
-    expect(submission('rejectAction').admin?.components?.Field).toBe(
-      '/components/admin/RejectSubmission#RejectSubmission',
+    expect(submission('paymentPanel').admin?.components?.Field).toBe(
+      '/components/admin/PaymentReviewPanel#PaymentReviewPanel',
     )
+  })
+
+  it('has one Reject control: inside the panel, not registered on its own', () => {
+    const paths = JSON.stringify(Businesses.fields)
+    expect(paths).not.toContain('/components/admin/RejectSubmission#RejectSubmission')
   })
 })

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAuth } from '@payloadcms/ui'
 
 /**
  * The "Tools" block at the bottom of the admin menu.
@@ -20,6 +21,8 @@ interface Tool {
   href: string
   title: string
   external?: boolean
+  /** Shown to admins only. The page checks the role again on the server. */
+  adminOnly?: boolean
 }
 
 const TOOLS: Tool[] = [
@@ -27,6 +30,13 @@ const TOOLS: Tool[] = [
     label: 'Monthly billing',
     href: '/admin/billing',
     title: 'Prepare and send the monthly commission bills',
+  },
+  {
+    label: 'Magazine places reports',
+    href: '/admin/place-reports',
+    title:
+      'Admin only. Money entries week by week to compare with Whish, refunds to send, downpayments kept, contracts ending',
+    adminOnly: true,
   },
   {
     label: 'Import listings',
@@ -61,6 +71,9 @@ const TOOLS: Tool[] = [
 ]
 
 export function ReportsNavLink() {
+  const { user } = useAuth()
+  const roles = (user as { roles?: unknown } | null)?.roles
+  const admin = Array.isArray(roles) && roles.includes('admin')
   return (
     <div style={{ marginTop: '1.5rem' }}>
       <div
@@ -75,7 +88,7 @@ export function ReportsNavLink() {
         Tools
       </div>
 
-      {TOOLS.map((tool) =>
+      {TOOLS.filter((tool) => admin || !tool.adminOnly).map((tool) =>
         tool.external ? (
           <a
             key={tool.href}

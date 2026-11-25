@@ -3,6 +3,14 @@ import { fakePayload, type FakePayload } from '../lib/place-submission-fake'
 
 vi.mock('../lib/report', () => ({ reportError: vi.fn(async () => {}) }))
 vi.mock('../lib/auth-email', () => ({ siteOrigin: () => 'https://vardenia.example' }))
+vi.mock('../lib/branches', async () => ({
+  runInTransaction: (await import('../lib/place-submission-fake')).runInFakeTransaction,
+}))
+vi.mock('../lib/partner-lock', async () => ({
+  advisoryLock: (await import('../lib/place-submission-fake')).fakeAdvisoryLock,
+  placeSubmissionLockKey: (id: number | string) => `lock-${id}`,
+}))
+vi.mock('../lib/place-payment-notify', () => ({ notifyAfterChange: vi.fn(async () => {}) }))
 
 const { rejectSubmissionEndpoint } = await import('./reject-endpoint')
 

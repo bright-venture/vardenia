@@ -6,14 +6,52 @@ import type {
   CollectionBeforeValidateHook,
 } from 'payload'
 import { reportError } from '../lib/report'
+import { afterCommit } from '../lib/after-commit'
 import { advisoryLock, partnerLockKey } from '../lib/partner-lock'
+import { notifyAfterChange } from '../lib/place-payment-notify'
+import { addMonths } from '../lib/place-payment-rules'
 
 type Submission = {
   status?: string
-  payment?: { status?: string } | null
+  payment?: { stage?: string | null } | null
+  terms?: { termMonths?: number | null } | null
   ownerName?: string
   ownerEmail?: string
   ownerPhone?: string
+}
+
+/**
+ * Statuses from which publishing is the FIRST publish of a form submission
+ * (spec v4, lead decision 24 Nov 2026): fully paid only, with no override.
+ * The contract dates are then set automatically. Approved and expired are a
+ * renewal: staff set the new end date as before.
+ */
+const FIRST_PUBLISH = new Set(['paid'])
+/** Not paid in full: publishing is refused, with no exception. */
+const NOT_PAID = new Set(['awaiting_downpayment', 'pending', 'accepted'])
+
+const mergedSubmission = (
+  data: Record<string, unknown> | undefined,
+  originalDoc: Record<string, unknown> | undefined,
+): Submission => {
+  const before = (originalDoc?.submission as Submission | undefined) ?? {}
+  const asked = (data?.submission as Submission | undefined) ?? {}
+  return {
+    ...before,
+    ...asked,
+    payment: { ...(before.payment ?? {}), ...(asked.payment ?? {}) },
+    terms: { ...(before.terms ?? {}), ...(asked.terms ?? {}) },
+  }
+}
+
+const isFirstPublishOfSubmission = (
+  data: Record<string, unknown> | undefined,
+  originalDoc: Record<string, unknown> | undefined,
+) => {
+  const publishing = data?._status === 'published' && originalDoc?._status !== 'published'
+  if (!publishing) return false
+  const status = mergedSubmission(data, originalDoc).status
+  return typeof status === 'string' && FIRST_PUBLISH.has(status)
 }
 
 const idOf = (value: unknown): number | string | null => {
@@ -69,10 +107,11 @@ export const refusePublishingRejected: CollectionBeforeValidateHook = ({ data, o
 }
 
 /**
- * Statuses of the Magazine Places form that must never reach the website:
- * incomplete (still being filled in), abandoned and lapsed (given up). An
- * accepted submission may be published only once it is marked paid. Only ever
- * stricter than before: it refuses, it never allows.
+ * Publishing a Magazine Places submission needs it fully paid (spec v4, lead
+ * decision 24 Nov 2026): status `paid`, with no exception and no override.
+ * A renewal (approved, expired) and a listing staff made themselves (no
+ * status) are not affected. Incomplete, abandoned and lapsed never reach the
+ * website. Only ever stricter than before: it refuses, it never allows.
  */
 export const refusePublishingUnfinished: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
   // The other direction: a live listing cannot be knocked back into a form
@@ -91,25 +130,18 @@ export const refusePublishingUnfinished: CollectionBeforeValidateHook = ({ data,
 
   const publishing = data?._status === 'published' && originalDoc?._status !== 'published'
   if (!publishing) return data
-  const merged = {
-    ...((originalDoc?.submission as Submission | undefined) ?? {}),
-    ...((data?.submission as Submission | undefined) ?? {}),
-  }
-  const payment = {
-    ...((originalDoc?.submission as Submission | undefined)?.payment ?? {}),
-    ...((data?.submission as Submission | undefined)?.payment ?? {}),
-  }
+  const merged = mergedSubmission(data, originalDoc)
   const status = merged.status
-  const blocked =
-    status === 'incomplete' ||
-    status === 'abandoned' ||
-    status === 'lapsed' ||
-    (status === 'accepted' && payment.status !== 'paid')
-  if (!blocked) return data
+  if (status === 'incomplete' || status === 'abandoned' || status === 'lapsed') {
+    throw new APIError(`This submission is ${status}, so it cannot be published.`, 400, null, true)
+  }
+  if (typeof status !== 'string' || !NOT_PAID.has(status)) return data
   throw new APIError(
     status === 'accepted'
-      ? 'This submission is accepted but not paid yet. Mark it paid before publishing.'
-      : `This submission is ${status}, so it cannot be published.`,
+      ? 'This submission is accepted but the rest is not paid yet. Record the payment of the rest before publishing. Only a fully paid submission can be published.'
+      : status === 'pending'
+        ? 'This submission is in review and not paid yet. Accept it and record the payment of the rest before publishing.'
+        : 'This submission is waiting for the downpayment. It can be published once fully paid.',
     400,
     null,
     true,
@@ -130,6 +162,9 @@ export const refusePublishingUnfinished: CollectionBeforeValidateHook = ({ data,
 export const requireContractToPublish: CollectionBeforeValidateHook = ({ data, originalDoc }) => {
   const publishing = data?._status === 'published' && originalDoc?._status !== 'published'
   if (!publishing) return data
+  // The first publish of a paid submission sets the dates itself
+  // (approveSubmissionOnPublish); only a renewal needs them from staff.
+  if (isFirstPublishOfSubmission(data, originalDoc)) return data
   const submission = {
     ...((originalDoc?.submission as Submission | undefined) ?? {}),
     ...((data?.submission as Submission | undefined) ?? {}),
@@ -162,12 +197,29 @@ export const requireContractToPublish: CollectionBeforeValidateHook = ({ data, o
  * A beforeChange step rather than a second update from afterChange, so it adds
  * no second save and nothing can loop. Only the first publish counts: a renewal
  * after a contract lapse finds the listing already approved.
+ *
+ * On the first publish of a form submission (fully paid) the contract starts that day and ends `terms.termMonths` later
+ * (the term copied when the form was sent; 12 when missing). Staff may change
+ * both afterwards. The payment stage is left as it is (fully paid).
+ * A collection hook runs after field access, so this lands even though the
+ * status field is closed to the API.
  */
 export const approveSubmissionOnPublish: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   if (data?._status !== 'published' || originalDoc?._status === 'published') return data
   const current = { ...(originalDoc?.submission ?? {}), ...(data.submission ?? {}) } as Submission
   if (!current.ownerEmail) return data
-  return { ...data, submission: { ...current, status: 'approved' } }
+  const first = isFirstPublishOfSubmission(data, originalDoc)
+  const next: Record<string, unknown> = { ...data, submission: { ...current, status: 'approved' } }
+  if (first) {
+    const months = Number(mergedSubmission(data, originalDoc).terms?.termMonths)
+    const now = new Date()
+    next.contractStartsAt = now.toISOString()
+    next.contractEndsAt = addMonths(
+      now,
+      Number.isInteger(months) && months > 0 ? months : 12,
+    ).toISOString()
+  }
+  return next
 }
 
 /**
@@ -276,5 +328,35 @@ export const linkPartnerOnPublish: CollectionAfterChangeHook = async ({
     )
   }
 
+  return doc
+}
+
+/**
+ * E8, "your place is published", once the publish has committed.
+ *
+ * Payload runs every afterChange hook inside the save's transaction and has
+ * no hook after the commit, so this waits for the transaction to end
+ * (lib/after-commit), then reads the listing again outside it: only a publish
+ * that really landed (published, approved) asks for the email. A publish that
+ * rolled back (the partner link failed, say) finds a draft and sends nothing.
+ * Last in the afterChange list. Never throws.
+ */
+export const notifyPublished: CollectionAfterChangeHook = ({ doc, previousDoc, req }) => {
+  try {
+    if (previousDoc?._status === 'published' || doc?._status !== 'published') return doc
+    const before = (previousDoc?.submission as Submission | undefined)?.status
+    if (typeof before !== 'string' || !FIRST_PUBLISH.has(before)) return doc
+    const id = Number(doc.id)
+    const { payload } = req
+    afterCommit(req, async () => {
+      const fresh = (await payload
+        .findByID({ collection: 'businesses', id, depth: 0, overrideAccess: true })
+        .catch(() => null)) as { _status?: unknown; submission?: Submission | null } | null
+      if (fresh?._status !== 'published' || fresh.submission?.status !== 'approved') return
+      await notifyAfterChange('E8', { payload, businessId: id })
+    })
+  } catch {
+    // An email can never stop a publish.
+  }
   return doc
 }

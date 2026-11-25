@@ -46,7 +46,7 @@ describe('RejectSubmission', () => {
   it.each(['pending', 'incomplete'])('is offered for %s', (status) => {
     form.fields['submission.status'] = { value: status }
     render()
-    expect(button('Reject submission')).toBeTruthy()
+    expect(button('Reject: not accepted')).toBeTruthy()
   })
 
   it.each(['approved', 'rejected', 'accepted', 'abandoned', undefined])(
@@ -70,7 +70,7 @@ describe('RejectSubmission', () => {
 
   it('cannot be pressed without a reason', () => {
     render()
-    expect((button('Reject submission') as HTMLButtonElement).disabled).toBe(true)
+    expect((button('Reject: not accepted') as HTMLButtonElement).disabled).toBe(true)
   })
 
   it('asks twice, then posts the reason and the share choice', async () => {
@@ -88,7 +88,7 @@ describe('RejectSubmission', () => {
     await act(async () =>
       container.querySelector<HTMLInputElement>('input[type=checkbox]')!.click(),
     )
-    await act(async () => button('Reject submission')!.click())
+    await act(async () => button('Reject: not accepted')!.click())
     expect(fetchMock).not.toHaveBeenCalled()
     await act(async () => button('Yes, reject it')!.click())
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -116,7 +116,7 @@ describe('RejectSubmission', () => {
       setter.call(area, 'x')
       area.dispatchEvent(new Event('input', { bubbles: true }))
     })
-    await act(async () => button('Reject submission')!.click())
+    await act(async () => button('Reject: not accepted')!.click())
     await act(async () => button('Yes, reject it')!.click())
     expect(container.querySelector('[role=alert]')?.textContent).toBe('Already rejected.')
   })

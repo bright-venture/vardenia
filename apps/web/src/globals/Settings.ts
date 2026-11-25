@@ -65,6 +65,22 @@ export function goldFloorCheck(
   return `The ${fullest.category} category has ${fullest.count} gold listings, so each category needs at least ${fullest.count} places. Move ${fullest.count - places} of them to silver first.`
 }
 
+/**
+ * The price of one year in the magazine: at least 1 (lead decision, 24
+ * November 2026: there are no free places). The payment engine also refuses
+ * to count a balance without a price above 0.
+ */
+export const placePriceCheck = (value: unknown): true | string =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 1
+    ? true
+    : 'Enter the price of one year: 1 or more. Places are never free.'
+
+export const validatePricePerYear: NumberFieldSingleValidation = async (value, options) => {
+  const check = placePriceCheck(value)
+  if (check !== true) return check
+  return number(value, options)
+}
+
 export const validateMaxPlatinum: NumberFieldSingleValidation = async (value, options) => {
   const valid = await number(value, options)
   if (valid !== true) return valid
@@ -235,7 +251,7 @@ export const Settings: GlobalConfig = {
         {
           label: 'Magazine places',
           description:
-            'The Magazine Places form: what a place pays, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price and term are copied onto each submission when the owner accepts the terms, so changing them never rewrites an accepted one.',
+            'The Magazine Places form: what a place pays, how much of it first (the downpayment) and the deadlines for both payments, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price, downpayment, deadlines and term are copied onto each submission when the owner sends the form, so changing them never rewrites one already sent.',
           fields: [
             {
               name: 'magazinePlaces',
@@ -244,24 +260,125 @@ export const Settings: GlobalConfig = {
               // staff-readable).
               access: { read: isAdminFieldLevel, update: isAdminFieldLevel },
               fields: [
-                { name: 'pricePerYear', type: 'number', min: 0, defaultValue: 20 },
-                { name: 'currency', type: 'text', defaultValue: 'USD' },
-                { name: 'termMonths', type: 'number', min: 1, defaultValue: 12 },
-                { name: 'paymentDeadlineDays', type: 'number', min: 1, defaultValue: 7 },
                 {
-                  name: 'holdMinutes',
+                  name: 'pricePerYear',
+                  label: 'Price per year',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 1000,
+                  admin: {
+                    description: 'The full price of one year in the magazine. At least 1.',
+                  },
+                  validate: validatePricePerYear,
+                },
+                {
+                  name: 'currency',
+                  label: 'Currency',
+                  type: 'text',
+                  defaultValue: 'USD',
+                  admin: {
+                    description:
+                      'The currency of the price, as a three-letter code. USD is shown as $ in the emails.',
+                  },
+                },
+                {
+                  name: 'termMonths',
+                  label: 'Contract length (months)',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 12,
+                  admin: {
+                    description:
+                      'How long a published place stays listed. The contract starts the day it is published.',
+                  },
+                },
+                {
+                  name: 'downpaymentPercent',
+                  label: 'Downpayment (percent of the price)',
+                  type: 'number',
+                  min: 0.01,
+                  max: 100,
+                  defaultValue: 50,
+                  admin: {
+                    description:
+                      'Percent of the price paid first, before the team reviews the place. 50 = half.',
+                  },
+                },
+                {
+                  name: 'downpaymentDeadlineDays',
+                  label: 'Days to pay the downpayment',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 7,
+                  admin: {
+                    description:
+                      'Days after the form is sent to pay the downpayment. After that the number is released.',
+                  },
+                },
+                {
+                  name: 'downpaymentReminderDay',
+                  label: 'Downpayment reminder (day)',
+                  type: 'number',
+                  min: 0,
+                  defaultValue: 5,
+                  admin: {
+                    description:
+                      'On which day after the form is sent the one downpayment reminder goes out. 0: no reminder.',
+                  },
+                },
+                {
+                  name: 'balanceDeadlineDays',
+                  label: 'Days to pay the rest',
                   type: 'number',
                   min: 1,
                   defaultValue: 30,
-                  admin: { description: 'How long an unfinished form keeps its listing number.' },
+                  admin: {
+                    description:
+                      'Days after the place is accepted to pay the rest. After that it is rejected for not paying.',
+                  },
+                },
+                {
+                  name: 'balanceReminderDaysBefore',
+                  label: 'Reminder for the rest (days before)',
+                  type: 'number',
+                  min: 0,
+                  defaultValue: 3,
+                  admin: {
+                    description:
+                      'How many days before the deadline for the rest the reminder goes out. 0: no reminder.',
+                  },
+                },
+                {
+                  name: 'holdMinutes',
+                  label: 'Hold an unfinished form (minutes)',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 30,
+                  admin: {
+                    description:
+                      'How long an unfinished form keeps its page number while nobody touches it. After that the number is released.',
+                  },
                 },
                 {
                   name: 'whishNumber',
+                  label: 'Company Whish and WhatsApp number',
                   type: 'text',
                   defaultValue: '+96179300350',
-                  admin: { description: 'Used for Whish payments and WhatsApp.' },
+                  admin: {
+                    description:
+                      'Owners send their payments here by Whish, and the WhatsApp link in the emails opens a chat with it. Write it with the country code, like +96179300350.',
+                  },
                 },
-                { name: 'termsVersion', type: 'text', defaultValue: '2026-11' },
+                {
+                  name: 'termsVersion',
+                  label: 'Terms version',
+                  type: 'text',
+                  defaultValue: '2026-11-24',
+                  admin: {
+                    description:
+                      'A label for the terms owners agree to, copied onto each form when it is sent. Change it whenever the terms text changes, for example to the date of the change.',
+                  },
+                },
               ],
             },
           ],

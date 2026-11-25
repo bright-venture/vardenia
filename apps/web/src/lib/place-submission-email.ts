@@ -3,19 +3,16 @@ import { emailPalette } from './email-palette'
 import { governorateLabel } from './labels'
 
 /**
- * The two messages sent after a place is submitted: one to the team, one to the
- * owner. Pure builders so the wording and the escaping can be tested without
- * sending anything. The route sends them (see app/place-submissions/route.ts).
+ * The team alert sent after a place is submitted (E1b), and the plain
+ * rejection notice. Pure builders so the wording and the escaping can be tested
+ * without sending anything. Finish (lib/place-submission-finish) sends the
+ * alert.
  *
- * Every user-supplied string goes through escapeHtml. The owner email carries no
- * link at all, and above all no admin link: nothing is public yet.
+ * The owner's own email on a finish is E1, "pay the downpayment"
+ * (lib/place-payment-email, spec v4): it replaced the first version's
+ * confirmation, so the owner gets one email, not two.
  *
- * The owner email says: received, we will get back to you, the agreed price, and
- * that nothing is paid unless the business is accepted, with the reference and
- * page number. No payment details yet (payment emails are a later task).
- *
- * The owner copy exists in English and Arabic; any other language gets the
- * English copy, laid out left to right to match it.
+ * Every user-supplied string goes through escapeHtml.
  */
 
 /**
@@ -36,11 +33,6 @@ export interface PlaceSubmissionEmailArgs {
   ownerPhone: string
   /** VD-<n>. */
   reference: string
-  /** The yearly price the owner agreed to, from Settings (snapshotted on the submission). */
-  price: number
-  /** ISO code, USD in practice. */
-  currency: string
-  locale: Locale
   /** siteOrigin() */
   origin: string
 }
@@ -122,65 +114,17 @@ export function emailText(opts: {
   return lines.join('\n').trimEnd()
 }
 
-interface OwnerCopy {
-  subject: string
-  heading: string
-  hello: (name: string) => string
-  received: (business: string) => string
-  review: string
-  price: (amount: string) => string
-  payOnlyIfAccepted: string
-  closing: string
-}
-
-/** $20 for USD, otherwise "20 EUR". */
-export const formatPrice = (price: number, currency: string) =>
-  currency.toUpperCase() === 'USD' ? `$${price}` : `${price} ${currency.toUpperCase()}`
-
-const OWNER_LABELS = {
-  en: { reference: 'Reference', page: 'Page number' },
-  ar: {
-    reference: 'المرجع',
-    page: 'رقم الصفحة',
-  },
-}
-
-const OWNER_COPY: Record<'en' | 'ar', OwnerCopy> = {
-  en: {
-    subject: 'We have received your listing',
-    heading: 'Thank you for your submission',
-    hello: (name) => `${name},`,
-    received: (business) => `Thank you for adding ${business} to Vardenia.`,
-    review: 'We received your business and we will get back to you.',
-    price: (amount) => `The price agreed is ${amount} a year.`,
-    payOnlyIfAccepted: 'You pay only if we accept your business.',
-    closing: 'The Vardenia team',
-  },
-  ar: {
-    subject:
-      '\u0648\u0635\u0644\u0646\u0627 \u0637\u0644\u0628 \u0625\u062f\u0631\u0627\u062c \u0645\u0643\u0627\u0646\u0643',
-    heading:
-      '\u0634\u0643\u0631\u0627\u064b \u0639\u0644\u0649 \u0625\u0631\u0633\u0627\u0644\u0643',
-    hello: (name) => `${name}\u060c`,
-    received: (business) =>
-      `\u0634\u0643\u0631\u0627\u064b \u0644\u0625\u0636\u0627\u0641\u0629 ${business} \u0625\u0644\u0649 \u0641\u0627\u0631\u062f\u064a\u0646\u064a\u0627.`,
-    review: 'وصلنا طلب إدراج مكانك وسنعاود التواصل معك.',
-    price: (amount) => `السعر المتفق عليه هو ${amount} في السنة.`,
-    payOnlyIfAccepted: 'لن تدفع إلا إذا قبلنا مكانك.',
-    closing: '\u0641\u0631\u064a\u0642 \u0641\u0627\u0631\u062f\u064a\u0646\u064a\u0627',
-  },
-}
-
 export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
   team: PlaceSubmissionEmail
-  owner: PlaceSubmissionEmail
 } {
   const name = oneLine(args.businessName)
 
   // The slug ("keserwan") reads as a typo in an email; the team reads English.
   const teamBody = {
     heading: 'A new place was submitted',
-    paragraphs: ['The owner accepted the terms. It waits for review. Nothing is public.'],
+    paragraphs: [
+      'The owner accepted the terms. It waits for the downpayment, then for review. Nothing is public.',
+    ],
     rows: [
       ['Reference', args.reference],
       ['Business', args.businessName],
@@ -202,34 +146,7 @@ export function placeSubmissionEmails(args: PlaceSubmissionEmailArgs): {
     text: emailText(teamBody),
   }
 
-  const arabic = args.locale === 'ar'
-  const copy = OWNER_COPY[arabic ? 'ar' : 'en']
-  const ownerBody = {
-    heading: copy.heading,
-    paragraphs: [
-      copy.hello(args.ownerName),
-      copy.received(args.businessName),
-      copy.review,
-      copy.price(formatPrice(args.price, args.currency)),
-      copy.payOnlyIfAccepted,
-      copy.closing,
-    ],
-    rows: [
-      [OWNER_LABELS[arabic ? 'ar' : 'en'].reference, args.reference],
-      [OWNER_LABELS[arabic ? 'ar' : 'en'].page, String(args.listingNumber)],
-    ] as [string, string][],
-  }
-  const owner: PlaceSubmissionEmail = {
-    subject: copy.subject,
-    html: emailLayout({
-      lang: arabic ? 'ar' : 'en',
-      dir: arabic ? dirFor('ar') : 'ltr',
-      ...ownerBody,
-    }),
-    text: emailText(ownerBody),
-  }
-
-  return { team, owner }
+  return { team }
 }
 
 export interface PlaceRejectionEmailArgs {

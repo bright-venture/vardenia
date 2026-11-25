@@ -54,8 +54,10 @@ describe('submission status', () => {
     for (const v of [
       'incomplete',
       'abandoned',
+      'awaiting_downpayment',
       'pending',
       'accepted',
+      'paid',
       'lapsed',
       'approved',
       'rejected',
@@ -67,19 +69,8 @@ describe('submission status', () => {
 })
 
 const STAFF_ONLY: string[][] = [
-  ['status'],
   ['reference'],
   ['acceptedAt'],
-  ['paymentDeadline'],
-  ['payment'],
-  ['payment', 'status'],
-  ['payment', 'amount'],
-  ['payment', 'currency'],
-  ['payment', 'method'],
-  ['payment', 'senderNumber'],
-  ['payment', 'whishAt'],
-  ['payment', 'paidAt'],
-  ['payment', 'markedBy'],
   ['terms'],
   ['terms', 'version'],
   ['terms', 'priceAtAcceptance'],
@@ -88,7 +79,39 @@ const STAFF_ONLY: string[][] = [
   ['terms', 'acceptedAt'],
 ]
 
-describe('reference, payment and terms fields', () => {
+/** Written only by lib/place-payments (and the form's own services): staff read, nobody writes. */
+const ENGINE_ONLY: string[][] = [
+  ['status'],
+  ['rejectionKind'],
+  ['payments'],
+  ['payment'],
+  ...[
+    'stage',
+    'price',
+    'downpaymentAmount',
+    'currency',
+    'received',
+    'refunded',
+    'stillToPay',
+    'downpaymentDueAt',
+    'balanceDeadlineDays',
+    'balanceDueAt',
+    'downpaymentReminderSentAt',
+    'balanceReminderSentAt',
+    'submittedEmailSentAt',
+    'downpaymentEmailSentAt',
+    'acceptedEmailSentAt',
+    'notAcceptedEmailSentAt',
+    'unpaidEmailSentAt',
+    'lapsedEmailSentAt',
+    'publishedEmailSentAt',
+    'lapsedListingNumber',
+  ].map((name) => ['payment', name]),
+]
+
+const admin = { id: 1, collection: 'users', roles: ['admin'] }
+
+describe('reference and terms fields', () => {
   it.each(STAFF_ONLY)(
     '%s: staff read and write it; owners, customers and the public cannot',
     (...path) => {
@@ -102,39 +125,97 @@ describe('reference, payment and terms fields', () => {
       }
     },
   )
+})
+
+describe('status, payment summary, money lines and rejection kind', () => {
+  it.each(ENGINE_ONLY)(
+    '%s: staff read it; nobody (admins included) sets it through the API',
+    (...path) => {
+      const access = submission(...path).access!
+      expect(access.read!(ctx(staff))).toBe(true)
+      expect(access.read!(ctx(admin))).toBe(true)
+      for (const who of [admin, staff, owner, customer, null]) {
+        expect(access.update!(ctx(who)), `write as ${JSON.stringify(who)}`).toBe(false)
+        expect(access.create!(ctx(who)), `create as ${JSON.stringify(who)}`).toBe(false)
+      }
+      for (const who of [owner, customer, null]) {
+        expect(access.read!(ctx(who)), `read as ${JSON.stringify(who)}`).toBe(false)
+      }
+    },
+  )
+
+  it('the old single payment fields and paymentDeadline are gone', () => {
+    for (const path of [
+      ['paymentDeadline'],
+      ['payment', 'status'],
+      ['payment', 'amount'],
+      ['payment', 'method'],
+      ['payment', 'senderNumber'],
+      ['payment', 'whishAt'],
+      ['payment', 'paidAt'],
+      ['payment', 'markedBy'],
+    ]) {
+      expect(() => submission(...path), path.join('.')).toThrow()
+    }
+  })
 
   it('is never partner-editable', () => {
     const editable = PARTNER_EDITABLE_FIELDS as readonly string[]
     expect(editable).not.toContain('submission')
     expect(editable).not.toContain('_status')
-    for (const f of ['payment', 'terms', 'reference', 'paymentDeadline', 'acceptedAt']) {
+    // The submission group is not in the list, so nothing inside it is. (The
+    // top-level `payments` in the list is the payment methods a place takes.)
+    for (const f of ['payment', 'terms', 'reference', 'acceptedAt', 'rejectionKind']) {
       expect(editable, f).not.toContain(f)
     }
   })
 
-  it('has a unique reference, unpaid by default, and the agreed method options', () => {
+  it('has a unique reference, the agreed stages, line types and methods', () => {
     expect(submission('reference').unique).toBe(true)
-    expect(submission('payment', 'status').defaultValue).toBe('unpaid')
-    expect(submission('payment', 'status').options!.map((o) => o.value)).toEqual(['unpaid', 'paid'])
-    expect(submission('payment', 'method').options!.map((o) => o.value)).toEqual([
-      'whish',
-      'cash',
-      'desk',
+    expect(submission('payment', 'stage').defaultValue).toBe('none')
+    expect(submission('payment', 'stage').options!.map((o) => o.value)).toEqual([
+      'none',
+      'downpayment_paid',
+      'waived',
+      'fully_paid',
+      'refund_due',
+      'refunded',
+      'kept',
     ])
-    expect((submission('payment', 'markedBy') as { relationTo?: string }).relationTo).toBe('users')
-  })
-
-  it('writes the sender number in one normalised shape', () => {
-    const hooks = (
-      submission('payment', 'senderNumber') as unknown as {
-        hooks: { beforeValidate: ((a: { value: unknown }) => unknown)[] }
-      }
-    ).hooks
-    const run = (value: unknown) => hooks.beforeValidate[0]!({ value })
-    expect(run('+961 3 123 456')).toBe('03123456')
-    expect(run('00961 3 123 456')).toBe('03123456')
-    expect(run(undefined)).toBeUndefined()
-    expect(run('not a number')).toBe('not a number')
+    expect(submission('rejectionKind').options!.map((o) => o.value)).toEqual([
+      'not_accepted',
+      'unpaid',
+    ])
+    expect(submission('payments', 'type').options!.map((o) => o.value)).toEqual([
+      'downpayment',
+      'balance',
+      'refund',
+    ])
+    expect(submission('payments', 'method').options!.map((o) => o.value)).toEqual([
+      'whish',
+      'desk',
+      'cash',
+    ])
+    for (const name of ['recordedBy', 'voidedBy']) {
+      expect((submission('payments', name) as { relationTo?: string }).relationTo).toBe('users')
+    }
+    const lineFields = (submission('payments').fields ?? []).map((f) => f.name)
+    expect(lineFields).toEqual([
+      'type',
+      'amount',
+      'currency',
+      'senderNumber',
+      'whishAt',
+      'method',
+      'note',
+      'recordedBy',
+      'recordedAt',
+      'voided',
+      'voidedBy',
+      'voidedAt',
+      'voidReason',
+      'forfeited',
+    ])
   })
 })
 
@@ -177,13 +258,17 @@ describe('Magazine places settings fields', () => {
     expect(group.access!.update!(ctx(admin))).toBe(true)
     const defaults = Object.fromEntries(group.fields!.map((f) => [f.name, f.defaultValue]))
     expect(defaults).toEqual({
-      pricePerYear: 20,
+      pricePerYear: 1000,
       currency: 'USD',
       termMonths: 12,
-      paymentDeadlineDays: 7,
+      downpaymentPercent: 50,
+      downpaymentDeadlineDays: 7,
+      downpaymentReminderDay: 5,
+      balanceDeadlineDays: 30,
+      balanceReminderDaysBefore: 3,
       holdMinutes: 30,
       whishNumber: '+96179300350',
-      termsVersion: '2026-11',
+      termsVersion: '2026-11-24',
     })
   })
 })
@@ -196,7 +281,15 @@ describe('Magazine places settings fields', () => {
  * finished is a draft, so it is never in either.
  */
 describe('unfinished submissions are never listed publicly', () => {
-  const rows = ['incomplete', 'abandoned', 'accepted', 'lapsed', 'pending'].map((status, i) => ({
+  const rows = [
+    'incomplete',
+    'abandoned',
+    'awaiting_downpayment',
+    'accepted',
+    'paid',
+    'lapsed',
+    'pending',
+  ].map((status, i) => ({
     id: i + 1,
     name: status,
     _status: 'draft',

@@ -14,21 +14,27 @@ const reply = (status: number, body: unknown) =>
   )
 
 describe('fetchTerms', () => {
-  it('reads the price, currency, term and version from the route', async () => {
-    const f = reply(200, {
-      ok: true,
-      price: 20,
-      currency: 'USD',
-      termMonths: 12,
-      termsVersion: '2026-11',
-    })
-    expect(await fetchTerms(f)).toEqual({
-      price: 20,
-      currency: 'USD',
-      termMonths: 12,
-      termsVersion: '2026-11',
-    })
+  const TERMS = {
+    price: 1000,
+    currency: 'USD',
+    termMonths: 12,
+    termsVersion: '2026-11-24',
+    downpaymentPercent: 50,
+    downpaymentAmount: 500,
+    downpaymentDeadlineDays: 7,
+    balanceDeadlineDays: 30,
+  }
+
+  it('reads the price, term, version, downpayment and both deadlines from the route', async () => {
+    const f = reply(200, { ok: true, ...TERMS, extra: 'ignored' })
+    expect(await fetchTerms(f)).toEqual(TERMS)
     expect(f).toHaveBeenCalledWith(TERMS_URL, expect.objectContaining({ cache: 'no-store' }))
+  })
+
+  it('is null when the payment terms are missing (an older server)', async () => {
+    const old: Partial<typeof TERMS> = { ...TERMS }
+    delete old.downpaymentAmount
+    expect(await fetchTerms(reply(200, { ok: true, ...old }))).toBeNull()
   })
 
   it('is null on an error, a bad body or a network failure', async () => {

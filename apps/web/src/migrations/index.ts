@@ -74,6 +74,7 @@ import * as migration_20261121_120000_customer_booking_limits_two from './202611
 import * as migration_20261121_134843_core_backend from './20261121_134843_core_backend'
 import * as migration_20261124_100000_districts from './20261124_100000_districts'
 import * as migration_20261124_120000_magazine_places_form from './20261124_120000_magazine_places_form'
+import * as migration_20261124_180000_two_stage_payment from './20261124_180000_two_stage_payment'
 
 export const migrations = [
   {
@@ -455,5 +456,10 @@ export const migrations = [
     up: migration_20261124_120000_magazine_places_form.up,
     down: migration_20261124_120000_magazine_places_form.down,
     name: '20261124_120000_magazine_places_form',
+  },
+  {
+    up: migration_20261124_180000_two_stage_payment.up,
+    down: migration_20261124_180000_two_stage_payment.down,
+    name: '20261124_180000_two_stage_payment',
   },
 ]

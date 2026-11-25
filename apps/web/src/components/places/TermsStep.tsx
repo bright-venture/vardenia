@@ -8,25 +8,41 @@ import { fetchTerms, type Terms } from './flow-client'
 /**
  * Step 3 of the big-screen form: the price and the terms, then Submit.
  *
- * The price comes from the Settings through GET /place-submissions/terms, never
- * from the page. This step only SHOWS the price: nothing is paid in the form
- * ("You pay only if we accept your business"). The checkbox is required, and
- * Submit is held until the fresh bot check (`turnstile`, drawn by the parent)
- * has a token, when there is one to wait for.
+ * The price and the payment terms come from the Settings through GET
+ * /place-submissions/terms, never from the page. This step only SHOWS them:
+ * nothing is paid in the form. The two-stage payment (spec v4): the
+ * downpayment by Whish within its days keeps the page number, and is returned
+ * if the business is not accepted; the rest is due within its days of
+ * acceptance. The checkbox is required, and Submit is held until the fresh bot
+ * check (`turnstile`, drawn by the parent) has a token, when there is one to
+ * wait for.
  */
 
 /** 20 USD as "$20" in the page language; a currency code Intl does not know is shown as text. */
-function formatPrice(terms: Terms, locale: string): string {
+function formatMoney(value: number, currency: string, locale: string): string {
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: terms.currency,
-      maximumFractionDigits: Number.isInteger(terms.price) ? 0 : 2,
-    }).format(terms.price)
+      currency,
+      maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    }).format(value)
   } catch {
-    return `${terms.price} ${terms.currency}`
+    return `${value} ${currency}`
   }
 }
+
+/** The price minus the downpayment, counted in cents like the payment engine. */
+const restOf = (terms: Terms) =>
+  Math.max(0, Math.round(terms.price * 100) - Math.round(terms.downpaymentAmount * 100)) / 100
+
+/** The values the payment sentences interpolate, money already in the page language. */
+const paymentValues = (terms: Terms, locale: string) => ({
+  percent: terms.downpaymentPercent,
+  downpayment: formatMoney(terms.downpaymentAmount, terms.currency, locale),
+  rest: formatMoney(restOf(terms), terms.currency, locale),
+  downpaymentDays: terms.downpaymentDeadlineDays,
+  balanceDays: terms.balanceDeadlineDays,
+})
 
 const CHECK = 'accent-cedar-900 size-4 shrink-0'
 
@@ -74,7 +90,7 @@ export function TermsStep({
     setReload((n) => n + 1)
   }, [])
 
-  const amount = terms ? formatPrice(terms, locale) : ''
+  const amount = terms ? formatMoney(terms.price, terms.currency, locale) : ''
 
   return (
     <section className="flex flex-col gap-6" aria-labelledby="place-step-terms">
@@ -110,7 +126,7 @@ export function TermsStep({
             <p data-price className="font-display text-ink-900 text-2xl">
               {t('flow.price', { amount })}
             </p>
-            <p className="mt-2">{t('flow.termLine')}</p>
+            <p className="mt-2">{t('flow.termLine', paymentValues(terms, locale))}</p>
           </div>
 
           <div>
@@ -122,7 +138,9 @@ export function TermsStep({
             </ul>
           </div>
 
-          <p className="text-ink-900 text-sm font-semibold">{t('flow.payOnlyIf')}</p>
+          <p data-payment-terms className="text-ink-900 text-sm font-semibold">
+            {t('flow.payOnlyIf', paymentValues(terms, locale))}
+          </p>
 
           <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
             <input

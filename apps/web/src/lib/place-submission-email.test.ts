@@ -11,9 +11,6 @@ const BASE = {
   ownerEmail: 'sami@example.com',
   ownerPhone: '+961 70 123456',
   reference: 'VD-42',
-  price: 20,
-  currency: 'USD',
-  locale: 'en' as const,
   origin: 'https://vardenia.example',
 }
 
@@ -61,86 +58,30 @@ describe('the team email', () => {
   })
 })
 
-describe('the owner email', () => {
-  it('says we received it, the agreed price, pay only if accepted, with reference and page', () => {
-    const { owner } = placeSubmissionEmails(BASE)
-    expect(owner.html).toMatch(/received your business/i)
-    expect(owner.html).toMatch(/get back to you/i)
-    expect(owner.html).toContain('The price agreed is $20 a year.')
-    expect(owner.html).toMatch(/pay only if we accept your business/i)
-    expect(owner.html).toContain('VD-42')
-    expect(owner.html).toContain('>17<')
-    expect(owner.html).toContain('dir="ltr"')
-    expect(owner.html).toContain('lang="en"')
-  })
-
-  it('carries no link of any kind, and no admin address', () => {
-    for (const locale of ['en', 'ar'] as const) {
-      const { owner } = placeSubmissionEmails({ ...BASE, locale })
-      expect(owner.html).not.toContain('<a ')
-      expect(owner.html).not.toContain('/admin')
-      expect(owner.text).not.toContain('http')
-    }
-  })
-
-  it('uses the price and currency from Settings', () => {
-    const eur = placeSubmissionEmails({ ...BASE, price: 35, currency: 'eur' }).owner
-    expect(eur.html).toContain('35 EUR a year')
-    expect(eur.html).not.toContain('$')
-  })
-
-  it('has a plain-text part, in its language', () => {
-    const en = placeSubmissionEmails(BASE).owner.text
-    expect(en).toContain('The price agreed is $20 a year.')
-    expect(en).toContain('Reference: VD-42')
-    const ar = placeSubmissionEmails({ ...BASE, locale: 'ar' }).owner.text
-    expect(ar).toContain('لن تدفع إلا إذا قبلنا مكانك')
-    expect(ar).toContain('$20')
-    expect(ar).toContain('VD-42')
-    expect(ar).not.toMatch(/pay only/i)
-  })
-
-  it('is right to left in Arabic', () => {
-    const { owner } = placeSubmissionEmails({ ...BASE, locale: 'ar' })
-    expect(owner.html).toContain('dir="rtl"')
-    expect(owner.html).toContain('lang="ar"')
-    expect(owner.html).not.toMatch(/pay only/i)
-  })
-
-  it('falls back to English copy, in a matching direction, for other languages', () => {
-    const { owner } = placeSubmissionEmails({ ...BASE, locale: 'ur' })
-    expect(owner.html).toMatch(/pay only if we accept/i)
-    expect(owner.html).toContain('dir="ltr"')
+describe('no owner email here', () => {
+  it('builds only the team alert: the owner gets E1 (lib/place-payment-email) instead', () => {
+    expect(Object.keys(placeSubmissionEmails(BASE))).toEqual(['team'])
   })
 })
 
 describe('user-supplied text is escaped', () => {
   const evil = '<script>alert(1)</script>'
-  for (const locale of ['en', 'ar'] as const) {
-    it(`in both emails (${locale})`, () => {
-      const { team, owner } = placeSubmissionEmails({
-        ...BASE,
-        locale,
-        businessName: evil,
-        ownerName: evil,
-        ownerPhone: evil,
-        issueTitle: evil,
-        reference: evil,
-        currency: evil,
-      })
-      for (const mail of [team, owner]) {
-        expect(mail.html).not.toContain('<script>')
-        expect(mail.html).not.toContain(evil)
-        // No raw tag survives anywhere a value was inserted.
-        expect(mail.html).not.toMatch(/<script/i)
-        expect(mail.html.replace(/<[a-z/!][^>]*>/gi, '')).not.toContain('<')
-      }
-      expect(owner.html).toContain('&lt;SCRIPT&gt;') // the currency, upper-cased and escaped
-      expect(team.html).toContain('&lt;script&gt;')
-      expect(owner.html).toContain('&lt;script&gt;')
-      expect(team.subject).not.toMatch(/[\r\n]/)
+  it('in the team email', () => {
+    const { team } = placeSubmissionEmails({
+      ...BASE,
+      businessName: evil,
+      ownerName: evil,
+      ownerPhone: evil,
+      issueTitle: evil,
+      reference: evil,
     })
-  }
+    expect(team.html).not.toContain(evil)
+    // No raw tag survives anywhere a value was inserted.
+    expect(team.html).not.toMatch(/<script/i)
+    expect(team.html.replace(/<[a-z/!][^>]*>/gi, '')).not.toContain('<')
+    expect(team.html).toContain('&lt;script&gt;')
+    expect(team.subject).not.toMatch(/[\r\n]/)
+  })
 })
 
 describe('placeRejectionEmail', () => {

@@ -6,6 +6,8 @@ import { runInTransaction } from './branches'
 import { advisoryLock, placeSubmissionLockKey } from './partner-lock'
 import { placeSessionLife, type SessionClock } from './place-session'
 import { placeSubmissionEmails, teamAlertAddress } from './place-submission-email'
+import { notifyAfterChange } from './place-payment-notify'
+import { addDays, downpaymentFor } from './place-payment-rules'
 import { getPlaceSettings } from './place-settings'
 import { hashSessionToken } from './place-submission'
 import { reportError } from './report'
@@ -18,12 +20,16 @@ import { reportError } from './report'
  * idle or past its hard cap (lib/place-session), and a business that is no
  * longer `incomplete`, all give the same `not-found`, so the answer says
  * nothing about which one it was. The one exception is a replay: a closed
- * session whose business is pending or later answers ok with the same
- * reference and sends nothing.
+ * session whose business is awaiting the downpayment or later answers ok with
+ * the same reference and sends nothing.
  *
- * One write moves the business incomplete -> pending, stamps submittedAt and
- * the terms snapshot (version, price, currency, term, acceptedAt) from the
- * Settings as they are NOW, and closes the session, in one transaction. The
+ * One write moves the business incomplete -> awaiting_downpayment (spec v4:
+ * the owner pays the downpayment before staff review it; the page number
+ * stays reserved), stamps submittedAt, the terms snapshot (version, price,
+ * currency, term, acceptedAt) and the payment snapshot (price, downpayment,
+ * currency, the downpayment deadline and the number of days for the rest)
+ * from the Settings as they are NOW, and closes the session, in one
+ * transaction. The
  * update is claimed with `submission.status = incomplete` in its where, so two
  * finishes at once cannot both win: the loser changes nothing and sends nothing.
  * Nothing from the request but the token and the boolean reaches the record.
@@ -60,7 +66,14 @@ const idOf = (value: unknown): number | null => {
   return typeof id === 'number' ? id : null
 }
 
-const REPLAYABLE = new Set(['pending', 'accepted', 'approved', 'expired'])
+const REPLAYABLE = new Set([
+  'awaiting_downpayment',
+  'pending',
+  'accepted',
+  'paid',
+  'approved',
+  'expired',
+])
 
 async function replayOf(
   payload: Payload,
@@ -184,7 +197,7 @@ export async function finishPlaceSubmission(args: {
         data: {
           submission: {
             ...business.submission,
-            status: 'pending',
+            status: 'awaiting_downpayment',
             submittedAt: stamp,
             terms: {
               version: settings.termsVersion,
@@ -192,6 +205,18 @@ export async function finishPlaceSubmission(args: {
               currency: settings.currency,
               termMonths: settings.termMonths,
               acceptedAt: stamp,
+            },
+            payments: [],
+            payment: {
+              stage: 'none',
+              price: settings.pricePerYear,
+              downpaymentAmount: downpaymentFor(settings.pricePerYear, settings.downpaymentPercent),
+              currency: settings.currency,
+              received: 0,
+              refunded: 0,
+              stillToPay: settings.pricePerYear,
+              downpaymentDueAt: addDays(now, settings.downpaymentDeadlineDays).toISOString(),
+              balanceDeadlineDays: settings.balanceDeadlineDays,
             },
           },
         } as never,
@@ -221,7 +246,11 @@ export async function finishPlaceSubmission(args: {
     const business = done.business
 
     const reference = String(business.submission.reference ?? '')
-    await sendEmails({ payload, business, businessId, reference, settings, locale })
+    // The team alert (E1b), then the owner's only email: E1, "pay the
+    // downpayment" (lib/place-payment-notify), which replaced the first
+    // version's confirmation. Never on a replay.
+    await sendTeamAlert({ payload, business, businessId, reference })
+    await notifyAfterChange('E1', { payload, businessId, locale, now })
     return { ok: true, reference }
   } catch (error) {
     await reportError(error, { source: 'place-submission.finish' })
@@ -229,15 +258,13 @@ export async function finishPlaceSubmission(args: {
   }
 }
 
-async function sendEmails(args: {
+async function sendTeamAlert(args: {
   payload: Payload
   business: BusinessDoc
   businessId: number
   reference: string
-  settings: Awaited<ReturnType<typeof getPlaceSettings>>
-  locale: Locale
 }) {
-  const { payload, business, businessId, reference, settings, locale } = args
+  const { payload, business, businessId, reference } = args
   const extra = { listingId: businessId }
   try {
     const issueId = idOf(business.issue)
@@ -265,9 +292,6 @@ async function sendEmails(args: {
       ownerEmail: String(business.submission.ownerEmail ?? ''),
       ownerPhone: String(business.submission.ownerPhone ?? ''),
       reference,
-      price: settings.pricePerYear,
-      currency: settings.currency,
-      locale,
       origin: siteOrigin(),
     })
 
@@ -282,18 +306,6 @@ async function sendEmails(args: {
         })
       } catch (error) {
         await reportError(error, { source: 'place-submission.email.team', extra })
-      }
-    }
-    if (business.submission.ownerEmail) {
-      try {
-        await payload.sendEmail({
-          to: business.submission.ownerEmail,
-          subject: emails.owner.subject,
-          html: emails.owner.html,
-          text: emails.owner.text,
-        })
-      } catch (error) {
-        await reportError(error, { source: 'place-submission.email.owner', extra })
       }
     }
   } catch (error) {

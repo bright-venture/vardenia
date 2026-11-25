@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import { recordSubmissionHistory } from '../hooks/recordSubmissionHistory'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
 
 /**
@@ -11,8 +12,17 @@ import { releaseListingNumber } from '../hooks/releaseListingNumber'
 
 type Doc = Record<string, unknown> & { id: number }
 
-const get = (doc: unknown, path: string): unknown =>
-  path.split('.').reduce<unknown>((v, k) => (v == null ? undefined : (v as never)[k]), doc)
+/** A path's values; an array on the way gives one value per row (like a SQL join). */
+const values = (doc: unknown, path: string): unknown[] =>
+  path.split('.').reduce<unknown[]>(
+    (vs, k) =>
+      vs.flatMap((v) => {
+        if (v == null) return [undefined]
+        if (Array.isArray(v)) return v.map((row) => (row == null ? undefined : (row as never)[k]))
+        return [(v as never)[k]]
+      }),
+    [doc],
+  )
 
 const cmp = (a: unknown, b: unknown) =>
   new Date(a as string).getTime() - new Date(b as string).getTime()
@@ -22,18 +32,43 @@ function matches(doc: Doc, where: Record<string, unknown> | undefined): boolean 
   return Object.entries(where).every(([key, cond]) => {
     if (key === 'and') return (cond as never[]).every((w) => matches(doc, w))
     if (key === 'or') return (cond as never[]).some((w) => matches(doc, w))
-    const value = get(doc, key)
-    return Object.entries(cond as Record<string, unknown>).every(([op, arg]) => {
-      if (op === 'equals') return value === arg
-      if (op === 'exists') return (value != null) === arg
-      if (op === 'less_than') return value != null && cmp(value, arg) < 0
-      if (op === 'in') return (arg as unknown[]).includes(value)
-      throw new Error(`fake payload: unsupported operator ${op}`)
-    })
+    // Any row matching is enough, as for Payload's query on an array field.
+    return values(doc, key).some((value) =>
+      Object.entries(cond as Record<string, unknown>).every(([op, arg]) => {
+        if (op === 'equals') return value === arg
+        if (op === 'not_equals') return value !== arg
+        if (op === 'exists') return (value != null) === arg
+        if (op === 'less_than') return value != null && cmp(value, arg) < 0
+        if (op === 'greater_than_equal') return value != null && cmp(value, arg) >= 0
+        if (op === 'in') return (arg as unknown[]).includes(value)
+        throw new Error(`fake payload: unsupported operator ${op}`)
+      }),
+    )
   })
 }
 
 export type { Doc }
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === 'object' && !Array.isArray(v)
+
+/**
+ * What Payload 3 does to an update's data before any collection hook
+ * (fields/hooks/beforeValidate/promise.js + getFallbackValue.js): a key that is
+ * undefined takes the stored value; a group is filled key by key, recursively;
+ * an array or a null is kept as sent.
+ */
+export function fillFromStored(data: unknown, stored: unknown): unknown {
+  if (!isPlainObject(data) || !isPlainObject(stored)) return data
+  const out: Record<string, unknown> = { ...data }
+  for (const [key, value] of Object.entries(stored)) {
+    if (out[key] === undefined) out[key] = structuredClone(value)
+    else if (isPlainObject(out[key]) && isPlainObject(value)) {
+      out[key] = fillFromStored(out[key], value)
+    }
+  }
+  return out
+}
 
 export interface FakePayload {
   payload: Payload
@@ -117,6 +152,9 @@ export function fakePayload(initial: Record<string, Doc[]> = {}): FakePayload {
       id?: number
       where?: never
       data: Record<string, unknown>
+      req?: { context?: Record<string, unknown>; user?: unknown }
+      user?: unknown
+      context?: Record<string, unknown>
     }) => {
       f.updates.push({ collection: args.collection, id: args.id, data: structuredClone(args.data) })
       const targets = table(args.collection).filter((d) =>
@@ -128,10 +166,18 @@ export function fakePayload(initial: Record<string, Doc[]> = {}): FakePayload {
         if (args.id === undefined && f.errorUpdate.has(`${args.collection}:${doc.id}`)) {
           return { docs: [], errors: [{ message: 'could not update', id: doc.id }] }
         }
-        let data = structuredClone(args.data)
+        // Like Payload's field-level beforeValidate on update: every key left
+        // out (undefined) is filled from the stored document, group by group,
+        // BEFORE the collection hooks run. Arrays and null are taken as given.
+        let data = fillFromStored(structuredClone(args.data), doc) as Record<string, unknown>
         if (args.collection === 'businesses') {
+          // Like Payload: a local call's context is merged into req.context.
+          const req = args.req ?? {}
+          req.context = { ...(req.context ?? {}), ...(args.context ?? {}) }
+          if (args.user !== undefined && req.user === undefined) req.user = args.user
           // Synchronous, like a database row lock: the claim and the write are one step.
           data = releaseListingNumber({ data, originalDoc: doc } as never) as never
+          data = recordSubmissionHistory({ data, originalDoc: doc, req } as never) as never
         }
         Object.assign(doc, data)
         done.push(structuredClone(doc))

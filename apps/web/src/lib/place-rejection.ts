@@ -1,38 +1,37 @@
 import type { Payload } from 'payload'
 import type { Locale } from '@vardenia/i18n'
 
-import { isStaffUser } from '../access/index'
 import { siteOrigin } from './auth-email'
+import { MAX_REASON_LENGTH, rejectNotAccepted } from './place-payments'
 import { placeRejectionEmail } from './place-submission-email'
 import { reportError } from './report'
 
 /**
- * The Reject action for a submitted business (staff and admin only).
+ * The Reject action for a submitted business (staff and admin only): "Reject:
+ * not accepted" of the two-stage payment (spec v4). The state change itself
+ * is lib/place-payments `rejectNotAccepted` (lock, re-read, one claimed
+ * write, history, number released, rejectionKind not_accepted, stage
+ * refund_due when a downpayment was received). This module keeps the endpoint's
+ * answer shape and sends the plain rejection email when nothing was paid.
  *
- * Allowed from `pending` (finished by the owner, waiting for staff) and
- * `incomplete` (still being filled in) only; every other state is refused with
- * a plain message, and a published listing can never be rejected (its number
- * would be given away while the page is live; hooks/linkPartnerOnPublish
- * refuses it as well). A reason is required. It is stored on the submission
- * (staff only) with who and when, and the owner is told only if staff ticked
- * "share the reason".
+ * Allowed from `pending` (in review), `awaiting_downpayment` and `incomplete`;
+ * every other state is refused with a plain message, and a published listing
+ * can never be rejected. A reason is required. The owner is told the reason
+ * only if staff ticked "share the reason". When money was received, the owner
+ * gets the "not accepted, refund coming" email (E5, lib/place-payment-notify)
+ * instead, and the submission waits in Refunds to send.
  *
- * The change is one write claimed with the current status in its where clause,
- * so two staff rejecting at once, or a finish arriving at the same moment,
- * cannot both win. Setting the status to rejected frees the listing number in
- * the same write (hooks/releaseListingNumber) and appends to the history
- * (hooks/recordSubmissionHistory). The business stays a draft.
- *
- * The owner email is best effort: the rejection stands whatever happens to it.
+ * The emails are best effort: the rejection stands whatever happens to them.
  */
 
-export const MAX_REASON_LENGTH = 1000
+export { MAX_REASON_LENGTH }
 
 export type RejectOutcome =
-  | { ok: true; emailed: boolean }
+  | { ok: true; emailed: boolean; refundDue: boolean }
   | {
       ok: false
       status: 400 | 403 | 404 | 409 | 500
+      code: string
       message: string
     }
 
@@ -47,105 +46,52 @@ export interface RejectArgs {
   locale?: unknown
 }
 
-const REJECTABLE = ['pending', 'incomplete']
-
-const fail = (status: 400 | 403 | 404 | 409 | 500, message: string): RejectOutcome => ({
-  ok: false,
-  status,
-  message,
-})
-
 const ARABIC = /[؀-ۿ]/
 
 interface BusinessDoc {
+  id?: unknown
   name?: unknown
   _status?: unknown
   submission?: {
-    status?: string
-    reference?: string
-    ownerName?: string
-    ownerEmail?: string
+    status?: string | null
+    reference?: string | null
+    ownerName?: string | null
+    ownerEmail?: string | null
   } | null
 }
 
 export async function rejectSubmission(args: RejectArgs): Promise<RejectOutcome> {
-  const { payload, user } = args
-  if (!isStaffUser(user)) return fail(403, 'Staff only.')
-
-  const id = Number(args.businessId)
-  if (!Number.isInteger(id) || id <= 0) return fail(400, 'Choose a business to reject.')
-
+  const { payload } = args
   const reason = typeof args.reason === 'string' ? args.reason.trim() : ''
-  if (!reason) return fail(400, 'Write the reason for the rejection first.')
-  if (reason.length > MAX_REASON_LENGTH) {
-    return fail(400, `Keep the reason under ${MAX_REASON_LENGTH} characters.`)
-  }
   const shareReason = args.shareReason === true
-
-  try {
-    const business = (await payload
-      .findByID({ collection: 'businesses', id, depth: 0, overrideAccess: true })
-      .catch(() => null)) as BusinessDoc | null
-    if (!business) return fail(404, 'That business was not found.')
-
-    const status = business.submission?.status
-    if (business._status === 'published') {
-      return fail(
-        409,
-        'A published listing cannot be rejected. Set the listing to Draft first, then reject it.',
-      )
+  let emailed = false
+  const outcome = await rejectNotAccepted({
+    payload,
+    actor: { user: args.user },
+    businessId: args.businessId,
+    reason: args.reason,
+    shareReason,
+    locale: args.locale,
+    plainEmail: async (business) => {
+      emailed = await sendRejection({
+        payload,
+        business: business as BusinessDoc,
+        reason,
+        shareReason,
+        locale: args.locale,
+        listingId: Number(args.businessId),
+      })
+    },
+  })
+  if (!outcome.ok) {
+    return {
+      ok: false,
+      status: outcome.status as 400 | 403 | 404 | 409 | 500,
+      code: outcome.code,
+      message: outcome.message,
     }
-    if (!status || !REJECTABLE.includes(status)) {
-      return fail(
-        409,
-        status === 'rejected'
-          ? 'This submission was already rejected.'
-          : 'Only a submission that is waiting for review, or one still being filled in, can be rejected.',
-      )
-    }
-
-    const now = new Date().toISOString()
-    const userId = (user as { id: number }).id
-    const result = await payload.update({
-      collection: 'businesses',
-      where: {
-        and: [{ id: { equals: id } }, { 'submission.status': { in: REJECTABLE } }],
-      },
-      data: {
-        submission: {
-          ...business.submission,
-          status: 'rejected',
-          rejectionReason: reason,
-          rejectionReasonShared: shareReason,
-          rejectedAt: now,
-          rejectedBy: userId,
-        },
-      } as never,
-      depth: 0,
-      user: user as never,
-      overrideAccess: true,
-      context: { skipAutoTranslate: true, skipQrGeneration: true },
-    })
-    if (result.errors?.length) {
-      throw new Error(`The rejection could not be saved: ${JSON.stringify(result.errors)}`)
-    }
-    if (result.docs.length === 0) {
-      return fail(409, 'This submission changed while you were looking at it. Reload and check it.')
-    }
-
-    const emailed = await sendRejection({
-      payload,
-      business,
-      reason,
-      shareReason,
-      locale: args.locale,
-      listingId: id,
-    })
-    return { ok: true, emailed }
-  } catch (error) {
-    await reportError(error, { source: 'place-rejection', extra: { listingId: id } })
-    return fail(500, 'The rejection could not be saved. Try again, or check Errors in the admin.')
   }
+  return { ok: true, emailed, refundDue: outcome.answer?.refundDue === true }
 }
 
 async function sendRejection(args: {

@@ -691,8 +691,23 @@ export interface Business {
     linkedin?: string | null;
   };
   submission?: {
+    /**
+     * Changed only by the actions on this page (payments, accept, reject).
+     */
     status?:
-      ('incomplete' | 'abandoned' | 'pending' | 'accepted' | 'lapsed' | 'approved' | 'rejected' | 'expired') | null;
+      | (
+          | 'incomplete'
+          | 'abandoned'
+          | 'awaiting_downpayment'
+          | 'pending'
+          | 'accepted'
+          | 'paid'
+          | 'lapsed'
+          | 'approved'
+          | 'rejected'
+          | 'expired'
+        )
+      | null;
     ownerName?: string | null;
     ownerEmail?: string | null;
     ownerPhone?: string | null;
@@ -705,6 +720,7 @@ export interface Business {
      * Why it was rejected. Set by Reject submission.
      */
     rejectionReason?: string | null;
+    rejectionKind?: ('not_accepted' | 'unpaid') | null;
     /**
      * Whether the reason was sent to the owner.
      */
@@ -716,25 +732,82 @@ export interface Business {
      */
     history?:
       | {
-          step: 'incomplete' | 'pending' | 'rejected' | 'approved' | 'abandoned' | 'accepted' | 'lapsed' | 'expired';
+          step:
+            | 'incomplete'
+            | 'awaiting_downpayment'
+            | 'pending'
+            | 'rejected'
+            | 'approved'
+            | 'abandoned'
+            | 'accepted'
+            | 'paid'
+            | 'lapsed'
+            | 'expired'
+            | 'downpayment_received'
+            | 'balance_received'
+            | 'refund_sent'
+            | 'downpayment_waived'
+            | 'payment_undone'
+            | 'deadline_extended'
+            | 'email_resent';
           at: string;
           by?: (number | null) | User;
+          note?: string | null;
           id?: string | null;
         }[]
       | null;
-    paymentDeadline?: string | null;
+    /**
+     * Money received and refunded. Recorded with the buttons on this page; cannot be edited.
+     */
+    payments?:
+      | {
+          type: 'downpayment' | 'balance' | 'refund';
+          amount: number;
+          currency?: string | null;
+          senderNumber?: string | null;
+          whishAt?: string | null;
+          method?: ('whish' | 'desk' | 'cash') | null;
+          note?: string | null;
+          recordedBy?: (number | null) | User;
+          recordedAt?: string | null;
+          voided?: boolean | null;
+          voidedBy?: (number | null) | User;
+          voidedAt?: string | null;
+          voidReason?: string | null;
+          forfeited?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
     payment?: {
-      status?: ('unpaid' | 'paid') | null;
-      amount?: number | null;
-      currency?: string | null;
-      method?: ('whish' | 'cash' | 'desk') | null;
+      stage?: ('none' | 'downpayment_paid' | 'waived' | 'fully_paid' | 'refund_due' | 'refunded' | 'kept') | null;
       /**
-       * Normalised Lebanese format (lib/lebanese-phone).
+       * The full price, as it was when the form was sent.
        */
-      senderNumber?: string | null;
-      whishAt?: string | null;
-      paidAt?: string | null;
-      markedBy?: (number | null) | User;
+      price?: number | null;
+      /**
+       * What is paid first.
+       */
+      downpaymentAmount?: number | null;
+      currency?: string | null;
+      /**
+       * Downpayment and rest received (undone lines not counted).
+       */
+      received?: number | null;
+      refunded?: number | null;
+      stillToPay?: number | null;
+      downpaymentDueAt?: string | null;
+      balanceDeadlineDays?: number | null;
+      balanceDueAt?: string | null;
+      downpaymentReminderSentAt?: string | null;
+      balanceReminderSentAt?: string | null;
+      submittedEmailSentAt?: string | null;
+      downpaymentEmailSentAt?: string | null;
+      acceptedEmailSentAt?: string | null;
+      notAcceptedEmailSentAt?: string | null;
+      unpaidEmailSentAt?: string | null;
+      lapsedEmailSentAt?: string | null;
+      publishedEmailSentAt?: string | null;
+      lapsedListingNumber?: number | null;
     };
     terms?: {
       version?: string | null;
@@ -2057,6 +2130,7 @@ export interface BusinessesSelect<T extends boolean = true> {
         reference?: T;
         acceptedAt?: T;
         rejectionReason?: T;
+        rejectionKind?: T;
         rejectionReasonShared?: T;
         rejectedAt?: T;
         rejectedBy?: T;
@@ -2066,20 +2140,51 @@ export interface BusinessesSelect<T extends boolean = true> {
               step?: T;
               at?: T;
               by?: T;
+              note?: T;
               id?: T;
             };
-        paymentDeadline?: T;
+        payments?:
+          | T
+          | {
+              type?: T;
+              amount?: T;
+              currency?: T;
+              senderNumber?: T;
+              whishAt?: T;
+              method?: T;
+              note?: T;
+              recordedBy?: T;
+              recordedAt?: T;
+              voided?: T;
+              voidedBy?: T;
+              voidedAt?: T;
+              voidReason?: T;
+              forfeited?: T;
+              id?: T;
+            };
         payment?:
           | T
           | {
-              status?: T;
-              amount?: T;
+              stage?: T;
+              price?: T;
+              downpaymentAmount?: T;
               currency?: T;
-              method?: T;
-              senderNumber?: T;
-              whishAt?: T;
-              paidAt?: T;
-              markedBy?: T;
+              received?: T;
+              refunded?: T;
+              stillToPay?: T;
+              downpaymentDueAt?: T;
+              balanceDeadlineDays?: T;
+              balanceDueAt?: T;
+              downpaymentReminderSentAt?: T;
+              balanceReminderSentAt?: T;
+              submittedEmailSentAt?: T;
+              downpaymentEmailSentAt?: T;
+              acceptedEmailSentAt?: T;
+              notAcceptedEmailSentAt?: T;
+              unpaidEmailSentAt?: T;
+              lapsedEmailSentAt?: T;
+              publishedEmailSentAt?: T;
+              lapsedListingNumber?: T;
             };
         terms?:
           | T
@@ -2787,18 +2892,49 @@ export interface Setting {
       )[]
     | null;
   magazinePlaces?: {
-    pricePerYear?: number | null;
-    currency?: string | null;
-    termMonths?: number | null;
-    paymentDeadlineDays?: number | null;
     /**
-     * How long an unfinished form keeps its listing number.
+     * The full price of one year in the magazine. At least 1.
+     */
+    pricePerYear?: number | null;
+    /**
+     * The currency of the price, as a three-letter code. USD is shown as $ in the emails.
+     */
+    currency?: string | null;
+    /**
+     * How long a published place stays listed. The contract starts the day it is published.
+     */
+    termMonths?: number | null;
+    /**
+     * Percent of the price paid first, before the team reviews the place. 50 = half.
+     */
+    downpaymentPercent?: number | null;
+    /**
+     * Days after the form is sent to pay the downpayment. After that the number is released.
+     */
+    downpaymentDeadlineDays?: number | null;
+    /**
+     * On which day after the form is sent the one downpayment reminder goes out. 0: no reminder.
+     */
+    downpaymentReminderDay?: number | null;
+    /**
+     * Days after the place is accepted to pay the rest. After that it is rejected for not paying.
+     */
+    balanceDeadlineDays?: number | null;
+    /**
+     * How many days before the deadline for the rest the reminder goes out. 0: no reminder.
+     */
+    balanceReminderDaysBefore?: number | null;
+    /**
+     * How long an unfinished form keeps its page number while nobody touches it. After that the number is released.
      */
     holdMinutes?: number | null;
     /**
-     * Used for Whish payments and WhatsApp.
+     * Owners send their payments here by Whish, and the WhatsApp link in the emails opens a chat with it. Write it with the country code, like +96179300350.
      */
     whishNumber?: string | null;
+    /**
+     * A label for the terms owners agree to, copied onto each form when it is sent. Change it whenever the terms text changes, for example to the date of the change.
+     */
     termsVersion?: string | null;
   };
   /**
@@ -2824,7 +2960,11 @@ export interface SettingsSelect<T extends boolean = true> {
         pricePerYear?: T;
         currency?: T;
         termMonths?: T;
-        paymentDeadlineDays?: T;
+        downpaymentPercent?: T;
+        downpaymentDeadlineDays?: T;
+        downpaymentReminderDay?: T;
+        balanceDeadlineDays?: T;
+        balanceReminderDaysBefore?: T;
         holdMinutes?: T;
         whishNumber?: T;
         termsVersion?: T;
