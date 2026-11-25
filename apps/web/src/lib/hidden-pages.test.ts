@@ -15,18 +15,23 @@ const { CONTENT_PAGE_SLUGS } = await import('./pages')
 
 describe('hidden standing pages', () => {
   it('keeps only real standing pages from whatever was stored', () => {
-    expect(cleanHiddenPages(['advertise', 'legal', 'refunds', 7, null])).toEqual(['advertise'])
+    expect(
+      cleanHiddenPages(['add-your-business', 'advertise', 'legal', 'refunds', 7, null]),
+    ).toEqual(['add-your-business'])
     expect(cleanHiddenPages(null)).toEqual([])
-    expect(cleanHiddenPages('advertise')).toEqual([])
+    expect(cleanHiddenPages('add-your-business')).toEqual([])
   })
 
   it('takes the links to hidden pages out of a menu, and nothing else', () => {
     const links = [
       { href: '/about', label: 'About' },
-      { href: '/advertise', label: 'Advertise' },
+      { href: '/add-your-business', label: 'Add your business' },
       { href: '/partner', label: 'Partner sign in' },
     ]
-    expect(withoutHidden(links, ['advertise']).map((l) => l.href)).toEqual(['/about', '/partner'])
+    expect(withoutHidden(links, ['add-your-business']).map((l) => l.href)).toEqual([
+      '/about',
+      '/partner',
+    ])
     expect(withoutHidden(links, [])).toEqual(links)
   })
 
@@ -56,9 +61,11 @@ describe('hidden standing pages', () => {
   })
 
   it('rebuilds the site only when the list of hidden pages changes', () => {
-    expect(hiddenPagesChanged([], ['advertise'])).toBe(true)
-    expect(hiddenPagesChanged(['advertise'], [])).toBe(true)
-    expect(hiddenPagesChanged(['faq', 'advertise'], ['advertise', 'faq'])).toBe(false)
+    expect(hiddenPagesChanged([], ['add-your-business'])).toBe(true)
+    expect(hiddenPagesChanged(['add-your-business'], [])).toBe(true)
+    expect(hiddenPagesChanged(['faq', 'add-your-business'], ['add-your-business', 'faq'])).toBe(
+      false,
+    )
     expect(hiddenPagesChanged(undefined, [])).toBe(false)
   })
 })

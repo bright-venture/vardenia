@@ -2871,8 +2871,6 @@ export interface Setting {
         | 'about'
         | 'contact'
         | 'faq'
-        | 'partner-with-us'
-        | 'advertise'
         | 'add-your-business'
         | 'magazine'
         | 'magazine-issues'

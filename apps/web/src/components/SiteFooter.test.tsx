@@ -40,7 +40,7 @@ describe('the site footer and hidden pages', () => {
       'Directory',
       'About',
       'Contact',
-      'Partner with us',
+      'Add your business',
       'Partner sign in',
       'Privacy',
       'Terms',
@@ -50,13 +50,14 @@ describe('the site footer and hidden pages', () => {
   })
 
   /**
-   * The Settings list on 11 November 2026: Partner sign in, Partner with us and
-   * Contact were hidden, and the footer has to follow it.
+   * The Settings list on 11 November 2026: Partner sign in, a business page and
+   * Contact were hidden, and the footer has to follow it. (Partner with us was
+   * merged into Add your business on 25 November 2026.)
    */
   it('leaves out what Settings hides', async () => {
-    const links = await footerLinks(['partner-sign-in', 'partner-with-us', 'contact', 'faq'])
+    const links = await footerLinks(['partner-sign-in', 'add-your-business', 'contact', 'faq'])
     expect(links).not.toContain('Partner sign in')
-    expect(links).not.toContain('Partner with us')
+    expect(links).not.toContain('Add your business')
     expect(links).not.toContain('Contact')
     expect(links).not.toContain('Questions')
     expect(links).toContain('About')

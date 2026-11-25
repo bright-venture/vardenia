@@ -47,7 +47,6 @@ const FIXED_SEGMENTS = [
   'account',
   'add-your-business',
   'credits',
-  'advertise',
   // A restaurant brand and its branches, /brands/<slug> (Task 12).
   'brands',
   'contact',
@@ -60,7 +59,6 @@ const FIXED_SEGMENTS = [
   // Where businesses book a place in the magazine (19 November 2026).
   'magazine-places',
   'partner',
-  'partner-with-us',
   'scan',
   'search',
   // The "Did you go?" page a guest opens from the email. lib/attendance.

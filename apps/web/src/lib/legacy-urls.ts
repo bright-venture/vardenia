@@ -65,3 +65,26 @@ export function legacyCategoryRedirect(pathname: string, params: URLSearchParams
   const query = kept.toString().replace(/%2C/g, ',')
   return `${prefix}/${section.path}${query ? `?${query}` : ''}`
 }
+
+/**
+ * Standing pages that were merged into another, and the page they went into.
+ *
+ * Partner with us became part of Add your business on 25 November 2026 (the
+ * owner's decision): its sections are there now (lib/pages). The old address is
+ * in emails already sent and in search results, so it forwards rather than
+ * answering 404.
+ */
+const MERGED_PAGES: Record<string, string> = {
+  'partner-with-us': '/add-your-business',
+}
+
+/**
+ * Where a merged page's old address goes, with the language kept
+ * (`/ar/partner-with-us` to `/ar/add-your-business`), or null.
+ */
+export function mergedPageRedirect(pathname: string): string | null {
+  const match = /^(\/[a-z]{2})?\/([a-z-]+)\/?$/.exec(pathname)
+  if (!match) return null
+  const target = MERGED_PAGES[match[2]!]
+  return target ? `${match[1] ?? ''}${target}` : null
+}

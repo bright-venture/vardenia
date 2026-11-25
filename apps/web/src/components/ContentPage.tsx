@@ -100,7 +100,6 @@ const TITLE_ONLY = /^- \*\*([^*]+)\*\*$/
 const DESKTOP_ENQUIRY_ACTIONS: Partial<Record<ContentPageSlug, string>> = {
   contact: 'Send a message',
   faq: 'Ask a question',
-  advertise: 'Discuss a campaign',
 }
 
 export async function ContentPageView({
@@ -137,8 +136,6 @@ export async function ContentPageView({
     contact: 2,
     faq: 0,
     'add-your-business': 0,
-    'partner-with-us': 5,
-    advertise: 3,
   }[slug]
   const body = (section: { body: string[] }, sectionIndex: number) =>
     groupLines(section.body).map((group, groupIndex) => {
@@ -173,7 +170,7 @@ export async function ContentPageView({
         locale={locale}
         immersive={slug === 'about'}
       >
-        {locale === 'en' && (slug === 'add-your-business' || slug === 'partner-with-us') && (
+        {locale === 'en' && slug === 'add-your-business' && (
           <nav hidden className="vd-business-chapters" aria-label={page.title}>
             {page.sections.map((section, i) => (
               <a key={section.heading} href={`#story-${i}`}>
@@ -269,8 +266,8 @@ export async function ContentPageView({
             ),
           )}
           {/* A question the list did not answer (18 November 2026). */}
-          {(faq || (locale === 'en' && (slug === 'contact' || slug === 'advertise'))) && (
-            <AskQuestionForm locale={locale} topic={slug === 'contact' || slug === 'advertise' ? slug : 'faq'} />
+          {(faq || (locale === 'en' && slug === 'contact')) && (
+            <AskQuestionForm locale={locale} topic={slug === 'contact' ? 'contact' : 'faq'} />
           )}
           <nav className="vd-story-next" aria-label={page.title}>
             <Link href={next.href} className="vd-button">

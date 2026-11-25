@@ -13,19 +13,19 @@ import { INPUT, LABEL, NOTICE_ERROR, NOTICE_SUCCESS, PRIMARY_BUTTON } from './fo
  * "Ask us a question", at the foot of the Questions page (18 November 2026).
  * No account needed; the Vardenia team answers by email. See /booking/question.
  */
-type Topic = 'faq' | 'contact' | 'advertise'
+type Topic = 'faq' | 'contact'
 
 const headings = {
   faq: 'Still have a question?',
   contact: 'Contact the Vardenia team',
-  advertise: 'Tell us about your campaign',
 } as const
 
 export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; topic?: Topic }) {
   const desktop = useDesktopEdition(locale)
   const [subject, setSubject] = useState('')
-  const prefix = topic === 'contact' ? 'Contact enquiry' : 'Campaign enquiry'
-  const subjectLine = topic === 'faq' ? '' : `${prefix}${subject.trim() ? ' — ' + subject.trim() : ''}\n\n`
+  const prefix = 'Contact enquiry'
+  const subjectLine =
+    topic === 'faq' ? '' : `${prefix}${subject.trim() ? ' — ' + subject.trim() : ''}\n\n`
   const heading = headings[topic]
   const t = useTranslations('askQuestion')
   const [name, setName] = useState('')
@@ -51,7 +51,14 @@ export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; top
       const response = await fetch('/booking/question', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name, email, question: message, website, locale, turnstileToken: token }),
+        body: JSON.stringify({
+          name,
+          email,
+          question: message,
+          website,
+          locale,
+          turnstileToken: token,
+        }),
       })
       if (response.ok) {
         setSent(true)
@@ -70,11 +77,17 @@ export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; top
 
   return (
     <section
-      id="enquiry" tabIndex={-1} aria-labelledby="enquiry-heading"
+      id="enquiry"
+      tabIndex={-1}
+      aria-labelledby="enquiry-heading"
       className={`vd-ask-question ${desktop ? 'vd-enquiry' : ''} border-ink-100 bg-surface-raised mt-12 border p-6 sm:p-8`}
     >
-      <h2 id="enquiry-heading" className="font-display text-ink-900 text-2xl">{desktop ? heading : t('title')}</h2>
-      <p className="text-ink-700 mt-2 text-sm">{desktop ? 'Send your message and we’ll reply by email.' : t('intro')}</p>
+      <h2 id="enquiry-heading" className="font-display text-ink-900 text-2xl">
+        {desktop ? heading : t('title')}
+      </h2>
+      <p className="text-ink-700 mt-2 text-sm">
+        {desktop ? 'Send your message and we’ll reply by email.' : t('intro')}
+      </p>
 
       {sent ? (
         <p className={`${NOTICE_SUCCESS} mt-6`} role="status">
@@ -112,7 +125,12 @@ export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; top
           {topic !== 'faq' && (
             <label className="block">
               <span className={LABEL}>Subject (optional)</span>
-              <input className={`${INPUT} mt-1`} maxLength={160} value={subject} onChange={(e) => setSubject(e.target.value)} />
+              <input
+                className={`${INPUT} mt-1`}
+                maxLength={160}
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+              />
             </label>
           )}
           <label className="block">
@@ -140,7 +158,10 @@ export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; top
           />
           {desktop && (
             <p className="text-ink-500 text-sm">
-              We use these details to respond to your enquiry. <Link href="/legal/privacy" className="underline underline-offset-4">Privacy policy</Link>
+              We use these details to respond to your enquiry.{' '}
+              <Link href="/legal/privacy" className="underline underline-offset-4">
+                Privacy policy
+              </Link>
             </p>
           )}
           <Turnstile onToken={setToken} handle={turnstile} locale={locale} />
@@ -156,8 +177,20 @@ export function AskQuestionForm({ locale, topic = 'faq' }: { locale: Locale; top
       )}
       {desktop && (
         <div className="text-ink-700 mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          {CONTACT.email && <a href={`mailto:${CONTACT.email}`} className="underline underline-offset-4">{CONTACT.email}</a>}
-          {CONTACT.phone && <a href={`tel:${CONTACT.phone.replace(/[^+\d]/g, '')}`} className="underline underline-offset-4" dir="ltr">{CONTACT.phone}</a>}
+          {CONTACT.email && (
+            <a href={`mailto:${CONTACT.email}`} className="underline underline-offset-4">
+              {CONTACT.email}
+            </a>
+          )}
+          {CONTACT.phone && (
+            <a
+              href={`tel:${CONTACT.phone.replace(/[^+\d]/g, '')}`}
+              className="underline underline-offset-4"
+              dir="ltr"
+            >
+              {CONTACT.phone}
+            </a>
+          )}
         </div>
       )}
     </section>

@@ -157,22 +157,6 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           destination: 2,
         }
       : null,
-    shown('partner-with-us')
-      ? {
-          href: '/partner-with-us',
-          name: t('footer.partnerWithUs'),
-          description: t('nav.partnerWithUsNote'),
-          destination: 1,
-        }
-      : null,
-    shown('advertise')
-      ? {
-          href: '/advertise',
-          name: t('footer.advertise'),
-          description: t('nav.advertiseNote'),
-          destination: 3,
-        }
-      : null,
     // Booking a place in the printed magazine (19 November 2026).
     {
       href: '/magazine-places',

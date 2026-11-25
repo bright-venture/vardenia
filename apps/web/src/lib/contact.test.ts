@@ -117,10 +117,10 @@ describe('every page that names a contact', () => {
     restore(() => {
       CONTACT.email = null
 
-      // Six, counted rather than assumed: contact, partner-with-us, advertise,
-      // add-your-business, and the privacy policy, which names it twice. The
-      // note this replaces said four while listing six.
-      expect(marked() - withAddress).toBeGreaterThanOrEqual(6)
+      // Five, counted rather than assumed, since Partner with us (merged into
+      // Add your business) and Advertise (removed), which named it too, went
+      // on 25 November 2026.
+      expect(marked() - withAddress).toBeGreaterThanOrEqual(5)
     })
   })
 })

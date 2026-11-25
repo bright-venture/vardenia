@@ -76,8 +76,6 @@ export const CONTENT_PAGES = {
   about: aboutPage,
   contact: contactPage,
   faq: faqPage,
-  'partner-with-us': partnerWithUsPage,
-  advertise: advertisePage,
   'add-your-business': addYourBusinessPage,
 } as const satisfies Record<string, Builder>
 
@@ -836,43 +834,43 @@ export function contactPage(locale: Locale = 'en'): ContentPage {
         }),
         body: pick(locale, {
           en: [
-            'To be listed, see **Add your business**. To advertise in the magazine, see **Advertise with us**.',
+            'To be listed, see **Add your business**.',
             'If you already have a partner account and cannot sign in, say so here and we will sort it out rather than sending you round a reset loop.',
           ],
           ar: [
-            'لإدراج مكانك، انظر **أضف عملك**. للإعلان في المجلة، انظر **أعلن معنا**.',
+            'لإدراج مكانك، انظر **أضف عملك**.',
             'وإذا كان لديك حساب شريك ولا تستطيع الدخول، أخبرنا هنا ونحلّها بدل أن ندور بك في حلقة استعادة كلمة السر.',
           ],
           fr: [
-            'Pour être référencé, voyez **Ajouter votre établissement**. Pour faire de la publicité dans le magazine, voyez **Annoncez chez nous**.',
+            'Pour être référencé, voyez **Ajouter votre établissement**.',
             "Si vous avez déjà un compte partenaire et n'arrivez pas à vous connecter, dites-le ici : nous réglerons le problème plutôt que de vous faire tourner en rond avec des réinitialisations.",
           ],
           es: [
-            'Para aparecer en el directorio, consulta **Añade tu negocio**. Para anunciarte en la revista, consulta **Anúnciate con nosotros**.',
+            'Para aparecer en el directorio, consulta **Añade tu negocio**.',
             'Si ya tienes una cuenta de socio y no puedes iniciar sesión, dínoslo aquí y lo resolveremos en lugar de mandarte a dar vueltas con restablecimientos de contraseña.',
           ],
           pt: [
-            'Para aparecer no diretório, veja **Adicione seu negócio**. Para anunciar na revista, veja **Anuncie conosco**.',
+            'Para aparecer no diretório, veja **Adicione seu negócio**.',
             'Se você já tem uma conta de parceiro e não consegue entrar, avise aqui e resolvemos, em vez de deixar você preso num ciclo de redefinição de senha.',
           ],
           ru: [
-            'Чтобы попасть в справочник, см. **Добавить своё заведение**. Чтобы разместить рекламу в журнале, см. **Реклама у нас**.',
+            'Чтобы попасть в справочник, см. **Добавить своё заведение**.',
             'Если у вас уже есть партнёрский аккаунт и вы не можете войти, напишите об этом здесь — мы разберёмся сами, а не будем гонять вас по кругу сброса пароля.',
           ],
           zh: [
-            '想被收录，请看**添加您的商户**。想在杂志上投放广告，请看**在我们这里投放广告**。',
+            '想被收录，请看**添加您的商户**。',
             '如果您已有合作伙伴账户却无法登录，请在这里告诉我们，我们会直接解决，而不是让您在重置密码的流程里兜圈子。',
           ],
           hi: [
-            'लिस्टिंग के लिए देखें **अपना व्यवसाय जोड़ें**। पत्रिका में विज्ञापन के लिए देखें **हमारे साथ विज्ञापन दें**।',
+            'लिस्टिंग के लिए देखें **अपना व्यवसाय जोड़ें**।',
             'अगर आपके पास पहले से साझेदार खाता है और आप साइन इन नहीं कर पा रहे, तो यहाँ बताइए; हम आपको पासवर्ड रीसेट के चक्कर में घुमाने के बजाय ख़ुद मामला सुलझा देंगे।',
           ],
           bn: [
-            'লিস্টিংয়ের জন্য দেখুন **আপনার ব্যবসা যোগ করুন**। ম্যাগাজিনে বিজ্ঞাপনের জন্য দেখুন **আমাদের সাথে বিজ্ঞাপন দিন**।',
+            'লিস্টিংয়ের জন্য দেখুন **আপনার ব্যবসা যোগ করুন**।',
             'আপনার যদি আগে থেকেই অংশীদার অ্যাকাউন্ট থাকে আর সাইন ইন করতে না পারেন, এখানে জানান; পাসওয়ার্ড রিসেটের চক্করে না ঘুরিয়ে আমরা নিজেরাই সমাধান করে দেব।',
           ],
           ur: [
-            'لسٹنگ کے لیے دیکھیں **اپنا کاروبار شامل کریں**۔ میگزین میں اشتہار کے لیے دیکھیں **ہمارے ساتھ اشتہار دیں**۔',
+            'لسٹنگ کے لیے دیکھیں **اپنا کاروبار شامل کریں**۔',
             'اگر آپ کا پہلے سے شراکت دار اکاؤنٹ ہے اور آپ سائن اِن نہیں کر پا رہے تو یہاں بتائیں؛ ہم آپ کو پاس ورڈ ری سیٹ کے چکر میں ڈالنے کے بجائے خود مسئلہ حل کر دیں گے۔',
           ],
         }),
@@ -1418,517 +1416,301 @@ export function faqPage(locale: Locale = 'en'): ContentPage {
   }
 }
 
-// ---------------------------------------------------------- partner with us
+// ------------------------------------------------- what a listing includes
 
-export function partnerWithUsPage(locale: Locale = 'en'): ContentPage {
-  return {
-    title: pick(locale, {
-      en: 'Partner with us',
-      ar: 'كن شريكاً',
-      fr: 'Devenir partenaire',
-      es: 'Colabora con nosotros',
-      pt: 'Seja nosso parceiro',
-      ru: 'Стать партнёром',
-      zh: '成为合作伙伴',
-      hi: 'हमारे साझेदार बनें',
-      bn: 'আমাদের অংশীদার হোন',
-      ur: 'ہمارے شراکت دار بنیں',
-    }),
-    intro: pick(locale, {
-      en: 'A Vardenia listing puts a business in front of people who are deciding where to go, in print and online, with one code connecting the two.',
-      ar: 'إدراجك في فاردينيا يضع عملك أمام من يقرر الآن إلى أين يذهب، مطبوعاً وإلكترونياً، برمز واحد يربط الاثنين.',
-      fr: 'Une fiche Vardenia place un établissement sous les yeux de ceux qui décident où aller, dans le magazine comme en ligne, avec un seul code pour relier les deux.',
-      es: 'Una ficha en Vardenia pone un negocio delante de quienes están decidiendo adónde ir, en papel y en línea, con un solo código que une ambos.',
-      pt: 'Uma ficha na Vardenia coloca um negócio diante de quem está decidindo aonde ir, no impresso e online, com um único código ligando os dois.',
-      ru: 'Карточка в Vardenia показывает заведение тем, кто прямо сейчас решает, куда пойти, — в журнале и онлайн, и один код связывает одно с другим.',
-      zh: '在 Vardenia 被收录，意味着您的商户会出现在正在决定去哪儿的人面前，无论是在杂志上还是网上，一个二维码把两者连在一起。',
-      hi: 'Vardenia की लिस्टिंग किसी व्यवसाय को उन लोगों के सामने रखती है जो तय कर रहे हैं कि कहाँ जाएँ, छपी पत्रिका में भी और ऑनलाइन भी, और एक कोड दोनों को जोड़ता है।',
-      bn: 'Vardenia-তে একটি লিস্টিং আপনার ব্যবসাকে তুলে ধরে তাঁদের সামনে যাঁরা ঠিক করছেন কোথায় যাবেন, ছাপায় এবং অনলাইনে, আর একটি কোড দুটোকে জুড়ে দেয়।',
-      ur: 'Vardenia کی لسٹنگ کسی کاروبار کو اُن لوگوں کے سامنے لاتی ہے جو طے کر رہے ہیں کہ کہاں جائیں، چھپے ہوئے میگزین میں بھی اور آن لائن بھی، اور ایک کوڈ دونوں کو جوڑتا ہے۔',
-    }),
-    sections: [
-      {
-        heading: pick(locale, {
-          en: 'What a listing is',
-          ar: 'ما هو الإدراج',
-          fr: "Ce qu'est une fiche",
-          es: 'Qué es una ficha',
-          pt: 'O que é uma ficha',
-          ru: 'Что такое карточка',
-          zh: '收录包含什么',
-          hi: 'लिस्टिंग क्या है',
-          bn: 'লিস্টিং কী',
-          ur: 'لسٹنگ کیا ہے',
-        }),
-        body: pick(locale, {
+/**
+ * What a listing is, what it is not and what each level includes: the
+ * Partner with us page until 25 November 2026, when the owner merged it into
+ * Add your business (its own "How to start" went: Add your business already
+ * says how to start). /partner-with-us now redirects there (lib/legacy-urls).
+ */
+function listingSections(locale: Locale): ContentPage['sections'] {
+  return [
+    {
+      heading: pick(locale, {
+        en: 'What a listing is',
+        ar: 'ما هو الإدراج',
+        fr: "Ce qu'est une fiche",
+        es: 'Qué es una ficha',
+        pt: 'O que é uma ficha',
+        ru: 'Что такое карточка',
+        zh: '收录包含什么',
+        hi: 'लिस्टिंग क्या है',
+        bn: 'লিস্টিং কী',
+        ur: 'لسٹنگ کیا ہے',
+      }),
+      body: pick(locale, {
+        en: [
+          '- A page on the site with photographs, hours, and everything a visitor needs before they decide.',
+          '- At silver and gold, a printed page in the magazine, carrying a code that opens that page.',
+          '- That code never expires. It keeps working for the life of the issue and beyond, and it follows the listing if anything about the business changes.',
+          '- Bookings, if the business takes them, answered from a dashboard rather than from a phone that rings during service.',
+        ],
+        ar: [
+          '- صفحة على الموقع فيها الصور ومواعيد العمل وكل ما يحتاجه الزائر قبل أن يقرر.',
+          '- في المستويين الفضي والذهبي، صفحة مطبوعة في المجلة تحمل رمزاً يفتح تلك الصفحة.',
+          '- هذا الرمز لا ينتهي. يبقى يعمل طوال عمر العدد وبعده، ويتبع الإدراج مهما تغيّر في العمل.',
+          '- الحجوزات، إن كان المكان يقبلها، يردّ عليها من لوحة تحكم بدل هاتف يرن في وسط الخدمة.',
+        ],
+        fr: [
+          '- Une page sur le site, avec photos, horaires et tout ce dont un visiteur a besoin avant de se décider.',
+          '- En argent et en or, une page imprimée dans le magazine, avec un code qui ouvre cette page.',
+          "- Ce code n'expire jamais. Il fonctionne pendant toute la vie du numéro et au-delà, et il suit la fiche si quoi que ce soit change dans l'établissement.",
+          "- Les réservations, si l'établissement en prend, gérées depuis un tableau de bord plutôt qu'au téléphone qui sonne en plein service.",
+        ],
+        es: [
+          '- Una página en el sitio con fotos, horario y todo lo que un visitante necesita antes de decidirse.',
+          '- En plata y oro, una página impresa en la revista, con un código que abre esa página.',
+          '- Ese código nunca caduca. Funciona durante toda la vida del número y después, y sigue a la ficha si algo del negocio cambia.',
+          '- Las reservas, si el negocio las acepta, se responden desde un panel y no desde un teléfono que suena en pleno servicio.',
+        ],
+        pt: [
+          '- Uma página no site com fotos, horários e tudo o que um visitante precisa antes de decidir.',
+          '- Em prata e ouro, uma página impressa na revista, com um código que abre essa página.',
+          '- Esse código nunca expira. Ele funciona durante toda a vida da edição e depois dela, e acompanha a ficha se algo no negócio mudar.',
+          '- Reservas, se o negócio aceitar, respondidas por um painel e não por um telefone que toca no meio do serviço.',
+        ],
+        ru: [
+          '- Страница на сайте с фотографиями, часами работы и всем, что нужно гостю, прежде чем решить.',
+          '- На уровнях «серебро» и «золото»: печатная страница в журнале с кодом, который открывает эту страницу.',
+          '- Срок действия этого кода никогда не истекает. Он работает всё время жизни номера и дольше и следует за карточкой, если в заведении что-то меняется.',
+          '- Бронирования, если заведение их принимает, — через панель управления, а не по телефону, который звонит посреди смены.',
+        ],
+        zh: [
+          '- 网站上的一个页面，包含照片、营业时间，以及访客在做决定前需要的一切信息。',
+          '- 银级和金级另有杂志上的一页印刷版面，附有可打开该页面的二维码。',
+          '- 这个二维码永不过期。在整期杂志的生命周期内乃至之后都有效，商户有任何变化，它都会跟着页面走。',
+          '- 如果商户接受预订，可以在管理后台处理，而不必在营业高峰时接听响个不停的电话。',
+        ],
+        hi: [
+          '- साइट पर एक पेज, जिसमें तस्वीरें, समय और वह सब कुछ हो जो किसी आगंतुक को फ़ैसला करने से पहले चाहिए।',
+          '- सिल्वर और गोल्ड में, पत्रिका में एक छपा हुआ पेज, जिस पर वह पेज खोलने वाला कोड हो।',
+          '- वह कोड कभी एक्सपायर नहीं होता। वह अंक के पूरे जीवनकाल में और उसके बाद भी काम करता है, और व्यवसाय में कुछ भी बदले तो लिस्टिंग के साथ चलता है।',
+          '- बुकिंग, अगर व्यवसाय लेता है, तो उनका जवाब सर्विस के बीच बजते फ़ोन के बजाय एक डैशबोर्ड से दिया जाता है।',
+        ],
+        bn: [
+          '- সাইটে একটি পেজ, যেখানে ছবি, সময়সূচি আর সিদ্ধান্ত নেওয়ার আগে একজন অতিথির যা যা দরকার সব থাকে।',
+          '- সিলভার ও গোল্ডে, ম্যাগাজিনে একটি ছাপা পাতা, যাতে সেই পেজ খোলার কোড থাকে।',
+          '- সেই কোডের মেয়াদ কখনো ফুরায় না। সংখ্যাটির পুরো আয়ুষ্কাল জুড়ে এবং তার পরেও এটি কাজ করে, আর ব্যবসার কিছু বদলালে লিস্টিংকে অনুসরণ করে।',
+          '- বুকিং, যদি ব্যবসাটি নেয়, তাহলে সেগুলোর উত্তর দেওয়া হয় একটি ড্যাশবোর্ড থেকে, ব্যস্ত সময়ে বেজে চলা ফোন থেকে নয়।',
+        ],
+        ur: [
+          '- سائٹ پر ایک صفحہ جس میں تصاویر، اوقات اور وہ سب کچھ ہو جو کسی مہمان کو فیصلہ کرنے سے پہلے چاہیے۔',
+          '- سلور اور گولڈ میں، میگزین میں ایک چھپا ہوا صفحہ، جس پر وہ صفحہ کھولنے والا کوڈ ہو۔',
+          '- وہ کوڈ کبھی ختم نہیں ہوتا۔ یہ شمارے کی پوری عمر اور اس کے بعد بھی کام کرتا ہے، اور کاروبار میں کچھ بھی بدلے تو لسٹنگ کے ساتھ رہتا ہے۔',
+          '- بکنگ، اگر کاروبار لیتا ہے، تو ان کا جواب سروس کے دوران بجتے فون کے بجائے ایک ڈیش بورڈ سے دیا جاتا ہے۔',
+        ],
+      }),
+    },
+    {
+      heading: pick(locale, {
+        en: 'What it is not',
+        ar: 'ما ليس هو',
+        fr: "Ce qu'elle n'est pas",
+        es: 'Qué no es',
+        pt: 'O que ela não é',
+        ru: 'Чем она не является',
+        zh: '它不是什么',
+        hi: 'यह क्या नहीं है',
+        bn: 'এটা কী নয়',
+        ur: 'یہ کیا نہیں ہے',
+      }),
+      body: pick(locale, {
+        en: [
+          'It is not an advertising slot dressed as editorial. Listings are marked, and a reader can tell a listing from an article.',
+          'A venue pays Vardenia a commission on what each guest who books through Vardenia and comes spends, as set out in the agreement it signs. Nothing is charged for a no-show or a cancellation, and the guest pays the venue its usual price.',
+          'A listing cannot be bought into a place it does not belong. A restaurant is under Eat & Drink whether or not it pays more than the one next to it.',
+        ],
+        ar: [
+          'ليس مساحة إعلانية متنكرة في هيئة تحرير. الإدراجات معلّمة، والقارئ يميّز الإدراج من المقال.',
+          'يدفع المكان لفاردينيا عمولة على ما ينفقه كل ضيف يحجز عبر فاردينيا ويحضر، كما هو محدّد في الاتفاق الذي يوقّعه. لا يُحتسب شيء إذا لم يحضر الضيف أو ألغى، والضيف يدفع للمكان سعره المعتاد.',
+          'ولا يُشترى الإدراج ليوضع في مكان لا ينتمي إليه. المطعم تحت المأكولات والمشروبات سواء دفع أكثر من جاره أو لم يدفع.',
+        ],
+        fr: [
+          "Ce n'est pas un espace publicitaire déguisé en contenu éditorial. Les fiches sont signalées, et un lecteur distingue une fiche d'un article.",
+          "L'établissement verse à Vardenia une commission sur ce que dépense chaque client qui réserve par Vardenia et se présente, comme le prévoit l'accord qu'il signe. Rien n'est facturé pour un client absent ou une annulation, et le client paie à l'établissement son prix habituel.",
+          "Une fiche ne s'achète pas une place qui n'est pas la sienne. Un restaurant figure dans Manger & Boire, qu'il paie plus que son voisin ou non.",
+        ],
+        es: [
+          'No es un espacio publicitario disfrazado de contenido editorial. Las fichas están señaladas, y un lector distingue una ficha de un artículo.',
+          'El local paga a Vardenia una comisión sobre lo que gasta cada cliente que reserva a través de Vardenia y acude, según el acuerdo que firma. No se cobra nada por una ausencia ni por una cancelación, y el cliente paga al local su precio habitual.',
+          'Una ficha no puede comprar un sitio que no le corresponde. Un restaurante está en Comer y beber, pague o no más que el de al lado.',
+        ],
+        pt: [
+          'Não é um espaço publicitário disfarçado de conteúdo editorial. As fichas são identificadas, e o leitor sabe distinguir uma ficha de um artigo.',
+          'O estabelecimento paga à Vardenia uma comissão sobre o que gasta cada cliente que reserva através da Vardenia e comparece, conforme o acordo que assina. Nada é cobrado por uma ausência ou um cancelamento, e o cliente paga ao estabelecimento o preço de sempre.',
+          'Uma ficha não compra um lugar ao qual não pertence. Um restaurante fica em Comer e beber, pague ele mais ou não do que o vizinho.',
+        ],
+        ru: [
+          'Это не рекламное место под видом редакционного материала. Карточки помечены, и читатель отличит карточку от статьи.',
+          'Заведение платит Vardenia комиссию с суммы, которую потратил каждый гость, забронировавший через Vardenia и пришедший, как указано в договоре, который оно подписывает. За неявку или отмену ничего не взимается, а гость платит заведению его обычную цену.',
+          'Карточку нельзя купить в раздел, которому она не принадлежит. Ресторан находится в разделе «Еда и напитки», платит он больше соседа или нет.',
+        ],
+        zh: [
+          '它不是伪装成编辑内容的广告位。收录条目都有标注，读者能分清哪是商户条目、哪是文章。',
+          '每位通过 Vardenia 预订并实际到店的客人，商户按其消费金额向 Vardenia 支付佣金，具体写在商户签署的协议中。客人未到或取消不收取任何费用，客人向商户支付的仍是其正常价格。',
+          '收录不能花钱买到不属于它的位置。一家餐厅就在“餐饮”栏目里，无论它是否比隔壁付得更多。',
+        ],
+        hi: [
+          'यह संपादकीय के भेस में कोई विज्ञापन स्लॉट नहीं है। लिस्टिंग पर निशान होता है, और पाठक लिस्टिंग और लेख में फ़र्क़ कर सकता है।',
+          'Vardenia के ज़रिए बुक करके आने वाले हर मेहमान के ख़र्च पर व्यवसाय Vardenia को कमीशन देता है, जैसा कि उसके हस्ताक्षर किए समझौते में लिखा होता है। मेहमान के न आने या रद्द करने पर कुछ नहीं लिया जाता, और मेहमान व्यवसाय को उसकी सामान्य क़ीमत ही देता है।',
+          'पैसे देकर लिस्टिंग को ऐसी जगह नहीं रखवाया जा सकता जहाँ वह नहीं बैठती। रेस्तराँ खाना-पीना में ही रहेगा, चाहे वह पड़ोसी से ज़्यादा पैसे दे या न दे।',
+        ],
+        bn: [
+          'এটি সম্পাদকীয়র ছদ্মবেশে কোনো বিজ্ঞাপনের জায়গা নয়। লিস্টিং চিহ্নিত থাকে, আর পাঠক লিস্টিং ও প্রবন্ধের পার্থক্য বুঝতে পারেন।',
+          'Vardenia-র মাধ্যমে বুক করে যে অতিথি আসেন, তাঁদের প্রত্যেকের খরচের ওপর ব্যবসাটি Vardenia-কে একটি কমিশন দেয়, যা ব্যবসার স্বাক্ষর করা চুক্তিতে লেখা থাকে। অতিথি না এলে বা বাতিল করলে কিছু নেওয়া হয় না, আর অতিথি ব্যবসাটিকে তার স্বাভাবিক দামই দেন।',
+          'টাকা দিয়ে কোনো লিস্টিংকে এমন জায়গায় বসানো যায় না যেখানে তার থাকার কথা নয়। একটি রেস্তোরাঁ খাওয়া-দাওয়া বিভাগেই থাকবে, পাশেরটির চেয়ে বেশি টাকা দিক বা না দিক।',
+        ],
+        ur: [
+          'یہ ادارتی مواد کے بھیس میں کوئی اشتہاری جگہ نہیں۔ لسٹنگز پر نشان ہوتا ہے، اور قاری لسٹنگ اور مضمون میں فرق کر سکتا ہے۔',
+          'Vardenia کے ذریعے بکنگ کر کے آنے والے ہر مہمان کے خرچ پر کاروبار Vardenia کو کمیشن دیتا ہے، جیسا کہ اس معاہدے میں لکھا ہوتا ہے جس پر کاروبار دستخط کرتا ہے۔ مہمان کے نہ آنے یا منسوخی پر کچھ نہیں لیا جاتا، اور مہمان کاروبار کو اس کی معمول کی قیمت ہی دیتا ہے۔',
+          'پیسے دے کر کسی لسٹنگ کو ایسی جگہ نہیں رکھوایا جا سکتا جہاں اس کا تعلق نہ ہو۔ ریستوران کھانا پینا ہی میں رہے گا، چاہے وہ پڑوسی سے زیادہ ادا کرے یا نہیں۔',
+        ],
+      }),
+    },
+    {
+      /**
+       * What each level includes, and no prices: prices are only in the rate
+       * card PDF, never on the site (owner's rule). Matches core/tiers and the
+       * terms: bronze is the website, silver adds the magazine page and its
+       * QR code, gold adds first place in its own category, and platinum adds
+       * the home page band.
+       */
+      heading: pick(locale, {
+        en: 'What each level includes',
+        ar: 'ما يشمله كل مستوى',
+        fr: 'Ce que comprend chaque niveau',
+        es: 'Qué incluye cada nivel',
+        pt: 'O que inclui cada nível',
+        ru: 'Что входит в каждый уровень',
+        zh: '各级别包含的内容',
+        hi: 'हर स्तर में क्या शामिल है',
+        bn: 'প্রতিটি স্তরে কী থাকে',
+        ur: 'ہر سطح میں کیا شامل ہے',
+      }),
+      body: [
+        ...pick(locale, {
           en: [
-            '- A page on the site with photographs, hours, and everything a visitor needs before they decide.',
-            '- At silver and gold, a printed page in the magazine, carrying a code that opens that page.',
-            '- That code never expires. It keeps working for the life of the issue and beyond, and it follows the listing if anything about the business changes.',
-            '- Bookings, if the business takes them, answered from a dashboard rather than from a phone that rings during service.',
+            '- **Bronze**: a listing on the website, in its section and in search.',
+            '- **Silver**: everything in bronze, plus a page in the printed magazine with its own QR code, and a place above every bronze listing.',
+            '- **Gold**: everything in silver, plus first place in the lists of its own category. Gold places are limited.',
+            '- **Platinum**: everything in gold, plus a place in the band at the top of the home page. Platinum places are limited.',
+            'Prices are in our rate card. Write to us and we will send it.',
           ],
           ar: [
-            '- صفحة على الموقع فيها الصور ومواعيد العمل وكل ما يحتاجه الزائر قبل أن يقرر.',
-            '- في المستويين الفضي والذهبي، صفحة مطبوعة في المجلة تحمل رمزاً يفتح تلك الصفحة.',
-            '- هذا الرمز لا ينتهي. يبقى يعمل طوال عمر العدد وبعده، ويتبع الإدراج مهما تغيّر في العمل.',
-            '- الحجوزات، إن كان المكان يقبلها، يردّ عليها من لوحة تحكم بدل هاتف يرن في وسط الخدمة.',
+            '- **البرونزي**: إدراج على الموقع، في قسمه وفي البحث.',
+            '- **الفضي**: كل ما في البرونزي، مع صفحة في المجلة المطبوعة برمز QR خاص بها، ومكان قبل كل الإدراجات البرونزية.',
+            '- **الذهبي**: كل ما في الفضي، مع المرتبة الأولى في قوائم فئته. الأماكن الذهبية محدودة.',
+            '- **البلاتيني**: كل ما في الذهبي، مع مكان في الشريط أعلى الصفحة الرئيسية. الأماكن البلاتينية محدودة.',
+            'الأسعار في لائحة الأسعار لدينا. راسلنا وسنرسلها إليك.',
           ],
           fr: [
-            '- Une page sur le site, avec photos, horaires et tout ce dont un visiteur a besoin avant de se décider.',
-            '- En argent et en or, une page imprimée dans le magazine, avec un code qui ouvre cette page.',
-            "- Ce code n'expire jamais. Il fonctionne pendant toute la vie du numéro et au-delà, et il suit la fiche si quoi que ce soit change dans l'établissement.",
-            "- Les réservations, si l'établissement en prend, gérées depuis un tableau de bord plutôt qu'au téléphone qui sonne en plein service.",
+            '- **Bronze** : une fiche sur le site, dans sa rubrique et dans la recherche.',
+            '- **Argent** : tout ce que comprend le bronze, plus une page dans le magazine imprimé avec son propre code QR, et une place devant toutes les fiches bronze.',
+            "- **Or** : tout ce que comprend l'argent, plus la première place dans les listes de sa propre catégorie. Les places or sont limitées.",
+            "- **Platine** : tout ce que comprend l'or, plus une place dans le bandeau en haut de la page d'accueil. Les places platine sont limitées.",
+            'Les prix figurent dans notre grille tarifaire. Écrivez-nous et nous vous l’enverrons.',
           ],
           es: [
-            '- Una página en el sitio con fotos, horario y todo lo que un visitante necesita antes de decidirse.',
-            '- En plata y oro, una página impresa en la revista, con un código que abre esa página.',
-            '- Ese código nunca caduca. Funciona durante toda la vida del número y después, y sigue a la ficha si algo del negocio cambia.',
-            '- Las reservas, si el negocio las acepta, se responden desde un panel y no desde un teléfono que suena en pleno servicio.',
+            '- **Bronce**: una ficha en el sitio web, en su sección y en la búsqueda.',
+            '- **Plata**: todo lo del bronce, más una página en la revista impresa con su propio código QR, y un lugar por delante de todas las fichas de bronce.',
+            '- **Oro**: todo lo de la plata, más el primer lugar en las listas de su propia categoría. Las plazas de oro son limitadas.',
+            '- **Platino**: todo lo del oro, más un lugar en la franja de la parte superior de la página de inicio. Las plazas de platino son limitadas.',
+            'Los precios están en nuestra tarifa. Escríbenos y te la enviamos.',
           ],
           pt: [
-            '- Uma página no site com fotos, horários e tudo o que um visitante precisa antes de decidir.',
-            '- Em prata e ouro, uma página impressa na revista, com um código que abre essa página.',
-            '- Esse código nunca expira. Ele funciona durante toda a vida da edição e depois dela, e acompanha a ficha se algo no negócio mudar.',
-            '- Reservas, se o negócio aceitar, respondidas por um painel e não por um telefone que toca no meio do serviço.',
+            '- **Bronze**: uma ficha no site, na sua secção e na pesquisa.',
+            '- **Prata**: tudo o que o bronze inclui, mais uma página na revista impressa com o seu próprio código QR, e um lugar à frente de todas as fichas bronze.',
+            '- **Ouro**: tudo o que a prata inclui, mais o primeiro lugar nas listas da sua própria categoria. Os lugares ouro são limitados.',
+            '- **Platina**: tudo o que o ouro inclui, mais um lugar na faixa no topo da página inicial. Os lugares platina são limitados.',
+            'Os preços estão na nossa tabela de preços. Escreva-nos e enviamo-la.',
           ],
           ru: [
-            '- Страница на сайте с фотографиями, часами работы и всем, что нужно гостю, прежде чем решить.',
-            '- На уровнях «серебро» и «золото»: печатная страница в журнале с кодом, который открывает эту страницу.',
-            '- Срок действия этого кода никогда не истекает. Он работает всё время жизни номера и дольше и следует за карточкой, если в заведении что-то меняется.',
-            '- Бронирования, если заведение их принимает, — через панель управления, а не по телефону, который звонит посреди смены.',
+            '- **Бронза**: карточка на сайте, в своём разделе и в поиске.',
+            '- **Серебро**: всё, что входит в бронзу, плюс страница в печатном журнале со своим QR-кодом и место выше всех бронзовых карточек.',
+            '- **Золото**: всё, что входит в серебро, плюс первое место в списках своей категории. Число золотых мест ограничено.',
+            '- **Платина**: всё, что входит в золото, плюс место в полосе вверху главной страницы. Число платиновых мест ограничено.',
+            'Цены указаны в нашем прайс-листе. Напишите нам, и мы его пришлём.',
           ],
           zh: [
-            '- 网站上的一个页面，包含照片、营业时间，以及访客在做决定前需要的一切信息。',
-            '- 银级和金级另有杂志上的一页印刷版面，附有可打开该页面的二维码。',
-            '- 这个二维码永不过期。在整期杂志的生命周期内乃至之后都有效，商户有任何变化，它都会跟着页面走。',
-            '- 如果商户接受预订，可以在管理后台处理，而不必在营业高峰时接听响个不停的电话。',
+            '- **铜级**：网站上的收录条目，出现在所属栏目和搜索中。',
+            '- **银级**：包含铜级的全部内容，另加印刷版杂志中的一页及其专属二维码，并排在所有铜级条目之前。',
+            '- **金级**：包含银级的全部内容，另加所属类别列表中的首位。金级名额有限。',
+            '- **铂金级**：包含金级的全部内容，另加首页顶部横幅中的一个位置。铂金级名额有限。',
+            '价格见我们的价目表。写信给我们，我们会发给您。',
           ],
           hi: [
-            '- साइट पर एक पेज, जिसमें तस्वीरें, समय और वह सब कुछ हो जो किसी आगंतुक को फ़ैसला करने से पहले चाहिए।',
-            '- सिल्वर और गोल्ड में, पत्रिका में एक छपा हुआ पेज, जिस पर वह पेज खोलने वाला कोड हो।',
-            '- वह कोड कभी एक्सपायर नहीं होता। वह अंक के पूरे जीवनकाल में और उसके बाद भी काम करता है, और व्यवसाय में कुछ भी बदले तो लिस्टिंग के साथ चलता है।',
-            '- बुकिंग, अगर व्यवसाय लेता है, तो उनका जवाब सर्विस के बीच बजते फ़ोन के बजाय एक डैशबोर्ड से दिया जाता है।',
+            '- **ब्रॉन्ज़**: वेबसाइट पर एक लिस्टिंग, अपने सेक्शन में और खोज में।',
+            '- **सिल्वर**: ब्रॉन्ज़ की हर चीज़, साथ में छपी पत्रिका में एक पेज और उसका अपना QR कोड, और हर ब्रॉन्ज़ लिस्टिंग से ऊपर जगह।',
+            '- **गोल्ड**: सिल्वर की हर चीज़, साथ में अपनी श्रेणी की सूचियों में पहला स्थान। गोल्ड जगहें सीमित हैं।',
+            '- **प्लैटिनम**: गोल्ड की हर चीज़, साथ में होम पेज के ऊपर की पट्टी में जगह। प्लैटिनम जगहें सीमित हैं।',
+            'क़ीमतें हमारे रेट कार्ड में हैं। हमें लिखें, हम उसे भेज देंगे।',
           ],
           bn: [
-            '- সাইটে একটি পেজ, যেখানে ছবি, সময়সূচি আর সিদ্ধান্ত নেওয়ার আগে একজন অতিথির যা যা দরকার সব থাকে।',
-            '- সিলভার ও গোল্ডে, ম্যাগাজিনে একটি ছাপা পাতা, যাতে সেই পেজ খোলার কোড থাকে।',
-            '- সেই কোডের মেয়াদ কখনো ফুরায় না। সংখ্যাটির পুরো আয়ুষ্কাল জুড়ে এবং তার পরেও এটি কাজ করে, আর ব্যবসার কিছু বদলালে লিস্টিংকে অনুসরণ করে।',
-            '- বুকিং, যদি ব্যবসাটি নেয়, তাহলে সেগুলোর উত্তর দেওয়া হয় একটি ড্যাশবোর্ড থেকে, ব্যস্ত সময়ে বেজে চলা ফোন থেকে নয়।',
+            '- **ব্রোঞ্জ**: ওয়েবসাইটে একটি লিস্টিং, নিজের বিভাগে ও সার্চে।',
+            '- **সিলভার**: ব্রোঞ্জের সবকিছু, সঙ্গে ছাপা ম্যাগাজিনে একটি পাতা ও তার নিজস্ব QR কোড, আর সব ব্রোঞ্জ লিস্টিংয়ের আগে জায়গা।',
+            '- **গোল্ড**: সিলভারের সবকিছু, সঙ্গে নিজের বিভাগের তালিকায় প্রথম স্থান। গোল্ড জায়গা সীমিত।',
+            '- **প্ল্যাটিনাম**: গোল্ডের সবকিছু, সঙ্গে হোম পেজের ওপরের ব্যান্ডে একটি জায়গা। প্ল্যাটিনাম জায়গা সীমিত।',
+            'দাম আমাদের রেট কার্ডে আছে। আমাদের লিখুন, আমরা পাঠিয়ে দেব।',
           ],
           ur: [
-            '- سائٹ پر ایک صفحہ جس میں تصاویر، اوقات اور وہ سب کچھ ہو جو کسی مہمان کو فیصلہ کرنے سے پہلے چاہیے۔',
-            '- سلور اور گولڈ میں، میگزین میں ایک چھپا ہوا صفحہ، جس پر وہ صفحہ کھولنے والا کوڈ ہو۔',
-            '- وہ کوڈ کبھی ختم نہیں ہوتا۔ یہ شمارے کی پوری عمر اور اس کے بعد بھی کام کرتا ہے، اور کاروبار میں کچھ بھی بدلے تو لسٹنگ کے ساتھ رہتا ہے۔',
-            '- بکنگ، اگر کاروبار لیتا ہے، تو ان کا جواب سروس کے دوران بجتے فون کے بجائے ایک ڈیش بورڈ سے دیا جاتا ہے۔',
+            '- **برونز**: ویب سائٹ پر ایک لسٹنگ، اپنے سیکشن اور تلاش میں۔',
+            '- **سلور**: برونز کی ہر چیز، ساتھ میں چھپے ہوئے میگزین میں ایک صفحہ اور اس کا اپنا QR کوڈ، اور ہر برونز لسٹنگ سے اوپر جگہ۔',
+            '- **گولڈ**: سلور کی ہر چیز، ساتھ میں اپنی زمرے کی فہرستوں میں پہلا مقام۔ گولڈ جگہیں محدود ہیں۔',
+            '- **پلاٹینم**: گولڈ کی ہر چیز، ساتھ میں ہوم پیج کے اوپر والی پٹی میں جگہ۔ پلاٹینم جگہیں محدود ہیں۔',
+            'قیمتیں ہمارے ریٹ کارڈ میں ہیں۔ ہمیں لکھیں، ہم آپ کو بھیج دیں گے۔',
           ],
         }),
-      },
-      {
-        heading: pick(locale, {
-          en: 'What it is not',
-          ar: 'ما ليس هو',
-          fr: "Ce qu'elle n'est pas",
-          es: 'Qué no es',
-          pt: 'O que ela não é',
-          ru: 'Чем она не является',
-          zh: '它不是什么',
-          hi: 'यह क्या नहीं है',
-          bn: 'এটা কী নয়',
-          ur: 'یہ کیا نہیں ہے',
-        }),
-        body: pick(locale, {
-          en: [
-            'It is not an advertising slot dressed as editorial. Listings are marked, and a reader can tell a listing from an article.',
-            'A venue pays Vardenia a commission on what each guest who books through Vardenia and comes spends, as set out in the agreement it signs. Nothing is charged for a no-show or a cancellation, and the guest pays the venue its usual price.',
-            'A listing cannot be bought into a place it does not belong. A restaurant is under Eat & Drink whether or not it pays more than the one next to it.',
-          ],
-          ar: [
-            'ليس مساحة إعلانية متنكرة في هيئة تحرير. الإدراجات معلّمة، والقارئ يميّز الإدراج من المقال.',
-            'يدفع المكان لفاردينيا عمولة على ما ينفقه كل ضيف يحجز عبر فاردينيا ويحضر، كما هو محدّد في الاتفاق الذي يوقّعه. لا يُحتسب شيء إذا لم يحضر الضيف أو ألغى، والضيف يدفع للمكان سعره المعتاد.',
-            'ولا يُشترى الإدراج ليوضع في مكان لا ينتمي إليه. المطعم تحت المأكولات والمشروبات سواء دفع أكثر من جاره أو لم يدفع.',
-          ],
-          fr: [
-            "Ce n'est pas un espace publicitaire déguisé en contenu éditorial. Les fiches sont signalées, et un lecteur distingue une fiche d'un article.",
-            "L'établissement verse à Vardenia une commission sur ce que dépense chaque client qui réserve par Vardenia et se présente, comme le prévoit l'accord qu'il signe. Rien n'est facturé pour un client absent ou une annulation, et le client paie à l'établissement son prix habituel.",
-            "Une fiche ne s'achète pas une place qui n'est pas la sienne. Un restaurant figure dans Manger & Boire, qu'il paie plus que son voisin ou non.",
-          ],
-          es: [
-            'No es un espacio publicitario disfrazado de contenido editorial. Las fichas están señaladas, y un lector distingue una ficha de un artículo.',
-            'El local paga a Vardenia una comisión sobre lo que gasta cada cliente que reserva a través de Vardenia y acude, según el acuerdo que firma. No se cobra nada por una ausencia ni por una cancelación, y el cliente paga al local su precio habitual.',
-            'Una ficha no puede comprar un sitio que no le corresponde. Un restaurante está en Comer y beber, pague o no más que el de al lado.',
-          ],
-          pt: [
-            'Não é um espaço publicitário disfarçado de conteúdo editorial. As fichas são identificadas, e o leitor sabe distinguir uma ficha de um artigo.',
-            'O estabelecimento paga à Vardenia uma comissão sobre o que gasta cada cliente que reserva através da Vardenia e comparece, conforme o acordo que assina. Nada é cobrado por uma ausência ou um cancelamento, e o cliente paga ao estabelecimento o preço de sempre.',
-            'Uma ficha não compra um lugar ao qual não pertence. Um restaurante fica em Comer e beber, pague ele mais ou não do que o vizinho.',
-          ],
-          ru: [
-            'Это не рекламное место под видом редакционного материала. Карточки помечены, и читатель отличит карточку от статьи.',
-            'Заведение платит Vardenia комиссию с суммы, которую потратил каждый гость, забронировавший через Vardenia и пришедший, как указано в договоре, который оно подписывает. За неявку или отмену ничего не взимается, а гость платит заведению его обычную цену.',
-            'Карточку нельзя купить в раздел, которому она не принадлежит. Ресторан находится в разделе «Еда и напитки», платит он больше соседа или нет.',
-          ],
-          zh: [
-            '它不是伪装成编辑内容的广告位。收录条目都有标注，读者能分清哪是商户条目、哪是文章。',
-            '每位通过 Vardenia 预订并实际到店的客人，商户按其消费金额向 Vardenia 支付佣金，具体写在商户签署的协议中。客人未到或取消不收取任何费用，客人向商户支付的仍是其正常价格。',
-            '收录不能花钱买到不属于它的位置。一家餐厅就在“餐饮”栏目里，无论它是否比隔壁付得更多。',
-          ],
-          hi: [
-            'यह संपादकीय के भेस में कोई विज्ञापन स्लॉट नहीं है। लिस्टिंग पर निशान होता है, और पाठक लिस्टिंग और लेख में फ़र्क़ कर सकता है।',
-            'Vardenia के ज़रिए बुक करके आने वाले हर मेहमान के ख़र्च पर व्यवसाय Vardenia को कमीशन देता है, जैसा कि उसके हस्ताक्षर किए समझौते में लिखा होता है। मेहमान के न आने या रद्द करने पर कुछ नहीं लिया जाता, और मेहमान व्यवसाय को उसकी सामान्य क़ीमत ही देता है।',
-            'पैसे देकर लिस्टिंग को ऐसी जगह नहीं रखवाया जा सकता जहाँ वह नहीं बैठती। रेस्तराँ खाना-पीना में ही रहेगा, चाहे वह पड़ोसी से ज़्यादा पैसे दे या न दे।',
-          ],
-          bn: [
-            'এটি সম্পাদকীয়র ছদ্মবেশে কোনো বিজ্ঞাপনের জায়গা নয়। লিস্টিং চিহ্নিত থাকে, আর পাঠক লিস্টিং ও প্রবন্ধের পার্থক্য বুঝতে পারেন।',
-            'Vardenia-র মাধ্যমে বুক করে যে অতিথি আসেন, তাঁদের প্রত্যেকের খরচের ওপর ব্যবসাটি Vardenia-কে একটি কমিশন দেয়, যা ব্যবসার স্বাক্ষর করা চুক্তিতে লেখা থাকে। অতিথি না এলে বা বাতিল করলে কিছু নেওয়া হয় না, আর অতিথি ব্যবসাটিকে তার স্বাভাবিক দামই দেন।',
-            'টাকা দিয়ে কোনো লিস্টিংকে এমন জায়গায় বসানো যায় না যেখানে তার থাকার কথা নয়। একটি রেস্তোরাঁ খাওয়া-দাওয়া বিভাগেই থাকবে, পাশেরটির চেয়ে বেশি টাকা দিক বা না দিক।',
-          ],
-          ur: [
-            'یہ ادارتی مواد کے بھیس میں کوئی اشتہاری جگہ نہیں۔ لسٹنگز پر نشان ہوتا ہے، اور قاری لسٹنگ اور مضمون میں فرق کر سکتا ہے۔',
-            'Vardenia کے ذریعے بکنگ کر کے آنے والے ہر مہمان کے خرچ پر کاروبار Vardenia کو کمیشن دیتا ہے، جیسا کہ اس معاہدے میں لکھا ہوتا ہے جس پر کاروبار دستخط کرتا ہے۔ مہمان کے نہ آنے یا منسوخی پر کچھ نہیں لیا جاتا، اور مہمان کاروبار کو اس کی معمول کی قیمت ہی دیتا ہے۔',
-            'پیسے دے کر کسی لسٹنگ کو ایسی جگہ نہیں رکھوایا جا سکتا جہاں اس کا تعلق نہ ہو۔ ریستوران کھانا پینا ہی میں رہے گا، چاہے وہ پڑوسی سے زیادہ ادا کرے یا نہیں۔',
-          ],
-        }),
-      },
-      {
         /**
-         * What each level includes, and no prices: prices are only in the rate
-         * card PDF, never on the site (owner's rule). Matches core/tiers and the
-         * terms: bronze is the website, silver adds the magazine page and its
-         * QR code, gold adds first place in its own category, and platinum adds
-         * the home page band.
+         * Answered by the owner on 9 November 2026: the length varies by
+         * venue, a venue may renew, and a new issue is printed every year.
+         * No deadline is published, because each issue sets its own.
          */
-        heading: pick(locale, {
-          en: 'What each level includes',
-          ar: 'ما يشمله كل مستوى',
-          fr: 'Ce que comprend chaque niveau',
-          es: 'Qué incluye cada nivel',
-          pt: 'O que inclui cada nível',
-          ru: 'Что входит в каждый уровень',
-          zh: '各级别包含的内容',
-          hi: 'हर स्तर में क्या शामिल है',
-          bn: 'প্রতিটি স্তরে কী থাকে',
-          ur: 'ہر سطح میں کیا شامل ہے',
-        }),
-        body: [
-          ...pick(locale, {
-            en: [
-              '- **Bronze**: a listing on the website, in its section and in search.',
-              '- **Silver**: everything in bronze, plus a page in the printed magazine with its own QR code, and a place above every bronze listing.',
-              '- **Gold**: everything in silver, plus first place in the lists of its own category. Gold places are limited.',
-              '- **Platinum**: everything in gold, plus a place in the band at the top of the home page. Platinum places are limited.',
-              'Prices are in our rate card. Write to us and we will send it.',
-            ],
-            ar: [
-              '- **البرونزي**: إدراج على الموقع، في قسمه وفي البحث.',
-              '- **الفضي**: كل ما في البرونزي، مع صفحة في المجلة المطبوعة برمز QR خاص بها، ومكان قبل كل الإدراجات البرونزية.',
-              '- **الذهبي**: كل ما في الفضي، مع المرتبة الأولى في قوائم فئته. الأماكن الذهبية محدودة.',
-              '- **البلاتيني**: كل ما في الذهبي، مع مكان في الشريط أعلى الصفحة الرئيسية. الأماكن البلاتينية محدودة.',
-              'الأسعار في لائحة الأسعار لدينا. راسلنا وسنرسلها إليك.',
-            ],
-            fr: [
-              '- **Bronze** : une fiche sur le site, dans sa rubrique et dans la recherche.',
-              '- **Argent** : tout ce que comprend le bronze, plus une page dans le magazine imprimé avec son propre code QR, et une place devant toutes les fiches bronze.',
-              "- **Or** : tout ce que comprend l'argent, plus la première place dans les listes de sa propre catégorie. Les places or sont limitées.",
-              "- **Platine** : tout ce que comprend l'or, plus une place dans le bandeau en haut de la page d'accueil. Les places platine sont limitées.",
-              'Les prix figurent dans notre grille tarifaire. Écrivez-nous et nous vous l’enverrons.',
-            ],
-            es: [
-              '- **Bronce**: una ficha en el sitio web, en su sección y en la búsqueda.',
-              '- **Plata**: todo lo del bronce, más una página en la revista impresa con su propio código QR, y un lugar por delante de todas las fichas de bronce.',
-              '- **Oro**: todo lo de la plata, más el primer lugar en las listas de su propia categoría. Las plazas de oro son limitadas.',
-              '- **Platino**: todo lo del oro, más un lugar en la franja de la parte superior de la página de inicio. Las plazas de platino son limitadas.',
-              'Los precios están en nuestra tarifa. Escríbenos y te la enviamos.',
-            ],
-            pt: [
-              '- **Bronze**: uma ficha no site, na sua secção e na pesquisa.',
-              '- **Prata**: tudo o que o bronze inclui, mais uma página na revista impressa com o seu próprio código QR, e um lugar à frente de todas as fichas bronze.',
-              '- **Ouro**: tudo o que a prata inclui, mais o primeiro lugar nas listas da sua própria categoria. Os lugares ouro são limitados.',
-              '- **Platina**: tudo o que o ouro inclui, mais um lugar na faixa no topo da página inicial. Os lugares platina são limitados.',
-              'Os preços estão na nossa tabela de preços. Escreva-nos e enviamo-la.',
-            ],
-            ru: [
-              '- **Бронза**: карточка на сайте, в своём разделе и в поиске.',
-              '- **Серебро**: всё, что входит в бронзу, плюс страница в печатном журнале со своим QR-кодом и место выше всех бронзовых карточек.',
-              '- **Золото**: всё, что входит в серебро, плюс первое место в списках своей категории. Число золотых мест ограничено.',
-              '- **Платина**: всё, что входит в золото, плюс место в полосе вверху главной страницы. Число платиновых мест ограничено.',
-              'Цены указаны в нашем прайс-листе. Напишите нам, и мы его пришлём.',
-            ],
-            zh: [
-              '- **铜级**：网站上的收录条目，出现在所属栏目和搜索中。',
-              '- **银级**：包含铜级的全部内容，另加印刷版杂志中的一页及其专属二维码，并排在所有铜级条目之前。',
-              '- **金级**：包含银级的全部内容，另加所属类别列表中的首位。金级名额有限。',
-              '- **铂金级**：包含金级的全部内容，另加首页顶部横幅中的一个位置。铂金级名额有限。',
-              '价格见我们的价目表。写信给我们，我们会发给您。',
-            ],
-            hi: [
-              '- **ब्रॉन्ज़**: वेबसाइट पर एक लिस्टिंग, अपने सेक्शन में और खोज में।',
-              '- **सिल्वर**: ब्रॉन्ज़ की हर चीज़, साथ में छपी पत्रिका में एक पेज और उसका अपना QR कोड, और हर ब्रॉन्ज़ लिस्टिंग से ऊपर जगह।',
-              '- **गोल्ड**: सिल्वर की हर चीज़, साथ में अपनी श्रेणी की सूचियों में पहला स्थान। गोल्ड जगहें सीमित हैं।',
-              '- **प्लैटिनम**: गोल्ड की हर चीज़, साथ में होम पेज के ऊपर की पट्टी में जगह। प्लैटिनम जगहें सीमित हैं।',
-              'क़ीमतें हमारे रेट कार्ड में हैं। हमें लिखें, हम उसे भेज देंगे।',
-            ],
-            bn: [
-              '- **ব্রোঞ্জ**: ওয়েবসাইটে একটি লিস্টিং, নিজের বিভাগে ও সার্চে।',
-              '- **সিলভার**: ব্রোঞ্জের সবকিছু, সঙ্গে ছাপা ম্যাগাজিনে একটি পাতা ও তার নিজস্ব QR কোড, আর সব ব্রোঞ্জ লিস্টিংয়ের আগে জায়গা।',
-              '- **গোল্ড**: সিলভারের সবকিছু, সঙ্গে নিজের বিভাগের তালিকায় প্রথম স্থান। গোল্ড জায়গা সীমিত।',
-              '- **প্ল্যাটিনাম**: গোল্ডের সবকিছু, সঙ্গে হোম পেজের ওপরের ব্যান্ডে একটি জায়গা। প্ল্যাটিনাম জায়গা সীমিত।',
-              'দাম আমাদের রেট কার্ডে আছে। আমাদের লিখুন, আমরা পাঠিয়ে দেব।',
-            ],
-            ur: [
-              '- **برونز**: ویب سائٹ پر ایک لسٹنگ، اپنے سیکشن اور تلاش میں۔',
-              '- **سلور**: برونز کی ہر چیز، ساتھ میں چھپے ہوئے میگزین میں ایک صفحہ اور اس کا اپنا QR کوڈ، اور ہر برونز لسٹنگ سے اوپر جگہ۔',
-              '- **گولڈ**: سلور کی ہر چیز، ساتھ میں اپنی زمرے کی فہرستوں میں پہلا مقام۔ گولڈ جگہیں محدود ہیں۔',
-              '- **پلاٹینم**: گولڈ کی ہر چیز، ساتھ میں ہوم پیج کے اوپر والی پٹی میں جگہ۔ پلاٹینم جگہیں محدود ہیں۔',
-              'قیمتیں ہمارے ریٹ کارڈ میں ہیں۔ ہمیں لکھیں، ہم آپ کو بھیج دیں گے۔',
-            ],
-          }),
-          /**
-           * Answered by the owner on 9 November 2026: the length varies by
-           * venue, a venue may renew, and a new issue is printed every year.
-           * No deadline is published, because each issue sets its own.
-           */
-          ...pick(locale, {
-            en: [
-              'Contract length varies, and is agreed with each venue. When it ends, the venue can renew.',
-              'A new issue of the magazine is printed every year, and we will give you the deadline for the next one.',
-            ],
-            ar: [
-              'تختلف مدة العقد ويُتّفق عليها مع كل مكان. وعند انتهائها، يمكن للمكان أن يجدّده.',
-              'يُطبع عدد جديد من المجلة كل عام، وسنعطيك الموعد النهائي للعدد التالي.',
-            ],
-            fr: [
-              "La durée du contrat varie et se convient avec chaque établissement. À son terme, l'établissement peut le renouveler.",
-              'Un nouveau numéro du magazine est imprimé chaque année, et nous vous donnerons la date limite pour le prochain.',
-            ],
-            es: [
-              'La duración del contrato varía y se acuerda con cada local. Cuando termina, el local puede renovarlo.',
-              'Cada año se imprime un nuevo número de la revista, y te daremos la fecha límite del siguiente.',
-            ],
-            pt: [
-              'A duração do contrato varia e é combinada com cada estabelecimento. Quando termina, o estabelecimento pode renová-lo.',
-              'Todos os anos é impressa uma nova edição da revista, e daremos a você o prazo da próxima.',
-            ],
-            ru: [
-              'Срок договора бывает разным и согласуется с каждым заведением. Когда он заканчивается, заведение может его продлить.',
-              'Новый номер журнала выходит каждый год, и мы сообщим вам крайний срок для следующего.',
-            ],
-            zh: [
-              '合同期限不一，与每家商户单独商定。到期后，商户可以续约。',
-              '杂志每年印刷一期新刊，我们会告诉您下一期的截稿日期。',
-            ],
-            hi: [
-              'अनुबंध की अवधि अलग-अलग होती है और हर व्यवसाय के साथ तय की जाती है। अवधि पूरी होने पर व्यवसाय उसे नवीनीकृत कर सकता है।',
-              'पत्रिका का नया अंक हर साल छपता है, और हम आपको अगले अंक की अंतिम तिथि बता देंगे।',
-            ],
-            bn: [
-              'চুক্তির মেয়াদ ভিন্ন হতে পারে এবং প্রতিটি ব্যবসার সঙ্গে ঠিক করা হয়। মেয়াদ শেষ হলে ব্যবসাটি তা নবায়ন করতে পারে।',
-              'প্রতি বছর ম্যাগাজিনের একটি নতুন সংখ্যা ছাপা হয়, আর আমরা আপনাকে পরের সংখ্যার শেষ তারিখ জানিয়ে দেব।',
-            ],
-            ur: [
-              'معاہدے کی مدت مختلف ہوتی ہے اور ہر کاروبار کے ساتھ طے کی جاتی ہے۔ مدت ختم ہونے پر کاروبار اس کی تجدید کر سکتا ہے۔',
-              'میگزین کا نیا شمارہ ہر سال چھپتا ہے، اور ہم آپ کو اگلے شمارے کی آخری تاریخ بتا دیں گے۔',
-            ],
-          }),
-        ],
-      },
-      {
-        heading: pick(locale, {
-          en: 'How to start',
-          ar: 'كيف تبدأ',
-          fr: 'Comment commencer',
-          es: 'Cómo empezar',
-          pt: 'Como começar',
-          ru: 'С чего начать',
-          zh: '如何开始',
-          hi: 'शुरुआत कैसे करें',
-          bn: 'কীভাবে শুরু করবেন',
-          ur: 'آغاز کیسے کریں',
-        }),
-        body: [
-          pick(locale, {
-            en: 'Send us the business name, where it is, and a sentence about it. We will come back to you about whether it is right for the directory and what it would involve.',
-            ar: 'أرسل لنا اسم العمل وأين هو وجملة عنه. سنعود إليك بما إذا كان مناسباً للدليل وبما يعنيه ذلك.',
-            fr: "Envoyez-nous le nom de l'établissement, où il se trouve et une phrase à son sujet. Nous reviendrons vers vous pour vous dire s'il a sa place dans l'annuaire et ce que cela impliquerait.",
-            es: 'Envíanos el nombre del negocio, dónde está y una frase sobre él. Te responderemos si encaja en el directorio y qué implicaría.',
-            pt: 'Mande o nome do negócio, onde fica e uma frase sobre ele. Voltaremos a falar com você sobre se ele combina com o diretório e o que isso envolveria.',
-            ru: 'Пришлите нам название заведения, где оно находится, и пару слов о нём. Мы ответим, подходит ли оно для справочника и что для этого потребуется.',
-            zh: '请把商户名称、所在位置以及一句简介发给我们。我们会告诉您它是否适合收录进指南，以及需要做些什么。',
-            hi: 'हमें व्यवसाय का नाम, वह कहाँ है और उसके बारे में एक वाक्य भेजें। हम आपको बताएँगे कि वह निर्देशिका के लिए ठीक है या नहीं और इसमें क्या-क्या शामिल होगा।',
-            bn: 'ব্যবসার নাম, কোথায় অবস্থিত আর সেটি সম্পর্কে একটি বাক্য আমাদের পাঠান। ডিরেক্টরির জন্য সেটি উপযুক্ত কি না এবং তাতে কী কী লাগবে, আমরা আপনাকে জানাব।',
-            ur: 'ہمیں کاروبار کا نام، وہ کہاں ہے اور اس کے بارے میں ایک جملہ بھیجیں۔ ہم آپ کو بتائیں گے کہ آیا وہ ڈائریکٹری کے لیے موزوں ہے اور اس میں کیا کچھ شامل ہو گا۔',
-          }),
-          contactEmail(locale),
-          pick(locale, {
-            en: 'Or see **Add your business** for what to send.',
-            ar: 'أو انظر **أضف عملك** لتعرف ما ترسله.',
-            fr: 'Ou voyez **Ajouter votre établissement** pour savoir quoi envoyer.',
-            es: 'O consulta **Añade tu negocio** para saber qué enviar.',
-            pt: 'Ou veja **Adicione seu negócio** para saber o que enviar.',
-            ru: 'Или см. **Добавить своё заведение**, чтобы узнать, что прислать.',
-            zh: '或者查看**添加您的商户**，了解需要发送哪些信息。',
-            hi: 'या क्या भेजना है, यह जानने के लिए देखें **अपना व्यवसाय जोड़ें**।',
-            bn: 'অথবা কী পাঠাতে হবে জানতে দেখুন **আপনার ব্যবসা যোগ করুন**।',
-            ur: 'یا کیا بھیجنا ہے یہ جاننے کے لیے دیکھیں **اپنا کاروبار شامل کریں**۔',
-          }),
-        ],
-      },
-    ],
-  }
-}
-
-// ------------------------------------------------------------------ advertise
-
-export function advertisePage(locale: Locale = 'en'): ContentPage {
-  return {
-    title: pick(locale, {
-      en: 'Advertise with us',
-      ar: 'أعلن معنا',
-      fr: 'Annoncez chez nous',
-      es: 'Anúnciate con nosotros',
-      pt: 'Anuncie conosco',
-      ru: 'Реклама у нас',
-      zh: '在我们这里投放广告',
-      hi: 'हमारे साथ विज्ञापन दें',
-      bn: 'আমাদের সাথে বিজ্ঞাপন দিন',
-      ur: 'ہمارے ساتھ اشتہار دیں',
-    }),
-    intro: pick(locale, {
-      en: 'Advertising in Vardenia is separate from being listed. A listing describes a place; an advertisement is space in the magazine.',
-      ar: 'الإعلان في فاردينيا شيء والإدراج شيء آخر. الإدراج يصف مكاناً، والإعلان مساحة في المجلة.',
-      fr: 'Faire de la publicité dans Vardenia et y être référencé sont deux choses distinctes. Une fiche décrit un lieu ; une publicité est un espace dans le magazine.',
-      es: 'Anunciarse en Vardenia es algo distinto de estar en el directorio. Una ficha describe un lugar; un anuncio es un espacio en la revista.',
-      pt: 'Anunciar na Vardenia é diferente de estar no diretório. Uma ficha descreve um lugar; um anúncio é um espaço na revista.',
-      ru: 'Реклама в Vardenia — это отдельно от карточки в справочнике. Карточка описывает место; реклама — это место в журнале.',
-      zh: '在 Vardenia 投放广告与被收录是两回事。收录条目介绍一个地点；广告则是杂志上的一块版面。',
-      hi: 'Vardenia में विज्ञापन देना और लिस्ट होना दो अलग बातें हैं। लिस्टिंग किसी जगह के बारे में बताती है; विज्ञापन पत्रिका में ली गई जगह है।',
-      bn: 'Vardenia-তে বিজ্ঞাপন দেওয়া আর লিস্টিংয়ে থাকা আলাদা ব্যাপার। লিস্টিং একটি জায়গার বর্ণনা দেয়; বিজ্ঞাপন হলো ম্যাগাজিনের একটি জায়গা।',
-      ur: 'Vardenia میں اشتہار دینا اور لسٹ ہونا الگ الگ باتیں ہیں۔ لسٹنگ کسی مقام کی تفصیل ہے؛ اشتہار میگزین میں ایک جگہ ہے۔',
-    }),
-    sections: [
-      {
-        heading: pick(locale, {
-          en: 'Who reads it',
-          ar: 'من يقرأها',
-          fr: 'Qui le lit',
-          es: 'Quién la lee',
-          pt: 'Quem lê',
-          ru: 'Кто его читает',
-          zh: '谁在读',
-          hi: 'इसे कौन पढ़ता है',
-          bn: 'কারা পড়েন',
-          ur: 'اسے کون پڑھتا ہے',
-        }),
-        body: [
-          TBD('the print run, where issues are distributed, and who picks them up'),
-          TBD('the audience, in whatever terms we can actually support with evidence'),
-        ],
-      },
-      {
-        heading: pick(locale, {
-          en: 'What is available',
-          ar: 'المتاح',
-          fr: 'Ce qui est proposé',
-          es: 'Qué hay disponible',
-          pt: 'O que está disponível',
-          ru: 'Что доступно',
-          zh: '可选项目',
-          hi: 'क्या उपलब्ध है',
-          bn: 'কী কী পাওয়া যায়',
-          ur: 'کیا دستیاب ہے',
-        }),
-        body: [
-          TBD('the ad formats and sizes (prices stay in the rate card, never on the site)'),
-          TBD('artwork specifications and the deadline for supplying them'),
-          TBD('whether we offer any placement on the website, and if so what'),
-        ],
-      },
-      {
-        heading: pick(locale, {
-          en: 'What we will not do',
-          ar: 'ما لن نفعله',
-          fr: 'Ce que nous ne ferons pas',
-          es: 'Lo que no haremos',
-          pt: 'O que não faremos',
-          ru: 'Чего мы делать не будем',
-          zh: '我们不会做的事',
-          hi: 'हम क्या नहीं करेंगे',
-          bn: 'আমরা যা করব না',
-          ur: 'ہم کیا نہیں کریں گے',
-        }),
-        body: pick(locale, {
+        ...pick(locale, {
           en: [
-            'Advertising is marked as advertising. We do not write an article about a business because it bought a page, and we do not let an advertiser choose what the editorial says.',
-            'That rule costs us money occasionally and it is the reason the magazine is worth reading.',
+            'Contract length varies, and is agreed with each venue. When it ends, the venue can renew.',
+            'A new issue of the magazine is printed every year, and we will give you the deadline for the next one.',
           ],
           ar: [
-            'الإعلان معلّم كإعلان. لا نكتب مقالاً عن عمل لأنه اشترى صفحة، ولا نترك المعلن يقرر ما يقوله التحرير.',
-            'هذه القاعدة تكلفنا مالاً أحياناً، وهي سبب كون المجلة تستحق القراءة.',
+            'تختلف مدة العقد ويُتّفق عليها مع كل مكان. وعند انتهائها، يمكن للمكان أن يجدّده.',
+            'يُطبع عدد جديد من المجلة كل عام، وسنعطيك الموعد النهائي للعدد التالي.',
           ],
           fr: [
-            "La publicité est signalée comme telle. Nous n'écrivons pas d'article sur un établissement parce qu'il a acheté une page, et nous ne laissons pas un annonceur décider de ce que dit la rédaction.",
-            "Cette règle nous coûte parfois de l'argent, et c'est pour cela que le magazine vaut la peine d'être lu.",
+            "La durée du contrat varie et se convient avec chaque établissement. À son terme, l'établissement peut le renouveler.",
+            'Un nouveau numéro du magazine est imprimé chaque année, et nous vous donnerons la date limite pour le prochain.',
           ],
           es: [
-            'La publicidad se señala como publicidad. No escribimos un artículo sobre un negocio porque haya comprado una página, ni dejamos que un anunciante decida lo que dice la redacción.',
-            'Esa norma nos cuesta dinero de vez en cuando, y es la razón por la que la revista merece la pena.',
+            'La duración del contrato varía y se acuerda con cada local. Cuando termina, el local puede renovarlo.',
+            'Cada año se imprime un nuevo número de la revista, y te daremos la fecha límite del siguiente.',
           ],
           pt: [
-            'Publicidade é identificada como publicidade. Não escrevemos um artigo sobre um negócio porque ele comprou uma página, e não deixamos um anunciante escolher o que a redação diz.',
-            'Essa regra às vezes nos custa dinheiro, e é o motivo de a revista valer a leitura.',
+            'A duração do contrato varia e é combinada com cada estabelecimento. Quando termina, o estabelecimento pode renová-lo.',
+            'Todos os anos é impressa uma nova edição da revista, e daremos a você o prazo da próxima.',
           ],
           ru: [
-            'Реклама помечена как реклама. Мы не пишем статью о заведении потому, что оно купило полосу, и не позволяем рекламодателю решать, что говорит редакция.',
-            'Иногда это правило стоит нам денег — и именно поэтому журнал стоит читать.',
+            'Срок договора бывает разным и согласуется с каждым заведением. Когда он заканчивается, заведение может его продлить.',
+            'Новый номер журнала выходит каждый год, и мы сообщим вам крайний срок для следующего.',
           ],
           zh: [
-            '广告都会标明是广告。我们不会因为某个商户买了一个版面就为它写文章，也不会让广告主左右编辑内容。',
-            '这条规矩有时会让我们少赚些钱，但正是它让这本杂志值得一读。',
+            '合同期限不一，与每家商户单独商定。到期后，商户可以续约。',
+            '杂志每年印刷一期新刊，我们会告诉您下一期的截稿日期。',
           ],
           hi: [
-            'विज्ञापन पर विज्ञापन का निशान होता है। हम किसी व्यवसाय पर इसलिए लेख नहीं लिखते कि उसने एक पन्ना ख़रीदा, और न ही किसी विज्ञापनदाता को यह तय करने देते हैं कि संपादकीय क्या कहे।',
-            'यह नियम कभी-कभी हमें पैसे का नुक़सान कराता है, और इसी वजह से पत्रिका पढ़ने लायक़ है।',
+            'अनुबंध की अवधि अलग-अलग होती है और हर व्यवसाय के साथ तय की जाती है। अवधि पूरी होने पर व्यवसाय उसे नवीनीकृत कर सकता है।',
+            'पत्रिका का नया अंक हर साल छपता है, और हम आपको अगले अंक की अंतिम तिथि बता देंगे।',
           ],
           bn: [
-            'বিজ্ঞাপনকে বিজ্ঞাপন হিসেবেই চিহ্নিত করা হয়। কোনো ব্যবসা একটি পাতা কিনেছে বলে আমরা তাদের নিয়ে প্রবন্ধ লিখি না, আর কোনো বিজ্ঞাপনদাতাকে ঠিক করতে দিই না সম্পাদকীয় কী বলবে।',
-            'এই নিয়মে মাঝে মাঝে আমাদের টাকা হারাতে হয়, আর এ কারণেই ম্যাগাজিনটি পড়ার মতো।',
+            'চুক্তির মেয়াদ ভিন্ন হতে পারে এবং প্রতিটি ব্যবসার সঙ্গে ঠিক করা হয়। মেয়াদ শেষ হলে ব্যবসাটি তা নবায়ন করতে পারে।',
+            'প্রতি বছর ম্যাগাজিনের একটি নতুন সংখ্যা ছাপা হয়, আর আমরা আপনাকে পরের সংখ্যার শেষ তারিখ জানিয়ে দেব।',
           ],
           ur: [
-            'اشتہار پر اشتہار کا نشان ہوتا ہے۔ ہم کسی کاروبار پر اس لیے مضمون نہیں لکھتے کہ اس نے ایک صفحہ خریدا، اور نہ ہی کسی مشتہر کو یہ طے کرنے دیتے ہیں کہ اداریہ کیا کہے۔',
-            'یہ اصول کبھی کبھی ہمیں مالی نقصان دیتا ہے، اور یہی وجہ ہے کہ میگزین پڑھنے کے لائق ہے۔',
+            'معاہدے کی مدت مختلف ہوتی ہے اور ہر کاروبار کے ساتھ طے کی جاتی ہے۔ مدت ختم ہونے پر کاروبار اس کی تجدید کر سکتا ہے۔',
+            'میگزین کا نیا شمارہ ہر سال چھپتا ہے، اور ہم آپ کو اگلے شمارے کی آخری تاریخ بتا دیں گے۔',
           ],
         }),
-      },
-      {
-        heading: pick(locale, {
-          en: 'Get in touch',
-          ar: 'تواصل معنا',
-          fr: 'Nous contacter',
-          es: 'Contáctanos',
-          pt: 'Fale conosco',
-          ru: 'Свяжитесь с нами',
-          zh: '联系我们',
-          hi: 'संपर्क करें',
-          bn: 'যোগাযোগ করুন',
-          ur: 'رابطہ کریں',
-        }),
-        body: [
-          pick(locale, {
-            en: 'Tell us what you have in mind and we will send the current rates.',
-            ar: 'أخبرنا بما في بالك ونرسل لك الأسعار الحالية.',
-            fr: 'Dites-nous ce que vous avez en tête et nous vous enverrons les tarifs en vigueur.',
-            es: 'Cuéntanos qué tienes en mente y te enviaremos las tarifas vigentes.',
-            pt: 'Conte o que você tem em mente e enviaremos os preços atuais.',
-            ru: 'Расскажите, что вы задумали, и мы пришлём действующие расценки.',
-            zh: '告诉我们您的想法，我们会把最新的价格发给您。',
-            hi: 'बताइए आपके मन में क्या है, और हम मौजूदा दरें भेज देंगे।',
-            bn: 'আপনার ভাবনা আমাদের জানান, আমরা বর্তমান রেট পাঠিয়ে দেব।',
-            ur: 'بتائیں آپ کے ذہن میں کیا ہے، اور ہم موجودہ نرخ بھیج دیں گے۔',
-          }),
-          contactEmail(locale),
-        ],
-      },
-    ],
-  }
+      ],
+    },
+  ]
 }
 
 // ----------------------------------------------------- add your business
@@ -2270,6 +2052,7 @@ export function addYourBusinessPage(locale: Locale = 'en'): ContentPage {
           ],
         }),
       },
+      ...listingSections(locale),
       {
         heading: pick(locale, {
           en: 'To Get Started',

@@ -89,26 +89,18 @@ describe('content pages', () => {
   })
 
   /**
-   * A price or a deadline is not mine to invent, and a plausible wrong number on
-   * a page a business is reading is a commitment somebody has to honour. The
-   * advertise page still says plainly that its terms are not settled.
-   */
-  it('marks the advertising terms as unsettled rather than inventing them', () => {
-    expect(JSON.stringify(contentPage('advertise'))).toContain(PLACEHOLDER)
-  })
-
-  /**
-   * The partner page's terms were settled by the owner on 9 November 2026:
+   * The partner terms were settled by the owner on 9 November 2026 (on Add
+   * your business since Partner with us merged into it, 25 November 2026):
    * the levels, the commission, contract length agreed per venue with renewal,
    * and a new issue every year. Prices stay in the rate card, never here.
    */
   it('states the partner terms it has, and never a price', () => {
     for (const locale of ['en', 'ar'] as const) {
-      const page = JSON.stringify(contentPage('partner-with-us', locale))
+      const page = JSON.stringify(contentPage('add-your-business', locale))
       expect(page).not.toContain(PLACEHOLDER)
       expect(page).not.toMatch(/\$\s?\d|\d\s?\$|USD|LBP/)
     }
-    const en = JSON.stringify(contentPage('partner-with-us', 'en'))
+    const en = JSON.stringify(contentPage('add-your-business', 'en'))
     expect(en).toContain('Contract length varies')
     expect(en).toContain('printed every year')
   })
@@ -221,19 +213,6 @@ describe('the standing pages in Arabic', () => {
     for (const slug of CONTENT_PAGE_SLUGS) {
       expect(contentPage(slug)).toEqual(contentPage(slug, 'en'))
     }
-  })
-
-  /**
-   * The marker stays English on purpose: lib/legal counts unresolved clauses by
-   * matching it, and two spellings is how that count silently starts missing
-   * half of them.
-   */
-  it('leaves the TO CONFIRM marker untranslated', () => {
-    const unsettled = contentPage('advertise', 'ar')!
-      .sections.flatMap((s) => s.body)
-      .filter((line) => line.includes(PLACEHOLDER))
-
-    expect(unsettled.length).toBeGreaterThan(0)
   })
 })
 

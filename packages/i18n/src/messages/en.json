@@ -30,8 +30,6 @@
     "business": "Business",
     "businessMenuTitle": "Grow with Vardenia.",
     "businessMenuBody": "Bring your place to readers in print and online, take bookings, or advertise.",
-    "partnerWithUsNote": "Take bookings and requests through Vardenia",
-    "advertiseNote": "Space in the magazine and on the site",
     "language": "Language",
     "magazinePlacesNote": "Book a place in the printed magazine"
   },
@@ -466,8 +464,6 @@
     "questions": "Questions",
     "contact": "Contact",
     "addBusiness": "Add your business",
-    "partnerWithUs": "Partner with us",
-    "advertise": "Advertise",
     "partnerSignIn": "Partner sign in",
     "rights": "All rights reserved.",
     "legal": "Legal",
