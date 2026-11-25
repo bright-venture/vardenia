@@ -39,6 +39,7 @@
  */
 
 import type { Access, FieldAccess, Where } from 'payload'
+import { COMING_SOON_CATEGORIES } from '@vardenia/core'
 
 export type Role = 'admin' | 'staff'
 
@@ -202,6 +203,10 @@ export function ownedBusinessIds(user: unknown): (string | number)[] {
  * An owner with no businesses attached falls through to the public rule rather
  * than being refused outright. Refusing would be a worse bug to diagnose: the
  * dashboard would look broken rather than empty.
+ *
+ * Coming soon (25 November 2026): a listing in a category that is not open yet
+ * (core COMING_SOON_CATEGORIES: Weddings, Getting Around) is not public, even
+ * when published. Staff and its own partner still see it.
  */
 export const publishedStaffOrOwned: Access = ({ req }) => {
   if (isStaffUser(req.user)) return true
@@ -209,7 +214,12 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
   // Annotated rather than inferred: TypeScript otherwise widens the two branches
   // into a union carrying `or?: undefined`, which does not satisfy Where's index
   // signature.
-  const published: Where = { _status: { equals: 'published' } }
+  const published: Where = {
+    and: [
+      { _status: { equals: 'published' } },
+      { category: { not_in: [...COMING_SOON_CATEGORIES] } },
+    ],
+  }
 
   const owned = ownedBusinessIds(req.user)
   if (owned.length === 0) return published
@@ -231,12 +241,13 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
  * the public clause ever gains a condition, it fails and says to change this.
  *
  * The second condition is the trash (17 November 2026). Payload adds it to
- * every query on its own, so the rule above never says it; raw SQL has to.
+ * every query on its own, so the rule above never says it; raw SQL has to. The
+ * third is the coming-soon categories, as in the rule above.
  *
  * Only counts come out of those queries, so getting this wrong would miscount
  * rather than leak. `b` is the alias the count queries give the listings table.
  */
-export const PUBLISHED_SQL = `b._status = 'published' and b.deleted_at is null`
+export const PUBLISHED_SQL = `b._status = 'published' and b.deleted_at is null and b.category::text not in (${COMING_SOON_CATEGORIES.map((c) => `'${c}'`).join(', ')})`
 
 /**
  * Your own account in this collection, or any if you are staff.

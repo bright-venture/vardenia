@@ -6,7 +6,7 @@ import { mediaRead, publishedStaffOrOwned } from '../../access/index'
  * A small in-memory stand-in for the Payload local API, for the brand and
  * branch tests (Task 9). Not a database: it stores plain rows per collection
  * and answers `find`, `findByID`, `count`, `create` and `update` with the
- * `where` operators those modules use (equals, not_equals, in, exists,
+ * `where` operators those modules use (equals, not_equals, in, not_in, exists,
  * greater_than, greater_than_equal, and, or).
  *
  * What makes it worth having: with `overrideAccess: false` it applies the REAL
@@ -61,6 +61,8 @@ export function matches(row: Row, where: Where | undefined): boolean {
           return !eq(value, operand)
         case 'in':
           return (operand as unknown[]).some((o) => eq(value, o))
+        case 'not_in':
+          return !(operand as unknown[]).some((o) => eq(value, o))
         case 'exists':
           return (value !== undefined && value !== null) === Boolean(operand)
         case 'greater_than':

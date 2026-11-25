@@ -5,6 +5,9 @@ import {
   canTakeBookings,
   categoryTakesBookings,
   isBookableSubcategory,
+  BOOKING_COMING_SOON_KINDS,
+  hasBookingComingSoon,
+  isComingSoonCategory,
   isWholePropertyStay,
   ROOM_TYPE_SUBCATEGORIES,
   SUBCATEGORY_PARENT,
@@ -47,20 +50,35 @@ describe('the October 2026 list', () => {
 })
 
 describe('which kinds of place take bookings', () => {
-  it('books hotels, getaways, restaurants, tours, activities, planners and drivers', () => {
-    for (const slug of [
-      'hotels',
-      'getaways',
-      'restaurants',
-      'guided-tours',
-      'activities',
-      'event-planners',
-      'car-rental',
-      'airport-transfers',
-      'private-drivers',
-    ]) {
+  it('books hotels, getaways and restaurants today', () => {
+    for (const slug of ['hotels', 'getaways', 'restaurants']) {
       expect(isBookableSubcategory(slug), slug).toBe(true)
     }
+  })
+
+  /**
+   * The six other bookable kinds wait until their booking is built (25 November
+   * 2026): Activities and Guided Tours stay listed with a note, Weddings and
+   * Getting Around are hidden whole.
+   */
+  it('keeps tours, activities, planners and drivers coming soon', () => {
+    for (const slug of BOOKING_COMING_SOON_KINDS) {
+      expect(isBookableSubcategory(slug), slug).toBe(false)
+    }
+    expect([...BOOKING_COMING_SOON_KINDS].sort()).toEqual([
+      'activities',
+      'airport-transfers',
+      'car-rental',
+      'event-planners',
+      'guided-tours',
+      'private-drivers',
+    ])
+    expect(hasBookingComingSoon(['activities'])).toBe(true)
+    expect(hasBookingComingSoon(['restaurants', 'activities'])).toBe(false)
+    expect(hasBookingComingSoon(['cafes'])).toBe(false)
+    expect(isComingSoonCategory('weddings')).toBe(true)
+    expect(isComingSoonCategory('transportation')).toBe(true)
+    expect(isComingSoonCategory('tourism')).toBe(false)
   })
 
   it('only advertises pools, cafes, nightlife, festivals, historic sites, gyms and malls', () => {

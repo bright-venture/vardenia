@@ -1307,5 +1307,13 @@
     "newIssue": "Descubra a nova edição da revista",
     "previous": "Mensagem anterior",
     "next": "Mensagem seguinte"
+  },
+  "comingSoon": {
+    "label": "Em breve",
+    "title": "Em breve na Vardenia",
+    "sectionBody": "Estamos preparando esta seção. Até ela abrir, explore os lugares que já estão no diretório.",
+    "eventStaffBody": "Os pedidos de recepcionistas e garçons abrem em breve. Até lá, explore os lugares que já estão no diretório.",
+    "explore": "Explorar o diretório",
+    "bookingNote": "A reserva pela Vardenia chega em breve para este lugar."
   }
 }

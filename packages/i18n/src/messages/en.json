@@ -1307,5 +1307,13 @@
     "newIssue": "Explore the new magazine issue",
     "previous": "Previous message",
     "next": "Next message"
+  },
+  "comingSoon": {
+    "label": "Coming soon",
+    "title": "Coming soon to Vardenia",
+    "sectionBody": "We are preparing this section. Until it opens, explore the places already in the directory.",
+    "eventStaffBody": "Requests for hostesses and waiters open soon. Until then, explore the places already in the directory.",
+    "explore": "Explore the directory",
+    "bookingNote": "Booking through Vardenia is coming soon for this place."
   }
 }

@@ -11,10 +11,12 @@ import {
   sectionForPath,
   type SiteSection,
   type SubCategory,
+  isComingSoonCategory,
 } from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
+import { ComingSoonNotice } from '../../../../components/ComingSoonNotice'
 import {
   countByDistrict,
   countByGovernorate,
@@ -120,6 +122,10 @@ export default async function SectionPage({ params, searchParams }: Props) {
   await notFoundIfHidden(section.path as HideablePage)
 
   const t = await getTranslations('directory')
+  // Weddings and Getting Around are not open yet (core COMING_SOON_CATEGORIES,
+  // 25 November 2026): the heading stays, a Coming soon notice replaces the
+  // listings, and the listings themselves are not public (access/index).
+  const comingSoon = isComingSoonCategory(section.category)
 
   return (
     <main className="vd-category-page" data-section={section.path}>
@@ -141,18 +147,24 @@ export default async function SectionPage({ params, searchParams }: Props) {
           )[path] ?? 0
         }
       >
-        <a className="vd-button" href="#section-results">
-          {t('chooseType')} <span aria-hidden>↓</span>
-        </a>
+        {comingSoon ? null : (
+          <a className="vd-button" href="#section-results">
+            {t('chooseType')} <span aria-hidden>↓</span>
+          </a>
+        )}
       </PageHero>
-      <div className="vd-category-results" id="section-results">
-        {/* Same arrangement as the directory: `searchParams` is what makes a route
-          dynamic, so it is handed over unawaited and only this boundary blocks
-          on it. The heading above ships from the static build. */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <SectionResults locale={locale} section={section} searchParams={searchParams} />
-        </Suspense>
-      </div>
+      {comingSoon ? (
+        <ComingSoonNotice body="sectionBody" />
+      ) : (
+        <div className="vd-category-results" id="section-results">
+          {/* Same arrangement as the directory: `searchParams` is what makes a
+            route dynamic, so it is handed over unawaited and only this boundary
+            blocks on it. The heading above ships from the static build. */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <SectionResults locale={locale} section={section} searchParams={searchParams} />
+          </Suspense>
+        </div>
+      )}
     </main>
   )
 }

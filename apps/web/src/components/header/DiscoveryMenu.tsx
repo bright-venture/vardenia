@@ -21,6 +21,8 @@ export interface DiscoveryCategory {
   href: string
   name: string
   description: string
+  /** A small label beside the name, such as "Coming soon" (25 November 2026). */
+  badge?: string
   destination?: number
   /**
    * `whole` shows the picture uncropped on the panel's paper, for a cut-out
@@ -57,7 +59,8 @@ export function DiscoveryMenu({
   const desktop = useDesktopEdition(locale)
   const links = footer ? [...items, footer] : items
   const current = desktop
-    ? links.filter(({ href }) => pathname === href || pathname.startsWith(href + '/'))
+    ? links
+        .filter(({ href }) => pathname === href || pathname.startsWith(href + '/'))
         .sort((a, b) => b.href.length - a.href.length)[0]?.href
     : undefined
   const currentState = (href: string) =>
@@ -70,7 +73,11 @@ export function DiscoveryMenu({
   const place = item?.photo ? null : (DESTINATIONS[item?.destination ?? 0] ?? DESTINATIONS[0])
   const photo = item?.photo ?? (place ? { src: `/journey/${place.image}`, alt: place.alt } : null)
   return (
-    <div className="vd-discovery-menu" data-layout={desktop ? layout : 'editorial'} data-count={items.length}>
+    <div
+      className="vd-discovery-menu"
+      data-layout={desktop ? layout : 'editorial'}
+      data-count={items.length}
+    >
       <header className="vd-discovery-heading">
         <h2 id={headingId}>{title}</h2>
         <p>{body}</p>
@@ -87,7 +94,10 @@ export function DiscoveryMenu({
                   onFocus={() => setActive(index)}
                 >
                   <span>
-                    <strong>{entry.name}</strong>
+                    <strong>
+                      {entry.name}
+                      {entry.badge ? <span className="vd-soon-badge">{entry.badge}</span> : null}
+                    </strong>
                     <span>{entry.description}</span>
                   </span>
                   <span className="vd-discovery-arrow" aria-hidden>
@@ -98,7 +108,11 @@ export function DiscoveryMenu({
             ))}
           </ul>
           {footer ? (
-            <Link className="vd-discovery-all" href={footer.href} aria-current={currentState(footer.href)}>
+            <Link
+              className="vd-discovery-all"
+              href={footer.href}
+              aria-current={currentState(footer.href)}
+            >
               {footer.label} <LinkArrow />
             </Link>
           ) : null}

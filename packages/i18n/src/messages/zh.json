@@ -1307,5 +1307,13 @@
     "newIssue": "探索新一期杂志",
     "previous": "上一条",
     "next": "下一条"
+  },
+  "comingSoon": {
+    "label": "即将推出",
+    "title": "即将登陆 Vardenia",
+    "sectionBody": "我们正在筹备这一栏目。开放之前，欢迎浏览目录中已有的地点。",
+    "eventStaffBody": "礼仪人员和服务员的预约即将开放。在此之前，欢迎浏览目录中已有的地点。",
+    "explore": "浏览目录",
+    "bookingNote": "通过 Vardenia 预订此地点的功能即将推出。"
   }
 }

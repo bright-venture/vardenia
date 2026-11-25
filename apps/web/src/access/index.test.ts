@@ -256,13 +256,24 @@ describe('ownedBusinessIds', () => {
   })
 })
 
+/**
+ * The public rule for listings: published, and not in a coming-soon category
+ * (Weddings, Getting Around; core COMING_SOON_CATEGORIES, 25 November 2026).
+ */
+const PUBLIC_LISTINGS = {
+  and: [
+    { _status: { equals: 'published' } },
+    { category: { not_in: ['weddings', 'transportation'] } },
+  ],
+}
+
 describe('publishedStaffOrOwned', () => {
   it('gives staff everything', () => {
     expect(publishedStaffOrOwned(ctx(staff))).toBe(true)
   })
 
-  it('constrains the public to published listings', () => {
-    expect(publishedStaffOrOwned(ctx(null))).toEqual({ _status: { equals: 'published' } })
+  it('constrains the public to published listings outside the coming-soon categories', () => {
+    expect(publishedStaffOrOwned(ctx(null))).toEqual(PUBLIC_LISTINGS)
   })
 
   /**
@@ -271,7 +282,7 @@ describe('publishedStaffOrOwned', () => {
    */
   it('adds the owner their own listings, drafts included', () => {
     expect(publishedStaffOrOwned(ctx(owner(1, [7, 9])))).toEqual({
-      or: [{ _status: { equals: 'published' } }, { id: { in: [7, 9] } }],
+      or: [PUBLIC_LISTINGS, { id: { in: [7, 9] } }],
     })
   })
 
@@ -283,33 +294,36 @@ describe('publishedStaffOrOwned', () => {
 
   /** An owner with nothing attached falls back to public rather than being refused. */
   it('falls back to the public rule for an owner with no businesses', () => {
-    expect(publishedStaffOrOwned(ctx(owner(1, [])))).toEqual({ _status: { equals: 'published' } })
+    expect(publishedStaffOrOwned(ctx(owner(1, [])))).toEqual(PUBLIC_LISTINGS)
   })
 
   it('does not let a customer with a forged businesses array see drafts', () => {
     const forged = { id: 5, collection: 'customers', businesses: [7] }
-    expect(publishedStaffOrOwned(ctx(forged))).toEqual({ _status: { equals: 'published' } })
+    expect(publishedStaffOrOwned(ctx(forged))).toEqual(PUBLIC_LISTINGS)
   })
 
   /**
    * lib/listings counts listings with raw SQL, which bypasses this rule, so the
    * rule is restated there as PUBLISHED_SQL. This derives the SQL from the rule
-   * rather than comparing two literals: it only knows how to translate a single
-   * `equals`, so if the public clause ever gains a second condition - a hidden
-   * flag, an expiry - this fails, and PUBLISHED_SQL has to learn it too.
+   * rather than comparing two literals. It only knows how to translate the
+   * shape the rule has today (a published status and a category exclusion), so
+   * if the public clause ever gains another condition this fails, and
+   * PUBLISHED_SQL has to learn it too.
    */
   it('is restated exactly for the SQL counts', () => {
-    const where = publishedStaffOrOwned(ctx(null)) as Record<string, unknown>
-    const fields = Object.keys(where)
-
-    expect(fields, 'the public rule is no longer one condition').toHaveLength(1)
-    const field = fields[0] as string
-    const condition = where[field] as Record<string, unknown>
-    expect(Object.keys(condition), 'the public rule is no longer an equals').toEqual(['equals'])
+    const where = publishedStaffOrOwned(ctx(null)) as {
+      and: Record<string, Record<string, unknown>>[]
+    }
+    expect(Object.keys(where), 'the public rule is no longer an and').toEqual(['and'])
+    expect(where.and, 'the public rule gained or lost a condition').toHaveLength(2)
+    const [status, category] = where.and as [
+      { _status: { equals: string } },
+      { category: { not_in: string[] } },
+    ]
 
     // Plus the trash, which Payload adds to its own queries by itself.
     expect(PUBLISHED_SQL).toBe(
-      `b.${field} = '${String(condition.equals)}' and b.deleted_at is null`,
+      `b._status = '${status._status.equals}' and b.deleted_at is null and b.category::text not in (${category.category.not_in.map((c) => `'${c}'`).join(', ')})`,
     )
   })
 })

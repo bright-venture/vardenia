@@ -174,6 +174,13 @@ export const EVENT_STAFF_SECTION = {
   descriptionAr: 'مضيفات ونادلون لمناسبتكم',
 } as const
 
+/**
+ * Event Staff is coming soon (25 November 2026, the owner's decision): its page
+ * shows a Coming soon notice instead of the two request forms. Set to false to
+ * open it.
+ */
+export const EVENT_STAFF_COMING_SOON = true
+
 export function staffRoleForSlug(slug: string | null | undefined): StaffRole | null {
   return EVENT_STAFF_ROLES.find((role) => role.slug === slug) ?? null
 }

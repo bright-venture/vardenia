@@ -1307,5 +1307,13 @@
     "newIssue": "Descubre el nuevo número de la revista",
     "previous": "Mensaje anterior",
     "next": "Mensaje siguiente"
+  },
+  "comingSoon": {
+    "label": "Próximamente",
+    "title": "Próximamente en Vardenia",
+    "sectionBody": "Estamos preparando esta sección. Hasta que abra, explora los lugares que ya están en el directorio.",
+    "eventStaffBody": "Las solicitudes de azafatas y camareros abren pronto. Mientras tanto, explora los lugares que ya están en el directorio.",
+    "explore": "Explorar el directorio",
+    "bookingNote": "La reserva a través de Vardenia llegará pronto para este lugar."
   }
 }

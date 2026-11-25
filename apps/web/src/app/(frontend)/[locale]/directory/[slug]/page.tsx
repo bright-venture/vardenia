@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { can, tierOf } from '@vardenia/core'
+import { can, canTakeBookings, hasBookingComingSoon, tierOf } from '@vardenia/core'
 import { DEFAULT_LOCALE, dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import {
   findListingBySlug,
@@ -195,11 +195,17 @@ export default async function ListingPage({ params }: Params) {
    * every listing that does not take bookings - which is most of them - in
    * exchange for a column of white space.
    */
-  const bookable = resolveRules(listing.booking as BookingRules | null).enabled
-
   const subcategories = Array.isArray(listing.subcategories)
     ? (listing.subcategories as string[])
     : []
+  // Booking is open only for the kinds that book today (core
+  // isBookableSubcategory): an activity whose switch was left on shows no form,
+  // since the request would be refused anyway (lib/booking-service).
+  const bookable =
+    resolveRules(listing.booking as BookingRules | null).enabled && canTakeBookings(subcategories)
+  // Activities and Guided Tours: listed, booking coming soon (25 November 2026).
+  const bookingSoon = hasBookingComingSoon(subcategories)
+  const tSoon = await getTranslations('comingSoon')
   const amenities = Array.isArray(listing.amenities) ? (listing.amenities as string[]) : []
   const hours = Array.isArray(listing.openingHours) ? listing.openingHours : []
 
@@ -430,6 +436,12 @@ export default async function ListingPage({ params }: Params) {
           }`}
         >
           <div className={bookable ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
+            {bookingSoon ? (
+              <p className="vd-booking-soon border-gold-300 bg-surface-raised text-ink-700 mb-8 border-s-2 px-4 py-3 text-sm">
+                <span className="vd-soon-badge !ms-0 me-3">{tSoon('label')}</span>
+                {tSoon('bookingNote')}
+              </p>
+            ) : null}
             {/*
             The tagline set as display type, which is the design's call and a
             good one: it is one line saying what the place is, and at body size

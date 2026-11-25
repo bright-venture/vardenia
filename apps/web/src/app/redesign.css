@@ -983,3 +983,21 @@
     display: none;
   }
 }
+
+/* "Coming soon" beside a section's name in the menus (components/header,
+   25 November 2026). Small gold capitals, like the magazine's eyebrows. */
+.vd-soon-badge {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--vd-gold) 70%, transparent);
+  color: theme('colors.gold.700');
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}

@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { EVENT_STAFF_SECTION, staffRoleForSlug } from '@vardenia/core'
+import { EVENT_STAFF_SECTION, staffRoleForSlug, EVENT_STAFF_COMING_SOON } from '@vardenia/core'
 import { isLocale, type Locale } from '@vardenia/i18n'
 import config from '../../../../../payload.config'
-import { Link } from '../../../../../i18n/routing'
+import { Link, redirect } from '../../../../../i18n/routing'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import { StaffRequestForm } from '../../../../../components/StaffRequestForm'
 import {
@@ -50,6 +50,8 @@ export default async function StaffRequestPage({ params }: Props) {
   const { locale, role: slug } = await params
   const role = staffRoleForSlug(slug)
   if (!isLocale(locale) || !role) notFound()
+  // Coming soon (25 November 2026): the forms wait; the section page says so.
+  if (EVENT_STAFF_COMING_SOON) redirect({ href: `/${EVENT_STAFF_SECTION.path}`, locale })
   setRequestLocale(locale)
 
   const t = await getTranslations('eventStaff')

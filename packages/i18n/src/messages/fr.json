@@ -1307,5 +1307,13 @@
     "newIssue": "Découvrez le nouveau numéro du magazine",
     "previous": "Message précédent",
     "next": "Message suivant"
+  },
+  "comingSoon": {
+    "label": "Bientôt",
+    "title": "Bientôt sur Vardenia",
+    "sectionBody": "Nous préparons cette rubrique. En attendant son ouverture, découvrez les adresses déjà présentes dans l'annuaire.",
+    "eventStaffBody": "Les demandes d'hôtesses et de serveurs ouvrent bientôt. En attendant, découvrez les adresses déjà présentes dans l'annuaire.",
+    "explore": "Explorer l'annuaire",
+    "bookingNote": "La réservation via Vardenia arrive bientôt pour cet établissement."
   }
 }
