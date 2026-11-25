@@ -34,3 +34,12 @@ describe.each([
     expect(query.where).toBeUndefined()
   })
 })
+
+it('keeps numbered QA listings out of the sitemap while retaining their preview route', async () => {
+  find.mockResolvedValue({ docs: [
+    { id: 1, name: 'QA Test Place 1238', slug: 'qa-test-place-1238' },
+    { id: 2, name: 'Qamar', slug: 'qamar' },
+  ], hasNextPage: false })
+  expect(await findAllListingSlugs({ indexableOnly: true })).toEqual(['qamar'])
+  expect(await findAllListingSlugs()).toEqual(['qa-test-place-1238', 'qamar'])
+})

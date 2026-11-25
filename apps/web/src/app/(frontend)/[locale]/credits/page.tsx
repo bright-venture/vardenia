@@ -1,3 +1,5 @@
+import { buildMetadata } from '../../../../lib/seo'
+import { publicPageCopy } from '../../../../lib/public-page-copy'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { requireLocale } from '../../../../lib/require-locale'
 import { PhotographyCredits } from '../../../../components/journey/PhotographyCredits'
@@ -5,6 +7,7 @@ type Props = { params: Promise<{ locale: string }> }
 export async function generateMetadata({ params }: Props) {
   const locale = requireLocale((await params).locale)
   const t = await getTranslations({ locale, namespace: 'journey' })
+  if (locale === 'en') return buildMetadata({ seo: null, path: '/credits', locale, ...publicPageCopy['/credits'] })
   return { title: t('credits') }
 }
 export default async function CreditsPage({ params }: Props) {

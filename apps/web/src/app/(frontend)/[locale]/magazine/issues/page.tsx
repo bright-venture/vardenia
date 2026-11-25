@@ -1,3 +1,6 @@
+import { publicPageCopy } from '../../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../../components/EnglishPageSchema'
+import { issueCover } from '../../../../../lib/issue-presentation'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -28,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('magazine.issues'),
-    description: t('magazine.printArchive'),
+    title: locale === 'en' ? publicPageCopy['/magazine/issues'].title : t('magazine.issues'),
+    description: locale === 'en' ? publicPageCopy['/magazine/issues'].description : t('magazine.printArchive'),
     path: '/magazine/issues',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -46,6 +49,7 @@ export default async function IssuesPage({ params }: Props) {
 
   return (
     <main className="vd-magazine-index vd-magazine-issues">
+      <EnglishPageSchema locale={locale} path={'/magazine/issues'} name={publicPageCopy['/magazine/issues'].title} description={publicPageCopy['/magazine/issues'].description} type="CollectionPage" />
       <PageHero
         title={t('magazine.issues')}
         intro={t('magazine.printArchive')}
@@ -74,7 +78,7 @@ export default async function IssuesPage({ params }: Props) {
                 <article className="vd-issue-card" key={issue.id} data-vd-reveal>
                   <Link href={`/magazine/issues/${issue.slug}`} className="group block">
                     <MagazineCover
-                      media={issue.cover as never}
+                      media={issueCover(issue, locale)}
                       sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
                     />
                     <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">

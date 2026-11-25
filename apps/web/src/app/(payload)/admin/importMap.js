@@ -55,6 +55,7 @@ import { AdminHome as AdminHome_c8ff13fb3ed15fa560b19524fa05fa91 } from '../../.
 import { BillingView as BillingView_1a2cdf321de290072bb9304599d32102 } from '../../../components/admin/BillingView'
 import { ImportListings as ImportListings_63ae5156d5323ea00059048055533c2c } from '../../../components/admin/ImportListings'
 import { PlaceReports as PlaceReports_04d575b2d50bf159eb23c60b24f1b93a } from '../../../components/admin/PlaceReports'
+import { MagazinePageView as MagazinePageView_1c1ac8deb2b01c1a99200dd3e484c6f5 } from '../../../components/admin/MagazinePageView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -116,5 +117,6 @@ export const importMap = {
   "/components/admin/BillingView#BillingView": BillingView_1a2cdf321de290072bb9304599d32102,
   "/components/admin/ImportListings#ImportListings": ImportListings_63ae5156d5323ea00059048055533c2c,
   "/components/admin/PlaceReports#PlaceReports": PlaceReports_04d575b2d50bf159eb23c60b24f1b93a,
+  "/components/admin/MagazinePageView#MagazinePageView": MagazinePageView_1c1ac8deb2b01c1a99200dd3e484c6f5,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

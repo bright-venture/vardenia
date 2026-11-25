@@ -45,6 +45,7 @@ import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
 import { databaseSsl } from './lib/db-ssl'
+import { PAYLOAD_COOKIE_PREFIX } from './lib/auth-cookies'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -133,6 +134,7 @@ const s3Client = {
 const receiptsBucket = process.env.S3_RECEIPTS_BUCKET?.trim() || ''
 
 export default buildConfig({
+  cookiePrefix: PAYLOAD_COOKIE_PREFIX,
   serverURL: process.env.NEXT_PUBLIC_SITE_URL,
   admin: {
     user: Users.slug,
@@ -186,6 +188,10 @@ export default buildConfig({
         placeReports: {
           path: '/place-reports',
           Component: '/components/admin/PlaceReports#PlaceReports',
+        },
+        magazinePage: {
+          path: '/magazine-page',
+          Component: '/components/admin/MagazinePageView#MagazinePageView',
         },
       },
     },

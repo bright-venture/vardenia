@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { SESSION_HINT, markSignedIn, markSignedOut, sessionAudience } from './session-hint'
+import {
+  SESSION_HINT,
+  SESSION_HINT_CHANGE,
+  markSignedIn,
+  markSignedOut,
+  sessionAudience,
+} from './session-hint'
 
 /**
  * The header reads this to decide between "Sign in" and "Your account".
@@ -15,6 +21,7 @@ const cookieJar = () => {
   let jar: string[] = []
 
   vi.stubGlobal('document', {
+    dispatchEvent: vi.fn(),
     get cookie() {
       return jar.join('; ')
     },
@@ -33,6 +40,18 @@ const cookieJar = () => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('session hint', () => {
+  it('updates the open header immediately after sign-in and sign-out', () => {
+    cookieJar()
+    const audiences: ReturnType<typeof sessionAudience>[] = []
+    vi.mocked(document.dispatchEvent).mockImplementation((event) => {
+      if (event.type === SESSION_HINT_CHANGE) audiences.push(sessionAudience())
+      return true
+    })
+    markSignedIn('customer')
+    markSignedOut()
+    expect(audiences).toEqual(['customer', null])
+  })
+
   it('is absent until somebody signs in', () => {
     cookieJar()
     expect(sessionAudience()).toBeNull()

@@ -1,3 +1,4 @@
+import { isReviewListing } from '../../../../../lib/review-listing'
 import { ResilientPhoto } from '../../../../../components/ui/ResilientPhoto'
 import { Suspense, type ReactNode } from 'react'
 import type { Metadata } from 'next'
@@ -12,7 +13,9 @@ import {
   findAllListingSlugs,
   findRelatedListings,
 } from '../../../../../lib/listings'
-import { resolveGallery, resolvePhotograph } from '../../../../../lib/media'
+import { resolveGallery, resolvePhotograph, type MediaField } from '../../../../../lib/media'
+import { emSherifPhoto, emSherifProfile } from '../../../../../lib/em-sherif'
+import { hiddenPages } from '../../../../../lib/hidden-pages'
 import { buildMetadata } from '../../../../../lib/seo'
 import { listingSchema } from '../../../../../lib/structured-data'
 import { resolveRules, type BookingRules } from '../../../../../lib/availability'
@@ -39,7 +42,7 @@ import { canHaveRoomTypes } from '@vardenia/core'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
-import { listingSummary } from '../../../../../lib/plain-text'
+import { englishListingSummary, listingSummary } from '../../../../../lib/plain-text'
 import { ReviewForm } from '../../../../../components/ReviewForm'
 import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
@@ -125,13 +128,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const listing = await findListingBySlug(slug, locale)
   if (!listing) return {}
 
+  const editorial = emSherifProfile(listing, locale)
   return buildMetadata({
-    seo: listing.seo,
-    title: listing.name,
+    seo: isReviewListing(listing) ? { ...listing.seo, noIndex: true } : listing.seo,
+    title: editorial?.title ?? listing.name,
     // The tagline when there is one, else the opening of the description: the
     // October cleaning emptied every tagline (lib/plain-text).
-    description: listingSummary(listing),
-    fallbackImage: listing.heroImage as never,
+    description: editorial?.description ?? (locale === 'en'
+      ? englishListingSummary(listing, categoryLabel(listing.category, locale))
+      : listingSummary(listing)),
+    fallbackImage: editorial ? emSherifPhoto(listing.heroImage as MediaField) : listing.heroImage as MediaField,
     path: `/directory/${slug}`,
     locale,
   })
@@ -157,7 +163,9 @@ export default async function ListingPage({ params }: Params) {
    * bleed - which is a worse lie the larger you draw it. Without one, the
    * masthead falls back to the flat navy ground and shortens. See lib/media.
    */
-  const hero = resolvePhotograph(listing.heroImage as never, 'hero')
+  const editorial = emSherifProfile(listing, locale)
+  const photo = editorial ? emSherifPhoto(listing.heroImage as MediaField) : listing.heroImage as MediaField
+  const hero = resolvePhotograph(photo, 'hero')
   // Gallery size is what a listing tier actually buys. TIER_CAPABILITIES has
   // described this since the beginning and nothing read it, so every listing -
   // including free ones - showed all 40 images a partner pays for.
@@ -169,10 +177,14 @@ export default async function ListingPage({ params }: Params) {
   // The area, the address and both map links follow the switch; see
   // lib/location-display. `place` is still computed for the related listings.
   // Blank counts as none: spaces alone must not draw an empty address row.
-  const address = SHOW_LOCATION ? listing.address?.trim() || null : null
-  const open = isOpenNow(listing.openingHours as never)
+  const linkToDining = editorial && !(await hiddenPages()).includes('eat-and-drink')
+  const streetAddress = editorial?.streetAddress ?? listing.address
+  const address = SHOW_LOCATION ? streetAddress?.trim() || null : null
+  // For this branch link to the restaurant's own hours until the catalog is reconciled.
+  const publicHours = editorial ? null : listing.openingHours
+  const open = isOpenNow(publicHours as never)
 
-  const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
+  const point = !editorial && Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
   /**
    * The Google rating, if somebody has looked it up.
@@ -201,7 +213,7 @@ export default async function ListingPage({ params }: Params) {
     ? (listing.subcategories as string[])
     : []
   const amenities = Array.isArray(listing.amenities) ? (listing.amenities as string[]) : []
-  const hours = Array.isArray(listing.openingHours) ? listing.openingHours : []
+  const hours = Array.isArray(publicHours) ? publicHours : []
 
   /** Whether the ruled fact table has any rows, and whether it exists at all. */
   const hasRows = Boolean(address) || subcategories.length > 0
@@ -262,11 +274,27 @@ export default async function ListingPage({ params }: Params) {
   // its region still gets three suggestions, but not the word.
   const anyNear = related.some((entry) => entry.nearby.near)
 
+  const schema = listingSchema({
+    ...listing,
+    address: streetAddress,
+    location: point,
+    openingHours: publicHours,
+    heroImage: photo,
+  }, locale)
+  const restaurantSchema = editorial ? {
+    ...schema,
+    '@type': 'Restaurant',
+    name: editorial.name,
+    description: editorial.description,
+    servesCuisine: 'Lebanese',
+    hasMenu: editorial.menuUrl,
+  } : schema
+
   return (
     <main>
       <article className="vd-listing">
         {/* Invisible to readers, read by search engines. See lib/structured-data. */}
-        <JsonLd data={listingSchema(listing as never, locale as Locale)} />
+        <JsonLd data={restaurantSchema} />
 
         <header
           data-has-photograph={Boolean(hero)}
@@ -320,13 +348,13 @@ export default async function ListingPage({ params }: Params) {
             page other than the suggestions at the foot.
           */}
             <Link
-              href="/directory"
+              href={linkToDining ? '/eat-and-drink' : '/directory'}
               className="text-cedar-100/70 hover:text-surface-base mb-8 inline-flex w-fit items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 &larr;
               </span>
-              {t('title')}
+              {linkToDining ? 'Eat & Drink' : t('title')}
             </Link>
 
             {/*
@@ -363,8 +391,13 @@ export default async function ListingPage({ params }: Params) {
               dir="auto"
               className="text-surface-base mt-4 text-[clamp(2.5rem,7vw,5rem)] leading-[1.02]"
             >
-              {listing.name}
+              {editorial?.name ?? listing.name}
             </h1>
+            {editorial && (
+              <p className="text-surface-base mt-4 max-w-prose text-lg leading-relaxed">
+                {editorial.intro}
+              </p>
+            )}
             {point && <Coordinates place={{ lat: point[1], lon: point[0] }} enabled />}
 
             <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -534,6 +567,17 @@ export default async function ListingPage({ params }: Params) {
                     </Row>
                   ) : null}
 
+                  {editorial && (
+                    <>
+                      <Row label="Cuisine">Lebanese</Row>
+                      <Row label="Plan your visit">
+                        <div className="flex flex-wrap gap-x-5 gap-y-2">
+                          <a className="underline underline-offset-4" href={editorial.menuUrl}>Read the Beirut menu</a>
+                          <a className="underline underline-offset-4" href={editorial.hoursUrl}>Check service hours with Em Sherif</a>
+                        </div>
+                      </Row>
+                    </>
+                  )}
                   {subcategories.length > 0 ? (
                     <Row label={t('type')}>
                       {subcategories
@@ -590,7 +634,7 @@ export default async function ListingPage({ params }: Params) {
                     </span>
                   </summary>
                   <div className="mt-4 sm:ps-[180px]">
-                    <OpeningHoursTable hours={listing.openingHours as never} />
+                    <OpeningHoursTable hours={hours as never} />
                   </div>
                 </details>
               ) : null}

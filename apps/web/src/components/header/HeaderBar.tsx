@@ -2,14 +2,14 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { useLocale } from 'next-intl'
-import { useDesktopEdition } from '../editorial/useDesktopEdition'
+import { useEnglishHomeEdition } from '../editorial/useDesktopEdition'
 import { usePathname } from '../../i18n/routing'
 
 /** The homepage opens over the film; menus and the remaining pages use paper. */
 export function HeaderBar({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const desktop = useDesktopEdition(useLocale())
-  const home = desktop && pathname === '/'
+  const englishHome = useEnglishHomeEdition(useLocale())
+  const home = englishHome && pathname === '/'
   const [overHero, setOverHero] = useState(true)
 
   useEffect(() => {
@@ -17,7 +17,9 @@ export function HeaderBar({ children }: { children: ReactNode }) {
     let frame = 0
     const update = () => {
       frame = 0
-      const hero = document.querySelector('.vd-hero-track')
+      const hero = document.querySelector(
+        matchMedia('(max-width: 700px)').matches ? '.vd-hero-media' : '.vd-hero-track',
+      )
       const header = document.querySelector('.vd-header')
       setOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > (header?.getBoundingClientRect().height ?? 80)))
     }

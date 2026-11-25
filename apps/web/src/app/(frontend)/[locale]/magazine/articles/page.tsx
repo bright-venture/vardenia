@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../../components/EnglishPageSchema'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
@@ -57,8 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('magazine.articles'),
-    description: t('magazine.articlesMetaDescription'),
+    title: locale === 'en' ? publicPageCopy['/magazine/articles'].title : t('magazine.articles'),
+    description: locale === 'en' ? publicPageCopy['/magazine/articles'].description : t('magazine.articlesMetaDescription'),
     path: '/magazine/articles',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -74,6 +76,7 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
 
   return (
     <main className="vd-magazine-index vd-magazine-articles">
+      <EnglishPageSchema locale={locale} path={'/magazine/articles'} name={publicPageCopy['/magazine/articles'].title} description={publicPageCopy['/magazine/articles'].description} type="CollectionPage" />
       <PageHero
         title={t('magazine.articles')}
         intro={t('magazine.articlesMetaDescription')}

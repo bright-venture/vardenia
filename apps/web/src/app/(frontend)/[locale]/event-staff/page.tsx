@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -22,8 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isLocale(locale)) return {}
   return buildMetadata({
     seo: null,
-    title: sectionName(EVENT_STAFF_SECTION, locale),
-    description: sectionSummary(EVENT_STAFF_SECTION, locale),
+    title: locale === 'en' ? publicPageCopy['/event-staff'].title : sectionName(EVENT_STAFF_SECTION, locale),
+    description: locale === 'en' ? publicPageCopy['/event-staff'].description : sectionSummary(EVENT_STAFF_SECTION, locale),
     path: `/${EVENT_STAFF_SECTION.path}`,
     locale,
   })
@@ -37,6 +39,7 @@ export default async function EventStaffPage({ params }: Props) {
 
   return (
     <main>
+      <EnglishPageSchema locale={locale} path={'/event-staff'} name={publicPageCopy['/event-staff'].title} description={publicPageCopy['/event-staff'].description} type="CollectionPage" />
       <PageHero
         title={sectionName(EVENT_STAFF_SECTION, locale as Locale)}
         intro={t('intro')}

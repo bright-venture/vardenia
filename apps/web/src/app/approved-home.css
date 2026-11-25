@@ -1,5 +1,5 @@
 .vd-magazine-edition > .vd-magazine-spread-frame {display:none;}
-@media (min-width:1051px) {
+@media (min-width:1051px), (max-width:700px) {
 @scope (html:lang(en):has(.vd-main-home)) {
 .vd-magazine-edition > .vd-magazine-spread-frame {display:block;}
 /* Public homepage header: approved overlay composition. Menus remain on paper. */
@@ -830,7 +830,7 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
   display: none;
 }
 
-@media (min-width: 1051px) {
+@media (min-width: 1051px), (max-width: 700px) {
   .vd-magazine-edition:has(.vd-magazine-spread-frame[data-featured-spread='true']) {
     padding-block-start: 48px;
   }
@@ -925,5 +925,139 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
 .vd-magazine-edition:has(.vd-magazine-spread-frame) > .vd-magazine-art { display:none; }
 .vd-home .vd-scene-image {border-radius:10px;}
 .vd-home :is(.vd-button,.vd-feelings button), .vd-footer .vd-button {border-radius:6px;}
+.vd-postcard-return { display: none; }
+@media (max-width: 700px) {
+  /* The film and its paper introduction follow the thumb in normal document flow. */
+  .vd-home .vd-hero-track { height: auto; }
+  .vd-public:has(.vd-header[data-home]) .vd-home .vd-hero {
+    position: relative;
+    display: grid;
+    grid-template-areas: "film" "bridge";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(clamp(480px, 78svh, 760px), auto) auto;
+    height: auto;
+    min-height: 0;
+    background: var(--vd-paper);
+  }
+  .vd-home .vd-hero :is(.vd-hero-media, .vd-hero-shade) { grid-area: film; }
+  .vd-home .vd-hero-media { background: var(--vd-ink); }
+  .vd-home .vd-hero-shade {
+    background: linear-gradient(0deg, rgb(9 21 33 / .87), rgb(9 21 33 / .58) 33%, transparent 73%);
+  }
+  .vd-home .vd-hero-copy {
+    position: relative;
+    grid-area: film;
+    align-self: end;
+    inset: auto;
+    max-width: none;
+    margin: 94px var(--vd-gutter) 86px;
+    opacity: 1;
+    transform: none;
+  }
+  .vd-home .vd-hero h1 { font-size: clamp(45px, 13vw, 75px); line-height: .97; }
+  .vd-home .vd-hero-copy p { margin-block: 14px 18px; max-width: 32ch; line-height: 1.5; }
+  .vd-home .vd-film-controls {
+    grid-area: film;
+    bottom: 32px;
+  }
+  .vd-home .vd-hero-next { display: none; }
+  .vd-home .vd-hero::after {
+    grid-area: film;
+    height: 30px;
+  }
+  .vd-home .vd-hero-bridge {
+    grid-area: bridge;
+    display: block;
+    position: relative;
+    inset: auto;
+    padding: 32px var(--vd-gutter) 36px;
+    color: var(--vd-ink);
+    opacity: 1;
+    transform: none;
+  }
+  .vd-home .vd-hero-bridge h2 { max-width: none; font-size: clamp(28px, 7vw, 38px); text-transform: none; }
+  .vd-home .vd-hero-bridge h2 br { display: none; }
+  .vd-home .vd-hero-bridge p { max-width: 42ch; margin: 12px 0 4px; line-height: 1.55; }
+  .vd-home .vd-hero-bridge .vd-button {
+    min-height: 44px;
+    padding-inline: 0;
+    color: var(--vd-ink);
+    background: transparent;
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .vd-home .vd-journey-intro { padding-block: 38px 30px; }
+  .vd-home .vd-journey-intro > p { margin-top: 14px; }
+  .vd-home .vd-atlas > .vd-section-heading { padding-bottom: 10px; }
+  .vd-home .vd-featured-destinations-title { margin-block: 16px 12px; }
+  .vd-home .vd-detours .vd-section-heading { margin-bottom: 12px; padding-bottom: 0; }
+  .vd-home .vd-detours .vd-section-heading p { margin-top: 14px; }
+  .vd-home .vd-postcard-controls { margin-top: 12px; }
+  .vd-home .vd-postcards { gap: 14px; grid-auto-columns: min(82vw, 350px); }
+  .vd-home .vd-home-selection { padding-block: 44px; }
+  .vd-home .vd-home-selection .vd-home-heading { margin-bottom: 20px; }
+  .vd-home .vd-home-selection > ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 14px;
+  }
+  .vd-home-selection .vd-listing-card .vd-plate { aspect-ratio: 1; border-radius: 10px; }
+  .vd-home-selection .vd-listing-card h3 { font-size: clamp(20px, 5vw, 25px); }
+  .vd-home .vd-manifesto { padding-block: 48px; text-align: start; }
+  .vd-home .vd-manifesto .vd-kinetic-stage {
+    position: static;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    justify-content: start;
+  }
+  .vd-home .vd-manifesto h2 { max-width: 19ch; text-wrap: pretty; }
+  .vd-home .vd-manifesto > p { max-width: 40ch; margin: 18px 0 0; padding: 0; }
+  .vd-home .vd-scan-process .vd-print-sticky { padding-block: 48px; gap: 24px; }
+  .vd-home .vd-scan-process .vd-print-steps { margin-top: 20px; }
+  .vd-home .vd-scan-process .vd-print-steps li { padding-block: 12px; gap: 8px; grid-template-columns: 30px minmax(0, 1fr); }
+  .vd-home .vd-scan-process .vd-print-phone { width: min(225px, 100%); }
+  .vd-home .vd-pinned-photo { --vd-print-border: 9px; }
+  .vd-home .vd-pinned-photo .vd-photo-caption {
+    height: 60px;
+    padding-inline: 3px;
+    column-gap: 6px;
+  }
+  .vd-home .vd-pinned-photo .vd-photo-caption > span:first-child { font-size: 24px; }
+  .vd-home .vd-pinned-photo .vd-photo-caption :is(.vd-coordinates, .vd-coordinate-digits) { font-size: 16px; }
+  .vd-home .vd-pinned-photo .vd-scene-image { height: calc(100% - 60px); }
+  .vd-home .vd-photo-city { grid-column: 2 / 7; }
+  .vd-home .vd-photo-village { grid-column: 1 / 6; }
+  .vd-home .vd-detours .vd-postcard-turn[aria-expanded='false'] { pointer-events: auto; }
+  .vd-home .vd-detours .vd-postcard-turn[aria-expanded='true'] {
+    inset: 4px 4px auto auto; min-height: 44px; padding-inline: 12px;
+    pointer-events: auto; color: var(--vd-ink); background: var(--vd-paper);
+  }
+  .vd-home-whatsapp-label { display: inline; }
+  .vd-public .vd-whatsapp-contact {
+    position: static;
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 56px;
+    padding: 12px var(--vd-gutter) max(12px, env(safe-area-inset-bottom));
+    gap: 8px;
+    justify-content: flex-start;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--vd-paper);
+    background: var(--vd-ink);
+    border-top: 1px solid rgb(250 248 243 / .2);
+    transform: none;
+  }
+  .vd-public .vd-whatsapp-contact svg { width: 20px; height: 20px; }
+  .vd-postcard-return { display: inline; }
+  .vd-home .vd-magazine-edition:has(.vd-magazine-spread-frame) { padding-block-start: 20px; }
+  .vd-footer-top h2 { font-size: clamp(32px,9.5vw,62px); white-space: nowrap; }
+  .vd-footer-top h2 br, .vd-footer-top > .vd-button, .vd-footer [data-directory-slot='standard'] { display: none; }
+  .vd-footer [data-directory-slot='desktop'] { display: list-item; }
+}
+
 }
 }

@@ -49,6 +49,7 @@
  */
 
 export const SESSION_HINT = 'vd_session'
+export const SESSION_HINT_CHANGE = 'vd-session-change'
 
 /** Who the session belongs to, as far as the header needs to care. */
 export type SessionAudience = 'customer' | 'partner'
@@ -82,12 +83,14 @@ const attributes = () => {
 export function markSignedIn(audience: SessionAudience): void {
   if (typeof document === 'undefined') return
   document.cookie = `${SESSION_HINT}=${HINT_VALUE[audience]}; max-age=${MAX_AGE}; ${attributes()}`
+  document.dispatchEvent(new Event(SESSION_HINT_CHANGE))
 }
 
 /** Called wherever a session ends: sign out, closing an account. */
 export function markSignedOut(): void {
   if (typeof document === 'undefined') return
   document.cookie = `${SESSION_HINT}=; max-age=0; ${attributes()}`
+  document.dispatchEvent(new Event(SESSION_HINT_CHANGE))
 }
 
 /**

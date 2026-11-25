@@ -44,6 +44,11 @@ const TOOLS: Tool[] = [
     title: 'Create listings in bulk from a spreadsheet',
   },
   {
+    label: 'Magazine page editor',
+    href: '/admin/magazine-page',
+    title: 'Preview an All Lebanon listing page',
+  },
+  {
     label: 'QR code sheet',
     href: '/qr/sheet',
     title: 'Every active QR code on one printable page',

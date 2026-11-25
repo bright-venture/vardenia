@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../../components/EnglishPageSchema'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
@@ -39,8 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'eventStaff' })
   return buildMetadata({
     seo: null,
-    title: t('requestTitle', { role: t(`role_${role.slug}`) }),
-    description: t('formIntro'),
+    title: locale === 'en' ? publicPageCopy[`/event-staff/${role.slug}`].title : t('requestTitle', { role: t(`role_${role.slug}`) }),
+    description: locale === 'en' ? publicPageCopy[`/event-staff/${role.slug}`].description : t('formIntro'),
     path: `/${EVENT_STAFF_SECTION.path}/${role.slug}`,
     locale,
   })
@@ -69,6 +71,7 @@ export default async function StaffRequestPage({ params }: Props) {
 
   return (
     <main>
+      <EnglishPageSchema locale={locale} path={`/event-staff/${role.slug}`} name={publicPageCopy[`/event-staff/${role.slug}`].title} description={publicPageCopy[`/event-staff/${role.slug}`].description} type="WebPage" />
       <PageHero
         title={t('requestTitle', { role: roleName })}
         intro={t('formIntro')}

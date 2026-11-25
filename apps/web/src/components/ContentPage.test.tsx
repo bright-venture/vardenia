@@ -1,11 +1,21 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { renderToReadableStream } from 'react-dom/server'
+import type { ReactNode } from 'react'
 import { createTranslator, NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@vardenia/i18n/messages'
 import type { Locale } from '@vardenia/i18n'
 import { contentPage } from '../lib/pages'
 import { ContentPageView } from './ContentPage'
+
+async function renderPage(view: ReactNode) {
+  const stream = await renderToReadableStream(view)
+  await stream.allReady
+  return new Response(stream).text()
+}
+
+vi.mock('../lib/hidden-pages', () => ({ hiddenPages: async () => [] }))
+vi.mock('next/font/google', () => ({ Caveat: () => ({ variable: 'test-handwriting' }) }))
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async ({ locale }: { locale: Locale }) =>
@@ -27,7 +37,7 @@ for (const locale of ['en', 'ar'] as const) {
         const view = await ContentPageView({ page, slug, locale })
         const root = document.createElement('div')
         root.dir = locale === 'ar' ? 'rtl' : 'ltr'
-        root.innerHTML = renderToStaticMarkup(
+        root.innerHTML = await renderPage(
           <NextIntlClientProvider
             locale={locale}
             messages={getMessages(locale)}
@@ -75,7 +85,7 @@ describe('standing pages and the pages an admin has hidden', () => {
       hidden,
     })
     const root = document.createElement('div')
-    root.innerHTML = renderToStaticMarkup(
+    root.innerHTML = await renderPage(
       <NextIntlClientProvider locale="en" messages={getMessages('en')} timeZone="Asia/Beirut">
         {view}
       </NextIntlClientProvider>,

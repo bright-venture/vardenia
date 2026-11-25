@@ -1,11 +1,12 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { CircleUserRound } from 'lucide-react'
+import { useDesktopEdition } from './editorial/useDesktopEdition'
 import { LinkArrow } from './LinkArrow'
 import { Link } from '../i18n/routing'
-import { sessionAudience } from '../lib/session-hint'
+import { SESSION_HINT_CHANGE, sessionAudience } from '../lib/session-hint'
 
 /**
  * "Sign in" and "Sign up" to a visitor, "Your account" to a customer.
@@ -37,9 +38,11 @@ import { sessionAudience } from '../lib/session-hint'
  */
 
 const subscribe = (onChange: () => void) => {
+  document.addEventListener(SESSION_HINT_CHANGE, onChange)
   document.addEventListener('visibilitychange', onChange)
   window.addEventListener('focus', onChange)
   return () => {
+    document.removeEventListener(SESSION_HINT_CHANGE, onChange)
     document.removeEventListener('visibilitychange', onChange)
     window.removeEventListener('focus', onChange)
   }
@@ -47,6 +50,8 @@ const subscribe = (onChange: () => void) => {
 
 export function AccountLink() {
   const t = useTranslations()
+
+  const englishDesktop = useDesktopEdition(useLocale())
 
   // Third argument is the server snapshot: nothing is known there, so the
   // signed-out links are what gets prerendered.
@@ -65,14 +70,11 @@ export function AccountLink() {
    * live at /partner. Sending them to the customer page would show them a sign
    * in prompt while they hold a valid session, which is the contradiction this
    * whole component exists to avoid.
-   *
-   * The words are `partner.title` from the message catalogue rather than
-   * something new, so the link names the page it opens.
    */
   if (audience === 'partner') {
     return (
       <Link href="/partner" className="text-ink-700 hover:text-ink-900 transition-colors">
-        {t('account.bookings')}
+        {englishDesktop ? 'Partner dashboard' : t('account.bookings')}
       </Link>
     )
   }

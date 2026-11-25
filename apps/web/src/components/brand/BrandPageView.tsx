@@ -1,3 +1,4 @@
+import { EnglishPageSchema } from '../EnglishPageSchema'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../../i18n/routing'
@@ -22,6 +23,8 @@ export async function BrandPageView({ brand, locale }: { brand: PublicBrand; loc
 
   return (
     <main>
+      <EnglishPageSchema locale={locale} path={`/brands/${brand.slug}`} name={brand.name}
+        description={brand.description ?? t('description', { name: brand.name })} type="CollectionPage" />
       <article className="mx-auto max-w-3xl px-6 py-14 sm:py-20">
         <Link
           href="/directory"

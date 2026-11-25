@@ -21,9 +21,9 @@ const COPY: Record<CategorySlug, Record<'en' | 'ar', Copy>> = {
   },
   'food-and-beverage': {
     en: {
-      title: 'Restaurants, Cafés & Nightlife in Lebanon',
+      title: 'Eat & Drink in Lebanon: Restaurants, Cafés & Nightlife',
       description:
-        'Explore restaurants, cafés, pools and nightlife in Lebanon. Browse places by location and view their details in the Vardenia directory.',
+        'Find restaurants, cafés, pools and nightlife in Lebanon. Browse by region, see where each place is, and check dining details before you go.',
     },
     ar: {
       title: 'مطاعم ومقاهي وحياة ليلية في لبنان',

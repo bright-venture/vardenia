@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GOVERNORATES } from '@vardenia/core'
 import { parseFilterState } from '../ListingFilters'
-import { DESTINATIONS, directoryFor } from './destinations'
+import { DESTINATIONS, destinationHref, directoryFor, sceneDirectoryFor } from './destinations'
 
 /**
  * Every destination's "Explore this region" link must actually filter the
@@ -28,4 +28,11 @@ describe('directoryFor', () => {
     expect(directoryFor({ where: 'tyre' })).toBe('/directory?where=south-lebanon&district=tyre')
     expect(directoryFor({ where: 'beirut' })).toBe('/directory?where=beirut')
   })
+})
+
+it('links English Byblos photos and postcards to the same guide', () => {
+  const byblos = DESTINATIONS.find((place) => place.id === 'byblos')!
+  expect(destinationHref(byblos, 'en')).toBe('/destinations/byblos')
+  expect(sceneDirectoryFor('byblos-harbour', 'en')).toBe('/destinations/byblos')
+  expect(destinationHref(byblos, 'ar')).toBe(directoryFor(byblos))
 })

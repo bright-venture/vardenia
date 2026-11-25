@@ -16,10 +16,11 @@ import { mapPosition } from './map-projection'
 import { useCityAutoplay } from './useCityAutoplay'
 import { mountPinnedPhotos } from './pinned-physics'
 import { PinnedScenicPhoto } from './PinnedScenicPhoto'
-import { useDesktopEdition } from '../editorial/useDesktopEdition'
+import { useEnglishHomeEdition } from '../editorial/useDesktopEdition'
 import {
   DESTINATIONS,
-  directoryFor,
+  BYBLOS_GUIDE_PATH,
+  destinationHref,
   sceneDirectoryFor,
   matchesFeeling,
   routePath,
@@ -64,13 +65,13 @@ export function CinematicJourney({
   const [motion, toggleMotion] = useJourneyMotion(),
     [playing, setPlaying] = useState(false),
     [failed, setFailed] = useState(false)
-  const desktop = useDesktopEdition(locale)
-  const citiesShown = !desktop
+  const englishHome = useEnglishHomeEdition(locale)
+  const citiesShown = !englishHome
   useEffect(() => {
     const host = root.current
-    if (!host || !motion || !desktop) return
+    if (!host || !motion || !englishHome) return
     return mountPinnedPhotos(host)
-  }, [motion, desktop])
+  }, [motion, englishHome])
   const [feeling, setFeeling] = useState<Feeling>('all'),
     [active, setActive] = useState<string>('byblos')
   const [cityIndex, setCityIndex] = useState(3)
@@ -85,8 +86,8 @@ export function CinematicJourney({
   const [trip, setTrip] = useDiscoveryRoute(),
     [flipped, setFlipped] = useState<string[]>([]),
     [pointerMotion, setPointerMotion] = useState(true)
-  // The revised postcard copy and interaction are under review on English desktop.
-  const desktopPostcards = desktop
+  // The photo face opens on hover or tap in the English edition.
+  const desktopPostcards = englishHome
   const [hoveredPostcard, setHoveredPostcard] = useState<string | null>(null)
   const [focusedPostcard, setFocusedPostcard] = useState<string | null>(null)
   const ar = locale === 'ar',
@@ -210,6 +211,7 @@ export function CinematicJourney({
       heroStickyTop = 0,
       stops: { at: number; radius: number }[] = [],
       box = { x: 0, y: 0, width: 1, height: 1 }
+    const phone = window.matchMedia('(max-width: 700px)')
     const length = path.getTotalLength()
     path.style.strokeDasharray = String(length)
     const measure = () => {
@@ -245,8 +247,9 @@ export function CinematicJourney({
     const update = () => {
       frame = 0
       if (dirty) measure()
+      const mobileFilm = locale === 'en' && phone.matches
       const hr = heroTrack.getBoundingClientRect(),
-        p = motion
+        p = motion && !mobileFilm
           ? clamp((heroStickyTop - hr.top) / Math.max(1, heroTrack.offsetHeight - hero.offsetHeight))
           : 0
       hero.style.setProperty('--vd-copy-out', String(clamp((p - 0.08) / 0.38)))
@@ -255,8 +258,8 @@ export function CinematicJourney({
       const copy = hero.querySelector<HTMLElement>('.vd-hero-copy')!,
         bridge = hero.querySelector<HTMLElement>('.vd-hero-bridge')!
       copy.inert = p > 0.45
-      bridge.inert = p < 0.65
-      bridge.setAttribute('aria-hidden', String(p < 0.65))
+      bridge.inert = !mobileFilm && p < 0.65
+      bridge.setAttribute('aria-hidden', String(bridge.inert))
       const lr = landscape.getBoundingClientRect()
       let progress = motion
         ? clamp((innerHeight * 0.65 - lr.top - 240) / Math.max(1, landscape.offsetHeight - 380))
@@ -328,7 +331,7 @@ export function CinematicJourney({
       window.removeEventListener('load', resize)
       reveals.forEach((el) => el.classList.remove('vd-pending'))
     }
-  }, [motion, citiesShown])
+  }, [motion, citiesShown, locale])
   const cycle = (direction: number, pointer: boolean) => {
     setPointerMotion(pointer)
     const i = available.findIndex((p) => p.id === place?.id)
@@ -354,10 +357,10 @@ export function CinematicJourney({
         const p = DESTINATIONS.find((p) => p.id === id)!
         return [
           `${i + 1}. ${name(p)}`,
-          // The same filtered link as the page's own buttons (directoryFor),
+          // Use the destination linked by the page's own buttons,
           // unless the directory is hidden.
           ...(directoryShown
-            ? [`${location.origin}${locale === 'en' ? '' : '/' + locale}${directoryFor(p)}`]
+            ? [`${location.origin}${locale === 'en' ? '' : '/' + locale}${destinationHref(p, locale)}`]
             : []),
           '',
         ]
@@ -393,14 +396,14 @@ export function CinematicJourney({
   // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
     const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
-    if (desktop) return (
+    if (englishHome) return (
       <PinnedScenicPhoto
         photo={p}
         label={name(p)}
         className={extra}
         ready={pageReady}
         interactive={motion}
-        href={directoryShown ? sceneDirectoryFor(id) : undefined}
+        href={directoryShown ? sceneDirectoryFor(id, locale) : undefined}
         dragLabel={directoryShown ? `Explore ${name(p)}.${motion ? ' Drag to swing the photo; arrow keys also work.' : ''}` : name(p)}
       />
     )
@@ -533,13 +536,13 @@ export function CinematicJourney({
             <a className="vd-button vd-button-light" href="#ways">
               {t('begin')}{' '}
               <span aria-hidden>
-                {desktop ? <ArrowDown size={16} aria-hidden /> : <LinkArrow />}
+                {englishHome ? <ArrowDown size={16} aria-hidden /> : <LinkArrow />}
               </span>
             </a>
           </div>
           <div className="vd-hero-bridge" aria-hidden>
             <h2>
-              {t('bridgeA')}
+              {t('bridgeA')}{' '}
               <br />
               {t('bridgeB')}
             </h2>
@@ -561,9 +564,9 @@ export function CinematicJourney({
             }}
           >
             <summary>
-              {desktop && <Play size={13} fill="currentColor" strokeWidth={0} aria-hidden />}
+              {englishHome && <Play size={13} fill="currentColor" strokeWidth={0} aria-hidden />}
               {t('film')}
-              {desktop && <ChevronDown className="vd-film-chevron" size={14} aria-hidden />}
+              {englishHome && <ChevronDown className="vd-film-chevron" size={14} aria-hidden />}
             </summary>
             <div>
               {!failed && (
@@ -590,7 +593,7 @@ export function CinematicJourney({
             </div>
           </details>
           <a className="vd-hero-next" href="#ways" aria-label={t('begin')}>
-            {desktop ? <ArrowDown size={28} strokeWidth={1.4} aria-hidden /> : '↓'}
+            {englishHome ? <ArrowDown size={28} strokeWidth={1.4} aria-hidden /> : '↓'}
           </a>
         </div>
       </section>
@@ -646,25 +649,31 @@ export function CinematicJourney({
               {t('mountainB')}
             </h3>
             <p data-vd-reveal>{t('mountainBody')}</p>
-            <a
-              className="vd-button"
-              href="#destinations"
-              onClick={() => {
-                // This scene is Byblos now (11 Nov 2026): open the
-                // destinations on Byblos, among the coastal ones.
-                setFeeling('coast')
-                setActive('byblos')
-              }}
-            >
-              {t('mountainLink')} <LinkArrow />
-            </a>
+            {locale === 'en' ? (
+              <Link className="vd-button" href={BYBLOS_GUIDE_PATH}>
+                {t('mountainLink')} <LinkArrow />
+              </Link>
+            ) : (
+              <a
+                className="vd-button"
+                href="#destinations"
+                onClick={() => {
+                  // This scene is Byblos now (11 Nov 2026): open the
+                  // destinations on Byblos, among the coastal ones.
+                  setFeeling('coast')
+                  setActive('byblos')
+                }}
+              >
+                {t('mountainLink')} <LinkArrow />
+              </a>
+            )}
           </div>
           {scenePhoto('byblos-harbour', 'vd-photo-mountain', 20)}
           {scenePhoto('deir-el-qamar', 'vd-photo-village', -10)}
         </div>
         <p className="vd-journey-outro" data-vd-reveal>
           {t('outro')}
-          {!desktop && <><br /><a href="#stone" aria-label={t('citySlider')}>↓</a></>}
+          {!englishHome && <><br /><a href="#stone" aria-label={t('citySlider')}>↓</a></>}
         </p>
       </section>
       {citiesShown && (
@@ -704,7 +713,7 @@ export function CinematicJourney({
           {directoryShown ? (
             <Link
               className="vd-button vd-button-light"
-              href={directoryFor(city)}
+              href={destinationHref(city, locale)}
               onPointerEnter={(event) => {
                 if (event.pointerType !== 'touch') setCityHover(true)
               }}
@@ -732,7 +741,7 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('atlasBody')}</p>
         </div>
-        {directoryShown && !desktop ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
+        {directoryShown && !englishHome ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
         <h3 className="vd-featured-destinations-title" id="vd-featured-destinations-title">
           {t('featuredDestinations')}
         </h3>
@@ -807,7 +816,7 @@ export function CinematicJourney({
                 >
                   <span />
                   {/* Match the place title beside the map. */}
-                  <span className="vd-map-city-label">{desktop ? name(p) : region(p)}</span>
+                  <span className="vd-map-city-label">{englishHome ? name(p) : region(p)}</span>
                 </button>
               ))}
             </div>
@@ -818,7 +827,7 @@ export function CinematicJourney({
           </div>
           {place && (
             <div className="vd-atlas-details" key={place.id} aria-live="polite">
-              {desktop ? (
+              {englishHome ? (
                 <>
                   <p className="vd-destination-region">{region(place)}</p>
                   <h3>{name(place)}</h3>
@@ -831,14 +840,14 @@ export function CinematicJourney({
               )}
               <Coordinates
                 place={place}
-                enabled={!desktop && motion && pointerMotion}
+                enabled={!englishHome && motion && pointerMotion}
                 className="vd-destination-coordinates"
               />
               <p className="vd-destination-description">{body(place)}</p>
               <div className="vd-destination-actions">
                 {directoryShown ? (
-                  <Link className="vd-button vd-button-light" href={directoryFor(place)}>
-                    {t('explore')} <LinkArrow />
+                  <Link className="vd-button vd-button-light" href={destinationHref(place, locale)}>
+                    {locale === 'en' && place.id === 'byblos' ? t('mountainLink') : t('explore')} <LinkArrow />
                   </Link>
                 ) : null}
                 <button
@@ -880,9 +889,9 @@ export function CinematicJourney({
         <section className="vd-trip-panel" data-empty={!trip.length} id="discovery-route" aria-labelledby="vd-route-title">
           <div className="vd-trip-heading">
             <h3 id="vd-route-title">{t('routeTitle')}</h3>
-            {trip.length || !desktop ? <p>{t('routeBody')}</p> : null}
+            {trip.length || !englishHome ? <p>{t('routeBody')}</p> : null}
             <span aria-live="polite">
-              {trip.length} {desktop && trip.length === 1 ? 'stop' : t('stops')}
+              {trip.length} {englishHome && trip.length === 1 ? 'stop' : t('stops')}
             </span>
           </div>
           {trip.length ? (
@@ -903,7 +912,7 @@ export function CinematicJourney({
                       decoding="async"
                     />
                     {directoryShown ? (
-                      <Link href={directoryFor(p)}>{name(p)}</Link>
+                      <Link href={destinationHref(p, locale)}>{name(p)}</Link>
                     ) : (
                       <span>{name(p)}</span>
                     )}
@@ -936,7 +945,7 @@ export function CinematicJourney({
           ) : (
             <p className="vd-route-empty">{t('routeEmpty')}</p>
           )}
-          {trip.length || !desktop ? <div className="vd-trip-actions">
+          {trip.length || !englishHome ? <div className="vd-trip-actions">
             <button className="vd-button" disabled={!trip.length} onClick={exportRoute}>
               {t('download')} ↓
             </button>
@@ -1011,7 +1020,7 @@ export function CinematicJourney({
                   setFlipped((old) => (back ? old.filter((id) => id !== p.id) : [...old, p.id]))
                 }}
               >
-                {desktopPostcards ? null : `${back ? t('front') : t('turn')} ↶`}
+                {desktopPostcards ? (back && <span className="vd-postcard-return">{t('front')}</span>) : `${back ? t('front') : t('turn')} ↶`}
               </button>
             )
             return (
@@ -1032,7 +1041,7 @@ export function CinematicJourney({
                   >
                     <div className="vd-postcard-front" inert={back}>
                       {directoryShown && !desktopPostcards ? (
-                        <Link href={directoryFor(p)} aria-label={name(p)}>
+                        <Link href={destinationHref(p, locale)} aria-label={name(p)}>
                           {postcardImage(p)}
                         </Link>
                       ) : (
@@ -1054,7 +1063,7 @@ export function CinematicJourney({
                       {directoryShown ? (
                         <Link
                           className={desktopPostcards ? 'vd-button' : undefined}
-                          href={directoryFor(p)}
+                          href={destinationHref(p, locale)}
                           onFocus={() => {
                             if (desktopPostcards) setFocusedPostcard(p.id)
                           }}
@@ -1070,7 +1079,7 @@ export function CinematicJourney({
                   </div>
                 </div>
                 {desktopPostcards ? null : turn}
-                <h3>{directoryShown ? <Link href={directoryFor(p)}>{name(p)}</Link> : name(p)}</h3>
+                <h3>{directoryShown ? <Link href={destinationHref(p, locale)}>{name(p)}</Link> : name(p)}</h3>
                 <p>{body(p)}</p>
               </article>
             )
