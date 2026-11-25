@@ -1,3 +1,6 @@
+import { publicPageCopy } from '../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
+import { issueCover } from '../../../../lib/issue-presentation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -72,8 +75,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('magazine.title'),
-    description: t('magazine.metaDescription'),
+    title: locale === 'en' ? publicPageCopy['/magazine'].title : t('magazine.title'),
+    description: locale === 'en' ? publicPageCopy['/magazine'].description : t('magazine.metaDescription'),
     path: '/magazine',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -96,10 +99,11 @@ export default async function MagazinePage({ params }: Props) {
   const articlesShown = !hidden.includes('magazine-articles')
 
   const current = issues.docs[0]
-  const cover = current ? resolveImage(current.cover as never, 'portrait') : null
+  const cover = current ? resolveImage(issueCover(current, locale), 'portrait') : null
 
   return (
     <main className="vd-magazine-index mx-auto max-w-6xl px-6 py-16">
+      <EnglishPageSchema locale={locale} path={'/magazine'} name={publicPageCopy['/magazine'].title} description={publicPageCopy['/magazine'].description} type="CollectionPage" />
       <EditorialIntro locale={locale} kind="magazine" />
 
       {current && issuesShown ? (

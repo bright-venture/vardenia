@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
 import { Suspense } from 'react'
 import { ResultsSkeleton } from '../../../../components/ResultsSkeleton'
 import type { Metadata } from 'next'
@@ -65,8 +67,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('directory.title'),
-    description: t('directory.metaDescription'),
+    title: locale === 'en' ? publicPageCopy['/directory'].title : t('directory.title'),
+    description: locale === 'en' ? publicPageCopy['/directory'].description : t('directory.metaDescription'),
     path: '/directory',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -81,6 +83,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   return (
     <main className="vd-directory mx-auto max-w-6xl px-6 py-16">
+      <EnglishPageSchema locale={locale} path={'/directory'} name={publicPageCopy['/directory'].title} description={publicPageCopy['/directory'].description} type="CollectionPage" />
       {/*
         The design puts the result count beside the title. It cannot go here:
         this shell is deliberately static and the count needs the query, so

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../../../lib/seo'
+import { alternatesFor, buildMetadata } from '../../../../../lib/seo'
 import { termsOfService, legalEdition, PLACEHOLDER } from '../../../../../lib/legal'
 import { LegalDocumentView } from '../../../../../components/LegalDocument'
 
@@ -36,6 +36,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const lang = isLocale(locale) ? locale : DEFAULT_LOCALE
+  if (lang === 'en') return buildMetadata({
+    seo: null, locale: lang, path: '/legal/terms', title: termsOfService(lang).title,
+    description: legalEdition(lang).termsDescription,
+  })
   return {
     title: termsOfService(lang).title,
     description: legalEdition(lang).termsDescription,

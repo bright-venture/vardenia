@@ -1,9 +1,10 @@
+import { EnglishPageSchema } from './EnglishPageSchema'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
 import { contentPage, type ContentPageSlug } from '../lib/pages'
-import { alternatesFor } from '../lib/seo'
+import { alternatesFor, buildMetadata } from '../lib/seo'
 import { hiddenPages } from '../lib/hidden-pages'
 import { ContentPageView } from './ContentPage'
 
@@ -31,11 +32,34 @@ export interface ContentRouteProps {
   params: Promise<{ locale: string }>
 }
 
+const standingDescriptions: Record<ContentPageSlug, string> = {
+  about:
+    'Learn how Vardenia’s Lebanon travel magazine connects its printed recommendations with an online directory through QR codes.',
+  contact:
+    'Contact the Vardenia team in Lebanon. Send a message about the magazine, a directory listing or a business enquiry.',
+  faq: 'Find answers to common questions about the Vardenia magazine, the Lebanon directory and how businesses can take part.',
+  'partner-with-us':
+    'Explore ways to partner with Vardenia and reach visitors discovering Lebanon through the magazine and its online directory.',
+  advertise:
+    'Explore advertising in Vardenia’s Lebanon travel magazine and online directory, and contact the team about a placement.',
+  'add-your-business':
+    'Learn how to submit a business in Lebanon for consideration in Vardenia’s directory and print magazine.',
+}
+
 export function contentRoute(slug: ContentPageSlug) {
   async function generateMetadata({ params }: ContentRouteProps): Promise<Metadata> {
     const { locale } = await params
     const page = contentPage(slug, isLocale(locale) ? locale : DEFAULT_LOCALE)
     if (!page) return {}
+
+    if (locale === 'en')
+      return buildMetadata({
+        seo: null,
+        locale,
+        path: `/${slug}`,
+        title: page.title,
+        description: standingDescriptions[slug],
+      })
 
     // Title and description now come from the page in the reader's own language,
     // which matters here more than on most pages: these are what a search engine
@@ -72,7 +96,18 @@ export function contentRoute(slug: ContentPageSlug) {
     const hidden = await hiddenPages()
     if (hidden.includes(slug)) notFound()
 
-    return <ContentPageView page={page} slug={slug} locale={locale} hidden={hidden} />
+    return (
+      <>
+        <EnglishPageSchema
+          locale={locale}
+          path={`/${slug}`}
+          name={page.title}
+          description={page.intro}
+          type={slug === 'about' ? 'AboutPage' : slug === 'contact' ? 'ContactPage' : 'WebPage'}
+        />
+        <ContentPageView page={page} slug={slug} locale={locale} hidden={hidden} />
+      </>
+    )
   }
 
   return { generateMetadata, Page }

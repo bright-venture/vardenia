@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { isReviewListing } from './review-listing'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
@@ -1073,13 +1074,13 @@ export async function findAllListingSlugs({
   indexableOnly = false,
 }: { indexableOnly?: boolean } = {}) {
   const payload = await client()
-  const result = await findEvery<Pick<Business, 'id' | 'slug'>>(payload, {
+  const result = await findEvery<Pick<Business, 'id' | 'slug' | 'name'>>(payload, {
     collection: 'businesses',
     // Static generation still includes hidden pages; only the sitemap opts in.
     ...(indexableOnly ? { where: { 'seo.noIndex': { not_equals: true } } } : {}),
     depth: 0,
     overrideAccess: false,
-    select: { slug: true },
+    select: { slug: true, ...(indexableOnly ? { name: true } : {}) },
   })
 
   if (!result.complete) {
@@ -1089,5 +1090,6 @@ export async function findAllListingSlugs({
     )
   }
 
-  return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
+  const docs = indexableOnly ? result.docs.filter((doc) => !isReviewListing(doc)) : result.docs
+  return docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }

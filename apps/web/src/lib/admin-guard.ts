@@ -33,7 +33,7 @@
  */
 
 /** The cookie Payload mints for every auth collection. */
-export const PAYLOAD_COOKIE = 'payload-token'
+export { PAYLOAD_COOKIE } from './auth-cookies'
 
 /** Where each kind of account is sent instead of the admin panel. */
 const HOME_FOR: Record<string, string> = {

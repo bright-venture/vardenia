@@ -1,3 +1,4 @@
+import { BookingStatusSelect } from '../../../../../components/partner/BookingStatusSelect'
 import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
@@ -123,11 +124,6 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   return (
     <>
-      {locale === 'en' && (
-        <h2 hidden className="vd-desk-heading" data-desk="bookings">
-          {t('tabBookings')}
-        </h2>
-      )}
       {/*
         The sentence the owner came for, before the controls they did not.
 
@@ -282,7 +278,7 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
         that distinction is why the governorate filter on /directory wraps
         instead, having once dragged the whole page sideways to 539px.
       */}
-      <div className="border-ink-100 scrollbar-none mt-4 flex gap-2 overflow-x-auto border-y py-3">
+      <div className="vd-booking-status-links border-ink-100 scrollbar-none mt-4 flex gap-2 overflow-x-auto border-y py-3">
         <Chip href={href({ status: 'all' })} active={filter.status === 'all'}>
           {t('statusAll')}
         </Chip>
@@ -292,6 +288,19 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
           </Chip>
         ))}
       </div>
+
+      {locale === 'en' && (
+        <BookingStatusSelect
+          value={href({ status: filter.status })}
+          options={[
+            { value: href({ status: 'all' }), label: t('statusAll') },
+            ...BOOKING_STATUSES.map((value) => ({
+              value: href({ status: value }),
+              label: status(value),
+            })),
+          ]}
+        />
+      )}
 
       {/* `window` and `status` ride along as hidden fields so that searching does
           not silently reset the other filters. */}

@@ -188,15 +188,21 @@ export function directoryFor(p: Pick<Destination, 'where'>) {
   return parent ? `/directory?where=${parent.slug}&district=${p.where}` : '/directory'
 }
 
+export const BYBLOS_GUIDE_PATH = '/destinations/byblos'
+
+export function destinationHref(place: Destination, locale: string): string {
+  return locale === 'en' && place.id === 'byblos' ? BYBLOS_GUIDE_PATH : directoryFor(place)
+}
+
 /** Scenic photographs open the destination they actually depict. */
-export function sceneDirectoryFor(id: string): string {
+export function sceneDirectoryFor(id: string, locale = ''): string {
   const sceneDestination: Record<string, string> = {
     'beirut-downtown': 'beirut',
     arz: 'bsharri',
     'byblos-harbour': 'byblos',
   }
   const destination = DESTINATIONS.find((place) => place.id === (sceneDestination[id] ?? id))
-  return destination ? directoryFor(destination) : '/directory'
+  return destination ? destinationHref(destination, locale) : '/directory'
 }
 
 /** A place can belong to several ways of exploring; filters never imply bookable activities. */

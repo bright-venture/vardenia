@@ -51,3 +51,17 @@ export function listingSummary(listing: { tagline?: string | null; description?:
   const text = summarise(richTextToPlain(listing.description))
   return text || undefined
 }
+
+/** English import rows occasionally contain a staff credit instead of a place description. */
+export function englishListingSummary(listing: { name?: string | null; tagline?: string | null; description?: unknown }, category: string) {
+  const summary = listingSummary(listing)
+  if (summary && !/^President (?:&|and) CEO\s*:/i.test(summary)) return summary
+  if (!listing.name) return undefined
+  return category
+    ? `${listing.name} is listed under ${category} in Vardenia’s Lebanon directory.`
+    : `Explore the listing for ${listing.name} in Vardenia’s Lebanon directory.`
+}
+
+export function articleSummary(article: { excerpt?: string | null; body?: unknown }, locale: string) {
+  return article.excerpt || (locale === 'en' ? summarise(richTextToPlain(article.body)) || undefined : undefined)
+}

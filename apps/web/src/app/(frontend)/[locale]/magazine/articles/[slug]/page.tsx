@@ -1,3 +1,4 @@
+import { articleSummary } from '../../../../../../lib/plain-text'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -55,7 +56,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return buildMetadata({
     seo: article.seo,
     title: article.title,
-    description: article.excerpt,
+    description: articleSummary(article, locale),
     fallbackImage: article.heroImage as never,
     path: `/magazine/articles/${slug}`,
     type: 'article',

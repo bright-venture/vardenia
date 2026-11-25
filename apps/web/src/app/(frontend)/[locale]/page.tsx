@@ -1,3 +1,4 @@
+import { issueCover } from '../../../lib/issue-presentation'
 import type { Metadata } from 'next'
 // The homepage's own styles, out of the stylesheets every page loads.
 import '../../home.css'
@@ -5,7 +6,7 @@ import '../../approved-home.css'
 import QRCode from 'qrcode'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../lib/seo'
+import { alternatesFor, buildMetadata } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { findListings, findFeaturedListings, printedCodes } from '../../../lib/listings'
 import { findHomeListings } from '../../../lib/home-listings'
@@ -29,6 +30,19 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
+  if (locale === 'en') {
+    const title = 'Vardenia | Lebanon Travel Guide & Magazine'
+    return {
+      ...buildMetadata({
+        seo: undefined,
+        title,
+        description: 'Explore Lebanon with Vardenia’s travel magazine and local directory. Find coastal towns, mountain stays, restaurants and stories from across the country.',
+        path: '/',
+        locale,
+      }),
+      title: { absolute: title },
+    }
+  }
   return { alternates: alternatesFor('/', isLocale(locale) ? locale : DEFAULT_LOCALE) }
 }
 /** Published directory/editorial content; visual-review samples live only in review/. */
@@ -57,7 +71,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const issue = issues.docs[0]
   const allLebanon = issues.docs.find((edition) => edition.slug === 'all-lebanon')
   const desktopIssueHref = issuesShown && allLebanon ? '/magazine/issues/all-lebanon' : null
-  const cover = issue ? resolveImage(issue.cover as never, 'portrait') : null
+  const cover = issue ? resolveImage(issueCover(issue, locale), 'portrait') : null
   const pictured = [...featured, ...listings.docs].filter((doc) =>
     resolvePhotograph(doc.heroImage as never),
   )

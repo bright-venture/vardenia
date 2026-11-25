@@ -55,6 +55,8 @@ export default async function DashboardLayout({
 
   const [listings, restaurant] = await Promise.all([ownerListings(), ownsRestaurant()])
 
+  const venues = listings.map((listing) => listing.name).join(' · ')
+
   return (
     <main data-ui className="vd-partner-page mx-auto max-w-4xl px-6 py-16">
       {/*
@@ -72,8 +74,18 @@ export default async function DashboardLayout({
             {t('eyebrow')}
           </p>
           <h1 className="text-ink-900 mt-2 text-3xl">
-            {listings.length > 0 ? listings.map((l) => l.name).join(' · ') : t('title')}
+            {locale === 'en' && (
+              <span hidden className="vd-bookings-title">
+                {t('tabBookings')}
+              </span>
+            )}
+            <span className="vd-venue-title">{venues || t('title')}</span>
           </h1>
+          {locale === 'en' && venues && (
+            <p hidden className="vd-bookings-venues">
+              {venues}
+            </p>
+          )}
           <p className="text-ink-500 mt-2 text-sm">{owner.email}</p>
         </div>
         <SignOutButton collection="business-users" redirectTo="/partner/login" />
