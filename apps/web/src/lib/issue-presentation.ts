@@ -1,3 +1,4 @@
+import { isReviewListing } from './review-listing'
 import type { MediaField } from './media'
 
 export const ALL_LEBANON_DESCRIPTION =
@@ -22,4 +23,14 @@ export function issueCover(
     }
   }
   return media
+}
+
+/** For readers, publication date determines the current edition. Keep catalogue order for ties. */
+export function readerIssues<
+  T extends { slug?: string | null; title?: string | null; publishedAt?: string | null },
+>(issues: T[]) {
+  const timestamp = (issue: T) => Date.parse(issue.publishedAt ?? '') || 0
+  return issues
+    .filter((issue) => !isReviewListing({ name: issue.title, slug: issue.slug }))
+    .sort((a, b) => timestamp(b) - timestamp(a))
 }

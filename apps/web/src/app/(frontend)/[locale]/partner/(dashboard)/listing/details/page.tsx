@@ -52,7 +52,7 @@ export default async function PartnerDetailsPage({ params }: Props) {
     local || names.find((listing) => listing.id === id)?.name || ''
 
   return (
-    <section className="mt-10">
+    <section className="vd-partner-tools mt-10">
       <p className="text-sm">
         <Link href="/partner/listing" className={LINK}>
           {t('backToListing')}

@@ -9,6 +9,7 @@ export function isEnglishRecovery(pathname: string) {
 /** The standalone documents can render before React or without the usual locale provider. */
 export const recoveryEditionScript = `{
   const segment = location.pathname.split('/')[1];
+  if (segment === 'en') document.currentScript?.parentElement?.setAttribute('data-english-path', '');
   if (!${JSON.stringify(otherEditions)}.includes(segment))
     document.currentScript?.parentElement?.setAttribute('data-english-recovery', '');
 }`

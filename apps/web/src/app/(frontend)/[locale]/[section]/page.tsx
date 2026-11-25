@@ -17,7 +17,7 @@ import {
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { ComingSoonNotice } from '../../../../components/ComingSoonNotice'
+import { ComingSoonNotice, DesktopOpeningNotice } from '../../../../components/ComingSoonNotice'
 import {
   countByDistrict,
   countByGovernorate,
@@ -167,7 +167,9 @@ export default async function SectionPage({ params, searchParams }: Props) {
           )[path] ?? 0
         }
       >
-        {comingSoon ? null : (
+        {comingSoon ? (
+          locale === 'en' && <DesktopOpeningNotice body="sectionBody" />
+        ) : (
           <a className="vd-button" href="#section-results">
             {t('chooseType')} <span aria-hidden>↓</span>
           </a>
@@ -263,9 +265,10 @@ async function SectionResults({
     ? Object.values(subcategoryCounts).reduce((sum, n) => sum + n, 0)
     : null
 
-  const emptyWeddings =
+  const emptyCategory =
     locale === 'en' &&
-    section.path === 'weddings' &&
+    (section.path === 'lifestyle' || section.path === 'weddings') &&
+    !state.trip &&
     !anyFilterApplied(state) &&
     result?.totalDocs === 0
 
@@ -280,16 +283,22 @@ async function SectionResults({
           {diningExample.tagline}
         </p>
       )}
-      {emptyWeddings && (
-        <section className="vd-weddings-empty" aria-labelledby="wedding-planners-title">
-          <h2 id="wedding-planners-title">Wedding planners</h2>
-          <p>No wedding planners are listed yet.</p>
+      {emptyCategory && (
+        <section className="vd-weddings-empty" aria-labelledby="category-empty-title">
+          <h2 id="category-empty-title">
+            {section.path === 'weddings' ? 'Wedding planners' : 'Lifestyle listings'}
+          </h2>
+          <p>
+            {section.path === 'weddings'
+              ? 'No wedding planners are listed yet.'
+              : t('emptySection')}
+          </p>
           <Link className="vd-text-link" href="/directory">
             Explore the directory <span aria-hidden>↗</span>
           </Link>
         </section>
       )}
-      <div className={emptyWeddings ? 'vd-weddings-standard' : 'contents'}>
+      <div className={emptyCategory ? 'vd-weddings-standard' : 'contents'}>
         {/* The kinds of place, as filter tabs above the listings. */}
         <SubcategoryTiles
           base={base}

@@ -6,7 +6,6 @@
       --vd-pin-x: 51%;
       --vd-pin-y: 9px;
       --vd-pin-flip: 1;
-      --vd-print-border: clamp(10px, 1.4vw, 20px);
       transform: none;
       overflow: visible;
     }
@@ -19,12 +18,12 @@
       inset: 0;
       color: inherit;
       text-decoration: none;
-      padding: var(--vd-print-border);
+      padding: var(--vd-print-border, clamp(10px, 1.4vw, 20px));
       padding-bottom: 0;
       background: var(--vd-paper) url('/journey/natural-paper-grain-soft.webp') center / 700px;
       background-blend-mode: soft-light;
       border: 1px solid rgb(255 255 255 / 0.7);
-      border-radius: 10px;
+      border-radius: var(--vd-radius-print, 10px);
       box-shadow:
         calc(var(--vd-paper-twist, 0) * 4px) calc(6px + var(--vd-paper-lift, 0) * 15px)
           calc(10px + var(--vd-paper-lift, 0) * 16px) rgb(17 29 45 / 0.14),
@@ -39,7 +38,7 @@
       position: relative;
       overflow: hidden;
       height: calc(100% - 78px);
-      border-radius: 10px;
+      border-radius: var(--vd-radius-photo, 10px);
     }
     .vd-pinned-photo .vd-scene-image::after {
       display: none;

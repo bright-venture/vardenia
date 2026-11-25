@@ -7,7 +7,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { findArticleBySlug, findAllArticleSlugs } from '../../../../../../lib/articles'
-import { resolveImage } from '../../../../../../lib/media'
+import { isSeedTitleArt, resolveImage } from '../../../../../../lib/media'
 import { buildMetadata } from '../../../../../../lib/seo'
 import { articleSchema } from '../../../../../../lib/structured-data'
 import { JsonLd } from '../../../../../../components/JsonLd'
@@ -93,7 +93,10 @@ export default async function ArticlePage({ params }: Params) {
         <JsonLd data={articleSchema(article as never, locale as Locale)} />
 
         {hero ? (
-          <div className="vd-article-photo bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
+          <div
+            data-title-art={isSeedTitleArt(article.heroImage) || undefined}
+            className="vd-article-photo bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]"
+          >
             <Image
               src={hero.src}
               alt={hero.alt}

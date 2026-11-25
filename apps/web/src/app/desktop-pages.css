@@ -6,6 +6,8 @@
     --vd-stone: theme('colors.surface.sunken');
     --vd-radius-control: 6px;
     --vd-radius-photo: 10px;
+    --vd-radius-print: 16px;
+    --vd-print-border: clamp(10px, 1.4vw, 20px);
   }
   html:lang(en) .vd-footer-top { flex-wrap: wrap; }
   html:lang(en) .vd-footer-top h2 { white-space: nowrap; }
@@ -27,7 +29,7 @@
   }
   html:lang(en) .vd-weddings-standard { display: none; }
   html:lang(en) :is(.vd-directory, .vd-magazine-index) .vd-page-intro > figure {
-    padding: 10px;
+    padding: var(--vd-print-border);
     background: var(--vd-paper);
     border: 1px solid color-mix(in srgb, var(--vd-ink) 12%, transparent);
     box-shadow: 0 10px 24px -16px #111d2d66;
@@ -39,7 +41,7 @@
   html:lang(en) :is(.vd-partner-tabs > a, .vd-auth-card :is(input:not([type='checkbox']), select), .vd-task-page :is(input,select)) {
     border-radius: 6px;
   }
-  html:lang(en) .vd-auth-image { border-radius: 10px; overflow: hidden; }
+  html:lang(en) .vd-auth-image { border-radius: var(--vd-radius-print); overflow: hidden; }
   html:lang(en) .vd-task-page {
     background: var(--vd-paper);
     border: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
@@ -82,7 +84,7 @@
   }
   html:lang(en) .vd-page-intro > figure {
     aspect-ratio: auto;
-    border-radius: var(--vd-radius-photo);
+    border-radius: var(--vd-radius-print);
   }
   html:lang(en) .vd-page-intro > figure > picture {
     height: auto;
@@ -202,11 +204,12 @@
   }
   html:lang(en) .vd-story-section { margin-bottom: clamp(56px, 6vw, 88px); }
   html:lang(en) .vd-story-photograph {
-    padding: 10px;
+    padding: var(--vd-print-border);
     border: 1px solid theme('colors.ink.100');
-    border-radius: var(--vd-radius-photo);
+    border-radius: var(--vd-radius-print);
     background: var(--vd-paper);
   }
+  html:lang(en) .vd-story-photograph img { border-radius: var(--vd-radius-photo); }
   html:lang(en) .vd-story-photograph figcaption {
     margin: 8px 4px 0;
     font: 500 26px/1.25 var(--font-pinned-caption, var(--font-display));

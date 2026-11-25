@@ -110,6 +110,11 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
           <p className="text-ink-500 mt-2 text-sm">{customer.email}</p>
+          {locale === 'en' && (
+            <a hidden className="vd-reader-bookings-jump" href="#reader-bookings">
+              {t('bookings')} <span aria-hidden>↓</span>
+            </a>
+          )}
           <p className="vd-account-shortcuts mt-3 flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/account/passport" className={LINK}>
               {t('passportLink')}
@@ -145,7 +150,11 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <ChangePassword />
       </div>
 
-      <h2 id="reader-bookings" className="text-ink-500 mt-12 text-xs uppercase tracking-widest">
+      <h2
+        id="reader-bookings"
+        tabIndex={-1}
+        className="text-ink-500 mt-12 text-xs uppercase tracking-widest"
+      >
         {t('bookings')}
       </h2>
 

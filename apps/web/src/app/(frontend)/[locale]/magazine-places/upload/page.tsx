@@ -1,3 +1,4 @@
+import { Link } from '../../../../../i18n/routing'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -39,6 +40,15 @@ export default async function MagazinePlacesUploadPage({ params }: Props) {
       <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
       <div className="mt-6">
         <PlacePhotoUpload />
+        {locale === 'en' && (
+          <Link
+            hidden
+            className="vd-upload-return vd-text-link"
+            href="/magazine-places#places-form"
+          >
+            Return to the listing form for a new upload code
+          </Link>
+        )}
       </div>
     </main>
   )

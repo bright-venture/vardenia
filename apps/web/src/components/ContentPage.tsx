@@ -116,6 +116,9 @@ export async function ContentPageView({
 }) {
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
+  const levelsIndex = page.sections.findIndex(
+    ({ heading }) => heading === 'What each level includes',
+  )
   const enquiryAction = locale === 'en' ? DESKTOP_ENQUIRY_ACTIONS[slug] : undefined
   // The buttons at the foot point at the directory when Contact is hidden, and
   // the second link is left out when the page it names is hidden. With the
@@ -172,11 +175,14 @@ export async function ContentPageView({
       >
         {locale === 'en' && slug === 'add-your-business' && (
           <nav hidden className="vd-business-chapters" aria-label={page.title}>
-            {page.sections.map((section, i) => (
-              <a key={section.heading} href={`#story-${i}`}>
-                {section.heading}
+            <Link href="/magazine-places" className="vd-button">
+              Request a place <LinkArrow />
+            </Link>
+            {levelsIndex >= 0 && (
+              <a href={`#story-${levelsIndex}`} className="vd-text-link">
+                Compare listing levels
               </a>
-            ))}
+            )}
           </nav>
         )}
         {enquiryAction && (
@@ -190,6 +196,11 @@ export async function ContentPageView({
       </PageHero>
       <div className="vd-story-layout" id="page-story">
         <aside className="vd-story-index">
+          {faq && locale === 'en' && (
+            <a hidden className="vd-faq-enquiry vd-text-link" href="#enquiry">
+              Ask a question
+            </a>
+          )}
           <StoryIndex
             title={page.title}
             sections={page.sections.map((section, i) => ({

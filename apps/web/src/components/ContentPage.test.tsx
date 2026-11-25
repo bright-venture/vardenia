@@ -44,7 +44,22 @@ for (const locale of ['en', 'ar'] as const) {
         page.sections.forEach((section, i) => {
           expect(root.querySelector(`#story-${i} h2`)?.textContent).toBe(section.heading)
         })
-        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(2)
+        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(
+          slug === 'add-your-business' ? 3 : 2,
+        )
+        if (slug === 'add-your-business') {
+          expect(root.querySelector('.vd-story-next a[href$="/magazine-places"]')).toBeTruthy()
+          const opening = root.querySelector('.vd-business-chapters')
+          if (locale === 'en') {
+            expect(opening?.querySelector('a[href$="/magazine-places"]')).toBeTruthy()
+            const chapter = opening?.querySelector('a[href^="#"]')?.getAttribute('href')
+            expect(chapter && root.querySelector(chapter)?.querySelector('h2')?.textContent).toBe(
+              'What each level includes',
+            )
+          } else {
+            expect(opening).toBeNull()
+          }
+        }
         const actions = [...root.querySelectorAll('.vd-story-next a')].map((link) =>
           link.getAttribute('href'),
         )

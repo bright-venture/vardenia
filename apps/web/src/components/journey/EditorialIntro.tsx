@@ -8,7 +8,9 @@ import { DESTINATIONS } from './destinations'
 export async function EditorialIntro({
   locale,
   kind = 'directory',
+  children,
 }: {
+  children?: import('react').ReactNode
   locale: Locale
   kind?: 'directory' | 'magazine'
 }) {
@@ -39,6 +41,7 @@ export async function EditorialIntro({
         ) : (
           <p>{t('directoryBody')}</p>
         )}
+        {children}
       </div>
       <InteriorScenicPhoto
         locale={locale}

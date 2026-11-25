@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
+import styles from './magazine-places.module.css'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { isLocale, type Locale } from '@vardenia/i18n'
@@ -9,7 +11,7 @@ import { PlaceSubmissionForm } from '../../../../components/places/PlaceSubmissi
  * Where businesses book a place in the printed magazine (19 November 2026).
  * Reached from its own QR code (target "The magazine places page").
  *
- * The magazine viewer is still an empty frame (a teammate's part). The form is
+ * The English desktop edition opens with a printed spread. The form is
  * the "add your place" submission (components/places): it creates a draft
  * listing with a reserved page number, for the team to review. The team finds
  * them under Directory > Listings, where the State column reads Draft,
@@ -36,14 +38,44 @@ export default async function MagazinePlacesPage({ params }: Props) {
   const t = await getTranslations('magazinePlaces')
 
   return (
-    <main>
+    <main className={locale === 'en' ? styles.page : undefined}>
       <PageHero title={t('title')} intro={t('intro')} place={3} locale={locale as Locale} />
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[3fr_2fr]">
+      {locale === 'en' && (
+        <header className={styles.opening}>
+          <div>
+            <h1>{t('title')}</h1>
+            <p>{t('intro')}</p>
+            <a href="#places-form" className={styles.start}>
+              {t('formTitle')} <span aria-hidden>↓</span>
+            </a>
+          </div>
+          <figure className={styles.spread}>
+            <div>
+              {[4, 5].map((page) => (
+                <Image
+                  key={page}
+                  src={`/journey/magazine-pages/all-lebanon-00${page}.webp`}
+                  alt={`Beirut, All Lebanon magazine, page ${page}`}
+                  width={1057}
+                  height={1500}
+                  sizes="(min-width: 1051px) 24vw, 1px"
+                />
+              ))}
+            </div>
+            <figcaption>
+              <em>All Lebanon</em>
+              <span>Beirut, pages 4–5</span>
+            </figcaption>
+          </figure>
+        </header>
+      )}
+      <div
+        className={`${styles.workspace} mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[3fr_2fr]`}
+      >
         <section aria-labelledby="places-viewer">
           <h2 id="places-viewer" className="font-display text-ink-900 text-2xl">
             {t('viewerTitle')}
           </h2>
-          {/* The magazine viewer will go here. */}
           <div className="border-ink-100 bg-surface-raised text-ink-500 mt-4 flex aspect-[3/4] items-center justify-center border p-6 text-center text-sm">
             {t('viewerSoon')}
           </div>
@@ -52,7 +84,6 @@ export default async function MagazinePlacesPage({ params }: Props) {
           <h2 id="places-form" className="font-display text-ink-900 text-2xl">
             {t('formTitle')}
           </h2>
-          {/* The page preview sits at the top of the form; see PlaceSubmissionForm. */}
           <PlaceSubmissionForm locale={locale as Locale} />
         </section>
       </div>

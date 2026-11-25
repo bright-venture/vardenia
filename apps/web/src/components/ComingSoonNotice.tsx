@@ -12,7 +12,7 @@ import { LinkArrow } from './LinkArrow'
 export async function ComingSoonNotice({ body }: { body: 'sectionBody' | 'eventStaffBody' }) {
   const t = await getTranslations('comingSoon')
   return (
-    <section className="mx-auto max-w-4xl px-6 py-12">
+    <section className="vd-coming-notice mx-auto max-w-4xl px-6 py-12">
       <EmptyState
         title={
           <>
@@ -31,5 +31,18 @@ export async function ComingSoonNotice({ body }: { body: 'sectionBody' | 'eventS
         }
       />
     </section>
+  )
+}
+
+export async function DesktopOpeningNotice({ body }: { body: 'sectionBody' | 'eventStaffBody' }) {
+  const t = await getTranslations('comingSoon')
+  return (
+    <div hidden className="vd-desktop-opening">
+      <strong>{t('label')}</strong>
+      <p>{t(body)}</p>
+      <Link href="/directory" className="vd-button">
+        {t('explore')} <LinkArrow />
+      </Link>
+    </div>
   )
 }
