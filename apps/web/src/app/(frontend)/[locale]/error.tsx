@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../i18n/routing'
 
@@ -33,6 +34,9 @@ export default function ErrorBoundary({
     // Reaches the browser console and any client-side monitoring. The server
     // side of this is already in the platform logs, keyed by the same digest.
     console.error('Page error', { digest: error.digest, message: error.message })
+    // An error caught here never reaches the browser's own error handler, so it
+    // is passed to Sentry by hand (lib/sentry; inert without a DSN).
+    Sentry.captureException(error)
   }, [error])
 
   return (

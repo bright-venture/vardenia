@@ -24,8 +24,12 @@ import type { Instrumentation } from 'next'
  * instrumentation-node.ts.
  */
 
-export function register() {
-  // Nothing to do at startup. The export has to exist for Next to load this file.
+export async function register() {
+  // Sentry (lib/sentry), per runtime, behind the same positive NEXT_RUNTIME
+  // checks as below so each bundle only carries its own setup. It sends nothing
+  // without a DSN.
+  if (process.env.NEXT_RUNTIME === 'nodejs') await import('./sentry.server.config')
+  if (process.env.NEXT_RUNTIME === 'edge') await import('./sentry.edge.config')
 }
 
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
