@@ -38,10 +38,6 @@ const standingDescriptions: Record<ContentPageSlug, string> = {
   contact:
     'Contact the Vardenia team in Lebanon. Send a message about the magazine, a directory listing or a business enquiry.',
   faq: 'Find answers to common questions about the Vardenia magazine, the Lebanon directory and how businesses can take part.',
-  'partner-with-us':
-    'Explore ways to partner with Vardenia and reach visitors discovering Lebanon through the magazine and its online directory.',
-  advertise:
-    'Explore advertising in Vardenia’s Lebanon travel magazine and online directory, and contact the team about a placement.',
   'add-your-business':
     'Learn how to submit a business in Lebanon for consideration in Vardenia’s directory and print magazine.',
 }
