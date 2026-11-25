@@ -86,8 +86,12 @@ html.vd-menu-open .vd-header[data-overlay] .vd-header-account { color: var(--vd-
   }
   .vd-header::after {
     content: '';
-    position: fixed;
-    inset: 80px 0 0;
+    /* From the header's own bottom edge, not a fixed 80px from the top of
+       the window, so the strip above the home page header cannot leave the
+       dimming over the header (25 November 2026). */
+    position: absolute;
+    inset: 100% 0 auto;
+    height: 100vh;
     z-index: -1;
     background: color-mix(in srgb, var(--vd-ink) 24%, transparent);
     pointer-events: none;
