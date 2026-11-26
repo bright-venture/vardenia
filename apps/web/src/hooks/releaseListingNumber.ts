@@ -26,6 +26,9 @@ const FREES_NUMBER = new Set(['rejected', 'abandoned', 'lapsed'])
  */
 export const releaseListingNumber: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   const status = (data?.submission?.status ?? originalDoc?.submission?.status) as string | undefined
-  if (FREES_NUMBER.has(status ?? '') || data?.deletedAt) return { ...data, listingNumber: null }
+  // A sample (mock) listing never holds a magazine number.
+  const sample = (data?.isSample ?? originalDoc?.isSample) === true
+  if (FREES_NUMBER.has(status ?? '') || data?.deletedAt || sample)
+    return { ...data, listingNumber: null }
   return data
 }

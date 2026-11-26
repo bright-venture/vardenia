@@ -1024,6 +1024,19 @@ export const Businesses: CollectionConfig = {
       },
     },
     {
+      name: 'isSample',
+      label: 'Sample listing',
+      type: 'checkbox',
+      defaultValue: false,
+      index: false,
+      access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
+      admin: {
+        position: 'sidebar',
+        description:
+          'Mock listing shown to visitors but not a real business. Holds no magazine number. Admin only.',
+      },
+    },
+    {
       /**
        * Public contact details the business manages: shown on its page. Every
        * field is optional and public-readable; staff-only data lives elsewhere.

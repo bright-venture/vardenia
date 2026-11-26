@@ -38,6 +38,27 @@ describe('releaseListingNumber', () => {
   })
 })
 
+describe('releaseListingNumber, sample listings', () => {
+  it('clears the number when isSample is true', () => {
+    expect(run({ isSample: true, listingNumber: 5 }).listingNumber).toBe(null)
+  })
+
+  it('clears it on a partial update of a stored sample', () => {
+    expect(run({ name: 'x' }, { isSample: true, listingNumber: 5 }).listingNumber).toBe(null)
+  })
+
+  it('keeps the number of a real listing', () => {
+    const data = { name: 'x' }
+    expect(run(data, { isSample: false, listingNumber: 5 })).toBe(data)
+  })
+
+  it('unticking does not restore a number', () => {
+    expect(
+      run({ isSample: false }, { isSample: true, listingNumber: null }).listingNumber,
+    ).toBeUndefined()
+  })
+})
+
 describe('releaseListingNumber, form submissions', () => {
   it.each(['abandoned', 'lapsed'])('clears the number when the submission is %s', (status) => {
     expect(run({ submission: { status } }, { listingNumber: 12 }).listingNumber).toBe(null)
