@@ -2,6 +2,7 @@ import type { Locale } from '@vardenia/i18n'
 import { fieldErrors } from '@vardenia/core/booking-request'
 import { LISTING_GOVERNORATES } from '@vardenia/core/listing-numbers'
 import { contactProblemCode } from '@vardenia/core/contact'
+import type { PageLayout } from '@vardenia/core/page-layouts'
 import { SUBMISSION_EMAIL_MESSAGE, placeSubmissionSchema } from '@vardenia/core/place-submission'
 import { GOVERNORATES, type City } from '@vardenia/core/regions'
 import { categoryOfKind } from '@vardenia/core/taxonomy'
@@ -21,6 +22,8 @@ import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-
 
 export interface FormState {
   template: PreviewTemplate
+  /** How much of the magazine is bought; null until chosen. Decides the price and the slots offered. */
+  layout: PageLayout | null
   name: string
   tagline: string
   description: string
@@ -49,6 +52,7 @@ export const GOVERNORATE_ORDER: readonly string[] = LISTING_GOVERNORATES
 export function initialFormState(): FormState {
   return {
     template: 'a',
+    layout: null,
     name: '',
     tagline: '',
     description: '',
@@ -104,6 +108,7 @@ export function buildSubmission(
     pageTemplate: state.template,
     locale,
   }
+  if (state.layout) data.layout = state.layout
   if (pick) {
     data.issue = pick.issue
     data.listingNumber = pick.number
@@ -160,7 +165,7 @@ export function checkSubmission(
   const errors = normaliseErrors(fieldErrors(parsed.error))
   // An unchosen select fails as "not available" or an enum error; to the
   // owner it is simply not filled in yet.
-  for (const key of ['kind', 'governorate', 'city'] as const) {
+  for (const key of ['kind', 'governorate', 'city', 'layout'] as const) {
     if (errors[key] && !state[key]) errors[key] = 'required'
   }
   // With no region yet the city select is disabled and lists nothing: the

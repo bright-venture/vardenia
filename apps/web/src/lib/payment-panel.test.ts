@@ -9,6 +9,7 @@ import {
   daysLeftWords,
   emailNotice,
   expectedAmount,
+  layoutWords,
   expectedDownpayment,
   historyRows,
   moneyBody,
@@ -520,5 +521,21 @@ describe('refusalWords', () => {
     expect(refusalWords({ code: 'no-price' }, 409)).toMatch(/no price/)
     expect(refusalWords(null, 403)).toBe('Only staff can do this.')
     expect(refusalWords(null, 500)).toMatch(/did not go through/)
+  })
+})
+
+describe('layoutWords', () => {
+  const slots = [
+    { number: 1, page: 1, position: null, layout: 'full-page' },
+    { number: 2, page: 2, position: 1, layout: 'half-page' },
+  ]
+  it('names the layout and where the number sits', () => {
+    expect(
+      layoutWords({ id: 1, pageLayout: 'half-page', listingNumber: 2, issue: { id: 1, slots } }),
+    ).toBe('Half page, Page 2, position 1')
+  })
+  it('is the label alone without slots, and null for a legacy listing', () => {
+    expect(layoutWords({ id: 1, pageLayout: 'full-page', issue: 1 })).toBe('Full page')
+    expect(layoutWords({ id: 1 })).toBeNull()
   })
 })

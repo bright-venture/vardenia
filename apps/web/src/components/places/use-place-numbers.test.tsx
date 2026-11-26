@@ -2,16 +2,126 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { numbersUrl, parseNumbersResponse, usePlaceNumbers } from './use-place-numbers'
+import {
+  issuesForLayout,
+  numbersUrl,
+  parseNumbersResponse,
+  usePlaceNumbers,
+  type NumbersIssue,
+} from './use-place-numbers'
+
+const slot = (number: number, page: number, position: number | null = null, lastPage = page) => ({
+  number,
+  page,
+  position,
+  lastPage,
+})
 
 describe('parseNumbersResponse', () => {
-  it('reads the route reply', () => {
+  it('reads the route reply, a legacy issue with no layouts included', () => {
     expect(
       parseNumbersResponse({
         ok: true,
-        issues: [{ issueId: 1, issueTitle: 'All Lebanon', from: 1, to: 90, taken: [3, 'x'] }],
+        issues: [
+          { issueId: 1, issueTitle: 'All Lebanon', from: 1, to: 90, taken: [3, 'x'], layouts: [] },
+        ],
       }),
-    ).toEqual([{ issueId: 1, issueTitle: 'All Lebanon', from: 1, to: 90, taken: [3] }])
+    ).toEqual([
+      {
+        issueId: 1,
+        issueTitle: 'All Lebanon',
+        from: 1,
+        to: 90,
+        taken: [3],
+        currency: '',
+        layouts: [],
+      },
+    ])
+  })
+
+  it('keeps the layouts in the order the form lists them, with their free slots', () => {
+    const [issue] = parseNumbersResponse({
+      ok: true,
+      issues: [
+        {
+          issueId: 2,
+          issueTitle: 'Summer',
+          from: 1,
+          to: 9,
+          taken: [],
+          currency: 'USD',
+          layouts: [
+            {
+              layout: 'half-page',
+              price: 300,
+              downpaymentAmount: 150,
+              slots: [slot(4, 3, 1), slot(5, 3, 2)],
+              free: 2,
+            },
+            {
+              layout: 'full-spread',
+              price: 900,
+              downpaymentAmount: 450,
+              slots: [slot(1, 1, null, 2)],
+              free: 1,
+            },
+          ],
+        },
+      ],
+    })!
+    expect(issue!.currency).toBe('USD')
+    expect(issue!.layouts).toEqual([
+      {
+        layout: 'full-spread',
+        price: 900,
+        downpaymentAmount: 450,
+        slots: [slot(1, 1, null, 2)],
+        free: 1,
+      },
+      {
+        layout: 'half-page',
+        price: 300,
+        downpaymentAmount: 150,
+        slots: [slot(4, 3, 1), slot(5, 3, 2)],
+        free: 2,
+      },
+    ])
+  })
+
+  it('drops a malformed layout or slot rather than offering it', () => {
+    const [issue] = parseNumbersResponse({
+      ok: true,
+      issues: [
+        {
+          issueId: 2,
+          issueTitle: '',
+          from: 1,
+          to: 9,
+          taken: [],
+          layouts: [
+            { layout: 'poster', price: 100, downpaymentAmount: 50, slots: [slot(1, 1)], free: 1 },
+            { layout: 'full-page', price: 'x', downpaymentAmount: 50, slots: [], free: 0 },
+            null,
+            {
+              layout: 'quarter-page',
+              price: 100,
+              downpaymentAmount: 50,
+              slots: [slot(6, 4, 1), { number: 'x', page: 4 }, slot(7, 0, 2), slot(8, 4, 3, 2)],
+              free: 9,
+            },
+          ],
+        },
+      ],
+    })!
+    expect(issue!.layouts).toEqual([
+      {
+        layout: 'quarter-page',
+        price: 100,
+        downpaymentAmount: 50,
+        slots: [slot(6, 4, 1)],
+        free: 1,
+      },
+    ])
   })
 
   it('refuses anything else', () => {
@@ -35,6 +145,65 @@ describe('parseNumbersResponse', () => {
 
   it('builds the URL with the slug escaped', () => {
     expect(numbersUrl('north-lebanon')).toBe('/place-submissions/numbers?governorate=north-lebanon')
+  })
+})
+
+describe('issuesForLayout', () => {
+  const issues: NumbersIssue[] = [
+    {
+      issueId: 1,
+      issueTitle: 'Legacy',
+      from: 1,
+      to: 9,
+      taken: [],
+      currency: 'USD',
+      layouts: [],
+    },
+    {
+      issueId: 2,
+      issueTitle: 'Summer',
+      from: 1,
+      to: 9,
+      taken: [],
+      currency: 'USD',
+      layouts: [
+        {
+          layout: 'full-page',
+          price: 500,
+          downpaymentAmount: 250,
+          slots: [slot(2, 3)],
+          free: 1,
+        },
+        {
+          layout: 'half-page',
+          price: 300,
+          downpaymentAmount: 150,
+          slots: [slot(4, 4, 1)],
+          free: 1,
+        },
+      ],
+    },
+  ]
+
+  it('offers nothing while no layout is chosen', () => {
+    expect(issuesForLayout(issues, null)).toEqual([])
+  })
+
+  it("gives each issue that offers the layout, with that layout's price and free slots", () => {
+    expect(issuesForLayout(issues, 'half-page')).toEqual([
+      {
+        issueId: 2,
+        issueTitle: 'Summer',
+        currency: 'USD',
+        price: 300,
+        downpaymentAmount: 150,
+        slots: [slot(4, 4, 1)],
+      },
+    ])
+  })
+
+  it('offers nothing for a layout no issue has (a legacy issue never offers one)', () => {
+    expect(issuesForLayout(issues, 'full-spread')).toEqual([])
   })
 })
 

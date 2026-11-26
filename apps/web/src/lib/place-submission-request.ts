@@ -78,6 +78,7 @@ export function parseSubmission(body: Record<string, unknown>): ParsedSubmission
 
 const STATUS_FOR = {
   'number-unavailable': 409,
+  'layout-unavailable': 409,
   'no-range': 422,
   'kind-unavailable': 400,
   'too-many-open': 429,

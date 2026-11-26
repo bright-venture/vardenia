@@ -17,6 +17,7 @@
     "migrate:status": "payload migrate:status",
     "seed": "tsx src/seed/index.ts",
     "seed:reset": "tsx src/seed/reset.ts",
+    "seed:layouts": "tsx src/seed/page-layouts.ts",
     "seed:billing": "tsx src/seed/billing-demo.ts",
     "seed:billing:reset": "tsx src/seed/billing-demo.ts --reset",
     "import:listings": "tsx src/import/index.ts",

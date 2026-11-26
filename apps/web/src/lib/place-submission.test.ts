@@ -61,6 +61,7 @@ const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
     ownerEmail: 'n@x.com',
     ownerPhone: '+9617',
     pageTemplate: 'a',
+    layout: 'full-page',
     issue: 7,
     listingNumber: 12,
     locale: 'ar',
@@ -72,12 +73,46 @@ interface Stub {
   create: ReturnType<typeof vi.fn>
   update: ReturnType<typeof vi.fn>
   findGlobal: ReturnType<typeof vi.fn>
+  findByID: ReturnType<typeof vi.fn>
 }
+
+/** Slots of a full-page slot, numbered n on page p. */
+const page = (number: number, p: number, layout = 'full-page') => ({
+  number,
+  page: p,
+  position: null,
+  layout,
+})
+
+/**
+ * Issue 7's slots (copied from its template). The beirut block is numbers
+ * 10-20: 9 sits before it, 10-11 are the two halves of page 10, 12-20 are full
+ * pages 11-19, and 21 (full page) and 22-25 (quarters of page 21) sit after it.
+ */
+const defaultSlots = [
+  page(9, 9),
+  { number: 10, page: 10, position: 1, layout: 'half-page' },
+  { number: 11, page: 10, position: 2, layout: 'half-page' },
+  ...Array.from({ length: 9 }, (_, i) => page(12 + i, 11 + i)),
+  page(21, 20),
+  ...[1, 2, 3, 4].map((position) => ({
+    number: 21 + position,
+    page: 21,
+    position,
+    layout: 'quarter-page',
+  })),
+]
 
 /** A payload with one beirut range 10-20 in issue 7 and number 11 taken. */
 function stub(
   opts: {
     range?: boolean
+    /** The issue's price table; default: full page at 500, half page at 300. */
+    layouts?: unknown[] | null
+    /** The issue's slots; default: defaultSlots. null for a legacy issue. */
+    slots?: unknown[] | null
+    /** The numbers listings hold in the block; default: [11]. */
+    held?: number[]
     holdMinutes?: number
     /** One error per business create, in order; creates after the last succeed. */
     listingErrors?: unknown[]
@@ -89,6 +124,7 @@ function stub(
   store.rows = []
   const listingErrors = [...(opts.listingErrors ?? [])]
   let nextId = 555
+  const held = opts.held ?? [11]
   const find = vi.fn(async ({ collection }: { collection: string }) => {
     if (collection === 'listing-ranges') {
       return {
@@ -98,7 +134,8 @@ function stub(
             : [{ issue: { id: 7, title: 'Summer' }, governorate: 'beirut', from: 10, to: 20 }],
       }
     }
-    if (collection === 'businesses') return { docs: [{ listingNumber: 11 }] }
+    if (collection === 'businesses')
+      return { docs: held.map((listingNumber) => ({ listingNumber })) }
     return { docs: [] }
   })
   const create = vi.fn(
@@ -115,6 +152,15 @@ function stub(
       return { id: row.id }
     },
   )
+  const defaultLayouts = [
+    { layout: 'full-page', offered: true, price: 500 },
+    { layout: 'half-page', offered: true, price: 300 },
+  ]
+  const findByID = vi.fn(async () => ({
+    id: 7,
+    slots: opts.slots === undefined ? defaultSlots : opts.slots,
+    layouts: opts.layouts === undefined ? defaultLayouts : opts.layouts,
+  }))
   const update = vi.fn(async () => {
     if (opts.failUpdate) throw opts.failUpdate
     return { id: 555 }
@@ -122,7 +168,7 @@ function stub(
   const findGlobal = vi.fn(async () => ({
     magazinePlaces: opts.holdMinutes ? { holdMinutes: opts.holdMinutes } : {},
   }))
-  return { find, create, update, findGlobal } as unknown as Stub & Payload
+  return { find, create, update, findGlobal, findByID } as unknown as Stub & Payload
 }
 
 const created = (s: Stub, collection: string) =>
@@ -132,15 +178,121 @@ const stored = (collection: string) =>
   (store.rows as Row[]).filter((row) => row.collection === collection)
 
 describe('listNumbersFor', () => {
-  it('returns the range and what is taken, never who holds it', async () => {
+  it('returns the block, what is taken, and the free slots of each offered layout in it', async () => {
     const s = stub()
     const out = await listNumbersFor(s, 'beirut')
-    expect(out).toEqual([{ issueId: 7, issueTitle: 'Summer', from: 10, to: 20, taken: [11] }])
+    expect(out).toEqual([
+      {
+        issueId: 7,
+        issueTitle: 'Summer',
+        from: 10,
+        to: 20,
+        taken: [11],
+        currency: 'USD',
+        layouts: [
+          {
+            layout: 'full-page',
+            price: 500,
+            downpaymentAmount: 250,
+            // 9 and 21 are full pages too, but outside the block.
+            slots: Array.from({ length: 9 }, (_, i) => ({
+              number: 12 + i,
+              page: 11 + i,
+              position: null,
+              lastPage: 11 + i,
+            })),
+            free: 9,
+          },
+          {
+            layout: 'half-page',
+            price: 300,
+            downpaymentAmount: 150,
+            // 11 is held: only its other half is free.
+            slots: [{ number: 10, page: 10, position: 1, lastPage: 10 }],
+            free: 1,
+          },
+        ],
+      },
+    ])
     const businessQuery = s.find.mock.calls
       .map((c) => c[0])
       .find((a) => a.collection === 'businesses')
     expect(businessQuery.select).toEqual({ listingNumber: true })
     expect(businessQuery.overrideAccess).toBe(true)
+  })
+
+  it('gives a spread its second page as lastPage', async () => {
+    const out = await listNumbersFor(
+      stub({
+        slots: [{ number: 12, page: 62, position: null, layout: 'full-spread' }],
+        layouts: [{ layout: 'full-spread', offered: true, price: 900 }],
+      }),
+      'beirut',
+    )
+    expect(out[0]!.layouts).toEqual([
+      expect.objectContaining({
+        layout: 'full-spread',
+        slots: [{ number: 12, page: 62, position: null, lastPage: 63 }],
+        free: 1,
+      }),
+    ])
+  })
+
+  it('reports a layout whose slots in the block are all held with free: 0 and no slots', async () => {
+    const out = await listNumbersFor(stub({ held: [10, 11] }), 'beirut')
+    expect(out[0]!.layouts.find((l) => l.layout === 'half-page')).toEqual({
+      layout: 'half-page',
+      price: 300,
+      downpaymentAmount: 150,
+      slots: [],
+      free: 0,
+    })
+  })
+
+  it('leaves out an offered layout with no slot in this block (quarters sit after it)', async () => {
+    const out = await listNumbersFor(
+      stub({ layouts: [{ layout: 'quarter-page', offered: true, price: 100 }] }),
+      'beirut',
+    )
+    expect(out[0]!.layouts).toEqual([])
+  })
+
+  it('lists no layout that is not offered, has no price, or has no slot in the issue', async () => {
+    const s = stub({
+      layouts: [
+        { layout: 'full-page', offered: false, price: 500 },
+        { layout: 'half-page', offered: true, price: null },
+        { layout: 'three-third', offered: true, price: 200 },
+      ],
+    })
+    const out = await listNumbersFor(s, 'beirut')
+    expect(out[0]!.layouts).toEqual([])
+  })
+
+  it('reads the issue with overrideAccess and never names an owner', async () => {
+    const s = stub()
+    const out = await listNumbersFor(s, 'beirut')
+    expect(JSON.stringify(out)).not.toMatch(/owner|email|name/i)
+    expect(s.findByID.mock.calls[0]![0]).toMatchObject({
+      collection: 'issues',
+      id: 7,
+      overrideAccess: true,
+    })
+  })
+
+  it('offers no layouts for a legacy issue without slots, keeping its numbers', async () => {
+    const out = await listNumbersFor(stub({ slots: null }), 'beirut')
+    expect(out).toEqual([
+      {
+        issueId: 7,
+        issueTitle: 'Summer',
+        from: 10,
+        to: 20,
+        taken: [11],
+        currency: 'USD',
+        layouts: [],
+      },
+    ])
   })
 
   it('returns nothing for a governorate with no range', async () => {
@@ -156,9 +308,116 @@ describe('startPlaceSubmission', () => {
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('refuses a number another listing holds, writing nothing', async () => {
+  it('refuses a missing layout, writing nothing', async () => {
     const s = stub()
-    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 11 }) })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ layout: undefined as never }),
+    })
+    expect(out).toMatchObject({ ok: false, code: 'layout-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['not offered', [{ layout: 'full-page', offered: false, price: 500 }], undefined],
+    ['unpriced', [{ layout: 'full-page', offered: true, price: null }], undefined],
+    ['absent from the price table', [{ layout: 'half-page', offered: true, price: 3 }], undefined],
+    ['the issue has no table', null, undefined],
+    [
+      'without a slot in the issue',
+      [{ layout: 'full-page', offered: true, price: 500 }],
+      [{ number: 12, page: 11, position: 1, layout: 'half-page' }],
+    ],
+    ['in a legacy issue without slots', undefined, null],
+  ])('refuses a layout that is %s, with the standard message', async (_n, layouts, slots) => {
+    const s = stub({ layouts, slots })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toEqual({
+      ok: false,
+      code: 'layout-unavailable',
+      message: 'That layout is not available. Please choose another.',
+    })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a number in the block that is a slot of another layout, writing nothing', async () => {
+    const s = stub()
+    // 10 is in the block (10-20) but is half of page 10, not a full page.
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 10 }) })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a slot of the layout outside the governorate block, writing nothing', async () => {
+    const s = stub()
+    // 21 is a full page of the issue, but after beirut's block.
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 21 }) })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a number in the block that is no slot of the issue at all', async () => {
+    const s = stub({ slots: defaultSlots.filter((slot) => slot.number !== 15) })
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 15 }) })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('reads the slots and prices from the issue at start time, with overrideAccess', async () => {
+    const s = stub()
+    await startPlaceSubmission({ payload: s, input: input() })
+    expect(s.findByID.mock.calls[0]![0]).toMatchObject({
+      collection: 'issues',
+      id: 7,
+      overrideAccess: true,
+    })
+  })
+
+  it('creates the draft with the layout and the layout price snapshot (not Settings), and answers with it', async () => {
+    const s = stub()
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toMatchObject({ ok: true, price: 500, downpaymentAmount: 250, currency: 'USD' })
+    const [listing] = created(s, 'businesses')
+    expect(listing.data.pageLayout).toBe('full-page')
+    expect(listing.data.listingNumber).toBe(12)
+    expect(listing.data.submission.payment).toEqual({ price: 500, downpaymentAmount: 250 })
+    // The follow-up write must not touch the layout (it is set once).
+    expect(s.update.mock.calls[0]![0].data).not.toHaveProperty('pageLayout')
+  })
+
+  it('starts a half-page slot of the block at the half-page price', async () => {
+    const s = stub()
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ layout: 'half-page', listingNumber: 10 }),
+    })
+    expect(out).toMatchObject({ ok: true, price: 300, downpaymentAmount: 150 })
+    expect(created(s, 'businesses')[0].data.pageLayout).toBe('half-page')
+  })
+
+  it('ignores a price or template sent by the browser', async () => {
+    const s = stub()
+    await startPlaceSubmission({
+      payload: s,
+      input: {
+        ...input(),
+        price: 1,
+        downpaymentAmount: 1,
+        template: 'x',
+      } as unknown as PlaceSubmission,
+    })
+    const [listing] = created(s, 'businesses')
+    expect(listing.data.submission.payment).toEqual({ price: 500, downpaymentAmount: 250 })
+    expect(listing.data).not.toHaveProperty('price')
+    expect(listing.data).not.toHaveProperty('template')
+  })
+
+  it('refuses a slot of the layout another listing holds, writing nothing', async () => {
+    const s = stub()
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ layout: 'half-page', listingNumber: 11 }),
+    })
     expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
     expect(s.create).not.toHaveBeenCalled()
   })
@@ -240,6 +499,7 @@ describe('startPlaceSubmission', () => {
         'payments',
         'issue',
         'listingNumber',
+        'pageLayout',
         '_status',
         'contact',
         'submission',
@@ -250,6 +510,7 @@ describe('startPlaceSubmission', () => {
       'ownerName',
       'ownerPhone',
       'pageTemplate',
+      'payment',
       'status',
     ])
     expect(listing.data).not.toHaveProperty('tier')

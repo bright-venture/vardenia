@@ -5,18 +5,23 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@vardenia/i18n/messages'
 import type { Locale } from '@vardenia/i18n'
 import { NumberPicker } from './NumberPicker'
-import type { NumbersIssue } from './use-place-numbers'
+import type { LayoutIssue } from './use-place-numbers'
 
-const keserwan: NumbersIssue = {
+const summer: LayoutIssue = {
   issueId: 1,
   issueTitle: 'All Lebanon',
-  from: 1,
-  to: 90,
-  taken: [3],
+  currency: 'USD',
+  price: 300,
+  downpaymentAmount: 150,
+  slots: [
+    { number: 5, page: 62, position: 3, lastPage: 62 },
+    { number: 6, page: 12, position: null, lastPage: 12 },
+    { number: 7, page: 62, position: null, lastPage: 63 },
+  ],
 }
 
 const render = (
-  issues: NumbersIssue[],
+  issues: LayoutIssue[],
   value: number | null = null,
   locale: Locale = 'en',
   selectedIssue: number | null = null,
@@ -37,52 +42,46 @@ const doc = (html: string) => new DOMParser().parseFromString(html, 'text/html')
 const en = getMessages('en').magazinePlaces.numbers
 
 describe('NumberPicker', () => {
-  it('shows every number from 1 to 90, as buttons', () => {
-    const buttons = [...doc(render([keserwan])).querySelectorAll('button')]
-    expect(buttons).toHaveLength(90)
-    expect(buttons[0]!.textContent).toContain('1')
-    expect(buttons[89]!.textContent).toContain('90')
+  it('lists each free slot as text, one button each, carrying its listing number', () => {
+    const buttons = [...doc(render([summer])).querySelectorAll('button')]
+    expect(buttons.map((b) => b.textContent)).toEqual([
+      'Page 62, position 3',
+      'Page 12',
+      'Pages 62-63',
+    ])
+    expect(buttons.map((b) => b.getAttribute('data-number'))).toEqual(['5', '6', '7'])
     expect(buttons.every((b) => b.getAttribute('type') === 'button')).toBe(true)
   })
 
-  it('disables a taken number and labels it, visibly and for screen readers', () => {
-    const buttons = [...doc(render([keserwan])).querySelectorAll('button')]
-    const three = buttons[2]!
-    expect(three.hasAttribute('disabled')).toBe(true)
-    expect(three.textContent).toContain(en.taken)
-    expect(three.getAttribute('aria-label')).toBe('Number 3, taken')
-    const four = buttons[3]!
-    expect(four.hasAttribute('disabled')).toBe(false)
-    expect(four.getAttribute('aria-label')).toBe('Number 4')
-    expect(four.textContent).not.toContain(en.taken)
+  it('marks the chosen slot as pressed', () => {
+    const buttons = [...doc(render([summer], 6, 'en', 1)).querySelectorAll('button')]
+    expect(buttons[1]!.getAttribute('aria-pressed')).toBe('true')
+    expect(buttons[0]!.getAttribute('aria-pressed')).toBe('false')
   })
 
-  it('marks the chosen number as pressed', () => {
-    const buttons = [...doc(render([keserwan], 47, 'en', 1)).querySelectorAll('button')]
-    expect(buttons[46]!.getAttribute('aria-pressed')).toBe('true')
-    expect(buttons[45]!.getAttribute('aria-pressed')).toBe('false')
+  it("puts the layout's price and the free count in the issue heading", () => {
+    const text = doc(render([summer])).body.textContent ?? ''
+    expect(text).toContain('All Lebanon')
+    expect(text).toContain('$300 per year')
+    expect(text).toContain('3 free')
   })
 
-  it('says how many are free', () => {
-    expect(doc(render([keserwan])).body.textContent).toContain('89 of 90 free')
-  })
-
-  it('says so when every number is taken, and offers no button', () => {
-    const full = { ...keserwan, from: 1, to: 3, taken: [1, 2, 3] }
-    const html = render([full])
+  it('says so when every slot of the layout is taken, and offers no button', () => {
+    const html = render([{ ...summer, slots: [] }])
     expect(doc(html).body.textContent).toContain(en.noneFree)
-    expect(doc(html).querySelectorAll('button:not([disabled])')).toHaveLength(0)
-  })
-
-  it('says so when the region has no block of numbers', () => {
-    const html = render([])
-    expect(doc(html).body.textContent).toContain(en.noRange)
     expect(doc(html).querySelectorAll('button')).toHaveLength(0)
   })
 
-  it('reads in Arabic', () => {
+  it('says so when no issue offers the layout in this region', () => {
+    const html = render([])
+    expect(doc(html).body.textContent).toContain(en.noneForLayout)
+    expect(doc(html).querySelectorAll('button')).toHaveLength(0)
+  })
+
+  it('reads in Arabic, with no raw key', () => {
     const ar = getMessages('ar').magazinePlaces.numbers
-    const html = render([keserwan], null, 'ar')
-    expect(doc(html).body.textContent).toContain(ar.taken)
+    const text = doc(render([summer], null, 'ar')).body.textContent ?? ''
+    expect(text).toContain(ar.slotPage.split('{')[0]!.trim())
+    expect(text).not.toMatch(/numbers\.|\{/)
   })
 })

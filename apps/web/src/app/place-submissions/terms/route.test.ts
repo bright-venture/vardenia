@@ -46,6 +46,7 @@ describe('GET /place-submissions/terms', () => {
     expect(cache).toBe('no-store')
     expect(body).toEqual({
       ok: true,
+      layoutsEnabled: true,
       price: 1000,
       currency: 'USD',
       termMonths: 12,

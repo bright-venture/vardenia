@@ -1,7 +1,9 @@
 import type { Payload } from 'payload'
+import { PAGE_LAYOUTS, isPageLayout, type PageLayout, type Slot } from '@vardenia/core'
 import { isAdminUser } from '../access/index'
 import { addDays, beirutDate } from './beirut'
 import { fromCents, toCents } from './place-payment-rules'
+import { CLOSED_STATUSES } from './submission-queues'
 
 /**
  * The Magazine Places reports (PRD v4 A16, admin only), shown at
@@ -11,6 +13,7 @@ import { fromCents, toCents } from './place-payment-rules'
  * - refunds still to send
  * - downpayments kept (the owner did not pay the rest)
  * - contracts ending in the next 30 days
+ * - layout sales per issue: slots, held, sold, expected and received money
  *
  * Read-only. Everything below is pure except `loadPlaceReports`, which
  * checks the role before it reads anything and reads with the admin's own
@@ -44,6 +47,8 @@ export interface ReportBusiness {
   id: number | string
   name?: string | null
   listingNumber?: number | null
+  issue?: number | string | { id?: number | string | null } | null
+  pageLayout?: string | null
   submission?: {
     reference?: string | null
     status?: string | null
@@ -54,6 +59,7 @@ export interface ReportBusiness {
       currency?: string | null
       received?: number | null
       refunded?: number | null
+      price?: number | null
     } | null
   } | null
 }
@@ -223,6 +229,76 @@ export interface EndingContract {
   published: boolean
 }
 
+export interface LayoutSales {
+  issueId: number | string
+  issueTitle: string
+  layout: PageLayout
+  slots: number
+  held: number
+  sold: number
+  /** Sum of the price snapshots of the held listings. */
+  expected: number
+  /** Money recorded and not undone, refunds not counted. */
+  received: number
+}
+
+const CLOSED = new Set<string>(CLOSED_STATUSES)
+const idOf = (value: ReportBusiness['issue']): string | null => {
+  const id = value && typeof value === 'object' ? value.id : value
+  return id === null || id === undefined ? null : String(id)
+}
+
+/**
+ * Per issue that has slots and per layout it sells: how many slots, how many
+ * are held (a number in that layout, not closed), how many are sold (fully
+ * paid or published), the price snapshots of the held ones, and the money
+ * recorded for them. Listings made before layouts (no layout) and issues
+ * without slots are left out.
+ */
+export function layoutSales(
+  businesses: readonly ReportBusiness[],
+  issues: readonly { id: number | string; title: string; slots: readonly Slot[] }[],
+): LayoutSales[] {
+  const rows: LayoutSales[] = []
+  for (const issue of issues) {
+    if (issue.slots.length === 0) continue
+    const mine = businesses.filter(
+      (b) =>
+        idOf(b.issue) === String(issue.id) &&
+        isPageLayout(b.pageLayout) &&
+        typeof b.listingNumber === 'number' &&
+        !CLOSED.has(b.submission?.status ?? ''),
+    )
+    for (const layout of PAGE_LAYOUTS) {
+      const count = issue.slots.filter((s) => s.layout === layout).length
+      if (count === 0) continue
+      const held = mine.filter((b) => b.pageLayout === layout)
+      let expected = 0
+      let received = 0
+      for (const b of held) {
+        expected += toCents(Number(b.submission?.payment?.price ?? 0))
+        for (const line of b.submission?.payments ?? []) {
+          if (line.voided === true || line.type === 'refund' || !line.type) continue
+          received += toCents(Number(line.amount ?? 0))
+        }
+      }
+      rows.push({
+        issueId: issue.id,
+        issueTitle: issue.title,
+        layout,
+        slots: count,
+        held: held.length,
+        sold: held.filter(
+          (b) => b.submission?.status === 'paid' || b.submission?.status === 'approved',
+        ).length,
+        expected: fromCents(expected),
+        received: fromCents(received),
+      })
+    }
+  }
+  return rows
+}
+
 export interface PlaceReports {
   weeks: number
   fromDay: string
@@ -230,6 +306,7 @@ export interface PlaceReports {
   refunds: OwedLine[]
   kept: OwedLine[]
   contracts: EndingContract[]
+  layoutSales: LayoutSales[]
 }
 
 /**
@@ -249,7 +326,7 @@ export async function loadPlaceReports(
   const since = new Date(`${addDays(fromDay, -1)}T00:00:00Z`).toISOString()
   const until = new Date(now.getTime() + CONTRACT_WINDOW_DAYS * DAY).toISOString()
 
-  const [money, contracts] = await Promise.all([
+  const [money, contracts, issues, holders] = await Promise.all([
     payload.find({
       collection: 'businesses',
       depth: 1,
@@ -294,6 +371,34 @@ export async function loadPlaceReports(
       sort: 'contractEndsAt',
       select: { name: true, contractEndsAt: true, _status: true, submission: { reference: true } },
     }),
+    // Issues that sell layouts, and the listings holding a number under one.
+    payload.find({
+      collection: 'issues',
+      depth: 0,
+      pagination: false,
+      overrideAccess: false,
+      user: user as never,
+      where: { slots: { exists: true } },
+      select: { title: true, slots: true },
+    }),
+    payload.find({
+      collection: 'businesses',
+      depth: 0,
+      pagination: false,
+      overrideAccess: false,
+      user: user as never,
+      where: { and: [{ pageLayout: { exists: true } }, { listingNumber: { exists: true } }] },
+      select: {
+        issue: true,
+        listingNumber: true,
+        pageLayout: true,
+        submission: {
+          status: true,
+          payments: true,
+          payment: { price: true },
+        },
+      },
+    }),
   ])
 
   const businesses = money.docs as unknown as ReportBusiness[]
@@ -301,6 +406,16 @@ export async function loadPlaceReports(
     weeks,
     fromDay,
     moneyWeeks: byWeek(moneyLines(businesses, fromDay)),
+    layoutSales: layoutSales(
+      holders.docs as unknown as ReportBusiness[],
+      (issues.docs as unknown as { id: number | string; title?: string | null; slots?: unknown }[])
+        .filter((doc) => Array.isArray(doc.slots))
+        .map((doc) => ({
+          id: doc.id,
+          title: doc.title ?? `Issue ${doc.id}`,
+          slots: doc.slots as Slot[],
+        })),
+    ),
     refunds: refundsOutstanding(businesses),
     kept: downpaymentsKept(businesses),
     contracts: (

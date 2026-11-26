@@ -65,6 +65,9 @@ export const POST = withRateLimit(
         reference: outcome.reference,
         sessionToken: outcome.sessionToken,
         expiresAt: outcome.expiresAt,
+        price: outcome.price,
+        downpaymentAmount: outcome.downpaymentAmount,
+        currency: outcome.currency,
         // For the QR code on the big screen. The token is in the fragment, so
         // it never reaches a log; do not log or report this response either.
         uploadUrl: placeUploadUrl(siteOrigin(), outcome.sessionToken, parsed.input.locale),

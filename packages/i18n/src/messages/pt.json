@@ -1021,23 +1021,34 @@
       "ownerName": "Your name",
       "ownerEmail": "Email",
       "ownerPhone": "Phone",
-      "sending": "Sending..."
+      "sending": "Sending...",
+      "layoutLegend": "Size of your listing",
+      "layouts": {
+        "full-spread": "Full spread",
+        "full-page": "Full page",
+        "half-page": "Half page",
+        "three-third": "Three third",
+        "quarter-page": "1/4"
+      }
     },
     "numbers": {
       "legend": "Your page number",
-      "hint": "Each region has its own block of numbers. Pick a free one: it becomes your page number in the magazine.",
+      "hint": "Each region has its own pages. Pick a free place: its number becomes your listing number in the magazine.",
       "chooseRegion": "Choose a region above to see its numbers.",
       "loading": "Loading numbers...",
       "error": "We could not load the numbers.",
       "retry": "Try again",
       "noRange": "There are no numbers for this region yet. Please contact the Vardenia team.",
-      "noneFree": "Every number for this region is taken. Please contact the Vardenia team.",
-      "taken": "taken",
-      "number": "Number {n}",
-      "numberTaken": "Number {n}, taken",
-      "freeCount": "{free} of {total} free",
+      "noneFree": "Every place of this size is taken in this region. Please choose another size or contact the Vardenia team.",
       "chosen": "You picked number {n}.",
-      "justTaken": "That number was just taken. Please pick another."
+      "justTaken": "That number was just taken. Please pick another.",
+      "chooseLayout": "Choose a size above to see the free places.",
+      "noneForLayout": "This size is not offered in this region. Please choose another size.",
+      "price": "{amount} per year",
+      "free": "{free} free",
+      "slotPage": "Page {page}",
+      "slotPosition": "Page {page}, position {position}",
+      "slotSpread": "Pages {page}-{lastPage}"
     },
     "errors": {
       "check": "Please check the fields marked below.",

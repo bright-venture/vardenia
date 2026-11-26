@@ -23,6 +23,7 @@ const DATA = {
   ownerEmail: 'sami@example.com',
   ownerPhone: '70123456',
   pageTemplate: 'a',
+  layout: 'full-page',
   issue: 1,
   listingNumber: 5,
   locale: 'en',
@@ -86,6 +87,7 @@ describe('POST /place-submissions', () => {
 
   it.each([
     ['number-unavailable', 409],
+    ['layout-unavailable', 409],
     ['no-range', 422],
     ['kind-unavailable', 400],
     ['error', 500],
@@ -104,6 +106,9 @@ describe('POST /place-submissions', () => {
       reference: 'VD-1',
       sessionToken: 'tok',
       expiresAt: '2026-11-23T10:30:00.000Z',
+      price: 500,
+      downpaymentAmount: 250,
+      currency: 'USD',
     })
     const r = await post({ data: { ...DATA, locale: 'ar' }, turnstileToken: 't' })
     expect((r.body as { uploadUrl: string }).uploadUrl).toBe(
@@ -111,13 +116,16 @@ describe('POST /place-submissions', () => {
     )
   })
 
-  it('answers 201 with the reference, token, expiry and the QR upload link only', async () => {
+  it('answers 201 with the reference, token, expiry, price and the QR upload link only', async () => {
     vi.mocked(startPlaceSubmission).mockResolvedValue({
       ok: true,
       listingId: 424242,
       reference: 'VD-987',
       sessionToken: 'secret-token',
       expiresAt: '2026-11-23T10:30:00.000Z',
+      price: 500,
+      downpaymentAmount: 250,
+      currency: 'USD',
     })
     const r = await post({ data: DATA, turnstileToken: 't' })
     expect(r.status).toBe(201)
@@ -127,6 +135,9 @@ describe('POST /place-submissions', () => {
       reference: 'VD-987',
       sessionToken: 'secret-token',
       expiresAt: '2026-11-23T10:30:00.000Z',
+      price: 500,
+      downpaymentAmount: 250,
+      currency: 'USD',
       uploadUrl: 'http://localhost:3000/en/magazine-places/upload#t=secret-token',
     })
     // The token rides in the fragment, never in a query string.

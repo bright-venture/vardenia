@@ -26,6 +26,7 @@ const filled = (): FormState => ({
   ownerName: 'Rita Haddad',
   ownerEmail: 'rita@example.com',
   ownerPhone: '+961 3 000 000',
+  layout: 'full-page',
 })
 
 const pick = { issue: 1, number: 47 }
@@ -79,6 +80,7 @@ describe('buildSubmission', () => {
       listingNumber: 47,
       locale: 'ar',
       pageTemplate: 'a',
+      layout: 'full-page',
       kind: 'restaurants',
       acceptsWhish: true,
     })
@@ -91,6 +93,16 @@ describe('buildSubmission', () => {
     const { data } = buildSubmission(filled(), null, 'en')
     expect(data).not.toHaveProperty('issue')
     expect(data).not.toHaveProperty('listingNumber')
+  })
+
+  it('sends no layout while none is chosen', () => {
+    const { data } = buildSubmission({ ...filled(), layout: null }, pick, 'en')
+    expect(data).not.toHaveProperty('layout')
+  })
+
+  it('starts with no layout chosen, the A/B/C page design untouched', () => {
+    expect(initialFormState().layout).toBeNull()
+    expect(initialFormState().template).toBe('a')
   })
 })
 
@@ -109,6 +121,7 @@ describe('checkSubmission', () => {
     expect(result.errors.number).toBeDefined()
     expect(result.errors.kind).toBe('required')
     expect(result.errors.governorate).toBe('required')
+    expect(result.errors.layout).toBe('required')
     // No region yet: the city select is disabled, so the error is on the region only.
     expect(result.errors.city).toBeUndefined()
   })
@@ -162,6 +175,7 @@ describe('error keys and kinds', () => {
     expect(formErrorKey('issue')).toBe('number')
     expect(formErrorKey('listingNumber')).toBe('number')
     expect(formErrorKey('name')).toBe('name')
+    expect(formErrorKey('layout')).toBe('layout')
   })
 
   it('keeps the first message per key', () => {

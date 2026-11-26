@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
+import { buildSlots } from '@vardenia/core'
 import {
   DEFAULT_WEEKS,
   MAX_WEEKS,
   byWeek,
   canSeePlaceReports,
   downpaymentsKept,
+  layoutSales,
   loadPlaceReports,
   moneyLines,
   parseWeeks,
@@ -45,12 +47,12 @@ describe('who sees the reports', () => {
     expect(find).not.toHaveBeenCalled()
   })
 
-  it('reads as the admin, with access rules on, in two queries', async () => {
+  it('reads as the admin, with access rules on, in four queries', async () => {
     const find = vi.fn(async () => ({ docs: [] }))
     const result = await loadPlaceReports({ find } as never, admin, {
       now: new Date('2026-11-24T10:00:00Z'),
     })
-    expect(find).toHaveBeenCalledTimes(2)
+    expect(find).toHaveBeenCalledTimes(4)
     for (const [args] of find.mock.calls as unknown as [Record<string, unknown>][]) {
       expect(args.overrideAccess).toBe(false)
       expect(args.user).toBe(admin)
@@ -190,5 +192,99 @@ describe('refunds outstanding and downpayments kept', () => {
       ['Place 1', 500],
       ['Place 2', 300],
     ])
+  })
+})
+
+describe('layout sales', () => {
+  const slots = buildSlots([
+    { layout: 'full-page' },
+    { layout: 'half-page' },
+    { layout: 'quarter-page' },
+  ])
+  const issues = [{ id: 7, title: 'All Lebanon', slots }]
+  const held = (
+    id: number,
+    pageLayout: ReportBusiness['pageLayout'],
+    status: string | null,
+    price: number,
+    paid: number[] = [],
+    extra: Partial<ReportBusiness> = {},
+  ): ReportBusiness => ({
+    id,
+    issue: 7,
+    listingNumber: id,
+    pageLayout,
+    submission: {
+      status,
+      payment: { price, stage: status === 'paid' ? 'fully_paid' : 'none' },
+      payments: paid.map((amount) => ({ type: 'downpayment', amount })),
+    },
+    ...extra,
+  })
+
+  it('counts slots, held, sold, expected and received per issue and layout', () => {
+    const rows = layoutSales(
+      [
+        held(1, 'full-page', 'paid', 1500, [1500]),
+        held(2, 'half-page', 'accepted', 800, [200]),
+        held(3, 'half-page', 'approved', 800, [800]),
+      ],
+      issues,
+    )
+    expect(rows.find((r) => r.layout === 'half-page')).toMatchObject({
+      issueId: 7,
+      issueTitle: 'All Lebanon',
+      slots: 2,
+      held: 2,
+      sold: 1,
+      expected: 1600,
+      received: 1000,
+    })
+    expect(rows.find((r) => r.layout === 'full-page')).toMatchObject({ held: 1, sold: 1 })
+  })
+
+  it('shows zeros for a layout nobody holds, and skips layouts the issue has no slot for', () => {
+    const rows = layoutSales([], issues)
+    expect(rows.map((r) => r.layout)).toEqual(['full-page', 'half-page', 'quarter-page'])
+    expect(
+      rows.every((r) => r.held === 0 && r.sold === 0 && r.expected === 0 && r.received === 0),
+    ).toBe(true)
+  })
+
+  it('skips legacy rows without a layout, closed ones, voided money and refunds', () => {
+    const rows = layoutSales(
+      [
+        held(1, null, 'accepted', 800, [800]),
+        held(2, 'quarter-page', 'rejected', 300, [300]),
+        {
+          ...held(3, 'quarter-page', 'accepted', 300),
+          submission: {
+            status: 'accepted',
+            payment: { price: 300 },
+            payments: [
+              { type: 'downpayment', amount: 100 },
+              { type: 'balance', amount: 50, voided: true },
+              { type: 'refund', amount: 40 },
+            ],
+          },
+        },
+      ],
+      issues,
+    )
+    expect(rows.find((r) => r.layout === 'quarter-page')).toMatchObject({
+      held: 1,
+      expected: 300,
+      received: 100,
+    })
+    expect(rows.find((r) => r.layout === 'half-page')?.held).toBe(0)
+  })
+
+  it('leaves out issues without slots and businesses of other issues', () => {
+    const rows = layoutSales(
+      [held(1, 'full-page', 'accepted', 1500, [], { issue: { id: 9 } })],
+      [...issues, { id: 9, title: 'Legacy', slots: [] }],
+    )
+    expect(rows.every((r) => r.issueId === 7)).toBe(true)
+    expect(rows.find((r) => r.layout === 'full-page')?.held).toBe(0)
   })
 })

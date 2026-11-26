@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
+import { PAGE_LAYOUT_LABELS } from '@vardenia/core'
 import { formatMoney } from '../../lib/place-payment-rules'
 import {
   CONTRACT_WINDOW_DAYS,
@@ -170,6 +171,45 @@ export async function PlaceReports({ initPageResult, params, searchParams }: Adm
                     </table>
                   </div>
                 ))
+              )}
+            </section>
+
+            <section>
+              <h2 style={styles.heading}>Layout sales, by issue</h2>
+              <p style={styles.hint}>
+                Held is a listing number taken under that layout and not closed. Sold is fully paid
+                or published. Expected is the price fixed when each listing was started; received is
+                the money recorded, undone entries and refunds left out.
+              </p>
+              {reports.layoutSales.length === 0 ? (
+                <p>No issue has a template yet.</p>
+              ) : (
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Issue</th>
+                      <th style={styles.th}>Layout</th>
+                      <th style={styles.th}>Slots</th>
+                      <th style={styles.th}>Held</th>
+                      <th style={styles.th}>Sold</th>
+                      <th style={styles.th}>Expected</th>
+                      <th style={styles.th}>Received</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.layoutSales.map((row) => (
+                      <tr key={`${row.issueId}-${row.layout}`}>
+                        <td style={styles.td}>{row.issueTitle}</td>
+                        <td style={styles.td}>{PAGE_LAYOUT_LABELS[row.layout]}</td>
+                        <td style={{ ...styles.td, ...styles.num }}>{row.slots}</td>
+                        <td style={{ ...styles.td, ...styles.num }}>{row.held}</td>
+                        <td style={{ ...styles.td, ...styles.num }}>{row.sold}</td>
+                        <td style={{ ...styles.td, ...styles.num }}>{formatMoney(row.expected)}</td>
+                        <td style={{ ...styles.td, ...styles.num }}>{formatMoney(row.received)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </section>
 

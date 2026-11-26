@@ -78,6 +78,7 @@ import * as migration_20261124_180000_two_stage_payment from './20261124_180000_
 import * as migration_20261125_100000_business_pages_merged from './20261125_100000_business_pages_merged'
 import * as migration_20261126_100000_district_to_city from './20261126_100000_district_to_city'
 import * as migration_20261126_100000_sample_listings from './20261126_100000_sample_listings'
+import * as migration_20261126_120000_page_layouts from './20261126_120000_page_layouts'
 
 export const migrations = [
   {
@@ -479,5 +480,10 @@ export const migrations = [
     up: migration_20261126_100000_sample_listings.up,
     down: migration_20261126_100000_sample_listings.down,
     name: '20261126_100000_sample_listings',
+  },
+  {
+    up: migration_20261126_120000_page_layouts.up,
+    down: migration_20261126_120000_page_layouts.down,
+    name: '20261126_120000_page_layouts',
   },
 ]

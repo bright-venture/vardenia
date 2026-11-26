@@ -6,10 +6,13 @@ vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async () => (key: string) => key),
   setRequestLocale: vi.fn(),
 }))
+// i18n/routing (next-intl navigation) also reads redirect and permanentRedirect.
 vi.mock('next/navigation', () => ({
   notFound: () => {
     throw new Error('not found')
   },
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
 }))
 // The page links back with the site's Link; next-intl's navigation behind it
 // is not needed to read the metadata.

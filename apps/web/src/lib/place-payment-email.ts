@@ -16,7 +16,7 @@ import {
  * sends them.
  *
  * English and Arabic; any other language gets English, left to right. Every
- * owner email carries the reference (VD-n), the page number, the amounts and
+ * owner email carries the reference (VD-n), the page (or listing) number, the amounts and
  * the deadline that matters; the ones that ask for money also carry the
  * company's Whish number and a WhatsApp link for owners who paid from another
  * phone. That link holds the business name, the reference and "I paid from"
@@ -36,6 +36,11 @@ export interface PaymentEmailFacts {
   reference: string
   /** The page number, or null when there is none to show. */
   pageNumber: number | null
+  /** The layout label and the issue title the owner bought, when known (not for older listings). */
+  layout?: string | null
+  issue?: string | null
+  /** Where the slot sits, as the terms keep it ("Page 62, position 3", "Pages 62-63"). */
+  page?: string | null
   price: number
   downpaymentAmount: number
   /** Downpayment and rest received (undone lines not counted). */
@@ -143,6 +148,7 @@ interface Body {
 type Labels = Record<
   | 'reference'
   | 'page'
+  | 'listing'
   | 'released'
   | 'price'
   | 'downpayment'
@@ -162,6 +168,7 @@ const LABELS: Record<EmailLocale, Labels> = {
   en: {
     reference: 'Reference',
     page: 'Page number',
+    listing: 'Listing number',
     released: 'released',
     price: 'Price for one year',
     downpayment: 'Downpayment',
@@ -178,6 +185,7 @@ const LABELS: Record<EmailLocale, Labels> = {
   ar: {
     reference: 'المرجع',
     page: 'رقم الصفحة',
+    listing: 'رقم الإعلان',
     released: 'تم تحريره',
     price: 'السعر لسنة واحدة',
     downpayment: 'الدفعة الأولى',
@@ -200,9 +208,51 @@ const CLOSING: Record<EmailLocale, string> = {
 
 const hello = (name: string, locale: EmailLocale) => (locale === 'ar' ? `${name}،` : `${name},`)
 
+/**
+ * With a layout (PRD v7) the number is the listing number: a page holds up to
+ * four listings and the page itself is in the layout line. Older listings keep
+ * "page number", the wording their owners agreed to.
+ */
+export function numberWord(f: PaymentEmailFacts, locale: EmailLocale, capital = false): string {
+  if (locale === 'ar') return f.layout ? 'رقم الإعلان' : 'رقم الصفحة'
+  const word = f.layout ? 'listing number' : 'page number'
+  return capital ? word[0]!.toUpperCase() + word.slice(1) : word
+}
+
 function pageRow(f: PaymentEmailFacts, l: Labels, released = false): [string, string][] {
   if (f.pageNumber === null) return []
-  return [[l.page, released ? `${f.pageNumber} (${l.released})` : String(f.pageNumber)]]
+  const label = f.layout ? l.listing : l.page
+  return [[label, released ? `${f.pageNumber} (${l.released})` : String(f.pageNumber)]]
+}
+
+/**
+ * The page in Arabic, from the English text core's slotLabel writes into the
+ * terms. Anything else (a label written another way) is shown as it is.
+ */
+function pageText(page: string, locale: EmailLocale): string {
+  if (locale !== 'ar') return page
+  const spread = /^Pages (\d+)-(\d+)$/.exec(page)
+  if (spread) return `الصفحتان ${spread[1]}-${spread[2]}`
+  const single = /^Page (\d+)(?:, position (\d+))?$/.exec(page)
+  if (single) return single[2] ? `الصفحة ${single[1]}، الموقع ${single[2]}` : `الصفحة ${single[1]}`
+  return page
+}
+
+/**
+ * "Layout: Full page · Issue: Summer · Page 62, position 3 · No. 12", built
+ * from facts, for E1, E3 and E8 (PRD v7 §6). Nothing when the listing has no
+ * layout (made before layouts).
+ */
+export function layoutLine(f: PaymentEmailFacts, locale: EmailLocale): string[] {
+  if (!f.layout) return []
+  const ar = locale === 'ar'
+  const parts = [
+    ar ? `التصميم: ${f.layout}` : `Layout: ${f.layout}`,
+    ...(f.issue ? [ar ? `العدد: ${f.issue}` : `Issue: ${f.issue}`] : []),
+    ...(f.page ? [pageText(f.page, locale)] : []),
+    ...(f.pageNumber !== null ? [ar ? `رقم ${f.pageNumber}` : `No. ${f.pageNumber}`] : []),
+  ]
+  return [parts.join(' · ')]
 }
 
 const applyLink = (f: PaymentEmailFacts, l: Labels) => ({
@@ -233,11 +283,12 @@ const EN: Record<PaymentEvent, Copy> = {
       heading: 'Your form is in: pay the downpayment',
       paragraphs: [
         hello(f.ownerName, 'en'),
-        `Thank you for sending ${f.businessName} to Vardenia.${f.pageNumber !== null ? ` Page number ${f.pageNumber} is reserved for you.` : ''}`,
+        ...layoutLine(f, 'en'),
+        `Thank you for sending ${f.businessName} to Vardenia.${f.pageNumber !== null ? ` ${numberWord(f, 'en', true)} ${f.pageNumber} is reserved for you.` : ''}`,
         `To keep it, pay the downpayment of ${amount(f.downpaymentAmount, f.currency)} by Whish to ${f.whishNumber} before ${due}, from the phone number you gave in the form. Write your reference ${f.reference} in the Whish note if you can.`,
         'Paying from another number? Tell us on WhatsApp which number you paid from, so we can find your payment.',
         `Once the downpayment is received, we review your business. If we accept it, you pay the rest (${rest}) ${withinDays(f.balanceDeadlineDays, 'en')} of acceptance. If we do not accept it, we return your downpayment by Whish to the number it was paid from.`,
-        `If the downpayment is not received by ${due}, the page number is released.`,
+        `If the downpayment is not received by ${due}, the ${numberWord(f, 'en')} is released.`,
         CLOSING.en,
       ],
       rows: [
@@ -259,7 +310,7 @@ const EN: Record<PaymentEvent, Copy> = {
       heading: 'A reminder about your downpayment',
       paragraphs: [
         hello(f.ownerName, 'en'),
-        `We have not received the downpayment of ${amount(f.downpaymentAmount, f.currency)} for ${f.businessName} yet. Pay it by Whish to ${f.whishNumber} before ${due}, or the page number will be released.`,
+        `We have not received the downpayment of ${amount(f.downpaymentAmount, f.currency)} for ${f.businessName} yet. Pay it by Whish to ${f.whishNumber} before ${due}, or the ${numberWord(f, 'en')} will be released.`,
         'Already paid? Thank you. If you paid from another number, tell us on WhatsApp which one, so we can find your payment.',
         CLOSING.en,
       ],
@@ -301,10 +352,11 @@ const EN: Record<PaymentEvent, Copy> = {
       heading: 'Your business is accepted',
       paragraphs: [
         hello(f.ownerName, 'en'),
+        ...layoutLine(f, 'en'),
         `Good news: we accepted ${f.businessName} for Vardenia.`,
         `Pay the rest, ${amount(f.stillToPay, f.currency)}, by Whish to ${f.whishNumber} ${withinDays(f.balanceDeadlineDays, 'en')}, before ${due}. Write your reference ${f.reference} in the Whish note if you can.`,
         'Paying from another number? Tell us on WhatsApp which number you paid from, so we can find your payment.',
-        `If the rest is not received by ${due}, the application ends and the page number is released.`,
+        `If the rest is not received by ${due}, the application ends and the ${numberWord(f, 'en')} is released.`,
         CLOSING.en,
       ],
       rows: [
@@ -343,7 +395,7 @@ const EN: Record<PaymentEvent, Copy> = {
       paragraphs: [
         hello(f.ownerName, 'en'),
         `The rest of the price for ${f.businessName}, ${amount(f.stillToPay, f.currency)}, is due on ${due}. Pay it by Whish to ${f.whishNumber}.`,
-        `If it is not received by then, the application ends and the page number is released.`,
+        `If it is not received by then, the application ends and the ${numberWord(f, 'en')} is released.`,
         'Already paid? Thank you. If you paid from another number, tell us on WhatsApp which one, so we can find your payment.',
         CLOSING.en,
       ],
@@ -387,8 +439,8 @@ const EN: Record<PaymentEvent, Copy> = {
       paragraphs: [
         hello(f.ownerName, 'en'),
         balanceDeadlinePassed(f)
-          ? `The deadline to pay the rest for ${f.businessName} was ${due}, and we did not receive it. Your application has ended and the page number is released.`
-          : `We did not receive the rest of the price for ${f.businessName}. Your application has ended and the page number is released.`,
+          ? `The deadline to pay the rest for ${f.businessName} was ${due}, and we did not receive it. Your application has ended and the ${numberWord(f, 'en')} is released.`
+          : `We did not receive the rest of the price for ${f.businessName}. Your application has ended and the ${numberWord(f, 'en')} is released.`,
         ...(f.received > 0
           ? [
               `As set out in the terms, the ${amount(f.received, f.currency)} received is not returned.`,
@@ -414,7 +466,7 @@ const EN: Record<PaymentEvent, Copy> = {
       heading: 'The time to pay the downpayment is over',
       paragraphs: [
         hello(f.ownerName, 'en'),
-        `We did not receive the downpayment for ${f.businessName}${due ? ` by ${due}` : ' in time'}, so the page number has been released.`,
+        `We did not receive the downpayment for ${f.businessName}${due ? ` by ${due}` : ' in time'}, so the ${numberWord(f, 'en')} has been released.`,
         'To appear in Vardenia, please submit a new form.',
         CLOSING.en,
       ],
@@ -434,6 +486,7 @@ const EN: Record<PaymentEvent, Copy> = {
       heading: 'Congratulations',
       paragraphs: [
         hello(f.ownerName, 'en'),
+        ...layoutLine(f, 'en'),
         `${f.businessName} is now published on Vardenia. Thank you for joining us.`,
         ...(ends ? [`Your listing runs until ${ends}.`] : []),
         'If this is your first listing with us, a separate email lets you set the password of your partner account.',
@@ -459,11 +512,12 @@ const AR: Record<PaymentEvent, Copy> = {
       heading: 'وصلنا نموذجك: ادفع الدفعة الأولى',
       paragraphs: [
         hello(f.ownerName, 'ar'),
-        `شكراً لإرسال ${f.businessName} إلى فارديينيا.${f.pageNumber !== null ? ` رقم الصفحة ${f.pageNumber} محجوز لك.` : ''}`,
+        ...layoutLine(f, 'ar'),
+        `شكراً لإرسال ${f.businessName} إلى فارديينيا.${f.pageNumber !== null ? ` ${numberWord(f, 'ar')} ${f.pageNumber} محجوز لك.` : ''}`,
         `للاحتفاظ به، ادفع الدفعة الأولى وقدرها ${amount(f.downpaymentAmount, f.currency)} عبر Whish إلى الرقم ${f.whishNumber} قبل ${due}، من رقم الهاتف الذي أدخلته في النموذج. اكتب مرجعك ${f.reference} في ملاحظة Whish إن أمكن.`,
         'تدفع من رقم آخر؟ أخبرنا على واتساب بالرقم الذي دفعت منه لنجد دفعتك.',
         `عند استلام الدفعة الأولى نراجع مكانك. إذا قبلناه تدفع المبلغ المتبقي (${rest}) ${withinDays(f.balanceDeadlineDays, 'ar')} من القبول. وإذا لم نقبله نعيد إليك الدفعة الأولى عبر Whish إلى الرقم الذي دُفعت منه.`,
-        `إذا لم تصلنا الدفعة الأولى قبل ${due} يُحرَّر رقم الصفحة.`,
+        `إذا لم تصلنا الدفعة الأولى قبل ${due} يُحرَّر ${numberWord(f, 'ar')}.`,
         CLOSING.ar,
       ],
       rows: [
@@ -485,7 +539,7 @@ const AR: Record<PaymentEvent, Copy> = {
       heading: 'تذكير بالدفعة الأولى',
       paragraphs: [
         hello(f.ownerName, 'ar'),
-        `لم تصلنا بعد الدفعة الأولى وقدرها ${amount(f.downpaymentAmount, f.currency)} لـ ${f.businessName}. ادفعها عبر Whish إلى الرقم ${f.whishNumber} قبل ${due}، وإلا يُحرَّر رقم الصفحة.`,
+        `لم تصلنا بعد الدفعة الأولى وقدرها ${amount(f.downpaymentAmount, f.currency)} لـ ${f.businessName}. ادفعها عبر Whish إلى الرقم ${f.whishNumber} قبل ${due}، وإلا يُحرَّر ${numberWord(f, 'ar')}.`,
         'دفعت؟ شكراً لك. إذا دفعت من رقم آخر فأخبرنا على واتساب بالرقم لنجد دفعتك.',
         CLOSING.ar,
       ],
@@ -527,10 +581,11 @@ const AR: Record<PaymentEvent, Copy> = {
       heading: 'تم قبول مكانك',
       paragraphs: [
         hello(f.ownerName, 'ar'),
+        ...layoutLine(f, 'ar'),
         `خبر سار: قبلنا ${f.businessName} في فارديينيا.`,
         `ادفع المبلغ المتبقي وقدره ${amount(f.stillToPay, f.currency)} عبر Whish إلى الرقم ${f.whishNumber} ${withinDays(f.balanceDeadlineDays, 'ar')}، قبل ${due}. اكتب مرجعك ${f.reference} في ملاحظة Whish إن أمكن.`,
         'تدفع من رقم آخر؟ أخبرنا على واتساب بالرقم الذي دفعت منه لنجد دفعتك.',
-        `إذا لم يصلنا المبلغ المتبقي قبل ${due} ينتهي الطلب ويُحرَّر رقم الصفحة.`,
+        `إذا لم يصلنا المبلغ المتبقي قبل ${due} ينتهي الطلب ويُحرَّر ${numberWord(f, 'ar')}.`,
         CLOSING.ar,
       ],
       rows: [
@@ -569,7 +624,7 @@ const AR: Record<PaymentEvent, Copy> = {
       paragraphs: [
         hello(f.ownerName, 'ar'),
         `المبلغ المتبقي لـ ${f.businessName}، وقدره ${amount(f.stillToPay, f.currency)}، مستحق في ${due}. ادفعه عبر Whish إلى الرقم ${f.whishNumber}.`,
-        'إذا لم يصلنا قبل ذلك ينتهي الطلب ويُحرَّر رقم الصفحة.',
+        `إذا لم يصلنا قبل ذلك ينتهي الطلب ويُحرَّر ${numberWord(f, 'ar')}.`,
         'دفعت؟ شكراً لك. إذا دفعت من رقم آخر فأخبرنا على واتساب بالرقم لنجد دفعتك.',
         CLOSING.ar,
       ],
@@ -611,8 +666,8 @@ const AR: Record<PaymentEvent, Copy> = {
       paragraphs: [
         hello(f.ownerName, 'ar'),
         balanceDeadlinePassed(f)
-          ? `انتهت مهلة دفع المبلغ المتبقي لـ ${f.businessName} في ${due} ولم يصلنا. انتهى طلبك وتم تحرير رقم الصفحة.`
-          : `لم يصلنا المبلغ المتبقي لـ ${f.businessName}. انتهى طلبك وتم تحرير رقم الصفحة.`,
+          ? `انتهت مهلة دفع المبلغ المتبقي لـ ${f.businessName} في ${due} ولم يصلنا. انتهى طلبك وتم تحرير ${numberWord(f, 'ar')}.`
+          : `لم يصلنا المبلغ المتبقي لـ ${f.businessName}. انتهى طلبك وتم تحرير ${numberWord(f, 'ar')}.`,
         ...(f.received > 0
           ? [`وفقاً للشروط، لا يُعاد المبلغ المستلم وقدره ${amount(f.received, f.currency)}.`]
           : []),
@@ -636,7 +691,7 @@ const AR: Record<PaymentEvent, Copy> = {
       heading: 'انتهت مهلة دفع الدفعة الأولى',
       paragraphs: [
         hello(f.ownerName, 'ar'),
-        `لم تصلنا الدفعة الأولى لـ ${f.businessName}${due ? ` قبل ${due}` : ' في الوقت المحدد'}، لذلك تم تحرير رقم الصفحة.`,
+        `لم تصلنا الدفعة الأولى لـ ${f.businessName}${due ? ` قبل ${due}` : ' في الوقت المحدد'}، لذلك تم تحرير ${numberWord(f, 'ar')}.`,
         'لتظهر في فارديينيا، يرجى إرسال نموذج جديد.',
         CLOSING.ar,
       ],
@@ -656,6 +711,7 @@ const AR: Record<PaymentEvent, Copy> = {
       heading: 'مبروك',
       paragraphs: [
         hello(f.ownerName, 'ar'),
+        ...layoutLine(f, 'ar'),
         `تم نشر ${f.businessName} على فارديينيا. شكراً لانضمامك إلينا.`,
         ...(ends ? [`يبقى مكانك مُدرجاً حتى ${ends}.`] : []),
         'إذا كان هذا أول مكان لك معنا، تصلك رسالة منفصلة لتعيين كلمة مرور حساب الشريك.',
@@ -688,13 +744,16 @@ export function unpaidTeamEmail(facts: PaymentEmailFacts): PlaceSubmissionEmail 
   const body: Body = {
     heading: 'Rejected: did not pay the rest',
     paragraphs: [
-      `${facts.businessName} did not pay the rest${balanceDeadlinePassed(facts) ? ` by the deadline (${due})` : ` (rejected by staff before the deadline, ${due || 'none set'})`}. The submission is rejected, the page number released, and what was received is kept. The owner was told to submit a new form.`,
+      `${facts.businessName} did not pay the rest${balanceDeadlinePassed(facts) ? ` by the deadline (${due})` : ` (rejected by staff before the deadline, ${due || 'none set'})`}. The submission is rejected, the ${numberWord(facts, 'en')} released, and what was received is kept. The owner was told to submit a new form.`,
     ],
     rows: [
       ['Reference', facts.reference],
       ['Business', facts.businessName],
       ...(facts.pageNumber !== null
-        ? ([['Page number (released)', String(facts.pageNumber)]] as [string, string][])
+        ? ([[`${numberWord(facts, 'en', true)} (released)`, String(facts.pageNumber)]] as [
+            string,
+            string,
+          ][])
         : []),
       ['Received (kept)', amount(facts.received, facts.currency)],
       ['Still to pay', amount(facts.stillToPay, facts.currency)],

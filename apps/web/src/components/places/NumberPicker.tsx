@@ -1,25 +1,26 @@
 'use client'
 
 import { useId } from 'react'
-import { useTranslations } from 'next-intl'
-import { numbersIn } from '@vardenia/core/listing-numbers'
+import { useLocale, useTranslations } from 'next-intl'
 import { NOTICE_INFO } from '../formStyles'
-import type { NumbersIssue } from './use-place-numbers'
+import { formatMoney } from './flow-client'
+import type { LayoutIssue, NumbersSlot } from './use-place-numbers'
 
 /**
- * Every listing number of a governorate, one button each.
+ * The free slots of the chosen layout in a governorate, one button each.
  *
- * Free numbers can be picked; taken ones stay in place, greyed out and
- * disabled, so the owner sees the whole block and where the gaps are. A taken
- * number says "taken" in words as well as in style (colour is never the only
- * signal), and its accessible name says it too.
+ * A slot is named by where it sits, as text only: "Page 62, position 3",
+ * "Page 12" (one slot on the page) or "Pages 62-63" (a spread). Choosing one
+ * picks its listing number. Taken slots are not listed at all: the route only
+ * sends the free ones. Each issue's heading says its title, the layout's price
+ * and how many are free.
  *
- * Buttons with `aria-pressed` rather than radio inputs: up to a hundred radios
- * in one group would make arrow keys the only way through, and Tab still moves
- * through these one by one with disabled ones skipped.
+ * Buttons with `aria-pressed` rather than radio inputs: a long group of radios
+ * would make arrow keys the only way through, and Tab still moves through these
+ * one by one.
  *
- * When the governorate has no block (`issues` empty) or every number is taken,
- * it says so; the form keeps Submit disabled in both cases.
+ * When no issue offers the layout here (`issues` empty) or every slot of it is
+ * taken, it says so; the form keeps Next disabled in both cases.
  */
 export function NumberPicker({
   issues,
@@ -27,24 +28,25 @@ export function NumberPicker({
   selectedIssue = null,
   onChange,
 }: {
-  issues: NumbersIssue[]
+  issues: LayoutIssue[]
   value: number | null
-  /** The issue `value` belongs to; null matches the first issue that holds it. */
+  /** The issue `value` belongs to; null matches the first issue that lists it. */
   selectedIssue?: number | null
   onChange: (issueId: number, n: number) => void
 }) {
   const t = useTranslations('magazinePlaces.numbers')
+  const locale = useLocale()
   const ids = useId()
 
   if (issues.length === 0) {
     return (
       <p className={NOTICE_INFO} role="status">
-        {t('noRange')}
+        {t('noneForLayout')}
       </p>
     )
   }
 
-  if (!hasFreeNumber(issues)) {
+  if (!issues.some((issue) => issue.slots.length > 0)) {
     return (
       <p className={NOTICE_INFO} role="status">
         {t('noneFree')}
@@ -52,64 +54,59 @@ export function NumberPicker({
     )
   }
 
+  const slotText = (slot: NumbersSlot) =>
+    slot.lastPage > slot.page
+      ? t('slotSpread', { page: slot.page, lastPage: slot.lastPage })
+      : slot.position === null
+        ? t('slotPage', { page: slot.page })
+        : t('slotPosition', { page: slot.page, position: slot.position })
+
   const pressedIssue =
     value === null
       ? null
-      : (selectedIssue ?? issues.find((i) => value >= i.from && value <= i.to)?.issueId ?? null)
+      : (selectedIssue ??
+        issues.find((i) => i.slots.some((s) => s.number === value))?.issueId ??
+        null)
 
   return (
     <div className="flex flex-col gap-5">
       {issues.map((issue) => {
-        const taken = new Set(issue.taken)
-        const numbers = numbersIn({ governorate: '', from: issue.from, to: issue.to })
-        const free = numbers.filter((n) => !taken.has(n)).length
         const headingId = `${ids}-${issue.issueId}`
         return (
           <div key={issue.issueId} role="group" aria-labelledby={headingId}>
             <p id={headingId} className="text-ink-700 text-sm">
               {issue.issueTitle ? <span className="font-semibold">{issue.issueTitle}</span> : null}
-              {issue.issueTitle ? ' \u00b7 ' : null}
-              {t('freeCount', { free, total: numbers.length })}
+              {issue.issueTitle ? ' · ' : null}
+              {t('price', { amount: formatMoney(issue.price, issue.currency, locale) })}
+              {' · '}
+              {t('free', { free: issue.slots.length })}
             </p>
-            <div className="mt-2 grid grid-cols-6 gap-1.5 sm:grid-cols-10">
-              {numbers.map((n) => {
-                const isTaken = taken.has(n)
-                const pressed = !isTaken && pressedIssue === issue.issueId && value === n
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    data-number={n}
-                    disabled={isTaken}
-                    aria-pressed={pressed}
-                    aria-label={isTaken ? t('numberTaken', { n }) : t('number', { n })}
-                    onClick={() => onChange(issue.issueId, n)}
-                    className={`focus-visible:outline-gold-500 flex min-h-11 flex-col items-center justify-center border text-sm tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                      isTaken
-                        ? 'border-ink-100 bg-surface-sunken text-ink-500 cursor-not-allowed'
-                        : pressed
+            {issue.slots.length > 0 ? (
+              <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {issue.slots.map((slot) => {
+                  const pressed = pressedIssue === issue.issueId && value === slot.number
+                  return (
+                    <button
+                      key={slot.number}
+                      type="button"
+                      data-number={slot.number}
+                      aria-pressed={pressed}
+                      onClick={() => onChange(issue.issueId, slot.number)}
+                      className={`focus-visible:outline-gold-500 flex min-h-11 items-center justify-center border px-2 text-sm tabular-nums transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                        pressed
                           ? 'border-cedar-900 bg-cedar-900 text-surface-base font-semibold'
                           : 'border-ink-100 bg-surface-base text-ink-900 hover:border-ink-500'
-                    }`}
-                  >
-                    <span className={isTaken ? 'line-through' : undefined}>{n}</span>
-                    {isTaken ? <span className="text-xs leading-none">{t('taken')}</span> : null}
-                  </button>
-                )
-              })}
-            </div>
+                      }`}
+                    >
+                      {slotText(slot)}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
           </div>
         )
       })}
     </div>
-  )
-}
-
-/** At least one number, in any issue, that nobody holds. */
-export function hasFreeNumber(issues: readonly NumbersIssue[]): boolean {
-  return issues.some(
-    (issue) =>
-      issue.to - issue.from + 1 >
-      new Set(issue.taken.filter((n) => n >= issue.from && n <= issue.to)).size,
   )
 }

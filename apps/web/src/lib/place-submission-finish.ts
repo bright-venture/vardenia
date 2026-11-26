@@ -1,6 +1,8 @@
 import type { Payload, PayloadRequest } from 'payload'
+import { PAGE_LAYOUT_LABELS, isPageLayout, slotLabel } from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 
+import { toSlots } from '../collections/Issues'
 import { siteOrigin } from './auth-email'
 import { runInTransaction } from './branches'
 import { advisoryLock, placeSubmissionLockKey } from './partner-lock'
@@ -49,12 +51,14 @@ interface BusinessDoc {
   issue?: unknown
   heroImage?: unknown
   logo?: unknown
+  pageLayout?: unknown
   submission: {
     status?: string
     reference?: string
     ownerName?: string
     ownerEmail?: string
     ownerPhone?: string
+    payment?: { price?: unknown; downpaymentAmount?: unknown } | null
   }
 }
 
@@ -189,6 +193,42 @@ export async function finishPlaceSubmission(args: {
         return { code: 'photos-missing' as const }
       }
 
+      // The price snapshot rule: the layout's price stored on the draft when
+      // the form was started (lib/place-submission) is what the owner saw, so
+      // it is what is charged. Only a draft made before layouts has none, and
+      // takes the Settings price as it is now.
+      const snap = business.submission.payment
+      const snapPrice =
+        typeof snap?.price === 'number' && Number.isFinite(snap.price) && snap.price > 0
+          ? snap.price
+          : null
+      const price = snapPrice ?? settings.pricePerYear
+      const downpaymentAmount =
+        snapPrice !== null && typeof snap?.downpaymentAmount === 'number'
+          ? snap.downpaymentAmount
+          : downpaymentFor(price, settings.downpaymentPercent)
+      const layoutLabel = isPageLayout(business.pageLayout)
+        ? PAGE_LAYOUT_LABELS[business.pageLayout]
+        : undefined
+      const issueId = idOf(business.issue)
+      let issueTitle: string | undefined
+      let pageText: string | undefined
+      if (issueId !== null) {
+        const issue = (await payload
+          .findByID({ collection: 'issues', id: issueId, depth: 0, req, overrideAccess: true })
+          .catch(() => null)) as { title?: unknown; slots?: unknown } | null
+        if (issue?.title) issueTitle = String(issue.title)
+        // Where the listing prints ("Page 62, position 3"), from the issue's
+        // slots, which cannot change once a business holds a number. Only for
+        // a business with a layout: a legacy issue has no slots.
+        if (layoutLabel) {
+          const slot = toSlots(issue?.slots).find(
+            (s) => s.number === Number(business.listingNumber) && s.layout === business.pageLayout,
+          )
+          if (slot) pageText = slotLabel(slot)
+        }
+      }
+
       const result = await payload.update({
         collection: 'businesses',
         where: {
@@ -201,7 +241,10 @@ export async function finishPlaceSubmission(args: {
             submittedAt: stamp,
             terms: {
               version: settings.termsVersion,
-              priceAtAcceptance: settings.pricePerYear,
+              ...(layoutLabel ? { layout: layoutLabel } : {}),
+              ...(issueTitle ? { issue: issueTitle } : {}),
+              ...(pageText ? { page: pageText } : {}),
+              priceAtAcceptance: price,
               currency: settings.currency,
               termMonths: settings.termMonths,
               acceptedAt: stamp,
@@ -209,12 +252,12 @@ export async function finishPlaceSubmission(args: {
             payments: [],
             payment: {
               stage: 'none',
-              price: settings.pricePerYear,
-              downpaymentAmount: downpaymentFor(settings.pricePerYear, settings.downpaymentPercent),
+              price,
+              downpaymentAmount,
               currency: settings.currency,
               received: 0,
               refunded: 0,
-              stillToPay: settings.pricePerYear,
+              stillToPay: price,
               downpaymentDueAt: addDays(now, settings.downpaymentDeadlineDays).toISOString(),
               balanceDeadlineDays: settings.balanceDeadlineDays,
             },

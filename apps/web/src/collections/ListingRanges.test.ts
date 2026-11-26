@@ -3,6 +3,7 @@ import { APIError, type Access } from 'payload'
 import { isStaff } from '../access/index'
 import { ListingRanges, nextFromDefault, validateRangeAgainstIssue } from './ListingRanges'
 import { Issues, checkListingTotal } from './Issues'
+import { buildSlots } from '@vardenia/core'
 
 const north = { governorate: 'north-lebanon', from: 80, to: 150 }
 
@@ -338,5 +339,144 @@ describe('moving a range', () => {
 
   it('does not stop ordinary edits that keep it in place', async () => {
     await expect(run({ to: 6 }, { beirut: [3, 4] })).resolves.toBeDefined()
+  })
+})
+
+/**
+ * Issues built from a template (PRD v7): the admin enters a governorate's pages
+ * and the hook derives the numbers from the issue's slots.
+ *
+ * Template: spread (pages 1-2, number 1), full page (3, number 2), half page
+ * (4, numbers 3-4), spread (5-6, number 5), quarter page (7, numbers 6-9).
+ */
+describe('page blocks on an issue with slots', () => {
+  const hook = ListingRanges.hooks!.beforeValidate![0] as (args: never) => Promise<unknown>
+  const slots = buildSlots([
+    { layout: 'full-spread' },
+    { layout: 'full-page' },
+    { layout: 'half-page' },
+    { layout: 'full-spread' },
+    { layout: 'quarter-page' },
+  ])
+  const setup = (opts: { siblings?: unknown[]; held?: number[]; slots?: unknown } = {}) => {
+    const find = vi.fn(async ({ collection }: { collection: string }) => ({
+      docs:
+        collection === 'listing-ranges'
+          ? (opts.siblings ?? [])
+          : (opts.held ?? []).map((listingNumber) => ({ listingNumber })),
+    }))
+    const findByID = vi.fn(async (_args: unknown) => ({
+      id: 1,
+      listingTotal: 9,
+      pageCount: 7,
+      slots: opts.slots === undefined ? slots : opts.slots,
+    }))
+    return { req: { payload: { find, findByID } } }
+  }
+  const create = (s: ReturnType<typeof setup>, data: Record<string, unknown>) =>
+    hook({ data, operation: 'create', req: s.req } as never)
+
+  it('derives from and to from the pages', async () => {
+    const data: Record<string, unknown> = {
+      issue: 1,
+      governorate: 'beirut',
+      firstPage: 3,
+      lastPage: 4,
+    }
+    await create(setup(), data)
+    expect(data.from).toBe(2)
+    expect(data.to).toBe(4)
+  })
+
+  it('overwrites numbers typed by hand', async () => {
+    const data: Record<string, unknown> = {
+      issue: 1,
+      governorate: 'beirut',
+      firstPage: 5,
+      lastPage: 7,
+      from: 1,
+      to: 2,
+    }
+    await create(setup(), data)
+    expect(data.from).toBe(5)
+    expect(data.to).toBe(9)
+  })
+
+  it('refuses a block overlapping another governorate', async () => {
+    const s = setup({
+      siblings: [{ governorate: 'chouf', firstPage: 3, lastPage: 4, from: 2, to: 4 }],
+    })
+    await expect(
+      create(s, { issue: 1, governorate: 'beirut', firstPage: 4, lastPage: 7 }),
+    ).rejects.toThrow(/Pages 4-7 overlap pages 3-4/)
+  })
+
+  it('refuses a block that cuts a spread, as a public 400', async () => {
+    const error = await create(setup(), {
+      issue: 1,
+      governorate: 'beirut',
+      firstPage: 6,
+      lastPage: 7,
+    }).catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(400)
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as Error).message).toMatch(/cuts the spread on pages 5-6/)
+  })
+
+  it('refuses pages past the end of the template', async () => {
+    await expect(
+      create(setup(), { issue: 1, governorate: 'beirut', firstPage: 7, lastPage: 8 }),
+    ).rejects.toThrow(/within 1-7/)
+  })
+
+  it('needs both pages', async () => {
+    await expect(
+      create(setup(), { issue: 1, governorate: 'beirut', firstPage: 3 }),
+    ).rejects.toThrow(/first and last page/)
+  })
+
+  it('still refuses shrinking below a held number', async () => {
+    const s = setup({ held: [9] })
+    await expect(
+      hook({
+        data: { lastPage: 4 },
+        originalDoc: {
+          id: 7,
+          issue: 1,
+          governorate: 'beirut',
+          firstPage: 3,
+          lastPage: 7,
+          from: 2,
+          to: 9,
+        },
+        operation: 'update',
+        req: s.req,
+      } as never),
+    ).rejects.toThrow(/9/)
+  })
+
+  it('keeps manual numbers on a legacy issue without slots', async () => {
+    const data: Record<string, unknown> = { issue: 1, governorate: 'beirut', from: 1, to: 9 }
+    await create(setup({ slots: null }), data)
+    expect(data.from).toBe(1)
+    expect(data.to).toBe(9)
+  })
+
+  it('has optional page fields and numbers that may be left blank when pages are given', () => {
+    const named = (name: string) =>
+      ListingRanges.fields.find((f) => 'name' in f && f.name === name) as unknown as {
+        type: string
+        required?: boolean
+        validate: (value: unknown, options: unknown) => unknown
+      }
+    expect(named('firstPage').type).toBe('number')
+    expect(named('lastPage').type).toBe('number')
+    expect(named('firstPage').required).toBeFalsy()
+    const from = named('from')
+    expect(from.validate(undefined, { siblingData: { firstPage: 1, lastPage: 2 } })).toBe(true)
+    expect(from.validate(undefined, { siblingData: {} })).not.toBe(true)
+    expect(from.validate(0, { siblingData: {} })).not.toBe(true)
+    expect(from.validate(3, { siblingData: {} })).toBe(true)
   })
 })

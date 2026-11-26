@@ -18,8 +18,27 @@ export interface SubmissionParts {
   turnstileToken: string | null
 }
 
+/**
+ * The price of the chosen layout, snapshotted on the draft when it started.
+ * The terms step shows it over the Settings price: the owner pays what the
+ * layout cost when they pressed Next, even if staff change the table later.
+ */
+export interface Quote {
+  price: number
+  downpaymentAmount: number
+  currency: string
+}
+
 export type SubmitResult =
-  | { kind: 'ok'; reference: string; sessionToken: string; uploadUrl: string; expiresAt: string }
+  | {
+      kind: 'ok'
+      reference: string
+      sessionToken: string
+      uploadUrl: string
+      expiresAt: string
+      /** Absent only when the answer carries no usable price (the terms step then shows Settings). */
+      quote?: Quote
+    }
   | { kind: 'field-errors'; errors: Record<string, string> }
   | { kind: 'number-taken' }
   | { kind: 'no-range' }
@@ -48,6 +67,16 @@ async function readJson(response: Response): Promise<Record<string, unknown> | n
   } catch {
     return null
   }
+}
+
+const isAmount = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+
+function quoteOf(body: Record<string, unknown>): Quote | null {
+  const { price, downpaymentAmount, currency } = body
+  if (!isAmount(price) || !isAmount(downpaymentAmount) || typeof currency !== 'string') return null
+  if (!currency) return null
+  return { price, downpaymentAmount, currency }
 }
 
 function stringErrors(value: unknown): Record<string, string> | null {
@@ -83,12 +112,14 @@ export async function postSubmission(
       typeof body.uploadUrl === 'string' &&
       typeof body.expiresAt === 'string'
     ) {
+      const quote = quoteOf(body)
       return {
         kind: 'ok',
         reference: body.reference,
         sessionToken: body.sessionToken,
         uploadUrl: body.uploadUrl,
         expiresAt: body.expiresAt,
+        ...(quote ? { quote } : {}),
       }
     }
     return { kind: 'unknown' }

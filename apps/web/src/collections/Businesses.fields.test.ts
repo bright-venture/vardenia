@@ -368,3 +368,17 @@ describe('isSample', () => {
     expect(number.admin.condition(undefined)).toBe(true)
   })
 })
+
+describe('pageLayout', () => {
+  // Only the start (lib/place-submission, overrideAccess) sets it, on create:
+  // field access drops it from any admin or API create or update, even by an
+  // admin, so it can never be set without the slot checks of the start.
+  it('cannot be set on create or changed on update through access, by anyone', () => {
+    const access = field('pageLayout').access!
+    const admin = { req: { user: { collection: 'users', roles: ['admin'] } } }
+    expect(access.create!(admin)).toBe(false)
+    expect(access.update!(admin)).toBe(false)
+    expect(access.read!({ req: {} })).toBe(false)
+    expect(access.read!(admin)).toBe(true)
+  })
+})

@@ -51,8 +51,6 @@ export const PROTECTED_SORT_FIELDS = [
   'salesOwner',
   'internalNotes',
   'importBatch',
-  // Sorting by it would tell a reader which listings are mock ones.
-  'isSample',
   // Draft / Published / Rejected / Expired: tells a reader whose contract ended.
   'state',
   'commission.rate',
@@ -115,6 +113,13 @@ export const PROTECTED_SORT_FIELDS = [
   'submission.terms.currency',
   'submission.terms.termMonths',
   'submission.terms.acceptedAt',
+  'submission.terms.layout',
+  'submission.terms.issue',
+  'submission.terms.page',
+  // The layout bought: tells a reader who paid for how much.
+  'pageLayout',
+  // Which listings are mock ones.
+  'isSample',
 ] as const
 
 /** `sort` arrives as a string, a comma-joined string, or an array of either. */

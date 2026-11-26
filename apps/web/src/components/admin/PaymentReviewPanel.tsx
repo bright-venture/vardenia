@@ -17,6 +17,7 @@ import {
   historyRows,
   isAdminRole,
   isStaffRole,
+  layoutWords,
   moneyBody,
   moneyDefaults,
   moneyFacts,
@@ -166,6 +167,7 @@ export function PaymentReviewPanel() {
   const facts = moneyFacts(doc, now, percent)
   const actions = panelActions(view, user as never, doc)
   const money = (n: number) => formatMoney(n, facts.currency)
+  const layout = layoutWords(doc)
   const hint = publishHint(doc)
   const notice = emailNotice(doc)
   const blocked = acceptBlocked(view)
@@ -183,6 +185,7 @@ export function PaymentReviewPanel() {
       </p>
 
       <dl style={styles.facts}>
+        {layout ? <Fact label="Layout" value={layout} /> : null}
         <Fact label="Price" value={facts.price > 0 ? money(facts.price) : 'Not on file'} />
         {facts.downpaymentExpected !== null ? (
           <Fact label="Downpayment expected" value={money(facts.downpaymentExpected)} />

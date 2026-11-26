@@ -26,6 +26,9 @@ export const GET = withRateLimit(async () => {
     const settings = await getPlaceSettings(payload)
     return json({
       ok: true,
+      // The price shown comes from the start result (the layout's price); these
+      // are the Settings values, kept for older clients.
+      layoutsEnabled: true,
       price: settings.pricePerYear,
       currency: settings.currency,
       termMonths: settings.termMonths,
