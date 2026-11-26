@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DESTINATIONS, matchesFeeling, type Feeling } from './destinations'
+import { FEATURED_DESTINATIONS, matchesFeeling, type Feeling } from './destinations'
 describe('discovery themes', () => {
   it('offers a destination for every displayed theme', () => {
     const themes: Feeling[] = [
@@ -14,18 +14,20 @@ describe('discovery themes', () => {
     ]
     for (const theme of themes)
       expect(
-        DESTINATIONS.some((place) => matchesFeeling(place, theme)),
+        FEATURED_DESTINATIONS.some((place) => matchesFeeling(place, theme)),
         theme,
       ).toBe(true)
   })
   it('lets coastal heritage places appear under several interests', () => {
-    const byblos = DESTINATIONS.find((place) => place.id === 'byblos')!
-    expect(matchesFeeling(byblos, 'coast')).toBe(true)
-    expect(matchesFeeling(byblos, 'heritage')).toBe(true)
-    expect(matchesFeeling(byblos, 'harbours')).toBe(true)
-    expect(matchesFeeling(byblos, 'mountain')).toBe(false)
+    const batroun = FEATURED_DESTINATIONS.find((place) => place.id === 'batroun-harbour')!
+    expect(matchesFeeling(batroun, 'coast')).toBe(true)
+    expect(matchesFeeling(batroun, 'heritage')).toBe(true)
+    expect(matchesFeeling(batroun, 'harbours')).toBe(true)
+    expect(matchesFeeling(batroun, 'mountain')).toBe(false)
     expect(
-      DESTINATIONS.filter((place) => matchesFeeling(place, 'villages')).map((place) => place.id),
-    ).toContain('deir-el-qamar')
+      FEATURED_DESTINATIONS.filter((place) => matchesFeeling(place, 'villages')).map(
+        (place) => place.id,
+      ),
+    ).toContain('sawfar-autumn')
   })
 })

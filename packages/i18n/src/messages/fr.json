@@ -51,15 +51,15 @@
     "codeSteps": [
       {
         "title": "Le code imprimé",
-        "sub": "Chaque lieu du magazine porte un code sur sa page, et sur les chevalets de table que les établissements installent."
+        "sub": "Chaque établissement présenté possède un code QR unique qui ouvre directement sa fiche sur le site de Vardenia."
       },
       {
         "title": "Le scan",
-        "sub": "Pointez votre téléphone. Pas d'application, rien à taper : l'appareil photo suffit."
+        "sub": "Scannez le code QR avec l’appareil photo de votre téléphone, sans télécharger d’application."
       },
       {
-        "title": "La fiche, à jour",
-        "sub": "Le lieu s'ouvre avec ses horaires d'aujourd'hui, pas ceux du jour de l'impression."
+        "title": "La fiche à jour",
+        "sub": "Consultez la fiche de l’établissement sur Vardenia pour retrouver ses informations et ses horaires à jour."
       }
     ]
   },
@@ -133,12 +133,12 @@
       "onlineOnly": "Réservation en ligne uniquement"
     },
     "sectionIntro": {
-      "stay": "Maisons d’hôtes en pierre, hôtels de charme et chambres ouvertes sur la montagne ou la mer. Choisissez où vous réveiller, et laissez la vue donner le rythme de la journée.",
-      "eat-and-drink": "Des mezzés partagés sans se presser, une table au-dessus de la mer, un café sur la place du village, une longue soirée en ville. Le Liban se comprend d’abord à table.",
-      "experiences": "Vieux sentiers et vallées, ruines antiques, festivals et journées guidées. Des façons de découvrir le pays à pied, avec quelqu’un qui le connaît bien.",
-      "weddings": "Des organisateurs qui connaissent les lieux, les saisons et la lumière du soir. Pour un jour sous les oliviers, au bord de la mer ou haut dans la montagne.",
+      "stay": "Des maisons d’hôtes aux hôtels de charme, découvrez où séjourner au Liban, face à la Méditerranée ou au creux des montagnes.",
+      "eat-and-drink": "Des tables libanaises aux cafés contemporains, découvrez aussi les sorties nocturnes et les adresses au bord de la piscine.",
+      "experiences": "Parcourez les sentiers, les sites historiques et les festivals du Liban avec des guides locaux qui en connaissent la nature et le patrimoine.",
+      "weddings": "Des noces en bord de mer aux réceptions en montagne, trouvez des organisateurs qui donneront forme à votre fête.",
       "lifestyle": "Rues commerçantes, centres commerciaux et salles de sport pour les jours entre deux escapades : un cours le matin, un après-midi de flânerie, la ville à son rythme.",
-      "getting-around": "Prenez une voiture, soyez attendu à l’aéroport ou gardez un chauffeur pour la journée, pour que la route le long de la côte et vers la montagne fasse partie du voyage."
+      "getting-around": "Parcourez le Liban à votre rythme grâce aux locations de voitures, transferts depuis l’aéroport et chauffeurs privés, du littoral aux routes de montagne."
     }
   },
   "booking": {
@@ -665,7 +665,7 @@
     "mapCaption": "Un Liban, mille chemins.",
     "routeTitle": "Les lieux qui restent.",
     "routeBody": "Gardez les destinations qui vous parlent et créez votre propre parcours.",
-    "routeEmpty": "Commencez par la carte. Ajoutez un lieu, puis un autre.",
+    "routeEmpty": "Parcourez la carte et enregistrez les destinations qui vous inspirent pour préparer votre voyage.",
     "routeNote": "Ce parcours est enregistré dans ce navigateur. Il indique votre ordre de découverte, pas un itinéraire routier.",
     "download": "Télécharger mon parcours",
     "clear": "Effacer le parcours",
@@ -675,13 +675,13 @@
     "stops": "étapes",
     "detourA": "Laissez place",
     "detourB": "aux détours.",
-    "detourBody": "Choisissez un rivage, une montagne, une ville",
+    "detourBody": "Sept régions à découvrir. Choisissez une carte postale et poursuivez votre découverte dans l’annuaire.",
     "turn": "Retourner la carte",
     "front": "Voir la photographie",
     "readRegion": "Les lieux de cette région",
     "magazineA": "Des récits,",
     "magazineB": "à garder.",
-    "magazineBody": "Chaque lieu du magazine porte un code. Pointez-y un téléphone et la fiche s'ouvre, avec les horaires d'aujourd'hui plutôt que ceux du jour de l'impression.",
+    "magazineBody": "Le magazine et le site de Vardenia vous emmènent au cœur du Liban. Découvrez des destinations singulières, des expériences locales et de nouvelles raisons de parcourir le pays.",
     "magazinePageA": "Des histoires",
     "magazinePageB": "à garder.",
     "magazinePageLead": "Découvrez le Liban. Une région. Mille histoires.",
@@ -704,12 +704,12 @@
     "directoryEmphasis": "prochaine escale.",
     "directoryBody": "Des lieux où séjourner, des saveurs à découvrir et des expériences à retenir, de la côte aux montagnes et jusqu'à la Békaa.",
     "accountBody": "Pour voir vos réservations et les lieux que vous avez enregistrés.",
-    "byblosBody": "Du port à la vieille ville, entre façades de pierre et ruelles étroites.",
+    "byblosBody": "Découvrez Byblos en suivant son port historique, ses façades de pierre et ses ruelles sinueuses.",
     "bsharriBody": "Toits rouges et pentes de montagne invitent à prolonger la pause.",
-    "beirutBody": "À Raouché, la Méditerranée s’ouvre au bord de la vie quotidienne de Beyrouth.",
-    "baalbekBody": "Levez les yeux vers les colonnes, puis observez la pierre sculptée.",
-    "tyreBody": "Des bateaux, des façades claires et une ville du Sud autour de son port.",
-    "deir-el-qamarBody": "Une ruelle pavée, une vieille arche et la pierre chaleureuse d’un village du Chouf.",
+    "beirutBody": "À Raouché, l’horizon méditerranéen rejoint le rythme animé de Beyrouth.",
+    "baalbekBody": "Les colonnes antiques et les pierres sculptées de Baalbek racontent son histoire.",
+    "tyreBody": "Les bateaux colorés et les bâtiments traditionnels en pierre font le caractère de Tyr.",
+    "deir-el-qamarBody": "À Deir el Qamar, chaque passage raconte un pan du patrimoine culturel libanais.",
     "broummanaBody": "Des pentes de pins, des soirées d’été fraîches et les lumières de Beyrouth en contrebas.",
     "citySlider": "Villes du Liban",
     "pauseCities": "Mettre le diaporama en pause",
@@ -717,7 +717,38 @@
     "nature": "Nature et balades",
     "villages": "Vie de village",
     "harbours": "Villes portuaires",
-    "sunsets": "Couchers de soleil"
+    "sunsets": "Couchers de soleil",
+    "featuredPlaces": {
+      "batroun-harbour": {
+        "name": "Le port de Batroun",
+        "body": "Au vieux port de Batroun, les traditions maritimes se lisent dans l’architecture du quai."
+      },
+      "sawfar-autumn": {
+        "name": "L’automne à Sawfar",
+        "body": "À Sawfar, les routes serpentent sous des arbres centenaires aux couleurs de l’automne."
+      },
+      "bekaa-lake": {
+        "name": "La Bekaa",
+        "body": "Découvrez les paysages de la Bekaa, des champs ouverts aux eaux paisibles du lac."
+      },
+      "beirut-skyline": {
+        "name": "Le front de mer de Beyrouth",
+        "body": "Au cœur de Beyrouth, l’architecture contemporaine dessine le front de mer méditerranéen."
+      },
+      "barouk-reservoir": {
+        "name": "La retenue d’eau de Barouk",
+        "body": "À Barouk, l’eau bleue de la retenue et le relief escarpé composent un paysage paisible."
+      },
+      "jezzine-waterfall": {
+        "name": "Jezzine et sa cascade",
+        "body": "Sous la ville de Jezzine, une cascade anime le paysage de montagne."
+      },
+      "faqra-ruins": {
+        "name": "Les ruines romaines de Faqra",
+        "body": "À Faqra, les pierres des ruines romaines portent encore la trace des siècles."
+      }
+    },
+    "broummanaStreet": "Rue de Broummana"
   },
   "missingPage": {
     "title": "Cette page n’existe pas",
@@ -1315,5 +1346,20 @@
     "eventStaffBody": "Les demandes d'hôtesses et de serveurs ouvrent bientôt. En attendant, découvrez les adresses déjà présentes dans l'annuaire.",
     "explore": "Explorer l'annuaire",
     "bookingNote": "La réservation via Vardenia arrive bientôt pour cet établissement."
+  },
+  "websitePhotos": {
+    "stay": "Piscine d’hôtel",
+    "eat-and-drink": "Terrasse de restaurant",
+    "weddings": "Un mariage au jardin",
+    "lifestyle": "Galerie marchande",
+    "getting-around": "Sur les routes du Liban",
+    "event-staff": "Équipe d’accueil",
+    "directory": "Bhamdoun, Aley",
+    "magazine": "Falougha",
+    "issues": "La cédraie de Barouk",
+    "about": "Le palais de Beiteddine",
+    "more": "Sawfar en automne",
+    "faq": "Laqlouq",
+    "add-your-business": "Ehden"
   }
 }

@@ -51,15 +51,15 @@
     "codeSteps": [
       {
         "title": "O código impresso",
-        "sub": "Cada lugar da revista tem um código na sua página e nos cartões de mesa que os estabelecimentos colocam."
+        "sub": "Cada estabelecimento em destaque tem um código QR único que abre diretamente a sua ficha no site da Vardenia."
       },
       {
         "title": "O escaneamento",
-        "sub": "Aponte o celular. Sem app e sem digitar: a câmera basta."
+        "sub": "Leia o código QR com a câmara do telemóvel, sem instalar outra aplicação."
       },
       {
-        "title": "A página, atualizada",
-        "sub": "O lugar abre com o horário de hoje, não com o do dia em que foi impresso."
+        "title": "A ficha atualizada",
+        "sub": "Consulte a ficha do estabelecimento na Vardenia para ver as informações e os horários atualizados."
       }
     ]
   },
@@ -133,12 +133,12 @@
       "onlineOnly": "Só reserva online"
     },
     "sectionIntro": {
-      "stay": "Casas de hóspedes em pedra, hotéis boutique e quartos abertos para a montanha ou o mar. Escolha onde acordar e deixe a vista ditar o ritmo do dia.",
-      "eat-and-drink": "Mezze partilhado sem pressa, uma mesa sobre o mar, um café na praça da aldeia, uma noite longa na cidade. O Líbano entende-se melhor à mesa.",
-      "experiences": "Trilhos antigos e vales, ruínas milenares, festivais e dias guiados. Formas de descobrir o país a pé, com quem o conhece bem.",
-      "weddings": "Organizadores que conhecem os espaços, as estações e a luz do fim da tarde. Para um dia sob as oliveiras, junto ao mar ou no alto da montanha.",
+      "stay": "Das casas de hóspedes aos hotéis boutique, descubra estadias especiais no Líbano, junto ao Mediterrâneo ou nas montanhas.",
+      "eat-and-drink": "Explore a gastronomia libanesa, dos restaurantes tradicionais aos cafés modernos, e descubra a vida noturna ou um lugar à beira da piscina.",
+      "experiences": "Conheça o Líbano pelos trilhos, monumentos e festivais culturais, na companhia de guias locais que conhecem a natureza e o património do país.",
+      "weddings": "Encontre profissionais para organizar a sua celebração, de um casamento à beira-mar a uma receção elegante na montanha.",
       "lifestyle": "Ruas comerciais, centros comerciais e ginásios para os dias entre viagens: uma aula de manhã, uma tarde a passear, a cidade ao seu ritmo.",
-      "getting-around": "Levante um carro, seja recebido no aeroporto ou fique com um motorista o dia todo, para que a estrada pela costa e até à montanha faça parte da viagem."
+      "getting-around": "Percorra o Líbano ao seu ritmo com aluguer de carros, transferes do aeroporto e motoristas privados, pela costa ou pelas estradas de montanha."
     }
   },
   "booking": {
@@ -665,7 +665,7 @@
     "mapCaption": "Um Líbano, muitos caminhos.",
     "routeTitle": "Lugares que ficam consigo.",
     "routeBody": "Guarde os destinos que o inspiram e crie o seu próprio percurso.",
-    "routeEmpty": "Comece pelo mapa. Adicione um lugar e depois outro.",
+    "routeEmpty": "Explore o mapa e guarde os destinos que o inspiram para planear a sua viagem.",
     "routeNote": "Este percurso é guardado neste navegador. Indica a sua ordem de descoberta, não um trajeto de carro.",
     "download": "Descarregar o percurso",
     "clear": "Limpar percurso",
@@ -675,13 +675,13 @@
     "stops": "paragens",
     "detourA": "Deixe espaço",
     "detourB": "para um desvio.",
-    "detourBody": "Escolha um litoral, uma montanha, uma cidade",
+    "detourBody": "Sete regiões para descobrir. Escolha um postal e continue a explorar no diretório.",
     "turn": "Virar o postal",
     "front": "Ver a fotografia",
     "readRegion": "Lugares nesta região",
     "magazineA": "Histórias,",
     "magazineB": "para guardar.",
-    "magazineBody": "Cada lugar na revista traz um código. Aponte o celular e a ficha se abre, com os horários de hoje em vez dos do dia em que foi impressa.",
+    "magazineBody": "A revista e a plataforma digital da Vardenia levam-no ao coração do Líbano. Descubra destinos singulares, experiências locais e novas razões para explorar o país.",
     "magazinePageA": "Histórias",
     "magazinePageB": "para guardar.",
     "magazinePageLead": "Descubra o Líbano. Uma região. Mil histórias.",
@@ -704,12 +704,12 @@
     "directoryEmphasis": "o próximo lugar.",
     "directoryBody": "Lugares para ficar, sabores para descobrir e experiências para lembrar, do litoral às montanhas e pelo vale do Bekaa.",
     "accountBody": "Para ver suas reservas e os lugares que você salvou.",
-    "byblosBody": "Do porto à cidade antiga, entre fachadas de pedra e ruas estreitas.",
+    "byblosBody": "Descubra o encanto de Biblos entre o porto histórico, as fachadas de pedra e as ruelas sinuosas.",
     "bsharriBody": "Telhados vermelhos e encostas convidam a uma pausa mais longa.",
-    "beirutBody": "Em Raouché, o Mediterrâneo abre-se ao lado da vida quotidiana de Beirute.",
-    "baalbekBody": "Olhe para as colunas e depois para os detalhes da pedra esculpida.",
-    "tyreBody": "Barcos, fachadas claras e uma cidade do sul em torno do seu porto.",
-    "deir-el-qamarBody": "Uma ruela de pedra, um arco antigo e a pedra acolhedora de uma aldeia do Chouf.",
+    "beirutBody": "Em Raouché, o horizonte mediterrânico encontra o ritmo da vida urbana de Beirute.",
+    "baalbekBody": "As colunas antigas e as pedras esculpidas de Baalbek contam a história da cidade.",
+    "tyreBody": "Barcos coloridos e edifícios tradicionais de pedra dão a Tiro o seu caráter.",
+    "deir-el-qamarBody": "Em Deir el Qamar, cada passagem conta uma história do património cultural libanês.",
     "broummanaBody": "Encostas de pinheiros, noites de verão frescas e as luzes de Beirute lá em baixo.",
     "citySlider": "Cidades do Líbano",
     "pauseCities": "Pausar apresentação de cidades",
@@ -717,7 +717,38 @@
     "nature": "Natureza e passeios",
     "villages": "Vida de aldeia",
     "harbours": "Cidades portuárias",
-    "sunsets": "Pôr do sol"
+    "sunsets": "Pôr do sol",
+    "featuredPlaces": {
+      "batroun-harbour": {
+        "name": "Porto de Batroun",
+        "body": "No porto histórico de Batroun, as tradições marítimas refletem-se na arquitetura do cais."
+      },
+      "sawfar-autumn": {
+        "name": "Outono em Sawfar",
+        "body": "Siga as estradas sinuosas de Sawfar entre árvores centenárias com as cores quentes do outono."
+      },
+      "bekaa-lake": {
+        "name": "Vale do Bekaa",
+        "body": "Descubra a natureza do Bekaa, dos campos abertos às águas tranquilas do lago."
+      },
+      "beirut-skyline": {
+        "name": "A orla de Beirute",
+        "body": "No coração de Beirute, a arquitetura contemporânea encontra a costa mediterrânica."
+      },
+      "barouk-reservoir": {
+        "name": "Reservatório de Barouk",
+        "body": "As águas azuis e as encostas íngremes de Barouk revelam um lado tranquilo do Líbano."
+      },
+      "jezzine-waterfall": {
+        "name": "Jezzine e a cascata",
+        "body": "Sob a cidade de Jezzine, uma cascata dá movimento à paisagem montanhosa."
+      },
+      "faqra-ruins": {
+        "name": "Ruínas romanas de Faqra",
+        "body": "Nas ruínas romanas de Faqra, séculos de história continuam gravados na pedra."
+      }
+    },
+    "broummanaStreet": "Rua em Broummana"
   },
   "missingPage": {
     "title": "Esta página não existe",
@@ -1315,5 +1346,20 @@
     "eventStaffBody": "Os pedidos de recepcionistas e garçons abrem em breve. Até lá, explore os lugares que já estão no diretório.",
     "explore": "Explorar o diretório",
     "bookingNote": "A reserva pela Vardenia chega em breve para este lugar."
+  },
+  "websitePhotos": {
+    "stay": "Piscina de hotel",
+    "eat-and-drink": "Esplanada de restaurante",
+    "weddings": "Casamento no jardim",
+    "lifestyle": "Centro comercial",
+    "getting-around": "Pelas estradas do Líbano",
+    "event-staff": "Equipa de receção",
+    "directory": "Bhamdoun, Aley",
+    "magazine": "Falougha",
+    "issues": "Cedros de Barouk",
+    "about": "Palácio de Beiteddine",
+    "more": "Sawfar no outono",
+    "faq": "Laqlouq",
+    "add-your-business": "Ehden"
   }
 }

@@ -27,7 +27,9 @@ export function InteriorScenicPhoto({
   pinOnRight = true,
 }: {
   locale: Locale
-  place: Destination
+  place:
+    | Destination
+    | { id: string; name: string; ar: string; image: string; alt: string; where?: string }
   directoryShown: boolean
   image: ReactNode
   children: ReactNode
@@ -57,7 +59,7 @@ export function InteriorScenicPhoto({
         image={image}
         ready
         className={pinOnRight ? 'vd-interior-print-right' : ''}
-        href={directoryShown ? directoryFor(place) : undefined}
+        href={directoryShown && place.where ? directoryFor({ where: place.where }) : undefined}
         interactive={motion}
         dragLabel={motion ? `${label} Drag to swing the photo; arrow keys also work.` : label}
       />

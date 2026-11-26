@@ -6,10 +6,8 @@ describe('saved discovery routes', () => {
       expect(parseDiscoveryRoute(value)).toEqual([])
   })
   it('keeps valid destinations in visitor order and discards duplicates or unknown entries', () => {
-    expect(parseDiscoveryRoute('["tyre","byblos","tyre","unknown",null,4,"baalbek"]')).toEqual([
-      'tyre',
-      'byblos',
-      'baalbek',
-    ])
+    expect(
+      parseDiscoveryRoute('["tyre","barouk-reservoir","byblos","tyre","unknown",null,4,"baalbek"]'),
+    ).toEqual(['tyre', 'barouk-reservoir', 'byblos', 'baalbek'])
   })
 })

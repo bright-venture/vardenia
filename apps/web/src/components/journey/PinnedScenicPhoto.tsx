@@ -14,7 +14,7 @@ export function PinnedScenicPhoto({
   href,
   image,
 }: {
-  photo: ScenePhoto
+  photo: Omit<ScenePhoto, 'lat' | 'lon'> & Partial<Pick<ScenePhoto, 'lat' | 'lon'>>
   label: string
   className: string
   ready: boolean
@@ -46,7 +46,9 @@ export function PinnedScenicPhoto({
       </div>
       <span className="vd-photo-caption">
         <span>{label}</span>
-        <Coordinates place={photo} enabled={false} label={label} />
+        {photo.lat !== undefined && photo.lon !== undefined && (
+          <Coordinates place={{ lat: photo.lat, lon: photo.lon }} enabled={false} label={label} />
+        )}
       </span>
     </>
   )

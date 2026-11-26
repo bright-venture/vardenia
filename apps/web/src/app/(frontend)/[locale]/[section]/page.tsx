@@ -154,6 +154,15 @@ export default async function SectionPage({ params, searchParams }: Props) {
             : t(`sectionIntro.${section.path}` as 'sectionIntro.stay')
         }
         locale={locale}
+        photo={
+          path === 'stay' ||
+          path === 'eat-and-drink' ||
+          path === 'weddings' ||
+          path === 'lifestyle' ||
+          path === 'getting-around'
+            ? path
+            : undefined
+        }
         place={
           (
             {

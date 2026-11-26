@@ -1,9 +1,6 @@
-import { InteriorScenicPhoto } from '../editorial/InteriorScenicPhoto'
-import { hiddenPages } from '../../lib/hidden-pages'
+import { WebsitePhoto } from '../editorial/WebsitePhoto'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
-import { Coordinates } from './Coordinates'
-import { DESTINATIONS } from './destinations'
 
 export async function EditorialIntro({
   locale,
@@ -15,8 +12,7 @@ export async function EditorialIntro({
   kind?: 'directory' | 'magazine'
 }) {
   const t = await getTranslations({ locale, namespace: 'journey' })
-  const magazine = kind === 'magazine',
-    place = DESTINATIONS[magazine ? 3 : 0]
+  const magazine = kind === 'magazine'
   return (
     <header className="vd-page-intro">
       <div>
@@ -43,30 +39,7 @@ export async function EditorialIntro({
         )}
         {children}
       </div>
-      <InteriorScenicPhoto
-        locale={locale}
-        place={place}
-        directoryShown={
-          !magazine || (locale === 'en' && !(await hiddenPages()).includes('directory'))
-        }
-        image={
-          <picture>
-            <source
-              media="(max-width:700px)"
-              srcSet={`/journey/${place.image.replace('.webp', '-m.webp')}`}
-            />
-            <img
-              src={`/journey/${place.image}`}
-              alt={place.alt}
-              width="1600"
-              height="1200"
-              fetchPriority="high"
-            />
-          </picture>
-        }
-      >
-        <Coordinates place={place} enabled label={locale === 'ar' ? place.ar : place.name} />
-      </InteriorScenicPhoto>
+      <WebsitePhoto photo={kind} locale={locale} priority />
     </header>
   )
 }

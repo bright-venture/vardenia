@@ -1,3 +1,4 @@
+import { WebsitePhoto, type WebsitePhotoKey } from './WebsitePhoto'
 import { InteriorScenicPhoto } from './InteriorScenicPhoto'
 import { hiddenPages } from '../../lib/hidden-pages'
 import Image from 'next/image'
@@ -17,6 +18,7 @@ export async function PageHero({
   intro,
   body,
   place = 0,
+  photo,
   locale,
   children,
   immersive = false,
@@ -24,6 +26,7 @@ export async function PageHero({
   title: string
   intro?: string
   body?: string
+  photo?: WebsitePhotoKey
   place?: number
   locale: Locale
   children?: ReactNode
@@ -46,29 +49,39 @@ export async function PageHero({
           </div>
         ) : null}
       </div>
-      <InteriorScenicPhoto
-        locale={locale}
-        place={destination}
-        directoryShown={locale === 'en' && !(await hiddenPages()).includes('directory')}
-        className="vd-inner-hero-media"
-        pinOnRight={!immersive}
-        image={
-          <Image
-            src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
-            alt={destination.alt}
-            width={1600}
-            height={1200}
-            sizes="(max-width:700px) 100vw, 60vw"
-            priority
-          />
-        }
-      >
-        <Coordinates
-          place={destination}
-          enabled
-          label={locale === 'ar' ? destination.ar : destination.name}
+      {photo ? (
+        <WebsitePhoto
+          photo={photo}
+          locale={locale}
+          className="vd-inner-hero-media"
+          priority
+          pinOnRight={!immersive}
         />
-      </InteriorScenicPhoto>
+      ) : (
+        <InteriorScenicPhoto
+          locale={locale}
+          place={destination}
+          directoryShown={locale === 'en' && !(await hiddenPages()).includes('directory')}
+          className="vd-inner-hero-media"
+          pinOnRight={!immersive}
+          image={
+            <Image
+              src={`/journey/${destination.image.replace(/\.jpg$/, '.webp')}`}
+              alt={destination.alt}
+              width={1600}
+              height={1200}
+              sizes="(max-width:700px) 100vw, 60vw"
+              priority
+            />
+          }
+        >
+          <Coordinates
+            place={destination}
+            enabled
+            label={locale === 'ar' ? destination.ar : destination.name}
+          />
+        </InteriorScenicPhoto>
+      )}
     </header>
   )
 }

@@ -102,7 +102,7 @@ describe('content pages', () => {
     }
     const en = JSON.stringify(contentPage('add-your-business', 'en'))
     expect(en).toContain('Contract length varies')
-    expect(en).toContain('printed every year')
+    expect(en).toContain('published each year')
   })
 
   it('uses url-safe slugs', () => {
@@ -166,7 +166,7 @@ describe('the FAQ against what booking really requires', () => {
   })
 
   it('says the English legal text governs over a translation', () => {
-    expect(text()).toMatch(/if a translation ever differs from the english, the english applies/)
+    expect(text()).toMatch(/if translations differ, the english version takes priority/)
   })
 })
 
