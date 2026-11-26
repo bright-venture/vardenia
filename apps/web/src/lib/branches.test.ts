@@ -60,7 +60,7 @@ const source = (over: Partial<Row> = {}): Row => ({
     { id: 'a2', setting: 'outdoor', smoking: true, tables: 3, label: null },
   ],
   governorate: 'beirut',
-  district: 'beirut',
+  city: 'beirut',
   mapUrl: 'https://www.google.com/maps/@33.89,35.48,17z',
   location: [35.48, 33.89],
   openingHours: [{ id: 'h1', day: 'mon', opens: '08:00', closes: '22:00', closed: false }],
@@ -101,7 +101,7 @@ const input = (over: Partial<BranchRequest> = {}): BranchRequest => ({
   sourceListingId: 10,
   name: 'Cafe Nour Jounieh',
   governorate: 'keserwan',
-  district: 'jounieh',
+  city: 'jounieh',
   address: 'Main road, Jounieh',
   mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
   openingHours: [{ day: 'tue', opens: '09:00', closes: '23:00', closed: false }],
@@ -214,7 +214,7 @@ describe('createBranch: the first branch', () => {
       brand: outcome.brandId,
       _status: 'draft',
       governorate: 'keserwan',
-      district: 'jounieh',
+      city: 'jounieh',
       address: 'Main road, Jounieh',
       mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
       booking: { enabled: false },
@@ -411,7 +411,7 @@ describe('createBranch: the brand is made once', () => {
     const { payload, run } = setup()
     const first = await run()
     const second = await run(
-      input({ name: 'Cafe Nour Batroun', governorate: 'north-lebanon', district: 'batroun' }),
+      input({ name: 'Cafe Nour Batroun', governorate: 'north-lebanon', city: 'batroun' }),
     )
     expect(first).toMatchObject({ ok: true, brandCreated: true })
     expect(second).toMatchObject({ ok: true, brandCreated: false })

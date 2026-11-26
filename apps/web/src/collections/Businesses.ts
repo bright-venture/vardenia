@@ -39,7 +39,7 @@ import { featuresField, stayField } from '../fields/stay'
 import { guardKindFields } from '../hooks/guardKindFields'
 import { protectSeatingAreaBookings } from '../hooks/protectSeatingAreaBookings'
 import { seatingAreasField } from '../fields/seatingAreas'
-import { categoryOptions, districtOptions, governorateOptions, subcategoryOptions } from './options'
+import { categoryOptions, cityOptions, governorateOptions, subcategoryOptions } from './options'
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
@@ -259,10 +259,10 @@ export const validListingNumber = async (
 const valueOf = (option: string | { value: string }) =>
   typeof option === 'string' ? option : option.value
 
-/** Which governorate each district belongs to. */
-const DISTRICT_PARENT: Record<string, string> = Object.fromEntries(
+/** Which governorate each city belongs to. */
+const CITY_PARENT: Record<string, string> = Object.fromEntries(
   GOVERNORATES.flatMap((governorate) =>
-    governorate.districts.map((district) => [district.slug, governorate.slug]),
+    governorate.cities.map((city) => [city.slug, governorate.slug]),
   ),
 )
 
@@ -611,26 +611,23 @@ export const Businesses: CollectionConfig = {
               options: governorateOptions,
             },
             {
-              name: 'district',
-              // Shown as "Town": the stored field name stays `district`.
-              label: 'Town',
+              name: 'city',
+              label: 'City',
               type: 'select',
               index: true,
-              options: districtOptions,
-              // Only the chosen governorate's districts, for the same reason.
+              options: cityOptions,
+              // Only the chosen governorate's cities, for the same reason.
               filterOptions: ({ options, data }) =>
                 data?.governorate
-                  ? options.filter(
-                      (option) => DISTRICT_PARENT[valueOf(option)] === data.governorate,
-                    )
+                  ? options.filter((option) => CITY_PARENT[valueOf(option)] === data.governorate)
                   : options,
               validate: (value: unknown, { data }: { data: Partial<{ governorate: string }> }) =>
-                !value || DISTRICT_PARENT[String(value)] === data?.governorate
+                !value || CITY_PARENT[String(value)] === data?.governorate
                   ? true
-                  : 'That town is not in the chosen governorate.',
+                  : 'That city is not in the chosen governorate.',
               admin: {
                 description:
-                  'The town or place guests filter by (Jounieh, Faqra / Faraya). Only the towns of the governorate above are offered.',
+                  'The city or place guests filter by (Jounieh, Faqra / Faraya). Only the cities of the governorate above are offered.',
               },
             },
             { name: 'address', type: 'textarea', localized: true },

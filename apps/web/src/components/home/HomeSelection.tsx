@@ -1,7 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
 import type { HomeListing } from '../../lib/home-listings'
-import { HOME_PLACES_DESKTOP_LIMIT, HOME_PLACES_LIMIT, isHomeCandidate } from '../../lib/home-selection'
+import {
+  HOME_PLACES_DESKTOP_LIMIT,
+  HOME_PLACES_LIMIT,
+  isHomeCandidate,
+} from '../../lib/home-selection'
 import { Link } from '../../i18n/routing'
 import { LinkArrow } from '../LinkArrow'
 import { ListingCard } from '../ListingCard'
@@ -33,7 +37,7 @@ export async function HomeSelection({
         tagline={listing.tagline}
         category={listing.category}
         governorate={listing.governorate}
-        district={listing.district}
+        city={listing.city}
         verified={listing.verified}
         heroImage={listing.heroImage}
         locale={locale}
@@ -42,7 +46,11 @@ export async function HomeSelection({
   }))
 
   return (
-    <section id="featured-places" className="vd-home-places vd-home-selection" aria-labelledby="vd-selection-title">
+    <section
+      id="featured-places"
+      className="vd-home-places vd-home-selection"
+      aria-labelledby="vd-selection-title"
+    >
       <header className="vd-home-heading">
         <div>
           <h2 id="vd-selection-title" data-vd-reveal>

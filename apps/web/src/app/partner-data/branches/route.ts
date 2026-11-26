@@ -130,7 +130,7 @@ export const POST = withRateLimit(
       brandName: outcome.brandName,
       brandCreated: outcome.brandCreated,
       governorate: input.governorate,
-      district: input.district,
+      city: input.city,
       address: input.address,
       partnerName: partner.name || partner.email,
       partnerEmail: partner.email,

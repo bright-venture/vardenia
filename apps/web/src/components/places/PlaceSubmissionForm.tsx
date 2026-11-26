@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { PAGE_TEMPLATES } from '@vardenia/core/place-submission'
 import { submittableKindsByCategory } from '@vardenia/core/taxonomy'
-import { categoryLabel, districtLabel, governorateLabel, subcategoryLabel } from '../../lib/labels'
+import { categoryLabel, cityLabel, governorateLabel, subcategoryLabel } from '../../lib/labels'
 import { Turnstile, isTurnstileEnabled, type TurnstileHandle } from '../Turnstile'
 import {
   ERROR_TEXT,
@@ -22,7 +22,7 @@ import { BusinessPagePreview } from './BusinessPagePreview'
 import { postFinish, type FinishResult } from './flow-client'
 import {
   checkSubmission,
-  districtsFor,
+  citiesFor,
   errorKind,
   GOVERNORATE_ORDER,
   initialFormState,
@@ -437,7 +437,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
 
   const legend = 'font-display text-ink-900 text-xl'
   const kindGroups = submittableKindsByCategory()
-  const districts = districtsFor(state.governorate)
+  const cities = citiesFor(state.governorate)
 
   return (
     <div
@@ -627,25 +627,25 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             </div>
 
             <div>
-              <label className={LABEL} htmlFor={fid('district')}>
-                {t('form.district')}
+              <label className={LABEL} htmlFor={fid('city')}>
+                {t('form.city')}
               </label>
               <select
-                {...control('district')}
+                {...control('city')}
                 required
-                disabled={districts.length === 0}
-                value={state.district}
-                // Only the district: the page numbers depend on the region alone.
-                onChange={(e) => set({ district: e.target.value })}
+                disabled={cities.length === 0}
+                value={state.city}
+                // Only the city: the page numbers depend on the region alone.
+                onChange={(e) => set({ city: e.target.value })}
               >
-                <option value="">{t('form.chooseDistrict')}</option>
-                {districts.map((d) => (
+                <option value="">{t('form.chooseCity')}</option>
+                {cities.map((d) => (
                   <option key={d.slug} value={d.slug}>
-                    {districtLabel(d.slug, locale)}
+                    {cityLabel(d.slug, locale)}
                   </option>
                 ))}
               </select>
-              {errorLine('district')}
+              {errorLine('city')}
             </div>
 
             <div>

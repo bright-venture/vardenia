@@ -13,7 +13,7 @@ const business = (over: Partial<Facts> = {}): Facts => ({
   name: 'Chez Nouna',
   slug: 'chez-nouna',
   governorate: 'beirut',
-  district: 'beirut',
+  city: 'beirut',
   category: 'food-and-beverage',
   tier: 'silver',
   bookingsOn: true,

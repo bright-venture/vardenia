@@ -11,7 +11,7 @@ import type { Locale } from './index'
  * exactly one home (core) and the extra translations are a thin overlay - the
  * same split the message catalogues use.
  *
- * Regions are deliberately absent. Governorate and district names are proper
+ * Regions are deliberately absent. Governorate and city names are proper
  * nouns: Beirut stays Beirut in every language, which is what falling back to
  * the English label already does.
  *

@@ -63,6 +63,9 @@ for (const locale of ['en', 'ar'] as const) {
         const actions = [...root.querySelectorAll('.vd-story-next a')].map((link) =>
           link.getAttribute('href'),
         )
+        if (slug === 'add-your-business') {
+          expect(actions[0]?.endsWith('/magazine-places')).toBe(true)
+        }
         expect(
           actions.some((href) =>
             href?.endsWith(['about', 'contact', 'faq'].includes(slug) ? '/directory' : '/contact'),

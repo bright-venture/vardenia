@@ -1,4 +1,4 @@
-import { districtForPlace, type CategorySlug } from '@vardenia/core'
+import { cityForPlace, type CategorySlug } from '@vardenia/core'
 import { slugify } from '../fields/slug'
 
 /**
@@ -41,7 +41,7 @@ export interface ImportedListing {
   category: CategorySlug
   subcategories: string[]
   governorate: string
-  district: string | null
+  city: string | null
   /** The Location column, kept verbatim - it is a place name, not a street. */
   address: string | null
   priceRange: string | null
@@ -112,47 +112,47 @@ const CATEGORY_BY_HEADING: Record<string, { category: CategorySlug; subcategory:
  * heading rather than being one constant, because one file can reach into
  * several: the North file carries Akkar, the South file Nabatieh.
  *
- * Since 24 November 2026 the site's districts are towns and places (Jounieh,
- * Faqra / Faraya), so the district comes from the Location column first
- * (core districtForPlace). `district` here is only for a heading that is itself
+ * Since 24 November 2026 the site's cities are towns and places (Jounieh,
+ * Faqra / Faraya), so the city comes from the Location column first
+ * (core cityForPlace). `city` here is only for a heading that is itself
  * one of those places (Aley, Batroun, Zahle), used when the Location does not
  * name one.
  */
-const REGION_BY_HEADING: Record<string, { governorate: string; district?: string }> = {
+const REGION_BY_HEADING: Record<string, { governorate: string; city?: string }> = {
   'Keserwan District': { governorate: 'keserwan' },
-  'Byblos / Jbeil District': { governorate: 'keserwan', district: 'jbeil' },
+  'Byblos / Jbeil District': { governorate: 'keserwan', city: 'jbeil' },
   // Six rows span both, and are flagged so a person can check them.
   'Keserwan + Byblos / Jbeil Districts': { governorate: 'keserwan' },
   'Chouf District': { governorate: 'chouf' },
   // The Matn, Baabda and Aley files: all three are the Matn edition.
   'Matn District': { governorate: 'matn' },
-  'Baabda District': { governorate: 'matn', district: 'baabda' },
-  'Aley District': { governorate: 'matn', district: 'aley' },
-  'Beirut District': { governorate: 'beirut', district: 'beirut' },
+  'Baabda District': { governorate: 'matn', city: 'baabda' },
+  'Aley District': { governorate: 'matn', city: 'aley' },
+  'Beirut District': { governorate: 'beirut', city: 'beirut' },
   // The North Lebanon file, Akkar included: one region.
-  'Batroun District': { governorate: 'north-lebanon', district: 'batroun' },
-  'Bsharri District': { governorate: 'north-lebanon', district: 'bsharri' },
-  'Koura District': { governorate: 'north-lebanon', district: 'koura' },
+  'Batroun District': { governorate: 'north-lebanon', city: 'batroun' },
+  'Bsharri District': { governorate: 'north-lebanon', city: 'bsharri' },
+  'Koura District': { governorate: 'north-lebanon', city: 'koura' },
   'Miniyeh-Danniyeh District': { governorate: 'north-lebanon' },
-  'Tripoli District': { governorate: 'north-lebanon', district: 'tripoli' },
-  'Zgharta District': { governorate: 'north-lebanon', district: 'zgharta' },
-  'Akkar District': { governorate: 'north-lebanon', district: 'akkar' },
+  'Tripoli District': { governorate: 'north-lebanon', city: 'tripoli' },
+  'Zgharta District': { governorate: 'north-lebanon', city: 'zgharta' },
+  'Akkar District': { governorate: 'north-lebanon', city: 'akkar' },
   // The South Lebanon file, which reaches into Nabatieh's cazas too.
-  'Sidon District': { governorate: 'south-lebanon', district: 'sidon' },
-  'Tyre District': { governorate: 'south-lebanon', district: 'tyre' },
-  'Jezzine District': { governorate: 'south-lebanon', district: 'jezzine' },
+  'Sidon District': { governorate: 'south-lebanon', city: 'sidon' },
+  'Tyre District': { governorate: 'south-lebanon', city: 'tyre' },
+  'Jezzine District': { governorate: 'south-lebanon', city: 'jezzine' },
   'Nabatieh District': { governorate: 'south-lebanon' },
   'Marjeyoun District': { governorate: 'south-lebanon' },
   'Hasbaya District': { governorate: 'south-lebanon' },
   'Bint Jbeil District': { governorate: 'south-lebanon' },
   // The Bekaa file: Zahle, West Bekaa and Rachaya, and Baalbek-Hermel, one
   // region. Both spellings of West Bekaa are accepted.
-  'Zahle District': { governorate: 'beqaa', district: 'zahle' },
-  'West Bekaa District': { governorate: 'beqaa', district: 'western-beqaa' },
-  'Western Beqaa District': { governorate: 'beqaa', district: 'western-beqaa' },
-  'Rachaya District': { governorate: 'beqaa', district: 'western-beqaa' },
-  'Baalbek District': { governorate: 'beqaa', district: 'baalbek' },
-  'Hermel District': { governorate: 'beqaa', district: 'hermel' },
+  'Zahle District': { governorate: 'beqaa', city: 'zahle' },
+  'West Bekaa District': { governorate: 'beqaa', city: 'western-beqaa' },
+  'Western Beqaa District': { governorate: 'beqaa', city: 'western-beqaa' },
+  'Rachaya District': { governorate: 'beqaa', city: 'western-beqaa' },
+  'Baalbek District': { governorate: 'beqaa', city: 'baalbek' },
+  'Hermel District': { governorate: 'beqaa', city: 'hermel' },
 }
 
 /** Where a row lands when its District heading is not one we know. */
@@ -410,11 +410,9 @@ export function toListing(
   // A known heading names its governorate; anything else falls back and is
   // flagged, so an unrecognised region never silently mislabels the listing.
   const governorate = region?.governorate ?? DEFAULT_GOVERNORATE
-  // The town in the Location column, when it is one of the region's districts;
+  // The town in the Location column, when it is one of the region's cities;
   // else the heading's own place (Aley, Zahle) when it is one.
-  const district = region
-    ? (districtForPlace(location, governorate) ?? region.district ?? null)
-    : null
+  const city = region ? (cityForPlace(location, governorate) ?? region.city ?? null) : null
 
   if (!region) {
     warnings.push(
@@ -424,11 +422,11 @@ export function toListing(
     )
   } else if (districtHeading.includes('+')) {
     warnings.push('spans two districts, filed under Keserwan')
-  } else if (!district) {
+  } else if (!city) {
     warnings.push(
       location
-        ? `"${location}" is not one of the districts, left blank`
-        : 'no location given, district left blank',
+        ? `"${location}" is not one of the cities, left blank`
+        : 'no location given, city left blank',
     )
   }
 
@@ -466,7 +464,7 @@ export function toListing(
     category: mapping.category,
     subcategories: [subcategory],
     governorate,
-    district,
+    city,
     address: location || null,
     priceRange: priceBand(value(row, 'Price Range')),
     tagline: taglineFrom(description, activity),

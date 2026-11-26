@@ -8,7 +8,7 @@ const LISTING = {
   tagline: 'Sea views over Beirut',
   category: 'hospitality',
   governorate: 'mount-lebanon',
-  district: 'broummana',
+  city: 'broummana',
   address: 'Dbayeh Highway',
   location: [35.5925668, 33.9480149], // [lng, lat] - GeoJSON order
   priceRange: 4,

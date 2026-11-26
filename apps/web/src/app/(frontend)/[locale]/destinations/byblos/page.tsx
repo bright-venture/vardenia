@@ -14,7 +14,7 @@ export const revalidate = 3600
 const title = 'Byblos (Jbeil) travel guide'
 const description =
   'Walk from the old harbour through the souk to the archaeological site in Byblos, Lebanon. Discover places to eat and stay in the wider Jbeil district.'
-const districtHref = directoryFor({ where: 'jbeil' })
+const cityHref = directoryFor({ where: 'jbeil' })
 const stops = [
   [
     'The old harbour',
@@ -57,7 +57,7 @@ export default async function ByblosGuide({ params }: Props) {
   const hidden = await hiddenPages()
   const showDirectory = !hidden.includes('directory')
   const [places, issue] = await Promise.all([
-    showDirectory ? findListings({ locale: 'en', district: 'jbeil', perPage: 3 }) : null,
+    showDirectory ? findListings({ locale: 'en', city: 'jbeil', perPage: 3 }) : null,
     hidden.includes('magazine-issues') ? null : findIssueBySlug('all-lebanon', 'en'),
   ])
   return (
@@ -101,11 +101,11 @@ export default async function ByblosGuide({ params }: Props) {
           <section className="border-ink-100 border-t py-14">
             <h2 className="font-display text-4xl lg:text-5xl">Around Jbeil</h2>
             <p className="mb-8 mt-4 max-w-prose">
-              These places are spread across the wider district. Open a listing to see its location
+              These places are spread across the wider city. Open a listing to see its location
               before adding it to your day.
             </p>
             <ListingGrid listings={places.docs} locale="en" kind="related" empty="" />
-            <Link className="vd-button mt-8" href={districtHref}>
+            <Link className="vd-button mt-8" href={cityHref}>
               Browse the Jbeil directory
             </Link>
           </section>
@@ -119,7 +119,7 @@ export default async function ByblosGuide({ params }: Props) {
             Back to the scenic way
           </Link>
           {!hidden.includes('eat-and-drink') && (
-            <Link className="underline" href={districtHref.replace('/directory', '/eat-and-drink')}>
+            <Link className="underline" href={cityHref.replace('/directory', '/eat-and-drink')}>
               Eat &amp; Drink in Jbeil
             </Link>
           )}

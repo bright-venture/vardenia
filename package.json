@@ -20,9 +20,6 @@
     "clean": "turbo run clean && rimraf node_modules",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,json,md,mjs}": "prettier --write"
-  },
   "devDependencies": {
     "@vardenia/tsconfig": "workspace:*",
     "husky": "^9.1.7",

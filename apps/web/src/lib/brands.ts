@@ -14,7 +14,7 @@ export interface PublicBranch {
   slug: string
   address: string | null
   governorate: string | null
-  district: string | null
+  city: string | null
   mapUrl: string | null
   /** [longitude, latitude], as Payload stores a point. */
   location: [number, number] | null
@@ -95,7 +95,7 @@ export async function publicBrand(
       slug: true,
       address: true,
       governorate: true,
-      district: true,
+      city: true,
       mapUrl: true,
       location: true,
       openingHours: true,
@@ -142,7 +142,7 @@ export async function publicBrand(
         slug: String(row.slug ?? ''),
         address: text(row.address),
         governorate: text(row.governorate),
-        district: text(row.district),
+        city: text(row.city),
         mapUrl: text(row.mapUrl),
         location: point(row.location),
         openingHours: hours(row.openingHours),

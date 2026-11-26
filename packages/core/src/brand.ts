@@ -40,7 +40,7 @@ const blankToUndefined = (value: unknown) =>
  * so this is the first of two walls, not the only one.
  *
  * A map link or a point is required (both may be sent; the link wins when it
- * carries coordinates, as on the listing). The district must be one of the
+ * carries coordinates, as on the listing). The city must be one of the
  * governorate's, as in the public submission.
  */
 export const branchRequestSchema = z
@@ -49,7 +49,7 @@ export const branchRequestSchema = z
     /** The branch's full name, e.g. "Cafe Nour Jounieh". */
     name: z.string().trim().min(1, 'required').max(160, 'too long'),
     governorate: z.enum(GOVERNORATE_SLUGS),
-    district: z.preprocess(blankToUndefined, z.string().trim().max(64).optional()),
+    city: z.preprocess(blankToUndefined, z.string().trim().max(64).optional()),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
     mapUrl: z.preprocess(
       blankToUndefined,
@@ -79,12 +79,12 @@ export const branchRequestSchema = z
         message: 'paste a Google Maps link or give the map point',
       })
     }
-    if (value.district) {
+    if (value.city) {
       const gov = GOVERNORATES.find((g) => g.slug === value.governorate)
-      if (!gov || !gov.districts.some((d) => d.slug === value.district)) {
+      if (!gov || !gov.cities.some((d) => d.slug === value.city)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['district'],
+          path: ['city'],
           message: 'is not in the chosen governorate',
         })
       }

@@ -6,7 +6,7 @@ import { type Labelled } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
 import { useRouter } from '../i18n/routing'
-import { amenityLabel, districtLabel, governorateLabel } from '../lib/labels'
+import { amenityLabel, cityLabel, governorateLabel } from '../lib/labels'
 import { displayAmenities, filterHref, type FilterState } from './ListingFilters'
 
 /**
@@ -14,7 +14,7 @@ import { displayAmenities, filterHref, type FilterState } from './ListingFilters
  *
  * # Why a sheet and not more rows
  *
- * There are eight governorates, twenty-eight districts and sixteen amenities. Laid out as rows of chips they were four wrapping lines
+ * There are eight governorates, twenty-eight cities and sixteen amenities. Laid out as rows of chips they were four wrapping lines
  * that pushed the actual listings off the screen, and on a 375px phone the
  * amenities row alone was six lines.
  *
@@ -111,15 +111,15 @@ export function FilterSheet({
   state,
   locale,
   counts,
-  districtCounts,
+  cityCounts,
 }: {
   base: string
   state: FilterState
   locale: Locale
   /** Listings per governorate, for the Region group. See lib/listings. */
   counts?: Record<string, number>
-  /** Listings per district, for the district chips. */
-  districtCounts?: Record<string, number>
+  /** Listings per city, for the city chips. */
+  cityCounts?: Record<string, number>
 }) {
   const t = useTranslations('filters')
   const router = useRouter()
@@ -182,11 +182,11 @@ export function FilterSheet({
     return () => dialog.removeEventListener('close', onClose)
   }, [])
 
-  // The chosen region's districts: since 24 November 2026 these are the
+  // The chosen region's cities: since 24 November 2026 these are the
   // towns and places readers know (Jounieh, Faqra / Faraya), which replaced
   // the separate Areas list.
-  const districts =
-    GOVERNORATES.find((g) => g.slug === draft.governorate)?.districts ?? ([] as Labelled[])
+  const cities =
+    GOVERNORATES.find((g) => g.slug === draft.governorate)?.cities ?? ([] as Labelled[])
 
   /**
    * How many facets are narrowing the result right now, from the URL.
@@ -195,15 +195,15 @@ export function FilterSheet({
    * own tile row rather than in here, so counting it would put a badge on a
    * button that cannot show the reader what it is counting.
    */
-  const count = (state.governorate ? 1 : 0) + (state.district ? 1 : 0) + state.amenities.length
+  const count = (state.governorate ? 1 : 0) + (state.city ? 1 : 0) + state.amenities.length
 
   const set = (change: Partial<FilterState>) =>
     setDraft((current) => {
       const next = { ...current, ...change }
-      // Same rule as filterHref: a district belongs to one governorate, so
+      // Same rule as filterHref: a city belongs to one governorate, so
       // changing the governorate cannot keep it.
       if ('governorate' in change && change.governorate !== current.governorate) {
-        next.district = undefined
+        next.city = undefined
       }
       return next
     })
@@ -234,7 +234,7 @@ export function FilterSheet({
     setDraft((current) => ({
       ...current,
       governorate: undefined,
-      district: undefined,
+      city: undefined,
       amenities: [],
     }))
 
@@ -333,8 +333,8 @@ export function FilterSheet({
               is where the full list lives, so nothing is unreachable - and it
               is first, because it is the facet almost everybody uses.
 
-              Choosing a region clears the district for the same reason
-              filterHref does: a district belongs to somewhere else, and the
+              Choosing a region clears the city for the same reason
+              filterHref does: a city belongs to somewhere else, and the
               pair would return nothing while looking deliberate.
             */}
             {/* No "All of Lebanon" (18 November 2026): no region chosen is
@@ -347,7 +347,7 @@ export function FilterSheet({
                   onClick={() =>
                     set({
                       governorate: draft.governorate === g.slug ? undefined : g.slug,
-                      district: undefined,
+                      city: undefined,
                     })
                   }
                   count={counts?.[g.slug] ?? (counts ? 0 : undefined)}
@@ -357,21 +357,19 @@ export function FilterSheet({
               ))}
             </Group>
 
-            {/* Every district of the chosen region, each with its count, 0
+            {/* Every city of the chosen region, each with its count, 0
                 included. Shown once a region is chosen, because a flat list of
-                every district is not a choice anybody can make. */}
-            {districts.length > 0 ? (
-              <Group title={t('district')}>
-                {districts.map((d) => (
+                every city is not a choice anybody can make. */}
+            {cities.length > 0 ? (
+              <Group title={t('city')}>
+                {cities.map((d) => (
                   <Toggle
                     key={d.slug}
-                    active={draft.district === d.slug}
-                    onClick={() =>
-                      set({ district: draft.district === d.slug ? undefined : d.slug })
-                    }
-                    count={districtCounts?.[d.slug] ?? (districtCounts ? 0 : undefined)}
+                    active={draft.city === d.slug}
+                    onClick={() => set({ city: draft.city === d.slug ? undefined : d.slug })}
+                    count={cityCounts?.[d.slug] ?? (cityCounts ? 0 : undefined)}
                   >
-                    {districtLabel(d.slug, locale)}
+                    {cityLabel(d.slug, locale)}
                   </Toggle>
                 ))}
               </Group>

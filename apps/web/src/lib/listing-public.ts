@@ -88,7 +88,7 @@ const labelFor = (
   const found = list.find((entry) => entry.slug === slug)
   if (!found) return slug
   // Arabic and English are curated; the other eight languages read English,
-  // like governorates and districts (lib/labels).
+  // like governorates and cities (lib/labels).
   return locale === 'ar' ? found.ar : found.en
 }
 

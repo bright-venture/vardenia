@@ -3,7 +3,7 @@ import { fieldErrors } from '@vardenia/core/booking-request'
 import { LISTING_GOVERNORATES } from '@vardenia/core/listing-numbers'
 import { contactProblemCode } from '@vardenia/core/contact'
 import { SUBMISSION_EMAIL_MESSAGE, placeSubmissionSchema } from '@vardenia/core/place-submission'
-import { GOVERNORATES, type District } from '@vardenia/core/regions'
+import { GOVERNORATES, type City } from '@vardenia/core/regions'
 import { categoryOfKind } from '@vardenia/core/taxonomy'
 import { categoryLabel, placeLabel } from '../../lib/labels'
 import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-model'
@@ -26,7 +26,7 @@ export interface FormState {
   description: string
   kind: string
   governorate: string
-  district: string
+  city: string
   address: string
   acceptsWhish: boolean
   publicPhone: string
@@ -54,7 +54,7 @@ export function initialFormState(): FormState {
     description: '',
     kind: '',
     governorate: '',
-    district: '',
+    city: '',
     address: '',
     acceptsWhish: false,
     publicPhone: '',
@@ -66,18 +66,18 @@ export function initialFormState(): FormState {
   }
 }
 
-export function districtsFor(governorate: string): readonly District[] {
+export function citiesFor(governorate: string): readonly City[] {
   return (
-    (GOVERNORATES as readonly { slug: string; districts: readonly District[] }[]).find(
+    (GOVERNORATES as readonly { slug: string; cities: readonly City[] }[]).find(
       (g) => g.slug === governorate,
-    )?.districts ?? []
+    )?.cities ?? []
   )
 }
 
-/** A new governorate drops the district, which belonged to the old one. */
+/** A new governorate drops the city, which belonged to the old one. */
 export function withGovernorate(state: FormState, governorate: string): FormState {
   if (governorate === state.governorate) return state
-  return { ...state, governorate, district: '' }
+  return { ...state, governorate, city: '' }
 }
 
 /** The object the route validates. */
@@ -92,7 +92,7 @@ export function buildSubmission(
     description: state.description,
     kind: state.kind,
     governorate: state.governorate,
-    district: state.district,
+    city: state.city,
     address: state.address,
     acceptsWhish: state.acceptsWhish,
     publicPhone: state.publicPhone,
@@ -160,12 +160,12 @@ export function checkSubmission(
   const errors = normaliseErrors(fieldErrors(parsed.error))
   // An unchosen select fails as "not available" or an enum error; to the
   // owner it is simply not filled in yet.
-  for (const key of ['kind', 'governorate', 'district'] as const) {
+  for (const key of ['kind', 'governorate', 'city'] as const) {
     if (errors[key] && !state[key]) errors[key] = 'required'
   }
-  // With no region yet the district select is disabled and lists nothing: the
+  // With no region yet the city select is disabled and lists nothing: the
   // error belongs on the region, the input the owner can change.
-  if (!state.governorate) delete errors.district
+  if (!state.governorate) delete errors.city
   return { ok: false, errors }
 }
 
@@ -181,7 +181,7 @@ export function previewDataFrom(
     tagline: state.tagline,
     description: state.description,
     category: categoryLabel(categoryOfKind(state.kind) ?? '', locale),
-    governorate: placeLabel(state.governorate, state.district, locale),
+    governorate: placeLabel(state.governorate, state.city, locale),
     address: state.address,
     phone: state.publicPhone.trim(),
     galleryUrls: media.galleryUrls,

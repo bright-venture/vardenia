@@ -67,7 +67,7 @@ export const STAFF_ONLY_LISTING_FIELDS = Object.freeze([
   'category',
   'subcategories',
   'governorate',
-  'district',
+  'city',
   'brand',
   'state',
   'seo',

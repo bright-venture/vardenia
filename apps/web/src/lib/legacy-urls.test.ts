@@ -47,8 +47,8 @@ describe('legacyCategoryRedirect', () => {
     expect(run('/directory?category=hospitality&price=4&has=pool,spa')).toBe(
       '/stay?price=4&has=pool,spa',
     )
-    expect(run('/directory?category=weddings&where=keserwan&district=keserwan&page=2')).toBe(
-      '/weddings?where=keserwan&district=keserwan&page=2',
+    expect(run('/directory?category=weddings&where=keserwan&city=keserwan&page=2')).toBe(
+      '/weddings?where=keserwan&city=keserwan&page=2',
     )
   })
 

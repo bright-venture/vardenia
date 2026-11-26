@@ -35,7 +35,7 @@ export interface BusinessPerformance {
   name: string
   slug: string
   governorate: string | null
-  district: string | null
+  city: string | null
   category: string | null
   tier: string
   bookingsOn: boolean
@@ -287,7 +287,7 @@ export async function performanceReport(
 
   const [listings, scans, places, bookings, gaps] = await Promise.all([
     q(`
-      select b.id, b.slug, b.governorate, b.district, b.category, b.tier,
+      select b.id, b.slug, b.governorate, b.city, b.category, b.tier,
              b.booking_enabled, b.qr_code_id,
              (select name from {schema}.businesses_locales where _parent_id = b.id and _locale = 'en') as name,
              exists (select 1 from {schema}.business_users_rels r where r.businesses_id = b.id) as has_partner
@@ -358,7 +358,7 @@ export async function performanceReport(
       name: str(l.name) ?? String(l.slug),
       slug: String(l.slug),
       governorate: str(l.governorate),
-      district: str(l.district),
+      city: str(l.city),
       category: str(l.category),
       tier: String(l.tier ?? ''),
       bookingsOn: l.booking_enabled === true,

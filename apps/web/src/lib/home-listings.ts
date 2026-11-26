@@ -20,7 +20,7 @@ export type HomeListing = Pick<
   | 'tagline'
   | 'category'
   | 'governorate'
-  | 'district'
+  | 'city'
   | 'verified'
   | '_status'
   | 'heroImage'
@@ -91,7 +91,7 @@ export async function findHomeListings({
         tagline: true,
         category: true,
         governorate: true,
-        district: true,
+        city: true,
         verified: true,
         _status: true,
         heroImage: true,

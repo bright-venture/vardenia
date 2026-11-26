@@ -51,7 +51,7 @@ const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
     description: 'First line.\n\nSecond line.',
     kind: 'cafes',
     governorate: 'beirut',
-    district: 'beirut',
+    city: 'beirut',
     address: 'Hamra St',
     acceptsWhish: true,
     publicPhone: '+9611',
@@ -235,7 +235,7 @@ describe('startPlaceSubmission', () => {
         'category',
         'subcategories',
         'governorate',
-        'district',
+        'city',
         'address',
         'payments',
         'issue',
@@ -257,9 +257,9 @@ describe('startPlaceSubmission', () => {
     // Category comes from the one kind; payments hold only Whish.
     expect(listing.data.category).toBe('food-and-beverage')
     expect(listing.data.subcategories).toEqual(['cafes'])
-    // The district is stored as the slug the Businesses district select takes.
+    // The city is stored as the slug the Businesses city select takes.
     expect(listing.data.governorate).toBe('beirut')
-    expect(listing.data.district).toBe('beirut')
+    expect(listing.data.city).toBe('beirut')
     expect(listing.data.payments).toEqual({ cash: false, card: false, whish: true, omt: false })
     expect(listing.data.contact).toEqual({
       phone: '+9611',

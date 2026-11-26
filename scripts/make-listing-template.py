@@ -17,8 +17,8 @@ included, so nobody spends an afternoon filling a column that goes nowhere.
 
 # What this cannot express
 
-The importer hardcodes Mount Lebanon and knows three district headings. A
-listing anywhere else needs the importer changed first, so the district list
+The importer hardcodes Mount Lebanon and knows three city headings. A
+listing anywhere else needs the importer changed first, so the city list
 here is short on purpose rather than by oversight.
 
 Run: python scripts/make-listing-template.py
@@ -46,11 +46,11 @@ CATEGORIES = [
     "Festivals",
 ]
 
-# From DISTRICT_BY_HEADING. Short because the importer only covers Mount Lebanon.
-DISTRICTS = [
+# From CITY_BY_HEADING. Short because the importer only covers Mount Lebanon.
+CITIES = [
     "Keserwan District",
     "Byblos / Jbeil District",
-    "Keserwan + Byblos / Jbeil Districts",
+    "Keserwan + Byblos / Jbeil Cities",
 ]
 
 # seasonalityFrom() looks for these words. Anything else contributes nothing.
@@ -80,7 +80,7 @@ with open(os.path.join(HERE, "towns.json"), encoding="utf-8") as handle:
 COLUMNS = [
     ("Name / Listing", 34, "The business name as it should appear on the site. Nothing else - no town, no phone.", None, True, True),
     ("Category", 20, "Pick from the list. This decides which section of the site the listing appears in.", CATEGORIES, True, True),
-    ("District", 26, "Pick from the list.", DISTRICTS, True, True),
+    ("City", 26, "Pick from the list.", CITIES, True, True),
     ("Location", 26, "Town or village. Pick from the list; type a new one only if it is genuinely not there.", TOWNS, False, False),
     ("Type / Activity", 30, "What it is, in a few words. Becomes the listing's tags. Separate several with commas.", None, False, True),
     ("Hotel Stars", 11, "Hotels only. Pick 1 to 5. Under 4 files the hotel as boutique rather than luxury.", STARS, False, True),
@@ -113,7 +113,7 @@ GUIDE = [
     ("Most columns are dropdowns - click the cell and a little arrow appears. Use them.", None),
     ("Only the business name, the activity and the description have to be typed.", None),
     ("", None),
-    ("Category, District, Hotel Stars and Usually When will refuse anything not on the list,", None),
+    ("Category, City, Hotel Stars and Usually When will refuse anything not on the list,", None),
     ("because a value off the list cannot be imported at all.", None),
     ("", None),
     ("Location and Price Range only warn. If a village is genuinely not on the list, type it", None),
@@ -122,7 +122,7 @@ GUIDE = [
     ("", None),
     ("Only Mount Lebanon for now", "head"),
     ("The importer currently covers Keserwan and Byblos / Jbeil only. A business anywhere", None),
-    ("else needs a change to the site first - send it separately rather than inventing a district.", None),
+    ("else needs a change to the site first - send it separately rather than inventing a city.", None),
     ("", None),
     ("Photos", "head"),
     ("Do not put photos in this file. Photos go in folders, one folder per business.", None),

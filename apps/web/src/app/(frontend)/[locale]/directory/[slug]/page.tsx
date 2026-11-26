@@ -184,7 +184,7 @@ export default async function ListingPage({ params }: Params) {
     listing.gallery as never,
     can(tierOf(listing.tier), 'galleryLimit'),
   )
-  const place = placeLabel(listing.governorate, listing.district, locale as Locale)
+  const place = placeLabel(listing.governorate, listing.city, locale as Locale)
   // The area, the address and both map links follow the switch; see
   // lib/location-display. `place` is still computed for the related listings.
   // Blank counts as none: spaces alone must not draw an empty address row.
@@ -284,7 +284,7 @@ export default async function ListingPage({ params }: Params) {
       id: listing.id,
       category: listing.category,
       location: listing.location,
-      district: listing.district,
+      city: listing.city,
       governorate: listing.governorate,
     },
   })

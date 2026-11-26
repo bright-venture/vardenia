@@ -17,7 +17,7 @@ const listing = (over: Partial<Row>): Row => ({
   subcategories: ['restaurants'],
   address: 'Hamra',
   governorate: 'beirut',
-  district: 'beirut',
+  city: 'beirut',
   mapUrl: 'https://www.google.com/maps/@33.9,35.5,17z',
   location: [35.5, 33.9],
   openingHours: [{ id: 'r1', day: 'mon', opens: '09:00', closes: '23:00', closed: false }],
@@ -84,7 +84,7 @@ describe('publicBrand', () => {
       [
         'address',
         'bookingEnabled',
-        'district',
+        'city',
         'governorate',
         'id',
         'location',

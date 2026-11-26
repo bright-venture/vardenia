@@ -31,8 +31,8 @@ const subcategorySlugs = new Map<string, Set<string>>(
   TAXONOMY.map((c) => [c.slug as string, new Set<string>(c.children.map((s) => s.slug))]),
 )
 const governorateSlugs = new Set<string>(GOVERNORATES.map((g) => g.slug))
-const districtSlugs = new Map<string, Set<string>>(
-  GOVERNORATES.map((g) => [g.slug as string, new Set<string>(g.districts.map((d) => d.slug))]),
+const citySlugs = new Map<string, Set<string>>(
+  GOVERNORATES.map((g) => [g.slug as string, new Set<string>(g.cities.map((d) => d.slug))]),
 )
 
 describe('business fixtures', () => {
@@ -52,11 +52,11 @@ describe('business fixtures', () => {
   )
 
   it.each(BUSINESSES.map((b) => [b.slug, b] as const))(
-    '%s district belongs to its governorate',
+    '%s city belongs to its governorate',
     (_slug, b) => {
       expect(governorateSlugs.has(b.governorate)).toBe(true)
-      const allowed = districtSlugs.get(b.governorate)
-      expect(allowed!.has(b.district), `${b.district} is not in ${b.governorate}`).toBe(true)
+      const allowed = citySlugs.get(b.governorate)
+      expect(allowed!.has(b.city), `${b.city} is not in ${b.governorate}`).toBe(true)
     },
   )
 

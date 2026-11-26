@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { AMENITIES, AMENITY_SLUGS } from '@vardenia/core/attributes'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import type { Locale } from '@vardenia/i18n'
-import { governorateLabel, districtLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
+import { governorateLabel, cityLabel, subcategoryLabel, amenityLabel } from '../lib/labels'
 import { Link } from '../i18n/routing'
 import { beirutDate } from '../lib/beirut'
 import { parseTrip, tripParams, type Trip } from '../lib/trip'
@@ -43,7 +43,7 @@ import { FilterSheet } from './FilterSheet'
  * The chips outside the sheet are plain links and keep working with no
  * JavaScript; the sheet does not, which is a degradation rather than a break.
  *
- * # Districts appear only once a governorate is chosen
+ * # Cities appear only once a governorate is chosen
  *
  * There are twenty-eight of them. Shown all at once they are noise, and most
  * would return nothing; shown under their governorate they are the natural next
@@ -58,7 +58,7 @@ import { FilterSheet } from './FilterSheet'
 export interface FilterState {
   subcategory?: string
   governorate?: string
-  district?: string
+  city?: string
   amenities: string[]
   /** Show only places open right now, in Beirut time. Evaluated live, not cached. */
   openNow?: boolean
@@ -82,7 +82,7 @@ export function anyFilterApplied(state: FilterState): boolean {
   return (
     Boolean(state.subcategory) ||
     Boolean(state.governorate) ||
-    Boolean(state.district) ||
+    Boolean(state.city) ||
     state.amenities.length > 0 ||
     Boolean(state.openNow) ||
     Boolean(state.bookable)
@@ -99,16 +99,16 @@ export function anyFilterApplied(state: FilterState): boolean {
 export function filterHref(base: string, state: FilterState, change: Partial<FilterState>): string {
   const next = { ...state, ...change }
 
-  // Choosing a different governorate cannot keep the old district: it belongs to
+  // Choosing a different governorate cannot keep the old city: it belongs to
   // somewhere else, and the pair would return nothing while looking deliberate.
   if ('governorate' in change && change.governorate !== state.governorate) {
-    next.district = undefined
+    next.city = undefined
   }
 
   const params = new URLSearchParams()
   if (next.subcategory) params.set('filter', next.subcategory)
   if (next.governorate) params.set('where', next.governorate)
-  if (next.district) params.set('district', next.district)
+  if (next.city) params.set('city', next.city)
   if (next.amenities.length > 0) params.set('has', [...next.amenities].sort().join(','))
   if (next.openNow) params.set('open', '1')
   if (next.bookable) params.set('book', '1')
@@ -131,7 +131,7 @@ export function filterHref(base: string, state: FilterState, change: Partial<Fil
 export interface RawFilterParams {
   filter?: string
   where?: string
-  district?: string
+  city?: string
   /** An old price filter link: read and ignored, listings show no prices. */
   price?: string
   has?: string
@@ -146,8 +146,10 @@ export interface RawFilterParams {
   breakfast?: string
   cancel?: string
   view?: string
-  /** The old area filter (18 to 24 November 2026), read as a district. */
+  /** The old area filter (18 to 24 November 2026), read as a city. */
   area?: string
+  /** The city filter's name until 26 November 2026 (?district=jounieh). */
+  district?: string
 }
 
 /**
@@ -162,7 +164,7 @@ export interface RawFilterParams {
  * - every crafted value would otherwise be its own cache key, which is a cheap
  *   way for anybody to fill the cache with entries nobody will ask for twice.
  *
- * A district is only kept if it belongs to the chosen governorate, so the pair
+ * A city is only kept if it belongs to the chosen governorate, so the pair
  * can never contradict itself.
  */
 export function parseFilterState(
@@ -170,14 +172,15 @@ export function parseFilterState(
   subcategories: readonly { slug: string }[],
 ): FilterState {
   const governorate = GOVERNORATES.some((g) => g.slug === raw.where) ? raw.where : undefined
-  const districts = GOVERNORATES.find((g) => g.slug === governorate)?.districts ?? []
+  const cities = GOVERNORATES.find((g) => g.slug === governorate)?.cities ?? []
 
   return {
     subcategory: subcategories.some((c) => c.slug === raw.filter) ? raw.filter : undefined,
     governorate,
-    // A link from the time of the Areas list (?area=jounieh) still works when
-    // that place is now a district.
-    district: [raw.district, raw.area].find((slug) => districts.some((d) => d.slug === slug)),
+    // Older links still work: ?district=jounieh (the name until 26 November
+    // 2026), and ?area=jounieh from the time of the Areas list when that place
+    // is now a city.
+    city: [raw.city, raw.district, raw.area].find((slug) => cities.some((d) => d.slug === slug)),
     amenities: (raw.has ?? '')
       .split(',')
       .filter((slug) => AMENITY_SLUGS.includes(slug))
@@ -234,7 +237,7 @@ export async function ListingFilters({
   state,
   locale,
   counts,
-  districtCounts,
+  cityCounts,
   showBookable = false,
 }: {
   base: string
@@ -248,8 +251,8 @@ export async function ListingFilters({
    * lib/listings.countByGovernorate for what the numbers mean.
    */
   counts?: Record<string, number>
-  /** Listings per district, passed to the Filters sheet. */
-  districtCounts?: Record<string, number>
+  /** Listings per city, passed to the Filters sheet. */
+  cityCounts?: Record<string, number>
   /**
    * The "Online booking only" chip, on the whole directory (18 November
    * 2026): many places there take no bookings. Not on Stay, where hotels and
@@ -283,7 +286,7 @@ export async function ListingFilters({
    */
   const shown = inlineRegions(counts, state.governorate)
 
-  const narrowed = state.amenities.length > 0 || Boolean(state.district)
+  const narrowed = state.amenities.length > 0 || Boolean(state.city)
 
   const anyFilter =
     Boolean(state.subcategory) ||
@@ -381,14 +384,14 @@ export async function ListingFilters({
           </div>
         ) : null}
 
-        {/* Region, district and the sixteen amenities live in here. The
+        {/* Region, city and the sixteen amenities live in here. The
             kind of place does not: it is the section page's own tile row. */}
         <FilterSheet
           base={base}
           state={state}
           locale={locale}
           counts={counts}
-          districtCounts={districtCounts}
+          cityCounts={cityCounts}
         />
       </div>
 
@@ -410,9 +413,9 @@ export async function ListingFilters({
             </FilterChip>
           ) : null}
 
-          {state.district ? (
-            <FilterChip href={href({ district: undefined })} active>
-              {districtLabel(state.district, locale)}
+          {state.city ? (
+            <FilterChip href={href({ city: undefined })} active>
+              {cityLabel(state.city, locale)}
               <Cross />
             </FilterChip>
           ) : null}

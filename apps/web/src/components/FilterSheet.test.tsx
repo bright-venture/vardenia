@@ -14,7 +14,7 @@ let root: Root
 const initial: FilterState = {
   subcategory: 'boutique-hotels',
   governorate: 'mount-lebanon',
-  district: 'jounieh',
+  city: 'jounieh',
   amenities: ['wifi'],
   openNow: true,
   bookable: true,
@@ -73,7 +73,7 @@ describe('directory filter sheet', () => {
       click(button(getMessages(locale).filters.showResults))
       expect(push).toHaveBeenCalledTimes(1)
       const params = new URL(push.mock.calls[0]![0], 'https://example.test').searchParams
-      for (const name of ['where', 'district', 'price', 'has']) expect(params.has(name)).toBe(false)
+      for (const name of ['where', 'city', 'price', 'has']) expect(params.has(name)).toBe(false)
       expect(params.get('filter')).toBe(initial.subcategory)
       expect(params.get('open')).toBe('1')
       expect(params.get('book')).toBe('1')
@@ -124,7 +124,7 @@ describe('directory filter sheet', () => {
     const newer: FilterState = {
       ...initial,
       governorate: 'beirut',
-      district: undefined,
+      city: undefined,
       trip: { date: '2026-12-05', time: '18:00', nights: 4, party: 5 },
     }
     render('en', newer)

@@ -5,7 +5,7 @@ import { CATEGORIES, submittableKindsByCategory } from '@vardenia/core/taxonomy'
 import {
   buildSubmission,
   checkSubmission,
-  districtsFor,
+  citiesFor,
   errorKind,
   formErrorKey,
   GOVERNORATE_ORDER,
@@ -21,7 +21,7 @@ const filled = (): FormState => ({
   name: 'Le Petit Jardin',
   kind: 'restaurants',
   governorate: 'keserwan',
-  district: 'jbeil',
+  city: 'jbeil',
   address: 'Old Port, Byblos',
   ownerName: 'Rita Haddad',
   ownerEmail: 'rita@example.com',
@@ -49,21 +49,21 @@ describe('choices', () => {
     expect(slugs).not.toContain('car-rental')
   })
 
-  it('offers only the districts of the chosen governorate', () => {
-    expect(districtsFor('south-lebanon').map((d) => d.slug)).toEqual(['sidon', 'tyre', 'jezzine'])
-    expect(districtsFor('')).toEqual([])
+  it('offers only the cities of the chosen governorate', () => {
+    expect(citiesFor('south-lebanon').map((d) => d.slug)).toEqual(['sidon', 'tyre', 'jezzine'])
+    expect(citiesFor('')).toEqual([])
   })
 
-  it('clears the district with the governorate', () => {
+  it('clears the city with the governorate', () => {
     const state = filled()
-    expect(withGovernorate(state, 'beirut').district).toBe('')
-    expect(withGovernorate(state, 'keserwan').district).toBe('jbeil')
+    expect(withGovernorate(state, 'beirut').city).toBe('')
+    expect(withGovernorate(state, 'keserwan').city).toBe('jbeil')
   })
 
-  it('offers every governorate exactly its own districts from core regions', () => {
+  it('offers every governorate exactly its own cities from core regions', () => {
     for (const gov of GOVERNORATES) {
-      expect(districtsFor(gov.slug).map((d) => d.slug)).toEqual(gov.districts.map((d) => d.slug))
-      expect(districtsFor(gov.slug).length).toBeGreaterThan(0)
+      expect(citiesFor(gov.slug).map((d) => d.slug)).toEqual(gov.cities.map((d) => d.slug))
+      expect(citiesFor(gov.slug).length).toBeGreaterThan(0)
     }
   })
 })
@@ -109,29 +109,29 @@ describe('checkSubmission', () => {
     expect(result.errors.number).toBeDefined()
     expect(result.errors.kind).toBe('required')
     expect(result.errors.governorate).toBe('required')
-    // No region yet: the district select is disabled, so the error is on the region only.
-    expect(result.errors.district).toBeUndefined()
+    // No region yet: the city select is disabled, so the error is on the region only.
+    expect(result.errors.city).toBeUndefined()
   })
 
-  it('requires a district once the region is chosen', () => {
-    const result = checkSubmission({ ...filled(), district: '' }, pick, 'en')
+  it('requires a city once the region is chosen', () => {
+    const result = checkSubmission({ ...filled(), city: '' }, pick, 'en')
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(result.errors).toEqual({ district: 'required' })
+    expect(result.errors).toEqual({ city: 'required' })
   })
 
-  it('refuses a district of another region on the district input', () => {
-    const result = checkSubmission({ ...filled(), district: 'tyre' }, pick, 'en')
+  it('refuses a city of another region on the city input', () => {
+    const result = checkSubmission({ ...filled(), city: 'tyre' }, pick, 'en')
     expect(result.ok).toBe(false)
     if (result.ok) return
-    expect(Object.keys(result.errors)).toEqual(['district'])
-    expect(result.errors.district).not.toBe('required')
+    expect(Object.keys(result.errors)).toEqual(['city'])
+    expect(result.errors.city).not.toBe('required')
   })
 
-  it('sends the same issue and number whatever the district', () => {
-    for (const district of districtsFor('keserwan')) {
-      const { data } = buildSubmission({ ...filled(), district: district.slug }, pick, 'en')
-      expect(data).toMatchObject({ issue: 1, listingNumber: 47, district: district.slug })
+  it('sends the same issue and number whatever the city', () => {
+    for (const city of citiesFor('keserwan')) {
+      const { data } = buildSubmission({ ...filled(), city: city.slug }, pick, 'en')
+      expect(data).toMatchObject({ issue: 1, listingNumber: 47, city: city.slug })
     }
   })
 

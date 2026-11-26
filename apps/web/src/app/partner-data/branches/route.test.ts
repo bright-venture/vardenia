@@ -30,7 +30,7 @@ const body = {
   sourceListingId: 10,
   name: 'Cafe Nour Jounieh',
   governorate: 'keserwan',
-  district: 'jounieh',
+  city: 'jounieh',
   address: 'Main road, Jounieh',
   mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
 }
@@ -127,11 +127,11 @@ describe('POST /partner-data/branches', () => {
     expect(createBranch).not.toHaveBeenCalled()
   })
 
-  it('refuses a district of another governorate', async () => {
+  it('refuses a city of another governorate', async () => {
     auth.mockResolvedValue({ user: partner })
     const result = await post({ ...body, governorate: 'beirut' })
     expect(result.status).toBe(400)
-    expect(JSON.stringify(result.body)).toContain('district')
+    expect(JSON.stringify(result.body)).toContain('city')
   })
 
   it('answers 404 for a listing the partner does not own, without asking the service', async () => {

@@ -33,9 +33,9 @@ export const governorateOptions: Option[] = GOVERNORATES.map((g) => ({
   value: g.slug,
 }))
 
-export const districtOptions: Option[] = GOVERNORATES.flatMap((governorate) =>
-  governorate.districts.map((district) => ({
-    label: `${governorate.en} > ${district.en}`,
-    value: district.slug,
+export const cityOptions: Option[] = GOVERNORATES.flatMap((governorate) =>
+  governorate.cities.map((city) => ({
+    label: `${governorate.en} > ${city.en}`,
+    value: city.slug,
   })),
 )

@@ -11,7 +11,7 @@ const valid = {
   sourceListingId: 12,
   name: 'Cafe Nour Jounieh',
   governorate: 'keserwan',
-  district: 'jounieh',
+  city: 'jounieh',
   address: 'Main road, Jounieh',
   mapUrl: 'https://www.google.com/maps/@33.98,35.61,17z',
 }
@@ -78,10 +78,10 @@ describe('branchRequestSchema', () => {
     expect(parse({ mapUrl: 'https://www.google.com/maps/@48.85,2.35,15z' }).success).toBe(false)
   })
 
-  it('refuses a district of another governorate', () => {
-    const r = parse({ governorate: 'beirut', district: 'jounieh' })
+  it('refuses a city of another governorate', () => {
+    const r = parse({ governorate: 'beirut', city: 'jounieh' })
     expect(r.success).toBe(false)
-    if (!r.success) expect(r.error.issues[0]!.path).toEqual(['district'])
+    if (!r.success) expect(r.error.issues[0]!.path).toEqual(['city'])
   })
 
   it('refuses an unknown governorate', () => {

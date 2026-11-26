@@ -9,7 +9,7 @@
  * print, so the site groups places the same way. Lebanon's official map has
  * nine governorates and draws the lines elsewhere (Aley and Baabda are in
  * Mount Lebanon, Akkar and Baalbek-Hermel are governorates of their own); here
- * each district sits in the region whose edition carries it.
+ * each city sits in the region whose edition carries it.
  *
  * The names are the sheet's own (North, Bekaa), as printed, except the south:
  * the sheet's "Jnoub" reads as "South" on the site (11 November 2026). The slugs
@@ -17,18 +17,18 @@
  * in filter links. The field and the type keep the name `governorate`, because
  * that is the database column. Its options are these seven.
  *
- * Two levels only - region and district. Since 24 November 2026 the districts
+ * Two levels only - region and city. Since 24 November 2026 the cities
  * are the towns and places readers know (Jounieh, Faqra / Faraya, Deir el
  * Qamar), chosen by the owner, not the official qadas; they replaced the
  * separate Areas list. A listing carries its own address + lat/lng, and "near
  * me" queries run against PostGIS rather than a town lookup table.
  *
- * Slugs are stored values and appear in filter links (?district=jounieh). Some
+ * Slugs are stored values and appear in filter links (?city=jounieh). Some
  * keep an older slug under a new name (bsharri is Bcharre, sidon is Saida,
  * tyre is Sour, western-beqaa is West Bekaa) so links already shared still work.
  */
 
-export interface District {
+export interface City {
   slug: string
   en: string
   ar: string
@@ -38,7 +38,7 @@ export interface Governorate {
   slug: string
   en: string
   ar: string
-  districts: District[]
+  cities: City[]
 }
 
 export const GOVERNORATES = [
@@ -46,13 +46,13 @@ export const GOVERNORATES = [
     slug: 'beirut',
     en: 'Beirut',
     ar: 'بيروت',
-    districts: [{ slug: 'beirut', en: 'Beirut', ar: 'بيروت' }],
+    cities: [{ slug: 'beirut', en: 'Beirut', ar: 'بيروت' }],
   },
   {
     slug: 'matn',
     en: 'Matn',
     ar: 'المتن',
-    districts: [
+    cities: [
       { slug: 'dbayeh', en: 'Dbayeh', ar: 'ضبية' },
       { slug: 'broummana', en: 'Broummana', ar: 'برمانا' },
       { slug: 'bikfaya', en: 'Bikfaya', ar: 'بكفيا' },
@@ -66,7 +66,7 @@ export const GOVERNORATES = [
     slug: 'keserwan',
     en: 'Keserwan',
     ar: 'كسروان',
-    districts: [
+    cities: [
       { slug: 'jounieh', en: 'Jounieh', ar: 'جونية' },
       { slug: 'harissa', en: 'Harissa', ar: 'حريصا' },
       { slug: 'kaslik', en: 'Kaslik', ar: 'الكسليك' },
@@ -80,7 +80,7 @@ export const GOVERNORATES = [
     slug: 'north-lebanon',
     en: 'North',
     ar: 'الشمال',
-    districts: [
+    cities: [
       { slug: 'batroun', en: 'Batroun', ar: 'البترون' },
       { slug: 'chekka', en: 'Chekka', ar: 'شكا' },
       { slug: 'koura', en: 'Koura', ar: 'الكورة' },
@@ -94,7 +94,7 @@ export const GOVERNORATES = [
     slug: 'chouf',
     en: 'Chouf',
     ar: 'الشوف',
-    districts: [
+    cities: [
       { slug: 'deir-el-qamar', en: 'Deir el Qamar', ar: 'دير القمر' },
       { slug: 'beiteddine', en: 'Beiteddine', ar: 'بيت الدين' },
       { slug: 'baakline', en: 'Baakline', ar: 'بعقلين' },
@@ -108,7 +108,7 @@ export const GOVERNORATES = [
     slug: 'beqaa',
     en: 'Bekaa',
     ar: 'البقاع',
-    districts: [
+    cities: [
       { slug: 'zahle', en: 'Zahle', ar: 'زحلة' },
       { slug: 'baalbek', en: 'Baalbek', ar: 'بعلبك' },
       { slug: 'western-beqaa', en: 'West Bekaa', ar: 'البقاع الغربي' },
@@ -122,7 +122,7 @@ export const GOVERNORATES = [
     slug: 'south-lebanon',
     en: 'South',
     ar: 'الجنوب',
-    districts: [
+    cities: [
       { slug: 'sidon', en: 'Saida', ar: 'صيدا' },
       { slug: 'tyre', en: 'Sour', ar: 'صور' },
       { slug: 'jezzine', en: 'Jezzine', ar: 'جزين' },
@@ -133,13 +133,13 @@ export const GOVERNORATES = [
 export type GovernorateSlug = (typeof GOVERNORATES)[number]['slug']
 
 /**
- * Other names for a district's place, so a town written another way finds its
- * district: the import reads the magazine sheet's Location column with it, and
+ * Other names for a city's place, so a town written another way finds its
+ * city: the import reads the magazine sheet's Location column with it, and
  * migration 20261124_districts read each listing's address with this same list
  * (copied into it when it was written). Lowercase, as compared after
  * `placeKey`.
  */
-export const DISTRICT_ALIASES: Readonly<Record<string, string>> = {
+export const CITY_ALIASES: Readonly<Record<string, string>> = {
   byblos: 'jbeil',
   amchit: 'jbeil',
   faqra: 'faqra-faraya',
@@ -209,38 +209,35 @@ export function placeKey(name: string): string {
 }
 
 /**
- * The district a place name belongs to, or null. Matches a district's own
+ * The city a place name belongs to, or null. Matches a city's own
  * name ("Jounieh", either half of "Faqra / Faraya") or an alias ("Byblos").
- * With a governorate, only that region's districts count, so a name can never
+ * With a governorate, only that region's cities count, so a name can never
  * put a listing in another region.
  */
-export function districtForPlace(
-  name: string | null | undefined,
-  governorate?: string,
-): string | null {
+export function cityForPlace(name: string | null | undefined, governorate?: string): string | null {
   if (!name) return null
-  const whole = districtForKey(placeKey(name), governorate)
+  const whole = cityForKey(placeKey(name), governorate)
   if (whole) return whole
   // "Faqra, Kfardebian", "Jbeil / Byblos", "Jounieh ↔️ Harissa": the first
-  // part that names a district wins.
+  // part that names a city wins.
   for (const part of name.split(/[,/+&↔|]|\s-\s|\sand\s/)) {
-    const found = districtForKey(placeKey(part), governorate)
+    const found = cityForKey(placeKey(part), governorate)
     if (found) return found
   }
   return null
 }
 
-function districtForKey(key: string, governorate?: string): string | null {
+function cityForKey(key: string, governorate?: string): string | null {
   if (!key) return null
   const regions = GOVERNORATES.filter((g) => !governorate || g.slug === governorate)
   for (const region of regions) {
-    for (const district of region.districts) {
-      const names = [district.slug.replace(/-/g, ' '), ...district.en.split('/')].map(placeKey)
-      if (names.includes(key)) return district.slug
+    for (const city of region.cities) {
+      const names = [city.slug.replace(/-/g, ' '), ...city.en.split('/')].map(placeKey)
+      if (names.includes(key)) return city.slug
     }
   }
-  const alias = DISTRICT_ALIASES[key]
-  if (alias && regions.some((g) => g.districts.some((d) => d.slug === alias))) return alias
+  const alias = CITY_ALIASES[key]
+  if (alias && regions.some((g) => g.cities.some((d) => d.slug === alias))) return alias
   return null
 }
 

@@ -63,8 +63,8 @@ export interface ListingQuery {
    */
   subcategory?: string
   governorate?: string
-  /** One of the selected governorate's own districts. */
-  district?: string
+  /** One of the selected governorate's own cities. */
+  city?: string
   /** Every one of these, not any. See the query below. */
   amenities?: string[]
   /**
@@ -170,12 +170,12 @@ async function buildListingWhere(
     category,
     subcategory,
     governorate,
-    district,
+    city,
     amenities,
     bookable,
   }: Pick<
     ListingQuery,
-    'category' | 'subcategory' | 'governorate' | 'district' | 'amenities' | 'bookable'
+    'category' | 'subcategory' | 'governorate' | 'city' | 'amenities' | 'bookable'
   >,
 ): Promise<Where> {
   const where: Where = {}
@@ -192,7 +192,7 @@ async function buildListingWhere(
    */
   if (subcategory) where.subcategories = { in: [subcategory] }
   if (governorate) where.governorate = { equals: governorate }
-  if (district) where.district = { equals: district }
+  if (city) where.city = { equals: city }
   // The same switch the Book panel reads; public, like the rest of the rules.
   if (bookable) where['booking.enabled'] = { equals: true }
 
@@ -384,7 +384,7 @@ async function readOpenNowCandidates(
  * # The same key space as the grid
  *
  * Category, kind and region only - the filters findListings already caches -
- * because those are bounded. District and amenities multiply the keys
+ * because those are bounded. City and amenities multiply the keys
  * past usefulness, and those views read directly, as the grid does.
  *
  * Keyed on locale, though no hours are translated: the set is in page order,
@@ -422,7 +422,7 @@ export async function findListings({
   category,
   subcategory,
   governorate,
-  district,
+  city,
   amenities,
   openNow,
   bookable,
@@ -436,7 +436,7 @@ export async function findListings({
       category,
       subcategory,
       governorate,
-      district,
+      city,
       amenities,
       bookable,
     })
@@ -455,7 +455,7 @@ export async function findListings({
        */
       const filters = { category, subcategory, governorate }
       const candidates =
-        !district && !amenities?.length && !bookable
+        !city && !amenities?.length && !bookable
           ? await openNowCandidates({ locale, ...filters })
           : await readOpenNowCandidates(payload, where, locale, filters)
 
@@ -516,7 +516,7 @@ export async function findListings({
    * a section, optionally narrowed by kind or by governorate.
    *
    * Past that the arithmetic turns: seven categories times fifty-one
-   * subcategories times eight governorates times twenty-eight districts times
+   * subcategories times eight governorates times twenty-eight cities times
    * any combination of sixteen amenities is not a bounded
    * set in any useful sense. Caching it would fill the store with entries nobody
    * asks for twice, and evict the ones everybody asks for constantly.
@@ -526,7 +526,7 @@ export async function findListings({
    */
   // openNow is excluded too: its answer changes by the minute, so caching it for
   // an hour would show a closed place as open for most of that hour.
-  const cacheable = !district && !amenities?.length && !openNow
+  const cacheable = !city && !amenities?.length && !openNow
 
   if (!cacheable) return run()
 
@@ -646,18 +646,18 @@ export async function countByGovernorate(filter: {
 }
 
 /**
- * The same counts per district, so the Filters sheet can show every district
+ * The same counts per city, so the Filters sheet can show every city
  * of a region with its number, 0 included.
  */
-export async function countByDistrict(filter: {
+export async function countByCity(filter: {
   category?: string
   subcategory?: string
 }): Promise<Record<string, number> | undefined> {
-  return countByPlace('district', filter)
+  return countByPlace('city', filter)
 }
 
 async function countByPlace(
-  column: 'governorate' | 'district',
+  column: 'governorate' | 'city',
   {
     category,
     subcategory,
@@ -888,11 +888,11 @@ export type RelatedListing = ListingSummary & { nearby: NearbyPick }
  *
  * Same category is the strong signal: somebody reading about a hotel is
  * choosing a hotel. Among those, the order is by distance from the listing's
- * coordinates, then its district, then its governorate. See lib/nearby.
+ * coordinates, then its city, then its governorate. See lib/nearby.
  *
  * It used to prefer the governorate only among the category's 24 best-ranked
  * places across the whole country. Once the catalogue spread past two
- * districts, that meant a Bekaa listing could be offered three places in
+ * cities, that meant a Bekaa listing could be offered three places in
  * Beirut under the word "Nearby", because no Bekaa place made the top 24. The
  * whole category is ranked now, from a small cached index of where each place
  * is, and only the three chosen are loaded.
@@ -942,7 +942,7 @@ export async function findRelatedListings({
 /**
  * Where every published place in a category is, in directory order.
  *
- * Only the id, the point, the district and the governorate: about 80 bytes a
+ * Only the id, the point, the city and the governorate: about 80 bytes a
  * listing, so the largest category (Mount Lebanon's hospitality and food run
  * to a few hundred) is tens of kilobytes. One key per category, the same for
  * every language, so a build fills seven entries however many listings it
@@ -958,12 +958,12 @@ async function categoryPlaces(category: string): Promise<Placed[]> {
       depth: 0,
       sort: ['-tier', 'name'],
       overrideAccess: false,
-      select: { location: true, district: true, governorate: true },
+      select: { location: true, city: true, governorate: true },
     })
     return result.docs.map((doc) => ({
       id: doc.id,
       location: doc.location ?? null,
-      district: doc.district ?? null,
+      city: doc.city ?? null,
       governorate: doc.governorate ?? null,
     }))
   }

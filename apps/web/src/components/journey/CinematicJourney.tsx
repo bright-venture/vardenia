@@ -120,7 +120,7 @@ export function CinematicJourney({
     name = (p: Pick<Destination, 'name' | 'ar'> | ScenePhoto) => (ar ? p.ar : p.name),
     region = (p: Destination) => {
       const edition = GOVERNORATES.find(
-        (g) => g.slug === p.where || g.districts.some((d) => d.slug === p.where),
+        (g) => g.slug === p.where || g.cities.some((d) => d.slug === p.where),
       )
       return edition ? editionLabel(edition, ar) : ar ? p.regionAr : p.region
     }

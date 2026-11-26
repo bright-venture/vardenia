@@ -17,7 +17,7 @@ const DATA = {
   name: 'Cafe Cedar',
   kind: 'cafes',
   governorate: 'beirut',
-  district: 'beirut',
+  city: 'beirut',
   address: 'Hamra',
   ownerName: 'Sami',
   ownerEmail: 'sami@example.com',
