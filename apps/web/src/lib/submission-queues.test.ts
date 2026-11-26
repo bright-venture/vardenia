@@ -235,7 +235,9 @@ describe('counts: one SQL statement', () => {
     expect(whereToSql({ isSample: { equals: true } }, a)).toBe('"is_sample" = $1')
     expect(a).toEqual([true])
     const b: unknown[] = []
-    expect(whereToSql({ isSample: { not_equals: true } }, b)).toBe('"is_sample" <> $1')
+    expect(whereToSql({ isSample: { not_equals: true } }, b)).toBe(
+      '"is_sample" is distinct from $1',
+    )
     expect(b).toEqual([true])
   })
 

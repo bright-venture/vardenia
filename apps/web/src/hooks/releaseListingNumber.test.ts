@@ -52,6 +52,12 @@ describe('releaseListingNumber, sample listings', () => {
     expect(run(data, { isSample: false, listingNumber: 5 })).toBe(data)
   })
 
+  it('restoring a sample from the trash keeps no number', () => {
+    expect(run({ deletedAt: null }, { isSample: true, listingNumber: null }).listingNumber).toBe(
+      null,
+    )
+  })
+
   it('unticking does not restore a number', () => {
     expect(
       run({ isSample: false }, { isSample: true, listingNumber: null }).listingNumber,

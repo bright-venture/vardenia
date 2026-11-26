@@ -287,7 +287,15 @@ export function whereToSql(where: Where, values: unknown[]): string {
           parts.push(`${column} = ${p}${cast}`)
           break
         case 'not_equals':
-          parts.push(`${column} <> ${p}${cast}`)
+          // A boolean flag can be NULL; `<>` would drop such a row, while Payload's
+          // own not_equals (the list filter) keeps it. `is distinct from` makes the
+          // chip count match the list. Other types keep `<>` (their columns are
+          // matched on a set status, where excluding NULL is intended).
+          parts.push(
+            target.type === 'boolean'
+              ? `${column} is distinct from ${p}${cast}`
+              : `${column} <> ${p}${cast}`,
+          )
           break
         case 'in':
           parts.push(`${column} = any(${p}::${target.type}[])`)

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import { Businesses, validTime } from './Businesses'
-import { isAdminFieldLevel } from '../access/index'
+import { isAdminFieldLevel, isStaffFieldLevel } from '../access/index'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 
 /**
@@ -354,7 +354,17 @@ describe('isSample', () => {
   it('is an admin-only checkbox that defaults to false', () => {
     expect(sample.type).toBe('checkbox')
     expect(sample.defaultValue).toBe(false)
+    expect(sample.access.read).toBe(isStaffFieldLevel)
     expect(sample.access.create).toBe(isAdminFieldLevel)
     expect(sample.access.update).toBe(isAdminFieldLevel)
+  })
+
+  it('hides the number field for a sample listing', () => {
+    const number = field('listingNumber') as unknown as {
+      admin: { condition: (d: unknown) => boolean }
+    }
+    expect(number.admin.condition({ isSample: true })).toBe(false)
+    expect(number.admin.condition({ isSample: false })).toBe(true)
+    expect(number.admin.condition(undefined)).toBe(true)
   })
 })

@@ -1,29 +1,22 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 
 /**
- * Sample listings (26 November 2026). Every listing in production was mock data
- * on this date, so all existing rows are flagged `is_sample = true` and their
- * `listing_number` is cleared. No backup of the old numbers is kept, by the
- * owner's decision.
+ * Sample listings (26 November 2026). Adds `is_sample` to businesses, false for
+ * every row. This migration changes no data: the owner flags the existing mock
+ * listings by hand with an SQL query (is_sample = true, listing_number = NULL),
+ * and admins can tick or untick the box in the admin afterwards.
  *
- * The flagging sits inside the IF so it only runs when the column is just being
- * added. A second run therefore does nothing, and real listings created later
- * (is_sample = false) are never flagged.
+ * NOTE: the Payload snapshot (.json) says this column is nullable, but on
+ * production it is NOT NULL (this migration), while databases built by dev push
+ * have it nullable. The snapshot is deliberately left as generated.
  *
- * `down` only drops the column; the cleared numbers are not restored.
+ * `down` drops the column.
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
-  DO $$
-  BEGIN
-    IF NOT EXISTS (
-      SELECT 1 FROM information_schema.columns
-      WHERE table_schema = 'payload' AND table_name = 'businesses' AND column_name = 'is_sample'
-    ) THEN
-      ALTER TABLE "payload"."businesses" ADD COLUMN "is_sample" boolean DEFAULT false NOT NULL;
-      UPDATE "payload"."businesses" SET "is_sample" = true, "listing_number" = NULL;
-    END IF;
-  END $$;`)
+  -- The ALTER takes an ACCESS EXCLUSIVE lock while old code still serves traffic.
+  SET LOCAL lock_timeout = '5s';
+  ALTER TABLE "payload"."businesses" ADD COLUMN IF NOT EXISTS "is_sample" boolean DEFAULT false NOT NULL;`)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {

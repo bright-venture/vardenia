@@ -275,7 +275,12 @@ export async function adminHome(
     payload.find({
       ...opts,
       collection: 'businesses',
-      where: { contractEndsAt: { less_than: now.toISOString() } },
+      where: {
+        and: [
+          { contractEndsAt: { less_than: now.toISOString() } },
+          { isSample: { not_equals: true } },
+        ],
+      },
       sort: 'contractEndsAt',
     }),
     payload.find({
@@ -285,6 +290,7 @@ export async function adminHome(
         and: [
           { contractEndsAt: { greater_than_equal: now.toISOString() } },
           { contractEndsAt: { less_than: soon.toISOString() } },
+          { isSample: { not_equals: true } },
         ],
       },
       sort: 'contractEndsAt',

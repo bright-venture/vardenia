@@ -26,7 +26,7 @@ fake, hold no magazine number, and never be mixed with real businesses in staff 
 ## Constraints
 
 - Migrations apply automatically on a production deploy (scripts/deploy-migrate.sh), together
-  with the two never-run payment migrations. This one runs last and must be additive and idempotent.
+  with the two never-run payment migrations. This one runs last and changes no data.
 - Unique index (issue, listingNumber) ignores nulls, so many sample rows with no number are fine.
 
 ## Approaches considered
@@ -38,13 +38,13 @@ fake, hold no magazine number, and never be mixed with real businesses in staff 
 ## Design
 
 - Field `isSample` (checkbox, default false, sidebar). Update access: admin only. Not writable by the public form route.
-- Migration (last): add `is_sample boolean NOT NULL DEFAULT false` only if missing; in the same run set
-  `is_sample = true, listing_number = NULL` on all existing rows (only when the column was just added).
+- Migration (last): add `is_sample boolean NOT NULL DEFAULT false` only if missing. No back-fill: the owner flags
+  the existing mock rows by hand with SQL (`is_sample = true, listing_number = NULL`).
   Down: drop the column (numbers are not restored).
 - Hook: `releaseListingNumber` also clears `listingNumber` when `isSample` is true (on create and update).
   Unticking does not restore a number.
-- Staff views: submission queues, counters, /admin/place-reports and Businesses list exclude sample by
-  default; add a Sample listings quick filter.
+- Staff views: queues are status-based, so mock rows already stay out of them. Added Sample/Real
+  chips on the Businesses list and the contracts-report exclusion (sample listings are left out of it).
 - Public site: unchanged.
 
 ## Left to the builder

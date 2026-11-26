@@ -1019,8 +1019,9 @@ export const Businesses: CollectionConfig = {
       admin: {
         position: 'sidebar',
         step: 1,
+        condition: (data) => !data?.isSample,
         description:
-          'The number in the printed magazine, from the range of this governorate in the chosen issue.',
+          'The number in the printed magazine, from the range of this governorate in the chosen issue. Sample listings hold no number.',
       },
     },
     {
@@ -1029,7 +1030,7 @@ export const Businesses: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       index: false,
-      access: { create: isAdminFieldLevel, update: isAdminFieldLevel },
+      access: { read: isStaffFieldLevel, create: isAdminFieldLevel, update: isAdminFieldLevel },
       admin: {
         position: 'sidebar',
         description:
