@@ -376,7 +376,10 @@
     .vd-business-chapters a::after { content: none; }
     .vd-business-chapters .vd-text-link { text-decoration: underline; text-underline-offset: .25em; }
     .vd-standing-faq .vd-story-index > nav { display: none; }
-    .vd-faq-enquiry { display: inline-flex; margin-block-end: 14px; }
+    /* The left column stays empty on the FAQ (26 November 2026): the
+       Directory button is already at the foot of the page, and the question
+       form sits under the answers. "Ask a question" stays hidden too. */
+    .vd-standing-faq .vd-story-index > .vd-button { display: none; }
     .vd-standing-faq .vd-inner-hero-actions > a[href='#page-story'] { display: none; }
     .vd-listing > header[data-title-art] { min-height: auto; }
     .vd-listing > header[data-title-art] > :is(img, [aria-hidden]) { display: none; }
