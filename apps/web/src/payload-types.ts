@@ -678,6 +678,10 @@ export interface Business {
    * The number in the printed magazine, from the range of this governorate in the chosen issue.
    */
   listingNumber?: number | null;
+  /**
+   * Mock listing shown to visitors but not a real business. Holds no magazine number. Admin only.
+   */
+  isSample?: boolean | null;
   contact?: {
     phone?: string | null;
     whatsapp?: string | null;
@@ -2103,6 +2107,7 @@ export interface BusinessesSelect<T extends boolean = true> {
   qrCode?: T;
   issue?: T;
   listingNumber?: T;
+  isSample?: T;
   contact?:
     | T
     | {
