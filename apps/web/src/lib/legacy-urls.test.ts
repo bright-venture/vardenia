@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { legacyCategoryRedirect } from './legacy-urls'
+import { legacyCategoryRedirect, mergedPageRedirect } from './legacy-urls'
 
 /**
  * The test that matters here is the one about listing pages.
@@ -47,8 +47,8 @@ describe('legacyCategoryRedirect', () => {
     expect(run('/directory?category=hospitality&price=4&has=pool,spa')).toBe(
       '/stay?price=4&has=pool,spa',
     )
-    expect(run('/directory?category=weddings&where=keserwan&district=keserwan&page=2')).toBe(
-      '/weddings?where=keserwan&district=keserwan&page=2',
+    expect(run('/directory?category=weddings&where=keserwan&city=keserwan&page=2')).toBe(
+      '/weddings?where=keserwan&city=keserwan&page=2',
     )
   })
 
@@ -76,5 +76,19 @@ describe('legacyCategoryRedirect', () => {
     ['a path that merely starts the same way', '/directory-archive?category=hospitality'],
   ])('leaves %s alone', (_name, url) => {
     expect(run(url)).toBeNull()
+  })
+})
+
+describe('mergedPageRedirect', () => {
+  it('sends Partner with us to Add your business, in the same language', () => {
+    expect(mergedPageRedirect('/partner-with-us')).toBe('/add-your-business')
+    expect(mergedPageRedirect('/ar/partner-with-us')).toBe('/ar/add-your-business')
+    expect(mergedPageRedirect('/fr/partner-with-us/')).toBe('/fr/add-your-business')
+  })
+
+  it('leaves every other address alone', () => {
+    expect(mergedPageRedirect('/add-your-business')).toBeNull()
+    expect(mergedPageRedirect('/ar')).toBeNull()
+    expect(mergedPageRedirect('/directory/partner-with-us')).toBeNull()
   })
 })

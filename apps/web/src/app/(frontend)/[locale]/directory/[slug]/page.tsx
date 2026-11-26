@@ -1,3 +1,4 @@
+import { isReviewListing } from '../../../../../lib/review-listing'
 import { ResilientPhoto } from '../../../../../components/ui/ResilientPhoto'
 import { Suspense, type ReactNode } from 'react'
 import type { Metadata } from 'next'
@@ -5,14 +6,21 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
-import { can, tierOf } from '@vardenia/core'
+import { can, canTakeBookings, hasBookingComingSoon, tierOf } from '@vardenia/core'
 import { DEFAULT_LOCALE, dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import {
   findListingBySlug,
   findAllListingSlugs,
   findRelatedListings,
 } from '../../../../../lib/listings'
-import { resolveGallery, resolvePhotograph } from '../../../../../lib/media'
+import {
+  isSeedTitleArt,
+  resolveGallery,
+  resolvePhotograph,
+  type MediaField,
+} from '../../../../../lib/media'
+import { emSherifPhoto, emSherifProfile } from '../../../../../lib/em-sherif'
+import { hiddenPages } from '../../../../../lib/hidden-pages'
 import { buildMetadata } from '../../../../../lib/seo'
 import { listingSchema } from '../../../../../lib/structured-data'
 import { resolveRules, type BookingRules } from '../../../../../lib/availability'
@@ -27,19 +35,26 @@ import { isOpenNow } from '../../../../../lib/hours'
 import { Link } from '../../../../../i18n/routing'
 import { ActionBar } from '../../../../../components/ActionBar'
 import { SHOW_LOCATION } from '../../../../../lib/location-display'
-import { mapsLink } from '../../../../../lib/maps-link'
+import { hasMapTarget, mapsLink } from '../../../../../lib/maps-link'
 import { Coordinates } from '../../../../../components/journey/Coordinates'
 import { SaveButton } from '../../../../../components/SaveButton'
 import { BookingPanel } from '../../../../../components/BookingPanel'
+import { isWholeProperty, stayConfigOf, stayFormRules } from '../../../../../lib/stay-booking'
+import { RoomsSection } from '../../../../../components/rooms/RoomsSection'
+import { listingRoomTypes } from '../../../../../lib/room-display'
+import { bookingFormModel } from '../../../../../lib/booking-form'
+import { canHaveRoomTypes } from '@vardenia/core'
 import { OpeningHoursTable } from '../../../../../components/OpeningHoursTable'
 import { ListingGrid } from '../../../../../components/ListingGrid'
 import { ScanArrival } from '../../../../../components/ScanArrival'
-import { listingSummary } from '../../../../../lib/plain-text'
+import { englishListingSummary, listingSummary } from '../../../../../lib/plain-text'
 import { ReviewForm } from '../../../../../components/ReviewForm'
 import type { PaymentsAccepted } from '../../../../../components/BookingPanel'
 import { Eyebrow, Stars } from '../../../../../components/ui'
 import { listingReviews, reviewHighlights, SCORE_MIN_REVIEWS } from '../../../../../lib/reviews'
 import { listingAnswerHours } from '../../../../../lib/answer-time'
+import { ListingExtras } from '../../../../../components/listing/ListingExtras'
+import { bookingExtrasOf } from '../../../../../lib/listing-public'
 
 /**
  * The listing page. Every printed QR code in the magazine lands here, which
@@ -118,13 +133,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const listing = await findListingBySlug(slug, locale)
   if (!listing) return {}
 
+  const editorial = emSherifProfile(listing, locale)
   return buildMetadata({
-    seo: listing.seo,
-    title: listing.name,
+    seo: isReviewListing(listing) ? { ...listing.seo, noIndex: true } : listing.seo,
+    title: editorial?.title ?? listing.name,
     // The tagline when there is one, else the opening of the description: the
     // October cleaning emptied every tagline (lib/plain-text).
-    description: listingSummary(listing),
-    fallbackImage: listing.heroImage as never,
+    description:
+      editorial?.description ??
+      (locale === 'en'
+        ? englishListingSummary(listing, categoryLabel(listing.category, locale))
+        : listingSummary(listing)),
+    fallbackImage: editorial
+      ? emSherifPhoto(listing.heroImage as MediaField)
+      : (listing.heroImage as MediaField),
     path: `/directory/${slug}`,
     locale,
   })
@@ -150,7 +172,11 @@ export default async function ListingPage({ params }: Params) {
    * bleed - which is a worse lie the larger you draw it. Without one, the
    * masthead falls back to the flat navy ground and shortens. See lib/media.
    */
-  const hero = resolvePhotograph(listing.heroImage as never, 'hero')
+  const editorial = emSherifProfile(listing, locale)
+  const photo = editorial
+    ? emSherifPhoto(listing.heroImage as MediaField)
+    : (listing.heroImage as MediaField)
+  const hero = resolvePhotograph(photo, 'hero')
   // Gallery size is what a listing tier actually buys. TIER_CAPABILITIES has
   // described this since the beginning and nothing read it, so every listing -
   // including free ones - showed all 40 images a partner pays for.
@@ -158,13 +184,19 @@ export default async function ListingPage({ params }: Params) {
     listing.gallery as never,
     can(tierOf(listing.tier), 'galleryLimit'),
   )
-  const place = placeLabel(listing.governorate, listing.district, locale as Locale)
-  // The area, the address and both map links are hidden for now; see
+  const place = placeLabel(listing.governorate, listing.city, locale as Locale)
+  // The area, the address and both map links follow the switch; see
   // lib/location-display. `place` is still computed for the related listings.
-  const address = SHOW_LOCATION ? listing.address : null
-  const open = isOpenNow(listing.openingHours as never)
+  // Blank counts as none: spaces alone must not draw an empty address row.
+  const linkToDining = editorial && !(await hiddenPages()).includes('eat-and-drink')
+  const streetAddress = editorial?.streetAddress ?? listing.address
+  const address = SHOW_LOCATION ? streetAddress?.trim() || null : null
+  // For this branch link to the restaurant's own hours until the catalog is reconciled.
+  const publicHours = editorial ? null : listing.openingHours
+  const open = isOpenNow(publicHours as never)
 
-  const point = Array.isArray(listing.location) ? (listing.location as [number, number]) : null
+  const point =
+    !editorial && Array.isArray(listing.location) ? (listing.location as [number, number]) : null
 
   /**
    * The Google rating, if somebody has looked it up.
@@ -187,13 +219,19 @@ export default async function ListingPage({ params }: Params) {
    * every listing that does not take bookings - which is most of them - in
    * exchange for a column of white space.
    */
-  const bookable = resolveRules(listing.booking as BookingRules | null).enabled
-
   const subcategories = Array.isArray(listing.subcategories)
     ? (listing.subcategories as string[])
     : []
+  // Booking is open only for the kinds that book today (core
+  // isBookableSubcategory): an activity whose switch was left on shows no form,
+  // since the request would be refused anyway (lib/booking-service).
+  const bookable =
+    resolveRules(listing.booking as BookingRules | null).enabled && canTakeBookings(subcategories)
+  // Activities and Guided Tours: listed, booking coming soon (25 November 2026).
+  const bookingSoon = hasBookingComingSoon(subcategories)
+  const tSoon = await getTranslations('comingSoon')
   const amenities = Array.isArray(listing.amenities) ? (listing.amenities as string[]) : []
-  const hours = Array.isArray(listing.openingHours) ? listing.openingHours : []
+  const hours = Array.isArray(publicHours) ? publicHours : []
 
   /** Whether the ruled fact table has any rows, and whether it exists at all. */
   const hasRows = Boolean(address) || subcategories.length > 0
@@ -212,20 +250,23 @@ export default async function ListingPage({ params }: Params) {
       : null
 
   /**
-   * Room or unit types, for a stay. Read from the same booking group the form
-   * uses, so the section on the page and the dropdown in the form never disagree.
-   * Blank labels a half-filled CMS row might carry are dropped.
+   * Real rooms, for a hotel with room types (17 November 2026).
+   * When there are any, they replace the simple room labels and the stay form:
+   * the guest picks dates and rooms in the list, and the sidebar points there.
    */
-  const bookingGroup = (listing.booking ?? {}) as {
-    roomTypes?: ({ label?: string | null; note?: string | null } | null)[] | null
+  const realRooms =
+    bookable &&
+    canHaveRoomTypes((listing as { subcategories?: string[] | null }).subcategories ?? [])
+      ? await listingRoomTypes(listing.id, locale as Locale)
+      : []
+  const stayRules = (listing.booking ?? {}) as BookingRules & {
+    checkInTime?: string | null
+    checkOutTime?: string | null
+    autoConfirm?: boolean | null
   }
-  const roomTypes = (bookingGroup.roomTypes ?? []).flatMap((entry) => {
-    const label = typeof entry?.label === 'string' ? entry.label.trim() : ''
-    if (!label) return []
-    const note = typeof entry?.note === 'string' ? entry.note.trim() : ''
-    // No nightly rate: listings show no prices (decided 10 November 2026).
-    return [{ label, note }]
-  })
+  const stayModel = bookingFormModel(stayRules)
+
+  const tRooms = await getTranslations('rooms')
 
   const reviews = await listingReviews(listing.id)
   const highlights = reviewHighlights(reviews.reviews)
@@ -243,7 +284,7 @@ export default async function ListingPage({ params }: Params) {
       id: listing.id,
       category: listing.category,
       location: listing.location,
-      district: listing.district,
+      city: listing.city,
       governorate: listing.governorate,
     },
   })
@@ -251,14 +292,36 @@ export default async function ListingPage({ params }: Params) {
   // its region still gets three suggestions, but not the word.
   const anyNear = related.some((entry) => entry.nearby.near)
 
+  const schema = listingSchema(
+    {
+      ...listing,
+      address: streetAddress,
+      location: point,
+      openingHours: publicHours,
+      heroImage: photo,
+    },
+    locale,
+  )
+  const restaurantSchema = editorial
+    ? {
+        ...schema,
+        '@type': 'Restaurant',
+        name: editorial.name,
+        description: editorial.description,
+        servesCuisine: 'Lebanese',
+        hasMenu: editorial.menuUrl,
+      }
+    : schema
+
   return (
     <main>
       <article className="vd-listing">
         {/* Invisible to readers, read by search engines. See lib/structured-data. */}
-        <JsonLd data={listingSchema(listing as never, locale as Locale)} />
+        <JsonLd data={restaurantSchema} />
 
         <header
           data-has-photograph={Boolean(hero)}
+          data-title-art={isSeedTitleArt(photo) || undefined}
           className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden"
         >
           {/*
@@ -309,13 +372,13 @@ export default async function ListingPage({ params }: Params) {
             page other than the suggestions at the foot.
           */}
             <Link
-              href="/directory"
+              href={linkToDining ? '/eat-and-drink' : '/directory'}
               className="text-cedar-100/70 hover:text-surface-base mb-8 inline-flex w-fit items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors"
             >
               <span aria-hidden className="rtl:-scale-x-100">
                 &larr;
               </span>
-              {t('title')}
+              {linkToDining ? 'Eat & Drink' : t('title')}
             </Link>
 
             {/*
@@ -352,8 +415,13 @@ export default async function ListingPage({ params }: Params) {
               dir="auto"
               className="text-surface-base mt-4 text-[clamp(2.5rem,7vw,5rem)] leading-[1.02]"
             >
-              {listing.name}
+              {editorial?.name ?? listing.name}
             </h1>
+            {editorial && (
+              <p className="text-surface-base mt-4 max-w-prose text-lg leading-relaxed">
+                {editorial.intro}
+              </p>
+            )}
             {point && <Coordinates place={{ lat: point[1], lon: point[0] }} enabled />}
 
             <div className="text-cedar-100/80 mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -365,7 +433,7 @@ export default async function ListingPage({ params }: Params) {
               The dot is aria-hidden because the word beside it already says
               it. Colour is never the only signal here.
             */}
-              {open !== null ? (
+              {open !== null && realRooms.length === 0 ? (
                 <span className="inline-flex items-center gap-2">
                   <span
                     aria-hidden
@@ -414,11 +482,17 @@ export default async function ListingPage({ params }: Params) {
         </header>
 
         <div
-          className={`mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
+          className={`vd-listing-details mx-auto grid max-w-6xl gap-14 px-6 py-14 sm:py-20 ${
             bookable ? 'lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-20' : ''
           }`}
         >
           <div className={bookable ? 'min-w-0' : 'min-w-0 max-w-3xl'}>
+            {bookingSoon ? (
+              <p className="vd-booking-soon border-gold-300 bg-surface-raised text-ink-700 mb-8 border-s-2 px-4 py-3 text-sm">
+                <span className="vd-soon-badge !ms-0 me-3">{tSoon('label')}</span>
+                {tSoon('bookingNote')}
+              </p>
+            ) : null}
             {/*
             The tagline set as display type, which is the design's call and a
             good one: it is one line saying what the place is, and at body size
@@ -431,15 +505,18 @@ export default async function ListingPage({ params }: Params) {
               </p>
             ) : null}
 
-            {/* Directions (only with coordinates) sits beside Save (always). A
-              listing with no location still offers the heart. */}
+            {/* Directions sit beside Save (always), only while locations are
+              shown (lib/location-display) and only when the listing has a
+              point, a map link or an address to send the reader to. */}
             <div className={`flex flex-wrap items-center gap-3 ${listing.tagline ? 'mt-10' : ''}`}>
-              {SHOW_LOCATION ? (
+              {SHOW_LOCATION &&
+              hasMapTarget({ coordinates: point, mapUrl: listing.mapUrl, address }) ? (
                 <ActionBar
                   name={listing.name ?? ''}
-                  address={listing.address}
+                  address={address}
                   place={place}
                   coordinates={point}
+                  mapUrl={listing.mapUrl}
                 />
               ) : null}
               <SaveButton slug={slug} variant="button" />
@@ -510,6 +587,7 @@ export default async function ListingPage({ params }: Params) {
                           address,
                           place,
                           coordinates: point,
+                          mapUrl: listing.mapUrl,
                         })}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -519,6 +597,21 @@ export default async function ListingPage({ params }: Params) {
                     </Row>
                   ) : null}
 
+                  {editorial && (
+                    <>
+                      <Row label="Cuisine">Lebanese</Row>
+                      <Row label="Plan your visit">
+                        <div className="flex flex-wrap gap-x-5 gap-y-2">
+                          <a className="underline underline-offset-4" href={editorial.menuUrl}>
+                            Read the Beirut menu
+                          </a>
+                          <a className="underline underline-offset-4" href={editorial.hoursUrl}>
+                            Check service hours with Em Sherif
+                          </a>
+                        </div>
+                      </Row>
+                    </>
+                  )}
                   {subcategories.length > 0 ? (
                     <Row label={t('type')}>
                       {subcategories
@@ -544,7 +637,21 @@ export default async function ListingPage({ params }: Params) {
             page, and the urgent half of the question - open or not - is already
             answered beside the name.
           */}
-              {hours.length > 0 ? (
+              {/* A hotel with room types gives check-in and check-out, not
+                  opening hours (17 November 2026). */}
+              {realRooms.length > 0 ? (
+                <div className="border-ink-100 grid gap-1 border-b py-5 sm:grid-cols-[180px_1fr] sm:gap-4">
+                  <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
+                    {tRooms('checkInOut')}
+                  </span>
+                  <span className="text-ink-900 text-sm" dir="auto">
+                    {tRooms('times', {
+                      in: stayRules.checkInTime || '15:00',
+                      out: stayRules.checkOutTime || '11:00',
+                    })}
+                  </span>
+                </div>
+              ) : hours.length > 0 ? (
                 <details className="border-ink-100 group border-b py-5">
                   <summary className="flex cursor-pointer list-none items-center gap-4 sm:grid sm:grid-cols-[180px_1fr]">
                     <span className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
@@ -561,7 +668,7 @@ export default async function ListingPage({ params }: Params) {
                     </span>
                   </summary>
                   <div className="mt-4 sm:ps-[180px]">
-                    <OpeningHoursTable hours={listing.openingHours as never} />
+                    <OpeningHoursTable hours={hours as never} />
                   </div>
                 </details>
               ) : null}
@@ -586,6 +693,9 @@ export default async function ListingPage({ params }: Params) {
               </ul>
             ) : null}
 
+            {/* Contact links, hotel facilities, guest house stay and features, restaurant seating areas. */}
+            <ListingExtras listing={listing} locale={locale as Locale} />
+
             {listing.description ? (
               <div dir="auto" className="prose-vardenia mt-14 max-w-2xl">
                 <RichText data={listing.description as never} />
@@ -597,25 +707,17 @@ export default async function ListingPage({ params }: Params) {
             note beside each - the same set a guest picks from in the booking
             form, shown here so they can weigh the options before opening it.
           */}
-            {roomTypes.length > 0 ? (
-              <section className="mt-14">
-                <h2 className="text-ink-500 font-mono text-[11px] uppercase tracking-[0.16em]">
-                  {t('rooms')}
-                </h2>
-                <ul className="border-ink-100 mt-4 border-t">
-                  {roomTypes.map((room) => (
-                    <li
-                      key={room.label}
-                      className="border-ink-100 flex items-baseline justify-between gap-6 border-b py-3"
-                    >
-                      <span className="text-ink-900">{room.label}</span>
-                      <span className="text-ink-500 flex flex-wrap items-baseline justify-end gap-x-3 text-sm">
-                        {room.note ? <span>{room.note}</span> : null}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+            {realRooms.length > 0 ? (
+              <RoomsSection
+                businessId={listing.id}
+                rooms={realRooms}
+                locale={locale as Locale}
+                earliestDate={stayModel.earliestDate}
+                latestDate={stayModel.latestDate}
+                checkInTime={stayRules.checkInTime || '15:00'}
+                checkOutTime={stayRules.checkOutTime || '11:00'}
+                autoConfirm={stayRules.autoConfirm === true}
+              />
             ) : null}
 
             {/* The menu, as a link to the file. Restaurants and cafes keep one as a
@@ -726,11 +828,19 @@ export default async function ListingPage({ params }: Params) {
               <div className="lg:sticky lg:top-10">
                 <BookingPanel
                   businessId={listing.id}
-                  rules={listing.booking as never}
+                  rules={
+                    // A guest house books whole nights, at least its minimum,
+                    // up to its guest cap (lib/stay-booking, Task 6).
+                    (isWholeProperty(listing)
+                      ? stayFormRules(listing.booking as BookingRules | null, stayConfigOf(listing))
+                      : listing.booking) as never
+                  }
                   locale={locale as Locale}
                   venue={listing.name}
                   payments={(listing as { payments?: PaymentsAccepted | null }).payments}
                   answerHours={answerHours}
+                  roomsOnPage={realRooms.length > 0}
+                  extras={bookingExtrasOf(listing)}
                 />
               </div>
             </aside>

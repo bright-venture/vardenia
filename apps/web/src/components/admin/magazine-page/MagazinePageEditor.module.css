@@ -1,0 +1,346 @@
+.editor {
+  container-type: inline-size;
+  max-inline-size: 90rem;
+  padding-block: 1.5rem 3rem;
+  color: var(--theme-elevation-900, #22242a);
+  font:
+    0.9375rem/1.45 system-ui,
+    sans-serif;
+}
+
+.header {
+  margin-block-end: 1.75rem;
+}
+
+.header h1,
+.header p,
+.previewHeading h2,
+.previewHeading p {
+  margin: 0;
+}
+
+.header p:first-child {
+  margin-block-end: 0.25rem;
+  color: var(--theme-elevation-700, #4b4b51);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin-block-end: 0.5rem;
+  font:
+    500 clamp(2rem, 5cqw, 3.5rem)/1.02 Georgia,
+    serif;
+  letter-spacing: -0.035em;
+}
+
+.header p:last-child,
+.previewHeading p {
+  color: var(--theme-elevation-700, #4b4b51);
+}
+
+.workspace,
+.controls,
+.panel,
+.layout,
+.field {
+  display: grid;
+  gap: 0.75rem;
+  min-inline-size: 0;
+}
+
+.workspace {
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.controls {
+  gap: 1rem;
+}
+
+.panel,
+.layout {
+  margin: 0;
+}
+
+.panel {
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-200, #cdcbd0);
+}
+
+.legend {
+  padding-inline: 0.375rem;
+  font-size: 1.0625rem;
+  font-weight: 650;
+}
+
+.layout {
+  border: 0;
+  padding: 0;
+}
+
+.layout legend,
+.field {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.layout legend {
+  margin-block-end: 0.375rem;
+}
+
+.choices,
+.pair {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pair > * {
+  flex: 1;
+}
+
+.choice {
+  display: flex;
+  flex: 1;
+  min-block-size: 2.75rem;
+  min-inline-size: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px solid var(--theme-elevation-200, #cdcbd0);
+  padding: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.choice:has(:checked) {
+  border-color: var(--theme-elevation-800, #252831);
+  background: var(--theme-elevation-100, #eeece8);
+  font-weight: 650;
+}
+
+.choice:hover,
+.photoPicker:hover,
+.photoFile button:hover {
+  background: var(--theme-elevation-50, #f7f5f1);
+}
+
+.choice input {
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin: 0;
+  accent-color: var(--theme-elevation-800, #252831);
+}
+
+.editor :focus-visible,
+.photoPicker:has(:focus-visible) {
+  outline: 2px solid var(--theme-elevation-900, #22242a);
+  outline-offset: 2px;
+}
+
+.field {
+  gap: 0.375rem;
+}
+
+.field input,
+.field textarea,
+.field select,
+.photoPicker,
+.photoFile button {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  border: 1px solid var(--theme-elevation-300, #b8b6bc);
+  border-radius: 0;
+  background: var(--theme-elevation-0, #fff);
+  color: inherit;
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.photoPicker {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.photoPicker input[type='file'] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  min-block-size: 0;
+  border: 0;
+  padding: 0;
+  clip-path: inset(50%);
+}
+
+.photoFile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.photoFile button {
+  inline-size: auto;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.error {
+  margin: 0;
+  color: var(--theme-error-700, #a41520);
+}
+
+.previewHeading {
+  margin-block-end: 0.75rem;
+}
+
+.previewHeading h2 {
+  font-size: 1.1875rem;
+  font-weight: 650;
+}
+
+.previewHeading p {
+  font-size: 0.875rem;
+}
+
+.board {
+  display: grid;
+  justify-items: center;
+  padding: clamp(0.625rem, 3cqw, 1.75rem);
+  background: var(--theme-elevation-100, #eeece8);
+}
+
+@container (min-width: 45rem) {
+  .workspace {
+    grid-template-columns: minmax(18rem, 5fr) minmax(0, 7fr);
+    gap: clamp(1.5rem, 3cqw, 3rem);
+  }
+
+  .preview {
+    position: sticky;
+    inset-block-start: 1.25rem;
+  }
+}
+
+/* The paper shows source artwork at the PDF's 148 × 210 mm trim. */
+.paper {
+  position: relative;
+  container-type: inline-size;
+  inline-size: 100%;
+  max-inline-size: 34rem;
+  aspect-ratio: 148 / 210;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  color: #231f20;
+  box-shadow: 0 0.375rem 1.5rem #15171926;
+}
+
+@container (min-width: 45rem) {
+  .paper {
+    max-inline-size: clamp(15rem, calc((100svh - 9rem) * 148 / 210), 34rem);
+  }
+}
+
+@font-face {
+  font-family: 'Magazine Unica';
+  src: local('Neue Haas Unica Pro Light'), local('NeueHaasUnicaPro-Light');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Magazine Unica';
+  src: local('Neue Haas Unica Pro Regular'), local('NeueHaasUnicaPro-Regular');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Magazine Unica';
+  src: local('Neue Haas Unica Pro Bold'), local('NeueHaasUnicaPro-Bold');
+  font-weight: 700;
+}
+
+.slot,
+.frame,
+.mask,
+.liveText {
+  position: absolute;
+}
+
+.slot {
+  inset: 0;
+  pointer-events: none;
+}
+
+.frame img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.mask {
+  background-color: var(--paper);
+}
+
+.liveText {
+  display: block;
+  overflow: hidden;
+  transform: translateY(-0.9em);
+  color: #231f20;
+  font:
+    400 1.6685cqw/1.12 'Magazine Unica',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.liveText[data-field='category'] {
+  font-size: 2.1453cqw;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.liveText[data-field='name'] {
+  font-size: 3.8138cqw;
+  font-weight: 700;
+}
+
+.liveText[data-field='description'] {
+  display: -webkit-box;
+  color: #2a211b;
+  font:
+    400 1.9069cqw/1.2 'Open Sans',
+    Arial,
+    sans-serif;
+  -webkit-box-orient: vertical;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.liveText[data-field='website'] {
+  font-weight: 700;
+}
+
+.liveText[data-field='folio'] {
+  font-size: 1.5494cqw;
+}

@@ -151,9 +151,52 @@ export function isActiveCategory(slug: string): boolean {
 
 const SUBCATEGORIES: readonly SubCategory[] = CATEGORIES.flatMap((c) => c.children)
 
-/** True for a kind of place that can take bookings through Vardenia. */
+/**
+ * Coming soon (25 November 2026, the owner's decision): booking is built for
+ * hotels, getaways and restaurants only, so the other kinds marked `bookable`
+ * wait.
+ *
+ * - `BOOKING_COMING_SOON_KINDS`: kinds whose booking is not open yet. They do
+ *   not take bookings (isBookableSubcategory); Activities and Guided Tours are
+ *   in the printed magazine, so their listings stay visible, with a "Booking
+ *   coming soon" note on the page.
+ * - `COMING_SOON_CATEGORIES`: whole categories not open yet (Weddings, Getting
+ *   Around). Their listings are hidden from the public (access/index,
+ *   PUBLISHED_SQL) and their section page shows a Coming soon banner.
+ *
+ * To open one later, take it out of its list.
+ */
+export const BOOKING_COMING_SOON_KINDS: readonly string[] = [
+  'guided-tours',
+  'activities',
+  'event-planners',
+  'car-rental',
+  'airport-transfers',
+  'private-drivers',
+]
+
+export const COMING_SOON_CATEGORIES: readonly CategorySlug[] = ['weddings', 'transportation']
+
+export function isComingSoonCategory(slug: string | null | undefined): boolean {
+  return Boolean(slug) && (COMING_SOON_CATEGORIES as readonly string[]).includes(slug as string)
+}
+
+/** A listing with a kind whose booking is coming soon and no kind that books today. */
+export function hasBookingComingSoon(
+  subcategories: readonly (string | null | undefined)[],
+): boolean {
+  return (
+    !canTakeBookings(subcategories) &&
+    subcategories.some(
+      (slug) => Boolean(slug) && BOOKING_COMING_SOON_KINDS.includes(slug as string),
+    )
+  )
+}
+
+/** True for a kind of place that can take bookings through Vardenia today. */
 export function isBookableSubcategory(slug: string | null | undefined): boolean {
   if (!slug) return false
+  if (BOOKING_COMING_SOON_KINDS.includes(slug)) return false
   const found = SUBCATEGORIES.find((child) => child.slug === slug)
   return found?.bookable === true && found.retired !== true
 }
@@ -168,8 +211,99 @@ export function canTakeBookings(subcategories: readonly (string | null | undefin
   return subcategories.some(isBookableSubcategory)
 }
 
+/**
+ * The kinds of place that sell rooms by room type (17 November 2026).
+ *
+ * A hotel lists its room types (Standard, Deluxe, Suite), each with a number
+ * of rooms, and a guest books rooms of those types for nights. Every other
+ * bookable kind keeps the single capacity number it always had.
+ *
+ * Getaways left this list on 20 November 2026 (Task 6): a guest house is sold
+ * as a whole property, see WHOLE_PROPERTY_SUBCATEGORIES and core/stay.
+ */
+export const ROOM_TYPE_SUBCATEGORIES = ['hotels'] as const
+
+/**
+ * Whether a listing filed under these kinds of place may have room types.
+ *
+ * Never for a getaway, even one also filed as a hotel: a whole-property stay
+ * comes first (Task 6), so its bookings are never split between rooms and the
+ * whole house, which would let both be sold for the same night. The Businesses
+ * collection refuses that combination on save as well (hooks/guardKindFields).
+ */
+export function canHaveRoomTypes(subcategories: readonly (string | null | undefined)[]): boolean {
+  return (
+    !isWholePropertyStay(subcategories) &&
+    subcategories.some(
+      (slug) => !!slug && (ROOM_TYPE_SUBCATEGORIES as readonly string[]).includes(slug),
+    )
+  )
+}
+
+/**
+ * The kinds of place booked as one whole property (20 November 2026).
+ *
+ * A guest house, villa or chalet: one stay at a time for some nights, priced
+ * per night with an included-guest count and optional packages (the listing's
+ * `stay` group, core/stay). No room types.
+ */
+export const WHOLE_PROPERTY_SUBCATEGORIES = ['getaways'] as const
+
+/** Whether a listing filed under these kinds of place is booked as a whole property. */
+export function isWholePropertyStay(
+  subcategories: readonly (string | null | undefined)[] | null | undefined,
+): boolean {
+  return (subcategories ?? []).some(
+    (slug) => !!slug && (WHOLE_PROPERTY_SUBCATEGORIES as readonly string[]).includes(slug),
+  )
+}
+
 /** True when any kind of place in this category can be booked. */
 export function categoryTakesBookings(category: string | null | undefined): boolean {
   const found = category ? findCategory(category) : undefined
   return (found?.children ?? []).some((child) => isBookableSubcategory(child.slug))
+}
+
+/**
+ * The kinds of place a business owner may submit on the public "add your place"
+ * form (23 November 2026). One shared list: the schema refuses anything else and
+ * the form offers exactly these.
+ *
+ * The other six kinds (guided-tours, activities, event-planners, car-rental,
+ * airport-transfers, private-drivers) are coming soon: still in the taxonomy,
+ * not yet submittable. Adding one later means adding its slug here.
+ */
+export const SUBMITTABLE_KIND_SLUGS = [
+  'hotels',
+  'getaways',
+  'restaurants',
+  'cafes',
+  'pools',
+  'nightlife',
+  'historic-sites',
+  'festivals',
+  'malls',
+  'gyms',
+] as const
+
+export type SubmittableKindSlug = (typeof SUBMITTABLE_KIND_SLUGS)[number]
+
+export function isSubmittableKind(slug: unknown): slug is SubmittableKindSlug {
+  return typeof slug === 'string' && (SUBMITTABLE_KIND_SLUGS as readonly string[]).includes(slug)
+}
+
+/** The category a kind of place belongs to, or undefined for an unknown slug. */
+export function categoryOfKind(slug: string): CategorySlug | undefined {
+  return SUBCATEGORY_PARENT[slug]
+}
+
+/** The submittable kinds grouped by category, in taxonomy order; empty categories are left out. */
+export function submittableKindsByCategory(): Array<{
+  category: Category
+  kinds: SubCategory[]
+}> {
+  return CATEGORIES.map((category) => ({
+    category,
+    kinds: category.children.filter((child) => isSubmittableKind(child.slug)),
+  })).filter((group) => group.kinds.length > 0)
 }

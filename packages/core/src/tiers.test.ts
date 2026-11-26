@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { HOME_PAGE_PLACES, LISTING_TIERS, TIER_CAPABILITIES, can, tierOf } from './tiers'
+import {
+  DEFAULT_MAX_GOLD_PER_CATEGORY,
+  DEFAULT_MAX_PLATINUM,
+  LISTING_TIERS,
+  TIER_CAPABILITIES,
+  can,
+  tierOf,
+} from './tiers'
 
 /**
  * The commercial model, asserted rather than assumed.
@@ -50,6 +57,7 @@ describe('the ladder holds its shape', () => {
         'printInclusion',
         'pushCampaigns',
         'homePage',
+        'topOfCategory',
       ] as const) {
         if (below[flag]) {
           expect(above[flag], `${LISTING_TIERS[i]} lost ${flag}`).toBe(true)
@@ -78,18 +86,30 @@ describe('the ladder holds its shape', () => {
   })
 
   /**
-   * Gold is silver with the top of the list and the home page band. Only a
-   * magazine listing can buy it, which is the point: every silver listing must
-   * come before every bronze one, so a website-only listing bought to the top
-   * of the list is something that cannot be sold.
+   * Gold is silver plus the top of its category; platinum is gold plus the
+   * home page band. Only platinum has the home page.
    */
-  it('puts the home page band on gold alone, on top of everything silver has', () => {
-    const { bronze, silver, gold } = TIER_CAPABILITIES
-    expect(gold.homePage).toBe(true)
+  it('puts the top of the category on gold and platinum, the home page on platinum alone', () => {
+    const { bronze, silver, gold, platinum } = TIER_CAPABILITIES
+    expect(can('bronze', 'topOfCategory')).toBe(false)
+    expect(can('silver', 'topOfCategory')).toBe(false)
+    expect(can('gold', 'topOfCategory')).toBe(true)
+    expect(can('platinum', 'topOfCategory')).toBe(true)
+    expect(can('gold', 'homePage')).toBe(false)
+    expect(can('platinum', 'homePage')).toBe(true)
     expect(silver.homePage).toBe(false)
     expect(bronze.homePage).toBe(false)
-    expect(gold.printInclusion).toBe(true)
-    expect(gold.qrCode).toBe(true)
+    for (const t of [gold, platinum]) {
+      expect(t.printInclusion).toBe(true)
+      expect(t.qrCode).toBe(true)
+    }
+  })
+
+  it('gives bronze the website only and silver the magazine with its printed code', () => {
+    expect(can('bronze', 'printInclusion')).toBe(false)
+    expect(can('bronze', 'qrCode')).toBe(false)
+    expect(can('silver', 'printInclusion')).toBe(true)
+    expect(can('silver', 'qrCode')).toBe(true)
   })
 
   /**
@@ -117,12 +137,12 @@ describe('the ladder holds its shape', () => {
    * bury the magazine listings underneath the website-only ones.
    */
   it('declares the tiers cheapest first, which is what sorts the dearest first', () => {
-    expect(LISTING_TIERS).toEqual(['bronze', 'silver', 'gold'])
+    expect(LISTING_TIERS).toEqual(['bronze', 'silver', 'gold', 'platinum'])
   })
 
-  it('has room on the home page for as many gold listings as it shows', () => {
-    expect(HOME_PAGE_PLACES).toBeGreaterThan(0)
-    expect(Number.isInteger(HOME_PAGE_PLACES)).toBe(true)
+  it('defaults both caps to six places', () => {
+    expect(DEFAULT_MAX_GOLD_PER_CATEGORY).toBe(6)
+    expect(DEFAULT_MAX_PLATINUM).toBe(6)
   })
 
   /** `basic` was renamed `bronze` on 5 November 2026, with the same meaning. */

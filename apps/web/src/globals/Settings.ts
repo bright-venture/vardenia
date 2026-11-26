@@ -1,7 +1,7 @@
 import type { GlobalConfig, NumberFieldSingleValidation } from 'payload'
 import { number } from 'payload/shared'
-import { HOME_PAGE_PLACES } from '@vardenia/core'
-import { isAdmin, isStaff } from '../access/index'
+import { DEFAULT_MAX_GOLD_PER_CATEGORY, DEFAULT_MAX_PLATINUM } from '@vardenia/core'
+import { isAdmin, isAdminFieldLevel, isStaff } from '../access/index'
 import { clearListingsCache } from '../hooks/revalidateListings'
 import { HIDEABLE_LABELS, HIDEABLE_PAGES } from '../lib/hideable-pages'
 
@@ -11,8 +11,8 @@ import { HIDEABLE_LABELS, HIDEABLE_PAGES } from '../lib/hideable-pages'
  *
  * - Commission: the default rate venues pay on what their guests spent, and
  *   the rate for reading a receipt in pounds as dollars (core/booking-fees).
- * - Tiers: how many gold listings the home page shows, and so how many can be
- *   sold (core/tiers).
+ * - Tiers: how many gold listings each category can hold, and how many platinum
+ *   listings the home page shows, and so how many can be sold (core/tiers).
  * - Pages: standing pages hidden from the site while not ready (lib/hidden-pages).
  * - Accounts: a switch that pauses new customer sign-ups (lib/signups).
  *
@@ -25,33 +25,90 @@ import { HIDEABLE_LABELS, HIDEABLE_PAGES } from '../lib/hideable-pages'
  * admin changes it, as with every other commercial setting.
  */
 
-/** The most the home page band can sensibly hold: two rows of a wide screen, many swipes on a phone. */
-export const MAX_GOLD_PLACES = 24
+/** The most a band or a category's top can sensibly hold: two rows of a wide screen, many swipes on a phone. */
+export const MAX_TIER_PLACES = 24
 
 /**
- * A number of places that every gold listing already sold still fits in.
+ * A platinum limit that every platinum listing already sold still fits in.
  *
- * Lowering it below the gold listings there are would leave some of them paid
- * for and off the home page, cut by name. So it is refused, with the way out.
- * Separate from the validator so the rule can be tested without a database.
+ * Lowering it below the platinum listings there are would leave some of them
+ * paid for and off the home page, cut by name. So it is refused, with the way
+ * out. Separate from the validator so the rule can be tested without a database.
  */
-export function placesFloorCheck(places: number, goldListings: number): string | true {
-  if (places >= goldListings) return true
-  return `There are ${goldListings} gold listings, so the home page needs at least ${goldListings} places. Move ${goldListings - places} of them to silver first.`
+export function platinumFloorCheck(places: number, platinumListings: number): string | true {
+  if (places >= platinumListings) return true
+  return `There are ${platinumListings} platinum listings, so the home page needs at least ${platinumListings} places. Move ${platinumListings - places} of them to gold first.`
 }
 
-const validatePlaces: NumberFieldSingleValidation = async (value, options) => {
+/** The category holding the most gold listings, and how many, or null when there are none. */
+export function highestPerCategory(
+  goldListings: { category?: unknown }[],
+): { category: string; count: number } | null {
+  const counts = new Map<string, number>()
+  for (const { category } of goldListings) {
+    if (typeof category !== 'string') continue
+    counts.set(category, (counts.get(category) ?? 0) + 1)
+  }
+  let top: { category: string; count: number } | null = null
+  for (const [category, count] of counts) {
+    if (!top || count > top.count) top = { category, count }
+  }
+  return top
+}
+
+/** A gold limit that the fullest category already fits in. Refused otherwise, as for platinum. */
+export function goldFloorCheck(
+  places: number,
+  fullest: { category: string; count: number } | null,
+): string | true {
+  if (!fullest || places >= fullest.count) return true
+  return `The ${fullest.category} category has ${fullest.count} gold listings, so each category needs at least ${fullest.count} places. Move ${fullest.count - places} of them to silver first.`
+}
+
+/**
+ * The price of one year in the magazine: at least 1 (lead decision, 24
+ * November 2026: there are no free places). The payment engine also refuses
+ * to count a balance without a price above 0.
+ */
+export const placePriceCheck = (value: unknown): true | string =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 1
+    ? true
+    : 'Enter the price of one year: 1 or more. Places are never free.'
+
+export const validatePricePerYear: NumberFieldSingleValidation = async (value, options) => {
+  const check = placePriceCheck(value)
+  if (check !== true) return check
+  return number(value, options)
+}
+
+export const validateMaxPlatinum: NumberFieldSingleValidation = async (value, options) => {
   const valid = await number(value, options)
   if (valid !== true) return valid
   if (value === null || value === undefined) return true
   const { totalDocs } = await options.req.payload.count({
     collection: 'businesses',
-    // Drafts count: a gold draft has been sold its place, as in fields/tier.
-    where: { tier: { equals: 'gold' } },
+    // Drafts count: a platinum draft has been sold its place, as in fields/tier.
+    where: { tier: { equals: 'platinum' } },
     overrideAccess: true,
     req: options.req,
   })
-  return placesFloorCheck(value, totalDocs)
+  return platinumFloorCheck(value, totalDocs)
+}
+
+export const validateMaxGold: NumberFieldSingleValidation = async (value, options) => {
+  const valid = await number(value, options)
+  if (valid !== true) return valid
+  if (value === null || value === undefined) return true
+  const { docs } = await options.req.payload.find({
+    collection: 'businesses',
+    where: { tier: { equals: 'gold' } },
+    select: { category: true },
+    depth: 0,
+    pagination: false,
+    overrideAccess: true,
+    req: options.req,
+  })
+  return goldFloorCheck(value, highestPerCategory(docs))
 }
 
 /** Whether the list of hidden pages is different after a save, in any order. */
@@ -87,7 +144,7 @@ export const Settings: GlobalConfig = {
   },
   access: { read: isStaff, update: isAdmin },
   hooks: {
-    // The gold places decide the home page band, which is cached with the
+    // The platinum places decide the home page band, which is cached with the
     // listings: clear it so a new number shows on the next view.
     afterChange: [
       async ({ doc, previousDoc }) => {
@@ -141,20 +198,33 @@ export const Settings: GlobalConfig = {
         {
           label: 'Tiers',
           description:
-            'Bronze is the website only, silver adds a page in the magazine, and gold adds first place in every list and a place in the band at the top of the home page. Every silver listing comes before every bronze one. A listing tier is set on its Commercial tab.',
+            'Bronze is the website only, silver adds a page in the magazine, gold adds first place in its category, and platinum adds a place in the band at the top of the home page. Every silver listing comes before every bronze one. A listing tier is set on its Commercial tab.',
           fields: [
             {
-              name: 'goldPlaces',
-              label: 'Gold places on the home page',
+              name: 'maxGoldPerCategory',
+              label: 'Gold listings per category',
               type: 'number',
               min: 1,
-              max: MAX_GOLD_PLACES,
+              max: MAX_TIER_PLACES,
               admin: {
                 step: 1,
-                placeholder: String(HOME_PAGE_PLACES),
-                description: `How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: ${HOME_PAGE_PLACES}.`,
+                placeholder: String(DEFAULT_MAX_GOLD_PER_CATEGORY),
+                description: `How many gold listings each category can hold at the top, and so how many can be sold per category. A listing cannot be moved to gold once its category is full, and the number cannot go below the gold listings in the fullest category. Platinum listings do not count. Empty: ${DEFAULT_MAX_GOLD_PER_CATEGORY}.`,
               },
-              validate: validatePlaces,
+              validate: validateMaxGold,
+            },
+            {
+              name: 'maxPlatinum',
+              label: 'Platinum listings on the home page',
+              type: 'number',
+              min: 1,
+              max: MAX_TIER_PLACES,
+              admin: {
+                step: 1,
+                placeholder: String(DEFAULT_MAX_PLATINUM),
+                description: `How many platinum listings the home page shows, and so how many can be sold in all. A listing cannot be moved to platinum once they are all taken, and the number cannot go below the platinum listings there are. Empty: ${DEFAULT_MAX_PLATINUM}.`,
+              },
+              validate: validateMaxPlatinum,
             },
           ],
         },
@@ -175,6 +245,141 @@ export const Settings: GlobalConfig = {
                 description:
                   'Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.',
               },
+            },
+          ],
+        },
+        {
+          label: 'Magazine places',
+          description:
+            'The Magazine Places form: what a place pays, how much of it first (the downpayment) and the deadlines for both payments, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price, downpayment, deadlines and term are copied onto each submission when the owner sends the form, so changing them never rewrites one already sent.',
+          fields: [
+            {
+              name: 'magazinePlaces',
+              type: 'group',
+              // Only an admin reads or changes these (the global itself is
+              // staff-readable).
+              access: { read: isAdminFieldLevel, update: isAdminFieldLevel },
+              fields: [
+                {
+                  name: 'pricePerYear',
+                  label: 'Price per year',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 1000,
+                  admin: {
+                    description: 'The full price of one year in the magazine. At least 1.',
+                  },
+                  validate: validatePricePerYear,
+                },
+                {
+                  name: 'currency',
+                  label: 'Currency',
+                  type: 'text',
+                  defaultValue: 'USD',
+                  admin: {
+                    description:
+                      'The currency of the price, as a three-letter code. USD is shown as $ in the emails.',
+                  },
+                },
+                {
+                  name: 'termMonths',
+                  label: 'Contract length (months)',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 12,
+                  admin: {
+                    description:
+                      'How long a published place stays listed. The contract starts the day it is published.',
+                  },
+                },
+                {
+                  name: 'downpaymentPercent',
+                  label: 'Downpayment (percent of the price)',
+                  type: 'number',
+                  min: 0.01,
+                  max: 100,
+                  defaultValue: 50,
+                  admin: {
+                    description:
+                      'Percent of the price paid first, before the team reviews the place. 50 = half.',
+                  },
+                },
+                {
+                  name: 'downpaymentDeadlineDays',
+                  label: 'Days to pay the downpayment',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 7,
+                  admin: {
+                    description:
+                      'Days after the form is sent to pay the downpayment. After that the number is released.',
+                  },
+                },
+                {
+                  name: 'downpaymentReminderDay',
+                  label: 'Downpayment reminder (day)',
+                  type: 'number',
+                  min: 0,
+                  defaultValue: 5,
+                  admin: {
+                    description:
+                      'On which day after the form is sent the one downpayment reminder goes out. 0: no reminder.',
+                  },
+                },
+                {
+                  name: 'balanceDeadlineDays',
+                  label: 'Days to pay the rest',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 30,
+                  admin: {
+                    description:
+                      'Days after the place is accepted to pay the rest. After that it is rejected for not paying.',
+                  },
+                },
+                {
+                  name: 'balanceReminderDaysBefore',
+                  label: 'Reminder for the rest (days before)',
+                  type: 'number',
+                  min: 0,
+                  defaultValue: 3,
+                  admin: {
+                    description:
+                      'How many days before the deadline for the rest the reminder goes out. 0: no reminder.',
+                  },
+                },
+                {
+                  name: 'holdMinutes',
+                  label: 'Hold an unfinished form (minutes)',
+                  type: 'number',
+                  min: 1,
+                  defaultValue: 30,
+                  admin: {
+                    description:
+                      'How long an unfinished form keeps its page number while nobody touches it. After that the number is released.',
+                  },
+                },
+                {
+                  name: 'whishNumber',
+                  label: 'Company Whish and WhatsApp number',
+                  type: 'text',
+                  defaultValue: '+96179300350',
+                  admin: {
+                    description:
+                      'Owners send their payments here by Whish, and the WhatsApp link in the emails opens a chat with it. Write it with the country code, like +96179300350.',
+                  },
+                },
+                {
+                  name: 'termsVersion',
+                  label: 'Terms version',
+                  type: 'text',
+                  defaultValue: '2026-11-24',
+                  admin: {
+                    description:
+                      'A label for the terms owners agree to, copied onto each form when it is sent. Change it whenever the terms text changes, for example to the date of the change.',
+                  },
+                },
+              ],
             },
           ],
         },

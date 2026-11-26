@@ -218,6 +218,8 @@ async function loadManifest(): Promise<DemoManifest | null> {
   }
 }
 
+// Mock fixtures: this demo works on the seeded (mock) listings and must never run on
+// production. It creates no listings itself; any it touched would be sample data.
 async function venueIds(payload: Payload): Promise<Record<string, number>> {
   const found = await payload.find({
     collection: 'businesses',

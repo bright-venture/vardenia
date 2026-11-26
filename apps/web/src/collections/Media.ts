@@ -1,6 +1,15 @@
-import type { CollectionConfig } from 'payload'
-import { anyone, isStaff } from '../access/index'
+import type { Access, CollectionConfig } from 'payload'
+import {
+  BUSINESS_USER_COLLECTION,
+  isAdmin,
+  isStaff,
+  isStaffFieldLevel,
+  isStaffUser,
+  mediaRead,
+  ownedBusinessIds,
+} from '../access/index'
 import { blockMediaInUse } from '../hooks/blockMediaInUse'
+import { guardPartnerUpload, stampUploader } from '../hooks/guardPartnerUpload'
 import { unguessableFilename } from '../hooks/unguessableFilename'
 import { PHOTO_MAX_BYTES, limitUploadSize } from '../hooks/limitUploadSize'
 import { revalidateMediaAfterChange, revalidateMediaAfterDelete } from '../hooks/revalidateMedia'
@@ -14,20 +23,44 @@ import { revalidateMediaAfterChange, revalidateMediaAfterDelete } from '../hooks
  */
 const WEBP = { format: 'webp', options: { quality: 82 } } as const
 
+/**
+ * Partners may upload, so they can add photos of their own room types (17
+ * November 2026) and photos, a logo and a menu to their own listing (20
+ * November 2026). Only uploading: changing or removing a file stays with the
+ * team, so a partner cannot touch an image used anywhere else. The size limit
+ * and the unguessable filename below apply to their uploads as to ours, and
+ * hooks/guardPartnerUpload adds theirs: photos and PDF only, a rate limit, and
+ * the uploader recorded on the row.
+ */
+const staffOrPartner: Access = ({ req }) =>
+  isStaffUser(req.user) || ownedBusinessIds(req.user).length > 0
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: { group: 'Magazine' },
   access: {
-    read: anyone,
-    create: isStaff,
+    // Team uploads and anything attached to a page are public, as before; a
+    // partner's upload that is on no page yet is read only by staff and the
+    // partner. See access mediaRead and hooks/markMediaAttached.
+    read: mediaRead,
+    create: staffOrPartner,
     update: isStaff,
-    delete: isStaff,
+    // A photo may be on a live listing or article, and deleting removes the
+    // file for good: admin only (20 November 2026, auth audit step 6).
+    delete: isAdmin,
   },
   hooks: {
     // Renames every upload before it is stored, so a file cannot be reached by
     // guessing its name. See hooks/unguessableFilename.
     // 25 MB, as before: the site-wide limit is now magazine PDFs' 200 MB.
-    beforeOperation: [limitUploadSize(PHOTO_MAX_BYTES, 'Photos and videos'), unguessableFilename],
+    // A partner's upload is also checked for type and rate. See
+    // hooks/guardPartnerUpload.
+    beforeOperation: [
+      limitUploadSize(PHOTO_MAX_BYTES, 'Photos and videos'),
+      guardPartnerUpload,
+      unguessableFilename,
+    ],
+    beforeChange: [stampUploader],
     beforeDelete: [blockMediaInUse],
     afterChange: [revalidateMediaAfterChange],
     afterDelete: [revalidateMediaAfterDelete],
@@ -109,6 +142,47 @@ export const Media: CollectionConfig = {
       admin: {
         description:
           'Track this. Reusing a supplied photo in a paid ad without rights is a real liability.',
+      },
+    },
+    {
+      /**
+       * The partner who uploaded this, empty for a team upload. Set only by
+       * hooks/guardPartnerUpload (stampUploader); nobody writes it through the
+       * API. Lets a partner attach only their own uploads (lib/partner-media);
+       * the checks read it with overrideAccess.
+       */
+      name: 'uploadedBy',
+      label: 'Uploaded by partner',
+      type: 'relationship',
+      relationTo: BUSINESS_USER_COLLECTION,
+      index: true,
+      // Staff-only to read: which partner uploaded what is nobody else's
+      // business. The read rule (mediaRead) still filters on it, because an
+      // access constraint is not checked against field read access.
+      access: {
+        read: isStaffFieldLevel,
+        create: () => false,
+        update: () => false,
+      },
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      /**
+       * Whether a page uses this file. Only matters for a partner's upload,
+       * which is hidden from everyone but staff and the partner until it is
+       * attached (access mediaRead). Set by hooks/markMediaAttached when a
+       * listing, room type, article or issue is saved pointing at it.
+       */
+      name: 'attached',
+      label: 'Attached to a page',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      access: { create: () => false, update: isStaffFieldLevel },
+      admin: {
+        position: 'sidebar',
+        description:
+          "Set automatically when a page uses this file. Tick it by hand only for a partner's file used inside article text.",
       },
     },
   ],

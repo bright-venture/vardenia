@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import { Check, ChevronDown, Globe } from 'lucide-react'
 import { LOCALES, LOCALE_META, type Locale } from '@vardenia/i18n'
+import { BYBLOS_GUIDE_PATH, directoryFor } from './journey/destinations'
 import { getPathname, usePathname } from '../i18n/routing'
 
 /**
@@ -122,7 +123,9 @@ export function LanguageSwitcherLinks({
               // Not prefetched: one of these is always the page already open,
               // and switching language is rare enough to wait for.
               prefetch={false}
-              href={`${getPathname({ href: pathname, locale })}${search}`}
+              href={pathname === BYBLOS_GUIDE_PATH
+                ? getPathname({ href: directoryFor({ where: 'jbeil' }), locale })
+                : `${getPathname({ href: pathname, locale })}${search}`}
               hrefLang={locale}
               className="vd-lang-option"
             >

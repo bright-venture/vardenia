@@ -49,7 +49,7 @@ export const businessSummarySchema = z.object({
   category: z.string(),
   subcategories: z.array(z.string()),
   governorate: z.string(),
-  district: z.string().nullable(),
+  city: z.string().nullable(),
   coordinates: coordinatesSchema.nullable(),
   heroImage: z.string().url().nullable(),
   // `basic` is the old name of `bronze`, read as it so a response from before
@@ -68,7 +68,6 @@ export const businessDetailSchema = businessSummarySchema.extend({
   phone: z.string().nullable(),
   whatsapp: z.string().nullable(),
   email: z.string().email().nullable(),
-  website: z.string().url().nullable(),
   reservationUrl: z.string().url().nullable(),
   menuUrl: z.string().url().nullable(),
   socials: z.object({
@@ -92,7 +91,7 @@ export const businessQuerySchema = z.object({
   category: z.string().optional(),
   subcategory: z.string().optional(),
   governorate: z.string().optional(),
-  district: z.string().optional(),
+  city: z.string().optional(),
   near: coordinatesSchema.optional(),
   radiusKm: z.number().positive().max(100).default(25),
   tier: z.enum(LISTING_TIERS).optional(),

@@ -10,7 +10,7 @@ export default async function LocalizedNotFound() {
   const t = await getTranslations({ locale })
   const hidden = await hiddenPages()
   return (
-    <main className="vd-account-gate">
+    <main className="vd-account-gate" data-gate="missing-page">
       <PageHero
         title={t('missingPage.title')}
         intro={t('missingPage.body')}

@@ -1,3 +1,4 @@
+import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -11,11 +12,19 @@ import {
   sectionForPath,
   type SiteSection,
   type SubCategory,
+  isComingSoonCategory,
 } from '@vardenia/core'
 import { DEFAULT_LOCALE, LOCALES, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, countBySubcategory, findListings } from '../../../../lib/listings'
+import { ComingSoonNotice, DesktopOpeningNotice } from '../../../../components/ComingSoonNotice'
+import {
+  countByCity,
+  countByGovernorate,
+  countBySubcategory,
+  findListings,
+} from '../../../../lib/listings'
+import { BYBLOS_GUIDE_PATH } from '../../../../components/journey/destinations'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import { sectionName, sectionSummary } from '../../../../lib/labels'
 import { sectionSeoCopy } from '../../../../lib/section-seo'
@@ -115,13 +124,35 @@ export default async function SectionPage({ params, searchParams }: Props) {
   await notFoundIfHidden(section.path as HideablePage)
 
   const t = await getTranslations('directory')
+  // Weddings and Getting Around are not open yet (core COMING_SOON_CATEGORIES,
+  // 25 November 2026): the heading stays, a Coming soon notice replaces the
+  // listings, and the listings themselves are not public (access/index).
+  const comingSoon = isComingSoonCategory(section.category)
+
+  const englishDining = locale === 'en' && section.category === 'food-and-beverage'
+  const inJbeil = englishDining && parseFilterState(await searchParams, []).city === 'jbeil'
 
   return (
-    <main className="vd-category-page">
+    <main className="vd-category-page" data-section={section.path}>
+      <EnglishPageSchema
+        locale={locale}
+        path={`/${section.path}`}
+        name={nameFor(section, locale)}
+        description={sectionSummary(section, locale)}
+        type="CollectionPage"
+      />
       <PageHero
-        title={nameFor(section, locale)}
-        intro={sectionSummary(section, locale)}
-        body={t(`sectionIntro.${section.path}` as 'sectionIntro.stay')}
+        title={inJbeil ? 'Eat & Drink in Jbeil' : nameFor(section, locale)}
+        intro={
+          inJbeil
+            ? 'Planning a meal around Byblos? This view covers the whole Jbeil district, from the old town to villages inland.'
+            : sectionSummary(section, locale)
+        }
+        body={
+          inJbeil
+            ? 'Check the address before setting out from the harbour. A place listed in Jbeil may be outside walking distance of the souk.'
+            : t(`sectionIntro.${section.path}` as 'sectionIntro.stay')
+        }
         locale={locale}
         place={
           (
@@ -136,18 +167,26 @@ export default async function SectionPage({ params, searchParams }: Props) {
           )[path] ?? 0
         }
       >
-        <a className="vd-button" href="#section-results">
-          {t('chooseType')} <span aria-hidden>↓</span>
-        </a>
+        {comingSoon ? (
+          locale === 'en' && <DesktopOpeningNotice body="sectionBody" />
+        ) : (
+          <a className="vd-button" href="#section-results">
+            {t('chooseType')} <span aria-hidden>↓</span>
+          </a>
+        )}
       </PageHero>
-      <div className="vd-category-results" id="section-results">
-        {/* Same arrangement as the directory: `searchParams` is what makes a route
-          dynamic, so it is handed over unawaited and only this boundary blocks
-          on it. The heading above ships from the static build. */}
-        <Suspense fallback={<SectionSkeleton />}>
-          <SectionResults locale={locale} section={section} searchParams={searchParams} />
-        </Suspense>
-      </div>
+      {comingSoon ? (
+        <ComingSoonNotice body="sectionBody" />
+      ) : (
+        <div className="vd-category-results" id="section-results">
+          {/* Same arrangement as the directory: `searchParams` is what makes a
+            route dynamic, so it is handed over unawaited and only this boundary
+            blocks on it. The heading above ships from the static build. */}
+          <Suspense fallback={<SectionSkeleton />}>
+            <SectionResults locale={locale} section={section} searchParams={searchParams} />
+          </Suspense>
+        </div>
+      )}
     </main>
   )
 }
@@ -161,7 +200,7 @@ async function SectionResults({
   section: SiteSection
   searchParams: Props['searchParams']
 }) {
-  const { page, show, ...raw } = await searchParams
+  const { page, ...raw } = await searchParams
   const t = await getTranslations('directory')
 
   // Widened from the literal type, because the tiles and the check below both
@@ -175,29 +214,35 @@ async function SectionResults({
   const state = parseFilterState(raw, children)
 
   /**
-   * The section opens on a choice of subcategory rather than on listings.
-   *
-   * Only when nothing has been narrowed yet: once a reader has picked a kind of
-   * place, or a region, or anything else, they have answered the question the
-   * tiles exist to ask and the listings are what they want. `?show=all` is the
-   * explicit way past them - see SubcategoryTiles.
+   * No separate first screen of kinds of place any more (18 November 2026):
+   * the section opens on its listings, with the kinds as filter tabs above
+   * them (SubcategoryTiles). An old `?show=all` link still lands here.
    */
-  // Plans count as an answer too: a guest who has set a date wants places.
-  const choosing = show !== 'all' && !anyFilterApplied(state) && !state.trip
 
   /**
    * Counts feed the filter chips, and the grid needs its page. In parallel, so a
    * second Frankfurt round trip does not sit in front of the render. The tile
    * counts are only fetched when the tiles are actually being drawn.
    */
-  const [counts, result, subcategoryCounts] = await Promise.all([
+  const [counts, result, subcategoryCounts, cityCounts] = await Promise.all([
     countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
-    choosing
-      ? countBySubcategory({ category: section.category })
-      : Promise.resolve<Record<string, number> | null>({}),
+    countBySubcategory({ category: section.category }),
+    countByCity({ category: section.category, subcategory: state.subcategory }),
   ])
 
+  const englishDining = locale === 'en' && section.category === 'food-and-beverage'
+  const jbeilOnly =
+    englishDining &&
+    state.city === 'jbeil' &&
+    !anyFilterApplied({ ...state, governorate: undefined, city: undefined })
+  // These tab totals are nationwide, so omit them when a dining search is narrowed.
+  const omitDiningTotals = englishDining && anyFilterApplied({ ...state, subcategory: undefined })
+  // Use the published entry's own description, and only feature it when it is in these results.
+  const diningExample =
+    englishDining && !anyFilterApplied(state) && !state.trip && result?.page === 1
+      ? result.docs.find((place) => place.slug === 'em-sherif' && place.name && place.tagline)
+      : undefined
   const base = `/${section.path}`
 
   /**
@@ -215,113 +260,130 @@ async function SectionResults({
   // See the directory: only with plans set, and only for bookable places.
   const verdicts = await tripVerdicts(result?.docs ?? [], state.trip ?? null)
 
-  /**
-   * The tiles answer for themselves whether there is a choice worth offering -
-   * fewer than two subcategories on the section and they render nothing. Asking
-   * here as well keeps the page from hiding its listings behind a row that is
-   * about to be empty.
-   */
-  const tiles = choosing ? (
-    <SubcategoryTiles
-      base={base}
-      subcategories={children}
-      counts={subcategoryCounts}
-      locale={locale}
-    />
-  ) : null
+  // Listings in the whole section, for the All tab.
+  const sectionTotal = subcategoryCounts
+    ? Object.values(subcategoryCounts).reduce((sum, n) => sum + n, 0)
+    : null
 
-  /**
-   * Mirrors what SubcategoryTiles decides, because a disagreement between the
-   * two would render a page with neither tiles nor listings on it.
-   *
-   * It does not count non-empty subcategories. The row lists every kind of
-   * place in the section and marks the empty ones with a nought, so the
-   * question is only whether the section has a taxonomy worth showing at all.
-   */
-  const offeringChoice = choosing && children.filter((sub) => !sub.retired).length > 1
-
-  /**
-   * The choice, and nothing else on the page.
-   *
-   * The filter bar used to sit under the tiles. It asked the second question
-   * while the first was still open, and it asked it in a different shape - a
-   * row of regions and a Filters button below a row of kinds of place, with no
-   * results for either of them to act on. Filtering comes after a choice, so
-   * the bar appears on the listings view and not here.
-   *
-   * A section with nothing in it anywhere gets the row and nothing else, not
-   * even the empty state. It used to fall straight through to "No places
-   * found", which is how Weddings, Lifestyle, Health and Getting Around came
-   * to show no kinds of place at all - the four sections where a reader most
-   * needs to be told what will eventually be there. A row of noughts already
-   * says there is nothing here, and says it about each kind of place rather
-   * than about the section, so a box underneath repeating it in a sentence was
-   * the same fact twice.
-   */
-  if (offeringChoice) {
-    return tiles
-  }
+  const emptyCategory =
+    locale === 'en' &&
+    (section.path === 'lifestyle' || section.path === 'weddings') &&
+    !state.trip &&
+    !anyFilterApplied(state) &&
+    result?.totalDocs === 0
 
   return (
     <>
-      {/*
-        The result count. It used to share this row with a List/Map toggle; the
-        map was removed before launch because no listing carries coordinates.
-      */}
-      <div className="mt-3">
-        {/* Hidden at zero: the empty state below says the same sentence. */}
-        {total > 0 ? (
-          <p className="text-ink-500 font-mono text-sm tabular-nums">
-            {t('resultCount', { count: total })}
+      {diningExample && (
+        <p className="mb-5 text-base">
+          <Link className={LINK} href={`/directory/${diningExample.slug}`}>
+            {diningExample.name}
+          </Link>
+          {' · '}
+          {diningExample.tagline}
+        </p>
+      )}
+      {emptyCategory && (
+        <section className="vd-weddings-empty" aria-labelledby="category-empty-title">
+          <h2 id="category-empty-title">
+            {section.path === 'weddings' ? 'Wedding planners' : 'Lifestyle listings'}
+          </h2>
+          <p>
+            {section.path === 'weddings'
+              ? 'No wedding planners are listed yet.'
+              : t('emptySection')}
           </p>
+          <Link className="vd-text-link" href="/directory">
+            Explore the directory <span aria-hidden>↗</span>
+          </Link>
+        </section>
+      )}
+      <div className={emptyCategory ? 'vd-weddings-standard' : 'contents'}>
+        {/* The kinds of place, as filter tabs above the listings. */}
+        <SubcategoryTiles
+          base={base}
+          state={state}
+          subcategories={children}
+          counts={omitDiningTotals ? null : subcategoryCounts}
+          total={omitDiningTotals ? null : sectionTotal}
+          locale={locale}
+        />
+
+        {/*
+          The result count. It used to share this row with a List/Map toggle; the
+          map was removed before launch because no listing carries coordinates.
+        */}
+        <div className="mt-3">
+          {/* Hidden at zero: the empty state below says the same sentence. */}
+          {total > 0 ? (
+            <p className="text-ink-500 font-mono text-sm tabular-nums">
+              {t('resultCount', { count: total })}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Only where something here can be booked. Lifestyle, and Cafes, Pools,
+            Nightlife, Festivals and Historic Sites, are listed and advertised but
+            never booked, so asking for a date there promises an answer nobody can
+            give. See bookable in core/taxonomy. */}
+        {(
+          state.subcategory
+            ? isBookableSubcategory(state.subcategory)
+            : categoryTakesBookings(section.category)
+        ) ? (
+          <TripBar base={base} state={state} locale={locale} section={section.path} />
         ) : null}
+
+        <ListingFilters
+          base={base}
+          state={state}
+          locale={locale}
+          counts={counts}
+          cityCounts={cityCounts}
+        />
+
+        <ListingGrid
+          listings={result?.docs ?? []}
+          locale={locale}
+          // A section page is a results page: the grid starts near the top.
+          eager
+          trip={state.trip}
+          verdicts={verdicts}
+          empty={
+            jbeilOnly && total === 0
+              ? 'No Eat & Drink listings in Jbeil yet'
+              : t('resultCount', { count: 0 })
+          }
+          // Says which way out exists, rather than restating the problem. See
+          // ui/EmptyState: the title is what happened, the body is what to do.
+          emptyBody={
+            jbeilOnly && total === 0
+              ? 'Browse the Lebanon directory for places to eat and drink in other regions.'
+              : anyFilterApplied(state)
+                ? t('emptyFiltered')
+                : t('emptySection')
+          }
+          emptyAction={
+            anyFilterApplied(state) ? (
+              <Link
+                href={filterHref(base, { amenities: [], trip: state.trip }, {})}
+                prefetch={false}
+                rel="nofollow"
+                className={LINK}
+              >
+                {jbeilOnly ? 'Browse Eat & Drink across Lebanon' : t('clearFilters')}
+              </Link>
+            ) : null
+          }
+        />
+
+        <Pagination
+          className="mt-12"
+          page={result?.page ?? 1}
+          totalPages={result?.totalPages ?? 1}
+          href={pageHref}
+        />
       </div>
-
-      {/* Only where something here can be booked. Lifestyle, and Cafes, Pools,
-          Nightlife, Festivals and Historic Sites, are listed and advertised but
-          never booked, so asking for a date there promises an answer nobody can
-          give. See bookable in core/taxonomy. */}
-      {(
-        state.subcategory
-          ? isBookableSubcategory(state.subcategory)
-          : categoryTakesBookings(section.category)
-      ) ? (
-        <TripBar base={base} state={state} locale={locale} section={section.path} />
-      ) : null}
-
-      <ListingFilters base={base} state={state} locale={locale} counts={counts} />
-
-      <ListingGrid
-        listings={result?.docs ?? []}
-        locale={locale}
-        // A section page is a results page: the grid starts near the top.
-        eager
-        trip={state.trip}
-        verdicts={verdicts}
-        empty={t('resultCount', { count: 0 })}
-        // Says which way out exists, rather than restating the problem. See
-        // ui/EmptyState: the title is what happened, the body is what to do.
-        emptyBody={anyFilterApplied(state) ? t('emptyFiltered') : t('emptySection')}
-        emptyAction={
-          anyFilterApplied(state) ? (
-            <Link
-              href={filterHref(base, { amenities: [], trip: state.trip }, {})}
-              prefetch={false}
-              rel="nofollow"
-              className={LINK}
-            >
-              {t('clearFilters')}
-            </Link>
-          ) : null
-        }
-      />
-
-      <Pagination
-        className="mt-12"
-        page={result?.page ?? 1}
-        totalPages={result?.totalPages ?? 1}
-        href={pageHref}
-      />
     </>
   )
 }

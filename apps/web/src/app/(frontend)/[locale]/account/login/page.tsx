@@ -56,7 +56,7 @@ export default async function LoginPage({
   const t = await getTranslations('account')
 
   return (
-    <AuthCard icon={LogIn} title={t('signIn')} subtitle={t('signInSubtitle')}>
+    <AuthCard mode="sign-in" icon={LogIn} title={t('signIn')} subtitle={t('signInSubtitle')}>
       <LoginForm next={next} />
     </AuthCard>
   )

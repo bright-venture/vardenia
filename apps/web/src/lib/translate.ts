@@ -16,6 +16,39 @@
  */
 
 const ENDPOINT = process.env.LIBRETRANSLATE_URL?.replace(/\/$/, '')
+
+/**
+ * How long one translation request may take. A save waits on these (see
+ * hooks/autoTranslateListing), so an engine that hangs must not hang the save.
+ */
+export const TRANSLATE_TIMEOUT_MS = 8_000
+
+/**
+ * The longest text sent in one request. A text node longer than this is left
+ * as it is (falls back to English) rather than sent: it bounds what one node
+ * can cost, whatever a partner pastes.
+ */
+export const MAX_TEXT_CHARS = 2_000
+
+/** Options a caller with a budget passes: stop starting requests at `deadline` (ms). */
+export interface TranslateOptions {
+  deadline?: number
+}
+
+/** The engine answered, with an error status: no model for the pair, a bad key. */
+export class TranslateHttpError extends Error {
+  constructor(source: string, target: string, status: number) {
+    super(`translate ${source}->${target} failed: ${status}`)
+    this.name = 'TranslateHttpError'
+  }
+}
+
+/** The caller's deadline has passed; named like the fetch timeout so callers treat both alike. */
+function deadlinePassed(): Error {
+  const error = new Error('translation budget for this save is used up')
+  error.name = 'TimeoutError'
+  return error
+}
 const API_KEY = process.env.LIBRETRANSLATE_API_KEY
 
 /** Whether an engine is configured. When false, callers do nothing. */
@@ -32,8 +65,15 @@ export async function translateText(
   text: string,
   source: string,
   target: string,
+  { deadline }: TranslateOptions = {},
 ): Promise<string | null> {
-  if (!ENDPOINT || !text.trim()) return null
+  if (!ENDPOINT || !text.trim() || text.length > MAX_TEXT_CHARS) return null
+  let timeout = TRANSLATE_TIMEOUT_MS
+  if (deadline !== undefined) {
+    const left = deadline - Date.now()
+    if (left <= 0) throw deadlinePassed()
+    timeout = Math.min(timeout, left)
+  }
   const res = await fetch(`${ENDPOINT}/translate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -44,8 +84,9 @@ export async function translateText(
       format: 'text',
       ...(API_KEY ? { api_key: API_KEY } : {}),
     }),
+    signal: AbortSignal.timeout(timeout),
   })
-  if (!res.ok) throw new Error(`translate ${source}->${target} failed: ${res.status}`)
+  if (!res.ok) throw new TranslateHttpError(source, target, res.status)
   const data = (await res.json()) as { translatedText?: string }
   return data.translatedText ?? null
 }
@@ -77,6 +118,7 @@ export async function translateRichText(
   value: unknown,
   source: string,
   target: string,
+  options: TranslateOptions = {},
 ): Promise<unknown | null> {
   if (!ENDPOINT || !value || typeof value !== 'object') return null
   const clone = structuredClone(value) as { root?: LexicalNode }
@@ -85,7 +127,9 @@ export async function translateRichText(
 
   let translatedAny = false
   for (const node of nodes) {
-    const translated = await translateText(node.text as string, source, target)
+    // Each request checks the deadline before it starts, so a long
+    // description stops between nodes once the caller's budget is gone.
+    const translated = await translateText(node.text as string, source, target, options)
     if (translated != null) {
       node.text = translated
       translatedAny = true

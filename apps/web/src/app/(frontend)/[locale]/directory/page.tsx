@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
 import { Suspense } from 'react'
 import { ResultsSkeleton } from '../../../../components/ResultsSkeleton'
 import type { Metadata } from 'next'
@@ -8,14 +10,13 @@ import { SECTIONS } from '@vardenia/core'
 import { DEFAULT_LOCALE, isLocale, type Locale } from '@vardenia/i18n'
 import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
-import { countByGovernorate, findListings } from '../../../../lib/listings'
+import { countByCity, countByGovernorate, findListings } from '../../../../lib/listings'
 import { sectionName } from '../../../../lib/labels'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { LINK } from '../../../../components/formStyles'
 import { FilterChip } from '../../../../components/FilterChip'
 import { Pagination } from '../../../../components/Pagination'
 import { EditorialIntro } from '../../../../components/journey/EditorialIntro'
-import { TripBar } from '../../../../components/TripBar'
 import { tripVerdicts } from '../../../../lib/trip-availability'
 import { tripParams } from '../../../../lib/trip'
 import {
@@ -66,8 +67,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('directory.title'),
-    description: t('directory.metaDescription'),
+    title: locale === 'en' ? publicPageCopy['/directory'].title : t('directory.title'),
+    description:
+      locale === 'en' ? publicPageCopy['/directory'].description : t('directory.metaDescription'),
     path: '/directory',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -82,6 +84,13 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   return (
     <main className="vd-directory mx-auto max-w-6xl px-6 py-16">
+      <EnglishPageSchema
+        locale={locale}
+        path={'/directory'}
+        name={publicPageCopy['/directory'].title}
+        description={publicPageCopy['/directory'].description}
+        type="CollectionPage"
+      />
       {/*
         The design puts the result count beside the title. It cannot go here:
         this shell is deliberately static and the count needs the query, so
@@ -137,11 +146,12 @@ async function DirectoryResults({
    */
   const state = parseFilterState(raw, [])
 
-  const [counts, result] = await Promise.all([
+  const [counts, result, cityCounts] = await Promise.all([
     // No category here - /directory is every section at once, so the counts are
     // "listings in this governorate" across the whole directory.
     countByGovernorate({}),
     findListings({ locale, ...state, page: Number(page) || 1 }),
+    countByCity({}),
   ])
 
   // Only with plans set, and only for the places on this page that take
@@ -166,7 +176,7 @@ async function DirectoryResults({
         row with a List/Map toggle; the map was removed before launch because no
         listing carries coordinates, so there was never anything to draw.
       */}
-      <div className="mt-3">
+      <div className="vd-directory-count mt-3">
         {/* Hidden at zero: the empty state below already says it. */}
         {total > 0 ? (
           <p className="text-ink-500 font-mono text-sm tabular-nums">
@@ -187,7 +197,7 @@ async function DirectoryResults({
         than as loose buttons.
       */}
       <nav
-        className="border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
+        className="vd-directory-categories border-ink-100 scrollbar-none mt-10 flex gap-2 overflow-x-auto border-y py-4"
         aria-label={t('sections')}
       >
         <FilterChip href="/directory" active>
@@ -200,10 +210,24 @@ async function DirectoryResults({
         ))}
       </nav>
 
-      <TripBar base="/directory" state={state} locale={locale} section={null} />
+      {/* No "When are you going?" on the whole directory (18 November 2026):
+          what a date means differs per kind of place, so it is asked in each
+          section (Stay asks for nights and rooms). */}
 
-      <ListingFilters base="/directory" state={state} locale={locale} counts={counts} />
+      <ListingFilters
+        base="/directory"
+        state={state}
+        locale={locale}
+        counts={counts}
+        cityCounts={cityCounts}
+        showBookable
+      />
 
+      {locale === 'en' && total > 0 && (
+        <p hidden className="vd-directory-result-summary">
+          {t('resultCount', { count: total })}
+        </p>
+      )}
       <ListingGrid
         listings={result?.docs ?? []}
         locale={locale}

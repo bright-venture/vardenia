@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../lib/listings', () => ({ findAllListingSlugs: vi.fn(async () => ['chez-nouna']) }))
 vi.mock('../lib/articles', () => ({ findAllArticleSlugs: vi.fn(async () => []) }))
 vi.mock('../lib/issues', () => ({ findAllIssueSlugs: async () => [] }))
+vi.mock('../lib/brand-slugs', () => ({ findPublicBrandSlugs: async () => ['sample-brand'] }))
 vi.mock('../lib/pages', () => ({ CONTENT_PAGE_SLUGS: [] }))
 vi.mock('../lib/hidden-pages', async () => ({
   hiddenPages: async () => [],
@@ -46,6 +47,12 @@ describe('sitemap SEO signals', () => {
     const entries = await sitemap()
     const home = entries.find((entry) => entry.url === 'https://example.com/')!
     expect(home.alternates?.languages?.['x-default']).toBe(home.url)
+    const guide = entries.find((entry) => entry.url === 'https://example.com/destinations/byblos')
+    for (const path of ['/legal/privacy', '/legal/terms', '/credits', '/brands/sample-brand']) {
+      expect(entries.some((entry) => entry.url === `https://example.com${path}`)).toBe(true)
+    }
+    expect(guide).toBeDefined()
+    expect(guide?.alternates).toBeUndefined()
     expect(home.alternates?.languages?.ar).toBe('https://example.com/ar')
     expect(entries.every((entry) => entry.lastModified === undefined)).toBe(true)
   })

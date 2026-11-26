@@ -1,3 +1,4 @@
+import { BookingStatusSelect } from '../../../../../components/partner/BookingStatusSelect'
 import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
@@ -18,6 +19,7 @@ import {
 } from '../../../../../lib/booking-filters'
 import { addDays, beirutDate, beirutDayLabel, beirutTime } from '../../../../../lib/beirut'
 import { LINK, NOTICE_INFO } from '../../../../../components/formStyles'
+import { seatingAreaLabel } from '../../../../../lib/seating-label'
 import { BookingActions } from '../../../../../components/BookingActions'
 
 /**
@@ -75,7 +77,7 @@ export default async function PartnerPage({ params, searchParams }: Props) {
 
   if (!owner) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="bookings" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
           <Link href="/partner/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -246,7 +248,10 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
     `/partner${bookingFilterQuery({ ...filter, ...next })}`
 
   return (
-    <section className="border-ink-100 mt-8 border-t pt-6" aria-label={t('filters')}>
+    <section
+      className="vd-booking-filters border-ink-100 mt-8 border-t pt-6"
+      aria-label={t('filters')}
+    >
       {/*
         Three windows, and they fit on a phone. Left as a wrapping row.
       */}
@@ -273,7 +278,7 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
         that distinction is why the governorate filter on /directory wraps
         instead, having once dragged the whole page sideways to 539px.
       */}
-      <div className="border-ink-100 scrollbar-none mt-4 flex gap-2 overflow-x-auto border-y py-3">
+      <div className="vd-booking-status-links border-ink-100 scrollbar-none mt-4 flex gap-2 overflow-x-auto border-y py-3">
         <Chip href={href({ status: 'all' })} active={filter.status === 'all'}>
           {t('statusAll')}
         </Chip>
@@ -283,6 +288,19 @@ async function FilterBar({ filter, locale }: { filter: BookingFilter; locale: Lo
           </Chip>
         ))}
       </div>
+
+      {locale === 'en' && (
+        <BookingStatusSelect
+          value={href({ status: filter.status })}
+          options={[
+            { value: href({ status: 'all' }), label: t('statusAll') },
+            ...BOOKING_STATUSES.map((value) => ({
+              value: href({ status: value }),
+              label: status(value),
+            })),
+          ]}
+        />
+      )}
 
       {/* `window` and `status` ride along as hidden fields so that searching does
           not silently reset the other filters. */}
@@ -475,6 +493,12 @@ async function BookingList({
               const business = row.business
               const name = typeof business === 'object' && business ? (business.name ?? '') : ''
               const cancelled = row.status === 'cancelled'
+              const areaName = seatingAreaLabel(business, row.area, {
+                indoor: booking('seatingAreaIndoor'),
+                'indoor-smoking': booking('seatingAreaIndoorSmoking'),
+                outdoor: booking('seatingAreaOutdoor'),
+                'outdoor-smoking': booking('seatingAreaOutdoorSmoking'),
+              })
 
               /**
                * From `guest`, not from the populated relationship, which an owner
@@ -601,6 +625,9 @@ async function BookingList({
                         {row.roomType ?? ''}
                       </p>
                     ) : null}
+
+                    {/* Where they asked to sit, for a restaurant with seating areas. */}
+                    {areaName ? <p className="text-ink-700 mt-1 text-sm">{areaName}</p> : null}
 
                     {row.status === 'pending' && requested ? (
                       <p className="text-gold-700 mt-1 text-xs">

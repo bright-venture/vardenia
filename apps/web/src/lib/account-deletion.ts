@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 import { OCCUPYING_STATUSES } from '@vardenia/core'
 import { findEvery } from './find-every'
+import { RETENTION_CONTEXT } from './retention'
 
 /**
  * Closing a customer account.
@@ -138,6 +139,10 @@ export async function closeCustomerAccount(
     })
     .catch(() => failures.push('saved places'))
 
+  // The rest of what the person left with us (20 November 2026). Bookings stay
+  // as anonymous records, kept for good; everything below is theirs alone.
+  await removePersonalRecords(payload, customerId, failures)
+
   /*
    * Nothing is anonymised while anything above failed. Reporting "closed" with
    * a live reservation or a note left behind is the one outcome worse than
@@ -161,6 +166,105 @@ export async function closeCustomerAccount(
   cancelled += await cancelUpcoming(payload, customerId, now, [])
 
   return { cancelled, anonymised: true }
+}
+
+/**
+ * What else a closed account takes with it (20 November 2026).
+ *
+ * - Receipts: the photo or PDF (it can show a name or card digits) and the text
+ *   read from it are deleted. The booking keeps the amount it was billed on, as
+ *   the record of what the business owes, so the booking is not re-read here:
+ *   that would recompute its billing from no receipt and tell the team about a
+ *   "new" disagreement (the same reason lib/retention skips it).
+ * - Reviews: deleted. They are the person's own words, signed with their name;
+ *   the listing's rating follows on its own (hooks/revalidateReviews).
+ * - Event Staff requests: kept as a record of the event, with the name, email,
+ *   phone and notes erased.
+ * - Questions from the Questions page: deleted. They are matched by the email
+ *   the account had, because they are sent without signing in.
+ *
+ * Each failure is named in `failures`, so the account is not anonymised while
+ * anything personal is left behind.
+ */
+async function removePersonalRecords(
+  payload: Payload,
+  customerId: number | string,
+  failures: string[],
+): Promise<void> {
+  const receipts = await findEvery<{ id: number | string }>(payload, {
+    collection: 'receipts',
+    where: { customer: { equals: customerId } },
+    depth: 0,
+    overrideAccess: true,
+    select: {},
+  })
+  for (const receipt of receipts.docs) {
+    await payload
+      .delete({
+        collection: 'receipts',
+        id: receipt.id,
+        overrideAccess: true,
+        context: { [RETENTION_CONTEXT]: true },
+      })
+      .catch(() => failures.push(`receipt ${String(receipt.id)}`))
+  }
+
+  await payload
+    .delete({
+      collection: 'reviews',
+      where: { customer: { equals: customerId } },
+      overrideAccess: true,
+    })
+    .catch(() => failures.push('reviews'))
+
+  const staffRequests = await findEvery<{ id: number | string }>(payload, {
+    collection: 'staff-requests',
+    where: { customer: { equals: customerId } },
+    depth: 0,
+    overrideAccess: true,
+    select: {},
+  })
+  for (const request of staffRequests.docs) {
+    await payload
+      .update({
+        collection: 'staff-requests',
+        id: request.id,
+        data: {
+          name: 'Closed account',
+          email: anonymisedCustomer().email,
+          phone: null,
+          notes: null,
+        },
+        overrideAccess: true,
+      })
+      .catch(() => failures.push(`event staff request ${String(request.id)}`))
+  }
+
+  const customer = (await payload
+    .findByID({ collection: 'customers', id: customerId, depth: 0, overrideAccess: true })
+    .catch(() => null)) as { email?: unknown } | null
+  const email = typeof customer?.email === 'string' ? customer.email.trim().toLowerCase() : ''
+  if (email && !email.endsWith(`@${REMOVED_DOMAIN}`)) {
+    // `like` narrows it down; the exact, case-blind match is checked here.
+    const questions = await findEvery<{ id: number | string; email?: unknown }>(payload, {
+      collection: 'guest-questions',
+      where: { email: { like: email } },
+      depth: 0,
+      overrideAccess: true,
+      select: { email: true },
+    })
+    for (const question of questions.docs) {
+      if (
+        String(question.email ?? '')
+          .trim()
+          .toLowerCase() !== email
+      )
+        continue
+      await payload
+        .delete({ collection: 'guest-questions', id: question.id, overrideAccess: true })
+        .catch(() => failures.push(`question ${String(question.id)}`))
+    }
+  }
 }
 
 /**

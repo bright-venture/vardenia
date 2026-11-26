@@ -2,8 +2,9 @@
  * Once a day, deletes what the privacy policy only keeps for a while: bookings
  * and receipts 12 months after the visit (a real visit is cut down to what its
  * passport stamp needs), printed-code scans after 12 months, error records
- * after 90 days. The work is done by the site itself, at POST /booking/retention
- * (apps/web/src/lib/retention.ts); this only knocks.
+ * after 90 days. The same call hides listings whose contract has ended
+ * (apps/web/src/lib/contract-lapse.ts). The work is done by the site itself, at
+ * POST /booking/retention (apps/web/src/lib/retention.ts); this only knocks.
  *
  * A Netlify scheduled function: it runs on the published production deploy
  * only, never on previews or locally. Needs NEXT_PUBLIC_SITE_URL and

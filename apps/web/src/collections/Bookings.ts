@@ -1,5 +1,7 @@
 import type { Access, CollectionConfig, FieldAccess, Where } from 'payload'
 import {
+  SEATING_AREA_KEYS,
+  SEATING_AREA_NAMES,
   ATTENDANCE_VERDICTS,
   BOOKING_STATUSES,
   GUEST_ANSWERS,
@@ -40,6 +42,34 @@ const venueOnceOrStaff: FieldAccess = ({ req, doc }) => {
   }
   const stored = (doc as { amount?: unknown } | undefined)?.amount
   return stored === null || stored === undefined
+}
+
+const idOf = (value: unknown): string | null => {
+  const id = typeof value === 'object' && value !== null ? (value as { id?: unknown }).id : value
+  return typeof id === 'string' || typeof id === 'number' ? String(id) : null
+}
+
+/**
+ * Who reads a booking's price snapshot (Task 7): staff, a partner of the
+ * listing it was booked at, and the guest who booked it. The collection read
+ * rule already narrows the documents to those three; this checks the
+ * document itself as well, so the field holds even where a document reaches
+ * someone by another path.
+ */
+export const bookingPriceRead: FieldAccess = ({ req, doc }) => {
+  const user = req.user as { id?: unknown; collection?: string } | null | undefined
+  if (isStaffUser(user)) return true
+  if (!user || !doc) return false
+  const record = doc as { business?: unknown; customer?: unknown }
+  if (user.collection === BUSINESS_USER_COLLECTION) {
+    const business = idOf(record.business)
+    return business !== null && ownedBusinessIds(user).map(String).includes(business)
+  }
+  if (user.collection === CUSTOMER_COLLECTION) {
+    const customer = idOf(record.customer)
+    return customer !== null && customer === idOf(user.id)
+  }
+  return false
 }
 
 /**
@@ -271,6 +301,40 @@ export const Bookings: CollectionConfig = {
       // The fee is charged per guest for some venues. Staff only, re-checked.
       access: { update: isStaffFieldLevel },
     },
+    {
+      /**
+       * Of the party, how many are children (18 November 2026). Asked on hotel
+       * bookings, as Booking.com does: adults need adult places in the rooms,
+       * children may also use the extra places. 0 for everything else.
+       */
+      name: 'children',
+      type: 'number',
+      min: 0,
+      defaultValue: 0,
+      access: { update: isStaffFieldLevel },
+      admin: { condition: (data) => Number(data?.children) > 0 },
+    },
+
+    {
+      /**
+       * The restaurant seating area this booking holds (Task 8, core/seating):
+       * `indoor`, `indoor-smoking`, `outdoor` or `outdoor-smoking`. Set on
+       * every new booking at a restaurant with seating areas (required there,
+       * and one of the listing's), and counted only against bookings of the
+       * same area, against that area's tables - by guardBookingWrite and by
+       * the capacity trigger. Empty everywhere else, and on bookings made
+       * before the listing had areas (they count against no area).
+       *
+       * Staff only once the booking exists, like the times: moving a booking
+       * to another area is re-checked in guardBookingWrite.
+       */
+      name: 'area',
+      label: 'Seating area',
+      type: 'select',
+      options: SEATING_AREA_KEYS.map((key) => ({ label: SEATING_AREA_NAMES[key], value: key })),
+      access: { update: isStaffFieldLevel },
+      admin: { condition: (data) => Boolean(data?.area) },
+    },
 
     {
       /**
@@ -285,6 +349,113 @@ export const Bookings: CollectionConfig = {
       admin: {
         description: 'The room or unit type requested, for a stay. Empty for a table booking.',
       },
+    },
+
+    {
+      /**
+       * The rooms a hotel booking holds (17 November 2026): one line per room
+       * type and option, with how many rooms. Empty for every other booking,
+       * which keeps the listing's single capacity as before.
+       *
+       * The name and the option's wording are copied in when the booking is
+       * made, so the reservation book and the emails still read correctly if
+       * the hotel later renames the room. What counts against the hotel's rooms
+       * is `roomType` and `count`, per night: lib/room-availability, and the
+       * database trigger installed with the room types migration.
+       */
+      name: 'rooms',
+      type: 'array',
+      access: { update: isStaffFieldLevel },
+      labels: { singular: 'Room', plural: 'Rooms' },
+      admin: {
+        condition: (data) => Array.isArray(data?.rooms) && data.rooms.length > 0,
+        description: 'The rooms this hotel booking holds.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'roomType',
+              type: 'relationship',
+              relationTo: 'room-types',
+              required: true,
+              index: true,
+            },
+            { name: 'count', type: 'number', required: true, min: 1, max: 50, defaultValue: 1 },
+          ],
+        },
+        { name: 'roomName', type: 'text' },
+        { name: 'optionId', type: 'text' },
+        { name: 'optionLabel', type: 'text' },
+      ],
+    },
+    {
+      /**
+       * How many rooms the booking holds in all; 0 for everything that is not a
+       * room booking. Set by guardBookingWrite from `rooms`, never typed.
+       *
+       * A column of its own because the database needs it before the lines
+       * exist: the listing-capacity trigger runs when the booking row is
+       * inserted, and Payload writes the lines afterwards. A room booking is
+       * counted against its room types instead (see the room types migration),
+       * so that trigger skips a row whose count is above 0.
+       */
+      name: 'roomCount',
+      type: 'number',
+      defaultValue: 0,
+      access: { create: isStaffFieldLevel, update: isStaffFieldLevel },
+      admin: { readOnly: true, condition: (data) => Number(data?.roomCount) > 0 },
+    },
+
+    /**
+     * The price the guest was quoted, as it stood when they booked (Task 7,
+     * 20 November 2026). A hotel: nights x the chosen option's price x rooms,
+     * per room line. A guest house: the stay quote (core quoteStay), with the
+     * package chosen. Empty for restaurants, and for a booking whose prices
+     * were not set (an unpriced room option or no stay price): never a zero
+     * total, never a partial one.
+     *
+     * Written only by the booking service, with access overridden, and only
+     * on create (guardBookingWrite drops it from every other write, and the
+     * field refuses create and update through the API). Staff cannot edit it
+     * either: it is the record of what was quoted, and correcting a price is
+     * done on the bill (`amount`), not by rewriting the quote. Editing a room
+     * or stay price later never touches it, and moving a booking's dates does
+     * not reprice it.
+     */
+    {
+      name: 'price',
+      type: 'group',
+      access: {
+        read: bookingPriceRead,
+        create: () => false,
+        update: () => false,
+      },
+      admin: {
+        readOnly: true,
+        condition: (data) => typeof data?.price?.total === 'number',
+        description: 'The price quoted when the booking was made. Set automatically, never edited.',
+      },
+      fields: [
+        { name: 'total', label: 'Total (USD)', type: 'number', min: 0 },
+        { name: 'currency', type: 'text' },
+        { name: 'nights', type: 'number', min: 0 },
+        {
+          name: 'lines',
+          type: 'array',
+          fields: [
+            { name: 'label', type: 'text' },
+            { name: 'amount', label: 'Amount (USD)', type: 'number', min: 0 },
+          ],
+        },
+        {
+          name: 'quotedAt',
+          label: 'Quoted at',
+          type: 'date',
+          admin: { date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' } },
+        },
+      ],
     },
 
     {

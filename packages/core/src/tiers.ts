@@ -8,15 +8,17 @@
  */
 
 /**
- * Three tiers, in enum order, a ladder where each rung is above the last:
+ * Four tiers, in enum order, a ladder where each rung is above the last:
  *
  * - `bronze`: the listing on the website, and nothing in print. For a venue
  *   that wants to be found online but does not buy a magazine page.
  * - `silver`: a page in the printed magazine, with the website listing
  *   included. Every listing imported from the magazine lands here, so it is
  *   also the default.
- * - `gold`: silver, plus first place in every listing grid and one of the
- *   places in the band at the top of the home page ({@link HOME_PAGE_PLACES}).
+ * - `gold`: silver, plus the top of its category: first place in the listing
+ *   grids of its category ({@link DEFAULT_MAX_GOLD_PER_CATEGORY} per category).
+ * - `platinum`: gold, plus one of the places in the band at the top of the home
+ *   page ({@link DEFAULT_MAX_PLATINUM} in all).
  *
  * # Every silver listing comes before every bronze one
  *
@@ -37,32 +39,46 @@
  *
  * The order matters beyond readability: every listing grid sorts on `-tier`,
  * and `-tier` is the Postgres enum's own declaration order, so gold comes
- * first, then silver, then bronze. Declare a new rung in its place on the
+ * first, then gold, silver, bronze. Declare a new rung in its place on the
  * ladder, never at the end.
  */
-export const LISTING_TIERS = ['bronze', 'silver', 'gold'] as const
+export const LISTING_TIERS = ['bronze', 'silver', 'gold', 'platinum'] as const
 export type ListingTier = (typeof LISTING_TIERS)[number]
 
 /**
- * How many gold listings there can be, which is how many the home page band
- * shows, until an admin sets another number in the admin's Settings, Tiers
- * section (apps/web/src/globals/Settings). This is the default.
+ * How many gold listings a category can hold, until an admin sets another
+ * number in the admin's Settings, Tiers section (apps/web/src/globals/Settings).
+ * This is the default.
  *
- * A gold listing that never appears in the band has been sold something it
- * does not get - the band is sorted and cut at the number of places, so one
- * more would silently lose out to whichever come first. The admin refuses it
- * instead, and refuses lowering the places below the gold listings sold.
+ * Gold is the top of its category, so a seventh gold listing would be sold a
+ * place it cannot show. The admin refuses it instead, and refuses lowering the
+ * number below the gold listings a category already has. Platinum does not
+ * count against it.
  */
-export const HOME_PAGE_PLACES = 6
+export const DEFAULT_MAX_GOLD_PER_CATEGORY = 6
+
+/**
+ * How many platinum listings there can be, which is how many the home page
+ * band shows, until an admin sets another number in Settings. This is the
+ * default. The same reasoning as gold: a platinum listing that never appears
+ * in the band has been sold something it does not get.
+ */
+export const DEFAULT_MAX_PLATINUM = 6
 
 export interface TierCapabilities {
   /** Sort weight in directory results. Higher floats to the top within a category. */
   rank: number
   /**
-   * A place in the band at the top of the home page. Gold only, and limited to
-   * {@link HOME_PAGE_PLACES} listings.
+   * A place in the band at the top of the home page. Platinum only, and limited
+   * to {@link DEFAULT_MAX_PLATINUM} listings (or the admin's setting).
    */
   homePage: boolean
+  /**
+   * First place in the listing grids of its own category. Gold and platinum,
+   * limited per category to {@link DEFAULT_MAX_GOLD_PER_CATEGORY} gold listings
+   * (or the admin's setting).
+   */
+  topOfCategory: boolean
   /** Max images in the public gallery. */
   galleryLimit: number
   /** Gets a long-form editorial feature written by the Vardenia team. */
@@ -104,6 +120,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   bronze: {
     rank: 0,
     homePage: false,
+    topOfCategory: false,
     galleryLimit: 15,
     editorialFeature: false,
     qrCode: false,
@@ -118,6 +135,7 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
   silver: {
     rank: 5,
     homePage: false,
+    topOfCategory: false,
     galleryLimit: 15,
     editorialFeature: true,
     qrCode: true,
@@ -127,13 +145,26 @@ export const TIER_CAPABILITIES: Record<ListingTier, TierCapabilities> = {
     pushCampaigns: false,
   },
   /**
-   * Everything silver has, plus the top of every list and the home page band.
-   * It includes the magazine page, so a website-only venue cannot buy the top
-   * of the list without being in print.
+   * Everything silver has, plus the top of its category. It includes the
+   * magazine page, so a website-only venue cannot buy the top of the list
+   * without being in print.
    */
   gold: {
     rank: 10,
+    homePage: false,
+    topOfCategory: true,
+    galleryLimit: 15,
+    editorialFeature: true,
+    qrCode: true,
+    analyticsAccess: true,
+    printInclusion: true,
+    pushCampaigns: false,
+  },
+  /** Everything gold has, plus a place in the band at the top of the home page. */
+  platinum: {
+    rank: 15,
     homePage: true,
+    topOfCategory: true,
     galleryLimit: 15,
     editorialFeature: true,
     qrCode: true,

@@ -1,6 +1,12 @@
 import type { CollectionAfterChangeHook } from 'payload'
 import { LOCALES, DEFAULT_LOCALE } from '@vardenia/i18n'
-import { translationConfigured, translateText, translateRichText } from '../lib/translate'
+import {
+  TranslateHttpError,
+  translationConfigured,
+  translateText,
+  translateRichText,
+} from '../lib/translate'
+import { reportError } from '../lib/report'
 
 /**
  * Fills a listing's tagline and description in the machine-translated locales
@@ -26,7 +32,77 @@ import { translationConfigured, translateText, translateRichText } from '../lib/
  * The translations are machine output and are worth a native review; this only
  * puts them in place so a new listing is not English-only in eight languages the
  * moment it is published.
+ *
+ * # Bounded, because partners save too (Task 3, 20 November 2026)
+ *
+ * A partner's dashboard edit runs this like a staff save, inside their request.
+ * It costs nothing unless the English tagline or description changed and a
+ * target is still empty, so a partner editing an already translated listing
+ * pays one database read and no translation. On top of the four rules:
+ *
+ * 5. **Stops when the engine is unreachable** (a timeout or a network error)
+ *    for the rest of this save, instead of waiting on a dead engine once per
+ *    language. An error status for one language pair moves on to the next.
+ *    The empty targets are tried again on the next English save.
+ * 6. **Refuses a huge description**: more than MAX_DESCRIPTION_TEXT_NODES text
+ *    nodes is not machine-translated at all (one request per node per
+ *    language). lib/translate also puts a timeout on each request.
+ * 7. **Never fails the save**: reading the current values is caught like the
+ *    writes, and logged. An error that is not the engine's (a bug, a failed
+ *    write) goes to reportError, and the next language is tried.
+ * 8. **One budget per save**: TRANSLATE_BUDGET_MS of wall time and
+ *    MAX_TRANSLATED_CHARS_PER_SAVE characters across all languages; each
+ *    request also gets the remaining time as its timeout, and lib/translate
+ *    skips a single text node over MAX_TEXT_CHARS.
  */
+
+/**
+ * A timeout (ours or fetch's), an abort, or a network failure: the engine is
+ * out of reach and the rest of this save is not worth waiting on. Undici
+ * reports a network failure as `TypeError('fetch failed')`; any other
+ * TypeError is a bug in our code and is not counted here.
+ */
+const engineUnreachable = (error: unknown): boolean => {
+  const name = (error as { name?: unknown } | null)?.name
+  if (name === 'TimeoutError' || name === 'AbortError') return true
+  return error instanceof TypeError && error.message === 'fetch failed'
+}
+
+/**
+ * One deadline for the whole save. The hook runs inside the save's request
+ * and transaction, so the transaction stays open while it translates; this
+ * bounds that, whatever the engine and the description do. Languages not
+ * reached stay empty (the listing falls back to English) and are filled on
+ * the next English save.
+ */
+export const TRANSLATE_BUDGET_MS = 20_000
+
+/** Characters sent to the engine per save, across all languages. */
+export const MAX_TRANSLATED_CHARS_PER_SAVE = 30_000
+
+/** Characters a rich text value would send, summed over its text nodes. */
+const richTextChars = (value: unknown): number => {
+  if (!value || typeof value !== 'object') return 0
+  const node = value as { type?: unknown; text?: unknown; children?: unknown; root?: unknown }
+  let total = node.type === 'text' && typeof node.text === 'string' ? node.text.length : 0
+  if (node.root) total += richTextChars(node.root)
+  if (Array.isArray(node.children)) for (const child of node.children) total += richTextChars(child)
+  return total
+}
+
+/** Text nodes in a description beyond which it is not machine-translated. */
+export const MAX_DESCRIPTION_TEXT_NODES = 100
+
+const countTextNodes = (value: unknown): number => {
+  if (!value || typeof value !== 'object') return 0
+  const node = value as { type?: unknown; text?: unknown; children?: unknown; root?: unknown }
+  let count = node.type === 'text' && typeof node.text === 'string' ? 1 : 0
+  if (node.root) count += countTextNodes(node.root)
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) count += countTextNodes(child)
+  }
+  return count
+}
 
 const TARGETS = LOCALES.filter(
   (locale) => locale !== 'en' && locale !== DEFAULT_LOCALE && locale !== 'ar',
@@ -55,7 +131,9 @@ export const autoTranslateListing: CollectionAfterChangeHook = async ({
   const descriptionSource = doc.description
   const taglineChanged = taglineSource !== (previousDoc?.tagline ?? '')
   const descriptionChanged =
-    JSON.stringify(descriptionSource ?? null) !== JSON.stringify(previousDoc?.description ?? null)
+    JSON.stringify(descriptionSource ?? null) !==
+      JSON.stringify(previousDoc?.description ?? null) &&
+    countTextNodes(descriptionSource) <= MAX_DESCRIPTION_TEXT_NODES
 
   if (
     (!taglineChanged || !taglineSource) &&
@@ -65,32 +143,58 @@ export const autoTranslateListing: CollectionAfterChangeHook = async ({
   }
 
   // One read of every locale's current values, so we only fill what is empty.
-  const current = (await req.payload.findByID({
-    collection: 'businesses',
-    id: doc.id,
-    locale: 'all',
-    depth: 0,
-    overrideAccess: true,
-    req,
-  })) as { tagline?: Record<string, string>; description?: Record<string, unknown> }
+  let current: { tagline?: Record<string, string>; description?: Record<string, unknown> }
+  try {
+    current = (await req.payload.findByID({
+      collection: 'businesses',
+      id: doc.id,
+      locale: 'all',
+      depth: 0,
+      overrideAccess: true,
+      req,
+    })) as typeof current
+  } catch (error) {
+    req.payload.logger.error(`autoTranslate ${doc.id}: ${(error as Error).message}`)
+    return doc
+  }
+
+  const deadline = Date.now() + TRANSLATE_BUDGET_MS
+  let charsSent = 0
 
   for (const target of TARGETS) {
     const data: Record<string, unknown> = {}
 
+    const wantsTagline = Boolean(taglineChanged && taglineSource && !current.tagline?.[target])
+    const wantsDescription =
+      descriptionChanged &&
+      !richIsEmpty(descriptionSource) &&
+      richIsEmpty(current.description?.[target])
+    if (!wantsTagline && !wantsDescription) continue
+
+    // Rule 8: one deadline and one character budget for the whole save.
+    const cost =
+      (wantsTagline ? taglineSource.length : 0) +
+      (wantsDescription ? richTextChars(descriptionSource) : 0)
+    if (Date.now() >= deadline || charsSent + cost > MAX_TRANSLATED_CHARS_PER_SAVE) {
+      req.payload.logger.error(
+        `autoTranslate ${doc.id}: budget for this save used up at [${target}]; the rest stay untranslated`,
+      )
+      break
+    }
+    charsSent += cost
+
     try {
-      if (taglineChanged && taglineSource && !current.tagline?.[target]) {
-        const translated = await translateText(taglineSource, DEFAULT_LOCALE, target)
+      if (wantsTagline) {
+        const translated = await translateText(taglineSource, DEFAULT_LOCALE, target, { deadline })
         // The tagline field is capped at 120 chars; a translation can run longer.
         if (translated)
           data.tagline =
             translated.length > 120 ? `${translated.slice(0, 119).trimEnd()}…` : translated
       }
-      if (
-        descriptionChanged &&
-        !richIsEmpty(descriptionSource) &&
-        richIsEmpty(current.description?.[target])
-      ) {
-        const translated = await translateRichText(descriptionSource, DEFAULT_LOCALE, target)
+      if (wantsDescription) {
+        const translated = await translateRichText(descriptionSource, DEFAULT_LOCALE, target, {
+          deadline,
+        })
         if (translated) data.description = translated
       }
 
@@ -113,6 +217,19 @@ export const autoTranslateListing: CollectionAfterChangeHook = async ({
       })
     } catch (error) {
       req.payload.logger.error(`autoTranslate ${doc.id} [${target}]: ${(error as Error).message}`)
+      // Rule 5: an engine that is down or too slow, or the save's deadline,
+      // ends this save's translating. A refusal for one language pair (an
+      // error status) does not: the next language may well have a model.
+      if (engineUnreachable(error)) break
+      // Anything else is not the engine: a bug, or a failed write. Reported
+      // to the error log so it is seen, then the next language is tried. Not
+      // rethrown: the listing itself has saved and must stay saved.
+      if (!(error instanceof TranslateHttpError)) {
+        void reportError(error, {
+          source: 'autoTranslateListing',
+          extra: { listing: doc.id, target },
+        })
+      }
     }
   }
 

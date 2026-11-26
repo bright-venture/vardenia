@@ -40,12 +40,79 @@ import { isStaffUser } from '../access/index'
  * before any document is assembled.
  */
 
-/** Fields whose *order* is as sensitive as their value. */
+/**
+ * Fields whose *order* is as sensitive as their value: every staff-only field
+ * of a listing, a group's fields written as the dotted path `?sort=` takes.
+ * guardSort.test walks the collection and fails when one is missing.
+ */
 export const PROTECTED_SORT_FIELDS = [
   'contractStartsAt',
   'contractEndsAt',
   'salesOwner',
   'internalNotes',
+  'importBatch',
+  // Draft / Published / Rejected / Expired: tells a reader whose contract ended.
+  'state',
+  'commission.rate',
+  'commission.waivedUntil',
+  // What an owner typed into the public submission form.
+  'submission.status',
+  'submission.ownerName',
+  'submission.ownerEmail',
+  'submission.ownerPhone',
+  'submission.ownerPhoneSearch',
+  'submission.rejectionReason',
+  'submission.rejectionReasonShared',
+  'submission.rejectedAt',
+  'submission.rejectedBy',
+  'submission.history.step',
+  'submission.history.at',
+  'submission.history.by',
+  'submission.pageTemplate',
+  'submission.submittedAt',
+  'submission.reference',
+  'submission.acceptedAt',
+  'submission.rejectionKind',
+  'submission.history.note',
+  'submission.payments.type',
+  'submission.payments.amount',
+  'submission.payments.currency',
+  'submission.payments.senderNumber',
+  'submission.payments.whishAt',
+  'submission.payments.method',
+  'submission.payments.note',
+  'submission.payments.recordedBy',
+  'submission.payments.recordedAt',
+  'submission.payments.voided',
+  'submission.payments.voidedBy',
+  'submission.payments.voidedAt',
+  'submission.payments.voidReason',
+  'submission.payments.forfeited',
+  'submission.payment.stage',
+  'submission.payment.price',
+  'submission.payment.downpaymentAmount',
+  'submission.payment.currency',
+  'submission.payment.received',
+  'submission.payment.refunded',
+  'submission.payment.stillToPay',
+  'submission.payment.downpaymentDueAt',
+  'submission.payment.balanceDeadlineDays',
+  'submission.payment.balanceDueAt',
+  'submission.payment.downpaymentReminderSentAt',
+  'submission.payment.balanceReminderSentAt',
+  'submission.payment.submittedEmailSentAt',
+  'submission.payment.downpaymentEmailSentAt',
+  'submission.payment.acceptedEmailSentAt',
+  'submission.payment.notAcceptedEmailSentAt',
+  'submission.payment.unpaidEmailSentAt',
+  'submission.payment.lapsedEmailSentAt',
+  'submission.payment.publishedEmailSentAt',
+  'submission.payment.lapsedListingNumber',
+  'submission.terms.version',
+  'submission.terms.priceAtAcceptance',
+  'submission.terms.currency',
+  'submission.terms.termMonths',
+  'submission.terms.acceptedAt',
 ] as const
 
 /** `sort` arrives as a string, a comma-joined string, or an array of either. */

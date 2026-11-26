@@ -38,6 +38,16 @@ export interface Trip {
   /** For a stay. 1 when not given. */
   nights: number
   party: number
+  /** For hotels with room types: how many rooms, and what the rooms must offer. */
+  rooms?: number
+  /**
+   * Children, on top of `party`, for a stay (18 November 2026). On the Stay
+   * search `party` is the adults, as on Booking.com.
+   */
+  children?: number
+  breakfast?: boolean
+  freeCancellation?: boolean
+  view?: 'sea' | null
 }
 
 /** The query string as it arrives. */
@@ -46,6 +56,11 @@ export interface RawTripParams {
   time?: string
   nights?: string
   party?: string
+  rooms?: string
+  children?: string
+  breakfast?: string
+  cancel?: string
+  view?: string
 }
 
 /** A table for dinner, when a guest gave a day and no time. */
@@ -53,6 +68,7 @@ export const TRIP_DEFAULT_TIME = '20:00'
 export const TRIP_DEFAULT_PARTY = 2
 export const TRIP_MAX_PARTY = 50
 export const TRIP_MAX_NIGHTS = 30
+export const TRIP_MAX_ROOMS = 10
 /** How far ahead a plan may be, matching the longest calendar a listing can open. */
 export const TRIP_MAX_DAYS_AHEAD = 365
 
@@ -83,6 +99,15 @@ export function parseTrip(raw: RawTripParams, today?: string): Trip | null {
     time: raw.time && TIME.test(raw.time) ? raw.time : null,
     nights: wholeNumber(raw.nights, 1, TRIP_MAX_NIGHTS) ?? 1,
     party: wholeNumber(raw.party, 1, TRIP_MAX_PARTY) ?? TRIP_DEFAULT_PARTY,
+    ...((wholeNumber(raw.rooms, 1, TRIP_MAX_ROOMS) ?? 1) > 1
+      ? { rooms: wholeNumber(raw.rooms, 1, TRIP_MAX_ROOMS) as number }
+      : {}),
+    ...((wholeNumber(raw.children, 0, 20) ?? 0) > 0
+      ? { children: wholeNumber(raw.children, 0, 20) as number }
+      : {}),
+    ...(raw.breakfast === '1' ? { breakfast: true } : {}),
+    ...(raw.cancel === '1' ? { freeCancellation: true } : {}),
+    ...(raw.view === 'sea' ? { view: 'sea' as const } : {}),
   }
 }
 
@@ -99,6 +124,11 @@ export function tripParams(trip: Trip | null | undefined): [string, string][] {
   if (trip.time) out.push(['time', trip.time])
   if (trip.nights !== 1) out.push(['nights', String(trip.nights)])
   out.push(['party', String(trip.party)])
+  if (trip.children && trip.children > 0) out.push(['children', String(trip.children)])
+  if (trip.rooms && trip.rooms > 1) out.push(['rooms', String(trip.rooms)])
+  if (trip.breakfast) out.push(['breakfast', '1'])
+  if (trip.freeCancellation) out.push(['cancel', '1'])
+  if (trip.view) out.push(['view', trip.view])
   return out
 }
 
@@ -185,6 +215,7 @@ export function prefillFromTrip(
     date: inRange ? trip.date : defaults.date,
     time: trip.time ?? defaults.time,
     nights,
-    partySize: trip.party,
+    // Children come on top of the party where the search asked for them apart.
+    partySize: trip.party + (trip.children ?? 0),
   }
 }

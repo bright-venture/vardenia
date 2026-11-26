@@ -224,19 +224,91 @@ describe('outcomeFor', () => {
   })
 
   /**
-   * Nobody needs an email saying they turned up, and "you did not turn up" is an
-   * accusation made from a button pressed at the end of a shift.
+   * "You did not turn up" is an accusation made from a button pressed at the end
+   * of a shift, so a no-show is never written about.
    */
-  it.each([
-    ['confirmed', 'completed'],
-    ['confirmed', 'no-show'],
-  ] as const)('says nothing about %s -> %s', (from, to) => {
-    expect(outcomeFor(from, to)).toBeNull()
+  it('says nothing about confirmed -> no-show', () => {
+    expect(outcomeFor('confirmed', 'no-show')).toBeNull()
+  })
+
+  /**
+   * The one exception to "nothing about completed": the visit is now over and
+   * only now can the guest review it, so they are told so (an invitation, not a
+   * statement of attendance). Only from confirmed, the one legal way in.
+   */
+  it('invites a review when the business marks a confirmed booking completed', () => {
+    expect(outcomeFor('confirmed', 'completed')).toBe('completed')
   })
 
   it('says nothing when the status did not change', () => {
     expect(outcomeFor('confirmed', 'confirmed')).toBeNull()
     expect(outcomeFor('pending', 'pending')).toBeNull()
+  })
+})
+
+describe('the review invitation, in every language', () => {
+  const LOCALES = ['en', 'ar', 'fr', 'es', 'pt', 'ru', 'zh', 'hi', 'bn', 'ur'] as const
+  const args = {
+    name: 'Sami',
+    reference: 'ABCD1234',
+    outcome: 'completed' as const,
+    start: new Date('2026-10-20T17:00:00.000Z'),
+    end: new Date('2026-10-20T19:00:00.000Z'),
+    partySize: 2,
+    businessName: 'Em <Sherif> & Sons',
+  }
+
+  it.each(LOCALES)('is written in %s, with its own subject and wording', (locale) => {
+    const content = bookingOutcomeContent({ ...args, locale })
+    expect(content.subject.length).toBeGreaterThan(3)
+    expect(content.text).toContain('ABCD1234')
+    expect(content.html).toContain(`lang="${locale}"`)
+    if (locale !== 'en') {
+      expect(content.subject).not.toBe(bookingOutcomeContent({ ...args, locale: 'en' }).subject)
+    }
+  })
+
+  it.each(LOCALES)('names the business, escaped, in %s', (locale) => {
+    const content = bookingOutcomeContent({ ...args, locale })
+    expect(content.text).toContain('Em <Sherif> & Sons')
+    expect(content.html).toContain('Em &lt;Sherif&gt; &amp; Sons')
+    expect(content.html).not.toContain('<Sherif>')
+  })
+
+  it('keeps right-to-left handling for Arabic and Urdu, and left-to-right for English', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'ar' }).html).toContain('dir="rtl"')
+    expect(bookingOutcomeContent({ ...args, locale: 'ur' }).html).toContain('dir="rtl"')
+    expect(bookingOutcomeContent({ ...args, locale: 'en' }).html).toContain('dir="ltr"')
+  })
+
+  it('tells the guest they can now review, in English', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'en' }).text).toMatch(/review/i)
+  })
+
+  it('is real Arabic', () => {
+    expect(bookingOutcomeContent({ ...args, locale: 'ar' }).subject).toMatch(/[\u0600-\u06FF]/)
+  })
+
+  it.each(LOCALES)('names nobody when the business name could not be read, in %s', (locale) => {
+    const named = bookingOutcomeContent({ ...args, locale })
+    for (const businessName of [undefined, '', '   ']) {
+      const content = bookingOutcomeContent({ ...args, locale, businessName })
+      // Not "Vardenia has marked your visit as done": Vardenia did not mark it.
+      expect(content.text).not.toContain('Vardenia has marked')
+      expect(content.text).not.toContain('{business}')
+      expect(content.text).not.toContain('Em <Sherif>')
+      expect(content.text).toContain('ABCD1234')
+      expect(content.subject).toBe(named.subject)
+    }
+    // The sentence that names the business is not used with an empty name.
+    const intro = (businessName: string | undefined) =>
+      bookingOutcomeContent({ ...args, locale, businessName }).text
+    expect(intro(undefined)).not.toBe(intro('Vardenia'))
+  })
+
+  it('says in English that the visit was marked as done, without naming anyone', () => {
+    const content = bookingOutcomeContent({ ...args, locale: 'en', businessName: undefined })
+    expect(content.text).toContain('Your visit has been marked as done.')
   })
 })
 
@@ -555,5 +627,51 @@ describe('notifyVenueOfBooking', () => {
       expect.any(Error),
       expect.objectContaining({ source: 'booking.venue-request' }),
     )
+  })
+})
+
+/**
+ * The quoted total (Task 7): one line when the booking stored a price
+ * snapshot, nothing otherwise (restaurants, unpriced stays).
+ */
+describe('the total, when a price was quoted', () => {
+  it('adds one "Total" line to the guest email, in the guest language', () => {
+    const en = bookingConfirmationContent({ ...BASE, status: 'confirmed', total: 1234.5 })!
+    expect(en.text).toContain('Total: $1,234.50')
+    expect(en.html).toContain('$1,234.50')
+    const fr = bookingConfirmationContent({
+      ...BASE,
+      status: 'confirmed',
+      locale: 'fr',
+      total: 450,
+    })!
+    expect(fr.text).toContain('Total: $450')
+    const ar = bookingConfirmationContent({ ...BASE, status: 'pending', locale: 'ar', total: 450 })!
+    expect(ar.text).toMatch(/الإجمالي: \$450/)
+  })
+
+  it('shows a total of 0, which is a real price', () => {
+    const mail = bookingConfirmationContent({ ...BASE, status: 'confirmed', total: 0 })!
+    expect(mail.text).toContain('Total: $0')
+  })
+
+  it('adds nothing without a total', () => {
+    const mail = bookingConfirmationContent({ ...BASE, status: 'confirmed' })!
+    expect(mail.text).not.toContain('Total')
+    expect(mail.html).not.toContain('$')
+  })
+
+  it('adds the total to the venue email too', () => {
+    const base = {
+      businessName: 'Beit Douma',
+      guestName: 'Sami',
+      reference: 'ABCD1234',
+      start: new Date('2026-09-01T12:00:00Z'),
+      end: new Date('2026-09-03T08:00:00Z'),
+      partySize: 2,
+      confirmed: false,
+    }
+    expect(venueRequestContent({ ...base, total: 300 }).text).toContain('Total: $300')
+    expect(venueRequestContent(base).text).not.toContain('Total')
   })
 })

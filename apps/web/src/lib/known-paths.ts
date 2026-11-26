@@ -47,14 +47,20 @@ const FIXED_SEGMENTS = [
   'account',
   'add-your-business',
   'credits',
-  'advertise',
+  // A restaurant brand and its branches, /brands/<slug> (Task 12).
+  'brands',
   'contact',
+  // Destination guides, /destinations/<place> (the Byblos page).
+  'destinations',
   'directory',
+  // Event Staff, the request-form section (18 November 2026).
+  'event-staff',
   'faq',
   'legal',
   'magazine',
+  // Where businesses book a place in the magazine (19 November 2026).
+  'magazine-places',
   'partner',
-  'partner-with-us',
   'scan',
   'search',
   // The "Did you go?" page a guest opens from the email. lib/attendance.
@@ -89,6 +95,17 @@ export const UNMATCHED_PREFIXES = [
   'billing',
   'invoice',
   'media',
+  // The public "add your place" endpoints (a multipart POST and the number
+  // picker's JSON), actions rather than pages. Excluded from the matcher.
+  'place-submissions',
+  // The phone's photo upload for that form (multipart POST). Excluded from the matcher.
+  'place-uploads',
+  // Task 9's JSON endpoints, actions rather than pages: a public restaurant
+  // brand (/brand-data/<slug>) and a partner adding a branch
+  // (/partner-data/branches). Under -data prefixes so the page paths
+  // /brands/<slug> and /partner/* stay pages. Excluded from the matcher.
+  'brand-data',
+  'partner-data',
 ] as const
 
 export const KNOWN_SEGMENTS: ReadonlySet<string> = new Set<string>([

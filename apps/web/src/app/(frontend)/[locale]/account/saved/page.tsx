@@ -1,3 +1,4 @@
+import { ReaderDeskNav } from '../../../../../components/account/ReaderDeskNav'
 import { AccountEmptyState } from '../../../../../components/account/AccountEmptyState'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
@@ -42,7 +43,7 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
 
   if (!customer) {
     return (
-      <main data-ui className="vd-account-gate">
+      <main data-ui data-gate="saved" className="vd-account-gate">
         <PageHero title={t('savedTitle')} intro={t('signInToSaved')} place={1} locale={locale}>
           <Link href="/account/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -59,6 +60,7 @@ export default async function SavedPage({ params }: { params: Promise<{ locale: 
 
   return (
     <main data-ui className="vd-saved-page mx-auto max-w-6xl px-6 py-16">
+      {locale === 'en' && <ReaderDeskNav t={t} current="/account/saved" />}
       <header className="vd-personal-header flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('savedTitle')}</h1>

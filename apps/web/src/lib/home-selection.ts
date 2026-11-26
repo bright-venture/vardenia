@@ -1,6 +1,7 @@
 import { resolvePhotograph, type MediaLike } from './media'
 
 export const HOME_PLACES_LIMIT = 6
+export const HOME_PLACES_DESKTOP_LIMIT = HOME_PLACES_LIMIT * 3
 
 export interface HomeCandidate {
   id: number
@@ -37,6 +38,7 @@ export function isHomeCandidate(listing: HomeCandidate): boolean {
 export function selectHomePlaces<T extends HomeCandidate>(
   candidates: readonly T[],
   excludedIds: readonly number[] = [],
+  limit = HOME_PLACES_LIMIT,
 ): T[] {
   const ids = new Set(excludedIds)
   const slugs = new Set<string>()
@@ -52,7 +54,7 @@ export function selectHomePlaces<T extends HomeCandidate>(
   const count = (counts: Map<string, number>, value: string | null | undefined) =>
     value ? (counts.get(value) ?? 0) : HOME_PLACES_LIMIT
 
-  while (pool.length && selected.length < HOME_PLACES_LIMIT) {
+  while (pool.length && selected.length < limit) {
     let bestIndex = 0
     let bestScore = Infinity
     pool.forEach((listing, index) => {

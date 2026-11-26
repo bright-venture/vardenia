@@ -55,7 +55,7 @@ export default async function PartnerScansPage({ params }: Props) {
 
   if (!owner) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="scans" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
           <Link href="/partner/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -74,6 +74,11 @@ export default async function PartnerScansPage({ params }: Props) {
   if (report.total === 0) {
     return (
       <>
+        {locale === 'en' && (
+          <h2 hidden className="vd-desk-heading" data-desk="scans">
+            {t('tabScans')}
+          </h2>
+        )}
         <p className="text-ink-700 mt-8 text-sm leading-relaxed">{t('scansIntro')}</p>
         <AccountEmptyState kind="scans" message={t('scansNone')} />
       </>
@@ -82,10 +87,15 @@ export default async function PartnerScansPage({ params }: Props) {
 
   return (
     <>
+      {locale === 'en' && (
+        <h2 hidden className="vd-desk-heading" data-desk="scans">
+          {t('tabScans')}
+        </h2>
+      )}
       <p className="text-ink-700 mt-8 text-sm leading-relaxed">{t('scansIntro')}</p>
 
       {/* The three numbers first, before the breakdowns. */}
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="vd-scan-totals mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Tile label={t('scansAllTime')} value={num(report.total)} />
         <Tile
           label={t('scansWindow', { days: report.windowDays })}

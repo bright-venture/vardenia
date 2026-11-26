@@ -143,6 +143,7 @@ const TARGET_LABELS: Record<string, string> = {
   category: 'A category page',
   external: 'Another website',
   home: 'The Vardenia home page',
+  'magazine-places': 'The magazine places page (for businesses)',
 }
 
 export const QrCodes: CollectionConfig = {

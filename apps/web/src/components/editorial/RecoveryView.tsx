@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { isEnglishRecovery, recoveryEditionScript } from '../../lib/recovery-edition'
 import type { ReactNode } from 'react'
 /** Standalone recovery screens work even when the normal layout cannot render. */
 export function RecoveryView({
@@ -11,7 +14,18 @@ export function RecoveryView({
   children: ReactNode
 }) {
   return (
-    <main className="vd-recovery">
+    <main
+      className="vd-recovery"
+      suppressHydrationWarning
+      ref={(element) => {
+        if (element)
+          element.toggleAttribute(
+            'data-english-recovery',
+            isEnglishRecovery(window.location.pathname),
+          )
+      }}
+    >
+      <script dangerouslySetInnerHTML={{ __html: recoveryEditionScript }} />
       <div className="vd-recovery-copy">
         <Link className="vd-recovery-brand" href="/">
           Vardenia

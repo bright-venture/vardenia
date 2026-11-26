@@ -6,12 +6,12 @@
  * listing (see lib/maps-paste), and in September 2026 production had none at
  * all, so everything below the first rule is not a fallback for rare cases: it
  * is what almost every listing uses until the links are filled in. As they are,
- * suggestions move from "same district" to "1.2 km away" with no further change.
+ * suggestions move from "same city" to "1.2 km away" with no further change.
  *
  * # The order
  *
  * 1. Places with coordinates within NEARBY_RADIUS_KM, closest first.
- * 2. The same district, in the directory's own order (tier, then name).
+ * 2. The same city, in the directory's own order (tier, then name).
  * 3. The same governorate, likewise.
  * 4. Anything else in the category, so a listing with no neighbours still
  *    offers somewhere to go next. These are marked not near, and the page
@@ -27,7 +27,7 @@ export const NEARBY_RADIUS_KM = 30
 export interface Placed {
   id: number
   location?: [number, number] | number[] | null
-  district?: string | null
+  city?: string | null
   governorate?: string | null
 }
 
@@ -35,7 +35,7 @@ export interface NearbyPick {
   id: number
   /** Straight-line distance, whenever both places have coordinates. */
   km: number | null
-  /** Within the radius, or in the same district or governorate. */
+  /** Within the radius, or in the same city or governorate. */
   near: boolean
 }
 
@@ -96,8 +96,8 @@ export function rankNearby(subject: Placed, candidates: Placed[], count = 3): Ne
     return here && there ? distanceKm(here, there) : null
   }
 
-  if (subject.district) {
-    others.filter((c) => c.district === subject.district).forEach((c) => take(c, kmTo(c), true))
+  if (subject.city) {
+    others.filter((c) => c.city === subject.city).forEach((c) => take(c, kmTo(c), true))
   }
   if (subject.governorate) {
     others

@@ -16,7 +16,10 @@ export function AccountEmptyState({
 }) {
   const Icon = icons[kind]
   return (
-    <div className="border-ink-100 bg-surface-raised mt-8 flex flex-col items-start gap-5 border p-6 sm:flex-row sm:gap-6 sm:p-8">
+    <div
+      data-empty={kind}
+      className="border-ink-100 bg-surface-raised mt-8 flex flex-col items-start gap-5 border p-6 sm:flex-row sm:gap-6 sm:p-8"
+    >
       <span
         className="border-gold-300 bg-gold-100/40 text-cedar-900 inline-flex size-12 shrink-0 items-center justify-center border"
         aria-hidden="true"

@@ -29,3 +29,7 @@ export const SESSION_COOKIES = {
   sameSite: 'Lax',
   secure: process.env.NODE_ENV === 'production',
 } as const
+
+// Payload and the header's session check must use the same cookie name.
+export const PAYLOAD_COOKIE_PREFIX = 'payload'
+export const PAYLOAD_COOKIE = `${PAYLOAD_COOKIE_PREFIX}-token`

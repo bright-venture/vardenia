@@ -160,22 +160,42 @@ describe('QrCodes: switching a code off', () => {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * The public rule for listings: published and not in a coming-soon category
+ * (core COMING_SOON_CATEGORIES, 25 November 2026).
+ */
+const PUBLIC_LISTINGS = {
+  and: [
+    { _status: { equals: 'published' } },
+    { category: { not_in: ['weddings', 'transportation'] } },
+  ],
+}
+
 describe('collection read access', () => {
   it('hides unpublished listings and articles from the public', () => {
     for (const config of [Businesses, Articles]) {
       const read = config.access?.read
       expect(read, `${config.slug} has no read rule`).toBeDefined()
-      expect(read!(ctx(null)), `${config.slug} should constrain anonymous reads`).toEqual({
-        _status: { equals: 'published' },
-      })
+      expect(read!(ctx(null)), `${config.slug} should constrain anonymous reads`).toEqual(
+        config === Businesses ? PUBLIC_LISTINGS : { _status: { equals: 'published' } },
+      )
       expect(read!(ctx(staff))).toBe(true)
     }
   })
 
-  it('keeps media and issues public, which the printed magazine depends on', () => {
-    for (const config of [Media, Issues]) {
-      expect(config.access?.read!(ctx(null))).toBe(true)
-    }
+  it('keeps issues public, which the printed magazine depends on', () => {
+    expect(Issues.access?.read!(ctx(null))).toBe(true)
+  })
+
+  /**
+   * Media stays public for everything the team uploaded and everything a page
+   * uses. Only a partner's upload that is on no page yet is held back (Task 3).
+   */
+  it('keeps team media and attached media public', () => {
+    expect(Media.access?.read!(ctx(null))).toEqual({
+      or: [{ uploadedBy: { exists: false } }, { attached: { equals: true } }],
+    })
+    expect(Media.access?.read!(ctx(staff))).toBe(true)
   })
 
   it('keeps QR codes, scan events and users staff-only', () => {
@@ -393,20 +413,25 @@ describe('account collections', () => {
  */
 describe('Businesses read access with owners in play', () => {
   it('still constrains the public to published listings', () => {
-    expect(Businesses.access?.read!(ctx(null))).toEqual({ _status: { equals: 'published' } })
+    expect(Businesses.access?.read!(ctx(null))).toEqual(PUBLIC_LISTINGS)
   })
 
   it('gives an owner their own listings on top of the published ones', () => {
     const owner = { id: 20, collection: 'business-users', businesses: [7] }
     expect(Businesses.access?.read!(ctx(owner))).toEqual({
-      or: [{ _status: { equals: 'published' } }, { id: { in: [7] } }],
+      or: [PUBLIC_LISTINGS, { id: { in: [7] } }],
     })
   })
 
-  /** Reading a listing is not editing one. Curation stays with the team. */
-  it('gives owners no write access of any kind', () => {
+  /**
+   * Since Task 3 an owner updates their own listings - only those rows, as a
+   * query, and only the allow-listed fields (hooks/guardPartnerListingWrite).
+   * Creating and deleting a listing stay with the team.
+   */
+  it('gives owners update on their own rows only, and no create or delete', () => {
     const owner = { id: 20, collection: 'business-users', businesses: [7] }
-    for (const action of ['create', 'update', 'delete'] as const) {
+    expect(Businesses.access?.update!(ctx(owner))).toEqual({ id: { in: [7] } })
+    for (const action of ['create', 'delete'] as const) {
       expect(Businesses.access?.[action]!(ctx(owner)), `owner should not ${action}`).toBe(false)
     }
   })

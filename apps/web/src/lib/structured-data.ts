@@ -1,8 +1,8 @@
 import type { Locale } from '@vardenia/i18n'
-import { districtLabel, governorateLabel } from './labels'
+import { categoryLabel, cityLabel, governorateLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
 import { localizedPath } from './seo'
-import { listingSummary } from './plain-text'
+import { articleSummary, englishListingSummary, listingSummary } from './plain-text'
 
 /** The publisher, named once, so markup and the organisation block agree. */
 const SITE_NAME = 'Vardenia'
@@ -21,13 +21,13 @@ const SITE_NAME = 'Vardenia'
  * an empty one, because structured data that overstates what you know is worse
  * than none. Google penalises markup that disagrees with the page.
  *
- * `telephone`, `email` and `sameAs` used to be here and are gone with the
- * contact fields themselves - bookings and enquiries go through Vardenia now,
- * so a listing holds no phone number, address book entry or social profile to
- * declare. That costs a little: `sameAs` is how Google ties a listing to the
- * business as a real-world entity. It is the price of the model, not an
- * oversight, and it is worth revisiting if listings ever carry a public profile
- * link again.
+ * `telephone`, `email` and `sameAs` used to be here and were removed when the
+ * contact fields went (bookings and enquiries went through Vardenia). Listings
+ * have public contact details again (the `contact` group, shown on the page by
+ * components/listing/ListingExtras), and they are still deliberately left out of
+ * this markup: declaring them is a separate SEO and privacy decision for the
+ * owner. `sameAs` is how Google ties a listing to the business as a real-world
+ * entity, so it is worth revisiting.
  */
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
@@ -120,7 +120,7 @@ export interface ListingForSchema {
   description?: unknown
   category?: string | null
   governorate?: string | null
-  district?: string | null
+  city?: string | null
   address?: string | null
   location?: unknown
   heroImage?: MediaField
@@ -155,8 +155,8 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   const point = Array.isArray(listing.location) ? (listing.location as number[]) : null
   const [lng, lat] = point ?? []
 
-  const street = listing.address || undefined
-  const locality = districtLabel(listing.district, locale) || undefined
+  const street = listing.address?.trim() || undefined
+  const locality = cityLabel(listing.city, locale) || undefined
   const region = governorateLabel(listing.governorate, locale) || undefined
 
   const address = compact({
@@ -177,7 +177,10 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
     '@context': 'https://schema.org',
     '@type': SCHEMA_TYPE[listing.category ?? ''] ?? 'LocalBusiness',
     name: listing.name,
-    description: listingSummary(listing),
+    description:
+      locale === 'en'
+        ? englishListingSummary(listing, categoryLabel(listing.category, locale))
+        : listingSummary(listing),
     url: listing.slug ? absolute(`/directory/${listing.slug}`, locale) : undefined,
     image: image?.src,
     address: hasAddress ? address : undefined,
@@ -193,6 +196,7 @@ export interface ArticleForSchema {
   title?: string | null
   slug?: string | null
   excerpt?: string | null
+  body?: unknown
   publishedAt?: string | null
   updatedAt?: string | null
   heroImage?: MediaField
@@ -206,7 +210,7 @@ export function articleSchema(article: ArticleForSchema, locale: Locale): Json {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: article.title,
-    description: article.excerpt,
+    description: articleSummary(article, locale),
     url: article.slug ? absolute(`/magazine/articles/${article.slug}`, locale) : undefined,
     image: image?.src,
     datePublished: article.publishedAt,
@@ -235,4 +239,23 @@ export function organizationSchema(): Json {
     description: "Lebanon's tourism and lifestyle guide, in print and online.",
     areaServed: { '@type': 'Country', name: 'Lebanon' },
   }
+}
+
+/** Publication identity stays independent of the availability of a digital file. */
+export function issueSchema(
+  name: string,
+  slug: string,
+  issueNumber: number,
+  description?: string,
+): Json {
+  return compact({
+    '@context': 'https://schema.org',
+    '@type': 'PublicationIssue',
+    name,
+    issueNumber,
+    description,
+    url: absolute(`/magazine/issues/${slug}`, 'en'),
+    isPartOf: { '@type': 'Periodical', name: SITE_NAME },
+    publisher: { '@type': 'Organization', name: SITE_NAME },
+  })
 }

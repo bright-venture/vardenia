@@ -66,7 +66,7 @@ export default async function VerifyPage({
     .catch(() => false)
 
   return (
-    <main className="vd-task-page mx-auto max-w-md px-6 py-20">
+    <main data-task="verify-email" className="vd-task-page mx-auto max-w-md px-6 py-20">
       <h1 className="font-display text-ink-900 text-3xl">{t('verifyTitle')}</h1>
 
       {verified ? (
@@ -87,6 +87,11 @@ export default async function VerifyPage({
             <Link href="/account/login" className={PRIMARY_BUTTON}>
               {t('signIn')}
             </Link>
+            {locale === 'en' && (
+              <p hidden className="vd-verify-help">
+                Sign in to request a fresh verification email.
+              </p>
+            )}
             <Link href="/account/forgot" className={LINK}>
               {t('forgot')}
             </Link>

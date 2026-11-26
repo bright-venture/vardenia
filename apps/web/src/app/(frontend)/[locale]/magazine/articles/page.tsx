@@ -1,3 +1,5 @@
+import { publicPageCopy } from '../../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../../components/EnglishPageSchema'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
@@ -57,8 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('magazine.articles'),
-    description: t('magazine.articlesMetaDescription'),
+    title: locale === 'en' ? publicPageCopy['/magazine/articles'].title : t('magazine.articles'),
+    description: locale === 'en' ? publicPageCopy['/magazine/articles'].description : t('magazine.articlesMetaDescription'),
     path: '/magazine/articles',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -74,12 +76,18 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
 
   return (
     <main className="vd-magazine-index vd-magazine-articles">
+      <EnglishPageSchema locale={locale} path={'/magazine/articles'} name={publicPageCopy['/magazine/articles'].title} description={publicPageCopy['/magazine/articles'].description} type="CollectionPage" />
       <PageHero
         title={t('magazine.articles')}
         intro={t('magazine.articlesMetaDescription')}
         place={1}
         locale={locale}
       >
+        {locale === 'en' && (
+          <a href="#archive" hidden className="vd-desktop-archive-link">
+            Browse articles
+          </a>
+        )}
         {/* Back to the magazine, unless the admin has it hidden. */}
         {(await hiddenPages()).includes('magazine') ? null : (
           <Link href="/magazine" className="vd-text-link">
@@ -87,7 +95,7 @@ export default async function ArticlesPage({ params, searchParams }: Props) {
           </Link>
         )}
       </PageHero>
-      <div className="vd-editorial-results">
+      <div id="archive" tabIndex={-1} className="vd-editorial-results">
         {/* `searchParams` is handed over unawaited so this boundary is the only
           thing that blocks on it, matching the directory page. */}
         <Suspense fallback={<ResultsSkeleton kind="editorial" />}>

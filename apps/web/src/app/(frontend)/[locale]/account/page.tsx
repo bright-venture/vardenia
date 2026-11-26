@@ -1,7 +1,10 @@
+import { ReaderDeskNav } from '../../../../components/account/ReaderDeskNav'
 import { PageHero } from '../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getPayload } from 'payload'
+import config from '../../../../payload.config'
 import { dataLocale, isLocale, type Locale } from '@vardenia/i18n'
 import { canSendReceipt, type BookingStatus } from '@vardenia/core'
 import { Link } from '../../../../i18n/routing'
@@ -17,6 +20,7 @@ import { LINK, NOTICE_INFO } from '../../../../components/formStyles'
 import { SignOutButton } from '../../../../components/SignOutButton'
 import { CancelBookingButton } from '../../../../components/CancelBookingButton'
 import { ChangeEmail, ChangeName, ChangePassword } from '../../../../components/ProfileForms'
+import { reviewEligibility } from '../../../../lib/review-eligibility'
 
 /**
  * What a customer sees of themselves: their bookings, and a way out.
@@ -56,7 +60,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   if (!customer) {
     return (
-      <main data-ui className="vd-account-gate">
+      <main data-ui data-gate="overview" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={1} locale={locale}>
           <Link href="/account/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -76,8 +80,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   /*
    * One invitation per place, on its most recent finished booking. A guest can
    * review a place once, and four past dinners at Em Sherif offered the link
-   * four times. The rule is createReview's: completed, or confirmed and over,
-   * at a published listing not yet reviewed.
+   * four times. The rule is createReview's (lib/review-eligibility): a booking
+   * the business marked completed, at a published, bookable listing not yet
+   * reviewed.
    */
   const invite = new Set<string>()
   const offered = new Set<string>()
@@ -86,20 +91,31 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     if (typeof business !== 'object' || !business?.slug) continue
     const place = String(business.id)
     const published = (business as { _status?: string })._status !== 'draft'
-    const finished =
-      booking.status === 'completed' || (booking.status === 'confirmed' && booking.ended)
-    if (!published || !finished || reviewed.has(place) || offered.has(place)) continue
+    const verdict = reviewEligibility({
+      status: booking.status,
+      guestAnswer: booking.guestAnswer,
+      subcategories: (business as { subcategories?: string[] | null }).subcategories,
+      bookingEnabled: (business as { booking?: { enabled?: boolean } | null }).booking?.enabled,
+      alreadyReviewed: reviewed.has(place),
+    })
+    if (!published || !verdict.ok || offered.has(place)) continue
     offered.add(place)
     invite.add(String(booking.id))
   }
 
   return (
     <main data-ui className="vd-account-page mx-auto max-w-3xl px-6 py-16">
+      {locale === 'en' && <ReaderDeskNav t={t} current="/account" />}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-ink-900 text-3xl">{t('title')}</h1>
           <p className="text-ink-500 mt-2 text-sm">{customer.email}</p>
-          <p className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+          {locale === 'en' && (
+            <a hidden className="vd-reader-bookings-jump" href="#reader-bookings">
+              {t('bookings')} <span aria-hidden>↓</span>
+            </a>
+          )}
+          <p className="vd-account-shortcuts mt-3 flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/account/passport" className={LINK}>
               {t('passportLink')}
             </Link>
@@ -124,7 +140,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           about them rather than about a restaurant. Each row is closed at rest,
           so the page still opens as a short summary of what is true rather than
           as a settings panel. */}
-      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('details')}</h2>
+      <h2 id="reader-details" className="text-ink-500 mt-12 text-xs uppercase tracking-widest">
+        {t('details')}
+      </h2>
 
       <div className="mt-4">
         <ChangeName current={customer.name} />
@@ -132,7 +150,13 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         <ChangePassword />
       </div>
 
-      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('bookings')}</h2>
+      <h2
+        id="reader-bookings"
+        tabIndex={-1}
+        className="text-ink-500 mt-12 text-xs uppercase tracking-widest"
+      >
+        {t('bookings')}
+      </h2>
 
       {bookings.length === 0 ? (
         <div className="mt-6">
@@ -161,6 +185,8 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           ) : null}
         </>
       )}
+      <StaffRequestList customerId={customer.id} />
+
       {/* At the bottom, quiet, and a link rather than a button. Closing an
           account is irreversible and takes upcoming reservations with it; it
           should take a deliberate navigation rather than a stray tap. */}
@@ -317,5 +343,52 @@ async function BookingList({
         })}
       </ul>
     </section>
+  )
+}
+
+/**
+ * The guest's Event Staff requests (18 November 2026), newest first, with the
+ * status the team has set. Nothing when there are none.
+ */
+async function StaffRequestList({ customerId }: { customerId: number }) {
+  const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'staff-requests',
+    depth: 0,
+    limit: 20,
+    overrideAccess: true,
+    sort: '-createdAt',
+    where: { customer: { equals: customerId } },
+    select: { reference: true, role: true, eventDate: true, guests: true, status: true },
+  })
+  if (result.docs.length === 0) return null
+  const t = await getTranslations('eventStaff')
+  return (
+    <>
+      <h2 className="text-ink-500 mt-12 text-xs uppercase tracking-widest">{t('accountTitle')}</h2>
+      <ul className="border-ink-100 mt-4 divide-y border-y">
+        {result.docs.map((doc) => {
+          const d = doc as unknown as Record<string, unknown>
+          return (
+            <li
+              key={String(d.id)}
+              className="flex flex-wrap items-baseline justify-between gap-3 py-3"
+            >
+              <span className="text-ink-900">
+                {t(d.role === 'waiters' ? 'role_waiters' : 'role_hostesses')} ·{' '}
+                <span dir="ltr">{String(d.eventDate ?? '')}</span> · {t('guests')}:{' '}
+                {String(d.guests ?? '')}
+              </span>
+              <span className="text-ink-500 text-sm">
+                <span className="font-mono" dir="ltr">
+                  {String(d.reference ?? '')}
+                </span>{' '}
+                · {t(`status_${String(d.status ?? 'new')}` as never)}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </>
   )
 }

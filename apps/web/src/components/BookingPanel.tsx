@@ -3,6 +3,7 @@ import { dataLocale, type Locale } from '@vardenia/i18n'
 import { resolveRules, type BookingRules } from '../lib/availability'
 import { bookingFormModel } from '../lib/booking-form'
 import { BookingForm } from './BookingForm'
+import type { BookingExtrasConfig } from '../lib/listing-public'
 
 /**
  * Where the booking form sits on a listing, and whether it appears at all.
@@ -32,6 +33,8 @@ export async function BookingPanel({
   venue,
   payments,
   answerHours,
+  roomsOnPage = false,
+  extras = null,
 }: {
   businessId: number
   rules: BookingRules | null | undefined
@@ -41,6 +44,10 @@ export async function BookingPanel({
   payments?: PaymentsAccepted | null
   /** The typical wait for an answer, in hours; null when not known well enough. */
   answerHours?: number | null
+  /** A hotel with room types: rooms are booked from the list on the page. */
+  roomsOnPage?: boolean
+  /** Seating areas (restaurant) or packages and the total (guest house). */
+  extras?: BookingExtrasConfig | null
 }) {
   /**
    * `enabled` is read through `resolveRules` rather than off the raw group,
@@ -52,6 +59,25 @@ export async function BookingPanel({
   if (!resolveRules(rules).enabled) return null
 
   const t = await getTranslations('booking')
+
+  if (roomsOnPage) {
+    const tr = await getTranslations('rooms')
+    return (
+      <section
+        id="book"
+        className="vd-booking-panel border-ink-100 bg-surface-raised border p-6 md:p-8"
+      >
+        <h2 className="font-display text-ink-900 text-2xl">{tr('panelTitle')}</h2>
+        <p className="text-ink-700 mt-3 text-sm">{tr('panelBody')}</p>
+        <a
+          href="#rooms"
+          className="bg-cedar-900 text-surface-base mt-5 inline-flex min-h-[44px] items-center px-5 text-sm font-semibold"
+        >
+          {tr('panelLink')}
+        </a>
+      </section>
+    )
+  }
 
   /**
    * Built here, and therefore built at prerender time.
@@ -117,7 +143,7 @@ export async function BookingPanel({
       </h2>
 
       <div className="mt-6">
-        <BookingForm businessId={businessId} model={model} locale={locale} />
+        <BookingForm businessId={businessId} model={model} locale={locale} extras={extras} />
       </div>
 
       <ul className="border-ink-100 text-ink-700 mt-6 space-y-2 border-t pt-4 text-sm">

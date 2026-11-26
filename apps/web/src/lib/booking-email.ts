@@ -1,5 +1,5 @@
 import type { Payload } from 'payload'
-import type { BookingStatus } from '@vardenia/core'
+import { formatUsd, type BookingStatus } from '@vardenia/core'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { dateLocale } from './beirut'
 import { reportError } from './report'
@@ -33,6 +33,41 @@ export interface BookingConfirmationArgs {
   end: Date
   partySize: number
   locale: Locale
+  /** For a hotel booking: "2 × Deluxe Twin". */
+  roomType?: string
+  /** The quoted total in USD, when the booking stored a price (Task 7). */
+  total?: number
+}
+
+/** The total row, when a price was quoted (hotels and guest houses, Task 7). */
+const TOTAL_LABEL: Record<Locale, string> = {
+  en: 'Total',
+  ar: 'الإجمالي',
+  fr: 'Total',
+  es: 'Total',
+  pt: 'Total',
+  ru: 'Итого',
+  zh: '总价',
+  hi: 'कुल',
+  bn: 'মোট',
+  ur: 'کل',
+}
+
+const hasTotal = (total: number | undefined): total is number =>
+  typeof total === 'number' && Number.isFinite(total)
+
+/** The rooms row in a guest's email (hotel bookings with room types). */
+const ROOMS_LABEL: Record<Locale, string> = {
+  en: 'Rooms',
+  ar: 'الغرف',
+  fr: 'Chambres',
+  es: 'Habitaciones',
+  pt: 'Quartos',
+  ru: 'Номера',
+  zh: '客房',
+  hi: 'कमरे',
+  bn: 'রুম',
+  ur: 'کمرے',
 }
 
 const BEIRUT = 'Asia/Beirut'
@@ -369,11 +404,23 @@ export function bookingConfirmationContent({
   end,
   partySize,
   locale,
+  roomType,
+  total,
 }: Omit<BookingConfirmationArgs, 'payload' | 'to'>): BookingEmailContent | null {
   const copy = copyFor(status, locale)
   if (!copy) return null
 
-  return renderBookingEmail({ copy, name, reference, start, end, partySize, locale })
+  return renderBookingEmail({
+    copy,
+    name,
+    reference,
+    start,
+    end,
+    partySize,
+    locale,
+    roomType,
+    total,
+  })
 }
 
 /**
@@ -393,6 +440,8 @@ function renderBookingEmail({
   partySize,
   locale,
   reason,
+  roomType,
+  total,
 }: {
   copy: Copy
   name: string
@@ -403,6 +452,8 @@ function renderBookingEmail({
   locale: Locale
   /** What the venue said, when they said anything. See `REASON_LABEL`. */
   reason?: string
+  roomType?: string
+  total?: number
 }): BookingEmailContent {
   // From the language, not `=== 'ar'`: Urdu is right-to-left too, and an
   // Urdu email laid out left-to-right puts every label on the wrong side.
@@ -415,6 +466,12 @@ function renderBookingEmail({
     [copy.whenLabel, when],
     [copy.untilLabel, until],
     [copy.partyLabel, String(partySize)],
+    ...(roomType
+      ? ([[ROOMS_LABEL[locale] ?? ROOMS_LABEL.en, roomType]] as [string, string][])
+      : []),
+    ...(hasTotal(total)
+      ? ([[TOTAL_LABEL[locale] ?? TOTAL_LABEL.en, formatUsd(total)]] as [string, string][])
+      : []),
     [copy.referenceLabel, reference],
   ]
 
@@ -513,19 +570,27 @@ export async function sendBookingConfirmation({
  *                 nothing was ever reserved and the wording must not imply it was.
  *  - `cancelled`  a booking that *was* confirmed has been called off. Different
  *                 news, and worse, because they had planned around it.
+ *  - `completed`  the business marked the visit done: an invitation to review.
  *
- * `completed` and `no-show` are deliberately absent. Telling somebody they
- * turned up is noise; telling them they did not is an accusation, and one we
- * would be making from a button a busy person pressed at the end of a shift.
+ * `no-show` is deliberately absent: "you did not turn up" would be an accusation
+ * made from a button a busy person pressed at the end of a shift.
  */
 /**
  * `expired` is a request the venue never answered, declined automatically when
  * its time arrived (lib/booking-expiry). Never produced by `outcomeFor`, which
  * reads statuses alone and cannot tell silence from a refusal.
  */
-export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled' | 'expired'
+export type BookingOutcomeKind = 'confirmed' | 'declined' | 'cancelled' | 'expired' | 'completed'
 
-const OUTCOME_COPY: Record<Locale, Record<Exclude<BookingOutcomeKind, 'expired'>, Copy>> = {
+/**
+ * `completed` is the one visit-over message, and it is an invitation rather than
+ * a record: the business has marked the visit done, so the guest can now review
+ * it on the listing page (lib/review-service refuses a review before that).
+ * Never sent for a no-show.
+ */
+
+type CopiedKind = Exclude<BookingOutcomeKind, 'expired' | 'completed'>
+const OUTCOME_COPY: Record<Locale, Record<CopiedKind, Copy>> = {
   en: {
     confirmed: {
       subject: 'Your booking is confirmed',
@@ -877,15 +942,6 @@ const OUTCOME_COPY: Record<Locale, Record<Exclude<BookingOutcomeKind, 'expired'>
 }
 
 /**
- * Which outcome, if any, a status change should be written about.
- *
- * Takes both statuses because `cancelled` means two different things depending
- * on where it came from: from `pending` the business declined a request that was
- * never held, and from `confirmed` it called off something the customer had
- * planned around. Sending the same sentence for both would tell one of them
- * something untrue.
- */
-/**
  * A request nobody answered. Labelled like a decline, but honest about why:
  * the venue did not refuse, it did not reply, and the guest should not read
  * that as a verdict on their evening.
@@ -953,9 +1009,122 @@ const EXPIRED_COPY: Record<Locale, Pick<Copy, 'subject' | 'heading' | 'intro'>> 
   },
 }
 
+/**
+ * The review invitation: wording over the confirmed copy's labels, the way
+ * EXPIRED_COPY is laid over the declined copy's.
+ */
+const COMPLETED_COPY: Record<
+  Locale,
+  Pick<Copy, 'subject' | 'heading' | 'intro' | 'closing'> & {
+    /** The intro when the business name could not be read: names nobody. */
+    introUnnamed: string
+  }
+> = {
+  en: {
+    subject: 'Thank you for your visit - tell others how it was',
+    heading: 'You can now write a review',
+    intro:
+      '{business} has marked your visit as done. You can now write a review of it on its Vardenia page; it helps other travellers choose.',
+    introUnnamed:
+      "Your visit has been marked as done. You can now write a review on the place's Vardenia page; it helps other travellers choose.",
+    closing: 'Thank you for choosing Vardenia.',
+  },
+  ar: {
+    subject: 'شكرًا لزيارتك - شاركنا رأيك',
+    heading: 'يمكنك الآن كتابة تقييم',
+    intro:
+      'سجّل {business} أن زيارتك قد تمت. يمكنك الآن كتابة تقييم له على صفحته في فاردينيا، فهو يساعد المسافرين الآخرين على الاختيار.',
+    introUnnamed:
+      'تم تسجيل زيارتك على أنها تمت. يمكنك الآن كتابة تقييم للمكان على صفحته في فاردينيا، فهو يساعد المسافرين الآخرين على الاختيار.',
+    closing: 'شكرًا لاختيارك فاردينيا.',
+  },
+  fr: {
+    subject: "Merci de votre visite - dites aux autres comment c'était",
+    heading: 'Vous pouvez maintenant laisser un avis',
+    intro:
+      '{business} a marqué votre visite comme effectuée. Vous pouvez maintenant laisser un avis sur sa page Vardenia ; cela aide les autres voyageurs à choisir.',
+    introUnnamed:
+      "Votre visite a été marquée comme effectuée. Vous pouvez maintenant laisser un avis sur la page Vardenia de l'établissement ; cela aide les autres voyageurs à choisir.",
+    closing: "Merci d'avoir choisi Vardenia.",
+  },
+  es: {
+    subject: 'Gracias por tu visita - cuenta a otros cómo fue',
+    heading: 'Ya puedes escribir una reseña',
+    intro:
+      '{business} ha marcado tu visita como realizada. Ya puedes escribir una reseña en su página de Vardenia; ayuda a otros viajeros a elegir.',
+    introUnnamed:
+      'Tu visita se ha marcado como realizada. Ya puedes escribir una reseña en la página de Vardenia del lugar; ayuda a otros viajeros a elegir.',
+    closing: 'Gracias por elegir Vardenia.',
+  },
+  pt: {
+    subject: 'Obrigado pela sua visita - conte aos outros como foi',
+    heading: 'Já pode escrever uma avaliação',
+    intro:
+      '{business} marcou a sua visita como concluída. Já pode escrever uma avaliação na sua página da Vardenia; ajuda outros viajantes a escolher.',
+    introUnnamed:
+      'A sua visita foi marcada como concluída. Já pode escrever uma avaliação na página da Vardenia do local; ajuda outros viajantes a escolher.',
+    closing: 'Obrigado por escolher a Vardenia.',
+  },
+  ru: {
+    subject: 'Спасибо за визит - расскажите другим, как всё прошло',
+    heading: 'Теперь вы можете оставить отзыв',
+    intro:
+      'Заведение «{business}» отметило ваш визит как состоявшийся. Теперь вы можете оставить отзыв об этом месте на его странице Vardenia; это помогает другим путешественникам сделать выбор.',
+    introUnnamed:
+      'Ваш визит отмечен как состоявшийся. Теперь вы можете оставить отзыв об этом месте на его странице Vardenia; это помогает другим путешественникам сделать выбор.',
+    closing: 'Спасибо, что выбрали Vardenia.',
+  },
+  zh: {
+    subject: '感谢您的光临 - 告诉大家体验如何',
+    heading: '您现在可以撰写评价了',
+    intro:
+      '{business} 已将您的这次到访标记为完成。您现在可以在其 Vardenia 页面上撰写评价，这能帮助其他旅行者做出选择。',
+    introUnnamed:
+      '您的这次到访已被标记为完成。您现在可以在该地点的 Vardenia 页面上撰写评价，这能帮助其他旅行者做出选择。',
+    closing: '感谢您选择 Vardenia。',
+  },
+  hi: {
+    subject: 'आपकी यात्रा के लिए धन्यवाद - दूसरों को बताएँ कैसा रहा',
+    heading: 'अब आप समीक्षा लिख सकते हैं',
+    intro:
+      '{business} ने आपकी यात्रा को पूरा हुआ चिह्नित कर दिया है। अब आप उसके Vardenia पेज पर समीक्षा लिख सकते हैं; इससे दूसरे यात्रियों को चुनने में मदद मिलती है।',
+    introUnnamed:
+      'आपकी यात्रा को पूरा हुआ चिह्नित कर दिया गया है। अब आप उस जगह के Vardenia पेज पर समीक्षा लिख सकते हैं; इससे दूसरे यात्रियों को चुनने में मदद मिलती है।',
+    closing: 'Vardenia चुनने के लिए धन्यवाद।',
+  },
+  bn: {
+    subject: 'আপনার আসার জন্য ধন্যবাদ - অন্যদের জানান কেমন ছিল',
+    heading: 'এখন আপনি রিভিউ লিখতে পারেন',
+    intro:
+      '{business} আপনার এই যাওয়াকে সম্পন্ন হিসেবে চিহ্নিত করেছে। এখন আপনি তাদের Vardenia পেজে রিভিউ লিখতে পারেন; এতে অন্য ভ্রমণকারীরা বেছে নিতে সাহায্য পান।',
+    introUnnamed:
+      'আপনার এই যাওয়াকে সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে। এখন আপনি জায়গাটির Vardenia পেজে রিভিউ লিখতে পারেন; এতে অন্য ভ্রমণকারীরা বেছে নিতে সাহায্য পান।',
+    closing: 'Vardenia বেছে নেওয়ার জন্য ধন্যবাদ।',
+  },
+  ur: {
+    subject: 'آپ کے دورے کا شکریہ - دوسروں کو بتائیں کیسا رہا',
+    heading: 'اب آپ جائزہ لکھ سکتے ہیں',
+    intro:
+      '{business} نے آپ کے دورے کو مکمل کے طور پر درج کر دیا ہے۔ اب آپ اس کے Vardenia صفحے پر جائزہ لکھ سکتے ہیں؛ اس سے دوسرے مسافروں کو انتخاب میں مدد ملتی ہے۔',
+    introUnnamed:
+      'آپ کے دورے کو مکمل کے طور پر درج کر دیا گیا ہے۔ اب آپ اس جگہ کے Vardenia صفحے پر جائزہ لکھ سکتے ہیں؛ اس سے دوسرے مسافروں کو انتخاب میں مدد ملتی ہے۔',
+    closing: 'Vardenia کو چننے کا شکریہ۔',
+  },
+}
+
+/**
+ * Which outcome, if any, a status change should be written about.
+ *
+ * Takes both statuses because `cancelled` means two different things depending
+ * on where it came from: from `pending` the business declined a request that was
+ * never held, and from `confirmed` it called off something the customer had
+ * planned around. Sending the same sentence for both would tell one of them
+ * something untrue.
+ */
 export function outcomeFor(from: BookingStatus, to: BookingStatus): BookingOutcomeKind | null {
   if (from === to) return null
   if (to === 'confirmed') return 'confirmed'
+  if (to === 'completed') return from === 'confirmed' ? 'completed' : null
   if (to === 'cancelled') return from === 'pending' ? 'declined' : 'cancelled'
   return null
 }
@@ -976,6 +1145,24 @@ export interface BookingOutcomeArgs {
    * explain each one, and the message has to read properly without it.
    */
   reason?: string
+  /** Named in the review invitation (`completed`); text only, no link. */
+  businessName?: string
+}
+
+/**
+ * The review invitation's copy. The intro names the business; when its name
+ * could not be read, a neutral sentence that names nobody (not "Vardenia has
+ * marked your visit", which is not true: the business marked it).
+ */
+function completedCopy(locale: Locale, businessName: string | undefined): Copy {
+  const { introUnnamed, ...completed } = COMPLETED_COPY[locale]
+  const name = businessName?.trim()
+  return {
+    ...OUTCOME_COPY[locale].confirmed,
+    ...completed,
+    // Raw here: renderBookingEmail escapes the intro for html.
+    intro: name ? completed.intro.replaceAll('{business}', () => name) : introUnnamed,
+  }
 }
 
 /** Pure, like the confirmation content, so the wording is testable. */
@@ -988,11 +1175,14 @@ export function bookingOutcomeContent({
   partySize,
   locale,
   reason,
+  businessName,
 }: Omit<BookingOutcomeArgs, 'payload' | 'to'>): BookingEmailContent {
   const copy =
     outcome === 'expired'
       ? { ...OUTCOME_COPY[locale].declined, ...EXPIRED_COPY[locale] }
-      : OUTCOME_COPY[locale][outcome]
+      : outcome === 'completed'
+        ? completedCopy(locale, businessName)
+        : OUTCOME_COPY[locale][outcome]
   return renderBookingEmail({
     copy,
     name,
@@ -1248,6 +1438,8 @@ export interface VenueRequestArgs {
   end: Date
   partySize: number
   roomType?: string
+  /** The quoted total in USD, when the booking stored a price (Task 7). */
+  total?: number
   /** Confirmed straight away by the venue's own auto-confirm setting. */
   confirmed: boolean
 }
@@ -1262,6 +1454,7 @@ export function venueRequestContent({
   end,
   partySize,
   roomType,
+  total,
   confirmed,
 }: VenueRequestArgs): BookingEmailContent {
   const whenAr = formatWhen(start, 'ar')
@@ -1283,6 +1476,7 @@ export function venueRequestContent({
       : []),
     ['People', String(partySize)],
     ...(roomType ? ([['Room', roomType]] as [string, string][]) : []),
+    ...(hasTotal(total) ? ([['Total', formatUsd(total)]] as [string, string][]) : []),
     ['Reference', reference],
   ]
 

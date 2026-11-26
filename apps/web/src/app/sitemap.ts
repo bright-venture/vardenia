@@ -1,6 +1,14 @@
+import { findPublicBrandSlugs } from '../lib/brand-slugs'
 import type { MetadataRoute } from 'next'
-import { SECTIONS } from '@vardenia/core'
+import {
+  EVENT_STAFF_COMING_SOON,
+  EVENT_STAFF_ROLES,
+  EVENT_STAFF_SECTION,
+  SECTIONS,
+  isComingSoonCategory,
+} from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
+import { BYBLOS_GUIDE_PATH } from '../components/journey/destinations'
 import { alternatesFor } from '../lib/seo'
 import { CONTENT_PAGE_SLUGS } from '../lib/pages'
 import { hiddenPages, isHrefHidden } from '../lib/hidden-pages'
@@ -66,10 +74,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isIndexingAllowed()) return []
   const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
-  const [listings, articles, issues] = await Promise.all([
+  const [listings, articles, issues, brands] = await Promise.all([
     findAllListingSlugs({ indexableOnly: true }),
     findAllArticleSlugs({ indexableOnly: true }),
     findAllIssueSlugs(),
+    findPublicBrandSlugs(),
   ])
 
   const entries: MetadataRoute.Sitemap = []
@@ -103,6 +112,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // this site, not a ranking lever - Google largely ignores it, but it costs
   // nothing and other crawlers do read it.
   push('/', CHANGE_FREQUENCY.index, 1)
+  entries.push({ url: `${base}${BYBLOS_GUIDE_PATH}`, changeFrequency: CHANGE_FREQUENCY.article })
   push('/directory', CHANGE_FREQUENCY.index, 0.9)
 
   /**
@@ -117,7 +127,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
    * Ranked with the directory rather than below it: a section is a better answer
    * to a real search than "every listing in Lebanon" is.
    */
-  for (const section of SECTIONS) push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+  // Not the sections that are coming soon (core COMING_SOON_CATEGORIES): a
+  // page with no listings yet is not worth offering to search engines.
+  for (const section of SECTIONS) {
+    if (!isComingSoonCategory(section.category)) {
+      push(`/${section.path}`, CHANGE_FREQUENCY.index, 0.9)
+    }
+  }
+  // Event Staff and its two request forms (18 November 2026).
+  // Event Staff is coming soon (core EVENT_STAFF_COMING_SOON): its forms send
+  // readers back to the section page, so none of it is listed until it opens.
+  if (!EVENT_STAFF_COMING_SOON) {
+    push(`/${EVENT_STAFF_SECTION.path}`, CHANGE_FREQUENCY.index, 0.7)
+    for (const role of EVENT_STAFF_ROLES) {
+      push(`/${EVENT_STAFF_SECTION.path}/${role.slug}`, CHANGE_FREQUENCY.index, 0.6)
+    }
+  }
 
   push('/magazine', CHANGE_FREQUENCY.index, 0.9)
   push('/magazine/articles', CHANGE_FREQUENCY.index, 0.7)
@@ -132,6 +157,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!hidden.includes(slug)) push(`/${slug}`, CHANGE_FREQUENCY.article, 0.5)
   }
 
+  for (const path of ['/legal/privacy', '/legal/terms', '/credits']) {
+    push(path, CHANGE_FREQUENCY.article, 0.4)
+  }
+  for (const slug of brands) push(`/brands/${slug}`, CHANGE_FREQUENCY.listing, 0.6)
   for (const slug of listings) push(`/directory/${slug}`, CHANGE_FREQUENCY.listing, 0.8)
   for (const slug of articles) push(`/magazine/articles/${slug}`, CHANGE_FREQUENCY.article, 0.6)
   for (const slug of issues) push(`/magazine/issues/${slug}`, CHANGE_FREQUENCY.issue, 0.5)

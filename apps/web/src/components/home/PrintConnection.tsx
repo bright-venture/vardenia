@@ -1,11 +1,19 @@
 'use client'
 import { LinkArrow } from '../LinkArrow'
 import Image from 'next/image'
-import { useRef } from 'react'
-import { useTranslations } from 'next-intl'
+import { useRef, useSyncExternalStore } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { RotateCcw } from 'lucide-react'
 import { useJourneyMotion } from '../journey/browser-state'
 import { usePrintScan } from './usePrintScan'
+
+const desktopQuery = '(min-width: 1051px)'
+const readDesktop = () => matchMedia(desktopQuery).matches
+const subscribeDesktop = (onChange: () => void) => {
+  const media = matchMedia(desktopQuery)
+  media.addEventListener('change', onChange)
+  return () => media.removeEventListener('change', onChange)
+}
 
 interface Target {
   title: string
@@ -20,12 +28,27 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
   const steps = original.raw('codeSteps') as { title: string; sub: string }[]
   const [motion] = useJourneyMotion()
   const root = useRef<HTMLElement>(null)
-  const { phase, replay, reveal } = usePrintScan(root, motion)
+  const phone = useRef<HTMLDivElement>(null)
+  const locale = useLocale()
+  const wide = useSyncExternalStore(subscribeDesktop, readDesktop, () => false)
+  const desktop = locale === 'en' && wide
+  const { phase, replay, reveal } = usePrintScan(root, motion, desktop)
+
+  const replayScan = () => {
+    if (desktop && phone.current) {
+      const bounds = phone.current.getBoundingClientRect()
+      if (bounds.top < 80 || bounds.bottom > innerHeight) {
+        phone.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+    replay()
+  }
   return (
     <section
       ref={root}
       className={`vd-print-connection vd-scan-process ${motion ? '' : 'vd-print-still'}`}
       data-scan-phase={phase}
+      data-scan-desktop={desktop}
       onFocusCapture={(event) => {
         if (!event.target.closest('.vd-scan-replay') && event.target.matches(':focus-visible'))
           reveal()
@@ -79,7 +102,7 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
               </span>
             </a>
           </figure>
-          <div className="vd-print-phone" id="vd-print-page">
+          <div ref={phone} className="vd-print-phone" id="vd-print-page">
             <Image
               className="vd-phone-hardware"
               src="/journey/phone-mockup-v1.webp"
@@ -131,9 +154,6 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
                 <div className="vd-scan-camera-caption">
                   {phase === 0 ? t('scanAim') : phase === 1 ? t('scanReading') : t('scanFound')}
                 </div>
-                <div className="vd-scan-shutter">
-                  <span />
-                </div>
               </div>
               <div className="vd-scan-live-page" inert={phase !== 3} aria-hidden={phase !== 3}>
                 <div className="vd-print-phone-top" aria-hidden>
@@ -176,18 +196,14 @@ export function PrintConnection({ qr, target }: { qr: string; target: Target }) 
             />
           </div>
           <div className="vd-scan-actions">
-            <p className="vd-print-hint">{t('printHint')}</p>
+            <p className="vd-print-hint">
+              {desktop ? 'Scan the QR or select “Follow the code.”' : t('printHint')}
+            </p>
             {motion && (
               <button
                 type="button"
                 className="vd-scan-replay"
-                onClick={(event) => {
-                  replay()
-                  root.current?.querySelector('#vd-print-page')?.scrollIntoView({
-                    block: 'center',
-                    behavior: event.detail > 0 ? 'smooth' : 'auto',
-                  })
-                }}
+                onClick={replayScan}
               >
                 <RotateCcw aria-hidden className="size-4" strokeWidth={1.5} />
                 {t('scanReplay')}

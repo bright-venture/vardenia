@@ -2,7 +2,12 @@ import { MobileMenu } from './header/MobileMenu'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { ChevronDown, Heart } from 'lucide-react'
-import { SECTIONS } from '@vardenia/core'
+import {
+  EVENT_STAFF_COMING_SOON,
+  EVENT_STAFF_SECTION,
+  SECTIONS,
+  isComingSoonCategory,
+} from '@vardenia/core'
 import type { Locale } from '@vardenia/i18n'
 import { Link } from '../i18n/routing'
 import { LinkArrow } from './LinkArrow'
@@ -19,6 +24,8 @@ import { hiddenPages, withoutHidden } from '../lib/hidden-pages'
 /** Shared, locale-aware navigation; native disclosures also work without JavaScript. */
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations()
+  // Sections not open yet carry a "Coming soon" label (25 November 2026).
+  const soon = t('comingSoon.label')
   // Pages an admin has hidden (lib/hidden-pages) are left out of the menus.
   const hidden = await hiddenPages()
   // The header's sign-in and account links, which Settings can hide.
@@ -35,17 +42,29 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
   // The six sections and the directory, without the ones an admin has hidden.
   const sectionItems = withoutHidden(
-    SECTIONS.map((section) => ({
-      href: `/${section.path}`,
-      name: sectionName(section, locale),
-      description: sectionSummary(section, locale),
-      destination: categoryPhotos[section.path] ?? 0,
-    })),
+    [
+      ...SECTIONS.map((section) => ({
+        href: `/${section.path}`,
+        name: sectionName(section, locale),
+        description: sectionSummary(section, locale),
+        badge: isComingSoonCategory(section.category) ? soon : undefined,
+        destination: categoryPhotos[section.path] ?? 0,
+      })),
+      // The seventh section: a request form, not listings (18 November 2026).
+      {
+        href: `/${EVENT_STAFF_SECTION.path}`,
+        name: sectionName(EVENT_STAFF_SECTION, locale),
+        description: sectionSummary(EVENT_STAFF_SECTION, locale),
+        badge: EVENT_STAFF_COMING_SOON ? soon : undefined,
+        destination: 5,
+      },
+    ],
     hidden,
   )
   const directoryShown = shown('directory')
   const sectionMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('homeFinish.browseTitle')}
       body={t('homeFinish.browseBody')}
       footer={directoryShown ? { href: '/directory', label: t('home.wholeDirectory') } : undefined}
@@ -124,6 +143,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   ].filter((item) => item !== null)
   const aboutMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('nav.aboutMenuTitle')}
       body={t('nav.aboutMenuBody')}
       items={aboutItems}
@@ -146,25 +166,17 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           destination: 2,
         }
       : null,
-    shown('partner-with-us')
-      ? {
-          href: '/partner-with-us',
-          name: t('footer.partnerWithUs'),
-          description: t('nav.partnerWithUsNote'),
-          destination: 1,
-        }
-      : null,
-    shown('advertise')
-      ? {
-          href: '/advertise',
-          name: t('footer.advertise'),
-          description: t('nav.advertiseNote'),
-          destination: 3,
-        }
-      : null,
+    // Booking a place in the printed magazine (19 November 2026).
+    {
+      href: '/magazine-places',
+      name: t('magazinePlaces.title'),
+      description: t('nav.magazinePlacesNote'),
+      destination: 4,
+    },
   ].filter((item) => item !== null)
   const businessMenu = (
     <DiscoveryMenu
+      layout="links"
       title={t('nav.businessMenuTitle')}
       body={t('nav.businessMenuBody')}
       items={businessItems}
@@ -198,24 +210,29 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           >
             {/* A menu whose every page is hidden goes too (lib/hidden-pages). */}
             {sectionItems.length > 0 ? (
-              <DropdownNav label={t('nav.discover')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.discover')} wide>
                 {sectionMenu}
               </DropdownNav>
             ) : null}
             {magazineItems.length > 0 ? (
-              <DropdownNav label={t('nav.magazine')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.magazine')} wide>
                 {magazineMenu}
               </DropdownNav>
             ) : null}
             {aboutItems.length > 0 ? (
-              <DropdownNav label={t('nav.about')} wide>
+              <DropdownNav preserveInitialOpen={locale === 'en'} label={t('nav.about')} wide>
                 {aboutMenu}
               </DropdownNav>
             ) : null}
             {businessItems.length > 0 ? (
               // Hidden on narrow desktops, where four titles push the logo
               // off centre (redesign.css); the footer lists the same pages.
-              <DropdownNav label={t('nav.business')} wide className="vd-nav-business">
+              <DropdownNav
+                preserveInitialOpen={locale === 'en'}
+                label={t('nav.business')}
+                wide
+                className="vd-nav-business"
+              >
                 {businessMenu}
               </DropdownNav>
             ) : null}
@@ -273,7 +290,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                       <li key={item.href}>
                         <Link href={item.href} className="vd-mobile-link">
                           <span>
-                            <strong>{item.name}</strong>
+                            <strong>
+                              {item.name}
+                              {item.badge ? (
+                                <span className="vd-soon-badge">{item.badge}</span>
+                              ) : null}
+                            </strong>
                             <span>{item.description}</span>
                           </span>
                           <LinkArrow />

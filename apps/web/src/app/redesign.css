@@ -105,6 +105,27 @@
     display: none;
   }
 }
+/*
+ * Every page's header as on the home page (25 November 2026, the owner's
+ * choice): the wordmark at the start, the menu centred, the tools at the end.
+ * It used to be the menu at the start and the wordmark centred everywhere but
+ * the English home page. Desktop widths only, as on the home page; phones and
+ * tablets keep their own header. In Arabic and Urdu the grid mirrors, so the
+ * wordmark sits on the right.
+ */
+@media (min-width: 1051px) {
+  .vd-header .vd-brand {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .vd-header nav.vd-desktop-nav {
+    grid-column: 2;
+    justify-content: center;
+  }
+  .vd-header .vd-header-tools {
+    gap: 12px;
+  }
+}
 .vd-header-tools {
   grid-column: 3;
   grid-row: 1;
@@ -836,4 +857,147 @@
   .vd-public::before {
     opacity: 0.08;
   }
+}
+
+/* The strip of messages above the header (components/header/AnnouncementBar,
+   25 November 2026): navy, a gold mark, one message at a time. It sits in the
+   page flow above the sticky header, so it scrolls away and the header stays. */
+.vd-announce {
+  position: relative;
+  z-index: 51;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 calc(var(--vd-gutter) - 12px);
+  background: var(--vd-ink);
+  color: var(--vd-paper);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+}
+.vd-announce-track {
+  position: relative;
+  flex: 0 1 640px;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.vd-announce-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 700ms var(--vd-ease),
+    transform 700ms var(--vd-ease);
+  pointer-events: none;
+}
+.vd-announce-item[data-current] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.vd-announce-item a {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  min-height: 40px;
+  color: inherit;
+  text-decoration: none;
+}
+.vd-announce-item a > span:nth-child(2) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 5px;
+  transition: text-decoration-color 250ms ease;
+}
+.vd-announce-item a:hover > span:nth-child(2) {
+  text-decoration-color: var(--vd-gold);
+}
+.vd-announce-mark {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  background: var(--vd-gold);
+  transform: rotate(45deg);
+}
+.vd-announce-arrow {
+  flex: none;
+  color: var(--vd-gold);
+  transition: transform 250ms var(--vd-ease);
+}
+.vd-announce-item a:hover .vd-announce-arrow {
+  transform: translateX(3px);
+}
+.vd-announce-step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  color: color-mix(in srgb, var(--vd-paper) 70%, transparent);
+  transition: color 250ms ease;
+}
+.vd-announce-step:hover {
+  color: var(--vd-gold);
+}
+.vd-announce :focus-visible {
+  outline: 2px solid var(--vd-gold);
+  outline-offset: -4px;
+}
+/* Phones: the message gets the whole width; the strip is swiped instead of
+   using the arrows (the longest message, in Russian, needs about 320px). */
+@media (max-width: 639px) {
+  .vd-announce {
+    padding: 0 16px;
+  }
+  .vd-announce-step,
+  .vd-announce-mark {
+    display: none;
+  }
+  .vd-announce-track {
+    flex: 1 1 auto;
+    touch-action: pan-y;
+  }
+  .vd-announce-item a {
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-announce-item,
+  .vd-announce-arrow {
+    transition: none;
+    transform: none;
+  }
+}
+@media print {
+  .vd-announce {
+    display: none;
+  }
+}
+
+/* "Coming soon" beside a section's name in the menus (components/header,
+   25 November 2026). Small gold capitals, like the magazine's eyebrows. */
+.vd-soon-badge {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--vd-gold) 70%, transparent);
+  color: theme('colors.gold.700');
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
 }

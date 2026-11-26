@@ -45,7 +45,7 @@ export default async function SignupPage({ params }: { params: Promise<{ locale:
   // form that would only be refused. Signing in stays one click away.
   if (await signupsPaused(await getPayload({ config }))) {
     return (
-      <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpPaused')}>
+      <AuthCard mode="sign-up" icon={UserPlus} title={t('signUp')} subtitle={t('signUpPaused')}>
         <p className="text-sm">
           <Link href="/account/login" className="vd-text-link">
             {t('signIn')}
@@ -56,7 +56,7 @@ export default async function SignupPage({ params }: { params: Promise<{ locale:
   }
 
   return (
-    <AuthCard icon={UserPlus} title={t('signUp')} subtitle={t('signUpSubtitle')}>
+    <AuthCard mode="sign-up" icon={UserPlus} title={t('signUp')} subtitle={t('signUpSubtitle')}>
       {/* Passed through so the verification email arrives in the language the
           person was reading when they signed up. */}
       <SignupForm locale={locale as Locale} />

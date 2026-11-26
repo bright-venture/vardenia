@@ -33,10 +33,13 @@
  *    statements and QR codes, and switching a printed code off. And the
  *    commercial flags - tier, verified, booking fee - on create as
  *    well as on update.
- *  - business-users own nothing yet; they read their own listings.
+ *  - business-users read their own listings and, since Task 3 (20 November
+ *    2026), edit the allow-listed public fields of them (core
+ *    PARTNER_EDITABLE_FIELDS, enforced by hooks/guardPartnerListingWrite).
  */
 
 import type { Access, FieldAccess, Where } from 'payload'
+import { COMING_SOON_CATEGORIES } from '@vardenia/core'
 
 export type Role = 'admin' | 'staff'
 
@@ -92,6 +95,9 @@ export const isStaffUser = (user: unknown): boolean =>
   rolesOf(user).some((role) => role === 'admin' || role === 'staff')
 
 export const isAdmin: Access = ({ req }) => rolesOf(req.user).includes('admin')
+
+/** The same question as `isAdmin`, for code holding a user rather than a req. */
+export const isAdminUser = (user: unknown): boolean => rolesOf(user).includes('admin')
 
 export const isStaff: Access = ({ req }) => isStaffUser(req.user)
 
@@ -197,6 +203,10 @@ export function ownedBusinessIds(user: unknown): (string | number)[] {
  * An owner with no businesses attached falls through to the public rule rather
  * than being refused outright. Refusing would be a worse bug to diagnose: the
  * dashboard would look broken rather than empty.
+ *
+ * Coming soon (25 November 2026): a listing in a category that is not open yet
+ * (core COMING_SOON_CATEGORIES: Weddings, Getting Around) is not public, even
+ * when published. Staff and its own partner still see it.
  */
 export const publishedStaffOrOwned: Access = ({ req }) => {
   if (isStaffUser(req.user)) return true
@@ -204,7 +214,12 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
   // Annotated rather than inferred: TypeScript otherwise widens the two branches
   // into a union carrying `or?: undefined`, which does not satisfy Where's index
   // signature.
-  const published: Where = { _status: { equals: 'published' } }
+  const published: Where = {
+    and: [
+      { _status: { equals: 'published' } },
+      { category: { not_in: [...COMING_SOON_CATEGORIES] } },
+    ],
+  }
 
   const owned = ownedBusinessIds(req.user)
   if (owned.length === 0) return published
@@ -225,10 +240,14 @@ export const publishedStaffOrOwned: Access = ({ req }) => {
  * The test "is restated exactly for the SQL counts" in index.test pins that: if
  * the public clause ever gains a condition, it fails and says to change this.
  *
+ * The second condition is the trash (17 November 2026). Payload adds it to
+ * every query on its own, so the rule above never says it; raw SQL has to. The
+ * third is the coming-soon categories, as in the rule above.
+ *
  * Only counts come out of those queries, so getting this wrong would miscount
  * rather than leak. `b` is the alias the count queries give the listings table.
  */
-export const PUBLISHED_SQL = `b._status = 'published'`
+export const PUBLISHED_SQL = `b._status = 'published' and b.deleted_at is null and b.category::text not in (${COMING_SOON_CATEGORIES.map((c) => `'${c}'`).join(', ')})`
 
 /**
  * Your own account in this collection, or any if you are staff.
@@ -253,3 +272,44 @@ export const selfOrStaff =
     if (!req.user || collectionOf(req.user) !== collection) return false
     return { id: { equals: req.user.id } }
   }
+
+/**
+ * Who may update a listing: staff, and a partner for the listings attached to
+ * their account.
+ *
+ * A query constraint, never `true`, so Payload filters in the database and a
+ * partner asking for somebody else's listing finds nothing to update. Which
+ * fields they may send is the guard's business (hooks/guardPartnerListingWrite);
+ * this only decides which rows. An owner with no listings, a customer and an
+ * anonymous caller get `false`.
+ */
+export const staffOrOwnedListing: Access = ({ req }) => {
+  if (isStaffUser(req.user)) return true
+  const owned = ownedBusinessIds(req.user)
+  if (owned.length === 0) return false
+  return { id: { in: owned } }
+}
+
+/**
+ * Who may read a media row.
+ *
+ * Staff see everything. Everyone else sees what the team uploaded (no
+ * `uploadedBy`) and anything already attached to a page (`attached`, set by
+ * hooks/markMediaAttached when a listing, room type, article or issue is saved
+ * pointing at it). A partner also sees their own uploads, so the dashboard can
+ * show a photo before it is attached. What nobody but staff and the uploader
+ * sees is a partner's upload that is not on any page yet - a menu draft, a
+ * photo they changed their mind about.
+ *
+ * The files themselves are served straight from the public bucket under an
+ * unguessable name (hooks/unguessableFilename); this keeps the name from being
+ * listed through the API.
+ */
+export const mediaRead: Access = ({ req }) => {
+  if (isStaffUser(req.user)) return true
+  const visible: Where[] = [{ uploadedBy: { exists: false } }, { attached: { equals: true } }]
+  if (collectionOf(req.user) === BUSINESS_USER_COLLECTION && req.user?.id != null) {
+    visible.push({ uploadedBy: { equals: req.user.id } })
+  }
+  return { or: visible }
+}

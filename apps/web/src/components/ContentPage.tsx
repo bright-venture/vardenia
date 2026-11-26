@@ -1,4 +1,6 @@
+import { InteriorScenicPhoto } from './editorial/InteriorScenicPhoto'
 import { StoryIndex } from './editorial/StoryIndex'
+import { AskQuestionForm } from './AskQuestionForm'
 import './editorial/standing-pages.css'
 import { LinkArrow } from './LinkArrow'
 import type { ContentPage, ContentPageSlug } from '../lib/pages'
@@ -95,11 +97,11 @@ function Line({ text, id }: { text: string; id: string }) {
 /** A list item that is nothing but a bold title: "- **Reliable Information**". */
 const TITLE_ONLY = /^- \*\*([^*]+)\*\*$/
 
-/**
- * No locale prop any more: lib/pages already returned the right language, and a
- * component that takes both the copy and the language it is in has two sources
- * of truth for one fact.
- */
+const DESKTOP_ENQUIRY_ACTIONS: Partial<Record<ContentPageSlug, string>> = {
+  contact: 'Send a message',
+  faq: 'Ask a question',
+}
+
 export async function ContentPageView({
   page,
   slug = 'about',
@@ -114,6 +116,10 @@ export async function ContentPageView({
 }) {
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
+  const levelsIndex = page.sections.findIndex(
+    ({ heading }) => heading === 'What each level includes',
+  )
+  const enquiryAction = locale === 'en' ? DESKTOP_ENQUIRY_ACTIONS[slug] : undefined
   // The buttons at the foot point at the directory when Contact is hidden, and
   // the second link is left out when the page it names is hidden. With the
   // directory hidden as well, the first goes home.
@@ -133,8 +139,6 @@ export async function ContentPageView({
     contact: 2,
     faq: 0,
     'add-your-business': 0,
-    'partner-with-us': 5,
-    advertise: 3,
   }[slug]
   const body = (section: { body: string[] }, sectionIndex: number) =>
     groupLines(section.body).map((group, groupIndex) => {
@@ -169,12 +173,34 @@ export async function ContentPageView({
         locale={locale}
         immersive={slug === 'about'}
       >
+        {locale === 'en' && slug === 'add-your-business' && (
+          <nav hidden className="vd-business-chapters" aria-label={page.title}>
+            <Link href="/magazine-places" className="vd-button">
+              Request a place <LinkArrow />
+            </Link>
+            {levelsIndex >= 0 && (
+              <a href={`#story-${levelsIndex}`} className="vd-text-link">
+                Compare listing levels
+              </a>
+            )}
+          </nav>
+        )}
+        {enquiryAction && (
+          <a hidden className="vd-desktop-enquiry-link" href="#enquiry">
+            {enquiryAction}
+          </a>
+        )}
         <a href="#page-story" className={`vd-button ${slug === 'about' ? 'vd-button-paper' : ''}`}>
           {page.sections[0]?.heading} <span aria-hidden>↓</span>
         </a>
       </PageHero>
       <div className="vd-story-layout" id="page-story">
         <aside className="vd-story-index">
+          {faq && locale === 'en' && (
+            <a hidden className="vd-faq-enquiry vd-text-link" href="#enquiry">
+              Ask a question
+            </a>
+          )}
           <StoryIndex
             title={page.title}
             sections={page.sections.map((section, i) => ({
@@ -227,24 +253,46 @@ export async function ContentPageView({
                 ))}
                 {/* After the subsections, so it closes the section. */}
                 {slug === 'about' && i === 0 ? (
-                  <figure className="vd-story-photograph" data-vd-reveal>
-                    <Image
-                      src={`/journey/${DESTINATIONS[5].image}`}
-                      alt={DESTINATIONS[5].alt}
-                      width={1600}
-                      height={1200}
-                      sizes="(max-width:700px) 100vw, 60vw"
-                    />
+                  <InteriorScenicPhoto
+                    locale={locale}
+                    place={DESTINATIONS[5]}
+                    directoryShown={directoryShown}
+                    className="vd-story-photograph"
+                    image={
+                      <Image
+                        src={`/journey/${DESTINATIONS[5].image}`}
+                        alt={DESTINATIONS[5].alt}
+                        width={1600}
+                        height={1200}
+                        sizes="(max-width:700px) 100vw, 60vw"
+                      />
+                    }
+                  >
                     <figcaption>
                       {locale === 'ar' ? DESTINATIONS[5].ar : DESTINATIONS[5].name}
                     </figcaption>
-                  </figure>
+                  </InteriorScenicPhoto>
                 ) : null}
               </section>
             ),
           )}
+          {/* A question the list did not answer (18 November 2026). */}
+          {(faq || (locale === 'en' && slug === 'contact')) && (
+            <AskQuestionForm locale={locale} topic={slug === 'contact' ? 'contact' : 'faq'} />
+          )}
           <nav className="vd-story-next" aria-label={page.title}>
-            <Link href={next.href} className="vd-button">
+            {/* Add your business ends on the sign-up form (25 November 2026):
+                the one main button, with Contact and Questions beside it. */}
+            {slug === 'add-your-business' ? (
+              <Link href="/magazine-places" className="vd-button">
+                {t('nav.applyMagazine')}
+                <LinkArrow />
+              </Link>
+            ) : null}
+            <Link
+              href={next.href}
+              className={slug === 'add-your-business' ? 'vd-text-link' : 'vd-button'}
+            >
               {next.label}
               <LinkArrow />
             </Link>

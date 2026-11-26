@@ -4,12 +4,22 @@ import { useEffect, type RefObject } from 'react'
 /** How long each city stays before the next (was 6 s; 4.5 s from 11 Nov 2026). */
 export const CITY_SLIDE_DELAY = 4500
 
-/** A new reading interval starts after selection; offscreen/hidden content never advances. */
 export function useCityAutoplay(
   root: RefObject<HTMLElement | null>,
   enabled: boolean,
   advance: () => void,
   selection: number,
+) {
+  useVisibleRotation(root, enabled, advance, selection, CITY_SLIDE_DELAY)
+}
+
+/** Restart the reading interval after a change and pause when offscreen. */
+export function useVisibleRotation(
+  root: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  advance: () => void,
+  selection: number,
+  delay: number,
 ) {
   useEffect(() => {
     const section = root.current
@@ -18,7 +28,7 @@ export function useCityAutoplay(
     let visible = false
     const sync = () => {
       clearTimeout(timer)
-      if (visible && !document.hidden) timer = setTimeout(advance, CITY_SLIDE_DELAY)
+      if (visible && !document.hidden) timer = setTimeout(advance, delay)
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -34,5 +44,5 @@ export function useCityAutoplay(
       observer.disconnect()
       document.removeEventListener('visibilitychange', sync)
     }
-  }, [root, enabled, advance, selection])
+  }, [root, enabled, advance, selection, delay])
 }

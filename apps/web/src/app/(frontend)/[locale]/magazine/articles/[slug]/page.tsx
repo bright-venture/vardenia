@@ -1,3 +1,4 @@
+import { articleSummary } from '../../../../../../lib/plain-text'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -6,7 +7,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 import { LOCALES, formatDate, isLocale, type Locale } from '@vardenia/i18n'
 import { findArticleBySlug, findAllArticleSlugs } from '../../../../../../lib/articles'
-import { resolveImage } from '../../../../../../lib/media'
+import { isSeedTitleArt, resolveImage } from '../../../../../../lib/media'
 import { buildMetadata } from '../../../../../../lib/seo'
 import { articleSchema } from '../../../../../../lib/structured-data'
 import { JsonLd } from '../../../../../../components/JsonLd'
@@ -55,7 +56,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return buildMetadata({
     seo: article.seo,
     title: article.title,
-    description: article.excerpt,
+    description: articleSummary(article, locale),
     fallbackImage: article.heroImage as never,
     path: `/magazine/articles/${slug}`,
     type: 'article',
@@ -92,7 +93,10 @@ export default async function ArticlePage({ params }: Params) {
         <JsonLd data={articleSchema(article as never, locale as Locale)} />
 
         {hero ? (
-          <div className="vd-article-photo bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]">
+          <div
+            data-title-art={isSeedTitleArt(article.heroImage) || undefined}
+            className="vd-article-photo bg-surface-sunken relative aspect-[16/9] w-full md:aspect-[21/9]"
+          >
             <Image
               src={hero.src}
               alt={hero.alt}
@@ -161,7 +165,7 @@ export default async function ArticlePage({ params }: Params) {
                   tagline={business.tagline as string | null}
                   category={business.category as string | null}
                   governorate={business.governorate as string | null}
-                  district={business.district as string | null}
+                  city={business.city as string | null}
                   verified={business.verified as boolean | null}
                   heroImage={business.heroImage as never}
                   locale={locale}

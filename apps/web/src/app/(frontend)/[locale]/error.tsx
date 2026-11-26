@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../../i18n/routing'
 
@@ -33,10 +34,16 @@ export default function ErrorBoundary({
     // Reaches the browser console and any client-side monitoring. The server
     // side of this is already in the platform logs, keyed by the same digest.
     console.error('Page error', { digest: error.digest, message: error.message })
+    // An error caught here never reaches the browser's own error handler, so it
+    // is passed to Sentry by hand (lib/sentry; inert without a DSN).
+    Sentry.captureException(error)
   }, [error])
 
   return (
-    <main className="vd-task-page mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center px-6 py-24">
+    <main
+      data-task="page-error"
+      className="vd-task-page mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center px-6 py-24"
+    >
       <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{t('common.brand')}</p>
 
       <h1 className="font-display text-ink-900 mt-4 text-3xl leading-tight md:text-4xl">

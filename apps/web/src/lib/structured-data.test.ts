@@ -8,7 +8,7 @@ const LISTING = {
   tagline: 'Sea views over Beirut',
   category: 'hospitality',
   governorate: 'mount-lebanon',
-  district: 'matn',
+  city: 'broummana',
   address: 'Dbayeh Highway',
   location: [35.5925668, 33.9480149], // [lng, lat] - GeoJSON order
   priceRange: 4,
@@ -111,6 +111,11 @@ describe('listingSchema', () => {
   it('omits an address block that would carry only the country', () => {
     const sparse = listingSchema({ name: 'X', category: 'lifestyle' }, 'en')
     expect(sparse).not.toHaveProperty('address')
+  })
+
+  it('treats a whitespace-only address as none', () => {
+    const blank = listingSchema({ name: 'X', category: 'lifestyle', address: '   ' }, 'en')
+    expect(blank).not.toHaveProperty('address')
   })
 
   it('produces JSON that survives a round trip', () => {

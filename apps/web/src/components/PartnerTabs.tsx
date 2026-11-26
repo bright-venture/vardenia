@@ -25,11 +25,20 @@ export function PartnerTabs({
   listing,
   scans,
   statements,
+  rooms,
+  branches,
+  details,
 }: {
   bookings: string
   listing: string
   scans: string
   statements: string
+  /** Shown only to a partner with a hotel. */
+  rooms?: string
+  /** Shown only to a partner with a restaurant (Task 12a). */
+  branches?: string
+  /** Edit listing details, under the listing path; shown to a partner with a listing. */
+  details?: string
 }) {
   const pathname = usePathname()
 
@@ -39,28 +48,49 @@ export function PartnerTabs({
    * `/ar/partner/listing` in Arabic. Comparing whole paths would leave the
    * Arabic dashboard with nothing highlighted.
    */
-  const onListing = /\/partner\/listing(\/|$)/.test(pathname)
+  const onDetails = /\/partner\/listing\/details(\/|$)/.test(pathname)
+  const onListing = /\/partner\/listing(\/|$)/.test(pathname) && !onDetails
   const onScans = /\/partner\/scans(\/|$)/.test(pathname)
   // Includes a single statement, /partner/statements/12, so the tab stays lit there.
   const onStatements = /\/partner\/statements(\/|$)/.test(pathname)
+  const onRooms = /\/partner\/rooms(\/|$)/.test(pathname)
+  const onBranches = /\/partner\/branches(\/|$)/.test(pathname)
 
   return (
     <nav
       className={`${styles.navigation} vd-partner-tabs border-ink-100 mt-8 gap-6 border-b`}
       aria-label={bookings}
     >
-      <Tab href="/partner" active={!onListing && !onScans && !onStatements}>
+      <Tab
+        href="/partner"
+        active={!onListing && !onDetails && !onScans && !onStatements && !onRooms && !onBranches}
+      >
         {bookings}
       </Tab>
       <Tab href="/partner/listing" active={onListing}>
         {listing}
       </Tab>
+      {details ? (
+        <Tab href="/partner/listing/details" active={onDetails}>
+          {details}
+        </Tab>
+      ) : null}
       <Tab href="/partner/scans" active={onScans}>
         {scans}
       </Tab>
       <Tab href="/partner/statements" active={onStatements}>
         {statements}
       </Tab>
+      {rooms ? (
+        <Tab href="/partner/rooms" active={onRooms}>
+          {rooms}
+        </Tab>
+      ) : null}
+      {branches ? (
+        <Tab href="/partner/branches" active={onBranches}>
+          {branches}
+        </Tab>
+      ) : null}
     </nav>
   )
 }

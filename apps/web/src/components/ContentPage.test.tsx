@@ -1,11 +1,21 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { renderToReadableStream } from 'react-dom/server'
+import type { ReactNode } from 'react'
 import { createTranslator, NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@vardenia/i18n/messages'
 import type { Locale } from '@vardenia/i18n'
 import { contentPage } from '../lib/pages'
 import { ContentPageView } from './ContentPage'
+
+async function renderPage(view: ReactNode) {
+  const stream = await renderToReadableStream(view)
+  await stream.allReady
+  return new Response(stream).text()
+}
+
+vi.mock('../lib/hidden-pages', () => ({ hiddenPages: async () => [] }))
+vi.mock('next/font/google', () => ({ Caveat: () => ({ variable: 'test-handwriting' }) }))
 
 vi.mock('next-intl/server', () => ({
   getTranslations: async ({ locale }: { locale: Locale }) =>
@@ -14,20 +24,13 @@ vi.mock('next-intl/server', () => ({
 
 for (const locale of ['en', 'ar'] as const) {
   describe(`standing-page composition in ${locale}`, () => {
-    for (const slug of [
-      'about',
-      'contact',
-      'faq',
-      'add-your-business',
-      'partner-with-us',
-      'advertise',
-    ] as const) {
+    for (const slug of ['about', 'contact', 'faq', 'add-your-business'] as const) {
       it(`preserves the ${slug} sections and offers a next step after reading`, async () => {
         const page = contentPage(slug, locale)!
         const view = await ContentPageView({ page, slug, locale })
         const root = document.createElement('div')
         root.dir = locale === 'ar' ? 'rtl' : 'ltr'
-        root.innerHTML = renderToStaticMarkup(
+        root.innerHTML = await renderPage(
           <NextIntlClientProvider
             locale={locale}
             messages={getMessages(locale)}
@@ -41,10 +44,28 @@ for (const locale of ['en', 'ar'] as const) {
         page.sections.forEach((section, i) => {
           expect(root.querySelector(`#story-${i} h2`)?.textContent).toBe(section.heading)
         })
-        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(2)
+        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(
+          slug === 'add-your-business' ? 3 : 2,
+        )
+        if (slug === 'add-your-business') {
+          expect(root.querySelector('.vd-story-next a[href$="/magazine-places"]')).toBeTruthy()
+          const opening = root.querySelector('.vd-business-chapters')
+          if (locale === 'en') {
+            expect(opening?.querySelector('a[href$="/magazine-places"]')).toBeTruthy()
+            const chapter = opening?.querySelector('a[href^="#"]')?.getAttribute('href')
+            expect(chapter && root.querySelector(chapter)?.querySelector('h2')?.textContent).toBe(
+              'What each level includes',
+            )
+          } else {
+            expect(opening).toBeNull()
+          }
+        }
         const actions = [...root.querySelectorAll('.vd-story-next a')].map((link) =>
           link.getAttribute('href'),
         )
+        if (slug === 'add-your-business') {
+          expect(actions[0]?.endsWith('/magazine-places')).toBe(true)
+        }
         expect(
           actions.some((href) =>
             href?.endsWith(['about', 'contact', 'faq'].includes(slug) ? '/directory' : '/contact'),
@@ -65,7 +86,7 @@ for (const locale of ['en', 'ar'] as const) {
  */
 describe('standing pages and the pages an admin has hidden', () => {
   const links = async (
-    slug: 'about' | 'faq' | 'advertise',
+    slug: 'about' | 'faq' | 'add-your-business',
     hidden: ('faq' | 'about' | 'contact')[],
   ) => {
     const view = await ContentPageView({
@@ -75,7 +96,7 @@ describe('standing pages and the pages an admin has hidden', () => {
       hidden,
     })
     const root = document.createElement('div')
-    root.innerHTML = renderToStaticMarkup(
+    root.innerHTML = await renderPage(
       <NextIntlClientProvider locale="en" messages={getMessages('en')} timeZone="Asia/Beirut">
         {view}
       </NextIntlClientProvider>,
@@ -89,7 +110,7 @@ describe('standing pages and the pages an admin has hidden', () => {
   })
 
   it('sends readers to the directory when Contact is hidden', async () => {
-    const hrefs = await links('advertise', ['contact'])
+    const hrefs = await links('add-your-business', ['contact'])
     expect(hrefs.some((href) => href?.endsWith('/contact'))).toBe(false)
     expect(hrefs.some((href) => href?.endsWith('/directory'))).toBe(true)
   })

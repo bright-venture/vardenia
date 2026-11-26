@@ -30,6 +30,7 @@ const STATUS_FOR = {
   'not-eligible': 403,
   'already-reviewed': 409,
   'not-found': 404,
+  'not-bookable': 403,
   error: 500,
 } as const
 
@@ -92,5 +93,6 @@ export const POST = withRateLimit(
     return json({ ok: true }, 201)
   },
   RATE_LIMIT.WRITE_PER_WINDOW,
-  { shared: true },
+  // Its own counters: 20 a minute per account, 120 per connection (lib/rate-limit, 22 November 2026).
+  { action: 'review', perAccount: true },
 )

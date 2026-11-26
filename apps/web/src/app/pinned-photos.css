@@ -1,0 +1,178 @@
+/* Shared by the English desktop homepage and editorial photo prints. */
+@media (min-width: 1051px), (max-width: 700px) {
+  @scope (html:lang(en)) {
+    :is(.vd-home, .vd-interior-print) .vd-pinned-photo {
+      --vd-print-rest: -1.5deg;
+      --vd-pin-x: 51%;
+      --vd-pin-y: 9px;
+      --vd-pin-flip: 1;
+      transform: none;
+      overflow: visible;
+    }
+    :is(.vd-home, .vd-interior-print) .vd-pinned-photo:is(.vd-photo-city, .vd-photo-village) {
+      --vd-print-rest: 1deg;
+      --vd-pin-x: 49.3%;
+    }
+    :is(.vd-home, .vd-interior-print) .vd-pinned-print {
+      position: absolute;
+      inset: 0;
+      color: inherit;
+      text-decoration: none;
+      padding: var(--vd-print-border, clamp(10px, 1.4vw, 20px));
+      padding-bottom: 0;
+      background: var(--vd-paper) url('/journey/natural-paper-grain-soft.webp') center / 700px;
+      background-blend-mode: soft-light;
+      border: 1px solid rgb(255 255 255 / 0.7);
+      border-radius: var(--vd-radius-print, 10px);
+      box-shadow:
+        calc(var(--vd-paper-twist, 0) * 4px) calc(6px + var(--vd-paper-lift, 0) * 15px)
+          calc(10px + var(--vd-paper-lift, 0) * 16px) rgb(17 29 45 / 0.14),
+        0 1px 2px rgb(17 29 45 / 0.12);
+      transform-origin: var(--vd-pin-x) var(--vd-pin-y);
+      transform: perspective(1200px) rotateZ(calc(var(--vd-print-rest) + var(--vd-pin-sway, 0deg)))
+        rotateX(calc(var(--vd-paper-lift, 0) * 3deg))
+        rotateY(calc(var(--vd-paper-twist, 0) * 1.2deg));
+    }
+
+    .vd-pinned-photo .vd-scene-image {
+      position: relative;
+      overflow: hidden;
+      height: calc(100% - 78px);
+      border-radius: var(--vd-radius-photo, 10px);
+    }
+    .vd-pinned-photo .vd-scene-image::after {
+      display: none;
+    }
+    .vd-pinned-photo .vd-scene-image :is(img, picture) {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .vd-pinned-photo .vd-photo-caption {
+      position: static;
+      display: flex;
+      height: 78px;
+      flex-flow: row wrap;
+      justify-content: space-between;
+      align-content: center;
+      align-items: baseline;
+      gap: 2px 12px;
+      padding: 5px 10px;
+      background: none;
+      color: var(--vd-ink);
+      text-shadow: none;
+      font-family: 'Brother Signature', var(--font-home-handwriting), cursive;
+    }
+    .vd-pinned-photo .vd-photo-caption > span:first-child {
+      font: inherit;
+      font-size: 32px;
+      line-height: 1.12;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+    }
+    .vd-pinned-photo .vd-photo-caption .vd-coordinates {
+      position: static;
+      inset: auto;
+      min-height: 0;
+      margin-inline-start: auto;
+      padding: 0;
+      background: none;
+      color: inherit;
+      text-shadow: none;
+      white-space: nowrap;
+    }
+    .vd-pinned-photo .vd-photo-caption :is(.vd-coordinates, .vd-coordinate-digits) {
+      font-family: inherit;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 400;
+      letter-spacing: 0.025em;
+    }
+    .vd-pinned-photo .vd-photo-caption .vd-coordinates::before,
+    .vd-pinned-photo .vd-photo-caption .vd-coordinate-place {
+      display: none;
+    }
+    .vd-pinned-photo > img.vd-photo-pin {
+      position: absolute;
+      width: 32px;
+      height: 48px;
+      object-fit: contain;
+      /* The point of this angled pin lands 9px left of center, 44px from its top. */
+      inset-inline-start: calc(var(--vd-pin-x) + var(--vd-pin-flip) * 9px);
+      top: calc(var(--vd-pin-y) - 44px);
+      transform: translateX(-50%) scaleX(var(--vd-pin-flip));
+      z-index: 4;
+      pointer-events: none;
+      user-select: none;
+      filter: none;
+    }
+    :is(.vd-photo-city, .vd-photo-mountain, .vd-interior-print-right) .vd-photo-pin {
+      --vd-pin-flip: -1;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .vd-pinned-photo .vd-pinned-print {
+        transform: rotate(var(--vd-print-rest));
+      }
+    }
+    :is(.vd-home.vd-motion-off, .vd-inner-motion-off) .vd-pinned-print {
+      transform: rotate(var(--vd-print-rest));
+    }
+
+    /* Pan-y preserves native vertical page scrolling on touch screens. */
+    .vd-pinned-photo .vd-pinned-print[data-vd-draggable='true'] {
+      cursor: grab;
+      touch-action: pan-y pinch-zoom;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .vd-pinned-photo .vd-pinned-print[data-dragging='true'] {
+      cursor: grabbing;
+    }
+    .vd-pinned-photo .vd-pinned-print[data-vd-draggable='true']:focus-visible {
+      outline: 3px solid var(--vd-gold);
+      outline-offset: 5px;
+    }
+
+    .vd-pinned-photo a.vd-pinned-print:focus-visible {
+      outline: 3px solid var(--vd-gold);
+      outline-offset: 5px;
+    }
+
+    .vd-interior-print {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+    .vd-interior-print > figure.vd-pinned-photo {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 5 / 4;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      box-shadow: none;
+      overflow: visible;
+    }
+    .vd-page-intro .vd-interior-print > figure.vd-pinned-photo {
+      aspect-ratio: 1.36;
+    }
+    .vd-standing-about .vd-inner-hero > .vd-interior-print {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .vd-story-section > .vd-interior-print {
+      margin-top: 45px;
+    }
+    .vd-standing-faq .vd-interior-print > figure.vd-pinned-photo {
+      aspect-ratio: 4 / 3;
+    }
+    .vd-search-page[data-has-query='true'] .vd-interior-print {
+      max-width: 265px;
+      justify-self: end;
+    }
+  }
+}

@@ -30,8 +30,8 @@ import {
 export const dynamic = 'force-dynamic'
 
 const GOVERNORATE = new Map<string, string>(GOVERNORATES.map((g) => [g.slug, g.en]))
-const DISTRICT = new Map<string, string>(
-  GOVERNORATES.flatMap((g) => g.districts.map((d) => [d.slug, d.en] as [string, string])),
+const CITY = new Map<string, string>(
+  GOVERNORATES.flatMap((g) => g.cities.map((d) => [d.slug, d.en] as [string, string])),
 )
 const CATEGORY = new Map<string, string>(CATEGORIES.map((c) => [c.slug, c.en]))
 
@@ -39,10 +39,7 @@ const escape = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 const area = (b: BusinessPerformance) =>
-  [
-    b.district ? DISTRICT.get(b.district) : null,
-    b.governorate ? GOVERNORATE.get(b.governorate) : null,
-  ]
+  [b.city ? CITY.get(b.city) : null, b.governorate ? GOVERNORATE.get(b.governorate) : null]
     .filter(Boolean)
     .filter((v, i, all) => all.indexOf(v) === i)
     .join(', ')

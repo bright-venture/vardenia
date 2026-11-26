@@ -170,4 +170,22 @@ describe('BookingForm', () => {
     expect(html).not.toContain('You need a Vardenia account')
     expect(html).toContain('تحتاج إلى حساب')
   })
+
+  it('shows the seating-area choice only when the listing has areas', () => {
+    const withAreas = renderToStaticMarkup(
+      <NextIntlClientProvider locale="en" messages={getMessages('en')} timeZone="Asia/Beirut">
+        <BookingForm
+          businessId={42}
+          model={bookingFormModel(restaurant, NOW)}
+          locale="en"
+          extras={{
+            areas: [{ key: 'indoor', setting: 'indoor', smoking: false, label: null }],
+            packages: [],
+          }}
+        />
+      </NextIntlClientProvider>,
+    )
+    expect(withAreas).toContain('Seating area')
+    expect(render(restaurant)).not.toContain('Seating area')
+  })
 })

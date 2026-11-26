@@ -1,3 +1,4 @@
+import { enforcePasswordRule } from '../hooks/enforcePasswordRule'
 import { guardSelfAccountUpdate } from '../hooks/guardSelfAccountUpdate'
 import { guardAccountIdentity } from '../hooks/guardAccountIdentity'
 import type { CollectionConfig } from 'payload'
@@ -126,6 +127,8 @@ export const Customers: CollectionConfig = {
     // the current password first. hooks/guardSelfAccountUpdate. And only an
     // admin changes another person's. hooks/guardAccountIdentity.
     beforeOperation: [guardSelfAccountUpdate, guardAccountIdentity],
+    // One password rule for every path that sets one. hooks/enforcePasswordRule.
+    beforeValidate: [enforcePasswordRule],
     beforeDelete: [closeRatherThanDelete, cleanupSavedListings('customer')],
   },
 

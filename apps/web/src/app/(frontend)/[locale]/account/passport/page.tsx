@@ -40,7 +40,7 @@ export default async function PassportPage({ params }: { params: Promise<{ local
 
   if (!customer) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="passport" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={1} locale={locale}>
           <Link href="/account/login" className="vd-button">
             {account('signIn')} <span aria-hidden>↗</span>

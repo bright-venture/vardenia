@@ -8,7 +8,9 @@ export const routing = defineRouting({
   defaultLocale: DEFAULT_LOCALE,
   // English lives at the root (/directory), Arabic is prefixed (/ar/directory).
   // Keeps the primary market's URLs clean and stable for print.
-  localePrefix: 'as-needed',
+  // In the local dev server the internal /en rewrite re-enters the proxy.
+  // An explicit prefix there keeps client links and server routing in sync.
+  localePrefix: process.env.NODE_ENV === 'development' ? 'always' : 'as-needed',
 
   // Do not auto-redirect based on the browser's Accept-Language header.
   //

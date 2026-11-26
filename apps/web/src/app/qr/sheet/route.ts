@@ -27,7 +27,7 @@ import {
  *
  * Filtered by anything a code can be reached through: what it opens, the issue
  * it is printed in, an article (its own code and the codes of the listings it
- * features), the listing's governorate, district, category, tier and import
+ * features), the listing's governorate, city, category, tier and import
  * batch, where it is printed (magazine or shirt), whether it is active and
  * whether it has been scanned, plus a free-text search. The filters live in
  * lib/qr-sheet-filters, shared with /qr/export so "download all" gives exactly
@@ -66,8 +66,8 @@ const TARGET_LABELS: Record<string, string> = {
 }
 
 const GOVERNORATE_NAMES = new Map<string, string>(GOVERNORATES.map((g) => [g.slug, g.en]))
-const DISTRICT_NAMES = new Map<string, string>(
-  GOVERNORATES.flatMap((g) => g.districts.map((d) => [d.slug, d.en] as [string, string])),
+const CITY_NAMES = new Map<string, string>(
+  GOVERNORATES.flatMap((g) => g.cities.map((d) => [d.slug, d.en] as [string, string])),
 )
 const CATEGORY_NAMES = new Map<string, string>(
   CATEGORIES.flatMap((c) => [
@@ -82,8 +82,7 @@ interface Choice {
 }
 
 type Doc = Omit<QrDoc, 'business' | 'article' | 'issue'> & {
-  business?:
-    (RelatedDoc & { governorate?: string | null; district?: string | null }) | number | null
+  business?: (RelatedDoc & { governorate?: string | null; city?: string | null }) | number | null
   article?: (RelatedDoc & { governorate?: string | null }) | number | null
   issue?: (RelatedDoc & { issueNumber?: number | null }) | number | null
 }
@@ -244,9 +243,7 @@ function renderCard(qr: Doc, svg: string): string {
   const issue = typeof qr.issue === 'object' ? qr.issue : null
   const governorate = business?.governorate ?? article?.governorate ?? null
   const place = [
-    business?.district && business.district !== governorate
-      ? DISTRICT_NAMES.get(business.district)
-      : null,
+    business?.city && business.city !== governorate ? CITY_NAMES.get(business.city) : null,
     governorate ? GOVERNORATE_NAMES.get(governorate) : null,
   ]
     .filter(Boolean)
@@ -303,14 +300,14 @@ function filterForm(
   articleChoices: Choice[],
   batchChoices: Choice[],
 ): string {
-  const districtOptions =
-    `<option value=""${f.district === null ? ' selected' : ''}>All</option>` +
+  const cityOptions =
+    `<option value=""${f.city === null ? ' selected' : ''}>All</option>` +
     GOVERNORATES.map(
       (g) =>
-        `<optgroup label="${escape(g.en)}">${g.districts
+        `<optgroup label="${escape(g.en)}">${g.cities
           .map(
             (d) =>
-              `<option value="${d.slug}"${d.slug === f.district ? ' selected' : ''}>${escape(d.en)}</option>`,
+              `<option value="${d.slug}"${d.slug === f.city ? ' selected' : ''}>${escape(d.en)}</option>`,
           )
           .join('')}</optgroup>`,
     ).join('')
@@ -373,7 +370,7 @@ function filterForm(
       ),
     ),
   )}
-  ${field('District', select('district', districtOptions))}
+  ${field('City', select('city', cityOptions))}
   ${field('Category', select('category', categoryOptions))}
   ${field(
     'Tier',
@@ -473,7 +470,7 @@ function chips(f: SheetFilters, issueChoices: Choice[], articleChoices: Choice[]
   else if (f.issue !== null) add(found(issueChoices, String(f.issue)), 'issue')
   if (f.article !== null) add(`Article: ${found(articleChoices, String(f.article))}`, 'article')
   if (f.governorate) add(GOVERNORATE_NAMES.get(f.governorate) ?? f.governorate, 'governorate')
-  if (f.district) add(DISTRICT_NAMES.get(f.district) ?? f.district, 'district')
+  if (f.city) add(CITY_NAMES.get(f.city) ?? f.city, 'city')
   if (f.category) add(CATEGORY_NAMES.get(f.category) ?? f.category, 'category')
   if (f.tier) add(`Tier: ${f.tier}`, 'tier')
   if (f.batch) add(`Batch: ${f.batch}`, 'batch')

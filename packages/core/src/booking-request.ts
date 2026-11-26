@@ -1,5 +1,6 @@
 import { z } from './zod'
 import { LOCALE_CODES } from './locales'
+import { SEATING_AREA_KEYS } from './seating'
 
 /**
  * What a customer sends to ask for a booking.
@@ -60,6 +61,12 @@ export const bookingRequestSchema = z
     partySize: z.coerce.number().int().min(1, 'at least one person').max(500, 'too many'),
 
     /**
+     * Of the party, how many are children: hotel bookings (18 November 2026).
+     * Adults need adult places in the rooms; children may use the extra ones.
+     */
+    children: z.coerce.number().int().min(0).max(50).optional(),
+
+    /**
      * Neither is sent any more, and neither is trusted if it is.
      *
      * Booking requires a signed-in customer with a verified address, so the
@@ -91,6 +98,40 @@ export const bookingRequestSchema = z
      * than stored. Absent for a table booking, which has no room type.
      */
     roomType: z.string().trim().max(120, 'too long').optional(),
+
+    /**
+     * For a hotel with room types: which rooms, how many, and with which option
+     * (17 November 2026). Absent for every other booking. Checked against the
+     * hotel's room types and their rooms left on the server.
+     */
+    rooms: z
+      .array(
+        z.object({
+          roomType: z.coerce.number().int().positive(),
+          count: z.coerce.number().int().min(1).max(10),
+          option: z.string().trim().max(64).optional(),
+        }),
+      )
+      .max(10)
+      .optional(),
+
+    /**
+     * For a guest house: which of its packages the guest chose (Task 7). Checked
+     * against the listing's active packages on the server; an unknown or
+     * inactive one is refused, never priced as the nightly rate instead.
+     *
+     * There is no price field. The server quotes and stores the price itself,
+     * and Zod drops any key not named here, so a price, quote or total sent by
+     * a client never reaches the booking service.
+     */
+    packageId: z.string().trim().min(1).max(64).optional(),
+
+    /**
+     * For a restaurant with seating areas (Task 8): which area, by key. Required
+     * by the server when the listing has areas, and checked against them; a
+     * listing without areas ignores it. See core/seating.
+     */
+    area: z.enum(SEATING_AREA_KEYS).optional(),
 
     /** What the customer wants us to pass on: a dietary need, an anniversary. */
     notes: z.string().trim().max(1000, 'too long').optional(),
@@ -149,6 +190,12 @@ export const availabilityQuerySchema = z.object({
   start: isoDateTime,
   end: isoDateTime,
   partySize: z.coerce.number().int().min(1).max(500),
+  /** Of the party, how many are children: a guest house may not count them (Task 6). */
+  children: z.coerce.number().int().min(0).max(50).optional(),
+  /** A guest house package to quote (Task 7). */
+  packageId: z.string().trim().min(1).max(64).optional(),
+  /** A restaurant seating area to judge (Task 8); without it, every area is answered. */
+  area: z.enum(SEATING_AREA_KEYS).optional(),
 })
 
 export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
@@ -164,12 +211,24 @@ export type AvailabilityQuery = z.infer<typeof availabilityQuerySchema>
  * the other is not a floor: anybody could sign up, immediately reset, and land
  * below it.
  */
-const accountPassword = z
+/**
+ * The password rule for every account: customers, partners and the team
+ * (20 November 2026). Used by the site's forms and, on the server, by
+ * hooks/enforcePasswordRule and the built-in reset guard, so no path can set a
+ * password that breaks it.
+ */
+export const accountPassword = z
   .string()
   .min(10, 'must be at least 10 characters')
   .max(200, 'too long')
   // A password of only spaces satisfies a length check and nothing else.
   .refine((value) => value.trim().length >= 10, 'must be at least 10 characters')
+
+/** The same rule as a plain check: null when the password is fine, else why not. */
+export function passwordProblem(value: unknown): string | null {
+  const result = accountPassword.safeParse(value)
+  return result.success ? null : (result.error.issues[0]?.message ?? 'is not allowed')
+}
 
 /**
  * Opening an account from the site.

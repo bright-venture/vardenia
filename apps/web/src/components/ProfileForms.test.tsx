@@ -96,6 +96,28 @@ describe('profile form feedback', () => {
   })
 })
 
+describe('email change confirmation', () => {
+  it('keeps the check-the-new-address message and does not re-render the page signed out', async () => {
+    refresh.mockClear()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          ok: true,
+          message: 'Check the new address for a link to confirm it.',
+        }),
+      }),
+    )
+    await mount(<ChangeEmail current="guest@example.test" />)
+    await submit()
+    expect(container.querySelector('[role="status"]')?.textContent).toBe(
+      'Check the new address for a link to confirm it.',
+    )
+    expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
 describe('profile catalog integration', () => {
   it.each(LOCALES)('uses existing localized profile labels and actions in %s', async (locale) => {
     const messages = getMessages(locale)

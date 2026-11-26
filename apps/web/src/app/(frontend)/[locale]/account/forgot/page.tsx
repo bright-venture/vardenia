@@ -34,7 +34,7 @@ export default async function ForgotPage({ params }: { params: Promise<{ locale:
   const t = await getTranslations('account')
 
   return (
-    <AuthCard icon={KeyRound} title={t('forgot')} subtitle={t('forgotIntro')}>
+    <AuthCard mode="forgot" icon={KeyRound} title={t('forgot')} subtitle={t('forgotIntro')}>
       <ForgotPasswordForm />
     </AuthCard>
   )

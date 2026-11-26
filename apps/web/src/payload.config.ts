@@ -18,24 +18,34 @@ import { Statements } from './collections/Statements'
 import { SavedListings } from './collections/SavedListings'
 import { Reviews } from './collections/Reviews'
 import { Closures } from './collections/Closures'
+import { RoomTypes } from './collections/RoomTypes'
+import { RoomAvailability } from './collections/RoomAvailability'
+import { StaffRequests } from './collections/StaffRequests'
+import { GuestQuestions } from './collections/GuestQuestions'
 import { Media } from './collections/Media'
 import { Receipts } from './collections/Receipts'
 import { Businesses } from './collections/Businesses'
+import { Brands } from './collections/Brands'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
+import { ListingRanges } from './collections/ListingRanges'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
 import { RateLimits } from './collections/RateLimits'
+import { PlaceUploadSessions } from './collections/PlaceUploadSessions'
 import { Settings } from './globals/Settings'
 import { EDITION_MAX_BYTES, Editions } from './collections/Editions'
 import { editionsBucket, editionsPublicBase, mediaPublicBase } from './lib/storage-base'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { importListingsEndpoint } from './import/endpoint'
+import { rejectSubmissionEndpoint } from './submissions/reject-endpoint'
+import { paymentEndpoints, resendPaymentEmailEndpoint } from './submissions/payment-endpoints'
 import { allowedOrigins } from './lib/origins'
 import { emailSettings, emailWarning } from './lib/email'
 import { withSendCap } from './lib/email-cap'
 import { databaseSsl } from './lib/db-ssl'
+import { PAYLOAD_COOKIE_PREFIX } from './lib/auth-cookies'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -124,6 +134,7 @@ const s3Client = {
 const receiptsBucket = process.env.S3_RECEIPTS_BUCKET?.trim() || ''
 
 export default buildConfig({
+  cookiePrefix: PAYLOAD_COOKIE_PREFIX,
   serverURL: process.env.NEXT_PUBLIC_SITE_URL,
   admin: {
     user: Users.slug,
@@ -172,6 +183,16 @@ export default buildConfig({
           path: '/import-listings',
           Component: '/components/admin/ImportListings#ImportListings',
         },
+        // Magazine Places money reports, admin only (role checked in the
+        // view and in lib/place-reports before anything is read).
+        placeReports: {
+          path: '/place-reports',
+          Component: '/components/admin/PlaceReports#PlaceReports',
+        },
+        magazinePage: {
+          path: '/magazine-page',
+          Component: '/components/admin/MagazinePageView#MagazinePageView',
+        },
       },
     },
   },
@@ -182,20 +203,31 @@ export default buildConfig({
    * the admin cookie. A hand-rolled route would have to repeat that, and the
    * repetition is where an auth check goes missing.
    */
-  endpoints: [importListingsEndpoint],
+  endpoints: [
+    importListingsEndpoint,
+    rejectSubmissionEndpoint,
+    ...paymentEndpoints,
+    resendPaymentEmailEndpoint,
+  ],
 
   // The admin menu follows this order, group by group: Directory, Bookings,
   // Magazine, People, Reports. The last two are hidden from the menu.
   collections: [
     Businesses,
+    Brands,
     QrCodes,
     Reviews,
     Bookings,
     Receipts,
     Statements,
     Closures,
+    RoomTypes,
+    RoomAvailability,
+    StaffRequests,
+    GuestQuestions,
     Articles,
     Issues,
+    ListingRanges,
     Editions,
     Media,
     BusinessUsers,
@@ -205,6 +237,7 @@ export default buildConfig({
     ErrorEvents,
     SavedListings,
     RateLimits,
+    PlaceUploadSessions,
   ],
 
   globals: [Settings],

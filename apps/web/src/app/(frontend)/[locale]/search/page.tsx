@@ -8,6 +8,7 @@ import { Link } from '../../../../i18n/routing'
 import { normaliseSearchPage, search } from '../../../../lib/search'
 import { ListingGrid } from '../../../../components/ListingGrid'
 import { ArticleCard } from '../../../../components/ArticleCard'
+import { BYBLOS_GUIDE_PATH } from '../../../../components/journey/destinations'
 import { SearchForm } from '../../../../components/SearchForm'
 import { SearchPagination, type SearchParams } from './SearchPagination'
 
@@ -59,12 +60,35 @@ export default async function SearchPage({ params, searchParams }: Props) {
     articlesPage: normaliseSearchPage(queryParams.articlesPage),
   })
 
+  const guideQuery = results.query ?? ''
+  const guideMatch =
+    locale === 'en' && /^(byblos|jbeil|jbail)(?: (?:travel )?guide)?$/i.test(guideQuery)
   return (
-    <main className="vd-search-page">
+    <main className="vd-search-page" data-has-query={results.query !== null}>
       <PageHero title={t('search.title')} intro={t('search.prompt')} place={2} locale={locale}>
         <SearchForm locale={locale} initial={results.query ?? ''} />
+        {locale === 'en' && results.query === null && (
+          <nav hidden className="vd-search-examples" aria-label="Example searches">
+            <span>Try</span>
+            {['Beirut', 'Byblos', 'Baalbek'].map((place) => (
+              <Link key={place} href={`/search?q=${encodeURIComponent(place)}`}>
+                {place}
+              </Link>
+            ))}
+          </nav>
+        )}
       </PageHero>
-      <div className="vd-search-results">
+      <div className="vd-search-results" data-guide-match={guideMatch || undefined}>
+        {guideMatch && (
+          <section hidden className="vd-guide-result">
+            <p>{t('search.resultCount', { count: results.total + 1, query: guideQuery })}</p>
+            <h2>Destination guide</h2>
+            <Link className="vd-text-link" href={BYBLOS_GUIDE_PATH}>
+              Byblos (Jbeil) travel guide
+            </Link>
+            <p>Walk from the old harbour through the souk to the archaeological site.</p>
+          </section>
+        )}
         {results.query === null ? (
           <Prompt />
         ) : results.total === 0 ? (

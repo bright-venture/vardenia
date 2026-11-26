@@ -11,8 +11,9 @@ export type { HideablePage } from './hideable-pages'
  * Standing pages an admin has hidden from the Settings page (globals/Settings,
  * Pages tab).
  *
- * Added on 9 November 2026 so a page that is not ready, such as Advertise with
- * its open lines, can be taken off the site without a deploy. A hidden page
+ * Added on 9 November 2026 so a page that is not ready (Advertise, with its
+ * open lines, was the first; it was removed on 25 November 2026) can be taken
+ * off the site without a deploy. A hidden page
  * answers "not found", and every link to it goes: the header menu, the footer,
  * the sitemap and the buttons at the foot of the other standing pages. Since 11
  * November 2026 the magazine's pages, the six sections and the directory can

@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 import { withPayload } from '@payloadcms/next/withPayload'
 import createNextIntlPlugin from 'next-intl/plugin'
+import { withSentryConfig } from '@sentry/nextjs/config'
 import { config as loadEnv } from 'dotenv'
 import { securityHeaders } from './src/lib/security-headers'
 import { cdnCacheHeaders } from './src/lib/cdn-cache'
@@ -12,6 +13,16 @@ loadEnv({ path: '../../.env' })
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
+/** "production" on Netlify's main build, "staging" on any other, else "development". */
+function sentryEnvironment(): string {
+  const explicit = process.env.SENTRY_ENVIRONMENT?.trim()
+  if (explicit) return explicit
+  const context = process.env.CONTEXT
+  if (context === 'production') return 'production'
+  if (context === 'branch-deploy' || context === 'deploy-preview') return 'staging'
+  return 'development'
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
@@ -20,6 +31,9 @@ const nextConfig: NextConfig = {
   // See src/lib/film.
   env: {
     NEXT_PUBLIC_FILM_BASE: filmBase(),
+    // Which build is reporting to Sentry (lib/sentry): Netlify's CONTEXT is
+    // "production" for main and "branch-deploy" or "deploy-preview" otherwise.
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT: sentryEnvironment(),
   },
 
   /**
@@ -199,4 +213,22 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPayload(withNextIntl(nextConfig))
+/**
+ * Sentry's build step (lib/sentry). With SENTRY_AUTH_TOKEN, SENTRY_ORG and
+ * SENTRY_PROJECT set on Netlify it uploads the source maps, so an error points
+ * at the real line, then deletes them from the build so they are never served.
+ * Without the token it uploads nothing and the build is otherwise unchanged.
+ */
+const sentryUpload = Boolean(process.env.SENTRY_AUTH_TOKEN)
+
+export default withSentryConfig(withPayload(withNextIntl(nextConfig)), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: {
+    disable: !sentryUpload,
+    deleteSourcemapsAfterUpload: true,
+  },
+})

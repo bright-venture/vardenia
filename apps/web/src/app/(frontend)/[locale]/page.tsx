@@ -1,10 +1,12 @@
+import { issueCover } from '../../../lib/issue-presentation'
 import type { Metadata } from 'next'
 // The homepage's own styles, out of the stylesheets every page loads.
 import '../../home.css'
+import '../../approved-home.css'
 import QRCode from 'qrcode'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { DEFAULT_LOCALE, isLocale } from '@vardenia/i18n'
-import { alternatesFor } from '../../../lib/seo'
+import { alternatesFor, buildMetadata } from '../../../lib/seo'
 import { requireLocale } from '../../../lib/require-locale'
 import { findListings, findFeaturedListings, printedCodes } from '../../../lib/listings'
 import { findHomeListings } from '../../../lib/home-listings'
@@ -15,6 +17,7 @@ import { QR_LIGHT } from '../../../lib/qr-image'
 import { CinematicJourney } from '../../../components/journey/CinematicJourney'
 import { MagazineArt } from '../../../components/journey/MagazineArt'
 import { HomePlaces } from '../../../components/home/HomePlaces'
+import { HOME_PLACES_DESKTOP_LIMIT } from '../../../lib/home-selection'
 import { HomeSelection } from '../../../components/home/HomeSelection'
 import { Manifesto } from '../../../components/home/Manifesto'
 import { PrintConnection } from '../../../components/home/PrintConnection'
@@ -27,6 +30,19 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
+  if (locale === 'en') {
+    const title = 'Vardenia | Lebanon Travel Guide & Magazine'
+    return {
+      ...buildMetadata({
+        seo: undefined,
+        title,
+        description: 'Explore Lebanon with Vardenia’s travel magazine and local directory. Find coastal towns, mountain stays, restaurants and stories from across the country.',
+        path: '/',
+        locale,
+      }),
+      title: { absolute: title },
+    }
+  }
   return { alternates: alternatesFor('/', isLocale(locale) ? locale : DEFAULT_LOCALE) }
 }
 /** Published directory/editorial content; visual-review samples live only in review/. */
@@ -47,9 +63,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const magazineShown = !hidden.includes('magazine')
   const issuesShown = !hidden.includes('magazine-issues')
   // The automatic selection, never repeating a gold listing already in the band above.
-  const selected = await findHomeListings({ locale, excludedIds: featured.map((doc) => doc.id) })
+  const selected = await findHomeListings({
+    locale,
+    excludedIds: featured.map((doc) => doc.id),
+    limit: locale === 'en' ? HOME_PLACES_DESKTOP_LIMIT : undefined,
+  })
   const issue = issues.docs[0]
-  const cover = issue ? resolveImage(issue.cover as never, 'portrait') : null
+  const allLebanon = issues.docs.find((edition) => edition.slug === 'all-lebanon')
+  const desktopIssueHref = issuesShown && allLebanon ? '/magazine/issues/all-lebanon' : null
+  const cover = issue ? resolveImage(issueCover(issue, locale), 'portrait') : null
   const pictured = [...featured, ...listings.docs].filter((doc) =>
     resolvePhotograph(doc.heroImage as never),
   )
@@ -85,7 +107,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     liveCode: Boolean(listingHref),
   }
   return (
-    <main className="vd-main-home">
+    <main className="vd-main-home" id="homepage">
       <CinematicJourney
         locale={locale}
         directoryShown={directoryShown}
@@ -120,6 +142,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   : null
             }
             openLabel={issue && issuesShown ? t('openIssue') : j('readMagazine')}
+            desktopIssueHref={locale === 'en' ? desktopIssueHref : undefined}
           />
         }
       />

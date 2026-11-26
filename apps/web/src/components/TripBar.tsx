@@ -7,8 +7,8 @@ import {
   TRIP_DEFAULT_TIME,
   TRIP_MAX_DAYS_AHEAD,
   TRIP_MAX_PARTY,
+  TRIP_MAX_ROOMS,
 } from '../lib/trip'
-import { FilterChip } from './FilterChip'
 import { filterHref, type FilterState } from './ListingFilters'
 import { INPUT, LABEL, LINK, PRIMARY_BUTTON } from './formStyles'
 
@@ -81,11 +81,6 @@ const FIELD = `mt-1.5 h-11 py-0 ${INPUT}`
  * table for a restaurant, a pick-up time and passengers for getting around. See
  * WORDING below; the directory as a whole uses the general one.
  *
- * # "Online booking only" sits here, not with the other filters
- *
- * It is the question this bar raises: most listings are contact-only, and a
- * guest who has just chosen a date wants the ones that can take it. Placed in
- * the filter row it also squeezed the region chips off a phone.
  */
 export async function TripBar({
   base,
@@ -104,6 +99,12 @@ export async function TripBar({
   const today = beirutDate()
   const words = WORDING[section ?? 'any'] ?? WORDING.any!
   const nights = section === 'stay'
+  /**
+   * Adults, children and rooms apart (18 November 2026): on Stay. The other
+   * sections keep their single People field, and the whole directory has no
+   * date box at all.
+   */
+  const family = nights
 
   // The filters already applied, carried through the submit. Built by the same
   // function as every other link, so the names and order cannot drift.
@@ -128,7 +129,11 @@ export async function TripBar({
       <form
         action={getPathname({ href: base, locale })}
         method="get"
-        className="mt-4 grid grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]"
+        className={`mt-4 grid grid-cols-2 items-end gap-3 ${
+          nights
+            ? 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_6rem_6rem_auto]'
+            : 'sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6.5rem_auto]'
+        }`}
       >
         {carried.map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
@@ -187,7 +192,8 @@ export async function TripBar({
 
         <div>
           <label className={LABEL} htmlFor="trip-party">
-            {t(`directory.trip.${words.party}`)}
+            {/* A stay asks for adults and children apart (18 November 2026). */}
+            {family ? t('rooms.adults') : t(`directory.trip.${words.party}`)}
           </label>
           <input
             id="trip-party"
@@ -201,25 +207,88 @@ export async function TripBar({
           />
         </div>
 
+        {family ? (
+          <>
+            <div>
+              <label className={LABEL} htmlFor="trip-children">
+                {t('rooms.children')}
+              </label>
+              <input
+                id="trip-children"
+                type="number"
+                name="children"
+                inputMode="numeric"
+                min={0}
+                max={20}
+                defaultValue={trip?.children ?? 0}
+                className={FIELD}
+              />
+            </div>
+            <div>
+              <label className={LABEL} htmlFor="trip-rooms">
+                {t('rooms.roomsField')}
+              </label>
+              <input
+                id="trip-rooms"
+                type="number"
+                name="rooms"
+                inputMode="numeric"
+                min={1}
+                max={TRIP_MAX_ROOMS}
+                defaultValue={trip?.rooms ?? 1}
+                className={FIELD}
+              />
+            </div>
+            {/* Room filters: met by the same room type at a hotel with room types. */}
+            {nights ? (
+              <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-2 text-sm sm:order-last sm:col-span-6">
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="breakfast"
+                    value="1"
+                    defaultChecked={trip?.breakfast === true}
+                  />
+                  {t('rooms.filterBreakfast')}
+                </label>
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="cancel"
+                    value="1"
+                    defaultChecked={trip?.freeCancellation === true}
+                  />
+                  {t('rooms.filterFreeCancel')}
+                </label>
+                <label className="text-ink-900 flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="view"
+                    value="sea"
+                    defaultChecked={trip?.view === 'sea'}
+                  />
+                  {t('rooms.filterSeaView')}
+                </label>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
         <button type="submit" className={`${PRIMARY_BUTTON} col-span-2 h-11 py-0 sm:col-span-1`}>
           {t(`directory.trip.${words.apply}`)}
         </button>
       </form>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <FilterChip
-          href={filterHref(base, state, { bookable: !state.bookable })}
-          active={Boolean(state.bookable)}
-        >
-          {t('directory.trip.onlineOnly')}
-        </FilterChip>
-
-        {trip ? (
+      {/* "Online booking only" was removed on 18 November 2026: hotels and
+          guesthouses will all take bookings, so the switch would soon filter
+          nothing. An old link with ?book=1 still works. */}
+      {trip ? (
+        <div className="mt-4">
           <Link href={filterHref(base, withoutTrip, {})} className={`${LINK} text-sm`}>
             {t('directory.trip.clear')}
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </section>
   )
 }

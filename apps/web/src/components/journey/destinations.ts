@@ -176,16 +176,33 @@ export function coordinates(p: { lat: number; lon: number }) {
 /**
  * The directory filtered to a destination's area.
  *
- * The directory's `where` takes a governorate only; a district goes in
- * `district`, under its governorate (see parseFilterState). Four of the six
- * destinations are districts (Jbeil, Bsharri, Tyre, Chouf), and sent as
+ * The directory's `where` takes a governorate only; a city goes in
+ * `city`, under its governorate (see parseFilterState). Four of the six
+ * destinations are cities (Jbeil, Bsharri, Tyre, Chouf), and sent as
  * `where` they were silently dropped, so "Explore this region" opened the
- * whole directory. A district now names its governorate as well.
+ * whole directory. A city now names its governorate as well.
  */
 export function directoryFor(p: Pick<Destination, 'where'>) {
   if (GOVERNORATES.some((g) => g.slug === p.where)) return `/directory?where=${p.where}`
-  const parent = GOVERNORATES.find((g) => g.districts.some((d) => d.slug === p.where))
-  return parent ? `/directory?where=${parent.slug}&district=${p.where}` : '/directory'
+  const parent = GOVERNORATES.find((g) => g.cities.some((d) => d.slug === p.where))
+  return parent ? `/directory?where=${parent.slug}&city=${p.where}` : '/directory'
+}
+
+export const BYBLOS_GUIDE_PATH = '/destinations/byblos'
+
+export function destinationHref(place: Destination, locale: string): string {
+  return locale === 'en' && place.id === 'byblos' ? BYBLOS_GUIDE_PATH : directoryFor(place)
+}
+
+/** Scenic photographs open the destination they actually depict. */
+export function sceneDirectoryFor(id: string, locale = ''): string {
+  const sceneDestination: Record<string, string> = {
+    'beirut-downtown': 'beirut',
+    arz: 'bsharri',
+    'byblos-harbour': 'byblos',
+  }
+  const destination = DESTINATIONS.find((place) => place.id === (sceneDestination[id] ?? id))
+  return destination ? destinationHref(destination, locale) : '/directory'
 }
 
 /** A place can belong to several ways of exploring; filters never imply bookable activities. */

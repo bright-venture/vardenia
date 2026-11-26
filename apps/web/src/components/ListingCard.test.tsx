@@ -19,7 +19,7 @@ beforeEach(() => {
 /**
  * The card every directory result is rendered as, and the first thing a reader
  * sees of an advertiser. Its risk is not crashing - it is degrading quietly:
- * a listing with no photo, no price band or no district still has to look like
+ * a listing with no photo, no price band or no city still has to look like
  * a listing rather than like a broken one.
  */
 
@@ -73,25 +73,25 @@ describe('ListingCard', () => {
     expect(html).not.toContain('hospitality')
   })
 
-  it('shows a place as district then governorate', () => {
-    const html = text(render({ governorate: 'keserwan', district: 'jbeil' }))
+  it('shows a place as city then governorate', () => {
+    const html = text(render({ governorate: 'keserwan', city: 'jbeil' }))
     expect(html).toContain('Jbeil')
     expect(html).toContain('Keserwan')
   })
 
-  /** Beirut is both a governorate and its only district. "Beirut, Beirut" reads as a bug. */
-  it('does not repeat a place that is its own district', () => {
-    const html = text(render({ governorate: 'beirut', district: 'beirut' }))
+  /** Beirut is both a governorate and its only city. "Beirut, Beirut" reads as a bug. */
+  it('does not repeat a place that is its own city', () => {
+    const html = text(render({ governorate: 'beirut', city: 'beirut' }))
     expect(html).not.toContain('Beirut, Beirut')
     expect(html).toContain('Beirut')
   })
 
   it('shows no area at all while locations are hidden', () => {
     display.SHOW_LOCATION = false
-    const html = text(render({ governorate: 'keserwan', district: 'jbeil' }))
+    const html = text(render({ governorate: 'keserwan', city: 'jbeil' }))
     expect(html).not.toContain('Jbeil')
     expect(html).not.toContain('Keserwan')
-    expect(render({ governorate: 'keserwan', district: 'jbeil' })).not.toContain('vd-card-place')
+    expect(render({ governorate: 'keserwan', city: 'jbeil' })).not.toContain('vd-card-place')
   })
 
   /** Listings show no prices (decided 10 November 2026). */

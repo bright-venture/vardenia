@@ -60,6 +60,24 @@ import * as migration_20261110_090000_drop_old_settings_tables from './20261110_
 import * as migration_20261111_120000_hidden_pages_more from './20261111_120000_hidden_pages_more'
 import * as migration_20261111_160000_hidden_pages_sign_in from './20261111_160000_hidden_pages_sign_in'
 import * as migration_20261111_170000_hidden_pages_legal_links from './20261111_170000_hidden_pages_legal_links'
+import * as migration_20261117_100312_drop_business_versions from './20261117_100312_drop_business_versions'
+import * as migration_20261117_115415_room_types from './20261117_115415_room_types'
+import * as migration_20261117_132014_room_availability from './20261117_132014_room_availability'
+import * as migration_20261118_075104_event_staff from './20261118_075104_event_staff'
+import * as migration_20261118_083233_areas from './20261118_083233_areas'
+import * as migration_20261118_084619_booking_children from './20261118_084619_booking_children'
+import * as migration_20261118_094623_guest_questions from './20261118_094623_guest_questions'
+import * as migration_20261119_090456_magazine_places from './20261119_090456_magazine_places'
+import * as migration_20261119_131549_business_submissions from './20261119_131549_business_submissions'
+import * as migration_20261120_131807_remove_place_requests_add_expired from './20261120_131807_remove_place_requests_add_expired'
+import * as migration_20261121_120000_customer_booking_limits_two from './20261121_120000_customer_booking_limits_two'
+import * as migration_20261121_134843_core_backend from './20261121_134843_core_backend'
+import * as migration_20261124_100000_districts from './20261124_100000_districts'
+import * as migration_20261124_120000_magazine_places_form from './20261124_120000_magazine_places_form'
+import * as migration_20261124_180000_two_stage_payment from './20261124_180000_two_stage_payment'
+import * as migration_20261125_100000_business_pages_merged from './20261125_100000_business_pages_merged'
+import * as migration_20261126_100000_district_to_city from './20261126_100000_district_to_city'
+import * as migration_20261126_100000_sample_listings from './20261126_100000_sample_listings'
 
 export const migrations = [
   {
@@ -371,5 +389,95 @@ export const migrations = [
     up: migration_20261111_170000_hidden_pages_legal_links.up,
     down: migration_20261111_170000_hidden_pages_legal_links.down,
     name: '20261111_170000_hidden_pages_legal_links',
+  },
+  {
+    up: migration_20261117_100312_drop_business_versions.up,
+    down: migration_20261117_100312_drop_business_versions.down,
+    name: '20261117_100312_drop_business_versions',
+  },
+  {
+    up: migration_20261117_115415_room_types.up,
+    down: migration_20261117_115415_room_types.down,
+    name: '20261117_115415_room_types',
+  },
+  {
+    up: migration_20261117_132014_room_availability.up,
+    down: migration_20261117_132014_room_availability.down,
+    name: '20261117_132014_room_availability',
+  },
+  {
+    up: migration_20261118_075104_event_staff.up,
+    down: migration_20261118_075104_event_staff.down,
+    name: '20261118_075104_event_staff',
+  },
+  {
+    up: migration_20261118_083233_areas.up,
+    down: migration_20261118_083233_areas.down,
+    name: '20261118_083233_areas',
+  },
+  {
+    up: migration_20261118_084619_booking_children.up,
+    down: migration_20261118_084619_booking_children.down,
+    name: '20261118_084619_booking_children',
+  },
+  {
+    up: migration_20261118_094623_guest_questions.up,
+    down: migration_20261118_094623_guest_questions.down,
+    name: '20261118_094623_guest_questions',
+  },
+  {
+    up: migration_20261119_090456_magazine_places.up,
+    down: migration_20261119_090456_magazine_places.down,
+    name: '20261119_090456_magazine_places',
+  },
+  {
+    up: migration_20261119_131549_business_submissions.up,
+    down: migration_20261119_131549_business_submissions.down,
+    name: '20261119_131549_business_submissions',
+  },
+  {
+    up: migration_20261120_131807_remove_place_requests_add_expired.up,
+    down: migration_20261120_131807_remove_place_requests_add_expired.down,
+    name: '20261120_131807_remove_place_requests_add_expired',
+  },
+  {
+    up: migration_20261121_120000_customer_booking_limits_two.up,
+    down: migration_20261121_120000_customer_booking_limits_two.down,
+    name: '20261121_120000_customer_booking_limits_two',
+  },
+  {
+    up: migration_20261121_134843_core_backend.up,
+    down: migration_20261121_134843_core_backend.down,
+    name: '20261121_134843_core_backend',
+  },
+  {
+    up: migration_20261124_100000_districts.up,
+    down: migration_20261124_100000_districts.down,
+    name: '20261124_100000_districts',
+  },
+  {
+    up: migration_20261124_120000_magazine_places_form.up,
+    down: migration_20261124_120000_magazine_places_form.down,
+    name: '20261124_120000_magazine_places_form',
+  },
+  {
+    up: migration_20261124_180000_two_stage_payment.up,
+    down: migration_20261124_180000_two_stage_payment.down,
+    name: '20261124_180000_two_stage_payment',
+  },
+  {
+    up: migration_20261125_100000_business_pages_merged.up,
+    down: migration_20261125_100000_business_pages_merged.down,
+    name: '20261125_100000_business_pages_merged',
+  },
+  {
+    up: migration_20261126_100000_district_to_city.up,
+    down: migration_20261126_100000_district_to_city.down,
+    name: '20261126_100000_district_to_city',
+  },
+  {
+    up: migration_20261126_100000_sample_listings.up,
+    down: migration_20261126_100000_sample_listings.down,
+    name: '20261126_100000_sample_listings',
   },
 ]

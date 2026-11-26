@@ -173,7 +173,7 @@ describe('a real run', () => {
       'category',
       'subcategories',
       'governorate',
-      'district',
+      'city',
       'address',
       'priceRange',
       'ratingCheckedAt',

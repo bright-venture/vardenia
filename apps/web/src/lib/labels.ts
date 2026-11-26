@@ -14,7 +14,7 @@ import { TAXONOMY } from '@vardenia/core/taxonomy'
 import { sectionDescription, sectionLabel, taxonomyLabel, type Locale } from '@vardenia/i18n'
 
 /**
- * Regions keep English and Arabic only: a governorate or district is a proper
+ * Regions keep English and Arabic only: a governorate or city is a proper
  * noun, so every other language falls back to the English label (Beirut stays
  * Beirut). Categories, subcategories and amenities go through
  * `localize`, which additionally consults the taxonomy translations in
@@ -52,23 +52,23 @@ export function governorateLabel(slug: string | null | undefined, locale: Locale
   return found ? pick(found, locale) : slug
 }
 
-export function districtLabel(slug: string | null | undefined, locale: Locale): string {
+export function cityLabel(slug: string | null | undefined, locale: Locale): string {
   if (!slug) return ''
   for (const governorate of GOVERNORATES) {
-    const district = governorate.districts.find((d) => d.slug === slug)
-    if (district) return pick(district, locale)
+    const city = governorate.cities.find((d) => d.slug === slug)
+    if (city) return pick(city, locale)
   }
   return slug
 }
 
-/** "Mount Lebanon" or "Keserwan, Mount Lebanon" when a district is set. */
+/** "Mount Lebanon" or "Keserwan, Mount Lebanon" when a city is set. */
 export function placeLabel(
   governorate: string | null | undefined,
-  district: string | null | undefined,
+  city: string | null | undefined,
   locale: Locale,
 ): string {
   const g = governorateLabel(governorate, locale)
-  const d = districtLabel(district, locale)
+  const d = cityLabel(city, locale)
   if (d && g && d !== g) return `${d}, ${g}`
   return d || g
 }
@@ -78,6 +78,9 @@ export function amenityLabel(slug: string, locale: Locale): string {
   return found ? localize(found, locale) : slug
 }
 
+/** What sectionName and sectionSummary read; Event Staff has no category. */
+type SectionWords = Pick<SiteSection, 'path' | 'en' | 'ar' | 'descriptionEn' | 'descriptionAr'>
+
 /**
  * A section's name and one-line summary, in the reader's language.
  *
@@ -85,7 +88,7 @@ export function amenityLabel(slug: string, locale: Locale): string {
  * print); the other eight UI languages come from the section translations in
  * @vardenia/i18n, falling back to the English field.
  */
-export function sectionName(section: SiteSection, locale: Locale): string {
+export function sectionName(section: SectionWords, locale: Locale): string {
   return locale === 'ar'
     ? section.ar
     : locale === 'en'
@@ -93,7 +96,7 @@ export function sectionName(section: SiteSection, locale: Locale): string {
       : (sectionLabel(section.path, locale) ?? section.en)
 }
 
-export function sectionSummary(section: SiteSection, locale: Locale): string {
+export function sectionSummary(section: SectionWords, locale: Locale): string {
   return locale === 'ar'
     ? section.descriptionAr
     : locale === 'en'

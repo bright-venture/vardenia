@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
-import { closedPeriods, createBooking, translateInsertError } from './booking-service'
+import { closedPeriods, createBooking, limitRefusal, translateInsertError } from './booking-service'
 import { unavailableMessage } from './availability'
 
 /**
@@ -48,6 +48,16 @@ describe('translateInsertError', () => {
     if (outcome.ok) return
     expect(outcome.code).toBe('rate-limited')
     expect(outcome.message).toMatch(/upcoming bookings/)
+  })
+
+  it('turns the waiting-requests refusal into the same answer the count gives', () => {
+    const outcome = translateInsertError(
+      pgError('This account already has the most booking requests waiting for an answer.'),
+    )
+    expect(outcome.ok).toBe(false)
+    if (outcome.ok) return
+    expect(outcome.code).toBe('rate-limited')
+    expect(outcome.message).toMatch(/5 booking requests waiting/)
   })
 
   /**
@@ -166,6 +176,8 @@ describe('createBooking, before anything is written', () => {
           ? { docs: closures, totalDocs: closures.length }
           : { docs: [], totalDocs: 0 },
       ),
+      // The customer's upcoming bookings: none.
+      count: vi.fn(async () => ({ totalDocs: 0 })),
       create,
     } as unknown as Payload
     return { payload, create }
@@ -277,6 +289,7 @@ describe('createBooking, retried with the same attempt id', () => {
         }
         return { docs: [], totalDocs: 0 }
       }),
+      count: vi.fn(async () => ({ totalDocs: 0 })),
       create,
     } as unknown as Payload
     return { payload, create, lookups }
@@ -292,6 +305,22 @@ describe('createBooking, retried with the same attempt id', () => {
       bookingId: 41,
     })
     expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('replays the stored total of the booking the attempt made', async () => {
+    const h = harness({
+      earlier: { id: 41, reference: 'FIRST001', status: 'pending', price: { total: 240 } },
+    })
+    const outcome = await createBooking({ payload: h.payload, request, customerId: 5, now: NOW })
+    expect(outcome).toMatchObject({ ok: true, replayed: true, total: 240 })
+    const unpriced = harness({ earlier: { id: 41, reference: 'FIRST001', status: 'pending' } })
+    const again = await createBooking({
+      payload: unpriced.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(again).not.toHaveProperty('total')
   })
 
   it('looks the attempt up for this customer only', async () => {
@@ -370,5 +399,412 @@ describe('closedPeriods', () => {
         { endsOn: { greater_than_equal: '2026-10-18' } },
       ],
     })
+  })
+})
+
+/**
+ * Two limits per customer (21 November 2026): 5 requests waiting for an answer,
+ * 15 upcoming bookings in total.
+ */
+describe('limitRefusal', () => {
+  it('lets a traveller hold more than 5 confirmed bookings', () => {
+    expect(limitRefusal({ pending: 0, upcoming: 9 }, true)).toBeNull()
+  })
+
+  it('refuses a sixth request waiting for an answer', () => {
+    expect(limitRefusal({ pending: 5, upcoming: 6 }, true)?.message).toMatch(
+      /5 booking requests waiting/,
+    )
+  })
+
+  it('still allows an instant booking while 5 requests wait, since it does not wait', () => {
+    expect(limitRefusal({ pending: 5, upcoming: 6 }, false)).toBeNull()
+  })
+
+  it('refuses a sixteenth upcoming booking, instant or not', () => {
+    expect(limitRefusal({ pending: 0, upcoming: 15 }, false)?.message).toMatch(
+      /15 upcoming bookings/,
+    )
+    expect(limitRefusal({ pending: 0, upcoming: 15 }, true)?.message).toMatch(
+      /15 upcoming bookings/,
+    )
+  })
+})
+
+/**
+ * A guest house is booked as a whole property (Task 6): the stay runs from its
+ * check-in to its check-out, one stay at a time, at least the owner's minimum
+ * nights and no more guests than their cap. A room line is refused: getaways
+ * no longer have room types.
+ */
+describe('createBooking at a guest house', () => {
+  const NOW = new Date('2026-12-01T08:00:00.000Z')
+  const DAY = 86_400_000
+  const from = new Date(NOW.getTime() + 3 * DAY)
+
+  const getaway = {
+    id: 12,
+    name: 'Beit Douma',
+    _status: 'published',
+    subcategories: ['getaways'],
+    booking: { enabled: true, capacity: 4, checkInTime: '14:00', checkOutTime: '12:00' },
+    stay: { nightlyPrice: 150, includedGuests: 4, maxGuests: 6, minNights: 2 },
+  }
+
+  const harness = (existing: Record<string, unknown>[] = []) => {
+    const create = vi.fn(async () => ({ id: 3, reference: 'STAY0001', status: 'pending' }))
+    const find = vi.fn(async (args: { collection: string; where?: unknown }) => {
+      const where = JSON.stringify(args.where ?? {})
+      // The overlap lookup is the only bookings query bounded on `end`.
+      if (args.collection === 'bookings' && where.includes('"end"')) {
+        return { docs: existing, totalDocs: existing.length }
+      }
+      return { docs: [], totalDocs: 0 }
+    })
+    const count = vi.fn(async () => ({ totalDocs: 0 }))
+    const payload = {
+      findByID: vi.fn(async () => getaway),
+      find,
+      count,
+      create,
+    } as unknown as Payload
+    return { payload, create, find }
+  }
+
+  const request = (nights: number, partySize = 2, children = 0) => ({
+    business: 12,
+    start: from.toISOString(),
+    end: new Date(from.getTime() + nights * DAY).toISOString(),
+    partySize,
+    children,
+    locale: 'en' as const,
+  })
+
+  it('books the whole property from check-in to check-out, with the children', async () => {
+    const h = harness()
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: request(2, 5, 1),
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toMatchObject({ ok: true, reference: 'STAY0001' })
+    const data = (h.create.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data
+    expect(data).toMatchObject({ business: 12, partySize: 5, children: 1 })
+    // 14:00 and 12:00 Beirut (UTC+2 in December).
+    expect(String(data.start)).toMatch(/T12:00:00.000Z$/)
+    expect(String(data.end)).toMatch(/T10:00:00.000Z$/)
+    expect(new Date(String(data.end)).getTime() - new Date(String(data.start)).getTime()).toBe(
+      2 * DAY - 2 * 3_600_000,
+    )
+    if (outcome.ok) expect(outcome.start).toBe(data.start)
+  })
+
+  it('refuses a second overlapping stay even though capacity says 4, and writes nothing', async () => {
+    const h = harness([
+      {
+        id: 1,
+        status: 'confirmed',
+        start: new Date(from.getTime() - DAY).toISOString(),
+        end: new Date(from.getTime() + DAY).toISOString(),
+      },
+    ])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: request(2),
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('at-capacity'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses fewer nights than the minimum', async () => {
+    const h = harness()
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: request(1),
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('below-min-nights'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses more guests than the cap', async () => {
+    const h = harness()
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: request(2, 7),
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('party-too-large'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses room lines: a guest house has no room types', async () => {
+    const h = harness()
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: { ...request(2), rooms: [{ roomType: 3, count: 1 }] },
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('room-unknown'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('treats a listing that is also a hotel as a whole property first: no room lines', async () => {
+    const both = { ...getaway, subcategories: ['hotels', 'getaways'] }
+    const create = vi.fn()
+    const payload = {
+      findByID: vi.fn(async () => both),
+      find: vi.fn(async () => ({ docs: [], totalDocs: 0 })),
+      count: vi.fn(async () => ({ totalDocs: 0 })),
+      create,
+    } as unknown as Payload
+    const outcome = await createBooking({
+      payload,
+      request: { ...request(2), rooms: [{ roomType: 3, count: 1 }] },
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toMatchObject({ ok: false, message: unavailableMessage('room-unknown') })
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('counts an old room booking against the whole property', async () => {
+    const h = harness([
+      {
+        id: 2,
+        status: 'confirmed',
+        roomCount: 1,
+        start: new Date(from.getTime()).toISOString(),
+        end: new Date(from.getTime() + DAY).toISOString(),
+      },
+    ])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request: request(2),
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toMatchObject({ ok: false, message: unavailableMessage('at-capacity') })
+  })
+
+  it('stores children within the party: never more than the party less one adult', async () => {
+    const h = harness()
+    await createBooking({ payload: h.payload, request: request(2, 2, 5), customerId: 5, now: NOW })
+    const data = (h.create.mock.calls[0] as unknown as [{ data: Record<string, unknown> }])[0].data
+    expect(data).toMatchObject({ partySize: 2, children: 1 })
+  })
+
+  it('translates the guard refusing a short stay back to the same answer', () => {
+    const outcome = translateInsertError(new Error(unavailableMessage('below-min-nights')), 'ar')
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('below-min-nights', 'ar'),
+    })
+  })
+})
+
+/**
+ * Restaurant seating areas (Task 8, 20 November 2026): each area has its own
+ * tables, the guest picks one, and a booking is counted only against bookings
+ * of the same area. A restaurant without areas books exactly as before.
+ */
+describe('createBooking at a restaurant with seating areas', () => {
+  const HOUR = 3_600_000
+  const NOW = new Date('2026-10-20T08:00:00.000Z')
+  const start = new Date(NOW.getTime() + 48 * HOUR)
+  const end = new Date(start.getTime() + 2 * HOUR)
+
+  const restaurant = (seatingAreas: unknown[], capacity = 1) => ({
+    id: 7,
+    name: 'Em Sherif',
+    _status: 'published',
+    subcategories: ['restaurants'],
+    booking: { enabled: true, capacity, leadTimeMinutes: 0 },
+    seatingAreas,
+  })
+  const areas = [
+    { id: 'a', setting: 'indoor', smoking: false, tables: 2 },
+    { id: 'b', setting: 'outdoor', smoking: true, tables: 1 },
+  ]
+
+  /** A store: what is created is what the next overlap lookup returns. */
+  const harness = (business: Record<string, unknown>) => {
+    const rows: Record<string, unknown>[] = []
+    const create = vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
+      const row = {
+        id: rows.length + 1,
+        reference: `REF${rows.length + 1}`,
+        status: 'confirmed',
+        ...data,
+      }
+      rows.push({ ...row, status: 'confirmed' })
+      return row
+    })
+    const find = vi.fn(async (args: { collection: string; where?: unknown }) => {
+      const where = JSON.stringify(args.where ?? {})
+      if (args.collection === 'bookings' && where.includes('"end"')) {
+        return { docs: rows, totalDocs: rows.length }
+      }
+      return { docs: [], totalDocs: 0 }
+    })
+    const count = vi.fn(async () => ({ totalDocs: 0 }))
+    const payload = {
+      findByID: vi.fn(async () => business),
+      find,
+      count,
+      create,
+    } as unknown as Payload
+    return { payload, create, rows }
+  }
+
+  const request = (area?: string) => ({
+    business: 7,
+    start: start.toISOString(),
+    end: end.toISOString(),
+    partySize: 2,
+    locale: 'en' as const,
+    ...(area ? { area: area as 'indoor' } : {}),
+  })
+  const book = (payload: Payload, area?: string) =>
+    createBooking({ payload, request: request(area), customerId: 5, now: NOW })
+
+  it('fills two areas of different sizes independently', async () => {
+    const h = harness(restaurant(areas, 1))
+    expect(await book(h.payload, 'outdoor-smoking')).toMatchObject({ ok: true })
+    // The single outdoor smoking table is taken; indoor (2 tables) is not touched.
+    expect(await book(h.payload, 'outdoor-smoking')).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('at-capacity'),
+    })
+    expect(await book(h.payload, 'indoor')).toMatchObject({ ok: true })
+    expect(await book(h.payload, 'indoor')).toMatchObject({ ok: true })
+    expect(await book(h.payload, 'indoor')).toMatchObject({ ok: false, code: 'unavailable' })
+    expect(h.rows.map((row) => row.area)).toEqual(['outdoor-smoking', 'indoor', 'indoor'])
+  })
+
+  it('requires an area when the restaurant has them, and writes nothing', async () => {
+    const h = harness(restaurant(areas))
+    expect(await book(h.payload)).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('area-required'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses an area the restaurant does not have', async () => {
+    const h = harness(restaurant(areas))
+    expect(await book(h.payload, 'outdoor')).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('area-unknown'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('a restaurant without areas: one capacity for everything, no area stored', async () => {
+    const h = harness(restaurant([], 2))
+    expect(await book(h.payload, 'indoor')).toMatchObject({ ok: true })
+    expect(await book(h.payload)).toMatchObject({ ok: true })
+    expect(await book(h.payload)).toMatchObject({ ok: false, code: 'unavailable' })
+    expect(h.rows.map((row) => row.area ?? null)).toEqual([null, null])
+  })
+
+  it('translates the trigger refusing an area the listing no longer has', () => {
+    expect(translateInsertError(pgError('This seating area is not offered here.'), 'fr')).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('area-unknown', 'fr'),
+    })
+  })
+})
+
+describe('createBooking at a hotel with room types, without room lines', () => {
+  const NOW = new Date('2026-12-01T08:00:00.000Z')
+  const DAY = 86_400_000
+  const from = new Date(NOW.getTime() + 3 * DAY)
+  const hotel = {
+    id: 21,
+    _status: 'published',
+    subcategories: ['hotels'],
+    booking: { enabled: true, capacity: 5, leadTimeMinutes: 0, maxAdvanceDays: 365 },
+  }
+  const harness = (types: unknown[]) => {
+    const create = vi.fn(async () => ({ id: 3, reference: 'HTL00001', status: 'pending' }))
+    const find = vi.fn(async (args: { collection: string; where?: unknown }) => ({
+      docs: args.collection === 'room-types' ? types : [],
+      totalDocs: 0,
+    }))
+    const payload = {
+      findByID: vi.fn(async () => hotel),
+      find,
+      count: vi.fn(async () => ({ totalDocs: 0 })),
+      create,
+    } as unknown as Payload
+    return { payload, create, find }
+  }
+  const request = {
+    business: 21,
+    start: from.toISOString(),
+    end: new Date(from.getTime() + DAY).toISOString(),
+    partySize: 2,
+    locale: 'en' as const,
+  }
+
+  it('refuses, and writes nothing, when the hotel has active room types', async () => {
+    const h = harness([
+      { id: 1, business: 21, name: 'Deluxe', rooms: 2, sleepsAdults: 2, active: true, options: [] },
+    ])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toEqual({
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('no-rooms-chosen'),
+    })
+    expect(h.create).not.toHaveBeenCalled()
+  })
+
+  it('still books a hotel that has no room type, counting only bookings with no rooms', async () => {
+    const h = harness([])
+    const outcome = await createBooking({
+      payload: h.payload,
+      request,
+      customerId: 5,
+      now: NOW,
+    })
+    expect(outcome).toMatchObject({ ok: true })
+    const overlap = h.find.mock.calls.find(
+      ([args]) => args.collection === 'bookings' && JSON.stringify(args.where).includes('"end"'),
+    )
+    expect(JSON.stringify(overlap?.[0].where)).toContain('roomCount')
   })
 })

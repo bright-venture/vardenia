@@ -27,7 +27,7 @@ interface Props {
   tagline?: string | null
   category?: string | null
   governorate?: string | null
-  district?: string | null
+  city?: string | null
   verified?: boolean | null
   /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
   signature?: boolean | null
@@ -93,7 +93,7 @@ export function ListingCard({
   tagline,
   category,
   governorate,
-  district,
+  city,
   signature,
   heroImage,
   reference,
@@ -109,7 +109,7 @@ export function ListingCard({
   const t = useTranslations('directory')
   const booking = useTranslations('booking')
   // Hidden for now; see lib/location-display.
-  const place = SHOW_LOCATION ? placeLabel(governorate, district, locale) : null
+  const place = SHOW_LOCATION ? placeLabel(governorate, city, locale) : null
   // Only ever shown when confidently open. `null` (no hours) and `false`
   // (closed) both render nothing: a grid of "Closed" badges is noise, and a card
   // is a reason to visit, not a warning off. Computed at render, so it carries
@@ -128,7 +128,7 @@ export function ListingCard({
     // heading is easy to miss on a grid. `has-[a:focus-visible]` moves it to the
     // card, and the anchor drops its own outline below so the two do not stack.
     <article className="vd-listing-card has-[a:focus-visible]:outline-gold-500 group relative has-[a:focus-visible]:outline has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2">
-      <div className="relative">
+      <div className="vd-card-media relative">
         <Plate image={heroImage} ratio="portrait" interactive priority={priority} sizes={sizes} />
 
         {/*
@@ -150,7 +150,7 @@ export function ListingCard({
           right way round because a clipped word is still readable and a
           covered one is not.
         */}
-        <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
+        <div className="vd-card-labels pointer-events-none absolute inset-x-3 top-3 flex items-start gap-2">
           <span className="vd-card-category bg-surface-base/95 text-ink-900 min-w-0 truncate px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]">
             {categoryLabel(category, locale)}
           </span>
@@ -170,7 +170,7 @@ export function ListingCard({
           puts it above that anchor's `::after` overlay, so a press lands on the
           heart and a press anywhere else on the card follows the link.
         */}
-        <div className="absolute bottom-3 end-3 z-10">
+        <div className="vd-card-save absolute bottom-3 end-3 z-10">
           <SaveButton slug={slug} name={name} />
         </div>
       </div>
@@ -182,7 +182,7 @@ export function ListingCard({
         now, and the type sits under it the way a caption sits under a plate
         in print.
       */}
-      <div className="mt-4">
+      <div className="vd-card-caption mt-4">
         {place || distanceKm !== null ? (
           <p className="vd-card-place text-ink-500 font-mono text-[10px] uppercase tracking-[0.14em]">
             {/* The distance first: on a suggestion it is the reason it is here. */}
@@ -262,7 +262,7 @@ export function ListingCard({
                 : verdict.kind === 'closed'
                   ? t('tripClosed')
                   : verdict.kind === 'party'
-                    ? t('tripParty', { party: trip.party })
+                    ? t('tripParty', { party: trip.party + (trip.children ?? 0) })
                     : verdict.kind === 'notice'
                       ? t('tripNotice')
                       : t('tripOther')}

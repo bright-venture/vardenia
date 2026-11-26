@@ -1,3 +1,7 @@
+import { publicPageCopy } from '../../../../../lib/public-page-copy'
+import { EnglishPageSchema } from '../../../../../components/EnglishPageSchema'
+import { DesktopEditionView } from '../../../../../components/editorial/DesktopEditionView'
+import { readerIssues, issueCover } from '../../../../../lib/issue-presentation'
 import { PageHero } from '../../../../../components/editorial/PageHero'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -28,8 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: t('magazine.issues'),
-    description: t('magazine.printArchive'),
+    title: locale === 'en' ? publicPageCopy['/magazine/issues'].title : t('magazine.issues'),
+    description:
+      locale === 'en' ? publicPageCopy['/magazine/issues'].description : t('magazine.printArchive'),
     path: '/magazine/issues',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -44,14 +49,51 @@ export default async function IssuesPage({ params }: Props) {
   const t = await getTranslations()
   const result = await findIssues(locale)
 
+  const desktopIssues = locale === 'en' ? readerIssues(result.docs) : []
+  function issueCard(issue: (typeof result.docs)[number]) {
+    return (
+      <article className="vd-issue-card" key={issue.id} data-vd-reveal>
+        <Link href={`/magazine/issues/${issue.slug}`} className="group block">
+          <MagazineCover
+            media={issueCover(issue, locale)}
+            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          />
+          <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">
+            {t('magazine.issueNumber', { number: issue.issueNumber })}
+          </p>
+          <h2 dir="auto" className="font-display text-ink-900 mt-1 text-xl leading-snug">
+            {issue.title}
+          </h2>
+          {issue.publishedAt ? (
+            <time className="text-ink-500 mt-1 block text-xs" dateTime={issue.publishedAt}>
+              {formatDate(new Date(issue.publishedAt), locale as Locale)}
+            </time>
+          ) : null}
+        </Link>
+      </article>
+    )
+  }
+
   return (
     <main className="vd-magazine-index vd-magazine-issues">
+      <EnglishPageSchema
+        locale={locale}
+        path={'/magazine/issues'}
+        name={publicPageCopy['/magazine/issues'].title}
+        description={publicPageCopy['/magazine/issues'].description}
+        type="CollectionPage"
+      />
       <PageHero
         title={t('magazine.issues')}
         intro={t('magazine.printArchive')}
         place={3}
         locale={locale}
       >
+        {locale === 'en' && (
+          <a href="#archive" hidden className="vd-desktop-archive-link">
+            Browse issues
+          </a>
+        )}
         {/* Back to the magazine, unless the admin has it hidden. */}
         {(await hiddenPages()).includes('magazine') ? null : (
           <Link href="/magazine" className="vd-text-link">
@@ -59,37 +101,27 @@ export default async function IssuesPage({ params }: Props) {
           </Link>
         )}
       </PageHero>
-      <div className="vd-editorial-results">
+      <div id="archive" tabIndex={-1} className="vd-editorial-results">
         {result.docs.length === 0 ? (
           <p className="vd-archive-empty text-ink-500 mt-16">{t('magazine.noIssues')}</p>
         ) : (
           <div className="vd-issue-grid mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {result.docs.map((issue) => {
-              return (
-                <article className="vd-issue-card" key={issue.id} data-vd-reveal>
-                  <Link href={`/magazine/issues/${issue.slug}`} className="group block">
-                    <MagazineCover
-                      media={issue.cover as never}
-                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                    />
-                    <p className="text-ink-500 mt-3 text-xs uppercase tabular-nums tracking-widest">
-                      {t('magazine.issueNumber', { number: issue.issueNumber })}
-                    </p>
-                    <h2 dir="auto" className="font-display text-ink-900 mt-1 text-xl leading-snug">
-                      {issue.title}
-                    </h2>
-                    {issue.publishedAt ? (
-                      <time
-                        className="text-ink-500 mt-1 block text-xs"
-                        dateTime={issue.publishedAt}
-                      >
-                        {formatDate(new Date(issue.publishedAt), locale as Locale)}
-                      </time>
-                    ) : null}
-                  </Link>
-                </article>
-              )
-            })}
+            {locale === 'en' ? (
+              <DesktopEditionView
+                locale={locale}
+                desktop={
+                  desktopIssues.length ? (
+                    desktopIssues.map(issueCard)
+                  ) : (
+                    <p className="vd-archive-empty">{t('magazine.noIssues')}</p>
+                  )
+                }
+              >
+                {result.docs.map(issueCard)}
+              </DesktopEditionView>
+            ) : (
+              result.docs.map(issueCard)
+            )}
           </div>
         )}
       </div>

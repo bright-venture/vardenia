@@ -48,13 +48,18 @@ export default async function PartnerStatementPage({ params }: Props) {
 
   return (
     <>
+      {locale === 'en' && (
+        <h2 hidden className="vd-desk-heading" data-desk="statement-detail">
+          {t('tabStatements')}
+        </h2>
+      )}
       <p className="mt-8 text-sm">
         <Link href="/partner/statements" className={LINK}>
           {t('statementBack')}
         </Link>
       </p>
 
-      <header className="mt-6 flex flex-wrap items-baseline justify-between gap-4">
+      <header className="vd-statement-summary mt-6 flex flex-wrap items-baseline justify-between gap-4">
         <div>
           <h2 className="text-ink-900 text-2xl">{monthLabel(statement.period, locale)}</h2>
           <p className="text-ink-500 mt-1 font-mono text-xs">

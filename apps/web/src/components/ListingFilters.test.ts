@@ -40,19 +40,19 @@ describe('filterHref', () => {
   })
 
   /**
-   * A district belongs to one governorate. Carrying it across to another gives a
+   * A city belongs to one governorate. Carrying it across to another gives a
    * pair that can never match, on a page that looks deliberately filtered - the
    * reader sees an empty section and no reason for it.
    */
-  it('drops the district when the governorate changes', () => {
-    const current = state({ governorate: 'keserwan', district: 'keserwan' })
+  it('drops the city when the governorate changes', () => {
+    const current = state({ governorate: 'keserwan', city: 'jounieh' })
     expect(filterHref(base, current, { governorate: 'beirut' })).toBe('/stay?where=beirut')
   })
 
-  it('keeps the district when the governorate is unchanged', () => {
-    const current = state({ governorate: 'keserwan', district: 'keserwan' })
+  it('keeps the city when the governorate is unchanged', () => {
+    const current = state({ governorate: 'keserwan', city: 'jounieh' })
     expect(filterHref(base, current, { amenities: ['pool'] })).toBe(
-      '/stay?where=keserwan&district=keserwan&has=pool',
+      '/stay?where=keserwan&city=jounieh&has=pool',
     )
   })
 
@@ -77,12 +77,12 @@ describe('filterHref', () => {
     const full = state({
       subcategory: 'boutique-hotels',
       governorate: 'keserwan',
-      district: 'keserwan',
+      city: 'jounieh',
       amenities: ['pool'],
     })
 
     expect(filterHref(base, full, {})).toBe(
-      '/stay?filter=boutique-hotels&where=keserwan&district=keserwan&has=pool',
+      '/stay?filter=boutique-hotels&where=keserwan&city=jounieh&has=pool',
     )
   })
 
@@ -129,7 +129,7 @@ describe('parseFilterState', () => {
         {
           filter: 'boutique-hotels',
           where: 'keserwan',
-          district: 'keserwan',
+          city: 'jounieh',
           price: '3',
           has: 'pool,wifi',
         },
@@ -138,7 +138,7 @@ describe('parseFilterState', () => {
     ).toEqual({
       subcategory: 'boutique-hotels',
       governorate: 'keserwan',
-      district: 'keserwan',
+      city: 'jounieh',
       amenities: ['pool', 'wifi'],
       openNow: false,
       bookable: false,
@@ -150,14 +150,19 @@ describe('parseFilterState', () => {
     expect(parseFilterState({ filter: 'photographers' }, children).subcategory).toBeUndefined()
   })
 
-  it('drops a district that is not in the chosen governorate', () => {
-    expect(
-      parseFilterState({ where: 'beirut', district: 'keserwan' }, children).district,
-    ).toBeUndefined()
+  it('drops a city that is not in the chosen governorate', () => {
+    expect(parseFilterState({ where: 'beirut', city: 'jounieh' }, children).city).toBeUndefined()
   })
 
-  it('drops a district when no governorate was chosen', () => {
-    expect(parseFilterState({ district: 'keserwan' }, children).district).toBeUndefined()
+  it('reads an old ?district= link as the city, and writes it back as ?city=', () => {
+    const state = parseFilterState({ where: 'keserwan', district: 'jounieh' }, children)
+    expect(state.city).toBe('jounieh')
+    expect(filterHref('/stay', state, {})).toContain('city=jounieh')
+    expect(filterHref('/stay', state, {})).not.toContain('district')
+  })
+
+  it('drops a city when no governorate was chosen', () => {
+    expect(parseFilterState({ city: 'jounieh' }, children).city).toBeUndefined()
   })
 
   it('drops junk rather than querying it', () => {
@@ -183,7 +188,7 @@ describe('parseFilterState', () => {
     expect(parseFilterState({}, children)).toEqual({
       subcategory: undefined,
       governorate: undefined,
-      district: undefined,
+      city: undefined,
       priceRange: undefined,
       amenities: [],
       openNow: false,

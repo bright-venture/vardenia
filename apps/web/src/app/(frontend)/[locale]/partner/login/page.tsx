@@ -51,6 +51,7 @@ export default async function PartnerLoginPage({
        otherwise identical and a partner who lands on the customer one should be
        able to tell at a glance. */
     <AuthCard
+      mode="sign-in"
       icon={Store}
       eyebrow={t('eyebrow')}
       title={t('signIn')}

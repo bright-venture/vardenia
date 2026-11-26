@@ -193,6 +193,7 @@ async function placeName(
       depth: 0,
       locale: wanted,
       overrideAccess: true,
+      trash: true,
     })
     .catch(() => null)
   return (doc as { name?: string } | null)?.name || fallback || 'Vardenia'

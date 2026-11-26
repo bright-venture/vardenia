@@ -1,15 +1,14 @@
 import {
+  ConciergeBell,
   BedDouble,
   BookOpen,
   CarFront,
   CircleHelp,
   FileText,
-  Handshake,
   Heart,
   Info,
   LogIn,
   Mail,
-  Megaphone,
   Mountain,
   Newspaper,
   Scale,
@@ -45,6 +44,8 @@ export const SECTION_ICONS: Record<CategorySlug, LucideIcon> = {
 }
 
 /** The handful used outside the section list, by the header and the footer. */
+/** Event Staff, the seventh section (18 November 2026). */
+export const EVENT_STAFF_ICON = ConciergeBell
 export const MAGAZINE_ICON = Newspaper
 export const SEARCH_ICON = Search
 export const CONTACT_ICON = Mail
@@ -53,8 +54,6 @@ export const ISSUE_ICON = BookOpen
 export const ARTICLE_ICON = FileText
 export const ABOUT_ICON = Info
 export const HELP_ICON = CircleHelp
-export const PARTNER_ICON = Handshake
-export const ADVERTISE_ICON = Megaphone
 export const SIGN_IN_ICON = LogIn
 export const PRIVACY_ICON = ShieldCheck
 export const TERMS_ICON = Scale

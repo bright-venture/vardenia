@@ -4,6 +4,8 @@ import { useId, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import { Link, usePathname } from '../i18n/routing'
+import { BookingExtras, type BookingExtrasValue } from './booking/BookingExtras'
+import type { BookingExtrasConfig } from '../lib/listing-public'
 import { trackEvent } from '../lib/analytics'
 import { sessionAudience } from '../lib/session-hint'
 import { durationLabel, newAttemptId, toInterval, type BookingFormModel } from '../lib/booking-form'
@@ -79,6 +81,8 @@ export interface BookingFormProps {
   businessId: number
   model: BookingFormModel
   locale: Locale
+  /** Seating areas or packages, when the listing has them (Task 12). */
+  extras?: BookingExtrasConfig | null
 }
 
 type FieldErrors = Record<string, string>
@@ -133,6 +137,7 @@ function BookingFormFields({
   businessId,
   model,
   locale,
+  extras = null,
   initial,
 }: BookingFormProps & { initial: ReturnType<typeof prefillFromTrip> }) {
   const t = useTranslations('booking')
@@ -145,6 +150,10 @@ function BookingFormFields({
   const [nights, setNights] = useState(initial.nights)
   const [roomType, setRoomType] = useState(model.roomTypes[0]?.label ?? '')
   const [partySize, setPartySize] = useState(initial.partySize)
+  const [extra, setExtra] = useState<BookingExtrasValue>({
+    area: extras?.areas[0]?.key ?? '',
+    packageId: '',
+  })
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
   // Never ticked for the guest: see notesConsent in @vardenia/core.
@@ -227,6 +236,8 @@ function BookingFormFields({
       partySize,
       // Only a stay sends one, and only when the listing offers a choice.
       ...(model.mode === 'nights' && roomType ? { roomType } : {}),
+      ...(extra.area ? { area: extra.area } : {}),
+      ...(extra.packageId ? { packageId: extra.packageId } : {}),
       ...(phone.trim() ? { phone } : {}),
       ...(notes.trim() ? { notes, notesConsent } : {}),
       locale,
@@ -496,6 +507,24 @@ function BookingFormFields({
           ) : null}
         </div>
       </div>
+
+      {extras ? (
+        <BookingExtras
+          businessId={businessId}
+          config={extras}
+          locale={locale}
+          interval={toInterval({
+            mode: model.mode,
+            date,
+            time,
+            durationMinutes: duration,
+            nights,
+          })}
+          partySize={partySize}
+          value={extra}
+          onChange={setExtra}
+        />
+      ) : null}
 
       <div>
         <label className={LABEL} htmlFor={`${ids}-phone`}>

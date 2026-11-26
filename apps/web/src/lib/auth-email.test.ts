@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PARTNER_LINK_DAYS,
+  PARTNER_INVITE_DAYS,
+  emailChangedEmail,
+  passwordChangedEmail,
   partnerResetEmail,
   passwordResetEmail,
   resetUrl,
@@ -97,6 +99,17 @@ describe.each([
   })
 })
 
+/** The customer reset email said "expires shortly" (QA case M2, 22 November 2026). */
+describe('the customer reset email', () => {
+  it('says the link lasts 1 hour, in both languages', () => {
+    const mail = passwordResetEmail('tok123')
+    expect(mail.text).toContain('for 1 hour')
+    expect(mail.text).toContain('لمدة ساعة واحدة')
+    expect(mail.html).toContain('for 1 hour')
+    expect(mail.text).not.toContain('shortly')
+  })
+})
+
 describe('escaping', () => {
   it('does not let a token inject markup', () => {
     const mail = verificationEmail('"><script>alert(1)</script>', ORIGIN)
@@ -105,19 +118,67 @@ describe('escaping', () => {
 })
 
 /**
- * The partner set-password link is also the invitation, so it must outlive
- * Payload's default hour, and the email must say how long it has.
+ * The first set-password email is the invitation and lives for days; an
+ * ordinary reset keeps Payload's default hour (20 November 2026). Each email
+ * must say how long its own link works.
  */
-describe('the partner invitation', () => {
-  it('lasts as long as the email says, in both languages', async () => {
+describe('partner set-password links', () => {
+  it('sets no lifetime on the collection, so an ordinary reset keeps the default hour', async () => {
     const { BusinessUsers } = await import('../collections/BusinessUsers')
     const auth = BusinessUsers.auth as { forgotPassword?: { expiration?: number } }
-    expect(auth.forgotPassword?.expiration).toBe(PARTNER_LINK_DAYS * 24 * 60 * 60 * 1000)
-    expect(PARTNER_LINK_DAYS).toBeGreaterThanOrEqual(2)
+    expect(auth.forgotPassword?.expiration).toBeUndefined()
+  })
 
+  it('says the invitation lasts as many days as it does, in both languages', () => {
+    expect(PARTNER_INVITE_DAYS).toBeGreaterThanOrEqual(2)
+    const mail = partnerResetEmail('tok123', 'https://vardenia.com', { invite: true })
+    expect(mail.subject).toContain('Set your Vardenia password')
+    expect(mail.text).toContain(`works for ${PARTNER_INVITE_DAYS} days`)
+    expect(mail.text).toContain(`لمدة ${PARTNER_INVITE_DAYS} أيام`)
+    expect(mail.html).toContain(`works for ${PARTNER_INVITE_DAYS} days`)
+  })
+
+  it('says an ordinary reset lasts 1 hour, in both languages', () => {
     const mail = partnerResetEmail('tok123', 'https://vardenia.com')
-    expect(mail.text).toContain(`works for ${PARTNER_LINK_DAYS} days`)
-    expect(mail.text).toContain(`لمدة ${PARTNER_LINK_DAYS} أيام`)
-    expect(mail.html).toContain(`works for ${PARTNER_LINK_DAYS} days`)
+    expect(mail.subject).toContain('Reset your Vardenia password')
+    expect(mail.text).toContain('works for 1 hour')
+    expect(mail.text).toContain('لمدة ساعة واحدة')
+    expect(mail.text).not.toContain('days')
+  })
+
+  it('makes "forgot password" send the ordinary 1 hour reset email', async () => {
+    const { BusinessUsers } = await import('../collections/BusinessUsers')
+    const fp = (
+      BusinessUsers.auth as { forgotPassword: { generateEmailHTML: (a: unknown) => string } }
+    ).forgotPassword
+    expect(fp.generateEmailHTML({ token: 't' })).toContain('1 hour')
+  })
+})
+
+/** Notices after an account change (21 November 2026). */
+describe('account change notices', () => {
+  it('tells the account its password changed, and whom to contact, in both languages', () => {
+    const mail = passwordChangedEmail('help@example.com')
+    expect(mail.subject).toContain('password was changed')
+    expect(mail.text).toContain('every other device was signed out')
+    expect(mail.text).toContain('help@example.com')
+    expect(mail.text).toContain('تواصل معنا')
+    expect(mail.text).not.toMatch(/reply to this/i)
+  })
+
+  it('tells the old address where the email went, and whom to contact', () => {
+    const mail = emailChangedEmail('new@example.com', 'help@example.com')
+    expect(mail.text).toContain('new@example.com')
+    expect(mail.text).toContain('help@example.com')
+    expect(mail.text).not.toMatch(/reply to this/i)
+    expect(mail.html).toContain('dir="rtl"')
+  })
+
+  it('does not let a typed address inject markup', () => {
+    expect(emailChangedEmail('"><script>x</script>@a.co').html).not.toContain('<script>')
+  })
+
+  it('names the public contact address by default', () => {
+    expect(passwordChangedEmail().text).toContain('contact@vardenia.com')
   })
 })

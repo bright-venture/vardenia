@@ -169,7 +169,7 @@ function documentFor(listing: ImportedListing, heroImage: number | string, batch
     category: listing.category,
     subcategories: listing.subcategories,
     governorate: listing.governorate,
-    ...(listing.district ? { district: listing.district } : {}),
+    ...(listing.city ? { city: listing.city } : {}),
     ...(listing.address ? { address: listing.address } : {}),
     ...(listing.priceRange ? { priceRange: listing.priceRange } : {}),
     ...(listing.description ? { description: richText([listing.description]) } : {}),

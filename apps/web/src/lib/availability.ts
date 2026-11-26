@@ -44,6 +44,22 @@ export const UNAVAILABLE_REASONS = [
   'closed-period',
   'closed',
   'at-capacity',
+  // Room bookings at hotels with room types (lib/room-availability).
+  'no-rooms-chosen',
+  'room-unknown',
+  'rooms-full',
+  'rooms-too-small',
+  // A guest house booked as a whole property (lib/stay-booking, Task 6).
+  'below-min-nights',
+  // Quoting a price (core/price-quote, Task 7). Shown with a quote, and the
+  // first three refuse a booking; 'no-price' never does (no snapshot is kept).
+  'invalid-input',
+  'unknown-package',
+  'inactive-package',
+  'no-price',
+  // A restaurant with seating areas (core/seating, Task 8).
+  'area-required',
+  'area-unknown',
 ] as const
 
 export type UnavailableReason = (typeof UNAVAILABLE_REASONS)[number]
@@ -80,6 +96,9 @@ export interface BookingRules {
   roomTypes?: ({ label?: string | null; price?: number | null } | null)[] | null
   /** Free-text cancellation terms, shown to the customer. Not enforced. */
   cancellationPolicy?: string | null
+  /** "HH:MM". For hotels with room types; see fields/bookingRules. */
+  checkInTime?: string | null
+  checkOutTime?: string | null
 }
 
 /** An existing booking, reduced to what the check actually needs. */
@@ -89,6 +108,11 @@ export interface ExistingBooking {
   status: BookingStatus
   /** Excluded from the capacity count, so editing a booking does not conflict with itself. */
   id?: string | number
+  /**
+   * The restaurant seating area it holds (core/seating, Task 8), or null. Only
+   * read at a listing with seating areas (lib/seating-booking).
+   */
+  area?: string | null
 }
 
 /**
@@ -459,6 +483,138 @@ const MESSAGES: Record<UnavailableReason, Record<Locale, string>> = {
     hi: 'इस समय यह जगह पूरी तरह बुक है।',
     bn: 'এই সময়ে জায়গাটি পুরোপুরি বুক করা।',
     ur: 'اس وقت یہ مقام مکمل طور پر بک ہے۔',
+  },
+  'no-rooms-chosen': {
+    en: 'Choose at least one room.',
+    ar: 'اختر غرفة واحدة على الأقل.',
+    fr: 'Choisissez au moins une chambre.',
+    es: 'Elige al menos una habitación.',
+    pt: 'Escolha pelo menos um quarto.',
+    ru: 'Выберите хотя бы один номер.',
+    zh: '请至少选择一间客房。',
+    hi: 'कम से कम एक कमरा चुनें।',
+    bn: 'অন্তত একটি রুম বেছে নিন।',
+    ur: 'کم از کم ایک کمرہ منتخب کریں۔',
+  },
+  'room-unknown': {
+    en: 'One of those rooms is no longer offered. Please reload the page and choose again.',
+    ar: 'إحدى هذه الغرف لم تعد متاحة. يرجى إعادة تحميل الصفحة والاختيار من جديد.',
+    fr: "L'une de ces chambres n'est plus proposée. Rechargez la page et choisissez à nouveau.",
+    es: 'Una de esas habitaciones ya no se ofrece. Recarga la página y elige de nuevo.',
+    pt: 'Um desses quartos não está mais disponível. Recarregue a página e escolha de novo.',
+    ru: 'Один из этих номеров больше не предлагается. Обновите страницу и выберите снова.',
+    zh: '其中一间客房已不再提供，请刷新页面重新选择。',
+    hi: 'इनमें से एक कमरा अब उपलब्ध नहीं है। पेज दोबारा लोड करके फिर चुनें।',
+    bn: 'এর একটি রুম আর দেওয়া হচ্ছে না। পেজটি আবার লোড করে বেছে নিন।',
+    ur: 'ان میں سے ایک کمرہ اب دستیاب نہیں۔ صفحہ دوبارہ لوڈ کر کے پھر منتخب کریں۔',
+  },
+  'rooms-full': {
+    en: 'There are not enough of those rooms left for those dates.',
+    ar: 'لم يتبقَّ عدد كافٍ من هذه الغرف في هذه التواريخ.',
+    fr: 'Il ne reste pas assez de ces chambres pour ces dates.',
+    es: 'No quedan suficientes habitaciones de ese tipo para esas fechas.',
+    pt: 'Não restam quartos suficientes desse tipo para essas datas.',
+    ru: 'На эти даты таких номеров осталось недостаточно.',
+    zh: '这些日期剩余的该类客房不足。',
+    hi: 'उन तारीख़ों के लिए ऐसे कमरे पर्याप्त नहीं बचे हैं।',
+    bn: 'ওই তারিখগুলোতে এই রুম যথেষ্ট বাকি নেই।',
+    ur: 'ان تاریخوں کے لیے ایسے کمرے کافی نہیں بچے۔',
+  },
+  'rooms-too-small': {
+    en: 'Those rooms do not sleep that many guests. Add a room or choose a bigger one.',
+    ar: 'هذه الغرف لا تتسع لهذا العدد من الضيوف. أضف غرفة أو اختر غرفة أكبر.',
+    fr: "Ces chambres n'accueillent pas autant de personnes. Ajoutez une chambre ou choisissez-en une plus grande.",
+    es: 'Esas habitaciones no alojan a tantos huéspedes. Añade una habitación o elige una más grande.',
+    pt: 'Esses quartos não acomodam tantos hóspedes. Adicione um quarto ou escolha um maior.',
+    ru: 'В этих номерах нельзя разместить столько гостей. Добавьте номер или выберите больший.',
+    zh: '这些客房容纳不下这么多客人，请增加客房或选择更大的房型。',
+    hi: 'इन कमरों में इतने मेहमान नहीं ठहर सकते। एक कमरा जोड़ें या बड़ा कमरा चुनें।',
+    bn: 'এই রুমগুলোতে এতজন অতিথি থাকতে পারবেন না। আরেকটি রুম যোগ করুন বা বড় রুম বেছে নিন।',
+    ur: 'ان کمروں میں اتنے مہمان نہیں ٹھہر سکتے۔ ایک کمرہ شامل کریں یا بڑا کمرہ منتخب کریں۔',
+  },
+  'below-min-nights': {
+    en: 'That stay is shorter than the minimum number of nights here. Please choose more nights.',
+    ar: 'مدة الإقامة أقصر من الحد الأدنى لعدد الليالي هنا. يرجى اختيار ليالٍ أكثر.',
+    fr: 'Ce séjour est plus court que le nombre minimum de nuits ici. Choisissez plus de nuits.',
+    es: 'Esa estancia es más corta que el mínimo de noches aquí. Elige más noches.',
+    pt: 'Essa estadia é mais curta do que o mínimo de noites aqui. Escolha mais noites.',
+    ru: 'Это проживание короче минимального числа ночей здесь. Выберите больше ночей.',
+    zh: '入住时间少于这里的最少晚数，请选择更多晚。',
+    hi: 'यह ठहराव यहाँ की न्यूनतम रातों से छोटा है। कृपया ज़्यादा रातें चुनें।',
+    bn: 'এই থাকা এখানকার ন্যূনতম রাতের চেয়ে কম। দয়া করে আরও রাত বেছে নিন।',
+    ur: 'یہ قیام یہاں کی کم از کم راتوں سے کم ہے۔ براہِ کرم زیادہ راتیں منتخب کریں۔',
+  },
+  'invalid-input': {
+    en: 'Those details do not look right. Please check the dates and the number of guests.',
+    ar: 'هذه التفاصيل غير صحيحة. يرجى التحقق من التواريخ وعدد الضيوف.',
+    fr: 'Ces informations ne semblent pas correctes. Vérifiez les dates et le nombre de personnes.',
+    es: 'Esos datos no parecen correctos. Revisa las fechas y el número de huéspedes.',
+    pt: 'Esses dados não parecem corretos. Confira as datas e o número de hóspedes.',
+    ru: 'Эти данные выглядят неверно. Проверьте даты и число гостей.',
+    zh: '这些信息似乎不正确，请检查日期和客人人数。',
+    hi: 'ये विवरण सही नहीं लगते। कृपया तारीख़ें और मेहमानों की संख्या जाँचें।',
+    bn: 'এই তথ্যগুলো ঠিক মনে হচ্ছে না। দয়া করে তারিখ ও অতিথির সংখ্যা যাচাই করুন।',
+    ur: 'یہ تفصیلات درست نہیں لگتیں۔ براہِ کرم تاریخیں اور مہمانوں کی تعداد جانچیں۔',
+  },
+  'unknown-package': {
+    en: 'That package is not offered here. Please choose another one, or book without a package.',
+    ar: 'هذه الباقة غير متوفرة هنا. يرجى اختيار باقة أخرى أو الحجز من دون باقة.',
+    fr: "Cette formule n'est pas proposée ici. Choisissez-en une autre ou réservez sans formule.",
+    es: 'Ese paquete no se ofrece aquí. Elige otro o reserva sin paquete.',
+    pt: 'Esse pacote não é oferecido aqui. Escolha outro ou reserve sem pacote.',
+    ru: 'Этот пакет здесь не предлагается. Выберите другой или бронируйте без пакета.',
+    zh: '这里不提供该套餐，请选择其他套餐，或不选套餐直接预订。',
+    hi: 'यह पैकेज यहाँ उपलब्ध नहीं है। कृपया दूसरा पैकेज चुनें या बिना पैकेज के बुक करें।',
+    bn: 'এই প্যাকেজটি এখানে দেওয়া হয় না। দয়া করে অন্য একটি বেছে নিন, অথবা প্যাকেজ ছাড়া বুক করুন।',
+    ur: 'یہ پیکج یہاں دستیاب نہیں۔ براہِ کرم کوئی اور پیکج منتخب کریں یا پیکج کے بغیر بک کریں۔',
+  },
+  'inactive-package': {
+    en: 'That package is no longer offered. Please choose another one, or book without a package.',
+    ar: 'لم تعد هذه الباقة متوفرة. يرجى اختيار باقة أخرى أو الحجز من دون باقة.',
+    fr: "Cette formule n'est plus proposée. Choisissez-en une autre ou réservez sans formule.",
+    es: 'Ese paquete ya no se ofrece. Elige otro o reserva sin paquete.',
+    pt: 'Esse pacote não é mais oferecido. Escolha outro ou reserve sem pacote.',
+    ru: 'Этот пакет больше не предлагается. Выберите другой или бронируйте без пакета.',
+    zh: '该套餐已不再提供，请选择其他套餐，或不选套餐直接预订。',
+    hi: 'यह पैकेज अब उपलब्ध नहीं है। कृपया दूसरा पैकेज चुनें या बिना पैकेज के बुक करें।',
+    bn: 'এই প্যাকেজটি আর দেওয়া হয় না। দয়া করে অন্য একটি বেছে নিন, অথবা প্যাকেজ ছাড়া বুক করুন।',
+    ur: 'یہ پیکج اب دستیاب نہیں۔ براہِ کرم کوئی اور پیکج منتخب کریں یا پیکج کے بغیر بک کریں۔',
+  },
+  'no-price': {
+    en: 'This place has not set a price for this stay yet. You can still book, and the venue will confirm the price.',
+    ar: 'لم يحدّد هذا المكان سعرًا لهذه الإقامة بعد. يمكنك الحجز مع ذلك، وسيؤكّد المكان السعر.',
+    fr: "Ce lieu n'a pas encore fixé de prix pour ce séjour. Vous pouvez tout de même réserver ; l'établissement confirmera le prix.",
+    es: 'Este lugar aún no ha fijado un precio para esta estancia. Puedes reservar igualmente y el alojamiento confirmará el precio.',
+    pt: 'Este lugar ainda não definiu um preço para esta estadia. Você pode reservar mesmo assim, e o local confirmará o preço.',
+    ru: 'Это место ещё не указало цену за такое проживание. Вы всё равно можете забронировать, а цену подтвердит заведение.',
+    zh: '该场所尚未为此次入住设定价格。您仍可预订，价格将由商家确认。',
+    hi: 'इस जगह ने इस ठहराव की कीमत अभी तय नहीं की है। आप फिर भी बुक कर सकते हैं, और जगह कीमत की पुष्टि करेगी।',
+    bn: 'এই জায়গাটি এখনও এই থাকার দাম ঠিক করেনি। আপনি তবুও বুক করতে পারেন, আর জায়গাটি দাম নিশ্চিত করবে।',
+    ur: 'اس جگہ نے ابھی اس قیام کی قیمت طے نہیں کی۔ آپ پھر بھی بک کر سکتے ہیں، اور جگہ قیمت کی تصدیق کرے گی۔',
+  },
+  'area-required': {
+    en: 'Please choose where you would like to sit.',
+    ar: 'يرجى اختيار المكان الذي تودّ الجلوس فيه.',
+    fr: 'Choisissez où vous souhaitez être placé.',
+    es: 'Elige dónde te gustaría sentarte.',
+    pt: 'Escolha onde você gostaria de se sentar.',
+    ru: 'Выберите, где вы хотели бы сидеть.',
+    zh: '请选择您想坐的区域。',
+    hi: 'कृपया चुनें कि आप कहाँ बैठना चाहेंगे।',
+    bn: 'আপনি কোথায় বসতে চান তা বেছে নিন।',
+    ur: 'براہِ کرم منتخب کریں کہ آپ کہاں بیٹھنا چاہیں گے۔',
+  },
+  'area-unknown': {
+    en: 'That seating area is not offered here. Please reload the page and choose again.',
+    ar: 'منطقة الجلوس هذه غير متوفرة هنا. يرجى إعادة تحميل الصفحة والاختيار من جديد.',
+    fr: "Cet espace n'est pas proposé ici. Rechargez la page et choisissez à nouveau.",
+    es: 'Esa zona no se ofrece aquí. Recarga la página y elige de nuevo.',
+    pt: 'Essa área não é oferecida aqui. Recarregue a página e escolha de novo.',
+    ru: 'Такой зоны здесь нет. Обновите страницу и выберите снова.',
+    zh: '这里不提供该座位区，请刷新页面重新选择。',
+    hi: 'यह बैठने की जगह यहाँ उपलब्ध नहीं है। पेज दोबारा लोड करके फिर चुनें।',
+    bn: 'এই বসার জায়গাটি এখানে নেই। পেজটি আবার লোড করে বেছে নিন।',
+    ur: 'بیٹھنے کی یہ جگہ یہاں دستیاب نہیں۔ صفحہ دوبارہ لوڈ کر کے پھر منتخب کریں۔',
   },
 }
 

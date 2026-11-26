@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { isTurnstileConfigured, verifyTurnstile } from './turnstile'
+import { isTurnstileConfigured, turnstileWarning, verifyTurnstile } from './turnstile'
 
 vi.mock('./report', () => ({ reportError: vi.fn() }))
 
@@ -114,5 +114,26 @@ describe('when a secret is configured', () => {
       },
     } as unknown as Response)
     expect((await verifyTurnstile('t', null, SECRET)).ok).toBe(true)
+  })
+})
+
+/** The admin home warnings (21 November 2026). */
+describe('turnstileWarning', () => {
+  it('says nothing when both keys are set', () => {
+    expect(turnstileWarning('secret', 'site-key')).toBeNull()
+  })
+
+  it('warns that the check is off when the secret is missing', () => {
+    const warning = turnstileWarning('', 'site-key')
+    expect(warning?.title).toBe('Anti-bot check is off')
+    expect(warning?.tone).toBe('warn')
+    expect(turnstileWarning(undefined, undefined)?.title).toBe('Anti-bot check is off')
+  })
+
+  it('raises an error when the secret is set but the site key is missing', () => {
+    const warning = turnstileWarning('secret', '  ')
+    expect(warning?.title).toBe('Anti-bot check cannot work')
+    expect(warning?.tone).toBe('error')
+    expect(warning?.detail).toMatch(/every sign-up/)
   })
 })

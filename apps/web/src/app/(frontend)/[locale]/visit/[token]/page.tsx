@@ -72,7 +72,10 @@ export default async function VisitPage({
   const visit = bookingId === null ? null : await visitSummary(payload, bookingId, locale)
 
   const shell = (children: React.ReactNode) => (
-    <main className="vd-task-page mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-24">
+    <main
+      data-task="visit"
+      className="vd-task-page mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-24"
+    >
       <p className="text-gold-700 text-xs uppercase tracking-[0.2em]">{common('brand')}</p>
       {children}
       <div className="mt-10">

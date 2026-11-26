@@ -70,14 +70,20 @@ export interface Config {
   blocks: {};
   collections: {
     businesses: Business;
+    brands: Brand;
     'qr-codes': QrCode;
     reviews: Review;
     bookings: Booking;
     receipts: Receipt;
     statements: Statement;
     closures: Closure;
+    'room-types': RoomType;
+    'room-availability': RoomAvailability;
+    'staff-requests': StaffRequest;
+    'guest-questions': GuestQuestion;
     articles: Article;
     issues: Issue;
+    'listing-ranges': ListingRange;
     editions: Edition;
     media: Media;
     'business-users': BusinessUser;
@@ -87,22 +93,37 @@ export interface Config {
     'error-events': ErrorEvent;
     'saved-listings': SavedListing;
     'rate-limits': RateLimit;
+    'place-upload-sessions': PlaceUploadSession;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    businesses: {
+      roomTypeList: 'room-types';
+      roomDateList: 'room-availability';
+    };
+    'room-types': {
+      openDates: 'room-availability';
+    };
+  };
   collectionsSelect: {
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    brands: BrandsSelect<false> | BrandsSelect<true>;
     'qr-codes': QrCodesSelect<false> | QrCodesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
     receipts: ReceiptsSelect<false> | ReceiptsSelect<true>;
     statements: StatementsSelect<false> | StatementsSelect<true>;
     closures: ClosuresSelect<false> | ClosuresSelect<true>;
+    'room-types': RoomTypesSelect<false> | RoomTypesSelect<true>;
+    'room-availability': RoomAvailabilitySelect<false> | RoomAvailabilitySelect<true>;
+    'staff-requests': StaffRequestsSelect<false> | StaffRequestsSelect<true>;
+    'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
+    'listing-ranges': ListingRangesSelect<false> | ListingRangesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'business-users': BusinessUsersSelect<false> | BusinessUsersSelect<true>;
@@ -112,6 +133,7 @@ export interface Config {
     'error-events': ErrorEventsSelect<false> | ErrorEventsSelect<true>;
     'saved-listings': SavedListingsSelect<false> | SavedListingsSelect<true>;
     'rate-limits': RateLimitsSelect<false> | RateLimitsSelect<true>;
+    'place-upload-sessions': PlaceUploadSessionsSelect<false> | PlaceUploadSessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -223,7 +245,10 @@ export interface Business {
     };
     [k: string]: unknown;
   } | null;
-  heroImage: number | Media;
+  /**
+   * Required for every listing except a submission that is still incomplete or abandoned.
+   */
+  heroImage?: (number | null) | Media;
   /**
    * Gallery size is capped by listing tier - extra images are hidden, not deleted.
    */
@@ -288,44 +313,65 @@ export interface Business {
       )[]
     | null;
   /**
+   * The restaurant brand this listing is a branch of. Restaurants only.
+   */
+  brand?: (number | null) | Brand;
+  /**
    * Free-form editorial tags ("sunset", "hidden gem"). Powers curated collections.
    */
   tags?: string[] | null;
   governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
   /**
-   * Only the districts of the governorate above are offered.
+   * The city or place guests filter by (Jounieh, Faqra / Faraya). Only the cities of the governorate above are offered.
    */
-  district?:
+  city?:
     | (
         | 'beirut'
-        | 'aley'
+        | 'dbayeh'
+        | 'broummana'
+        | 'bikfaya'
         | 'baabda'
-        | 'matn'
+        | 'hammana'
+        | 'aley'
+        | 'bassour'
+        | 'jounieh'
+        | 'harissa'
+        | 'kaslik'
+        | 'ghazir'
+        | 'tabarja'
+        | 'faqra-faraya'
         | 'jbeil'
-        | 'keserwan'
-        | 'akkar'
         | 'batroun'
-        | 'bsharri'
+        | 'chekka'
         | 'koura'
-        | 'miniyeh-danniyeh'
         | 'tripoli'
         | 'zgharta'
-        | 'chouf'
-        | 'baalbek'
-        | 'hermel'
-        | 'rachaya'
-        | 'western-beqaa'
+        | 'bsharri'
+        | 'akkar'
+        | 'deir-el-qamar'
+        | 'beiteddine'
+        | 'baakline'
+        | 'moukhtara'
+        | 'barouk'
+        | 'jiyeh'
+        | 'damour'
         | 'zahle'
-        | 'bint-jbeil'
-        | 'hasbaya'
-        | 'jezzine'
-        | 'marjeyoun'
-        | 'nabatieh'
+        | 'baalbek'
+        | 'western-beqaa'
+        | 'hermel'
+        | 'chtoura'
+        | 'saghbine'
+        | 'masnaa'
         | 'sidon'
         | 'tyre'
+        | 'jezzine'
       )
     | null;
   address?: string | null;
+  /**
+   * The listing on Google Maps. Shown as "View on map" and "Get directions". When the link carries coordinates the location below is filled from it; a short link (maps.app.goo.gl) is kept as it is.
+   */
+  mapUrl?: string | null;
   /**
    * Filled by the link above. Drives "near me" search and Google Maps directions.
    *
@@ -362,7 +408,7 @@ export interface Business {
      */
     autoConfirm?: boolean | null;
     /**
-     * How many bookings may overlap at once - tables, rooms, seats. This is enforced in the database, not just here.
+     * How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel with room types: there, each room type has its own rooms and open dates (Rooms tab). A guest house (Getaways) is booked as a whole property, one stay at a time, so its capacity is 1.
      */
     capacity?: number | null;
     minPartySize?: number | null;
@@ -384,7 +430,7 @@ export interface Business {
      */
     maxDurationMinutes?: number | null;
     /**
-     * Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.
+     * Old: names only, with no photos, rooms or availability. Use the Rooms tab instead. These show on the page only while the listing has no room types.
      */
     roomTypes?:
       | {
@@ -400,15 +446,194 @@ export interface Business {
           id?: string | null;
         }[]
       | null;
+    checkInTime?: string | null;
+    checkOutTime?: string | null;
     /**
      * Shown to the customer before they book, e.g. "Free cancellation up to 48 hours before". Leave empty to show nothing.
      */
     cancellationPolicy?: string | null;
   };
+  facilities?:
+    | (
+        | 'free-wifi'
+        | 'parking-free'
+        | 'parking-paid'
+        | 'airport-shuttle'
+        | 'family-rooms'
+        | 'non-smoking-rooms'
+        | 'restaurant'
+        | 'bar'
+        | '24h-front-desk'
+        | 'room-service'
+        | 'fitness-centre'
+        | 'spa-wellness'
+        | 'outdoor-pool'
+        | 'indoor-pool'
+        | 'pets-allowed'
+        | 'accessible'
+        | 'breakfast'
+        | 'terrace'
+        | 'garden'
+        | 'beachfront'
+        | 'ev-charging'
+        | 'laundry'
+        | 'business-centre'
+        | 'meeting-rooms'
+        | 'kids-club'
+        | 'babysitting'
+        | 'currency-exchange'
+        | 'luggage-storage'
+        | 'concierge'
+        | 'bbq'
+        | 'elevator'
+        | 'heating'
+        | 'air-conditioning-public'
+      )[]
+    | null;
   /**
-   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in every list and a place on the home page, whose number of places is set in Settings, Commission and tiers. Every silver listing comes before every bronze one.
+   * Up to 8, chosen from the facilities above.
    */
-  tier: 'bronze' | 'silver' | 'gold';
+  popularFacilities?:
+    | (
+        | 'free-wifi'
+        | 'parking-free'
+        | 'parking-paid'
+        | 'airport-shuttle'
+        | 'family-rooms'
+        | 'non-smoking-rooms'
+        | 'restaurant'
+        | 'bar'
+        | '24h-front-desk'
+        | 'room-service'
+        | 'fitness-centre'
+        | 'spa-wellness'
+        | 'outdoor-pool'
+        | 'indoor-pool'
+        | 'pets-allowed'
+        | 'accessible'
+        | 'breakfast'
+        | 'terrace'
+        | 'garden'
+        | 'beachfront'
+        | 'ev-charging'
+        | 'laundry'
+        | 'business-centre'
+        | 'meeting-rooms'
+        | 'kids-club'
+        | 'babysitting'
+        | 'currency-exchange'
+        | 'luggage-storage'
+        | 'concierge'
+        | 'bbq'
+        | 'elevator'
+        | 'heating'
+        | 'air-conditioning-public'
+      )[]
+    | null;
+  /**
+   * Up to 6 headline strengths.
+   */
+  propertyHighlights?:
+    | (
+        | 'parking'
+        | 'wellness'
+        | 'breakfast'
+        | 'pool'
+        | 'beachfront'
+        | 'mountain-view'
+        | 'city-centre'
+        | 'family-friendly'
+        | 'romantic'
+        | 'business-friendly'
+        | 'pet-friendly'
+        | 'quiet-location'
+      )[]
+    | null;
+  roomTypeList?: {
+    docs?: (number | RoomType)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  roomDateList?: {
+    docs?: (number | RoomAvailability)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * A guest house is booked as a whole property: one stay at a time (the listing capacity is 1), for nights. Prices in USD. Only for Getaways.
+   */
+  stay?: {
+    /**
+     * For the whole property.
+     */
+    nightlyPrice?: number | null;
+    /**
+     * Per guest above the included number, per night.
+     */
+    extraGuestFee?: number | null;
+    /**
+     * How many guests the nightly price covers.
+     */
+    includedGuests?: number | null;
+    /**
+     * The hard limit. Leave empty for none.
+     */
+    maxGuests?: number | null;
+    minNights?: number | null;
+    /**
+     * On: children count toward the guests included and the most guests. Off: only adults count.
+     */
+    childrenCountAsGuests?: boolean | null;
+    /**
+     * Optional offers that replace the nightly price, e.g. "Weekend with breakfast". The extra guest fee still applies. Up to 10.
+     */
+    packages?:
+      | {
+          label: string;
+          description?: string | null;
+          price: number;
+          unit: 'per-night' | 'per-stay' | 'per-person-per-night';
+          /**
+           * Off hides it from guests.
+           */
+          active?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Optional. Tick what the property offers. Only for Getaways.
+   */
+  features?: {
+    musicAllowed?: boolean | null;
+    eventsHosted?: boolean | null;
+    partiesAllowed?: boolean | null;
+    gardenAccess?: boolean | null;
+    barbecue?: boolean | null;
+    pool?: boolean | null;
+  };
+  /**
+   * Optional. When set, guests choose an area and each area has its own number of tables; the listing capacity is then not used for new bookings. One row per area (indoor, indoor smoking, outdoor, outdoor smoking). An area with upcoming bookings cannot be removed or given fewer tables than they need.
+   */
+  seatingAreas?:
+    | {
+        setting: 'indoor' | 'outdoor';
+        smoking?: boolean | null;
+        /**
+         * How many bookings may overlap in this area.
+         */
+        tables: number;
+        /**
+         * Optional name shown to guests, e.g. "Garden terrace".
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Bronze: the website only, with no QR code. Silver: a magazine page and its QR code, with the website included. Gold: silver, plus first place in its category, limited per category in Settings, Tiers. Platinum: gold, plus a place on the home page, limited overall in Settings, Tiers. Every silver listing comes before every bronze one.
+   */
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   /**
    * A percentage of what each guest who came spent, as entered by the venue. Leave the rate empty to use the rate in Settings, Commission and tiers. No-shows and cancellations are never charged.
    */
@@ -428,7 +653,7 @@ export interface Business {
   verified?: boolean | null;
   contractStartsAt?: string | null;
   /**
-   * Nothing happens automatically on this date. The listing keeps its tier until someone changes it. Sort the Listings list by this column to find lapsed accounts.
+   * The day after this date the listing is hidden from the website automatically (Status goes back to Draft). The business still sees it in its partner area. To renew, move this date forward and set Status to Published. Required to publish a listing that came through the business form; otherwise leave it empty for no end.
    */
   contractEndsAt?: string | null;
   salesOwner?: (number | null) | User;
@@ -441,9 +666,162 @@ export interface Business {
    */
   importBatch?: string | null;
   /**
+   * Only published listings appear on the website.
+   */
+  _status: 'draft' | 'published';
+  /**
    * Generated automatically on first save, for Silver listings only: Basic has no magazine page, so no code. Immutable once printed.
    */
   qrCode?: (number | null) | QrCode;
+  issue?: (number | null) | Issue;
+  /**
+   * The number in the printed magazine, from the range of this governorate in the chosen issue.
+   */
+  listingNumber?: number | null;
+  /**
+   * Mock listing shown to visitors but not a real business. Holds no magazine number. Admin only.
+   */
+  isSample?: boolean | null;
+  contact?: {
+    phone?: string | null;
+    whatsapp?: string | null;
+    email?: string | null;
+    instagram?: string | null;
+    facebook?: string | null;
+    tiktok?: string | null;
+    snapchat?: string | null;
+    youtube?: string | null;
+    x?: string | null;
+    linkedin?: string | null;
+  };
+  submission?: {
+    /**
+     * Changed only by the actions on this page (payments, accept, reject).
+     */
+    status?:
+      | (
+          | 'incomplete'
+          | 'abandoned'
+          | 'awaiting_downpayment'
+          | 'pending'
+          | 'accepted'
+          | 'paid'
+          | 'lapsed'
+          | 'approved'
+          | 'rejected'
+          | 'expired'
+        )
+      | null;
+    ownerName?: string | null;
+    ownerEmail?: string | null;
+    ownerPhone?: string | null;
+    ownerPhoneSearch?: string | null;
+    pageTemplate?: ('a' | 'b' | 'c') | null;
+    submittedAt?: string | null;
+    reference?: string | null;
+    acceptedAt?: string | null;
+    /**
+     * Why it was rejected. Set by Reject submission.
+     */
+    rejectionReason?: string | null;
+    rejectionKind?: ('not_accepted' | 'unpaid') | null;
+    /**
+     * Whether the reason was sent to the owner.
+     */
+    rejectionReasonShared?: boolean | null;
+    rejectedAt?: string | null;
+    rejectedBy?: (number | null) | User;
+    /**
+     * Each step of this submission, with who and when. Cannot be edited.
+     */
+    history?:
+      | {
+          step:
+            | 'incomplete'
+            | 'awaiting_downpayment'
+            | 'pending'
+            | 'rejected'
+            | 'approved'
+            | 'abandoned'
+            | 'accepted'
+            | 'paid'
+            | 'lapsed'
+            | 'expired'
+            | 'downpayment_received'
+            | 'balance_received'
+            | 'refund_sent'
+            | 'downpayment_waived'
+            | 'payment_undone'
+            | 'deadline_extended'
+            | 'email_resent';
+          at: string;
+          by?: (number | null) | User;
+          note?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Money received and refunded. Recorded with the buttons on this page; cannot be edited.
+     */
+    payments?:
+      | {
+          type: 'downpayment' | 'balance' | 'refund';
+          amount: number;
+          currency?: string | null;
+          senderNumber?: string | null;
+          whishAt?: string | null;
+          method?: ('whish' | 'desk' | 'cash') | null;
+          note?: string | null;
+          recordedBy?: (number | null) | User;
+          recordedAt?: string | null;
+          voided?: boolean | null;
+          voidedBy?: (number | null) | User;
+          voidedAt?: string | null;
+          voidReason?: string | null;
+          forfeited?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    payment?: {
+      stage?: ('none' | 'downpayment_paid' | 'waived' | 'fully_paid' | 'refund_due' | 'refunded' | 'kept') | null;
+      /**
+       * The full price, as it was when the form was sent.
+       */
+      price?: number | null;
+      /**
+       * What is paid first.
+       */
+      downpaymentAmount?: number | null;
+      currency?: string | null;
+      /**
+       * Downpayment and rest received (undone lines not counted).
+       */
+      received?: number | null;
+      refunded?: number | null;
+      stillToPay?: number | null;
+      downpaymentDueAt?: string | null;
+      balanceDeadlineDays?: number | null;
+      balanceDueAt?: string | null;
+      downpaymentReminderSentAt?: string | null;
+      balanceReminderSentAt?: string | null;
+      submittedEmailSentAt?: string | null;
+      downpaymentEmailSentAt?: string | null;
+      acceptedEmailSentAt?: string | null;
+      notAcceptedEmailSentAt?: string | null;
+      unpaidEmailSentAt?: string | null;
+      lapsedEmailSentAt?: string | null;
+      publishedEmailSentAt?: string | null;
+      lapsedListingNumber?: number | null;
+    };
+    terms?: {
+      version?: string | null;
+      priceAtAcceptance?: number | null;
+      currency?: string | null;
+      termMonths?: number | null;
+      acceptedAt?: string | null;
+    };
+  };
+  state?: ('draft' | 'published' | 'rejected' | 'expired' | 'incomplete' | 'abandoned') | null;
   seo?: {
     /**
      * Falls back to the document title when empty.
@@ -461,7 +839,7 @@ export interface Business {
   };
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
+  deletedAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -482,6 +860,11 @@ export interface Media {
    * Track this. Reusing a supplied photo in a paid ad without rights is a real liability.
    */
   usageRights?: ('owned' | 'licensed' | 'supplied') | null;
+  uploadedBy?: (number | null) | BusinessUser;
+  /**
+   * Set automatically when a page uses this file. Tick it by hand only for a partner's file used inside article text.
+   */
+  attached?: boolean | null;
   _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -539,6 +922,183 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-users".
+ */
+export interface BusinessUser {
+  id: number;
+  name: string;
+  /**
+   * Which listings this account manages. A group may hold several. Only staff can change this.
+   */
+  businesses: (number | Business)[];
+  phone?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'business-users';
+}
+/**
+ * Restaurant brands. Each branch is a listing with its Brand set. A brand is public while one of its branches is published.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: number;
+  name: string;
+  /**
+   * The brand page address, /brands/<slug>. Set once and never changed.
+   */
+  slug: string;
+  logo?: (number | null) | Media;
+  description?: string | null;
+  /**
+   * Set automatically: on while one of its branches is published.
+   */
+  published?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The rooms a hotel sells. Identical rooms are one room type with a number of rooms. Partners manage their own from the partner area.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-types".
+ */
+export interface RoomType {
+  id: number;
+  business: number | Business;
+  name: string;
+  /**
+   * Guests can filter a hotel by rooms or suites.
+   */
+  kind: 'room' | 'suite';
+  description?: string | null;
+  photos?: (number | Media)[] | null;
+  /**
+   * How many identical rooms of this type in all. Guests can only book the nights opened in Room dates (closed until opened).
+   */
+  rooms: number;
+  sleepsAdults: number;
+  sleepsChildren?: number | null;
+  sizeM2?: number | null;
+  /**
+   * For example "1 large double bed" or "2 single beds".
+   */
+  beds?: string | null;
+  views?: ('sea' | 'mountain' | 'city' | 'garden' | 'pool' | 'landmark-view')[] | null;
+  amenities?:
+    | (
+        | 'private-bathroom'
+        | 'balcony'
+        | 'kitchenette'
+        | 'air-conditioning'
+        | 'heating'
+        | 'wifi'
+        | 'tv'
+        | 'minibar'
+        | 'coffee-machine'
+        | 'bathtub'
+        | 'work-desk'
+        | 'safe'
+        | 'soundproofing'
+        | 'fireplace'
+        | 'shared-bathroom'
+        | 'shower'
+        | 'terrace'
+        | 'kettle'
+        | 'refrigerator'
+        | 'microwave'
+        | 'seating-area'
+        | 'dining-area'
+        | 'sofa'
+        | 'wardrobe'
+        | 'hairdryer'
+        | 'free-toiletries'
+        | 'bathrobes'
+        | 'slippers'
+        | 'iron'
+        | 'extra-bed-available'
+        | 'crib-available'
+      )[]
+    | null;
+  /**
+   * How this room is sold: with or without breakfast, free cancellation or not, pay at the property or in advance. At least one.
+   */
+  options?:
+    | {
+        breakfast?: boolean | null;
+        cancellation: 'free' | 'non-refundable';
+        /**
+         * 0 means until the day of arrival.
+         */
+        freeCancellationDays?: number | null;
+        payment: 'at-property' | 'in-advance';
+        /**
+         * USD, shown on the website. Optional; up to two decimals.
+         */
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Guests can only book the nights opened here. 0 rooms closes nights inside an open period.
+   */
+  openDates?: {
+    docs?: (number | RoomAvailability)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Off hides it from guests. Existing bookings are kept.
+   */
+  active?: boolean | null;
+  /**
+   * Lower first.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The nights each room type is open and how many rooms are sold. A room type is closed on nights no entry covers.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-availability".
+ */
+export interface RoomAvailability {
+  id: number;
+  roomType: number | RoomType;
+  business?: (number | null) | Business;
+  startsOn: string;
+  /**
+   * Inclusive. The guest leaves the next morning.
+   */
+  endsOn: string;
+  /**
+   * 0 closes these nights.
+   */
+  rooms: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
@@ -582,7 +1142,7 @@ export interface QrCode {
   /**
    * What the code opens. Pick "The Vardenia home page" for a code on a cover, a card or a window sticker. Everything else needs the matching field below. Fixed once the code is printed (given an issue, or scanned): to stop a printed code, an admin unticks Active.
    */
-  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home';
+  targetType: 'business' | 'article' | 'issue' | 'category' | 'external' | 'home' | 'magazine-places';
   /**
    * Every listing gets its code automatically when it is saved. Make one here only for a listing that has none.
    */
@@ -708,6 +1268,10 @@ export interface Issue {
    */
   printRun?: number | null;
   /**
+   * How many numbers the printed issue has. Each governorate takes a block of them under Listing number ranges.
+   */
+  listingTotal?: number | null;
+  /**
    * The full issue as a PDF, read on the issue page like a book. Upload it here or pick one from Magazine PDFs (up to 200 MB).
    */
   digitalEdition?: (number | null) | Edition;
@@ -817,10 +1381,42 @@ export interface Booking {
   start: string;
   end: string;
   partySize: number;
+  children?: number | null;
+  area?: ('indoor' | 'indoor-smoking' | 'outdoor' | 'outdoor-smoking') | null;
   /**
    * The room or unit type requested, for a stay. Empty for a table booking.
    */
   roomType?: string | null;
+  /**
+   * The rooms this hotel booking holds.
+   */
+  rooms?:
+    | {
+        roomType: number | RoomType;
+        count: number;
+        roomName?: string | null;
+        optionId?: string | null;
+        optionLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  roomCount?: number | null;
+  /**
+   * The price quoted when the booking was made. Set automatically, never edited.
+   */
+  price?: {
+    total?: number | null;
+    currency?: string | null;
+    nights?: number | null;
+    lines?:
+      | {
+          label?: string | null;
+          amount?: number | null;
+          id?: string | null;
+        }[]
+      | null;
+    quotedAt?: string | null;
+  };
   /**
    * Change it with the buttons on the booking, then Save.
    */
@@ -1011,36 +1607,78 @@ export interface Closure {
   createdAt: string;
 }
 /**
+ * Requests for hostesses and waiters from the Event Staff section. Call or email the guest, then set the status.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "business-users".
+ * via the `definition` "staff-requests".
  */
-export interface BusinessUser {
+export interface StaffRequest {
   id: number;
+  reference?: string | null;
+  role: 'hostesses' | 'waiters';
+  status: 'new' | 'contacted' | 'confirmed' | 'declined';
+  customer: number | Customer;
   name: string;
-  /**
-   * Which listings this account manages. A group may hold several. Only staff can change this.
-   */
-  businesses: (number | Business)[];
+  email: string;
   phone?: string | null;
+  eventType: 'wedding' | 'private-dinner' | 'corporate' | 'other';
+  guests: number;
+  /**
+   * Empty means the guest is not sure.
+   */
+  staffWanted?: number | null;
+  eventDate: string;
+  startTime?: string | null;
+  hours?: number | null;
+  venue: string;
+  notes?: string | null;
+  locale?: string | null;
+  /**
+   * For the team only. Never shown to the guest.
+   */
+  internalNotes?: string | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Asked from the Questions page. Write the Answer, set the status to Answered and save: the guest gets the answer by email.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guest-questions".
+ */
+export interface GuestQuestion {
+  id: number;
+  status: 'new' | 'answered';
+  name: string;
   email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'business-users';
+  question: string;
+  /**
+   * Sent to the guest by email when the status is Answered and you save. Sent once.
+   */
+  answer?: string | null;
+  answeredAt?: string | null;
+  locale?: string | null;
+  /**
+   * For the team only.
+   */
+  internalNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listing-ranges".
+ */
+export interface ListingRange {
+  id: number;
+  issue: number | Issue;
+  governorate: 'keserwan' | 'north-lebanon' | 'beirut' | 'beqaa' | 'south-lebanon' | 'chouf' | 'matn';
+  from: number;
+  to: number;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Every scan of a printed code, one by one, newest first. To see one listing only, use Filters, then Listing. For totals per listing: the Scans column in QR codes, the QR scans count on each listing (Activity tab), or the Scan report on the admin home page.
@@ -1136,6 +1774,30 @@ export interface RateLimit {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions".
+ */
+export interface PlaceUploadSession {
+  id: number;
+  tokenHash: string;
+  business: number | Business;
+  expiresAt: string;
+  logoReceived?: boolean | null;
+  heroReceived?: boolean | null;
+  closedAt?: string | null;
+  mediaIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1163,6 +1825,10 @@ export interface PayloadLockedDocument {
         value: number | Business;
       } | null)
     | ({
+        relationTo: 'brands';
+        value: number | Brand;
+      } | null)
+    | ({
         relationTo: 'qr-codes';
         value: number | QrCode;
       } | null)
@@ -1187,12 +1853,32 @@ export interface PayloadLockedDocument {
         value: number | Closure;
       } | null)
     | ({
+        relationTo: 'room-types';
+        value: number | RoomType;
+      } | null)
+    | ({
+        relationTo: 'room-availability';
+        value: number | RoomAvailability;
+      } | null)
+    | ({
+        relationTo: 'staff-requests';
+        value: number | StaffRequest;
+      } | null)
+    | ({
+        relationTo: 'guest-questions';
+        value: number | GuestQuestion;
+      } | null)
+    | ({
         relationTo: 'articles';
         value: number | Article;
       } | null)
     | ({
         relationTo: 'issues';
         value: number | Issue;
+      } | null)
+    | ({
+        relationTo: 'listing-ranges';
+        value: number | ListingRange;
       } | null)
     | ({
         relationTo: 'editions';
@@ -1229,6 +1915,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rate-limits';
         value: number | RateLimit;
+      } | null)
+    | ({
+        relationTo: 'place-upload-sessions';
+        value: number | PlaceUploadSession;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1315,10 +2005,12 @@ export interface BusinessesSelect<T extends boolean = true> {
       };
   category?: T;
   subcategories?: T;
+  brand?: T;
   tags?: T;
   governorate?: T;
-  district?: T;
+  city?: T;
   address?: T;
+  mapUrl?: T;
   location?: T;
   openingHours?:
     | T
@@ -1350,7 +2042,53 @@ export interface BusinessesSelect<T extends boolean = true> {
               note?: T;
               id?: T;
             };
+        checkInTime?: T;
+        checkOutTime?: T;
         cancellationPolicy?: T;
+      };
+  facilities?: T;
+  popularFacilities?: T;
+  propertyHighlights?: T;
+  roomTypeList?: T;
+  roomDateList?: T;
+  stay?:
+    | T
+    | {
+        nightlyPrice?: T;
+        extraGuestFee?: T;
+        includedGuests?: T;
+        maxGuests?: T;
+        minNights?: T;
+        childrenCountAsGuests?: T;
+        packages?:
+          | T
+          | {
+              label?: T;
+              description?: T;
+              price?: T;
+              unit?: T;
+              active?: T;
+              id?: T;
+            };
+      };
+  features?:
+    | T
+    | {
+        musicAllowed?: T;
+        eventsHosted?: T;
+        partiesAllowed?: T;
+        gardenAccess?: T;
+        barbecue?: T;
+        pool?: T;
+      };
+  seatingAreas?:
+    | T
+    | {
+        setting?: T;
+        smoking?: T;
+        tables?: T;
+        label?: T;
+        id?: T;
       };
   tier?: T;
   commission?:
@@ -1365,7 +2103,105 @@ export interface BusinessesSelect<T extends boolean = true> {
   salesOwner?: T;
   internalNotes?: T;
   importBatch?: T;
+  _status?: T;
   qrCode?: T;
+  issue?: T;
+  listingNumber?: T;
+  isSample?: T;
+  contact?:
+    | T
+    | {
+        phone?: T;
+        whatsapp?: T;
+        email?: T;
+        instagram?: T;
+        facebook?: T;
+        tiktok?: T;
+        snapchat?: T;
+        youtube?: T;
+        x?: T;
+        linkedin?: T;
+      };
+  submission?:
+    | T
+    | {
+        status?: T;
+        ownerName?: T;
+        ownerEmail?: T;
+        ownerPhone?: T;
+        ownerPhoneSearch?: T;
+        pageTemplate?: T;
+        submittedAt?: T;
+        reference?: T;
+        acceptedAt?: T;
+        rejectionReason?: T;
+        rejectionKind?: T;
+        rejectionReasonShared?: T;
+        rejectedAt?: T;
+        rejectedBy?: T;
+        history?:
+          | T
+          | {
+              step?: T;
+              at?: T;
+              by?: T;
+              note?: T;
+              id?: T;
+            };
+        payments?:
+          | T
+          | {
+              type?: T;
+              amount?: T;
+              currency?: T;
+              senderNumber?: T;
+              whishAt?: T;
+              method?: T;
+              note?: T;
+              recordedBy?: T;
+              recordedAt?: T;
+              voided?: T;
+              voidedBy?: T;
+              voidedAt?: T;
+              voidReason?: T;
+              forfeited?: T;
+              id?: T;
+            };
+        payment?:
+          | T
+          | {
+              stage?: T;
+              price?: T;
+              downpaymentAmount?: T;
+              currency?: T;
+              received?: T;
+              refunded?: T;
+              stillToPay?: T;
+              downpaymentDueAt?: T;
+              balanceDeadlineDays?: T;
+              balanceDueAt?: T;
+              downpaymentReminderSentAt?: T;
+              balanceReminderSentAt?: T;
+              submittedEmailSentAt?: T;
+              downpaymentEmailSentAt?: T;
+              acceptedEmailSentAt?: T;
+              notAcceptedEmailSentAt?: T;
+              unpaidEmailSentAt?: T;
+              lapsedEmailSentAt?: T;
+              publishedEmailSentAt?: T;
+              lapsedListingNumber?: T;
+            };
+        terms?:
+          | T
+          | {
+              version?: T;
+              priceAtAcceptance?: T;
+              currency?: T;
+              termMonths?: T;
+              acceptedAt?: T;
+            };
+      };
+  state?: T;
   seo?:
     | T
     | {
@@ -1376,7 +2212,20 @@ export interface BusinessesSelect<T extends boolean = true> {
       };
   updatedAt?: T;
   createdAt?: T;
-  _status?: T;
+  deletedAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  logo?: T;
+  description?: T;
+  published?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1424,7 +2273,35 @@ export interface BookingsSelect<T extends boolean = true> {
   start?: T;
   end?: T;
   partySize?: T;
+  children?: T;
+  area?: T;
   roomType?: T;
+  rooms?:
+    | T
+    | {
+        roomType?: T;
+        count?: T;
+        roomName?: T;
+        optionId?: T;
+        optionLabel?: T;
+        id?: T;
+      };
+  roomCount?: T;
+  price?:
+    | T
+    | {
+        total?: T;
+        currency?: T;
+        nights?: T;
+        lines?:
+          | T
+          | {
+              label?: T;
+              amount?: T;
+              id?: T;
+            };
+        quotedAt?: T;
+      };
   status?: T;
   notes?: T;
   locale?: T;
@@ -1530,6 +2407,93 @@ export interface ClosuresSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-types_select".
+ */
+export interface RoomTypesSelect<T extends boolean = true> {
+  business?: T;
+  name?: T;
+  kind?: T;
+  description?: T;
+  photos?: T;
+  rooms?: T;
+  sleepsAdults?: T;
+  sleepsChildren?: T;
+  sizeM2?: T;
+  beds?: T;
+  views?: T;
+  amenities?: T;
+  options?:
+    | T
+    | {
+        breakfast?: T;
+        cancellation?: T;
+        freeCancellationDays?: T;
+        payment?: T;
+        price?: T;
+        id?: T;
+      };
+  openDates?: T;
+  active?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "room-availability_select".
+ */
+export interface RoomAvailabilitySelect<T extends boolean = true> {
+  roomType?: T;
+  business?: T;
+  startsOn?: T;
+  endsOn?: T;
+  rooms?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "staff-requests_select".
+ */
+export interface StaffRequestsSelect<T extends boolean = true> {
+  reference?: T;
+  role?: T;
+  status?: T;
+  customer?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  eventType?: T;
+  guests?: T;
+  staffWanted?: T;
+  eventDate?: T;
+  startTime?: T;
+  hours?: T;
+  venue?: T;
+  notes?: T;
+  locale?: T;
+  internalNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "guest-questions_select".
+ */
+export interface GuestQuestionsSelect<T extends boolean = true> {
+  status?: T;
+  name?: T;
+  email?: T;
+  question?: T;
+  answer?: T;
+  answeredAt?: T;
+  locale?: T;
+  internalNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "articles_select".
  */
 export interface ArticlesSelect<T extends boolean = true> {
@@ -1577,7 +2541,20 @@ export interface IssuesSelect<T extends boolean = true> {
   publishedAt?: T;
   pageCount?: T;
   printRun?: T;
+  listingTotal?: T;
   digitalEdition?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "listing-ranges_select".
+ */
+export interface ListingRangesSelect<T extends boolean = true> {
+  issue?: T;
+  governorate?: T;
+  from?: T;
+  to?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1609,6 +2586,8 @@ export interface MediaSelect<T extends boolean = true> {
   caption?: T;
   credit?: T;
   usageRights?: T;
+  uploadedBy?: T;
+  attached?: T;
   _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1812,6 +2791,21 @@ export interface RateLimitsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "place-upload-sessions_select".
+ */
+export interface PlaceUploadSessionsSelect<T extends boolean = true> {
+  tokenHash?: T;
+  business?: T;
+  expiresAt?: T;
+  logoReceived?: T;
+  heroReceived?: T;
+  closedAt?: T;
+  mediaIds?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -1867,9 +2861,13 @@ export interface Setting {
    */
   poundsPerDollar?: number | null;
   /**
-   * How many gold listings the home page shows, and so how many can be sold. A listing cannot be moved to gold once they are all taken, and the number cannot go below the gold listings there are. Empty: 6.
+   * How many gold listings each category can hold at the top, and so how many can be sold per category. A listing cannot be moved to gold once its category is full, and the number cannot go below the gold listings in the fullest category. Platinum listings do not count. Empty: 6.
    */
-  goldPlaces?: number | null;
+  maxGoldPerCategory?: number | null;
+  /**
+   * How many platinum listings the home page shows, and so how many can be sold in all. A listing cannot be moved to platinum once they are all taken, and the number cannot go below the platinum listings there are. Empty: 6.
+   */
+  maxPlatinum?: number | null;
   /**
    * Pick the pages to hide. Remove one from the list to show it again. Takes effect on the next view.
    */
@@ -1878,8 +2876,6 @@ export interface Setting {
         | 'about'
         | 'contact'
         | 'faq'
-        | 'partner-with-us'
-        | 'advertise'
         | 'add-your-business'
         | 'magazine'
         | 'magazine-issues'
@@ -1898,6 +2894,52 @@ export interface Setting {
         | 'credits'
       )[]
     | null;
+  magazinePlaces?: {
+    /**
+     * The full price of one year in the magazine. At least 1.
+     */
+    pricePerYear?: number | null;
+    /**
+     * The currency of the price, as a three-letter code. USD is shown as $ in the emails.
+     */
+    currency?: string | null;
+    /**
+     * How long a published place stays listed. The contract starts the day it is published.
+     */
+    termMonths?: number | null;
+    /**
+     * Percent of the price paid first, before the team reviews the place. 50 = half.
+     */
+    downpaymentPercent?: number | null;
+    /**
+     * Days after the form is sent to pay the downpayment. After that the number is released.
+     */
+    downpaymentDeadlineDays?: number | null;
+    /**
+     * On which day after the form is sent the one downpayment reminder goes out. 0: no reminder.
+     */
+    downpaymentReminderDay?: number | null;
+    /**
+     * Days after the place is accepted to pay the rest. After that it is rejected for not paying.
+     */
+    balanceDeadlineDays?: number | null;
+    /**
+     * How many days before the deadline for the rest the reminder goes out. 0: no reminder.
+     */
+    balanceReminderDaysBefore?: number | null;
+    /**
+     * How long an unfinished form keeps its page number while nobody touches it. After that the number is released.
+     */
+    holdMinutes?: number | null;
+    /**
+     * Owners send their payments here by Whish, and the WhatsApp link in the emails opens a chat with it. Write it with the country code, like +96179300350.
+     */
+    whishNumber?: string | null;
+    /**
+     * A label for the terms owners agree to, copied onto each form when it is sent. Change it whenever the terms text changes, for example to the date of the change.
+     */
+    termsVersion?: string | null;
+  };
   /**
    * Ticked: nobody can create an account, and the sign-up page says so. A booking needs an account, so new readers cannot book until this is unticked. Takes effect at once.
    */
@@ -1912,8 +2954,24 @@ export interface Setting {
 export interface SettingsSelect<T extends boolean = true> {
   defaultRate?: T;
   poundsPerDollar?: T;
-  goldPlaces?: T;
+  maxGoldPerCategory?: T;
+  maxPlatinum?: T;
   hiddenPages?: T;
+  magazinePlaces?:
+    | T
+    | {
+        pricePerYear?: T;
+        currency?: T;
+        termMonths?: T;
+        downpaymentPercent?: T;
+        downpaymentDeadlineDays?: T;
+        downpaymentReminderDay?: T;
+        balanceDeadlineDays?: T;
+        balanceReminderDaysBefore?: T;
+        holdMinutes?: T;
+        whishNumber?: T;
+        termsVersion?: T;
+      };
   signupsPaused?: T;
   updatedAt?: T;
   createdAt?: T;

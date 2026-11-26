@@ -200,7 +200,7 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     category: fixture.category,
     subcategories: fixture.subcategories,
     governorate: fixture.governorate,
-    district: fixture.district,
+    city: fixture.city,
     address: fixture.address.en,
     location: fixture.location,
     openingHours: fixture.openingHours,
@@ -211,6 +211,8 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     contractStartsAt: fixture.contractStartsAt,
     contractEndsAt: fixture.contractEndsAt,
     internalNotes: fixture.internalNotes,
+    ...(fixture.stay ? { stay: fixture.stay } : {}),
+    ...(fixture.features ? { features: fixture.features } : {}),
     _status: fixture.status,
   }
 }
@@ -226,6 +228,7 @@ async function seedBusinesses(payload: Payload, manifest: Manifest) {
       seed: index,
     })
 
+    // These are mock fixtures (isSample stays false). The seeds must never run on production.
     // Draft state comes from `_status` in the data rather than the `draft`
     // option. Both work, but `draft` is typed as a conditional on a literal
     // boolean, so passing a computed one collapses the data type to never.

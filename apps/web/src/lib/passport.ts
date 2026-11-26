@@ -45,7 +45,7 @@ export interface PassportPlace {
   slug: string
   category: string | null
   governorate: string | null
-  district: string | null
+  city: string | null
 }
 
 export interface PassportView {
@@ -72,7 +72,7 @@ interface BookingRow {
         slug?: string | null
         category?: string | null
         governorate?: string | null
-        district?: string | null
+        city?: string | null
         _status?: string | null
       }
     | null
@@ -110,7 +110,7 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
         slug: true,
         category: true,
         governorate: true,
-        district: true,
+        city: true,
         _status: true,
       },
     },
@@ -128,7 +128,7 @@ export async function passportForCurrent(locale: Locale): Promise<PassportView |
       slug: business._status === 'draft' ? '' : (business.slug ?? ''),
       category: business.category ?? null,
       governorate: business.governorate ?? null,
-      district: business.district ?? null,
+      city: business.city ?? null,
     })
   }
 

@@ -32,7 +32,7 @@ describe('parseSheetFilters', () => {
 
   it('reads every filter', () => {
     const { filters, problems } = parse(
-      'q=byblos&placement=t-shirt&target=home&issue=3&article=10&governorate=north-lebanon&district=batroun&category=hotels&tier=silver&batch=import-2026-09-25&status=all&scans=never&print=all&sort=scans&per=200&size=40&page=2',
+      'q=byblos&placement=t-shirt&target=home&issue=3&article=10&governorate=north-lebanon&city=batroun&category=hotels&tier=silver&batch=import-2026-09-25&status=all&scans=never&print=all&sort=scans&per=200&size=40&page=2',
     )
     expect(problems).toEqual([])
     expect(filters).toEqual({
@@ -42,7 +42,7 @@ describe('parseSheetFilters', () => {
       issue: 3,
       article: 10,
       governorate: 'north-lebanon',
-      district: 'batroun',
+      city: 'batroun',
       category: 'hotels',
       tier: 'silver',
       batch: 'import-2026-09-25',
@@ -62,7 +62,7 @@ describe('parseSheetFilters', () => {
 
   it('reports nonsense instead of crashing on it, and ignores it', () => {
     const { filters, problems } = parse(
-      'issue=abc&article=1.5&governorate=nowhere&district=x&category=y&placement=billboard',
+      'issue=abc&article=1.5&governorate=nowhere&city=x&category=y&placement=billboard',
     )
     expect(problems).toHaveLength(6)
     expect(filters.issue).toBeNull()

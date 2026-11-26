@@ -1,5 +1,5 @@
 import type { Field } from 'payload'
-import { canTakeBookings } from '@vardenia/core'
+import { canHaveRoomTypes, canTakeBookings, isWholePropertyStay } from '@vardenia/core'
 import { isStaffFieldLevel } from '../access/index'
 
 /**
@@ -67,7 +67,22 @@ export const bookingRulesField: Field = {
       admin: {
         condition: (_, siblings) => siblings?.enabled === true,
         description:
-          'How many bookings may overlap at once - tables, rooms, seats. This is enforced in the database, not just here.',
+          'How many bookings may overlap at once - tables, seats. Enforced in the database. Not used for a hotel with room types: there, each room type has its own rooms and open dates (Rooms tab). A guest house (Getaways) is booked as a whole property, one stay at a time, so its capacity is 1.',
+      },
+      /*
+       * A guest house is one property (Task 6): one stay at a time. The
+       * booking check counts it as 1 whatever is stored (lib/stay-booking),
+       * and this keeps the stored number - the one the database trigger reads
+       * - at 1 too, so the guarantee and the check agree.
+       */
+      validate: (value: unknown, { data }: { data?: Partial<{ subcategories: string[] }> }) => {
+        if (value === null || value === undefined) return true
+        if (typeof value !== 'number' || !Number.isFinite(value) || value < 1) {
+          return 'Capacity is a number, 1 or more.'
+        }
+        return isWholePropertyStay(data?.subcategories) && value !== 1
+          ? 'A guest house is booked as a whole property, one stay at a time: its capacity is 1.'
+          : true
       },
     },
 
@@ -166,13 +181,17 @@ export const bookingRulesField: Field = {
      */
     {
       name: 'roomTypes',
+      label: 'Simple room labels (old)',
       type: 'array',
-      labels: { singular: 'Room type', plural: 'Room types' },
+      // Hidden and unused since 18 November 2026: room types replace them
+      // (the Rooms tab). Kept so no saved data is lost.
+      hidden: true,
+      labels: { singular: 'Room label', plural: 'Room labels' },
       admin: {
         condition: (_, siblings) =>
           siblings?.enabled === true && Number(siblings?.minDurationMinutes ?? 0) >= 1440,
         description:
-          'Room or unit types a guest can request (Standard, Deluxe, Suite). Shown as a dropdown on the stay form. This is a label for the booking, not separate availability.',
+          'Old: names only, with no photos, rooms or availability. Use the Rooms tab instead. These show on the page only while the listing has no room types.',
       },
       fields: [
         { name: 'label', type: 'text', required: true },
@@ -188,6 +207,51 @@ export const bookingRulesField: Field = {
           name: 'note',
           type: 'text',
           admin: { description: 'Optional, e.g. "Sleeps 2, sea view".' },
+        },
+      ],
+    },
+
+    {
+      /**
+       * When a stay starts and ends on the day (17 November 2026).
+       *
+       * Hotels use check-in and check-out times, not opening hours: a room
+       * booking runs from check-in on the first day to check-out on the last,
+       * and its nights are what count against the room types. Only read for a
+       * listing that has room types; every other stay keeps 15:00 and 11:00
+       * (lib/booking-form CHECK_IN and CHECK_OUT).
+       */
+      type: 'row',
+      admin: {
+        // For hotels, guest houses (whole-property stays, Task 6), and any
+        // listing that sells nights. Partners can also set these from their
+        // Rooms tab (hotels).
+        condition: (data, siblings) =>
+          siblings?.enabled === true &&
+          (canHaveRoomTypes((data?.subcategories as string[]) ?? []) ||
+            isWholePropertyStay((data?.subcategories as string[]) ?? []) ||
+            Number(siblings?.minDurationMinutes ?? 0) >= 1440),
+      },
+      fields: [
+        {
+          name: 'checkInTime',
+          label: 'Check-in from',
+          type: 'text',
+          defaultValue: '15:00',
+          validate: (value: unknown) =>
+            !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))
+              ? true
+              : 'Use 24-hour time, like 15:00.',
+        },
+        {
+          name: 'checkOutTime',
+          label: 'Check-out until',
+          type: 'text',
+          defaultValue: '11:00',
+          validate: (value: unknown) =>
+            !value || /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value))
+              ? true
+              : 'Use 24-hour time, like 11:00.',
         },
       ],
     },

@@ -39,7 +39,7 @@ export default async function PartnerStatementsPage({ params }: Props) {
 
   if (!owner) {
     return (
-      <main className="vd-account-gate">
+      <main data-gate="statements" className="vd-account-gate">
         <PageHero title={t('title')} intro={t('signInToSee')} place={5} locale={locale}>
           <Link href="/partner/login" className="vd-button">
             {t('signIn')} <span aria-hidden>↗</span>
@@ -53,6 +53,11 @@ export default async function PartnerStatementsPage({ params }: Props) {
 
   return (
     <>
+      {locale === 'en' && (
+        <h2 hidden className="vd-desk-heading" data-desk="statements">
+          {t('tabStatements')}
+        </h2>
+      )}
       <p className="text-ink-700 mt-8 max-w-prose text-sm leading-relaxed">
         {t('statementsIntro')}
       </p>

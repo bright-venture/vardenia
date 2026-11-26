@@ -150,11 +150,11 @@ describe('how many gallery photographs a tier displays', () => {
    * the tiers is print, not the number of photographs.
    */
   it('is the same fifteen on every tier', () => {
-    const limits = (['bronze', 'silver', 'gold'] as const).map((tier) =>
+    const limits = (['bronze', 'silver', 'gold', 'platinum'] as const).map((tier) =>
       can(tierOf(tier), 'galleryLimit'),
     )
 
-    expect(limits).toEqual([15, 15, 15])
+    expect(limits).toEqual([15, 15, 15, 15])
   })
 
   /**

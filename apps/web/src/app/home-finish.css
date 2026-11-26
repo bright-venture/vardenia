@@ -687,6 +687,7 @@
   color: var(--vd-paper);
   cursor: pointer;
 }
+.vd-footer .vd-footer-bottom > nav a:focus-visible,
 .vd-footer .vd-footer-motion:focus-visible {
   outline: 2px solid var(--vd-gold);
   outline-offset: 4px;

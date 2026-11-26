@@ -1,3 +1,4 @@
+import { duplicateOf } from './duplicate-booking'
 import type { Payload } from 'payload'
 
 import type { BookingRequest } from '@vardenia/core'
@@ -10,7 +11,27 @@ import {
   type ClosedPeriod,
   type ExistingBooking,
 } from './availability'
-import { canTakeBookings, OCCUPYING_STATUSES, type BookingStatus } from '@vardenia/core'
+import {
+  canHaveRoomTypes,
+  canTakeBookings,
+  OCCUPYING_STATUSES,
+  resolveSeatingArea,
+  seatingAreasOf,
+  splitParty,
+  type BookingStatus,
+} from '@vardenia/core'
+import { checkSeatingRequest } from './seating-booking'
+import {
+  checkRoomRequest,
+  optionLabel,
+  roomStayInterval,
+  roomsSummary,
+  stayNights,
+} from './room-availability'
+import { roomBookingsFor, roomTypesFor } from './room-booking'
+import { beirutDate } from './beirut'
+import { checkStayRequest, isWholeProperty, stayConfigOf, stayInterval } from './stay-booking'
+import { priceSnapshotData, quoteRefusalMessage, roomQuote, stayQuote } from './booking-price'
 
 /**
  * Turning a request into a booking.
@@ -46,15 +67,34 @@ export type BookingOutcome =
       businessId: number
       businessName: string
       roomType?: string
+      /** The times actually booked, when the server set them (room bookings). */
+      start?: string
+      end?: string
       /** A retry of an attempt that had already made this booking. */
       replayed?: boolean
+      /** The total of the price snapshot stored, USD (Task 7); absent when none. */
+      total?: number
     }
-  | { ok: false; code: 'unavailable' | 'not-found' | 'rate-limited' | 'error'; message: string }
+  | {
+      ok: false
+      /** 'invalid': a request that cannot be priced as sent (an unknown package). */
+      code: 'unavailable' | 'not-found' | 'rate-limited' | 'invalid' | 'error'
+      message: string
+    }
 
 /** Postgres raises this when the capacity trigger refuses an insert. */
 const CAPACITY_MESSAGE = 'fully booked'
+/** Raised by the room inventory trigger; see the room types migration. */
+const ROOMS_MESSAGE = 'not enough rooms'
 /** Raised by the enforce_customer_booking_limit trigger; see translateInsertError. */
 const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
+const CUSTOMER_PENDING_MESSAGE = 'most booking requests waiting'
+/**
+ * Raised by the capacity trigger (Task 8, migrations-sql/
+ * seating-capacity-trigger.sql) for an area the listing no longer has: a
+ * partner removed it between the check and the insert.
+ */
+const AREA_MESSAGE = 'seating area is not offered'
 
 /**
  * How many bookings one email may hold, awaiting confirmation, at one time.
@@ -69,6 +109,17 @@ const CUSTOMER_LIMIT_MESSAGE = 'most upcoming bookings allowed'
  * however many instances happen to be warm.
  */
 const MAX_PENDING_PER_CUSTOMER = 5
+
+/**
+ * Two limits per customer (21 November 2026, authentication audit, decided by
+ * the owner): at most MAX_PENDING_PER_CUSTOMER requests waiting for a place's
+ * answer, and at most MAX_UPCOMING_PER_CUSTOMER upcoming bookings in total
+ * (pending or confirmed). One limit of 5 upcoming stopped a real traveller
+ * planning a week (a hotel, three dinners, a tour); spamming requests is still
+ * capped at 5 unanswered. The database holds the same two numbers
+ * (migration customer_booking_limits_two).
+ */
+const MAX_UPCOMING_PER_CUSTOMER = 15
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -93,22 +144,52 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * this path.
  */
 
-/** Bookings this customer already holds that occupy a place. */
-export async function pendingBookingCount(payload: Payload, customerId: number): Promise<number> {
-  const result = await payload.find({
-    collection: 'bookings',
-    where: {
-      and: [
-        { customer: { equals: customerId } },
-        { status: { in: [...OCCUPYING_STATUSES] } },
-        { start: { greater_than: new Date().toISOString() } },
-      ],
-    },
-    limit: 0,
-    depth: 0,
-    overrideAccess: true,
-  })
-  return result.totalDocs
+/** This customer's upcoming bookings: waiting for an answer, and in total. */
+export async function upcomingBookingCounts(
+  payload: Payload,
+  customerId: number,
+): Promise<{ pending: number; upcoming: number }> {
+  const ahead = { start: { greater_than: new Date().toISOString() } }
+  const mine = { customer: { equals: customerId } }
+  const [pending, upcoming] = await Promise.all([
+    payload.count({
+      collection: 'bookings',
+      where: { and: [mine, { status: { equals: 'pending' } }, ahead] },
+      overrideAccess: true,
+    }),
+    payload.count({
+      collection: 'bookings',
+      where: { and: [mine, { status: { in: [...OCCUPYING_STATUSES] } }, ahead] },
+      overrideAccess: true,
+    }),
+  ])
+  return { pending: pending.totalDocs, upcoming: upcoming.totalDocs }
+}
+
+/**
+ * The refusal when a new booking would pass a limit, or null. `willWait` is
+ * false for a place that confirms on the spot: such a booking never waits, so
+ * only the total applies to it.
+ */
+export function limitRefusal(
+  counts: { pending: number; upcoming: number },
+  willWait: boolean,
+): { ok: false; code: 'rate-limited'; message: string } | null {
+  if (counts.upcoming >= MAX_UPCOMING_PER_CUSTOMER) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${MAX_UPCOMING_PER_CUSTOMER} upcoming bookings. Please cancel one before making another.`,
+    }
+  }
+  if (willWait && counts.pending >= MAX_PENDING_PER_CUSTOMER) {
+    return {
+      ok: false,
+      code: 'rate-limited',
+      message: `You already have ${MAX_PENDING_PER_CUSTOMER} booking requests waiting for an answer. Please wait for a reply, or cancel one, before making another.`,
+    }
+  }
+  return null
 }
 
 /**
@@ -122,6 +203,13 @@ export async function overlappingBookings(
   businessId: number,
   start: Date,
   end: Date,
+  /**
+   * Only bookings that hold no rooms: what counts against the listing's own
+   * capacity, as the database trigger counts it (room_count = 0, a null one
+   * too). Room bookings are counted against room types instead. Left off for a
+   * guest house, which deliberately counts any old room booking too.
+   */
+  { withoutRooms = false }: { withoutRooms?: boolean } = {},
 ): Promise<ExistingBooking[]> {
   const result = await payload.find({
     collection: 'bookings',
@@ -135,6 +223,9 @@ export async function overlappingBookings(
         { status: { in: [...OCCUPYING_STATUSES] } },
         { start: { less_than: end.toISOString() } },
         { end: { greater_than: start.toISOString() } },
+        ...(withoutRooms
+          ? [{ or: [{ roomCount: { equals: 0 } }, { roomCount: { exists: false } }] }]
+          : []),
       ],
     },
   })
@@ -145,7 +236,9 @@ export async function overlappingBookings(
     // A row with unparseable dates cannot conflict with anything, and guessing
     // at what it meant would be worse than leaving it out of the count.
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return []
-    return [{ id: doc.id, start, end, status: doc.status }]
+    // The seating area (Task 8): only read at a restaurant with areas.
+    const area = (doc as { area?: string | null }).area ?? null
+    return [{ id: doc.id, start, end, status: doc.status, area }]
   })
 }
 
@@ -196,6 +289,8 @@ interface AttemptBooking {
   reference?: string | null
   status: BookingStatus
   roomType?: string | null
+  /** The price snapshot stored on it (Task 7), when there is one. */
+  price?: { total?: number | null } | null
 }
 
 /**
@@ -230,7 +325,27 @@ function replayOf(made: AttemptBooking, business: { id: unknown; name?: unknown 
     businessId: Number(business.id),
     businessName: String(business.name ?? ''),
     ...(made.roomType ? { roomType: made.roomType } : {}),
+    // The total stored the first time, so a retry shows the same price.
+    ...(typeof made.price?.total === 'number' ? { total: made.price.total } : {}),
   }
+}
+
+/**
+ * The booking an identical request made moments ago already holds (the guard
+ * refused this one as its duplicate, lib/duplicate-booking): answered as a
+ * replay, so no second confirmation goes out. Null for any other error.
+ */
+async function replayOfDuplicate(
+  payload: Payload,
+  error: unknown,
+  business: { id: unknown; name?: unknown },
+): Promise<BookingOutcome | null> {
+  const id = duplicateOf(error)
+  if (id === null) return null
+  const made = await payload
+    .findByID({ collection: 'bookings', id, depth: 0, overrideAccess: true })
+    .catch(() => null)
+  return made ? replayOf(made as unknown as AttemptBooking, business) : null
 }
 
 /** The honest failure: we do not know what went wrong, so we do not guess. */
@@ -274,6 +389,14 @@ export function translateInsertError(error: unknown, locale: Locale = 'en'): Boo
    * who lost the race for the last table was told "fully booked" in English -
    * on the Arabic site too, not only on the eight newer languages.
    */
+  if (lower.includes(ROOMS_MESSAGE)) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage('rooms-full', locale) }
+  }
+
+  if (lower.includes(AREA_MESSAGE)) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage('area-unknown', locale) }
+  }
+
   if (lower.includes(CAPACITY_MESSAGE)) {
     return { ok: false, code: 'unavailable', message: unavailableMessage('at-capacity', locale) }
   }
@@ -299,11 +422,10 @@ export function translateInsertError(error: unknown, locale: Locale = 'en'): Boo
    * customer_booking_limit migration.
    */
   if (message.toLowerCase().includes(CUSTOMER_LIMIT_MESSAGE)) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${MAX_PENDING_PER_CUSTOMER} upcoming bookings. Please cancel one before making another.`,
-    }
+    return limitRefusal({ pending: 0, upcoming: MAX_UPCOMING_PER_CUSTOMER }, false)!
+  }
+  if (message.toLowerCase().includes(CUSTOMER_PENDING_MESSAGE)) {
+    return limitRefusal({ pending: MAX_PENDING_PER_CUSTOMER, upcoming: 0 }, true)!
   }
 
   return { ok: false, code: 'error', message: COULD_NOT_BOOK[locale] ?? COULD_NOT_BOOK.en }
@@ -383,19 +505,67 @@ export async function createBooking({
     }
   }
 
+  // A guest house is a whole property first, even one also filed as a hotel:
+  // never room lines (core canHaveRoomTypes is false for any getaway).
+  if (request.rooms && request.rooms.length > 0) {
+    // Only hotels sell rooms (core ROOM_TYPE_SUBCATEGORIES). A guest house
+    // sent room lines by a stale page or a crafted request is told the rooms
+    // are not offered, rather than having them counted.
+    if (!canHaveRoomTypes((business as { subcategories?: string[] | null }).subcategories ?? [])) {
+      return {
+        ok: false,
+        code: 'unavailable',
+        message: unavailableMessage('room-unknown', request.locale ?? 'en'),
+      }
+    }
+    return createRoomBooking({ payload, request, customerId, now, business, rules })
+  }
+
+  if (isWholeProperty(business)) {
+    return createStayBooking({ payload, request, customerId, now, business, rules })
+  }
+
+  /*
+   * A hotel with room types is booked from its room lines. Without lines the
+   * booking would be judged only by the listing's single capacity: no room
+   * inventory and no price. Refused here (and in the guard); a hotel with no
+   * active room type books as it always did.
+   */
+  const subcategories = (business as { subcategories?: string[] | null }).subcategories ?? []
+  if (canHaveRoomTypes(subcategories)) {
+    const types = await roomTypesFor(payload, [Number(business.id)], { locale: request.locale })
+    if ((types.get(Number(business.id))?.length ?? 0) > 0) {
+      return {
+        ok: false,
+        code: 'unavailable',
+        message: unavailableMessage('no-rooms-chosen', request.locale ?? 'en'),
+      }
+    }
+  }
+
   const [existing, closures] = await Promise.all([
-    overlappingBookings(payload, business.id, start, end),
+    overlappingBookings(payload, business.id, start, end, { withoutRooms: true }),
     closedPeriods(payload, business.id, start, end),
   ])
 
-  const verdict = checkAvailability({
+  /*
+   * Restaurant seating areas (Task 8, core/seating): with areas, the guest's
+   * area is required and counted against its own tables only; without, the
+   * listing's capacity as always (and an area sent anyway is not stored).
+   */
+  const areas = seatingAreasOf(business as never)
+  const verdict = checkSeatingRequest({
     rules,
     hours,
     closures,
     existing,
+    areas,
+    area: request.area,
     now,
     request: { interval: { start, end }, partySize: request.partySize },
   })
+  const seated = resolveSeatingArea(areas, request.area)
+  const area = seated.ok && seated.area ? seated.area.key : undefined
 
   if (!verdict.ok) {
     return {
@@ -405,14 +575,11 @@ export async function createBooking({
     }
   }
 
-  const pending = await pendingBookingCount(payload, customerId)
-  if (pending >= MAX_PENDING_PER_CUSTOMER) {
-    return {
-      ok: false,
-      code: 'rate-limited',
-      message: `You already have ${pending} upcoming bookings. Please cancel one before making another.`,
-    }
-  }
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
 
   /**
    * Keep the requested room type only if the listing actually offers it. The
@@ -437,6 +604,7 @@ export async function createBooking({
         end: end.toISOString(),
         partySize: request.partySize,
         ...(roomType ? { roomType } : {}),
+        ...(area ? { area } : {}),
         ...(request.notes ? { notes: request.notes } : {}),
 
         /**
@@ -482,6 +650,277 @@ export async function createBooking({
       const made = await bookingForAttempt(payload, customerId, request.requestId)
       if (made) return replayOf(made, business)
     }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
     return translateInsertError(error, request.locale ?? 'en')
+  }
+}
+
+/**
+ * A booking of rooms at a hotel with room types (17 November 2026).
+ *
+ * The times are the hotel's own: check-in on the first day to check-out after
+ * the nights, whatever the form sent, so every room booking counts the same
+ * nights the database trigger counts. The lines carry a copy of the room's name
+ * and the option's wording, and `roomType` on the booking gets the summary
+ * ("2 × Deluxe Twin"), which is what the account page, the admin and the
+ * emails already show.
+ */
+async function createRoomBooking({
+  payload,
+  request,
+  customerId,
+  now,
+  business,
+  rules,
+}: {
+  payload: Payload
+  request: BookingRequest
+  customerId: number
+  now: Date
+  business: { id: number | string; name?: unknown }
+  rules: Parameters<typeof checkAvailability>[0]['rules']
+}): Promise<BookingOutcome> {
+  const locale = request.locale ?? 'en'
+  const requestedStart = new Date(request.start)
+  const requestedEnd = new Date(request.end)
+  const interval = roomStayInterval(
+    beirutDate(requestedStart),
+    stayNights(requestedStart, requestedEnd).length,
+    rules,
+  )
+  if (!interval) {
+    return {
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('invalid-interval', locale),
+    }
+  }
+
+  const businessId = Number(business.id)
+  const [typesBy, existingBy, closures] = await Promise.all([
+    roomTypesFor(payload, [businessId], { locale }),
+    roomBookingsFor(payload, [businessId], interval.start, interval.end),
+    closedPeriods(payload, businessId, interval.start, interval.end),
+  ])
+  const types = typesBy.get(businessId) ?? []
+  const lines = (request.rooms ?? []).map((line) => ({
+    roomType: line.roomType,
+    count: line.count,
+    option: line.option ?? null,
+  }))
+
+  const verdict = checkRoomRequest({
+    rules,
+    closures,
+    types,
+    existing: existingBy.get(businessId) ?? [],
+    request: {
+      interval,
+      guests: request.partySize,
+      adults: splitParty(request.partySize, request.children).adults,
+      lines,
+    },
+    now,
+  })
+  if (!verdict.ok) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage(verdict.reason, locale) }
+  }
+
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
+
+  /*
+   * The price at booking time (Task 7): the room types just loaded, the same
+   * function the page's quote uses. An unpriced option stores no snapshot and
+   * never blocks the booking; nothing the client sent is read.
+   */
+  const quote = roomQuote(types, lines, stayNights(interval.start, interval.end).length)
+  const price = quote.ok ? priceSnapshotData(quote, now) : null
+
+  const rows = lines.map((line) => {
+    const type = types.find((candidate) => candidate.id === line.roomType)
+    const option =
+      type?.options.find((candidate) => candidate.id === line.option) ?? type?.options[0]
+    return {
+      roomType: line.roomType,
+      count: line.count,
+      roomName: type?.name ?? '',
+      optionId: option?.id ?? '',
+      optionLabel: optionLabel(option),
+    }
+  })
+  const summary = roomsSummary(rows)
+
+  try {
+    const booking = await payload.create({
+      collection: 'bookings',
+      data: {
+        business: businessId,
+        customer: customerId,
+        start: interval.start.toISOString(),
+        end: interval.end.toISOString(),
+        partySize: request.partySize,
+        children: splitParty(request.partySize, request.children).children,
+        roomType: summary,
+        rooms: rows,
+        ...(request.notes ? { notes: request.notes } : {}),
+        locale,
+        status: 'pending',
+        ...(request.requestId ? { requestId: request.requestId } : {}),
+        ...(price ? { price } : {}),
+      },
+      overrideAccess: true,
+      // Lets guardBookingWrite keep the snapshot: only this service writes it.
+      ...(price ? { context: { priceSnapshot: true } } : {}),
+    })
+    return {
+      ok: true,
+      bookingId: booking.id,
+      reference: String((booking as { reference?: unknown }).reference ?? ''),
+      status: (booking as { status: BookingStatus }).status,
+      businessId,
+      businessName: String(business.name ?? ''),
+      roomType: summary,
+      start: interval.start.toISOString(),
+      end: interval.end.toISOString(),
+      ...(price ? { total: price.total } : {}),
+    }
+  } catch (error) {
+    if (request.requestId) {
+      const made = await bookingForAttempt(payload, customerId, request.requestId)
+      if (made) return replayOf(made, business)
+    }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
+    return translateInsertError(error, locale)
+  }
+}
+
+/**
+ * A guest house booked as a whole property (Task 6, 20 November 2026). See
+ * lib/stay-booking: the stay runs from check-in on the first day to check-out
+ * after the nights, whatever the form sent; one stay at a time; at least the
+ * owner's minimum nights and no more guests than their cap. The insert then
+ * goes through guardBookingWrite and the capacity trigger like any booking.
+ */
+async function createStayBooking({
+  payload,
+  request,
+  customerId,
+  now,
+  business,
+  rules,
+}: {
+  payload: Payload
+  request: BookingRequest
+  customerId: number
+  now: Date
+  business: { id: number | string; name?: unknown }
+  rules: Parameters<typeof checkAvailability>[0]['rules']
+}): Promise<BookingOutcome> {
+  const locale = request.locale ?? 'en'
+  const interval = stayInterval(new Date(request.start), new Date(request.end), rules)
+  if (!interval) {
+    return {
+      ok: false,
+      code: 'unavailable',
+      message: unavailableMessage('invalid-interval', locale),
+    }
+  }
+
+  // At least one adult, as at a hotel (core splitParty, shared with the guard).
+  const { children } = splitParty(request.partySize, request.children)
+  const businessId = Number(business.id)
+  const [existing, closures] = await Promise.all([
+    overlappingBookings(payload, businessId, interval.start, interval.end),
+    closedPeriods(payload, businessId, interval.start, interval.end),
+  ])
+
+  const verdict = checkStayRequest({
+    rules,
+    closures,
+    existing,
+    stay: stayConfigOf(business),
+    request: { interval, adults: request.partySize - children, children },
+    now,
+  })
+  if (!verdict.ok) {
+    return { ok: false, code: 'unavailable', message: unavailableMessage(verdict.reason, locale) }
+  }
+
+  /*
+   * The price (Task 7): core quoteStay on the listing's stay config, the same
+   * function the page's quote uses. A package that is not on the listing, or
+   * switched off, is refused rather than priced as the nightly rate. No price
+   * set ('no-price') books without a snapshot. The limits were checked above
+   * by checkStayRequest, which uses the same core rule as the quote.
+   */
+  const quote = stayQuote({
+    stay: stayConfigOf(business),
+    nights: stayNights(interval.start, interval.end).length,
+    partySize: request.partySize,
+    children,
+    packageId: request.packageId,
+  })
+  if (!quote.ok && quote.reason !== 'no-price') {
+    const limit = quote.reason === 'below-min-nights' || quote.reason === 'above-max-guests'
+    return {
+      ok: false,
+      code: limit ? 'unavailable' : 'invalid',
+      message: quoteRefusalMessage(quote.reason, locale),
+    }
+  }
+  const price = quote.ok ? priceSnapshotData(quote, now) : null
+
+  const overLimit = limitRefusal(
+    await upcomingBookingCounts(payload, customerId),
+    (rules as { autoConfirm?: boolean } | undefined)?.autoConfirm !== true,
+  )
+  if (overLimit) return overLimit
+
+  try {
+    const booking = await payload.create({
+      collection: 'bookings',
+      data: {
+        business: businessId,
+        customer: customerId,
+        start: interval.start.toISOString(),
+        end: interval.end.toISOString(),
+        partySize: request.partySize,
+        children,
+        ...(price ? { price } : {}),
+        ...(request.notes ? { notes: request.notes } : {}),
+        locale,
+        // Placeholder; guardBookingWrite sets it from the listing's autoConfirm.
+        status: 'pending',
+        ...(request.requestId ? { requestId: request.requestId } : {}),
+      },
+      overrideAccess: true,
+      // Lets guardBookingWrite keep the snapshot: only this service writes it.
+      ...(price ? { context: { priceSnapshot: true } } : {}),
+    })
+    return {
+      ok: true,
+      bookingId: booking.id,
+      reference: String((booking as { reference?: unknown }).reference ?? ''),
+      status: (booking as { status: BookingStatus }).status,
+      businessId,
+      businessName: String(business.name ?? ''),
+      start: interval.start.toISOString(),
+      end: interval.end.toISOString(),
+      ...(price ? { total: price.total } : {}),
+    }
+  } catch (error) {
+    if (request.requestId) {
+      const made = await bookingForAttempt(payload, customerId, request.requestId)
+      if (made) return replayOf(made, business)
+    }
+    const duplicate = await replayOfDuplicate(payload, error, business)
+    if (duplicate) return duplicate
+    return translateInsertError(error, locale)
   }
 }

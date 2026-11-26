@@ -22,39 +22,43 @@ import { reportError } from '../../../../lib/report'
 
 export const dynamic = 'force-dynamic'
 
-export const POST = withRateLimit(async (request: Request) => {
-  const form = await request.formData().catch(() => null)
-  const token = String(form?.get('token') ?? '')
-  const answer = String(form?.get('answer') ?? '')
-  const rawLocale = String(form?.get('locale') ?? 'en')
-  const locale: Locale = isLocale(rawLocale) ? rawLocale : 'en'
+export const POST = withRateLimit(
+  async (request: Request) => {
+    const form = await request.formData().catch(() => null)
+    const token = String(form?.get('token') ?? '')
+    const answer = String(form?.get('answer') ?? '')
+    const rawLocale = String(form?.get('locale') ?? 'en')
+    const locale: Locale = isLocale(rawLocale) ? rawLocale : 'en'
 
-  const bookingId = bookingIdFromToken(token)
-  if (bookingId === null || !(GUEST_ANSWERS as readonly string[]).includes(answer)) {
-    return new Response('Not found.', { status: 404 })
-  }
+    const bookingId = bookingIdFromToken(token)
+    if (bookingId === null || !(GUEST_ANSWERS as readonly string[]).includes(answer)) {
+      return new Response('Not found.', { status: 404 })
+    }
 
-  let outcome = 'error'
-  try {
-    const payload = await getPayload({ config })
-    outcome = await recordGuestAnswer(
-      payload,
-      bookingId,
-      answer as GuestAnswer,
-      new Date(),
-      readSpent(form?.get('spent')),
-    )
-  } catch (error) {
-    await reportError(error, { source: 'attendance.answer', extra: { booking: bookingId } })
-  }
+    let outcome = 'error'
+    try {
+      const payload = await getPayload({ config })
+      outcome = await recordGuestAnswer(
+        payload,
+        bookingId,
+        answer as GuestAnswer,
+        new Date(),
+        readSpent(form?.get('spent')),
+      )
+    } catch (error) {
+      await reportError(error, { source: 'attendance.answer', extra: { booking: bookingId } })
+    }
 
-  // From the passport, straight back to it: the stamp shows the result.
-  if (form?.get('from') === 'passport') {
-    const prefix = locale === 'en' ? '' : `/${locale}`
-    return Response.redirect(`${siteOrigin()}${prefix}/account/passport`, 303)
-  }
+    // From the passport, straight back to it: the stamp shows the result.
+    if (form?.get('from') === 'passport') {
+      const prefix = locale === 'en' ? '' : `/${locale}`
+      return Response.redirect(`${siteOrigin()}${prefix}/account/passport`, 303)
+    }
 
-  const back = new URL(visitPageUrl(token, locale))
-  back.searchParams.set('done', outcome)
-  return Response.redirect(back.toString(), 303)
-}, RATE_LIMIT.WRITE_PER_WINDOW)
+    const back = new URL(visitPageUrl(token, locale))
+    back.searchParams.set('done', outcome)
+    return Response.redirect(back.toString(), 303)
+  },
+  RATE_LIMIT.WRITE_PER_WINDOW,
+  { action: 'attendance-answer', perAccount: true },
+)

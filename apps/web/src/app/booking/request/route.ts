@@ -38,6 +38,8 @@ const STATUS_FOR = {
   unavailable: 409,
   'not-found': 404,
   'rate-limited': 429,
+  // A request that cannot be priced as sent: an unknown or inactive package.
+  invalid: 400,
   error: 500,
 } as const
 
@@ -81,7 +83,7 @@ export const POST = withRateLimit(
 
     const customer = auth.user
     if (!customer || customer.collection !== CUSTOMER_COLLECTION) {
-      return json({ ok: false, code: 'signed-out', message: 'Sign in to book a table.' }, 401)
+      return json({ ok: false, code: 'signed-out', message: 'Sign in to book.' }, 401)
     }
 
     if (!customer._verified) {
@@ -151,10 +153,13 @@ export const POST = withRateLimit(
         name: String(customer.name ?? ''),
         reference: outcome.reference,
         status: outcome.status,
-        start: new Date(parsed.data.start),
-        end: new Date(parsed.data.end),
+        start: new Date(outcome.start ?? parsed.data.start),
+        end: new Date(outcome.end ?? parsed.data.end),
         partySize: parsed.data.partySize,
         locale: parsed.data.locale ?? 'en',
+        ...(outcome.roomType ? { roomType: outcome.roomType } : {}),
+        // The server's own quote, as stored (Task 7); never the client's.
+        ...(outcome.total !== undefined ? { total: outcome.total } : {}),
       }).catch(async (error) => {
         /**
          * The most consequential silent failure in the product. The booking is real
@@ -180,10 +185,11 @@ export const POST = withRateLimit(
         businessName: outcome.businessName || 'your listing',
         guestName: String(customer.name ?? ''),
         reference: outcome.reference,
-        start: new Date(parsed.data.start),
-        end: new Date(parsed.data.end),
+        start: new Date(outcome.start ?? parsed.data.start),
+        end: new Date(outcome.end ?? parsed.data.end),
         partySize: parsed.data.partySize,
         roomType: outcome.roomType,
+        ...(outcome.total !== undefined ? { total: outcome.total } : {}),
         confirmed: outcome.status === 'confirmed',
       })
     }
@@ -198,6 +204,10 @@ export const POST = withRateLimit(
      * The address is echoed back so the success panel can say where the
      * confirmation went. The form no longer collects it - it belongs to the
      * account - so this is the only way it can name it.
+     *
+     * The price stored on the booking (Task 7) goes back too when there is
+     * one, so the page shows the total that was actually booked; it is the
+     * server's own quote, recomputed at booking time, never the client's.
      */
     return json(
       {
@@ -205,6 +215,9 @@ export const POST = withRateLimit(
         reference: outcome.reference,
         status: outcome.status,
         email: String(customer.email),
+        ...(outcome.total !== undefined
+          ? { price: { total: outcome.total, currency: 'USD' } }
+          : {}),
       },
       201,
     )
@@ -219,5 +232,6 @@ export const POST = withRateLimit(
    * spend the allowance that lets them sign in. See lib/rate-limit.
    */
   RATE_LIMIT.WRITE_PER_WINDOW,
-  { shared: true },
+  // Its own counters: 20 a minute per account, 120 per connection (lib/rate-limit, 22 November 2026).
+  { action: 'booking-request', perAccount: true },
 )

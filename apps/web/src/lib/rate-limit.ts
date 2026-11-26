@@ -81,6 +81,20 @@ const MAX_PER_WINDOW = 300
 const AUTH_PER_WINDOW = 10
 
 /**
+ * The ceiling for one internet connection across every email (21 November
+ * 2026, authentication audit step 2).
+ *
+ * Sign-in, sign-up, forgot password, reset and verify used to share one counter
+ * of AUTH_PER_WINDOW per address. Many people can share one address (a mobile
+ * carrier, hotel or office Wi-Fi), so the eleventh person signing in within a
+ * minute was refused with the right password. Now each email gets its own
+ * AUTH_PER_WINDOW from that address (see checkRatePerEmail), and the address as
+ * a whole gets this many: enough for a busy lobby, still far too few to try one
+ * password on hundreds of accounts.
+ */
+const AUTH_CONNECTION_PER_WINDOW = 60
+
+/**
  * Writes that cost something to be wrong about, but are not sign-ins.
  *
  * Its own number, and that is the whole point: buckets are keyed by
@@ -94,6 +108,21 @@ const AUTH_PER_WINDOW = 10
  * account can cost once it exists.
  */
 const WRITE_PER_WINDOW = 20
+
+/**
+ * The ceiling for one internet connection on one form, across every account
+ * (22 November 2026).
+ *
+ * Every form that writes used to share one counter of WRITE_PER_WINDOW per
+ * address: twenty Questions sends used up Event Staff, bookings, saves and
+ * reviews for everyone on that connection. Lebanese carriers put many phones
+ * behind one address, and a hotel lobby or restaurant shares one Wi-Fi, so a
+ * busy evening could refuse a real guest's booking. Now each form has its own
+ * counters (see checkRatePerAccount): WRITE_PER_WINDOW per signed-in account,
+ * and this many per connection, enough for a busy lobby and still far too few
+ * for one machine running dozens of accounts.
+ */
+const WRITE_CONNECTION_PER_WINDOW = 120
 
 /** Stop the map growing without bound on a long-lived server. */
 const SWEEP_INTERVAL_MS = 5 * 60_000
@@ -155,12 +184,17 @@ export function checkRate(
    * Two buckets keep an expensive endpoint tight without making the cheap ones
    * unusable.
    */
-  const key = `${budget}:${ip}`
+  return countInMemory(`${budget}:${ip}`, now, budget)
+}
+
+/** One request against a named in-memory counter. */
+function countInMemory(key: string, now: number, budget: number): RateVerdict {
+  sweep(now)
   const existing = windows.get(key)
 
   if (!existing || existing.resetAt <= now) {
     windows.set(key, { count: 1, resetAt: now + WINDOW_MS })
-    return { ...unlimited, remaining: budget - 1 }
+    return { allowed: true, limit: budget, remaining: budget - 1, retryAfter: 0 }
   }
 
   existing.count += 1
@@ -229,17 +263,35 @@ async function checkRateShared(
   const unlimited: RateVerdict = { allowed: true, limit: budget, remaining: budget, retryAfter: 0 }
   if (!ip) return unlimited
 
+  const { payload, store } = await loadStore()
+  return countShared(payload, store, store.bucketKey(budget, ip), `${budget}:${ip}`, now, budget)
+}
+
+async function loadStore() {
   const [{ getPayload }, config, store] = await Promise.all([
     import('payload'),
     import('../payload.config').then((m) => m.default),
     import('./rate-limit-store'),
   ])
+  return { payload: await getPayload({ config }), store }
+}
 
-  const payload = await getPayload({ config })
-  const outcome = await store.hit(payload, store.bucketKey(budget, ip), WINDOW_MS, now)
+type Store = Awaited<ReturnType<typeof loadStore>>['store']
+type LoadedPayload = Awaited<ReturnType<typeof loadStore>>['payload']
+
+/** One request against a named counter in Postgres, or in memory if it cannot answer. */
+async function countShared(
+  payload: LoadedPayload,
+  store: Store,
+  storeKey: string,
+  memoryKey: string,
+  now: number,
+  budget: number,
+): Promise<RateVerdict> {
+  const outcome = await store.hit(payload, storeKey, WINDOW_MS, now)
 
   // Unreachable database. See the note above on failing open.
-  if (!outcome) return checkRate(headers, now, budget)
+  if (!outcome) return countInMemory(memoryKey, now, budget)
 
   /**
    * Swept from the request that happens to notice, roughly once per window per
@@ -259,6 +311,160 @@ async function checkRateShared(
 }
 
 /**
+ * The email a sign-in type request is about, lowercased, or '' when it has none
+ * (a reset or verify link, signing out). Read from a copy of the body, so the
+ * handler still gets the original.
+ */
+export async function emailOf(request: Request): Promise<string> {
+  if (request.method !== 'POST') return ''
+  if (!(request.headers.get('content-type') ?? '').includes('application/json')) return ''
+  const body = (await request
+    .clone()
+    .json()
+    .catch(() => null)) as { email?: unknown } | null
+  const email = body?.email
+  return typeof email === 'string' ? email.trim().toLowerCase().slice(0, 320) : ''
+}
+
+/**
+ * Two counters for sign-in type requests (21 November 2026): AUTH_PER_WINDOW
+ * per connection and email, and AUTH_CONNECTION_PER_WINDOW per connection.
+ * Refused when either is over. Requests with no email share the connection's
+ * own AUTH_PER_WINDOW counter, as before. Both keys are hashed in the store
+ * (counterKey), so no address is kept as written.
+ */
+export async function checkRatePerEmail(request: Request, now: number): Promise<RateVerdict> {
+  const ip = clientIp(request.headers)
+  const unlimited: RateVerdict = {
+    allowed: true,
+    limit: AUTH_PER_WINDOW,
+    remaining: AUTH_PER_WINDOW,
+    retryAfter: 0,
+  }
+  if (!ip) return unlimited
+
+  const email = await emailOf(request)
+  const { payload, store } = await loadStore()
+  const personKey = store.counterKey('auth-email', `${ip}|${email}`)
+  const person = await countShared(
+    payload,
+    store,
+    personKey,
+    `auth-email:${personKey}`,
+    now,
+    AUTH_PER_WINDOW,
+  )
+  const connection = await countShared(
+    payload,
+    store,
+    store.bucketKey(AUTH_CONNECTION_PER_WINDOW, ip),
+    `${AUTH_CONNECTION_PER_WINDOW}:${ip}`,
+    now,
+    AUTH_CONNECTION_PER_WINDOW,
+  )
+
+  if (!person.allowed) return person
+  if (!connection.allowed) return connection
+  return person.remaining <= connection.remaining ? person : connection
+}
+
+/** The signed-in person, as "collection:id", or null. Never throws. */
+async function accountOf(payload: LoadedPayload, headers: Headers): Promise<string | null> {
+  try {
+    const auth = (payload as { auth?: (args: { headers: Headers }) => Promise<unknown> }).auth
+    if (typeof auth !== 'function') return null
+    const result = (await auth.call(payload, { headers })) as {
+      user?: { id?: unknown; collection?: unknown } | null
+    }
+    const user = result?.user
+    if (!user || user.id === undefined || user.id === null) return null
+    return `${String(user.collection ?? 'user')}:${String(user.id)}`
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The counters for one form that writes something (22 November 2026).
+ *
+ * Each form (`action`) has its own counters, so one cannot use up another.
+ *
+ *  - `perAccount` and signed in: WRITE_PER_WINDOW per account, and
+ *    WRITE_CONNECTION_PER_WINDOW per connection; refused when either is over,
+ *    as for sign-in (checkRatePerEmail).
+ *  - Otherwise (the Questions form, a "Did you go?" or receipt link opened while
+ *    signed out): WRITE_PER_WINDOW per connection.
+ *
+ * Counted in the database, like the other shared limits, and keyed by hashes
+ * (counterKey), so no address or account is stored as written.
+ */
+export async function checkRatePerAccount(
+  request: Request,
+  now: number,
+  action: string,
+  perAccount: boolean,
+  /** A form that is polled or sends several files needs more than WRITE_PER_WINDOW. */
+  perMinute: number = WRITE_PER_WINDOW,
+): Promise<RateVerdict> {
+  const ip = clientIp(request.headers)
+  const unlimited: RateVerdict = {
+    allowed: true,
+    limit: perMinute,
+    remaining: perMinute,
+    retryAfter: 0,
+  }
+  if (!ip) return unlimited
+
+  const { payload, store } = await loadStore()
+  const account = perAccount ? await accountOf(payload, request.headers) : null
+
+  if (!account) {
+    const key = store.counterKey(`write:${action}`, ip)
+    return countShared(payload, store, key, `write:${action}:${key}`, now, perMinute)
+  }
+
+  const personKey = store.counterKey(`write-account:${action}`, account)
+  const person = await countShared(
+    payload,
+    store,
+    personKey,
+    `write-account:${action}:${personKey}`,
+    now,
+    WRITE_PER_WINDOW,
+  )
+  const connectionKey = store.counterKey(`write-connection:${action}`, ip)
+  const connection = await countShared(
+    payload,
+    store,
+    connectionKey,
+    `write-connection:${action}:${connectionKey}`,
+    now,
+    WRITE_CONNECTION_PER_WINDOW,
+  )
+
+  if (!person.allowed) return person
+  if (!connection.allowed) return connection
+  return person.remaining <= connection.remaining ? person : connection
+}
+
+/**
+ * One named counter in the database for a secret value (a session token): at
+ * most `budget` a minute per `action` and value. The value is hashed with the
+ * server secret (counterKey), so the token is never stored. Fails open to the
+ * in-memory count like the others.
+ */
+export async function checkRatePerKey(
+  action: string,
+  value: string,
+  budget: number,
+  now = Date.now(),
+): Promise<RateVerdict> {
+  const { payload, store } = await loadStore()
+  const key = store.counterKey(`key:${action}`, value)
+  return countShared(payload, store, key, `key:${action}:${key}`, now, budget)
+}
+
+/**
  * Wrap a handler so repeated calls from one address are bounded.
  *
  * Pass `{ shared: true }` for anything an attacker would want to repeat -
@@ -274,13 +480,32 @@ async function checkRateShared(
 export function withRateLimit(
   handler: Handler,
   budget = MAX_PER_WINDOW,
-  { shared = false }: { shared?: boolean } = {},
+  {
+    shared = false,
+    perEmail = false,
+    action,
+    perAccount = false,
+    perMinute,
+  }: {
+    shared?: boolean
+    perEmail?: boolean
+    /** A form that writes: its own counters, always shared. See checkRatePerAccount. */
+    action?: string
+    perAccount?: boolean
+    /** With `action` and no account: requests a minute per connection (default WRITE_PER_WINDOW). */
+    perMinute?: number
+  } = {},
 ): Handler {
   return async (request, context) => {
     const now = Date.now()
-    const verdict = shared
-      ? await checkRateShared(request.headers, now, budget)
-      : checkRate(request.headers, now, budget)
+    // `perEmail`: the two sign-in counters, always shared. See checkRatePerEmail.
+    const verdict = perEmail
+      ? await checkRatePerEmail(request, now)
+      : action
+        ? await checkRatePerAccount(request, now, action, perAccount, perMinute)
+        : shared
+          ? await checkRateShared(request.headers, now, budget)
+          : checkRate(request.headers, now, budget)
     if (!verdict.allowed) return tooManyRequests(verdict)
 
     return withHeaders(await handler(request, context), rateHeaders(verdict))
@@ -318,4 +543,11 @@ export function __resetRateLimit() {
   lastSweep = 0
 }
 
-export const RATE_LIMIT = { WINDOW_MS, MAX_PER_WINDOW, AUTH_PER_WINDOW, WRITE_PER_WINDOW } as const
+export const RATE_LIMIT = {
+  WINDOW_MS,
+  MAX_PER_WINDOW,
+  AUTH_PER_WINDOW,
+  AUTH_CONNECTION_PER_WINDOW,
+  WRITE_PER_WINDOW,
+  WRITE_CONNECTION_PER_WINDOW,
+} as const

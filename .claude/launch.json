@@ -9,6 +9,14 @@
       "autoPort": true
     },
     {
+      "name": "web-no-push",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@vardenia/web", "dev"],
+      "env": { "SEED_ALLOWED_DB": "" },
+      "port": 3000,
+      "autoPort": true
+    },
+    {
       "name": "web-ungated",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@vardenia/web", "dev"],

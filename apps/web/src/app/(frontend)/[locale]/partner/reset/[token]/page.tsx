@@ -42,7 +42,7 @@ export default async function PartnerResetPage({
   const partner = await getTranslations('partner')
 
   return (
-    <AuthCard icon={KeyRound} eyebrow={partner('eyebrow')} title={t('resetTitle')}>
+    <AuthCard mode="reset" icon={KeyRound} eyebrow={partner('eyebrow')} title={t('resetTitle')}>
       <ResetPasswordForm
         token={token}
         endpoint="/api/business-users/reset-password"

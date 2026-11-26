@@ -1,9 +1,10 @@
 import { cache } from 'react'
+import { isReviewListing } from './review-listing'
 import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
 import { dataLocale, type Locale } from '@vardenia/i18n'
 import config from '../payload.config'
-import { goldPlaces } from './gold-places'
+import { HOME_PAGE_TIERS, tierLimits } from './tier-limits'
 import type { Business } from '../payload-types'
 import { PUBLISHED_SQL } from '../access'
 import { rawDb } from './db'
@@ -62,8 +63,8 @@ export interface ListingQuery {
    */
   subcategory?: string
   governorate?: string
-  /** One of the selected governorate's own districts. */
-  district?: string
+  /** One of the selected governorate's own cities. */
+  city?: string
   /** Every one of these, not any. See the query below. */
   amenities?: string[]
   /**
@@ -169,12 +170,12 @@ async function buildListingWhere(
     category,
     subcategory,
     governorate,
-    district,
+    city,
     amenities,
     bookable,
   }: Pick<
     ListingQuery,
-    'category' | 'subcategory' | 'governorate' | 'district' | 'amenities' | 'bookable'
+    'category' | 'subcategory' | 'governorate' | 'city' | 'amenities' | 'bookable'
   >,
 ): Promise<Where> {
   const where: Where = {}
@@ -191,7 +192,7 @@ async function buildListingWhere(
    */
   if (subcategory) where.subcategories = { in: [subcategory] }
   if (governorate) where.governorate = { equals: governorate }
-  if (district) where.district = { equals: district }
+  if (city) where.city = { equals: city }
   // The same switch the Book panel reads; public, like the rest of the rules.
   if (bookable) where['booking.enabled'] = { equals: true }
 
@@ -383,7 +384,7 @@ async function readOpenNowCandidates(
  * # The same key space as the grid
  *
  * Category, kind and region only - the filters findListings already caches -
- * because those are bounded. District and amenities multiply the keys
+ * because those are bounded. City and amenities multiply the keys
  * past usefulness, and those views read directly, as the grid does.
  *
  * Keyed on locale, though no hours are translated: the set is in page order,
@@ -421,7 +422,7 @@ export async function findListings({
   category,
   subcategory,
   governorate,
-  district,
+  city,
   amenities,
   openNow,
   bookable,
@@ -435,7 +436,7 @@ export async function findListings({
       category,
       subcategory,
       governorate,
-      district,
+      city,
       amenities,
       bookable,
     })
@@ -454,7 +455,7 @@ export async function findListings({
        */
       const filters = { category, subcategory, governorate }
       const candidates =
-        !district && !amenities?.length && !bookable
+        !city && !amenities?.length && !bookable
           ? await openNowCandidates({ locale, ...filters })
           : await readOpenNowCandidates(payload, where, locale, filters)
 
@@ -515,7 +516,7 @@ export async function findListings({
    * a section, optionally narrowed by kind or by governorate.
    *
    * Past that the arithmetic turns: seven categories times fifty-one
-   * subcategories times eight governorates times twenty-eight districts times
+   * subcategories times eight governorates times twenty-eight cities times
    * any combination of sixteen amenities is not a bounded
    * set in any useful sense. Caching it would fill the store with entries nobody
    * asks for twice, and evict the ones everybody asks for constantly.
@@ -525,7 +526,7 @@ export async function findListings({
    */
   // openNow is excluded too: its answer changes by the minute, so caching it for
   // an hour would show a closed place as open for most of that hour.
-  const cacheable = !district && !amenities?.length && !openNow
+  const cacheable = !city && !amenities?.length && !openNow
 
   if (!cacheable) return run()
 
@@ -637,19 +638,40 @@ async function countPublished(
  * be keyed on locale anyway, holding ten identical copies of each count; the
  * `locale` argument went with it.
  */
-export async function countByGovernorate({
-  category,
-  subcategory,
-}: {
+export async function countByGovernorate(filter: {
   category?: string
   subcategory?: string
 }): Promise<Record<string, number> | undefined> {
+  return countByPlace('governorate', filter)
+}
+
+/**
+ * The same counts per city, so the Filters sheet can show every city
+ * of a region with its number, 0 included.
+ */
+export async function countByCity(filter: {
+  category?: string
+  subcategory?: string
+}): Promise<Record<string, number> | undefined> {
+  return countByPlace('city', filter)
+}
+
+async function countByPlace(
+  column: 'governorate' | 'city',
+  {
+    category,
+    subcategory,
+  }: {
+    category?: string
+    subcategory?: string
+  },
+): Promise<Record<string, number> | undefined> {
   const run = () =>
     countPublished(
-      'listings.governorate-counts',
+      `listings.${column}-counts`,
       ({ businesses, subcategories }) => {
         const values: unknown[] = []
-        const where = [PUBLISHED_SQL, 'b.governorate is not null']
+        const where = [PUBLISHED_SQL, `b.${column} is not null`]
 
         if (category) {
           values.push(category)
@@ -665,7 +687,7 @@ export async function countByGovernorate({
         }
 
         return {
-          sql: `select b.governorate::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
+          sql: `select b.${column}::text as key, count(*)::int as n from ${businesses} b where ${where.join(' and ')} group by 1`,
           values,
         }
       },
@@ -681,7 +703,7 @@ export async function countByGovernorate({
    */
   const counts = await unstable_cache(
     run,
-    ['governorate-counts', category ?? '', subcategory ?? ''],
+    [`${column}-counts`, category ?? '', subcategory ?? ''],
     { revalidate: LISTINGS_TTL, tags: ['businesses'] },
   )()
 
@@ -693,10 +715,11 @@ export async function countByGovernorate({
 /**
  * The listings a venue has paid to have shown.
  *
- * This is the visible half of what the gold tier buys - the home page draws a
- * band of these above everything else. The other half needs no query at all:
- * every listing grid sorts on `-tier` first, so a gold listing rises to the top
- * of its section without anything here. Gold includes the magazine page, so
+ * This is the visible half of what the platinum tier buys - the home page draws
+ * a band of these above everything else. The other half needs no query at all:
+ * every listing grid sorts on `-tier` first, so a platinum listing, then a gold
+ * one, rises to the top of its section without anything here. Platinum includes
+ * the magazine page, so
  * the band only ever holds magazine listings.
  *
  * # Why it is its own query rather than a filter on the homepage grid
@@ -717,18 +740,18 @@ export async function findFeaturedListings({
     const payload = await client()
     // As many places as the admin's Tiers page sets. Saving that page clears
     // this cache (globals/Settings), so a new number shows straight away.
-    const limit = await goldPlaces(payload)
+    const { maxPlatinum: limit } = await tierLimits(payload)
 
     const result = await payload.find({
       collection: 'businesses',
-      where: { tier: { equals: 'gold' } },
+      where: { tier: { in: HOME_PAGE_TIERS } },
       locale: dataLocale(locale),
       depth: 1,
       limit,
       pagination: false,
       // Drafts are excluded by the collection's own access rule, not here.
       overrideAccess: false,
-      // All gold, so this orders the band by name.
+      // All platinum, so this orders the band by name.
       sort: ['name'],
     })
 
@@ -865,11 +888,11 @@ export type RelatedListing = ListingSummary & { nearby: NearbyPick }
  *
  * Same category is the strong signal: somebody reading about a hotel is
  * choosing a hotel. Among those, the order is by distance from the listing's
- * coordinates, then its district, then its governorate. See lib/nearby.
+ * coordinates, then its city, then its governorate. See lib/nearby.
  *
  * It used to prefer the governorate only among the category's 24 best-ranked
  * places across the whole country. Once the catalogue spread past two
- * districts, that meant a Bekaa listing could be offered three places in
+ * cities, that meant a Bekaa listing could be offered three places in
  * Beirut under the word "Nearby", because no Bekaa place made the top 24. The
  * whole category is ranked now, from a small cached index of where each place
  * is, and only the three chosen are loaded.
@@ -919,7 +942,7 @@ export async function findRelatedListings({
 /**
  * Where every published place in a category is, in directory order.
  *
- * Only the id, the point, the district and the governorate: about 80 bytes a
+ * Only the id, the point, the city and the governorate: about 80 bytes a
  * listing, so the largest category (Mount Lebanon's hospitality and food run
  * to a few hundred) is tens of kilobytes. One key per category, the same for
  * every language, so a build fills seven entries however many listings it
@@ -935,12 +958,12 @@ async function categoryPlaces(category: string): Promise<Placed[]> {
       depth: 0,
       sort: ['-tier', 'name'],
       overrideAccess: false,
-      select: { location: true, district: true, governorate: true },
+      select: { location: true, city: true, governorate: true },
     })
     return result.docs.map((doc) => ({
       id: doc.id,
       location: doc.location ?? null,
-      district: doc.district ?? null,
+      city: doc.city ?? null,
       governorate: doc.governorate ?? null,
     }))
   }
@@ -1051,13 +1074,13 @@ export async function findAllListingSlugs({
   indexableOnly = false,
 }: { indexableOnly?: boolean } = {}) {
   const payload = await client()
-  const result = await findEvery<Pick<Business, 'id' | 'slug'>>(payload, {
+  const result = await findEvery<Pick<Business, 'id' | 'slug' | 'name'>>(payload, {
     collection: 'businesses',
     // Static generation still includes hidden pages; only the sitemap opts in.
     ...(indexableOnly ? { where: { 'seo.noIndex': { not_equals: true } } } : {}),
     depth: 0,
     overrideAccess: false,
-    select: { slug: true },
+    select: { slug: true, ...(indexableOnly ? { name: true } : {}) },
   })
 
   if (!result.complete) {
@@ -1067,5 +1090,6 @@ export async function findAllListingSlugs({
     )
   }
 
-  return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
+  const docs = indexableOnly ? result.docs.filter((doc) => !isReviewListing(doc)) : result.docs
+  return docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }

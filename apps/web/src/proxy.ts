@@ -2,7 +2,7 @@ import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 import { adminRedirectFor, PAYLOAD_COOKIE, tokenCollection } from './lib/admin-guard'
-import { legacyCategoryRedirect } from './lib/legacy-urls'
+import { legacyCategoryRedirect, mergedPageRedirect } from './lib/legacy-urls'
 import { isUnknownTopLevelPath } from './lib/known-paths'
 import { HINT_VALUE, SESSION_HINT } from './lib/session-hint'
 
@@ -144,6 +144,12 @@ export default function proxy(request: NextRequest): NextResponse {
     return NextResponse.redirect(new URL(moved, request.nextUrl), 308)
   }
 
+  // A standing page merged into another (lib/legacy-urls), same real 308.
+  const merged = mergedPageRedirect(request.nextUrl.pathname)
+  if (merged) {
+    return NextResponse.redirect(new URL(merged, request.nextUrl), 308)
+  }
+
   const response = syncSessionHint(request, intl(request) as NextResponse)
 
   /**
@@ -237,6 +243,15 @@ export default function proxy(request: NextRequest): NextResponse {
  * sign-up *page* wants the readable URL, and the two cannot share a path once
  * this file stops rewriting one of them into the other.
  *
+ * `/place-submissions/*` is JSON (the add-your-place start, finish, status and its
+ * number picker), and `/place-uploads` is the phone's multipart photo upload, so
+ * both are excluded like `/booking`.
+ *
+ * `/brand-data/*` (a public restaurant brand) and `/partner-data/*` (a partner
+ * adding a branch) are Task 9's JSON endpoints, excluded the same way. They
+ * have their own -data prefixes so the page paths `/brands/<slug>` and
+ * `/partner/*` keep their locale routing.
+ *
  * # A dot means a file, except in a visit link
  *
  * `.*\.` keeps files (`/favicon.ico`, `/sitemap.xml`) out of locale routing.
@@ -248,7 +263,7 @@ export default function proxy(request: NextRequest): NextResponse {
  */
 export const config = {
   matcher: [
-    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
+    '/((?!(?:api|admin|auth|booking|billing|invoice|reviews|save|read|g|qr|reports|not-found-404|place-submissions|place-uploads|brand-data|partner-data|_next|_vercel|media)(?:/|$)|(?!visit/).*\\.).*)',
     '/admin/:path*',
     '/admin',
   ],

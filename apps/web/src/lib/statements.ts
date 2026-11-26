@@ -161,7 +161,8 @@ export async function drawUpStatements(
           where: { id: { in: venueIds } },
           depth: 0,
           overrideAccess: true,
-          draft: true,
+          // A listing in the trash still owes for the visits it had.
+          trash: true,
           select: { name: true, commission: true },
         })
 
@@ -343,7 +344,13 @@ export async function sendDrafts(
 
     if ((await venueOwnerEmails(payload, businessId)).length === 0) {
       const venue = await payload
-        .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+        .findByID({
+          collection: 'businesses',
+          id: businessId,
+          depth: 0,
+          overrideAccess: true,
+          trash: true,
+        })
         .catch(() => null)
       result.noRecipient.push(String((venue as { name?: unknown } | null)?.name ?? businessId))
       continue

@@ -44,6 +44,7 @@ interface BookingDoc {
   locale?: string
   customer?: unknown
   declineReason?: string
+  guestAnswer?: string | null
 }
 
 const idOf = (value: unknown): number | string | null => {
@@ -79,6 +80,19 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
   const expired = context?.autoDeclined === true
   const outcome = expired ? 'expired' : outcomeFor(from, to)
   if (!outcome) return doc
+
+  /**
+   * The review invitation says the business marked the visit done. An automatic
+   * completion (lib/statements) marked nothing, and a guest who answered that
+   * they did not come must not be invited to review. Both stay reviewable or
+   * not by the review rule itself; this is only about what we write.
+   */
+  if (
+    outcome === 'completed' &&
+    (context?.autoCompleted === true || current.guestAnswer === 'did-not-come')
+  ) {
+    return doc
+  }
 
   const actor = req?.user?.collection
 
@@ -144,6 +158,15 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
     const end = new Date(String(current.end))
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return doc
 
+    let businessName: string | undefined
+    const businessId = idOf(current.business)
+    if (outcome === 'completed' && businessId !== null) {
+      const business = await req.payload
+        .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+        .catch(() => null)
+      businessName = String((business as { name?: unknown } | null)?.name ?? '') || undefined
+    }
+
     await sendBookingOutcome({
       payload: req.payload,
       to: email,
@@ -153,6 +176,7 @@ export const notifyBookingStatus: CollectionAfterChangeHook = async ({
       start,
       end,
       partySize: Number(current.partySize ?? 1),
+      businessName,
       // Captured when they booked. See the field on the Bookings collection.
       // Any language the site has, not just Arabic: this read `=== 'ar' ? 'ar'
       // : 'en'`, so the answer to a French booking would have come in English.
@@ -197,7 +221,13 @@ async function notifyVenue(booking: BookingDoc, from: BookingStatus, req: Payloa
   if (recipients.length === 0) return
 
   const business = await req.payload
-    .findByID({ collection: 'businesses', id: businessId, depth: 0, overrideAccess: true })
+    .findByID({
+      collection: 'businesses',
+      id: businessId,
+      depth: 0,
+      overrideAccess: true,
+      trash: true,
+    })
     .catch(() => null)
 
   const customerId = idOf(booking.customer)

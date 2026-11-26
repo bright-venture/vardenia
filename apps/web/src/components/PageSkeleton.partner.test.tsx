@@ -21,6 +21,7 @@ vi.mock('../lib/session', () => ({
   currentOwner: async () => ({ email: 'partner@example.test', businessIds: ['1'] }),
   ownerListings: async () => [{ name: 'Sample venue' }],
 }))
+vi.mock('../lib/partner-listing-details', () => ({ ownsRestaurant: async () => false }))
 vi.mock('../i18n/routing', () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>

@@ -1,3 +1,4 @@
+import { ReaderDeskNav } from '../account/ReaderDeskNav'
 import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import type { Locale } from '@vardenia/i18n'
@@ -42,6 +43,7 @@ export async function PassportBook({
 
   return (
     <main className="vd-passport-page mx-auto max-w-5xl px-6 py-16">
+      {locale === 'en' && <ReaderDeskNav t={account} current="/account/passport" />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="sr-only">{t('title')}</h1>
         <Link href="/account" className={LINK}>
@@ -99,7 +101,7 @@ export async function PassportBook({
 
       <ul className="border-ink-100 bg-surface-raised mt-6 grid grid-cols-1 gap-x-4 gap-y-10 border p-6 min-[480px]:grid-cols-2 sm:grid-cols-3 sm:p-10">
         {passport.stamps.map((stamp) => {
-          const where = placeLabel(stamp.place.governorate, stamp.place.district, locale)
+          const where = placeLabel(stamp.place.governorate, stamp.place.city, locale)
           const name = stamp.place.slug ? (
             <Link href={`/directory/${stamp.place.slug}`} className="hover:underline">
               {stamp.place.name}

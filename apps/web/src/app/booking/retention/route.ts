@@ -2,15 +2,21 @@ import { getPayload } from 'payload'
 import config from '../../../payload.config'
 import { isSchedulerRequest } from '../../../lib/booking-expiry'
 import { applyRetention } from '../../../lib/retention'
+import { hideLapsedListings } from '../../../lib/contract-lapse'
 import { reportError } from '../../../lib/report'
 
 /**
- * Deletes what the privacy policy only keeps for a while. Called hourly by
+ * Deletes what the privacy policy only keeps for a while. Called daily by
  * netlify/functions/apply-retention.mts; see lib/retention.
  *
  * Under /booking with the other scheduler calls, so whatever lets those through
  * Cloudflare lets this one through too. Anything without the scheduler's
  * secret gets a 404, so the endpoint does not even confirm it exists.
+ *
+ * Since 17 November 2026 it also hides listings whose contract has ended (see
+ * lib/contract-lapse). Run here rather than from a fourth scheduled function,
+ * because both are once a day and every scheduled run costs Netlify credits.
+ * Each step runs even if the other fails.
  *
  * `?dry=1` counts what a run would do and changes nothing.
  */
@@ -27,19 +33,34 @@ export async function POST(request: Request) {
 
   const dryRun = new URL(request.url).searchParams.get('dry') === '1'
 
+  let lapsed: Awaited<ReturnType<typeof hideLapsedListings>> | null = null
+  try {
+    const payload = await getPayload({ config })
+    lapsed = await hideLapsedListings(payload, { dryRun })
+    if (lapsed.failed > 0) {
+      await reportError(new Error(`${lapsed.failed} lapsed listing(s) could not be hidden`), {
+        source: 'contract.lapse',
+        level: 'warning',
+        extra: { ...lapsed },
+      })
+    }
+  } catch (error) {
+    await reportError(error, { source: 'contract.lapse', path: '/booking/retention' })
+  }
+
   try {
     const payload = await getPayload({ config })
     const result = await applyRetention(payload, { dryRun })
     if (result.failed > 0) {
-      await reportError(new Error(`${result.failed} old booking(s) could not be cleared`), {
+      await reportError(new Error('Retention could not clear old receipts'), {
         source: 'booking.retention',
         level: 'warning',
         extra: { ...result },
       })
     }
-    return json({ ok: true, ...result })
+    return json({ ok: true, ...result, lapsed })
   } catch (error) {
     await reportError(error, { source: 'booking.retention', path: '/booking/retention' })
-    return json({ ok: false }, 500)
+    return json({ ok: false, lapsed }, 500)
   }
 }

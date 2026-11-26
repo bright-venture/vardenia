@@ -1,3 +1,8 @@
+import { isReviewListing } from '../../../../../../lib/review-listing'
+import Image from 'next/image'
+import { JsonLd } from '../../../../../../components/JsonLd'
+import { issueSchema } from '../../../../../../lib/structured-data'
+import { ALL_LEBANON_DESCRIPTION, issueCover } from '../../../../../../lib/issue-presentation'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { hiddenPages, notFoundIfHidden } from '../../../../../../lib/hidden-pages'
@@ -62,9 +67,14 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const t = await getTranslations({ locale })
   return buildMetadata({
     seo: undefined,
-    title: issue.title,
-    description: t('magazine.issueMetaDescription', { number: issue.issueNumber }),
-    fallbackImage: issue.cover as never,
+    title: locale === 'en' && slug === 'all-lebanon' ? 'All Lebanon travel magazine' : issue.title,
+    description:
+      locale === 'en' && slug === 'all-lebanon'
+        ? ALL_LEBANON_DESCRIPTION
+        : locale === 'en'
+          ? `Explore ${issue.title}, issue ${issue.issueNumber} of Vardenia’s Lebanon travel magazine. Browse the edition and its published contents.`
+          : t('magazine.issueMetaDescription', { number: issue.issueNumber }),
+    fallbackImage: issueCover(issue, locale),
     path: `/magazine/issues/${slug}`,
     locale,
   })
@@ -81,12 +91,18 @@ export default async function IssuePage({ params }: Params) {
   if (!issue) notFound()
 
   const t = await getTranslations()
-  const [articles, listings, hidden] = await Promise.all([
+  const cover = issueCover(issue, locale)
+  const borrowedCover = cover !== issue.cover
+  const allLebanon = locale === 'en' && slug === 'all-lebanon'
+  const [articles, issueListings, hidden] = await Promise.all([
     findArticlesInIssue(issue.id, locale),
     findListingsInIssue(issue.id, locale),
     hiddenPages(),
   ])
   // With Articles hidden (lib/hidden-pages), their block goes: it links to them.
+  const listings = allLebanon
+    ? issueListings.filter((listing) => !isReviewListing(listing))
+    : issueListings
   const articlesShown = !hidden.includes('magazine-articles')
   // The magazine's seven regions in its order, each with its places; a
   // listing with no region (none today) closes the list rather than vanishing.
@@ -112,16 +128,22 @@ export default async function IssuePage({ params }: Params) {
 
   return (
     <main className="vd-issue-page mx-auto max-w-6xl px-6 py-16">
+      {locale === 'en' && (
+        <JsonLd
+          data={issueSchema(
+            issue.title,
+            slug,
+            issue.issueNumber,
+            allLebanon ? ALL_LEBANON_DESCRIPTION : undefined,
+          )}
+        />
+      )}
       <Link href="/magazine/issues" className="text-gold-700 text-xs uppercase tracking-[0.2em]">
         {t('magazine.issues')}
       </Link>
 
       <div className="vd-issue-header mt-6 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
-        <MagazineCover
-          media={issue.cover as never}
-          sizes="(max-width:700px) 100vw, 260px"
-          priority
-        />
+        <MagazineCover media={cover} sizes="(max-width:700px) 100vw, 260px" priority />
 
         <div>
           <p className="text-ink-500 text-xs uppercase tabular-nums tracking-widest">
@@ -136,17 +158,30 @@ export default async function IssuePage({ params }: Params) {
 
           <div className="text-ink-500 mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {issue.season ? <span>{issue.season}</span> : null}
-            {issue.publishedAt ? (
+            {issue.publishedAt && !borrowedCover ? (
               <time dateTime={issue.publishedAt}>
                 {formatDate(new Date(issue.publishedAt), locale as Locale)}
               </time>
             ) : null}
-            {issue.pageCount ? (
+            {issue.pageCount && !borrowedCover ? (
               <span className="tabular-nums">
                 {t('magazine.pageCount', { count: issue.pageCount })}
               </span>
             ) : null}
           </div>
+
+          {allLebanon && (
+            <div className="mt-5 max-w-xl space-y-4 leading-relaxed">
+              <p>
+                All Lebanon is Vardenia’s travel magazine for exploring the country by region. Start
+                in Beirut, then turn to Matn, Keserwan, the North, Chouf, the Bekaa and the South
+                for places to stay, eat and visit.
+              </p>
+              <a className="vd-text-link" data-sample-primary={!edition} href="#beirut-spread">
+                Preview Beirut, pages 4–5
+              </a>
+            </div>
+          )}
 
           {/*
             Print run is staff-facing intelligence, not reader-facing. It is what
@@ -173,7 +208,38 @@ export default async function IssuePage({ params }: Params) {
         />
       ) : null}
 
-      {articlesShown ? (
+      {allLebanon && (
+        <section
+          id="beirut-spread"
+          aria-labelledby="beirut-spread-title"
+          className="mx-auto mt-16 max-w-4xl scroll-mt-24"
+        >
+          <h2 id="beirut-spread-title" className="font-display text-3xl">
+            Beirut, pages 4–5
+          </h2>
+          <p className="mt-3 max-w-2xl">
+            The Beirut chapter opens on the coast. These facing pages introduce the city through its
+            waterfront, neighbourhoods and late tables.
+          </p>
+          <div className="mt-6 grid grid-cols-2" dir="ltr">
+            {[4, 5].map((page) => (
+              <Image
+                key={page}
+                src={`/journey/magazine-pages/all-lebanon-00${page}.webp`}
+                alt={`All Lebanon, Beirut opening spread, page ${page}`}
+                width={1057}
+                height={1500}
+                sizes="(max-width: 900px) 45vw, 448px"
+              />
+            ))}
+          </div>
+          <Link className="vd-text-link mt-6" href="/destinations/byblos">
+            Explore the Byblos guide
+          </Link>
+        </section>
+      )}
+
+      {articlesShown && (!allLebanon || articles.length > 0) ? (
         <section className="mt-16">
           <h2 dir="auto" className="text-ink-500 text-xs uppercase tracking-widest">
             {t('magazine.inThisIssue')}

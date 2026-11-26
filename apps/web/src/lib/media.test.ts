@@ -80,7 +80,7 @@ describe('resolveGallery', () => {
      * listing displayed every image uploaded to it, 40 in one case.
      */
     it('caps every tier at its allowance', () => {
-      for (const t of ['bronze', 'silver', 'gold'] as const) {
+      for (const t of ['bronze', 'silver', 'gold', 'platinum'] as const) {
         expect(resolveGallery(gallery(50), can(t, 'galleryLimit')), t).toHaveLength(15)
       }
     })
@@ -102,7 +102,7 @@ describe('resolveGallery', () => {
 
 describe('tierOf', () => {
   it('passes through the real tiers', () => {
-    for (const t of ['bronze', 'silver', 'gold'] as const) {
+    for (const t of ['bronze', 'silver', 'gold', 'platinum'] as const) {
       expect(tierOf(t)).toBe(t)
     }
   })
@@ -114,7 +114,7 @@ describe('tierOf', () => {
 
   /** Fails closed: a corrupt tier must not hand out partner privileges. */
   it('falls back to the lowest tier for anything unrecognised', () => {
-    for (const v of [null, undefined, '', 'platinum', 42, {}]) {
+    for (const v of [null, undefined, '', 'diamond', 42, {}]) {
       expect(tierOf(v)).toBe('bronze')
     }
   })
