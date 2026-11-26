@@ -288,6 +288,7 @@ export async function loadPlaceReports(
         and: [
           { contractEndsAt: { greater_than_equal: now.toISOString() } },
           { contractEndsAt: { less_than: until } },
+          { isSample: { not_equals: true } },
         ],
       },
       sort: 'contractEndsAt',

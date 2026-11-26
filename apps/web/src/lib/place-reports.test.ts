@@ -58,6 +58,14 @@ describe('who sees the reports', () => {
     expect(result?.moneyWeeks).toEqual([])
     expect(result?.weeks).toBe(DEFAULT_WEEKS)
   })
+
+  it('keeps sample listings out of the contracts query', async () => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    await loadPlaceReports({ find } as never, admin, { now: new Date('2026-11-24T10:00:00Z') })
+    const calls = find.mock.calls as unknown as [{ where?: { and?: unknown[] }; sort?: string }][]
+    const contracts = calls.map(([a]) => a).find((a) => a.sort === 'contractEndsAt')!
+    expect(contracts.where?.and).toContainEqual({ isSample: { not_equals: true } })
+  })
 })
 
 describe('weeks', () => {

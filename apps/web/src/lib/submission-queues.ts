@@ -44,6 +44,8 @@ export type QueueKey =
   | 'closed'
   | 'incomplete'
   | 'all'
+  | 'sample'
+  | 'real'
 
 export interface Queue {
   key: QueueKey
@@ -118,6 +120,20 @@ export const SUBMISSION_QUEUES: readonly Queue[] = [
     label: 'All',
     hint: 'Every listing, with or without a form.',
     where: null,
+    sort: '-createdAt',
+  },
+  {
+    key: 'sample',
+    label: 'Sample listings',
+    hint: 'Placeholder listings flagged as samples. They carry no number and stay out of the contract report.',
+    where: only({ isSample: { equals: true } }),
+    sort: '-createdAt',
+  },
+  {
+    key: 'real',
+    label: 'Real listings',
+    hint: 'Every listing that is not a sample.',
+    where: only({ isSample: { not_equals: true } }),
     sort: '-createdAt',
   },
 ]
@@ -237,17 +253,18 @@ export function isShowing(
  * list is a programming error and throws: the SQL below interpolates only these
  * constants, never a path or a value from a request.
  */
-const COLUMNS: Record<string, { column: string; type: 'text' | 'timestamptz' }> = {
+const COLUMNS: Record<string, { column: string; type: 'text' | 'timestamptz' | 'boolean' }> = {
   [STATUS]: { column: 'submission_status', type: 'text' },
   [STAGE]: { column: 'submission_payment_stage', type: 'text' },
   [DOWNPAYMENT_DUE]: { column: 'submission_payment_downpayment_due_at', type: 'timestamptz' },
   [BALANCE_DUE]: { column: 'submission_payment_balance_due_at', type: 'timestamptz' },
+  isSample: { column: 'is_sample', type: 'boolean' },
 }
 
 /**
  * A chip's `where` as a SQL condition, every value bound as a parameter.
- * Supports what the chips use: and, or, equals, in, less_than,
- * greater_than_equal. An empty `and` is true; an empty `or` is false.
+ * Supports what the chips use: and, or, equals, not_equals, in,
+ * less_than, greater_than_equal. An empty `and` is true; an empty `or` is false.
  */
 export function whereToSql(where: Where, values: unknown[]): string {
   const parts: string[] = []
@@ -268,6 +285,9 @@ export function whereToSql(where: Where, values: unknown[]): string {
       switch (operator) {
         case 'equals':
           parts.push(`${column} = ${p}${cast}`)
+          break
+        case 'not_equals':
+          parts.push(`${column} <> ${p}${cast}`)
           break
         case 'in':
           parts.push(`${column} = any(${p}::${target.type}[])`)
