@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '../../../payload.config'
 import { downpaymentFor } from '../../../lib/place-payment-rules'
+import { draftPrice } from '../../../lib/place-draft-price'
 import { getPlaceSettings } from '../../../lib/place-settings'
 import { withRateLimit } from '../../../lib/rate-limit'
 
@@ -13,6 +14,15 @@ import { withRateLimit } from '../../../lib/rate-limit'
  * returned: the owner gets it by email), never cached.
  *
  * Rate limited in memory like the number picker: a read with no side effect.
+ *
+ * # The price is the started form's own (PRD v7 section 5)
+ *
+ * With the form's session token in the `x-place-session` header, the price and
+ * downpayment are the ones copied onto its draft when it started (lib/place-
+ * draft-price), so an admin editing the issue's price afterwards changes
+ * nothing for that form. The token travels in a header, never in the address,
+ * so it stays out of logs. Without one (or for a form started before layouts),
+ * the Settings values answer as before.
  */
 
 export const dynamic = 'force-dynamic'
@@ -20,21 +30,22 @@ export const dynamic = 'force-dynamic'
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
-export const GET = withRateLimit(async () => {
+export const GET = withRateLimit(async (request?: Request) => {
   try {
     const payload = await getPayload({ config })
     const settings = await getPlaceSettings(payload)
+    const draft = await draftPrice(payload, request?.headers.get('x-place-session'))
+    const price = draft?.price ?? settings.pricePerYear
     return json({
       ok: true,
-      // The price shown comes from the start result (the layout's price); these
-      // are the Settings values, kept for older clients.
       layoutsEnabled: true,
-      price: settings.pricePerYear,
+      price,
       currency: settings.currency,
       termMonths: settings.termMonths,
       termsVersion: settings.termsVersion,
       downpaymentPercent: settings.downpaymentPercent,
-      downpaymentAmount: downpaymentFor(settings.pricePerYear, settings.downpaymentPercent),
+      downpaymentAmount:
+        draft?.downpaymentAmount ?? downpaymentFor(price, settings.downpaymentPercent),
       downpaymentDeadlineDays: settings.downpaymentDeadlineDays,
       balanceDeadlineDays: settings.balanceDeadlineDays,
     })

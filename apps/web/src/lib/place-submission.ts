@@ -352,16 +352,18 @@ export async function startPlaceSubmission(args: {
         message: 'Listings in that region are not open for this issue yet.',
       }
     }
-    if (!isInRange(input.listingNumber, range)) {
-      return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
-    }
     // The layout must be on sale in this issue, and the number one of its
     // slots inside the governorate's block. Slots and price are read here, from
-    // the issue as it is now, never from the browser or an earlier answer.
+    // the issue as it is now, never from the browser or an earlier answer. The
+    // layout is checked before the number, so a layout that is not on sale is
+    // refused as such whatever number came with it.
     const { slots, prices } = await issueLayouts(payload, input.issue)
     const layoutPrice = offeredPrice(prices, slots, input.layout)
     if (layoutPrice === null) {
       return { ok: false, code: 'layout-unavailable', message: LAYOUT_UNAVAILABLE }
+    }
+    if (!isInRange(input.listingNumber, range)) {
+      return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     const isSlot = layoutSlots(slots, input.layout, range).some(
       (slot) => slot.number === input.listingNumber,

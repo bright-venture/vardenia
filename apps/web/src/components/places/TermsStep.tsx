@@ -40,6 +40,7 @@ const CHECK = 'accent-cedar-900 size-4 shrink-0'
 export function TermsStep({
   locale,
   quote = null,
+  sessionToken = null,
   busy,
   problem,
   canSubmit,
@@ -49,6 +50,8 @@ export function TermsStep({
   locale: string
   /** The chosen layout's price from the start answer. */
   quote?: Quote | null
+  /** The started form's token, so the terms answer with its draft's own price. */
+  sessionToken?: string | null
   busy: boolean
   problem: string | null
   /** False while the bot check has not produced its token yet. */
@@ -69,7 +72,7 @@ export function TermsStep({
 
   useEffect(() => {
     let current = true
-    void fetchTerms().then((result) => {
+    void fetchTerms(fetch, sessionToken).then((result) => {
       if (!current) return
       setFailed(result === null)
       setTerms(result)
@@ -77,7 +80,7 @@ export function TermsStep({
     return () => {
       current = false
     }
-  }, [reload])
+  }, [reload, sessionToken])
 
   const retry = useCallback(() => {
     setFailed(false)

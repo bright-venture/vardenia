@@ -1076,6 +1076,7 @@
       "chooseLayout": "اختاروا حجمًا أعلاه لرؤية الأماكن المتاحة.",
       "noneForLayout": "هذا الحجم غير متوفر في هذه المنطقة. يرجى اختيار حجم آخر.",
       "price": "{amount} في السنة",
+      "priceFrom": "ابتداءً من {amount} في السنة",
       "free": "{free} متاحة",
       "slotPage": "الصفحة {page}",
       "slotPosition": "الصفحة {page}، الموقع {position}",

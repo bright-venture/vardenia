@@ -340,6 +340,18 @@ describe('startPlaceSubmission', () => {
     expect(s.create).not.toHaveBeenCalled()
   })
 
+  /**
+   * The layout is checked before the number (QA run 26 November 2026, LP-ST2):
+   * a layout that is not on sale is refused as such, whatever number came
+   * with it, so the owner is told to choose another size, not another number.
+   */
+  it('refuses a switched-off layout as a layout problem even with an out-of-block number', async () => {
+    const s = stub({ layouts: [{ layout: 'full-page', offered: false, price: 500 }] })
+    const out = await startPlaceSubmission({ payload: s, input: input({ listingNumber: 99 }) })
+    expect(out).toMatchObject({ ok: false, code: 'layout-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
   it('refuses a number in the block that is a slot of another layout, writing nothing', async () => {
     const s = stub()
     // 10 is in the block (10-20) but is half of page 10, not a full page.

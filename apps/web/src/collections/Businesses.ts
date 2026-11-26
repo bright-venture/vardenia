@@ -45,7 +45,7 @@ import { categoryOptions, cityOptions, governorateOptions, subcategoryOptions } 
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
-import { guardPageLayout } from '../hooks/guardPageLayout'
+import { guardPageLayout, refuseLayoutChange } from '../hooks/guardPageLayout'
 import { syncOwnerPhoneSearch } from '../hooks/syncOwnerPhoneSearch'
 import { staffSearch } from '../hooks/staffSearch'
 import { HISTORY_STEPS, recordSubmissionHistory } from '../hooks/recordSubmissionHistory'
@@ -170,12 +170,17 @@ const idOf = (value: unknown): number | string | null => {
 }
 
 /** Submission states in which a listing may have no main photo yet. */
-const PHOTO_OPTIONAL_STATUSES = new Set(['incomplete', 'abandoned'])
+const PHOTO_OPTIONAL_STATUSES = new Set(['incomplete', 'abandoned', 'rejected'])
 
 /**
  * The main photo is required for every listing (staff-created ones, and every
  * submission state from pending on), except while the owner's form is
- * incomplete or after it was abandoned. `data` is the whole document being
+ * incomplete, after it was abandoned, or once it was rejected. Rejected joins
+ * the list because staff may reject a form that was never sent (PRD v5:
+ * reject from pending, awaiting downpayment or incomplete), and such a form has
+ * no photo yet; a rejected listing is never public, so nothing shows without
+ * one. Before this, that reject failed on the missing photo (QA run of 26
+ * November 2026, LP-FN7). `data` is the whole document being
  * saved (an update is merged with the stored one first), so a write that only
  * touches the status is judged against the stored photo.
  */
@@ -361,7 +366,7 @@ export const Businesses: CollectionConfig = {
     // A partner may change only core PARTNER_EDITABLE_FIELDS of their own
     // listing, and attach only media they uploaded. See
     // hooks/guardPartnerListingWrite.
-    beforeOperation: [guardSort, staffSearch, guardPartnerListingWrite],
+    beforeOperation: [guardSort, staffSearch, guardPartnerListingWrite, refuseLayoutChange],
     // Every listing on a printed tier gets a QR code automatically; bronze, the
     // website-only tier, gets none. Sales should never have to remember to press
     // a button before a print deadline.
@@ -452,7 +457,7 @@ export const Businesses: CollectionConfig = {
               validate: validHeroImage,
               admin: {
                 description:
-                  'Required for every listing except a submission that is still incomplete or abandoned.',
+                  'Required for every listing except a submission that is still incomplete, abandoned or rejected.',
               },
             },
             {

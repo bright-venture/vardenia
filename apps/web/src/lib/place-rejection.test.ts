@@ -170,6 +170,20 @@ describe('the rejection', () => {
 })
 
 describe('the owner email', () => {
+  /**
+   * A form the owner never sent (still incomplete) can be rejected to free its
+   * number at once (PRD v5), but nobody is emailed: there was nothing to turn
+   * down (QA run of 26 November 2026, LP-FN7).
+   */
+  it('rejects a form that was never sent, frees its number, and emails nobody', async () => {
+    f = fakePayload({ businesses: [business({ heroImage: null }, 'incomplete')] })
+    const result = await reject()
+    expect(result).toMatchObject({ ok: true, emailed: false })
+    expect(f.row('businesses').submission).toMatchObject({ status: 'rejected' })
+    expect(f.row('businesses').listingNumber ?? null).toBeNull()
+    expect(f.emails).toHaveLength(0)
+  })
+
   it('goes to the owner with the reference, and the reason only when shared', async () => {
     await reject({ shareReason: false })
     expect(f.emails).toHaveLength(1)

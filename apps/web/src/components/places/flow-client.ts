@@ -56,9 +56,17 @@ export function formatMoney(value: number, currency: string, locale: string): st
 
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
-export async function fetchTerms(fetchImpl: typeof fetch = fetch): Promise<Terms | null> {
+export async function fetchTerms(
+  fetchImpl: typeof fetch = fetch,
+  /** The started form's token: the server then answers with its draft's own price. */
+  sessionToken?: string | null,
+): Promise<Terms | null> {
   try {
-    const response = await fetchImpl(TERMS_URL, { cache: 'no-store', credentials: 'same-origin' })
+    const response = await fetchImpl(TERMS_URL, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      ...(sessionToken ? { headers: { 'x-place-session': sessionToken } } : {}),
+    })
     if (!response.ok) return null
     const body = await readJson(response)
     if (

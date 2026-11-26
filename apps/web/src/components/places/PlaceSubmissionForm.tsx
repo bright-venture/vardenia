@@ -20,7 +20,7 @@ import {
   SECONDARY_BUTTON,
 } from '../formStyles'
 import { BusinessPagePreview } from './BusinessPagePreview'
-import { postFinish, type FinishResult } from './flow-client'
+import { formatMoney, postFinish, type FinishResult } from './flow-client'
 import {
   checkSubmission,
   citiesFor,
@@ -40,7 +40,7 @@ import { postSubmission, type Quote, type SubmitResult } from './submit-client'
 import { TermsStep } from './TermsStep'
 import { ThanksStep } from './ThanksStep'
 import { useKioskIdle } from './use-kiosk-idle'
-import { issuesForLayout, usePlaceNumbers } from './use-place-numbers'
+import { issuesForLayout, layoutPrice, usePlaceNumbers } from './use-place-numbers'
 
 /**
  * "Add your place" on /magazine-places: a business owner lays out their page in
@@ -388,6 +388,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
           <TermsStep
             locale={locale}
             quote={session?.quote ?? null}
+            sessionToken={session?.token ?? null}
             busy={busy}
             problem={finishProblem}
             canSubmit={!isTurnstileEnabled() || turnstileToken !== null}
@@ -709,8 +710,22 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                     onChange={() => chooseLayout(layout)}
                     className={CHECK}
                   />
-                  <span className="text-ink-900 text-sm font-semibold">
-                    {t(`form.layouts.${layout}`)}
+                  <span className="flex flex-col">
+                    <span className="text-ink-900 text-sm font-semibold">
+                      {t(`form.layouts.${layout}`)}
+                    </span>
+                    {/* The price beside each size (PRD v7 section 9), once a region is chosen. */}
+                    {(() => {
+                      const price =
+                        numbers.state === 'ready' ? layoutPrice(numbers.issues, layout) : null
+                      if (!price) return null
+                      const amount = formatMoney(price.amount, price.currency, locale)
+                      return (
+                        <span className="text-ink-700 text-sm">
+                          {t(price.from ? 'numbers.priceFrom' : 'numbers.price', { amount })}
+                        </span>
+                      )
+                    })()}
                   </span>
                 </label>
               ))}

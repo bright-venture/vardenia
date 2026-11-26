@@ -103,6 +103,11 @@ async function sendRejection(args: {
   listingId: number
 }): Promise<boolean> {
   const { payload, business, listingId } = args
+  // A form the owner never sent (still incomplete when staff rejected it) gets
+  // no email: they submitted nothing, so there is nothing to turn down. Its
+  // number is simply released. `business` is the listing as it was before the
+  // rejection.
+  if (business.submission?.status === 'incomplete') return false
   const to = business.submission?.ownerEmail
   if (!to) return false
   try {

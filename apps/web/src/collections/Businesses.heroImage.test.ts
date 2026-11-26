@@ -16,8 +16,8 @@ const check = (value: unknown, status?: string) =>
   validHeroImage(value, options(status === undefined ? {} : { submission: { status } }))
 
 describe('validHeroImage', () => {
-  const optional = ['incomplete', 'abandoned']
-  const required = ['pending', 'accepted', 'approved', 'lapsed', 'expired', 'rejected']
+  const optional = ['incomplete', 'abandoned', 'rejected']
+  const required = ['pending', 'accepted', 'approved', 'lapsed', 'expired']
 
   it.each(optional)('allows no photo while %s', async (status) => {
     expect(await check(null, status)).toBe(true)
