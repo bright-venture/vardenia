@@ -51,6 +51,8 @@ export const PROTECTED_SORT_FIELDS = [
   'salesOwner',
   'internalNotes',
   'importBatch',
+  // Sorting by it would tell a reader which listings are mock ones.
+  'isSample',
   // Draft / Published / Rejected / Expired: tells a reader whose contract ended.
   'state',
   'commission.rate',

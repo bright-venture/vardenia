@@ -11,6 +11,9 @@ vi.mock('next/navigation', () => ({
     throw new Error('not found')
   },
 }))
+// The page links back with the site's Link; next-intl's navigation behind it
+// is not needed to read the metadata.
+vi.mock('../../../../../i18n/routing', () => ({ Link: () => null }))
 vi.mock('../../../../../components/places/PlacePhotoUpload', () => ({
   PlacePhotoUpload: () => null,
 }))

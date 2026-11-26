@@ -1,5 +1,6 @@
 import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 import { isStaff } from '../access/index'
+import { reportError } from '../lib/report'
 
 /**
  * Questions guests send from the bottom of the Questions page (18 November
@@ -36,8 +37,12 @@ const sendAnswer: CollectionBeforeChangeHook = async ({ data, originalDoc, req, 
     })
     data.answeredAt = new Date().toISOString()
   } catch (error) {
-    // Not stamped, so saving again retries.
-    console.error('[guest-question] could not send the answer', error)
+    // Not stamped, so saving again retries. Reported, so a guest left without
+    // their answer shows up in the error list and Sentry, not only in a log.
+    await reportError(error, {
+      source: 'guest-question.answer-email',
+      extra: { question: originalDoc?.id },
+    })
   }
   return data
 }

@@ -62,6 +62,8 @@ export const STAFF_ONLY_LISTING_FIELDS = Object.freeze([
   'booking',
   'issue',
   'listingNumber',
+  // Admin only: a mock listing, not a real business (sample listings).
+  'isSample',
   'submission',
   'importBatch',
   'category',

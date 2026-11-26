@@ -1,4 +1,5 @@
 import type { CollectionAfterChangeHook } from 'payload'
+import { reportError } from '../lib/report'
 
 /**
  * Tells the Vardenia team a guest has asked for event staff (18 November 2026).
@@ -6,7 +7,7 @@ import type { CollectionAfterChangeHook } from 'payload'
  * Sent to every team member with the admin or staff role, the people who can
  * open the request in the admin, so no address has to be configured. Plain
  * text, read on a phone. Never fails the request: a lost email is recoverable
- * from the admin list, a lost request is not.
+ * from the admin list, a lost request is not. A failed send is reported.
  */
 export const notifyTeamOfStaffRequest: CollectionAfterChangeHook = async ({
   doc,
@@ -56,7 +57,12 @@ export const notifyTeamOfStaffRequest: CollectionAfterChangeHook = async ({
       text,
     })
   } catch (error) {
-    console.error('[staff-request] could not email the team', error)
+    // Reported, so a request the team was never told about shows up in the
+    // error list and Sentry, not only in a log.
+    await reportError(error, {
+      source: 'staff-request.team-email',
+      extra: { reference: doc.reference },
+    })
   }
   return doc
 }

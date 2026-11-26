@@ -675,7 +675,7 @@ export interface Business {
   qrCode?: (number | null) | QrCode;
   issue?: (number | null) | Issue;
   /**
-   * The number in the printed magazine, from the range of this governorate in the chosen issue.
+   * The number in the printed magazine, from the range of this governorate in the chosen issue. Sample listings hold no number.
    */
   listingNumber?: number | null;
   /**
