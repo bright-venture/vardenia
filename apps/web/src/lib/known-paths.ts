@@ -50,6 +50,8 @@ const FIXED_SEGMENTS = [
   // A restaurant brand and its branches, /brands/<slug> (Task 12).
   'brands',
   'contact',
+  // Destination guides, /destinations/<place> (the Byblos page).
+  'destinations',
   'directory',
   // Event Staff, the request-form section (18 November 2026).
   'event-staff',

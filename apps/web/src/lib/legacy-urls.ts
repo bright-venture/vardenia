@@ -57,7 +57,7 @@ export function legacyCategoryRedirect(pathname: string, params: URLSearchParams
    * `category` is the one left behind: it is what the path now expresses.
    */
   const kept = new URLSearchParams()
-  for (const key of ['filter', 'where', 'district', 'area', 'price', 'has', 'page']) {
+  for (const key of ['filter', 'where', 'city', 'district', 'area', 'price', 'has', 'page']) {
     const value = params.get(key)
     if (value) kept.set(key, value)
   }

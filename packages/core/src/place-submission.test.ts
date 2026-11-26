@@ -17,7 +17,7 @@ const valid = {
   name: 'Cafe Example',
   kind: 'cafes',
   governorate: 'beirut',
-  district: 'beirut',
+  city: 'beirut',
   address: 'Hamra Street, Beirut',
   ownerName: 'Sami',
   ownerEmail: 'sami@example.com',
@@ -146,31 +146,31 @@ describe('placeSubmissionSchema', () => {
     }
   })
 
-  it('district never changes whether the issue and listing number are valid', () => {
-    // Every district of a governorate gives the same numbers.
+  it('city never changes whether the issue and listing number are valid', () => {
+    // Every city of a governorate gives the same numbers.
     const keserwan = GOVERNORATES.find((g) => g.slug === 'keserwan')!
-    for (const district of keserwan.districts) {
-      const r = parse({ governorate: 'keserwan', district: district.slug })
+    for (const city of keserwan.cities) {
+      const r = parse({ governorate: 'keserwan', city: city.slug })
       expect(r.success).toBe(true)
       if (r.success) {
         expect(r.data.issue).toBe(valid.issue)
         expect(r.data.listingNumber).toBe(valid.listingNumber)
       }
     }
-    // A bad district fails on district alone, never on the numbers.
-    const bad = parse({ district: 'tyre' })
+    // A bad city fails on city alone, never on the numbers.
+    const bad = parse({ city: 'tyre' })
     expect(bad.success).toBe(false)
-    if (!bad.success) expect(bad.error.issues.every((i) => i.path[0] === 'district')).toBe(true)
+    if (!bad.success) expect(bad.error.issues.every((i) => i.path[0] === 'city')).toBe(true)
   })
 
-  it('rejects a district outside the governorate', () => {
-    const r = parse({ district: 'tyre' })
+  it('rejects a city outside the governorate', () => {
+    const r = parse({ city: 'tyre' })
     expect(r.success).toBe(false)
-    if (!r.success) expect(r.error.issues.some((i) => i.path[0] === 'district')).toBe(true)
+    if (!r.success) expect(r.error.issues.some((i) => i.path[0] === 'city')).toBe(true)
   })
 
-  it('accepts a district inside the governorate', () => {
-    expect(parse({ district: 'beirut' }).success).toBe(true)
+  it('accepts a city inside the governorate', () => {
+    expect(parse({ city: 'beirut' }).success).toBe(true)
   })
 
   it('lowercases the owner email', () => {
@@ -228,36 +228,36 @@ describe('placeSubmissionSchema', () => {
     })
   })
 
-  describe('district is required', () => {
-    it('every governorate a place can be in has at least one district', () => {
+  describe('city is required', () => {
+    it('every governorate a place can be in has at least one city', () => {
       for (const slug of LISTING_GOVERNORATES) {
         const gov = GOVERNORATES.find((g) => g.slug === slug)
-        expect(gov?.districts.length, slug).toBeGreaterThan(0)
+        expect(gov?.cities.length, slug).toBeGreaterThan(0)
       }
     })
 
-    it.each(['', '   '])('refuses a blank district (%j) as required', (district) => {
-      const r = parse({ district })
+    it.each(['', '   '])('refuses a blank city (%j) as required', (city) => {
+      const r = parse({ city })
       expect(r.success).toBe(false)
       if (!r.success) {
-        const issue = r.error.issues.find((i) => i.path[0] === 'district')
+        const issue = r.error.issues.find((i) => i.path[0] === 'city')
         expect(issue?.message).toBe('required')
       }
     })
 
-    it('refuses a missing district, on district alone', () => {
+    it('refuses a missing city, on city alone', () => {
       const without: Record<string, unknown> = { ...valid }
-      delete without.district
+      delete without.city
       const r = placeSubmissionSchema.safeParse(without)
       expect(r.success).toBe(false)
-      if (!r.success) expect(r.error.issues.every((i) => i.path[0] === 'district')).toBe(true)
+      if (!r.success) expect(r.error.issues.every((i) => i.path[0] === 'city')).toBe(true)
     })
 
-    it('accepts every district of every governorate, keeping the slug', () => {
+    it('accepts every city of every governorate, keeping the slug', () => {
       for (const gov of GOVERNORATES) {
-        for (const district of gov.districts) {
-          const r = parse({ governorate: gov.slug, district: district.slug })
-          expect(r.success && r.data.district).toBe(district.slug)
+        for (const city of gov.cities) {
+          const r = parse({ governorate: gov.slug, city: city.slug })
+          expect(r.success && r.data.city).toBe(city.slug)
         }
       }
     })

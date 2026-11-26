@@ -12,7 +12,7 @@ const TRIPOLI: [number, number] = [35.8497, 34.4367] // about 68 km
 const at = (id: number, location: Placed['location'], over: Partial<Placed> = {}): Placed => ({
   id,
   location,
-  district: null,
+  city: null,
   governorate: null,
   ...over,
 })
@@ -29,7 +29,7 @@ describe('distanceKm', () => {
 })
 
 describe('rankNearby', () => {
-  const subject = at(1, BEIRUT_HOTEL, { district: 'beirut', governorate: 'beirut' })
+  const subject = at(1, BEIRUT_HOTEL, { city: 'beirut', governorate: 'beirut' })
 
   it('puts the closest first, whatever the directory order', () => {
     const picks = rankNearby(subject, [at(2, BYBLOS), at(3, EM_SHERIF)])
@@ -50,12 +50,12 @@ describe('rankNearby', () => {
     expect(pick?.km).toBeGreaterThan(NEARBY_RADIUS_KM)
   })
 
-  it('falls back to the district, then the governorate, without coordinates', () => {
-    const bare = at(1, null, { district: 'zahle', governorate: 'beqaa' })
+  it('falls back to the city, then the governorate, without coordinates', () => {
+    const bare = at(1, null, { city: 'zahle', governorate: 'beqaa' })
     const picks = rankNearby(bare, [
-      at(2, null, { district: 'jbeil', governorate: 'keserwan' }),
-      at(3, null, { district: 'baalbek', governorate: 'beqaa' }),
-      at(4, null, { district: 'zahle', governorate: 'beqaa' }),
+      at(2, null, { city: 'jbeil', governorate: 'keserwan' }),
+      at(3, null, { city: 'baalbek', governorate: 'beqaa' }),
+      at(4, null, { city: 'zahle', governorate: 'beqaa' }),
     ])
     expect(picks).toEqual([
       { id: 4, km: null, near: true },
@@ -64,8 +64,8 @@ describe('rankNearby', () => {
     ])
   })
 
-  it('prefers a measured neighbour over a same-district guess', () => {
-    const picks = rankNearby(subject, [at(2, null, { district: 'beirut' }), at(3, EM_SHERIF)], 2)
+  it('prefers a measured neighbour over a same-city guess', () => {
+    const picks = rankNearby(subject, [at(2, null, { city: 'beirut' }), at(3, EM_SHERIF)], 2)
     expect(picks.map((p) => p.id)).toEqual([3, 2])
   })
 

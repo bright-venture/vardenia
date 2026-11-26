@@ -17,7 +17,7 @@ export interface BranchEmailArgs {
   brandName: string
   brandCreated: boolean
   governorate: string
-  district?: string
+  city?: string
   address: string
   partnerName: string
   partnerEmail: string
@@ -84,7 +84,7 @@ export function branchRequestEmails(args: BranchEmailArgs): {
         ['Copied from', args.sourceName],
         ['Brand', args.brandName],
         ['Governorate', args.governorate],
-        ['Town', args.district ?? ''],
+        ['City', args.city ?? ''],
         ['Address', args.address],
         ['Partner', args.partnerName],
         ['Email', args.partnerEmail],

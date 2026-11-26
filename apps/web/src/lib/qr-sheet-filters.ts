@@ -41,7 +41,7 @@ export interface SheetFilters {
   /** Codes that open this article, and codes for the listings it features. */
   article: number | null
   governorate: string | null
-  district: string | null
+  city: string | null
   /** A section slug (hospitality) or a kind of place (hotels). */
   category: string | null
   tier: string | null
@@ -68,7 +68,7 @@ export const DEFAULT_FILTERS: SheetFilters = {
   issue: null,
   article: null,
   governorate: null,
-  district: null,
+  city: null,
   category: null,
   tier: null,
   batch: null,
@@ -95,7 +95,7 @@ export function parseIssueId(raw: string | null): number | null {
 }
 
 const GOVERNORATE_SLUGS = new Set<string>(GOVERNORATES.map((g) => g.slug))
-const DISTRICT_SLUGS = new Set<string>(GOVERNORATES.flatMap((g) => g.districts.map((d) => d.slug)))
+const CITY_SLUGS = new Set<string>(GOVERNORATES.flatMap((g) => g.cities.map((d) => d.slug)))
 const SECTION_SLUGS = new Set<string>(CATEGORIES.map((c) => c.slug))
 const KIND_SLUGS = new Set<string>(CATEGORIES.flatMap((c) => c.children.map((child) => child.slug)))
 
@@ -137,11 +137,11 @@ export function parseSheetFilters(params: URLSearchParams): ParsedFilters {
     problems.push(`"${articleRaw}" is not an article id.`)
 
   const governorate = get('governorate')
-  const district = get('district')
+  const city = get('city')
   const category = get('category')
   if (governorate && !GOVERNORATE_SLUGS.has(governorate))
     problems.push(`Unknown governorate "${governorate}".`)
-  if (district && !DISTRICT_SLUGS.has(district)) problems.push(`Unknown district "${district}".`)
+  if (city && !CITY_SLUGS.has(city)) problems.push(`Unknown city "${city}".`)
   if (category && !SECTION_SLUGS.has(category) && !KIND_SLUGS.has(category)) {
     problems.push(`Unknown category "${category}".`)
   }
@@ -166,7 +166,7 @@ export function parseSheetFilters(params: URLSearchParams): ParsedFilters {
       issue,
       article,
       governorate: governorate && GOVERNORATE_SLUGS.has(governorate) ? governorate : null,
-      district: district && DISTRICT_SLUGS.has(district) ? district : null,
+      city: city && CITY_SLUGS.has(city) ? city : null,
       category:
         category && (SECTION_SLUGS.has(category) || KIND_SLUGS.has(category)) ? category : null,
       tier: pick(get('tier'), LISTING_TIERS),
@@ -231,7 +231,7 @@ export function sheetWhere(filters: SheetFilters, featuredIds: number[] = []): W
       ],
     })
   }
-  if (filters.district) and.push({ 'business.district': { equals: filters.district } })
+  if (filters.city) and.push({ 'business.city': { equals: filters.city } })
 
   if (filters.category) {
     and.push(
@@ -288,7 +288,7 @@ const KEYS = [
   'issue',
   'article',
   'governorate',
-  'district',
+  'city',
   'category',
   'tier',
   'batch',
@@ -312,7 +312,7 @@ export function filterParams(filters: SheetFilters): Partial<Record<Key, string>
   if (filters.issue !== null) out.issue = String(filters.issue)
   if (filters.article !== null) out.article = String(filters.article)
   if (filters.governorate) out.governorate = filters.governorate
-  if (filters.district) out.district = filters.district
+  if (filters.city) out.city = filters.city
   if (filters.category) out.category = filters.category
   if (filters.tier) out.tier = filters.tier
   if (filters.batch) out.batch = filters.batch
@@ -356,7 +356,7 @@ const NARROWING: Key[] = [
   'issue',
   'article',
   'governorate',
-  'district',
+  'city',
   'category',
   'tier',
   'batch',

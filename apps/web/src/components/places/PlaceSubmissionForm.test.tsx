@@ -230,7 +230,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
     await setValue(q('input[name="name"]'), 'Le Petit Jardin')
     await setValue(q('select[name="kind"]'), 'restaurants')
     await setValue(q('select[name="governorate"]'), 'keserwan')
-    await setValue(q('select[name="district"]'), 'jbeil')
+    await setValue(q('select[name="city"]'), 'jbeil')
     await setValue(q('input[name="address"]'), 'Old Port, Byblos')
     await setValue(q('input[name="ownerName"]'), 'Rita Haddad')
     await setValue(q('input[name="ownerEmail"]'), 'rita@example.com')
@@ -279,12 +279,12 @@ describe('PlaceSubmissionForm, the four steps', () => {
       )
     })
 
-    it("offers exactly the region's districts, by their names, and requires one", async () => {
-      const district = q<HTMLSelectElement>('select[name="district"]')
-      expect(district.required).toBe(true)
-      expect(district.disabled).toBe(true)
+    it("offers exactly the region's cities, by their names, and requires one", async () => {
+      const city = q<HTMLSelectElement>('select[name="city"]')
+      expect(city.required).toBe(true)
+      expect(city.disabled).toBe(true)
       await setValue(q('select[name="governorate"]'), 'keserwan')
-      const options = [...district.options].filter((o) => o.value)
+      const options = [...city.options].filter((o) => o.value)
       expect(options.map((o) => o.value)).toEqual([
         'jounieh',
         'harissa',
@@ -295,42 +295,42 @@ describe('PlaceSubmissionForm, the four steps', () => {
         'jbeil',
       ])
       expect(options.map((o) => o.textContent)).toContain('Faqra / Faraya')
-      expect(district.options[0]!.value).toBe('')
-      expect(district.options[0]!.textContent).toBe(m.form.chooseDistrict)
+      expect(city.options[0]!.value).toBe('')
+      expect(city.options[0]!.textContent).toBe(m.form.chooseCity)
     })
 
-    it('names the districts in Arabic on the Arabic form', async () => {
+    it('names the cities in Arabic on the Arabic form', async () => {
       await act(async () => root.render(wrap('ar')))
       await setValue(q('select[name="governorate"]'), 'keserwan')
-      const names = [...q<HTMLSelectElement>('select[name="district"]').options].map(
+      const names = [...q<HTMLSelectElement>('select[name="city"]').options].map(
         (o) => o.textContent,
       )
       expect(names).toContain('فقرا / فاريا')
       expect(names).toContain('جونية')
-      expect(names[0]).toBe(getMessages('ar').magazinePlaces.form.chooseDistrict)
+      expect(names[0]).toBe(getMessages('ar').magazinePlaces.form.chooseCity)
     })
 
-    it('puts "required" on the district when it is left unchosen, and the preview shows the chosen one', async () => {
+    it('puts "required" on the city when it is left unchosen, and the preview shows the chosen one', async () => {
       await fillAndPick()
-      await setValue(q('select[name="district"]'), '')
+      await setValue(q('select[name="city"]'), '')
       await pressNext()
       expect(calls('/place-submissions').length).toBe(0)
-      const district = q<HTMLSelectElement>('select[name="district"]')
-      expect(district.getAttribute('aria-invalid')).toBe('true')
-      const describedBy = district.getAttribute('aria-describedby')!
+      const city = q<HTMLSelectElement>('select[name="city"]')
+      expect(city.getAttribute('aria-invalid')).toBe('true')
+      const describedBy = city.getAttribute('aria-describedby')!
       expect(container.querySelector(`[id="${describedBy.split(' ').pop()}"]`)!.textContent).toBe(
         m.errors.required,
       )
-      await setValue(district, 'faqra-faraya')
+      await setValue(city, 'faqra-faraya')
       expect(q('[data-template]').textContent).toContain('Faqra / Faraya, Keserwan')
     })
 
-    it('never changes the numbers when the district changes', async () => {
+    it('never changes the numbers when the city changes', async () => {
       await setValue(q('select[name="governorate"]'), 'keserwan')
       await click(numberButton(4))
       const fetched = fetchMock.mock.calls.length
-      await setValue(q('select[name="district"]'), 'jounieh')
-      await setValue(q('select[name="district"]'), 'jbeil')
+      await setValue(q('select[name="city"]'), 'jounieh')
+      await setValue(q('select[name="city"]'), 'jbeil')
       expect(fetchMock.mock.calls.length).toBe(fetched)
       expect(numberButton(4).getAttribute('aria-pressed')).toBe('true')
       expect(nextButton().disabled).toBe(false)
@@ -394,7 +394,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
         pageTemplate: 'a',
         kind: 'restaurants',
         governorate: 'keserwan',
-        district: 'jbeil',
+        city: 'jbeil',
       })
       expect(body.turnstileToken).toBe('ts-1')
       expect(JSON.stringify(body)).not.toMatch(/hero|logo|gallery/)

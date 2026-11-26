@@ -111,10 +111,10 @@ export const placeSubmissionSchema = z
     // One kind of place. The server derives the category from it (categoryOfKind).
     kind: z.custom<SubmittableKindSlug>(isSubmittableKind, UNAVAILABLE_KIND_MESSAGE),
     governorate: z.enum(LISTING_GOVERNORATES),
-    // Required: since 24 November 2026 the districts are the towns readers
+    // Required: since 24 November 2026 the cities are the towns readers
     // know (core regions) and every governorate has at least one. Never
     // decides which numbers are offered or valid; display only.
-    district: z.string().trim().min(1, 'required').max(64, 'too long'),
+    city: z.string().trim().min(1, 'required').max(64, 'too long'),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
     // Stored as the listing's payments.whish; the other methods are never asked.
     acceptsWhish: z.boolean().default(false),
@@ -131,12 +131,12 @@ export const placeSubmissionSchema = z
     locale: z.enum(LOCALE_CODES),
   })
   .superRefine((value, ctx) => {
-    if (value.district) {
+    if (value.city) {
       const gov = GOVERNORATES.find((g) => g.slug === value.governorate)
-      if (!gov || !gov.districts.some((d) => d.slug === value.district)) {
+      if (!gov || !gov.cities.some((d) => d.slug === value.city)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['district'],
+          path: ['city'],
           message: 'is not in the chosen governorate',
         })
       }

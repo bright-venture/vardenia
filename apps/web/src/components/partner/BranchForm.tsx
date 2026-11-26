@@ -25,7 +25,7 @@ import { HINT, NOTICE_ERROR, NOTICE_SUCCESS, PRIMARY_BUTTON, SECONDARY_BUTTON } 
  */
 
 /** The paths this form has an input for. */
-const PLACED = /^(sourceListingId|name|governorate|district|address|mapUrl|location|contact\.\w+)$/
+const PLACED = /^(sourceListingId|name|governorate|city|address|mapUrl|location|contact\.\w+)$/
 
 export function BranchForm({
   sources,
@@ -177,7 +177,7 @@ export function BranchForm({
               {...props}
               required
               value={draft.governorate}
-              onChange={(e) => update({ governorate: e.target.value, district: '' })}
+              onChange={(e) => update({ governorate: e.target.value, city: '' })}
             >
               <option value="">{t('chooseGovernorate')}</option>
               {GOVERNORATES.map((g) => (
@@ -188,16 +188,16 @@ export function BranchForm({
             </select>
           )}
         </Field>
-        <Field fieldId="branch-district" title={t('district')} error={fieldErrors.district}>
+        <Field fieldId="branch-city" title={t('city')} error={fieldErrors.city}>
           {(props) => (
             <select
               {...props}
               disabled={!governorate}
-              value={draft.district}
-              onChange={(e) => update({ district: e.target.value })}
+              value={draft.city}
+              onChange={(e) => update({ city: e.target.value })}
             >
-              <option value="">{t('chooseDistrict')}</option>
-              {(governorate?.districts ?? []).map((d) => (
+              <option value="">{t('chooseCity')}</option>
+              {(governorate?.cities ?? []).map((d) => (
                 <option key={d.slug} value={d.slug}>
                   {named(d)}
                 </option>

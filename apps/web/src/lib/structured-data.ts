@@ -1,5 +1,5 @@
 import type { Locale } from '@vardenia/i18n'
-import { categoryLabel, districtLabel, governorateLabel } from './labels'
+import { categoryLabel, cityLabel, governorateLabel } from './labels'
 import { resolveImage, type MediaField } from './media'
 import { localizedPath } from './seo'
 import { articleSummary, englishListingSummary, listingSummary } from './plain-text'
@@ -120,7 +120,7 @@ export interface ListingForSchema {
   description?: unknown
   category?: string | null
   governorate?: string | null
-  district?: string | null
+  city?: string | null
   address?: string | null
   location?: unknown
   heroImage?: MediaField
@@ -156,7 +156,7 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
   const [lng, lat] = point ?? []
 
   const street = listing.address?.trim() || undefined
-  const locality = districtLabel(listing.district, locale) || undefined
+  const locality = cityLabel(listing.city, locale) || undefined
   const region = governorateLabel(listing.governorate, locale) || undefined
 
   const address = compact({
@@ -177,7 +177,10 @@ export function listingSchema(listing: ListingForSchema, locale: Locale): Json {
     '@context': 'https://schema.org',
     '@type': SCHEMA_TYPE[listing.category ?? ''] ?? 'LocalBusiness',
     name: listing.name,
-    description: locale === 'en' ? englishListingSummary(listing, categoryLabel(listing.category, locale)) : listingSummary(listing),
+    description:
+      locale === 'en'
+        ? englishListingSummary(listing, categoryLabel(listing.category, locale))
+        : listingSummary(listing),
     url: listing.slug ? absolute(`/directory/${listing.slug}`, locale) : undefined,
     image: image?.src,
     address: hasAddress ? address : undefined,
@@ -239,7 +242,12 @@ export function organizationSchema(): Json {
 }
 
 /** Publication identity stays independent of the availability of a digital file. */
-export function issueSchema(name: string, slug: string, issueNumber: number, description?: string): Json {
+export function issueSchema(
+  name: string,
+  slug: string,
+  issueNumber: number,
+  description?: string,
+): Json {
   return compact({
     '@context': 'https://schema.org',
     '@type': 'PublicationIssue',

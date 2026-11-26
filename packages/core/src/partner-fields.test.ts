@@ -64,7 +64,7 @@ describe('PARTNER_EDITABLE_FIELDS', () => {
       'category',
       'subcategories',
       'governorate',
-      'district',
+      'city',
       'brand',
       'id',
       'createdAt',

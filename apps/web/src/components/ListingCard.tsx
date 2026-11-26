@@ -27,7 +27,7 @@ interface Props {
   tagline?: string | null
   category?: string | null
   governorate?: string | null
-  district?: string | null
+  city?: string | null
   verified?: boolean | null
   /** Top commercial tier. Separate from `verified` on purpose - see ui/Tier. */
   signature?: boolean | null
@@ -93,7 +93,7 @@ export function ListingCard({
   tagline,
   category,
   governorate,
-  district,
+  city,
   signature,
   heroImage,
   reference,
@@ -109,7 +109,7 @@ export function ListingCard({
   const t = useTranslations('directory')
   const booking = useTranslations('booking')
   // Hidden for now; see lib/location-display.
-  const place = SHOW_LOCATION ? placeLabel(governorate, district, locale) : null
+  const place = SHOW_LOCATION ? placeLabel(governorate, city, locale) : null
   // Only ever shown when confidently open. `null` (no hours) and `false`
   // (closed) both render nothing: a grid of "Closed" badges is noise, and a card
   // is a reason to visit, not a warning off. Computed at render, so it carries

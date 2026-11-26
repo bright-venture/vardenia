@@ -62,7 +62,7 @@ import { advisoryLock, partnerLockKey } from './partner-lock'
  * # Slugs
  *
  * As in the public submission: the plain slug of the name, then the name with
- * the district (or governorate), then twice with four random hex characters.
+ * the city (or governorate), then twice with four random hex characters.
  * Taken slugs (trashed listings included) are skipped before writing, so a
  * clash does not kill the transaction. If another save takes the slug between
  * that check and the insert, the whole branch is retried from scratch, up to
@@ -289,7 +289,7 @@ export function capName(name: string): string {
 
 /**
  * A slug base short enough that the longest suffix added to it (freeSlug's
- * fallback, 9 characters, or `-<district>` up to 64) keeps it within the
+ * fallback, 9 characters, or `-<city>` up to 64) keeps it within the
  * public brand lookup's 200 (lib/brands SLUG_RE). Arabic transliteration can
  * double a name's length, so the cut is made after slugify. Trailing hyphens
  * are stripped.
@@ -503,7 +503,7 @@ async function attemptBranch(opts: {
   const base = slugBase(input.name, 'branch')
   const slug = await freeSlug(req, 'businesses', [
     base,
-    `${base}-${input.district ?? input.governorate}`,
+    `${base}-${input.city ?? input.governorate}`,
     `${base}-${hex()}`,
     `${base}-${hex()}`,
   ])
@@ -533,7 +533,7 @@ async function attemptBranch(opts: {
       }
     }),
     governorate: input.governorate,
-    district: input.district,
+    city: input.city,
     address: input.address,
     mapUrl: input.mapUrl,
     location: input.location,

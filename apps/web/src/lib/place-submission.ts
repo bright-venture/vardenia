@@ -262,7 +262,7 @@ export async function startPlaceSubmission(args: {
       category: categoryOfKind(input.kind),
       subcategories: [input.kind],
       governorate: input.governorate,
-      district: input.district,
+      city: input.city,
       address: input.address,
       payments: { cash: false, card: false, whish: input.acceptsWhish, omt: false },
       issue: input.issue,

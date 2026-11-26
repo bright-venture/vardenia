@@ -5,7 +5,7 @@ import type { ListingTier, StayConfig, StayFeatures } from '@vardenia/core'
  *
  * Separate from the code that inserts it so it can be checked without a
  * database - fixtures.test.ts asserts every category, subcategory, governorate
- * and district here is a real one, which is the way seed data usually rots. A
+ * and city here is a real one, which is the way seed data usually rots. A
  * typo in a slug produces a listing that exists but matches no filter, and you
  * find out by browsing rather than by running anything.
  *
@@ -34,7 +34,7 @@ export interface BusinessFixture {
   category: string
   subcategories: string[]
   governorate: string
-  district: string
+  city: string
   address: { en: string; ar: string }
   location: [number, number]
   /** Gold carries the home page place. */
@@ -77,7 +77,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'hospitality',
     subcategories: ['hotels'],
     governorate: 'beirut',
-    district: 'beirut',
+    city: 'beirut',
     address: {
       en: '137 Abdel Wahab El Inglizi Street, Achrafieh',
       ar: 'شارع عبد الوهاب الإنكليزي، الأشرفية',
@@ -112,7 +112,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'food-and-beverage',
     subcategories: ['restaurants'],
     governorate: 'beirut',
-    district: 'beirut',
+    city: 'beirut',
     address: { en: 'Monot Street, Achrafieh', ar: 'شارع مونو، الأشرفية' },
     location: [35.5145, 33.8894],
     tier: 'gold',
@@ -136,7 +136,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'tourism',
     subcategories: ['activities'],
     governorate: 'beqaa',
-    district: 'zahle',
+    city: 'zahle',
     address: { en: 'Ksara, Zahle', ar: 'كسارة، زحلة' },
     location: [35.8903, 33.8225],
     tier: 'gold',
@@ -162,7 +162,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'tourism',
     subcategories: ['activities'],
     governorate: 'keserwan',
-    district: 'faqra-faraya',
+    city: 'faqra-faraya',
     address: { en: 'Kfardebian, Keserwan', ar: 'كفردبيان، كسروان' },
     location: [35.8422, 34.0086],
     // Website only: a bronze listing, which can never be bought onto the home page.
@@ -186,7 +186,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'tourism',
     subcategories: ['historic-sites'],
     governorate: 'keserwan',
-    district: 'jbeil',
+    city: 'jbeil',
     address: { en: 'Old Souk, Byblos', ar: 'السوق القديم، جبيل' },
     location: [35.6519, 34.123],
     tier: 'silver',
@@ -207,7 +207,7 @@ export const BUSINESSES: BusinessFixture[] = [
     category: 'hospitality',
     subcategories: ['getaways'],
     governorate: 'north-lebanon',
-    district: 'batroun',
+    city: 'batroun',
     address: { en: 'Douma, Batroun', ar: 'دوما، البترون' },
     location: [35.8339, 34.2172],
     // Website only, no magazine page: the bronze tier needs an example too.
@@ -267,7 +267,7 @@ export const ARTICLES: ArticleFixture[] = [
     body: {
       en: [
         'Beirut rewards a short stay more than most cities, because so little of it needs planning.',
-        'Begin in Achrafieh. The streets above Sassine still carry the townhouses that gave the district its reputation, and the best of them have become hotels.',
+        'Begin in Achrafieh. The streets above Sassine still carry the townhouses that gave the city its reputation, and the best of them have become hotels.',
         'Save the evening. Dinner here is not a course followed by a course; it arrives all at once and keeps arriving.',
       ],
       ar: [

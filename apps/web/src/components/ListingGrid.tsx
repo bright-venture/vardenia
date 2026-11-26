@@ -144,7 +144,7 @@ export function ListingGrid({
             tagline={listing.tagline}
             category={listing.category}
             governorate={listing.governorate}
-            district={listing.district}
+            city={listing.city}
             verified={listing.verified}
             heroImage={listing.heroImage as never}
             openingHours={listing.openingHours}

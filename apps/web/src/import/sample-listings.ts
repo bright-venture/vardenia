@@ -52,7 +52,7 @@ const LINES = [
   '14,Tour Guides,Keserwan + Byblos / Jbeil Districts,,Ghineh,Sample Guide — Ghineh,,,,,+961 3 000 014,,International Mountain Guide / Mountaineer,,Instagram: @sampleguide | Page: @summitsample,,,,,,161–166,1,0',
   // A phone with a trailing note, and an Instagram/Page label variant.
   '15,Tour Guides,Keserwan District,,Keserwen Private Tours,Another Guide,,,,,+961 70 000 015 through a school,,Private Tour / Adventure Guide,,Instagram/Page: @anotherguide,,,,,,167–172,1,0',
-  // No district at all, and a phone missing its plus.
+  // No city at all, and a phone missing its plus.
   '16,Tour Guides,,,,Guide With No District,,,,,961 71 000 016.,,Local Guide,,,,,,,,173–176,1,0',
   // Months as a season: summer.
   '17,Festivals,Byblos / Jbeil District,,Jbeil / Byblos,Harbour Music Festival,,,,Founder: Organised by a committee,+961 9 000 017 / +961 3 000 017,,,July–August,,,,"Open-air music festival at the old port, with Lebanese and visiting acts",,,180–190,1,0',

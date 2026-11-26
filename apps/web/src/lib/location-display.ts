@@ -9,7 +9,7 @@
  * a Google search for the name and that area, which is not something to send a
  * reader to unchecked.
  *
- * Only the display is off. Each listing keeps its governorate and district, so
+ * Only the display is off. Each listing keeps its governorate and city, so
  * the directory's area filters, "nearby" suggestions and the structured data
  * for search engines go on working. The addresses themselves were emptied in
  * the database the same day, with a backup in backups/addresses.

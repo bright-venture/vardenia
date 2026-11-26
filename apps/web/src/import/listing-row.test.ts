@@ -79,15 +79,14 @@ describe('the whole file', () => {
     }
   })
 
-  it('only ever uses a district that exists, under the right governorate', () => {
+  it('only ever uses a city that exists, under the right governorate', () => {
     const parent = new Map<string, string>(
-      GOVERNORATES.flatMap((g) => g.districts.map((d) => [d.slug, g.slug] as [string, string])),
+      GOVERNORATES.flatMap((g) => g.cities.map((d) => [d.slug, g.slug] as [string, string])),
     )
 
     for (const listing of listings) {
       expect(GOVERNORATES.map((g): string => g.slug)).toContain(listing.governorate)
-      if (listing.district)
-        expect(parent.get(listing.district), listing.name).toBe(listing.governorate)
+      if (listing.city) expect(parent.get(listing.city), listing.name).toBe(listing.governorate)
     }
   })
 
@@ -124,7 +123,7 @@ describe('the whole file', () => {
       'category',
       'subcategories',
       'governorate',
-      'district',
+      'city',
       'address',
       'priceRange',
       'tagline',
@@ -157,26 +156,26 @@ describe('the rows that need a person', () => {
   it('flags a listing that spans two districts, files it under Keserwan and its town', () => {
     const listing = byName('Seaview Halat')
     expect(listing?.governorate).toBe('keserwan')
-    expect(listing?.district).toBe('kaslik')
+    expect(listing?.city).toBe('kaslik')
     expect(listing?.warnings.join(' ')).toContain('spans two districts')
   })
 
-  it('takes the district from the Location column, in any of its spellings', () => {
-    expect(byName('Pinegrove Chalets')?.district).toBe('faqra-faraya')
-    expect(byName('Stonehouse Faqra')?.district).toBe('faqra-faraya')
-    expect(byName('Harbour Music Festival')?.district).toBe('jbeil')
-    expect(byName('Skyline Cableway')?.district).toBe('jounieh')
+  it('takes the city from the Location column, in any of its spellings', () => {
+    expect(byName('Pinegrove Chalets')?.city).toBe('faqra-faraya')
+    expect(byName('Stonehouse Faqra')?.city).toBe('faqra-faraya')
+    expect(byName('Harbour Music Festival')?.city).toBe('jbeil')
+    expect(byName('Skyline Cableway')?.city).toBe('jounieh')
   })
 
-  it('flags a town that is not one of the districts and leaves it blank', () => {
+  it('flags a town that is not one of the cities and leaves it blank', () => {
     const listing = byName('Another Guide')
-    expect(listing?.district).toBeNull()
-    expect(listing?.warnings.join(' ')).toContain('is not one of the districts')
+    expect(listing?.city).toBeNull()
+    expect(listing?.warnings.join(' ')).toContain('is not one of the cities')
   })
 
-  it('flags a listing with no district and leaves it blank', () => {
+  it('flags a listing with no city and leaves it blank', () => {
     const listing = byName('Guide With No District')
-    expect(listing?.district).toBeNull()
+    expect(listing?.city).toBeNull()
     expect(listing?.warnings.join(' ')).toContain('no district given')
   })
 
@@ -199,7 +198,7 @@ describe('the rows that need a person', () => {
 /**
  * The Chouf file brought headings the Keserwan one never had, mapped to existing
  * subcategories rather than growing the taxonomy. Each one has to land in a real
- * category, in a subcategory that belongs to it, in a district the site knows -
+ * category, in a subcategory that belongs to it, in a city the site knows -
  * the same silent-mistake surface the whole-file tests guard, checked on the
  * exact mappings this file added.
  */
@@ -235,8 +234,8 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
       // The subcategory really is a child of the category it was filed under.
       expect(SUBCATEGORY_PARENT[subcategory], heading).toBe(category)
       expect(listing!.governorate, heading).toBe('chouf')
-      expect(listing!.district, heading).toBe('deir-el-qamar')
-      // A clean Chouf row needs nobody: known district, known category, no season.
+      expect(listing!.city, heading).toBe('deir-el-qamar')
+      // A clean Chouf row needs nobody: known city, known category, no season.
       expect(listing!.warnings, heading).toHaveLength(0)
     }
   })
@@ -245,12 +244,12 @@ describe('the Chouf headings, mapped to existing subcategories', () => {
 /**
  * The Beirut file is the first outside Mount Lebanon, so the governorate can no
  * longer be assumed. A "Beirut District" row has to carry the Beirut governorate
- * and the Beirut district, with its neighbourhood kept as the address, and it
+ * and the Beirut city, with its neighbourhood kept as the address, and it
  * must do so without any of the "district we do not know" warnings that a
  * Mount Lebanon importer would have raised for it.
  */
 describe('the Beirut file, its own governorate', () => {
-  it('files a Beirut row under the Beirut governorate and district, cleanly', () => {
+  it('files a Beirut row under the Beirut governorate and city, cleanly', () => {
     const listing = toListing({
       ID: 'HOT001',
       Category: 'Hotels',
@@ -261,21 +260,21 @@ describe('the Beirut file, its own governorate', () => {
 
     expect(listing).not.toBeNull()
     expect(listing!.governorate).toBe('beirut')
-    expect(listing!.district).toBe('beirut')
-    // The neighbourhood is the address, not the district.
+    expect(listing!.city).toBe('beirut')
+    // The neighbourhood is the address, not the city.
     expect(listing!.address).toBe('Ashrafieh')
     expect(listing!.warnings).toHaveLength(0)
 
-    // The district really belongs to the governorate it was filed under.
+    // The city really belongs to the governorate it was filed under.
     const beirut = GOVERNORATES.find((g) => g.slug === 'beirut')
-    expect(beirut?.districts.map((d) => d.slug)).toContain(listing!.district)
+    expect(beirut?.cities.map((d) => d.slug)).toContain(listing!.city)
   })
 })
 
 /**
  * The rest of Mount Lebanon. Matn, Baabda and Aley are the cazas the Keserwan
  * and Chouf files never reached; the magazine prints all three in its Matn
- * edition, so each files under the Matn region and its own district, with no
+ * edition, so each files under the Matn region and its own city, with no
  * unknown-district warning.
  */
 describe('the Matn region', () => {
@@ -287,7 +286,7 @@ describe('the Matn region', () => {
 
   it('files Matn, Baabda and Aley under Matn, cleanly', () => {
     const matn = GOVERNORATES.find((g) => g.slug === 'matn')
-    const known = new Set(matn?.districts.map((d) => d.slug))
+    const known = new Set(matn?.cities.map((d) => d.slug))
 
     for (const [heading, [location, slug]] of Object.entries(CASES)) {
       const listing = toListing({
@@ -300,7 +299,7 @@ describe('the Matn region', () => {
 
       expect(listing, heading).not.toBeNull()
       expect(listing!.governorate, heading).toBe('matn')
-      expect(listing!.district, heading).toBe(slug)
+      expect(listing!.city, heading).toBe(slug)
       expect(known, heading).toContain(slug)
       expect(listing!.warnings, heading).toHaveLength(0)
     }
@@ -310,7 +309,7 @@ describe('the Matn region', () => {
 /**
  * The North Lebanon file, which arrives with Akkar mixed into it. Officially
  * Akkar is a governorate of its own; in the magazine it is part of the North
- * edition, so it files under North Lebanon with its own district.
+ * edition, so it files under North Lebanon with its own city.
  */
 describe('North Lebanon, and Akkar alongside it', () => {
   const CASES: Record<string, [string, string | null]> = {
@@ -324,7 +323,7 @@ describe('North Lebanon, and Akkar alongside it', () => {
   }
 
   it('files each caza under the region that carries it', () => {
-    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+    for (const [heading, [governorate, city]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
         Category: 'Restaurants',
@@ -335,18 +334,18 @@ describe('North Lebanon, and Akkar alongside it', () => {
 
       expect(listing, heading).not.toBeNull()
       expect(listing!.governorate, heading).toBe(governorate)
-      expect(listing!.district, heading).toBe(district)
+      expect(listing!.city, heading).toBe(city)
 
-      // The district belongs to that governorate in the shared taxonomy.
-      if (district === null) {
-        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+      // The city belongs to that governorate in the shared taxonomy.
+      if (city === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the cities')
         continue
       }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
-        owner?.districts.map((d) => d.slug),
+        owner?.cities.map((d) => d.slug),
         heading,
-      ).toContain(district)
+      ).toContain(city)
       expect(listing!.warnings, heading).toHaveLength(0)
     }
   })
@@ -370,7 +369,7 @@ describe('South Lebanon, and Nabatieh beside it', () => {
   }
 
   it('files each caza under the region that carries it', () => {
-    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+    for (const [heading, [governorate, city]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
         Category: 'Getaways',
@@ -381,17 +380,17 @@ describe('South Lebanon, and Nabatieh beside it', () => {
 
       expect(listing, heading).not.toBeNull()
       expect(listing!.governorate, heading).toBe(governorate)
-      expect(listing!.district, heading).toBe(district)
+      expect(listing!.city, heading).toBe(city)
 
-      if (district === null) {
-        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+      if (city === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the cities')
         continue
       }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
-        owner?.districts.map((d) => d.slug),
+        owner?.cities.map((d) => d.slug),
         heading,
-      ).toContain(district)
+      ).toContain(city)
       expect(listing!.warnings, heading).toHaveLength(0)
     }
   })
@@ -413,7 +412,7 @@ describe('the Bekaa, one region', () => {
   }
 
   it('files each caza under the region that carries it', () => {
-    for (const [heading, [governorate, district]] of Object.entries(CASES)) {
+    for (const [heading, [governorate, city]] of Object.entries(CASES)) {
       const listing = toListing({
         ID: 'X',
         Category: 'Restaurants',
@@ -424,17 +423,17 @@ describe('the Bekaa, one region', () => {
 
       expect(listing, heading).not.toBeNull()
       expect(listing!.governorate, heading).toBe(governorate)
-      expect(listing!.district, heading).toBe(district)
+      expect(listing!.city, heading).toBe(city)
 
-      if (district === null) {
-        expect(listing!.warnings.join(' '), heading).toContain('is not one of the districts')
+      if (city === null) {
+        expect(listing!.warnings.join(' '), heading).toContain('is not one of the cities')
         continue
       }
       const owner = GOVERNORATES.find((g) => g.slug === governorate)
       expect(
-        owner?.districts.map((d) => d.slug),
+        owner?.cities.map((d) => d.slug),
         heading,
-      ).toContain(district)
+      ).toContain(city)
       expect(listing!.warnings, heading).toHaveLength(0)
     }
   })
@@ -511,7 +510,7 @@ describe('cleanName', () => {
 
   /**
    * The same place at a different zoom. "Zouk Mosbeh" against a Location of
-   * "ZOUK" is a town inside a district, and it appeared seven times in the real
+   * "ZOUK" is a town inside a city, and it appeared seven times in the real
    * export - which is how a warning list becomes noise nobody reads.
    */
   it('treats a place that contains the location as the same place', () => {

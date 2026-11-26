@@ -44,10 +44,16 @@ for (const locale of ['en', 'ar'] as const) {
         page.sections.forEach((section, i) => {
           expect(root.querySelector(`#story-${i} h2`)?.textContent).toBe(section.heading)
         })
-        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(2)
+        // Add your business also ends on its sign-up form (25 November 2026).
+        expect(root.querySelectorAll('.vd-story-next > a')).toHaveLength(
+          slug === 'add-your-business' ? 3 : 2,
+        )
         const actions = [...root.querySelectorAll('.vd-story-next a')].map((link) =>
           link.getAttribute('href'),
         )
+        if (slug === 'add-your-business') {
+          expect(actions[0]?.endsWith('/magazine-places')).toBe(true)
+        }
         expect(
           actions.some((href) =>
             href?.endsWith(['about', 'contact', 'faq'].includes(slug) ? '/directory' : '/contact'),

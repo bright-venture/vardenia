@@ -33,10 +33,10 @@ describe('buildBranchBody', () => {
   it('sends only the contact fields that were filled in', () => {
     const draft = filled()
     draft.contact.phone = ' 03 123 456 '
-    draft.district = 'jounieh'
+    draft.city = 'jounieh'
     const body = buildBranchBody(draft, 'en')
     expect(body.contact).toEqual({ phone: '03 123 456' })
-    expect(body.district).toBe('jounieh')
+    expect(body.city).toBe('jounieh')
     expect(branchRequestSchema.safeParse(body).success).toBe(true)
   })
 
@@ -49,7 +49,7 @@ describe('buildBranchBody', () => {
       'sourceListingId',
       'name',
       'governorate',
-      'district',
+      'city',
       'address',
       'mapUrl',
       'location',
@@ -129,7 +129,7 @@ describe('localized branch errors (review M3)', () => {
     ['name', 'too long', 'errTooLong'],
     ['address', 'too long', 'errTooLong'],
     ['governorate', 'Invalid option: expected one of "beirut"|"matn"', 'errGovernorate'],
-    ['district', 'is not in the chosen governorate', 'errDistrict'],
+    ['city', 'is not in the chosen governorate', 'errCity'],
     ['mapUrl', 'paste a Google Maps link or give the map point', 'errMapRequired'],
     ['mapUrl', 'That link points outside Lebanon. Check it is the right place.', 'errMapOutside'],
     [

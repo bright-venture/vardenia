@@ -19,7 +19,7 @@ import { buildMetadata } from '../../../../lib/seo'
 import { Link } from '../../../../i18n/routing'
 import { ComingSoonNotice } from '../../../../components/ComingSoonNotice'
 import {
-  countByDistrict,
+  countByCity,
   countByGovernorate,
   countBySubcategory,
   findListings,
@@ -130,7 +130,7 @@ export default async function SectionPage({ params, searchParams }: Props) {
   const comingSoon = isComingSoonCategory(section.category)
 
   const englishDining = locale === 'en' && section.category === 'food-and-beverage'
-  const inJbeil = englishDining && parseFilterState(await searchParams, []).district === 'jbeil'
+  const inJbeil = englishDining && parseFilterState(await searchParams, []).city === 'jbeil'
 
   return (
     <main className="vd-category-page" data-section={section.path}>
@@ -222,18 +222,18 @@ async function SectionResults({
    * second Frankfurt round trip does not sit in front of the render. The tile
    * counts are only fetched when the tiles are actually being drawn.
    */
-  const [counts, result, subcategoryCounts, districtCounts] = await Promise.all([
+  const [counts, result, subcategoryCounts, cityCounts] = await Promise.all([
     countByGovernorate({ category: section.category, subcategory: state.subcategory }),
     findListings({ locale, category: section.category, ...state, page: Number(page) || 1 }),
     countBySubcategory({ category: section.category }),
-    countByDistrict({ category: section.category, subcategory: state.subcategory }),
+    countByCity({ category: section.category, subcategory: state.subcategory }),
   ])
 
   const englishDining = locale === 'en' && section.category === 'food-and-beverage'
   const jbeilOnly =
     englishDining &&
-    state.district === 'jbeil' &&
-    !anyFilterApplied({ ...state, governorate: undefined, district: undefined })
+    state.city === 'jbeil' &&
+    !anyFilterApplied({ ...state, governorate: undefined, city: undefined })
   // These tab totals are nationwide, so omit them when a dining search is narrowed.
   const omitDiningTotals = englishDining && anyFilterApplied({ ...state, subcategory: undefined })
   // Use the published entry's own description, and only feature it when it is in these results.
@@ -330,7 +330,7 @@ async function SectionResults({
           state={state}
           locale={locale}
           counts={counts}
-          districtCounts={districtCounts}
+          cityCounts={cityCounts}
         />
 
         <ListingGrid

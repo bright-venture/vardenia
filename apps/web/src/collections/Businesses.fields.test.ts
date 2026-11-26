@@ -5,7 +5,7 @@ import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 
 /**
  * The listing form offers only what fits: a category's own subcategories, a
- * governorate's own districts, and opening times the "Open now" filter can
+ * governorate's own cities, and opening times the "Open now" filter can
  * read. Each used to be a note in a description asking staff to get it right.
  */
 
@@ -64,12 +64,12 @@ describe('subcategories', () => {
   })
 })
 
-describe('district', () => {
-  const district = field('district')
+describe('city', () => {
+  const city = field('city')
 
-  it('offers only the chosen governorate’s districts', () => {
-    const offered = district.filterOptions!({
-      options: optionsOf('district'),
+  it('offers only the chosen governorate’s cities', () => {
+    const offered = city.filterOptions!({
+      options: optionsOf('city'),
       data: { governorate: 'beqaa' },
     }).map((o) => o.value)
     expect(offered.sort()).toEqual([
@@ -83,20 +83,20 @@ describe('district', () => {
     ])
   })
 
-  it('takes every district the place form accepts, under the same governorate', () => {
-    const values = new Set(optionsOf('district').map((o) => o.value))
+  it('takes every city the place form accepts, under the same governorate', () => {
+    const values = new Set(optionsOf('city').map((o) => o.value))
     for (const gov of GOVERNORATES) {
-      for (const d of gov.districts) {
+      for (const d of gov.cities) {
         expect(values.has(d.slug), d.slug).toBe(true)
-        expect(district.validate!(d.slug, { data: { governorate: gov.slug } })).toBe(true)
+        expect(city.validate!(d.slug, { data: { governorate: gov.slug } })).toBe(true)
       }
     }
   })
 
-  it('refuses a district from another governorate', () => {
-    expect(district.validate!('zahle', { data: { governorate: 'beqaa' } })).toBe(true)
-    expect(district.validate!('tyre', { data: { governorate: 'beqaa' } })).not.toBe(true)
-    expect(district.validate!(null, { data: { governorate: 'beqaa' } })).toBe(true)
+  it('refuses a city from another governorate', () => {
+    expect(city.validate!('zahle', { data: { governorate: 'beqaa' } })).toBe(true)
+    expect(city.validate!('tyre', { data: { governorate: 'beqaa' } })).not.toBe(true)
+    expect(city.validate!(null, { data: { governorate: 'beqaa' } })).toBe(true)
   })
 })
 

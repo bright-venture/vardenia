@@ -200,7 +200,7 @@ function buildBusiness(fixture: BusinessFixture, heroImage: number | string) {
     category: fixture.category,
     subcategories: fixture.subcategories,
     governorate: fixture.governorate,
-    district: fixture.district,
+    city: fixture.city,
     address: fixture.address.en,
     location: fixture.location,
     openingHours: fixture.openingHours,

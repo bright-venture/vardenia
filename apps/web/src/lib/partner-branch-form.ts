@@ -19,7 +19,7 @@ export interface BranchDraft {
   sourceListingId: string
   name: string
   governorate: string
-  district: string
+  city: string
   address: string
   mapUrl: string
   contact: Record<ContactField, string>
@@ -30,7 +30,7 @@ export function emptyBranchDraft(sourceListingId: number | null): BranchDraft {
     sourceListingId: sourceListingId === null ? '' : String(sourceListingId),
     name: '',
     governorate: '',
-    district: '',
+    city: '',
     address: '',
     mapUrl: '',
     contact: Object.fromEntries(CONTACT_FIELDS.map((field) => [field, ''])) as Record<
@@ -46,7 +46,7 @@ export function buildBranchBody(draft: BranchDraft, locale: string): Record<stri
     name: draft.name.trim(),
     governorate: draft.governorate,
   }
-  if (draft.district.trim()) body.district = draft.district.trim()
+  if (draft.city.trim()) body.city = draft.city.trim()
   body.address = draft.address.trim()
   if (draft.mapUrl.trim()) body.mapUrl = draft.mapUrl.trim()
   const contact: Record<string, string> = {}
@@ -112,7 +112,7 @@ export function branchIssueKey(path: string, message: string): string {
     return 'errInvalid'
   }
   if (path === 'governorate') return 'errGovernorate'
-  if (path === 'district') return 'errDistrict'
+  if (path === 'city') return 'errCity'
   if (path === 'location') return 'errMapOutside'
   if (path === 'mapUrl') {
     if (message === OUTSIDE_LEBANON_LINK) return 'errMapOutside'

@@ -322,9 +322,9 @@ export interface Business {
   tags?: string[] | null;
   governorate: 'beirut' | 'matn' | 'keserwan' | 'north-lebanon' | 'chouf' | 'beqaa' | 'south-lebanon';
   /**
-   * The town or place guests filter by (Jounieh, Faqra / Faraya). Only the towns of the governorate above are offered.
+   * The city or place guests filter by (Jounieh, Faqra / Faraya). Only the cities of the governorate above are offered.
    */
-  district?:
+  city?:
     | (
         | 'beirut'
         | 'dbayeh'
@@ -2004,7 +2004,7 @@ export interface BusinessesSelect<T extends boolean = true> {
   brand?: T;
   tags?: T;
   governorate?: T;
-  district?: T;
+  city?: T;
   address?: T;
   mapUrl?: T;
   location?: T;
