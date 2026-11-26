@@ -108,7 +108,14 @@ export function KineticType({
       <div className="vd-kinetic-stage">
         <h2 id={headingId} className={className}>
           {segments.map((segment, i) => {
-            if (segment.index < 0) return <span key={i}>{segment.text}</span>
+            if (segment.index < 0) {
+              const afterSentence = segments[i - 1]?.text.endsWith('.')
+              return (
+                <span key={i} className={afterSentence ? 'vd-sentence-break' : undefined}>
+                  {segment.text}
+                </span>
+              )
+            }
             const showOpening = locale === 'en' && desktop && segment.index < 2
             const p = disabled || showOpening ? 1 : wordProgress(segment.index)
             const isAccent = segment.index === accentIndex

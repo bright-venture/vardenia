@@ -1,7 +1,7 @@
 'use client'
 import { Caveat } from 'next/font/google'
 import { filmSources } from '../../lib/film'
-import { ArrowDown, ChevronDown, Play } from 'lucide-react'
+import { ArrowDown, ChevronDown, Image as PhotoIcon, Play } from 'lucide-react'
 import { EditionRegions, editionLabel } from './EditionRegions'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import { LinkArrow } from '../LinkArrow'
@@ -16,7 +16,7 @@ import { mapPosition } from './map-projection'
 import { useCityAutoplay } from './useCityAutoplay'
 import { mountPinnedPhotos } from './pinned-physics'
 import { PinnedScenicPhoto } from './PinnedScenicPhoto'
-import { useEnglishHomeEdition } from '../editorial/useDesktopEdition'
+import { useDesktopViewport, useEnglishHomeEdition } from '../editorial/useDesktopEdition'
 import {
   DESTINATIONS,
   BYBLOS_GUIDE_PATH,
@@ -33,7 +33,13 @@ const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n))
 const assets = '/journey/'
 // The film from the media bucket when storage is configured; see lib/film.
 const FILM_SOURCES = filmSources(process.env.NEXT_PUBLIC_FILM_BASE)
-const captionFont = Caveat({ weight: '500', subsets: ['latin'], display: 'swap', preload: false, variable: '--font-home-handwriting' })
+const captionFont = Caveat({
+  weight: '500',
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+  variable: '--font-home-handwriting',
+})
 
 export function CinematicJourney({
   locale,
@@ -81,13 +87,33 @@ export function CinematicJourney({
   const advanceCity = useCallback(() => {
     setCityIndex((old) => (old + 1) % DESTINATIONS.length)
   }, [])
-  useCityAutoplay(cityRoot, citiesShown && motion && !cityHover && !cityFocus, advanceCity, cityIndex)
+  useCityAutoplay(
+    cityRoot,
+    citiesShown && motion && !cityHover && !cityFocus,
+    advanceCity,
+    cityIndex,
+  )
   const city = DESTINATIONS[cityIndex]!
   const [trip, setTrip] = useDiscoveryRoute(),
     [flipped, setFlipped] = useState<string[]>([]),
     [pointerMotion, setPointerMotion] = useState(true)
   // The photo face opens on hover or tap in the English edition.
   const desktopPostcards = englishHome
+  const wideViewport = useDesktopViewport()
+  const mobilePostcards = englishHome && !wideViewport
+  function browsePostcards(direction: number, animate: boolean) {
+    const rail = postcards.current
+    if (!rail) return
+    const [first, second] = rail.children
+    const distance =
+      mobilePostcards && first && second
+        ? second.getBoundingClientRect().left - first.getBoundingClientRect().left
+        : (ar ? -1 : 1) * rail.clientWidth * 0.85
+    rail.scrollBy({
+      left: direction * distance,
+      behavior: motion && animate ? 'smooth' : 'instant',
+    })
+  }
   const [hoveredPostcard, setHoveredPostcard] = useState<string | null>(null)
   const [focusedPostcard, setFocusedPostcard] = useState<string | null>(null)
   const ar = locale === 'ar',
@@ -152,11 +178,12 @@ export function CinematicJourney({
     setLeavingCity(shownCity)
     setShownCity(cityIndex)
   }
-  const cityLoaded = pageReady && citiesShown
-    ? [leavingCity, cityIndex, (cityIndex + 1) % DESTINATIONS.length]
-        .filter((index): index is number => index !== null)
-        .map((index) => DESTINATIONS[index]!.id)
-    : []
+  const cityLoaded =
+    pageReady && citiesShown
+      ? [leavingCity, cityIndex, (cityIndex + 1) % DESTINATIONS.length]
+          .filter((index): index is number => index !== null)
+          .map((index) => DESTINATIONS[index]!.id)
+      : []
   useEffect(() => {
     const el = film.current
     if (!el || !pageReady) return
@@ -217,7 +244,11 @@ export function CinematicJourney({
     const measure = () => {
       // The approved overlay header lets the hero begin at zero. Measure its
       // actual sticky position so phones do not begin partway through the fade.
-      heroStickyTop = citiesShown ? (innerWidth < 701 ? 70 : 80) : (Number.parseFloat(getComputedStyle(hero).top) || 0)
+      heroStickyTop = citiesShown
+        ? innerWidth < 701
+          ? 70
+          : 80
+        : Number.parseFloat(getComputedStyle(hero).top) || 0
       const r = route.getBoundingClientRect(),
         p = landscape.getBoundingClientRect(),
         den = Math.max(1, landscape.offsetHeight - 380)
@@ -249,9 +280,12 @@ export function CinematicJourney({
       if (dirty) measure()
       const mobileFilm = locale === 'en' && phone.matches
       const hr = heroTrack.getBoundingClientRect(),
-        p = motion && !mobileFilm
-          ? clamp((heroStickyTop - hr.top) / Math.max(1, heroTrack.offsetHeight - hero.offsetHeight))
-          : 0
+        p =
+          motion && !mobileFilm
+            ? clamp(
+                (heroStickyTop - hr.top) / Math.max(1, heroTrack.offsetHeight - hero.offsetHeight),
+              )
+            : 0
       hero.style.setProperty('--vd-copy-out', String(clamp((p - 0.08) / 0.38)))
       hero.style.setProperty('--vd-bridge-in', String(clamp((p - 0.45) / 0.35)))
       hero.style.setProperty('--vd-film-scale', String(1 + p * 0.07))
@@ -360,7 +394,9 @@ export function CinematicJourney({
           // Use the destination linked by the page's own buttons,
           // unless the directory is hidden.
           ...(directoryShown
-            ? [`${location.origin}${locale === 'en' ? '' : '/' + locale}${destinationHref(p, locale)}`]
+            ? [
+                `${location.origin}${locale === 'en' ? '' : '/' + locale}${destinationHref(p, locale)}`,
+              ]
             : []),
           '',
         ]
@@ -396,17 +432,22 @@ export function CinematicJourney({
   // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
     const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
-    if (englishHome) return (
-      <PinnedScenicPhoto
-        photo={p}
-        label={name(p)}
-        className={extra}
-        ready={pageReady}
-        interactive={motion}
-        href={directoryShown ? sceneDirectoryFor(id, locale) : undefined}
-        dragLabel={directoryShown ? `Explore ${name(p)}.${motion ? ' Drag to swing the photo; arrow keys also work.' : ''}` : name(p)}
-      />
-    )
+    if (englishHome)
+      return (
+        <PinnedScenicPhoto
+          photo={p}
+          label={name(p)}
+          className={extra}
+          ready={pageReady}
+          interactive={motion}
+          href={directoryShown ? sceneDirectoryFor(id, locale) : undefined}
+          dragLabel={
+            directoryShown
+              ? `Explore ${name(p)}.${motion ? ' Drag to swing the photo; arrow keys also work.' : ''}`
+              : name(p)
+          }
+        />
+      )
     return (
       <figure className={`vd-scene-photo ${extra}`} data-vd-parallax={shift} data-vd-reveal>
         <div className="vd-scene-image">
@@ -542,8 +583,7 @@ export function CinematicJourney({
           </div>
           <div className="vd-hero-bridge" aria-hidden>
             <h2>
-              {t('bridgeA')}{' '}
-              <br />
+              {t('bridgeA')} <br />
               {t('bridgeB')}
             </h2>
             <div>
@@ -673,64 +713,75 @@ export function CinematicJourney({
         </div>
         <p className="vd-journey-outro" data-vd-reveal>
           {t('outro')}
-          {!englishHome && <><br /><a href="#stone" aria-label={t('citySlider')}>↓</a></>}
+          {!englishHome && (
+            <>
+              <br />
+              <a href="#stone" aria-label={t('citySlider')}>
+                ↓
+              </a>
+            </>
+          )}
         </p>
       </section>
       {citiesShown && (
-      <section
-        ref={cityRoot}
-        className="vd-stone vd-city-slider"
-        id="stone"
-        aria-label={t('citySlider')}
-        aria-roledescription="carousel"
-        data-city-motion={motion}
-        onPointerDownCapture={() => setCityFocus(false)}
-        onFocusCapture={(event) => setCityFocus(event.target.matches(':focus-visible'))}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setCityFocus(false)
-        }}
-      >
-        <div className="vd-stone-image vd-city-images" aria-hidden>
-          {DESTINATIONS.filter((p) => cityLoaded.includes(p.id)).map((p) => (
-            <img
-              key={p.id}
-              className={p.id === city.id ? 'vd-city-current' : ''}
-              src={assets + p.image}
-              srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
-              sizes="100vw"
-              alt=""
-              width="1600"
-              height="1200"
-              loading="lazy"
-            />
-          ))}
-        </div>
-        <div className="vd-stone-shade" />
-        <GeographicMap className="vd-stone-map" />
-        <div className="vd-stone-copy" aria-live={cityFocus ? 'polite' : 'off'} aria-atomic="true">
-          <h2>{name(city)}</h2>
-          <p>{city.id === 'baalbek' ? t('stoneBody') : body(city)}</p>
-          {directoryShown ? (
-            <Link
-              className="vd-button vd-button-light"
-              href={destinationHref(city, locale)}
-              onPointerEnter={(event) => {
-                if (event.pointerType !== 'touch') setCityHover(true)
-              }}
-              onPointerLeave={() => setCityHover(false)}
-            >
-              {t('explore')} <LinkArrow />
-            </Link>
-          ) : null}
-        </div>
-        <Coordinates
-          key={city.id}
-          className="vd-stone-coordinates"
-          place={city}
-          enabled={motion}
-          label={name(city)}
-        />
-      </section>
+        <section
+          ref={cityRoot}
+          className="vd-stone vd-city-slider"
+          id="stone"
+          aria-label={t('citySlider')}
+          aria-roledescription="carousel"
+          data-city-motion={motion}
+          onPointerDownCapture={() => setCityFocus(false)}
+          onFocusCapture={(event) => setCityFocus(event.target.matches(':focus-visible'))}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setCityFocus(false)
+          }}
+        >
+          <div className="vd-stone-image vd-city-images" aria-hidden>
+            {DESTINATIONS.filter((p) => cityLoaded.includes(p.id)).map((p) => (
+              <img
+                key={p.id}
+                className={p.id === city.id ? 'vd-city-current' : ''}
+                src={assets + p.image}
+                srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
+                sizes="100vw"
+                alt=""
+                width="1600"
+                height="1200"
+                loading="lazy"
+              />
+            ))}
+          </div>
+          <div className="vd-stone-shade" />
+          <GeographicMap className="vd-stone-map" />
+          <div
+            className="vd-stone-copy"
+            aria-live={cityFocus ? 'polite' : 'off'}
+            aria-atomic="true"
+          >
+            <h2>{name(city)}</h2>
+            <p>{city.id === 'baalbek' ? t('stoneBody') : body(city)}</p>
+            {directoryShown ? (
+              <Link
+                className="vd-button vd-button-light"
+                href={destinationHref(city, locale)}
+                onPointerEnter={(event) => {
+                  if (event.pointerType !== 'touch') setCityHover(true)
+                }}
+                onPointerLeave={() => setCityHover(false)}
+              >
+                {t('explore')} <LinkArrow />
+              </Link>
+            ) : null}
+          </div>
+          <Coordinates
+            key={city.id}
+            className="vd-stone-coordinates"
+            place={city}
+            enabled={motion}
+            label={name(city)}
+          />
+        </section>
       )}
       <section className="vd-atlas" id="destinations">
         <div className="vd-section-heading">
@@ -741,7 +792,9 @@ export function CinematicJourney({
           </h2>
           <p data-vd-reveal>{t('atlasBody')}</p>
         </div>
-        {directoryShown && !englishHome ? <EditionRegions title={t('editionRegions')} arabic={ar} /> : null}
+        {directoryShown && !englishHome ? (
+          <EditionRegions title={t('editionRegions')} arabic={ar} />
+        ) : null}
         <h3 className="vd-featured-destinations-title" id="vd-featured-destinations-title">
           {t('featuredDestinations')}
         </h3>
@@ -847,7 +900,8 @@ export function CinematicJourney({
               <div className="vd-destination-actions">
                 {directoryShown ? (
                   <Link className="vd-button vd-button-light" href={destinationHref(place, locale)}>
-                    {locale === 'en' && place.id === 'byblos' ? t('mountainLink') : t('explore')} <LinkArrow />
+                    {locale === 'en' && place.id === 'byblos' ? t('mountainLink') : t('explore')}{' '}
+                    <LinkArrow />
                   </Link>
                 ) : null}
                 <button
@@ -886,7 +940,12 @@ export function CinematicJourney({
             </div>
           </div>
         </div>
-        <section className="vd-trip-panel" data-empty={!trip.length} id="discovery-route" aria-labelledby="vd-route-title">
+        <section
+          className="vd-trip-panel"
+          data-empty={!trip.length}
+          id="discovery-route"
+          aria-labelledby="vd-route-title"
+        >
           <div className="vd-trip-heading">
             <h3 id="vd-route-title">{t('routeTitle')}</h3>
             {trip.length || !englishHome ? <p>{t('routeBody')}</p> : null}
@@ -945,15 +1004,21 @@ export function CinematicJourney({
           ) : (
             <p className="vd-route-empty">{t('routeEmpty')}</p>
           )}
-          {trip.length || !englishHome ? <div className="vd-trip-actions">
-            <button className="vd-button" disabled={!trip.length} onClick={exportRoute}>
-              {t('download')} ↓
-            </button>
-            <button className="vd-text-button" disabled={!trip.length} onClick={() => setTrip([])}>
-              {t('clear')}
-            </button>
-            <p>{t('routeNote')}</p>
-          </div> : null}
+          {trip.length || !englishHome ? (
+            <div className="vd-trip-actions">
+              <button className="vd-button" disabled={!trip.length} onClick={exportRoute}>
+                {t('download')} ↓
+              </button>
+              <button
+                className="vd-text-button"
+                disabled={!trip.length}
+                onClick={() => setTrip([])}
+              >
+                {t('clear')}
+              </button>
+              <p>{t('routeNote')}</p>
+            </div>
+          ) : null}
         </section>
       </section>
       <section className="vd-detours" id="discover" data-desktop-postcards={desktopPostcards}>
@@ -965,32 +1030,24 @@ export function CinematicJourney({
           </h2>
           <div>
             <p data-vd-reveal>
-              {desktopPostcards
-                ? 'Seven places to begin. Turn a postcard, find your next feeling, and follow it into the directory.'
-                : t('detourBody')}
+              {mobilePostcards
+                ? 'Swipe through seven postcards. Tap a photo to turn it over.'
+                : desktopPostcards
+                  ? 'Seven places to begin. Turn a postcard, find your next feeling, and follow it into the directory.'
+                  : t('detourBody')}
             </p>
             <div className="vd-postcard-controls">
               <button
                 type="button"
                 aria-label={t('previous')}
-                onClick={(event) =>
-                  postcards.current?.scrollBy({
-                    left: (ar ? 1 : -1) * (postcards.current.clientWidth * 0.85),
-                    behavior: motion && event.detail !== 0 ? 'smooth' : 'instant',
-                  })
-                }
+                onClick={(event) => browsePostcards(-1, event.detail !== 0)}
               >
                 ←
               </button>
               <button
                 type="button"
                 aria-label={t('next')}
-                onClick={(event) =>
-                  postcards.current?.scrollBy({
-                    left: (ar ? -1 : 1) * (postcards.current.clientWidth * 0.85),
-                    behavior: motion && event.detail !== 0 ? 'smooth' : 'instant',
-                  })
-                }
+                onClick={(event) => browsePostcards(1, event.detail !== 0)}
               >
                 →
               </button>
@@ -1007,7 +1064,9 @@ export function CinematicJourney({
           {DESTINATIONS.map((p) => {
             const back =
               flipped.includes(p.id) ||
-              (desktopPostcards && (hoveredPostcard === p.id || focusedPostcard === p.id))
+              (desktopPostcards &&
+                !mobilePostcards &&
+                (hoveredPostcard === p.id || focusedPostcard === p.id))
             const turn = (
               <button
                 type="button"
@@ -1020,7 +1079,11 @@ export function CinematicJourney({
                   setFlipped((old) => (back ? old.filter((id) => id !== p.id) : [...old, p.id]))
                 }}
               >
-                {desktopPostcards ? (back && <span className="vd-postcard-return">{t('front')}</span>) : `${back ? t('front') : t('turn')} ↶`}
+                {mobilePostcards && back && <PhotoIcon aria-hidden size={18} />}
+                {desktopPostcards && !mobilePostcards && back && (
+                  <span className="vd-postcard-return">{t('front')}</span>
+                )}
+                {!desktopPostcards && `${back ? t('front') : t('turn')} ↶`}
               </button>
             )
             return (
@@ -1037,7 +1100,10 @@ export function CinematicJourney({
                   {desktopPostcards ? turn : null}
                   <div
                     className="vd-postcard-inner"
-                    style={{ transition: motion && (desktopPostcards || pointerMotion) ? undefined : 'none' }}
+                    style={{
+                      transition:
+                        motion && (desktopPostcards || pointerMotion) ? undefined : 'none',
+                    }}
                   >
                     <div className="vd-postcard-front" inert={back}>
                       {directoryShown && !desktopPostcards ? (
@@ -1071,15 +1137,20 @@ export function CinematicJourney({
                             if (desktopPostcards) setFocusedPostcard(null)
                           }}
                         >
-                          {desktopPostcards ? `Explore ${name(p)}` : t('readRegion')}{' '}
-                          <LinkArrow />
+                          {desktopPostcards ? `Explore ${name(p)}` : t('readRegion')} <LinkArrow />
                         </Link>
                       ) : null}
                     </div>
                   </div>
                 </div>
                 {desktopPostcards ? null : turn}
-                <h3>{directoryShown ? <Link href={destinationHref(p, locale)}>{name(p)}</Link> : name(p)}</h3>
+                <h3>
+                  {directoryShown ? (
+                    <Link href={destinationHref(p, locale)}>{name(p)}</Link>
+                  ) : (
+                    name(p)
+                  )}
+                </h3>
                 <p>{body(p)}</p>
               </article>
             )
