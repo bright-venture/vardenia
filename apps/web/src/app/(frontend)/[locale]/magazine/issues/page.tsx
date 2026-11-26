@@ -86,7 +86,7 @@ export default async function IssuesPage({ params }: Props) {
       <PageHero
         title={t('magazine.issues')}
         intro={t('magazine.printArchive')}
-        place={3}
+        photo="issues"
         locale={locale}
       >
         {locale === 'en' && (

@@ -90,7 +90,7 @@ export async function PhotographyCredits({
         >
           Lebanon topographical map
         </a>{' '}
-        by Dr Brains, clipped and desaturated ·{' '}
+        by Dr Brains, adapted for the relief and Barouk area maps ·{' '}
         <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>.{' '}
         <a href="/journey/lebanon-relief-original.png">Original relief image</a>.
       </p>

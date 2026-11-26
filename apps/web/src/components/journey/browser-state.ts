@@ -1,6 +1,6 @@
 'use client'
 import { useSyncExternalStore } from 'react'
-import { DESTINATIONS } from './destinations'
+import { ROUTE_PLACES } from './destinations'
 const routeKey = 'vardenia-discovery-route',
   routeEvent = 'vardenia:discovery-route',
   motionEvent = 'vardenia:motion'
@@ -12,7 +12,7 @@ export function parseDiscoveryRoute(raw: string | null): string[] {
     const value: unknown = JSON.parse(raw ?? '[]')
     return Array.isArray(value)
       ? [...new Set(value)].filter(
-          (id): id is string => typeof id === 'string' && DESTINATIONS.some((p) => p.id === id),
+          (id): id is string => typeof id === 'string' && ROUTE_PLACES.some((p) => p.id === id),
         )
       : []
   } catch {

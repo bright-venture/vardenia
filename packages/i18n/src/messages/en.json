@@ -51,15 +51,15 @@
     "codeSteps": [
       {
         "title": "The printed code",
-        "sub": "Every place in the magazine carries a code on its page, and on the table cards venues set out."
+        "sub": "Each featured business has a unique QR code that, when scanned, automatically opens its dedicated page on the Vardenia website."
       },
       {
         "title": "The scan",
-        "sub": "Point a phone at it. No app and no typing: the camera is enough."
+        "sub": "Simply scan the QR code with your phone’s camera, without downloading an additional app."
       },
       {
-        "title": "The listing, live",
-        "sub": "The place opens with its hours as they are today, not as they were the day it was printed."
+        "title": "The live listing",
+        "sub": "Access the business’s dedicated page with updated information and current opening hours, directly through the Vardenia website."
       }
     ]
   },
@@ -133,12 +133,12 @@
       "onlineOnly": "Online booking only"
     },
     "sectionIntro": {
-      "stay": "Stone guesthouses, boutique hotels and rooms that open onto the mountains or the sea. Choose where you wake up, and let the view set the pace of the day.",
-      "eat-and-drink": "Looking for a long mezze lunch or a quick coffee? Browse restaurants and cafés by region, or choose pools and nightlife for a different kind of outing.",
-      "experiences": "Old trails and valleys, ancient ruins, festivals and guided days out. Ways to see the country on foot, with someone who knows it well.",
-      "weddings": "Planners who know the venues, the seasons and the evening light. For a day under the olive trees, by the sea or high in the mountains.",
+      "stay": "From charming guesthouses to elegant boutique hotels, discover exceptional stays across Lebanon. Whether overlooking the Mediterranean or nestled in the mountains, every destination offers a distinctive experience.",
+      "eat-and-drink": "Discover Lebanon’s diverse dining scene, from authentic Lebanese restaurants to stylish cafés. Explore vibrant nightlife and relaxing poolside destinations, with experiences to suit every occasion.",
+      "experiences": "Discover Lebanon through scenic hiking trails, historic landmarks, cultural festivals and guided experiences. Explore the country’s natural and cultural heritage with the expertise of local guides.",
+      "weddings": "Turn your special occasions into unforgettable celebrations with expert event planners. From romantic seaside weddings to elegant mountain gatherings, bring your vision to life.",
       "lifestyle": "Shopping streets, malls and gyms for the days in between: a morning class, an afternoon of browsing, the city at its own pace.",
-      "getting-around": "Pick up a car, be met at the airport, or keep a driver for the day, so the road along the coast and up into the mountains becomes part of the trip."
+      "getting-around": "Explore Lebanon at your own pace with reliable car rentals, airport transfers and private drivers. From scenic coastal roads to winding mountain routes, make every journey part of your experience."
     }
   },
   "booking": {
@@ -665,7 +665,7 @@
     "mapCaption": "One Lebanon. Many ways in.",
     "routeTitle": "The places you’ll carry.",
     "routeBody": "Keep the destinations that speak to you. Arrange them into a route of your own.",
-    "routeEmpty": "Start with the map. Add a place that catches your eye, then another.",
+    "routeEmpty": "Explore the map. Save the destinations that inspire you and plan your journey.",
     "routeNote": "This discovery route is saved in this browser. Your selected order, not a driving route.",
     "download": "Download my route",
     "clear": "Clear route",
@@ -675,13 +675,13 @@
     "stops": "stops",
     "detourA": "Leave room",
     "detourB": "for a detour.",
-    "detourBody": "Six places to begin. Turn a postcard, find your next feeling, and follow it into the directory.",
+    "detourBody": "Seven regions to discover. Choose a postcard, uncover what inspires you, and explore further through the directory.",
     "turn": "Turn the postcard",
     "front": "Show photograph",
     "readRegion": "Places in this region",
     "magazineA": "Stories,",
     "magazineB": "to keep.",
-    "magazineBody": "Vardenia brings Lebanon’s places and stories together, in print and online. Follow a photograph into the magazine, and let the next page take you somewhere new.",
+    "magazineBody": "Vardenia connects you to the heart of Lebanon through its magazine and digital platform. Discover remarkable destinations, authentic experiences and new reasons to explore the country.",
     "magazinePageA": "Stories",
     "magazinePageB": "Worth Keeping.",
     "magazinePageLead": "Discover Lebanon. One Region. A Thousand Stories.",
@@ -704,12 +704,12 @@
     "directoryEmphasis": "next place.",
     "directoryBody": "Somewhere to stay. A table to share. A reason to take the longer road.",
     "accountBody": "Keep your favourite places and the journeys still to come.",
-    "byblosBody": "Follow the harbour into the old town, past stone façades and narrow lanes.",
+    "byblosBody": "Discover the charm of Byblos through its historic harbour, stone façades and winding lanes.",
     "bsharriBody": "Red roofs, mountain slopes and a view that invites a longer pause.",
-    "beirutBody": "At Raouché, the Mediterranean opens up beside the everyday life of the city.",
-    "baalbekBody": "Look up at the columns, then closer at the carved stone below them.",
-    "tyreBody": "Boats, pale façades and a southern town gathered around its harbour.",
-    "deir-el-qamarBody": "A cobbled lane, an old arch and the warm stone of a Chouf village.",
+    "beirutBody": "At Raouché, the Mediterranean horizon meets the vibrant rhythm of Beirut’s urban life.",
+    "baalbekBody": "Discover Baalbek’s ancient columns and stone carvings that tell the story of its past.",
+    "tyreBody": "Colourful boats and traditional stone buildings capture the timeless character of Tyre.",
+    "deir-el-qamarBody": "In Deir El Qamar, every passageway tells a story of Lebanon’s rich cultural heritage.",
     "broummanaBody": "Pine slopes, cool summer evenings and the lights of Beirut below.",
     "citySlider": "Cities of Lebanon",
     "pauseCities": "Pause city slideshow",
@@ -717,7 +717,38 @@
     "nature": "Nature & walks",
     "villages": "Village life",
     "harbours": "Harbour towns",
-    "sunsets": "Sunset views"
+    "sunsets": "Sunset views",
+    "featuredPlaces": {
+      "batroun-harbour": {
+        "name": "Batroun Harbour",
+        "body": "Explore Batroun’s historic harbour, where maritime traditions and architectural heritage define its character."
+      },
+      "sawfar-autumn": {
+        "name": "Autumn in Sawfar",
+        "body": "Follow Sawfar’s winding roads, framed by century-old trees and the warm tones of autumn."
+      },
+      "bekaa-lake": {
+        "name": "The Bekaa",
+        "body": "Embrace the natural beauty of the Bekaa, from its open fields to its peaceful waters."
+      },
+      "beirut-skyline": {
+        "name": "Beirut Skyline",
+        "body": "Where contemporary architecture meets the timeless beauty of the Mediterranean coastline, in the heart of Beirut."
+      },
+      "barouk-reservoir": {
+        "name": "Barouk Reservoir",
+        "body": "Where crystal-blue waters and rugged mountain terrain reveal a quieter side of Lebanon."
+      },
+      "jezzine-waterfall": {
+        "name": "Jezzine Cityscape",
+        "body": "Jezzine, where a waterfall flows beneath the town, adding movement to a timeless mountain landscape."
+      },
+      "faqra-ruins": {
+        "name": "Faqra Roman Ruins",
+        "body": "Step into Faqra’s Roman ruins, where centuries of history remain carved in stone."
+      }
+    },
+    "broummanaStreet": "Street in Broummana"
   },
   "missingPage": {
     "title": "This page does not exist",
@@ -1326,5 +1357,20 @@
     "eventStaffBody": "Requests for hostesses and waiters open soon. Until then, explore the places already in the directory.",
     "explore": "Explore the directory",
     "bookingNote": "Booking through Vardenia is coming soon for this place."
+  },
+  "websitePhotos": {
+    "stay": "Hotel pool",
+    "eat-and-drink": "Restaurant terrace",
+    "weddings": "Garden wedding",
+    "lifestyle": "Shopping centre",
+    "getting-around": "A road trip in Lebanon",
+    "event-staff": "Event reception team",
+    "directory": "Bhamdoun, Aley",
+    "magazine": "Falougha",
+    "issues": "Barouk cedar forest",
+    "about": "Beiteddine Palace",
+    "more": "Sawfar in autumn",
+    "faq": "Laqlouq",
+    "add-your-business": "Ehden"
   }
 }

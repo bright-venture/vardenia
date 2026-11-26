@@ -182,7 +182,7 @@ export function coordinates(p: { lat: number; lon: number }) {
  * `where` they were silently dropped, so "Explore this region" opened the
  * whole directory. A city now names its governorate as well.
  */
-export function directoryFor(p: Pick<Destination, 'where'>) {
+export function directoryFor(p: { where: string }) {
   if (GOVERNORATES.some((g) => g.slug === p.where)) return `/directory?where=${p.where}`
   const parent = GOVERNORATES.find((g) => g.cities.some((d) => d.slug === p.where))
   return parent ? `/directory?where=${parent.slug}&city=${p.where}` : '/directory'
@@ -190,7 +190,7 @@ export function directoryFor(p: Pick<Destination, 'where'>) {
 
 export const BYBLOS_GUIDE_PATH = '/destinations/byblos'
 
-export function destinationHref(place: Destination, locale: string): string {
+export function destinationHref(place: { id: string; where: string }, locale: string): string {
   return locale === 'en' && place.id === 'byblos' ? BYBLOS_GUIDE_PATH : directoryFor(place)
 }
 
@@ -205,16 +205,74 @@ export function sceneDirectoryFor(id: string, locale = ''): string {
   return destination ? destinationHref(destination, locale) : '/directory'
 }
 
-/** A place can belong to several ways of exploring; filters never imply bookable activities. */
-const THEMES: Record<Destination['id'], readonly Exclude<Feeling, 'all'>[]> = {
-  byblos: ['coast', 'heritage', 'harbours', 'sunsets'],
-  bsharri: ['mountain', 'nature'],
-  beirut: ['coast', 'heritage', 'sunsets'],
-  baalbek: ['heritage'],
-  tyre: ['coast', 'heritage', 'harbours', 'sunsets'],
-  'deir-el-qamar': ['mountain', 'heritage', 'nature', 'villages'],
-  broummana: ['mountain', 'nature', 'sunsets'],
-}
-export function matchesFeeling(place: Pick<Destination, 'id'>, feeling: Feeling) {
-  return feeling === 'all' || THEMES[place.id].includes(feeling)
+export const FEATURED_DESTINATIONS = [
+  {
+    id: 'batroun-harbour',
+    where: 'batroun',
+    lat: 34.256,
+    lon: 35.658,
+    image: 'batroun-harbour.webp',
+    themes: ['coast', 'harbours', 'heritage', 'sunsets'],
+  },
+  {
+    id: 'sawfar-autumn',
+    where: 'aley',
+    lat: 33.81,
+    lon: 35.7,
+    image: 'sawfar.webp',
+    themes: ['mountain', 'nature', 'villages'],
+  },
+  {
+    id: 'bekaa-lake',
+    where: 'western-beqaa',
+    lat: 33.55,
+    lon: 35.69,
+    image: 'bekaa-lake.webp',
+    themes: ['nature', 'sunsets'],
+  },
+  {
+    id: 'beirut-skyline',
+    where: 'beirut',
+    lat: 33.903,
+    lon: 35.498,
+    image: 'beirut-skyline.webp',
+    themes: ['coast', 'harbours', 'heritage', 'sunsets'],
+  },
+  {
+    id: 'barouk-reservoir',
+    where: 'barouk',
+    lat: 33.7,
+    lon: 35.68,
+    image: 'barouk-map.webp',
+    themes: ['mountain', 'nature'],
+  },
+  {
+    id: 'jezzine-waterfall',
+    where: 'jezzine',
+    lat: 33.546,
+    lon: 35.584,
+    image: 'jezzine-waterfall.webp',
+    themes: ['mountain', 'nature', 'villages'],
+  },
+  {
+    id: 'faqra-ruins',
+    where: 'faqra-faraya',
+    lat: 33.998,
+    lon: 35.807,
+    image: 'faqra-ruins.webp',
+    themes: ['mountain', 'heritage'],
+  },
+] as const satisfies readonly {
+  id: string
+  where: string
+  lat: number
+  lon: number
+  image: string
+  themes: readonly Feeling[]
+}[]
+export type FeaturedDestination = (typeof FEATURED_DESTINATIONS)[number]
+export const ROUTE_PLACES = [...DESTINATIONS, ...FEATURED_DESTINATIONS]
+
+export function matchesFeeling(place: { themes: readonly Feeling[] }, feeling: Feeling) {
+  return feeling === 'all' || place.themes.includes(feeling)
 }

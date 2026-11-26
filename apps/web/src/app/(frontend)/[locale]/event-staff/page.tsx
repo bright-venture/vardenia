@@ -56,7 +56,7 @@ export default async function EventStaffPage({ params }: Props) {
       <PageHero
         title={sectionName(EVENT_STAFF_SECTION, locale as Locale)}
         intro={t('intro')}
-        place={4}
+        photo="event-staff"
         locale={locale as Locale}
       >
         {EVENT_STAFF_COMING_SOON && locale === 'en' && (

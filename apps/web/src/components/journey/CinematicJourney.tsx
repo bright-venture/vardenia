@@ -19,10 +19,12 @@ import { PinnedScenicPhoto } from './PinnedScenicPhoto'
 import { useDesktopViewport, useEnglishHomeEdition } from '../editorial/useDesktopEdition'
 import {
   DESTINATIONS,
-  BYBLOS_GUIDE_PATH,
   destinationHref,
   sceneDirectoryFor,
+  FEATURED_DESTINATIONS,
   matchesFeeling,
+  ROUTE_PLACES,
+  type FeaturedDestination,
   routePath,
   SCENE_PHOTOS,
   type Destination,
@@ -79,7 +81,7 @@ export function CinematicJourney({
     return mountPinnedPhotos(host)
   }, [motion, englishHome])
   const [feeling, setFeeling] = useState<Feeling>('all'),
-    [active, setActive] = useState<string>('byblos')
+    [active, setActive] = useState<string>('batroun-harbour')
   const [cityIndex, setCityIndex] = useState(3)
   const cityRoot = useRef<HTMLElement>(null)
   const [cityHover, setCityHover] = useState(false)
@@ -117,15 +119,16 @@ export function CinematicJourney({
   const [hoveredPostcard, setHoveredPostcard] = useState<string | null>(null)
   const [focusedPostcard, setFocusedPostcard] = useState<string | null>(null)
   const ar = locale === 'ar',
-    name = (p: Pick<Destination, 'name' | 'ar'> | ScenePhoto) => (ar ? p.ar : p.name),
-    region = (p: Destination) => {
+    name = (p: Destination | ScenePhoto | FeaturedDestination) =>
+      'themes' in p ? t(`featuredPlaces.${p.id}.name`) : ar ? p.ar : p.name,
+    region = (p: Destination | FeaturedDestination) => {
       const edition = GOVERNORATES.find(
         (g) => g.slug === p.where || g.cities.some((d) => d.slug === p.where),
       )
-      return edition ? editionLabel(edition, ar) : ar ? p.regionAr : p.region
+      return edition ? editionLabel(edition, ar) : name(p)
     }
   const body = (p: Destination) => t(`${p.id}Body` as 'byblosBody')
-  const shown = DESTINATIONS.filter((p) => matchesFeeling(p, feeling))
+  const shown = FEATURED_DESTINATIONS.filter((p) => matchesFeeling(p, feeling))
   const available = shown
   const place = available.find((p) => p.id === active) || available[0]
   /**
@@ -385,10 +388,10 @@ export function CinematicJourney({
     })
   const exportRoute = () => {
     const text = [
-      'MY VARDENIA DISCOVERY ROUTE',
+      t('routeTitle'),
       '',
       ...trip.flatMap((id, i) => {
-        const p = DESTINATIONS.find((p) => p.id === id)!
+        const p = ROUTE_PLACES.find((p) => p.id === id)!
         return [
           `${i + 1}. ${name(p)}`,
           // Use the destination linked by the page's own buttons,
@@ -418,17 +421,21 @@ export function CinematicJourney({
    * off screen and was never drawn (10 November 2026). Linked to the directory
    * by the caller, unless the directory is hidden.
    */
-  const postcardImage = (p: Destination) => (
-    <img
-      src={assets + p.image}
-      srcSet={`${assets + p.image.replace('.webp', '-m.webp')} 640w, ${assets + p.image} 1600w`}
-      sizes="(max-width:700px) calc(100vw - 72px), 31vw"
-      alt={p.alt}
-      width="1600"
-      height="1200"
-      loading="lazy"
-    />
-  )
+  const postcardImage = (p: Destination) => {
+    const isBroummana = p.id === 'broummana'
+    const file = isBroummana ? 'broummana-street.webp' : p.image
+    return (
+      <img
+        src={assets + file}
+        srcSet={`${assets + file.replace('.webp', '-m.webp')} 640w, ${assets + file} 1600w`}
+        sizes="(max-width:700px) calc(100vw - 72px), 31vw"
+        alt={isBroummana ? t('broummanaStreet') : p.alt}
+        width="1600"
+        height="1200"
+        loading="lazy"
+      />
+    )
+  }
   // A scene's own photograph (SCENE_PHOTOS) or a destination's.
   const scenePhoto = (id: string, extra: string, shift: number) => {
     const p: ScenePhoto = SCENE_PHOTOS[id] ?? DESTINATIONS.find((d) => d.id === id)!
@@ -673,7 +680,7 @@ export function CinematicJourney({
                 // The first scene is Beirut now (its photo is downtown): open
                 // the destinations on Beirut, among the city and heritage ones.
                 setFeeling('heritage')
-                setActive('beirut')
+                setActive('beirut-skyline')
               }}
             >
               {t('coastLink')} <LinkArrow />
@@ -689,23 +696,10 @@ export function CinematicJourney({
               {t('mountainB')}
             </h3>
             <p data-vd-reveal>{t('mountainBody')}</p>
-            {locale === 'en' ? (
-              <Link className="vd-button" href={BYBLOS_GUIDE_PATH}>
+            {(locale === 'en' || directoryShown) && (
+              <Link className="vd-button" href={sceneDirectoryFor('byblos-harbour', locale)}>
                 {t('mountainLink')} <LinkArrow />
               </Link>
-            ) : (
-              <a
-                className="vd-button"
-                href="#destinations"
-                onClick={() => {
-                  // This scene is Byblos now (11 Nov 2026): open the
-                  // destinations on Byblos, among the coastal ones.
-                  setFeeling('coast')
-                  setActive('byblos')
-                }}
-              >
-                {t('mountainLink')} <LinkArrow />
-              </a>
             )}
           </div>
           {scenePhoto('byblos-harbour', 'vd-photo-mountain', 20)}
@@ -804,7 +798,7 @@ export function CinematicJourney({
           aria-labelledby="vd-featured-destinations-title"
         >
           <div className="vd-destination-images" aria-hidden>
-            {DESTINATIONS.map((p) => (
+            {FEATURED_DESTINATIONS.map((p) => (
               <img
                 key={p.id}
                 src={pageReady ? assets + p.image : undefined}
@@ -841,7 +835,7 @@ export function CinematicJourney({
                 const box = event.currentTarget.getBoundingClientRect()
                 const x = ((event.clientX - box.left) / box.width) * 100
                 const y = ((event.clientY - box.top) / box.height) * 100
-                const nearest = [...DESTINATIONS].sort((a, b) => {
+                const nearest = [...FEATURED_DESTINATIONS].sort((a, b) => {
                   const pa = mapPosition(a),
                     pb = mapPosition(b)
                   return (pa.x - x) ** 2 + (pa.y - y) ** 2 - ((pb.x - x) ** 2 + (pb.y - y) ** 2)
@@ -852,7 +846,7 @@ export function CinematicJourney({
               }}
             >
               <GeographicMap />
-              {DESTINATIONS.map((p) => (
+              {FEATURED_DESTINATIONS.map((p) => (
                 <button
                   key={p.id}
                   aria-label={`${region(p)} · ${name(p)}`}
@@ -869,7 +863,7 @@ export function CinematicJourney({
                 >
                   <span />
                   {/* Match the place title beside the map. */}
-                  <span className="vd-map-city-label">{englishHome ? name(p) : region(p)}</span>
+                  <span className="vd-map-city-label">{name(p)}</span>
                 </button>
               ))}
             </div>
@@ -891,17 +885,18 @@ export function CinematicJourney({
                   <p className="vd-destination-name">{name(place)}</p>
                 </>
               )}
-              <Coordinates
-                place={place}
-                enabled={!englishHome && motion && pointerMotion}
-                className="vd-destination-coordinates"
-              />
-              <p className="vd-destination-description">{body(place)}</p>
+              {place.id !== 'barouk-reservoir' && (
+                <Coordinates
+                  place={place}
+                  enabled={!englishHome && motion && pointerMotion}
+                  className="vd-destination-coordinates"
+                />
+              )}
+              <p className="vd-destination-description">{t(`featuredPlaces.${place.id}.body`)}</p>
               <div className="vd-destination-actions">
                 {directoryShown ? (
                   <Link className="vd-button vd-button-light" href={destinationHref(place, locale)}>
-                    {locale === 'en' && place.id === 'byblos' ? t('mountainLink') : t('explore')}{' '}
-                    <LinkArrow />
+                    {t('explore')} <LinkArrow />
                   </Link>
                 ) : null}
                 <button
@@ -956,7 +951,7 @@ export function CinematicJourney({
           {trip.length ? (
             <ol>
               {trip.map((id, i) => {
-                const p = DESTINATIONS.find((p) => p.id === id)!
+                const p = ROUTE_PLACES.find((p) => p.id === id)!
                 return (
                   <li key={id}>
                     {/* A 180x140 thumbnail (twice the drawn size, for sharp
@@ -1029,13 +1024,7 @@ export function CinematicJourney({
             {t('detourB')}
           </h2>
           <div>
-            <p data-vd-reveal>
-              {mobilePostcards
-                ? 'Swipe through seven postcards. Tap a photo to turn it over.'
-                : desktopPostcards
-                  ? 'Seven places to begin. Turn a postcard, find your next feeling, and follow it into the directory.'
-                  : t('detourBody')}
-            </p>
+            <p data-vd-reveal>{t('detourBody')}</p>
             <div className="vd-postcard-controls">
               <button
                 type="button"

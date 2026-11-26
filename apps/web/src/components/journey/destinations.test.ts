@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { GOVERNORATES } from '@vardenia/core'
 import { parseFilterState } from '../ListingFilters'
-import { DESTINATIONS, destinationHref, directoryFor, sceneDirectoryFor } from './destinations'
+import {
+  DESTINATIONS,
+  ROUTE_PLACES,
+  destinationHref,
+  directoryFor,
+  sceneDirectoryFor,
+} from './destinations'
 
 /**
  * Every destination's "Explore this region" link must actually filter the
@@ -9,7 +15,7 @@ import { DESTINATIONS, destinationHref, directoryFor, sceneDirectoryFor } from '
  * that names a city as `where` silently opens the whole directory.
  */
 describe('directoryFor', () => {
-  it.each(DESTINATIONS.map((p) => [p.id, p] as const))(
+  it.each(ROUTE_PLACES.map((p) => [p.id, p] as const))(
     '%s opens the directory filtered to its area',
     (_, p) => {
       const query = new URLSearchParams(directoryFor(p).split('?')[1] ?? '')

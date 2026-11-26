@@ -1,4 +1,4 @@
-import { InteriorScenicPhoto } from './editorial/InteriorScenicPhoto'
+import { WebsitePhoto } from './editorial/WebsitePhoto'
 import { StoryIndex } from './editorial/StoryIndex'
 import { AskQuestionForm } from './AskQuestionForm'
 import './editorial/standing-pages.css'
@@ -7,10 +7,8 @@ import type { ContentPage, ContentPageSlug } from '../lib/pages'
 import type { HideablePage } from '../lib/hideable-pages'
 import type { Locale } from '@vardenia/i18n'
 import { getTranslations } from 'next-intl/server'
-import Image from 'next/image'
 import { PageHero } from './editorial/PageHero'
 import { Link } from '../i18n/routing'
-import { DESTINATIONS } from './journey/destinations'
 import { PLACEHOLDER } from '../lib/legal'
 import { groupLines } from './LegalDocument'
 import { withEmphasis } from './emphasis'
@@ -47,7 +45,15 @@ import { withEmphasis } from './emphasis'
  * override. See LegalDocument.
  */
 
-function Line({ text, id }: { text: string; id: string }) {
+function Line({
+  text,
+  id,
+  businessLink = false,
+}: {
+  text: string
+  id: string
+  businessLink?: boolean
+}) {
   const isList = text.startsWith('- ')
   const body = isList ? text.slice(2) : text
 
@@ -68,6 +74,23 @@ function Line({ text, id }: { text: string; id: string }) {
       >
         <span className="text-state-warning me-2 text-sm font-semibold">Not settled</span>
         {body.replace(`${PLACEHOLDER} `, '')}
+      </p>
+    )
+  }
+
+  const business = body.match(/^(.*)\[([^\]]+)\]\(\/add-your-business\)(.*)$/u)
+  if (business) {
+    return (
+      <p className="text-ink-700 mt-4 leading-relaxed">
+        {business[1]}
+        {businessLink ? (
+          <Link className="vd-text-link" href="/add-your-business">
+            {business[2]}
+          </Link>
+        ) : (
+          <strong>{business[2]}</strong>
+        )}
+        {business[3]}
       </p>
     )
   }
@@ -117,7 +140,7 @@ export async function ContentPageView({
   const t = await getTranslations({ locale })
   const faq = slug === 'faq'
   const levelsIndex = page.sections.findIndex(
-    ({ heading }) => heading === 'What each level includes',
+    ({ heading }) => heading === 'What Each Level Includes',
   )
   const enquiryAction = locale === 'en' ? DESKTOP_ENQUIRY_ACTIONS[slug] : undefined
   // The buttons at the foot point at the directory when Contact is hidden, and
@@ -161,7 +184,12 @@ export async function ContentPageView({
           ))}
         </ul>
       ) : (
-        <Line key={id} text={group.lines[0]} id={id} />
+        <Line
+          key={id}
+          text={group.lines[0]}
+          id={id}
+          businessLink={!hidden.includes('add-your-business')}
+        />
       )
     })
   return (
@@ -170,6 +198,7 @@ export async function ContentPageView({
         title={page.title}
         intro={page.intro}
         place={place}
+        photo={slug === 'contact' ? undefined : slug}
         locale={locale}
         immersive={slug === 'about'}
       >
@@ -253,25 +282,7 @@ export async function ContentPageView({
                 ))}
                 {/* After the subsections, so it closes the section. */}
                 {slug === 'about' && i === 0 ? (
-                  <InteriorScenicPhoto
-                    locale={locale}
-                    place={DESTINATIONS[5]}
-                    directoryShown={directoryShown}
-                    className="vd-story-photograph"
-                    image={
-                      <Image
-                        src={`/journey/${DESTINATIONS[5].image}`}
-                        alt={DESTINATIONS[5].alt}
-                        width={1600}
-                        height={1200}
-                        sizes="(max-width:700px) 100vw, 60vw"
-                      />
-                    }
-                  >
-                    <figcaption>
-                      {locale === 'ar' ? DESTINATIONS[5].ar : DESTINATIONS[5].name}
-                    </figcaption>
-                  </InteriorScenicPhoto>
+                  <WebsitePhoto photo="more" locale={locale} className="vd-story-photograph" />
                 ) : null}
               </section>
             ),

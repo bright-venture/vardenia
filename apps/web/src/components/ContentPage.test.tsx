@@ -18,8 +18,8 @@ vi.mock('../lib/hidden-pages', () => ({ hiddenPages: async () => [] }))
 vi.mock('next/font/google', () => ({ Caveat: () => ({ variable: 'test-handwriting' }) }))
 
 vi.mock('next-intl/server', () => ({
-  getTranslations: async ({ locale }: { locale: Locale }) =>
-    createTranslator({ locale, messages: getMessages(locale) }),
+  getTranslations: async ({ locale, namespace }: { locale: Locale; namespace?: 'websitePhotos' }) =>
+    createTranslator({ locale, messages: getMessages(locale), namespace }),
 }))
 
 for (const locale of ['en', 'ar'] as const) {
@@ -54,7 +54,7 @@ for (const locale of ['en', 'ar'] as const) {
             expect(opening?.querySelector('a[href$="/magazine-places"]')).toBeTruthy()
             const chapter = opening?.querySelector('a[href^="#"]')?.getAttribute('href')
             expect(chapter && root.querySelector(chapter)?.querySelector('h2')?.textContent).toBe(
-              'What each level includes',
+              'What Each Level Includes',
             )
           } else {
             expect(opening).toBeNull()
