@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { GOVERNORATES } from '@vardenia/core/regions'
 import { Businesses, validTime } from './Businesses'
+import { isAdminFieldLevel, isStaffFieldLevel } from '../access/index'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 
 /**
@@ -340,5 +341,30 @@ describe('address, map link and location', () => {
   it('fills location from the link before validation', () => {
     const hooks = (Businesses.hooks as { beforeValidate: unknown[] }).beforeValidate
     expect(hooks).toContain(fillLocationFromMapUrl)
+  })
+})
+
+describe('isSample', () => {
+  const sample = field('isSample') as unknown as {
+    type: string
+    defaultValue: unknown
+    access: Record<string, unknown>
+  }
+
+  it('is an admin-only checkbox that defaults to false', () => {
+    expect(sample.type).toBe('checkbox')
+    expect(sample.defaultValue).toBe(false)
+    expect(sample.access.read).toBe(isStaffFieldLevel)
+    expect(sample.access.create).toBe(isAdminFieldLevel)
+    expect(sample.access.update).toBe(isAdminFieldLevel)
+  })
+
+  it('hides the number field for a sample listing', () => {
+    const number = field('listingNumber') as unknown as {
+      admin: { condition: (d: unknown) => boolean }
+    }
+    expect(number.admin.condition({ isSample: true })).toBe(false)
+    expect(number.admin.condition({ isSample: false })).toBe(true)
+    expect(number.admin.condition(undefined)).toBe(true)
   })
 })

@@ -77,6 +77,7 @@ import * as migration_20261124_120000_magazine_places_form from './20261124_1200
 import * as migration_20261124_180000_two_stage_payment from './20261124_180000_two_stage_payment'
 import * as migration_20261125_100000_business_pages_merged from './20261125_100000_business_pages_merged'
 import * as migration_20261126_100000_district_to_city from './20261126_100000_district_to_city'
+import * as migration_20261126_100000_sample_listings from './20261126_100000_sample_listings'
 
 export const migrations = [
   {
@@ -473,5 +474,10 @@ export const migrations = [
     up: migration_20261126_100000_district_to_city.up,
     down: migration_20261126_100000_district_to_city.down,
     name: '20261126_100000_district_to_city',
+  },
+  {
+    up: migration_20261126_100000_sample_listings.up,
+    down: migration_20261126_100000_sample_listings.down,
+    name: '20261126_100000_sample_listings',
   },
 ]

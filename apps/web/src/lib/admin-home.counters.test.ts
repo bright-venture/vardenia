@@ -48,6 +48,31 @@ const fakePayload = (counts: Record<string, number>, fail = false) => {
 
 const staff = { id: 2, collection: 'users', roles: ['staff'] } as never
 
+describe('admin home: contract panels', () => {
+  it('keep sample listings out of the expired and expiring queries', async () => {
+    const calls: { collection?: string; where?: unknown }[] = []
+    const payload = {
+      find: async (args: { collection?: string; where?: unknown }) => {
+        calls.push(args)
+        return { docs: [], totalDocs: 0 }
+      },
+      count: async () => ({ totalDocs: 0 }),
+      logger: { error: vi.fn() },
+      db: {
+        schemaName: 'payload',
+        tableNameMap: new Map(),
+        pool: { query: async () => ({ rows: [] }) },
+      },
+    }
+    await adminHome(payload as never, staff, now)
+    const contract = calls.filter((c) => JSON.stringify(c.where ?? {}).includes('contractEndsAt'))
+    expect(contract).toHaveLength(2)
+    for (const c of contract) {
+      expect(JSON.stringify(c.where)).toContain('{"isSample":{"not_equals":true}}')
+    }
+  })
+})
+
 describe('admin home: Magazine Places counters (PRD A15)', () => {
   it('shows the six counters, each linking to the list its number counts', async () => {
     const { payload } = fakePayload({

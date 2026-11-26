@@ -1016,8 +1016,22 @@ export const Businesses: CollectionConfig = {
       admin: {
         position: 'sidebar',
         step: 1,
+        condition: (data) => !data?.isSample,
         description:
-          'The number in the printed magazine, from the range of this governorate in the chosen issue.',
+          'The number in the printed magazine, from the range of this governorate in the chosen issue. Sample listings hold no number.',
+      },
+    },
+    {
+      name: 'isSample',
+      label: 'Sample listing',
+      type: 'checkbox',
+      defaultValue: false,
+      index: false,
+      access: { read: isStaffFieldLevel, create: isAdminFieldLevel, update: isAdminFieldLevel },
+      admin: {
+        position: 'sidebar',
+        description:
+          'Mock listing shown to visitors but not a real business. Holds no magazine number. Admin only.',
       },
     },
     {

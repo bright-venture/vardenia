@@ -49,7 +49,7 @@ function valuesOn(where: Where | null, path: string): string[] {
 }
 
 describe('quick filters (PRD v4 7.1)', () => {
-  it('are the eight chips, in order', () => {
+  it('are the ten chips, in order', () => {
     expect(SUBMISSION_QUEUES.map((q) => q.label)).toEqual([
       'Awaiting downpayment',
       'Downpayment received, to review',
@@ -59,7 +59,16 @@ describe('quick filters (PRD v4 7.1)', () => {
       'Closed',
       'Incomplete',
       'All',
+      'Sample listings',
+      'Real listings',
     ])
+  })
+
+  it('has Sample and Real chips on the isSample flag, and All is still unfiltered', () => {
+    const by = (key: string) => SUBMISSION_QUEUES.find((q) => q.key === key)!
+    expect(by('sample').where).toEqual({ or: [{ and: [{ isSample: { equals: true } }] }] })
+    expect(by('real').where).toEqual({ or: [{ and: [{ isSample: { not_equals: true } }] }] })
+    expect(by('all').where).toBeNull()
   })
 
   it('filter on real statuses and stages only', () => {
@@ -187,6 +196,8 @@ describe('counts: one SQL statement', () => {
       'closed',
       'incomplete',
       'all',
+      'sample',
+      'real',
       'due-soon',
       'overdue',
       'due-within',
@@ -219,6 +230,17 @@ describe('counts: one SQL statement', () => {
     )
   })
 
+  it('translates the boolean sample flag, equals and not_equals', () => {
+    const a: unknown[] = []
+    expect(whereToSql({ isSample: { equals: true } }, a)).toBe('"is_sample" = $1')
+    expect(a).toEqual([true])
+    const b: unknown[] = []
+    expect(whereToSql({ isSample: { not_equals: true } }, b)).toBe(
+      '"is_sample" is distinct from $1',
+    )
+    expect(b).toEqual([true])
+  })
+
   it('refuses a path or an operator it does not know, rather than guessing', () => {
     expect(() => whereToSql({ 'submission.ownerEmail': { equals: 'x' } }, [])).toThrow(/no column/)
     expect(() => whereToSql({ 'submission.status': { like: 'x' } }, [])).toThrow(/not supported/)
@@ -233,7 +255,7 @@ describe('counts: one SQL statement', () => {
     expect(counts['to-review']).toBe(1)
     expect(counts['ready-to-publish']).toBe(0)
     expect(counts.refunds).toBe(0)
-    expect(counts['due-within']).toBe(10)
+    expect(counts['due-within']).toBe(12)
   })
 
   it('is staff only: anyone else gets null and no query runs', async () => {
