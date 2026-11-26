@@ -13,7 +13,12 @@ import {
   findAllListingSlugs,
   findRelatedListings,
 } from '../../../../../lib/listings'
-import { resolveGallery, resolvePhotograph, type MediaField } from '../../../../../lib/media'
+import {
+  isSeedTitleArt,
+  resolveGallery,
+  resolvePhotograph,
+  type MediaField,
+} from '../../../../../lib/media'
 import { emSherifPhoto, emSherifProfile } from '../../../../../lib/em-sherif'
 import { hiddenPages } from '../../../../../lib/hidden-pages'
 import { buildMetadata } from '../../../../../lib/seo'
@@ -316,6 +321,7 @@ export default async function ListingPage({ params }: Params) {
 
         <header
           data-has-photograph={Boolean(hero)}
+          data-title-art={isSeedTitleArt(photo) || undefined}
           className="bg-cedar-900 relative isolate flex flex-col justify-end overflow-hidden"
         >
           {/*

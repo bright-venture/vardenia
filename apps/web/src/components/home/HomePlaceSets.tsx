@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Pause, Play } from 'lucide-react'
 import { HOME_PLACES_LIMIT } from '../../lib/home-selection'
-import { useDesktopViewport } from '../editorial/useDesktopEdition'
+import { useEnglishHomeEdition } from '../editorial/useDesktopEdition'
 import { useJourneyMotion } from '../journey/browser-state'
 import { useVisibleRotation } from '../journey/useCityAutoplay'
 
@@ -11,7 +11,11 @@ const HOME_PLACES_GRID = 'grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:gr
 const HOME_PLACES_DELAY = 8000
 const FLIP_FALLBACK_DELAY = 920
 
-export function HomePlaceSets({ cards }: { cards: { key: string | number; content: ReactNode }[] }) {
+export function HomePlaceSets({
+  cards,
+}: {
+  cards: { key: string | number; content: ReactNode }[]
+}) {
   const root = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(0)
   const [incoming, setIncoming] = useState<number | null>(null)
@@ -19,19 +23,22 @@ export function HomePlaceSets({ cards }: { cards: { key: string | number; conten
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
   const [motion] = useJourneyMotion()
-  const desktop = useDesktopViewport()
+  const showSets = useEnglishHomeEdition('en')
   const setCount = Math.ceil(cards.length / HOME_PLACES_LIMIT)
   const sets = Array.from({ length: setCount }, (_, index) =>
     cards.slice(index * HOME_PLACES_LIMIT, (index + 1) * HOME_PLACES_LIMIT),
   )
   const selected = Math.min(active, setCount - 1)
-  const flipping = desktop && motion && incoming !== null
-  const changeSet = useCallback((step: number) => {
-    if (setCount < 2 || incoming !== null) return
-    const next = (selected + step + setCount) % setCount
-    if (motion) setIncoming(next)
-    else setActive(next)
-  }, [incoming, motion, selected, setCount])
+  const flipping = showSets && motion && incoming !== null
+  const changeSet = useCallback(
+    (step: number) => {
+      if (setCount < 2 || incoming !== null) return
+      const next = (selected + step + setCount) % setCount
+      if (motion) setIncoming(next)
+      else setActive(next)
+    },
+    [incoming, motion, selected, setCount],
+  )
   const advance = useCallback(() => changeSet(1), [changeSet])
   const finish = useCallback(() => {
     if (incoming === null) return
@@ -48,17 +55,19 @@ export function HomePlaceSets({ cards }: { cards: { key: string | number; conten
 
   useVisibleRotation(
     root,
-    desktop && motion && setCount > 1 && incoming === null && !paused && !hovered && !focused,
+    showSets && motion && setCount > 1 && incoming === null && !paused && !hovered && !focused,
     advance,
     selected,
     HOME_PLACES_DELAY,
   )
 
-  if (!desktop) {
+  if (!showSets) {
     return (
       <ul className={HOME_PLACES_GRID}>
         {cards.slice(0, HOME_PLACES_LIMIT).map((card) => (
-          <li key={card.key} className="min-w-0" data-vd-reveal>{card.content}</li>
+          <li key={card.key} className="min-w-0" data-vd-reveal>
+            {card.content}
+          </li>
         ))}
       </ul>
     )
@@ -67,9 +76,14 @@ export function HomePlaceSets({ cards }: { cards: { key: string | number; conten
   const playbackLabel = paused ? 'Resume listing rotation' : 'Pause listing rotation'
   return (
     <div ref={root} className="vd-place-sets" data-flipping={flipping}>
-      {desktop && setCount > 1 ? (
+      {setCount > 1 ? (
         <div className="vd-place-set-controls" role="group" aria-label="Listing navigation">
-          <button type="button" aria-label="Previous listings" title="Previous listings" onClick={() => changeSet(-1)}>
+          <button
+            type="button"
+            aria-label="Previous listings"
+            title="Previous listings"
+            onClick={() => changeSet(-1)}
+          >
             <ArrowLeft size={17} aria-hidden />
           </button>
           {motion ? (
@@ -86,7 +100,8 @@ export function HomePlaceSets({ cards }: { cards: { key: string | number; conten
             <ArrowRight size={17} aria-hidden />
           </button>
           <span className="sr-only" aria-live={motion && !paused ? 'off' : 'polite'}>
-            Listings {selected * HOME_PLACES_LIMIT + 1} to {Math.min((selected + 1) * HOME_PLACES_LIMIT, cards.length)} of {cards.length}
+            Listings {selected * HOME_PLACES_LIMIT + 1} to{' '}
+            {Math.min((selected + 1) * HOME_PLACES_LIMIT, cards.length)} of {cards.length}
           </span>
         </div>
       ) : null}

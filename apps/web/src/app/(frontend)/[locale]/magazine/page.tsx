@@ -1,6 +1,7 @@
 import { publicPageCopy } from '../../../../lib/public-page-copy'
 import { EnglishPageSchema } from '../../../../components/EnglishPageSchema'
-import { issueCover } from '../../../../lib/issue-presentation'
+import { DesktopEditionView } from '../../../../components/editorial/DesktopEditionView'
+import { readerIssues, issueCover } from '../../../../lib/issue-presentation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -76,7 +77,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return buildMetadata({
     seo: undefined,
     title: locale === 'en' ? publicPageCopy['/magazine'].title : t('magazine.title'),
-    description: locale === 'en' ? publicPageCopy['/magazine'].description : t('magazine.metaDescription'),
+    description:
+      locale === 'en' ? publicPageCopy['/magazine'].description : t('magazine.metaDescription'),
     path: '/magazine',
     locale: isLocale(locale) ? locale : DEFAULT_LOCALE,
   })
@@ -99,48 +101,79 @@ export default async function MagazinePage({ params }: Props) {
   const articlesShown = !hidden.includes('magazine-articles')
 
   const current = issues.docs[0]
-  const cover = current ? resolveImage(issueCover(current, locale), 'portrait') : null
+  const desktopIssue = locale === 'en' ? readerIssues(issues.docs)[0] : current
+  function featuredIssue(current: (typeof issues.docs)[number]) {
+    const cover = resolveImage(issueCover(current, locale), 'portrait')
+    return (
+      <section className="vd-current-issue border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
+        <Link href={`/magazine/issues/${current.slug}`} className="group block">
+          <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
+            {cover ? (
+              <Image
+                src={cover.src}
+                alt={cover.alt}
+                fill
+                sizes="200px"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : null}
+          </div>
+        </Link>
+
+        <div>
+          <p className="text-ink-500 text-xs uppercase tracking-widest">
+            {t('magazine.currentIssue')}
+          </p>
+          <h2 className="font-display text-ink-900 mt-2 text-3xl leading-snug">
+            <Link href={`/magazine/issues/${current.slug}`}>{current.title}</Link>
+          </h2>
+          {current.season ? <p className="text-ink-500 mt-2 text-sm">{current.season}</p> : null}
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <ButtonLink href={`/magazine/issues/${current.slug}`} variant="solid">
+              {t('magazine.whatsInIssue')}
+            </ButtonLink>
+            <ButtonLink href="/magazine/issues" variant="outline">
+              {t('magazine.allIssues')}
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <main className="vd-magazine-index mx-auto max-w-6xl px-6 py-16">
-      <EnglishPageSchema locale={locale} path={'/magazine'} name={publicPageCopy['/magazine'].title} description={publicPageCopy['/magazine'].description} type="CollectionPage" />
-      <EditorialIntro locale={locale} kind="magazine" />
+      <EnglishPageSchema
+        locale={locale}
+        path={'/magazine'}
+        name={publicPageCopy['/magazine'].title}
+        description={publicPageCopy['/magazine'].description}
+        type="CollectionPage"
+      />
+      <EditorialIntro locale={locale} kind="magazine">
+        {locale === 'en' && issuesShown && desktopIssue && (
+          <Link
+            hidden
+            className="vd-current-issue-link vd-button"
+            href={`/magazine/issues/${desktopIssue.slug}`}
+          >
+            Explore {desktopIssue.title}
+          </Link>
+        )}
+      </EditorialIntro>
 
       {current && issuesShown ? (
-        <section className="vd-current-issue border-ink-100 mt-12 grid gap-8 border-t pt-12 md:grid-cols-[200px_minmax(0,1fr)]">
-          <Link href={`/magazine/issues/${current.slug}`} className="group block">
-            <div className="bg-surface-sunken relative aspect-[3/4] overflow-hidden">
-              {cover ? (
-                <Image
-                  src={cover.src}
-                  alt={cover.alt}
-                  fill
-                  sizes="200px"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              ) : null}
-            </div>
-          </Link>
-
-          <div>
-            <p className="text-ink-500 text-xs uppercase tracking-widest">
-              {t('magazine.currentIssue')}
-            </p>
-            <h2 className="font-display text-ink-900 mt-2 text-3xl leading-snug">
-              <Link href={`/magazine/issues/${current.slug}`}>{current.title}</Link>
-            </h2>
-            {current.season ? <p className="text-ink-500 mt-2 text-sm">{current.season}</p> : null}
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href={`/magazine/issues/${current.slug}`} variant="solid">
-                {t('magazine.whatsInIssue')}
-              </ButtonLink>
-              <ButtonLink href="/magazine/issues" variant="outline">
-                {t('magazine.allIssues')}
-              </ButtonLink>
-            </div>
-          </div>
-        </section>
+        desktopIssue?.id !== current.id ? (
+          <DesktopEditionView
+            locale={locale}
+            desktop={desktopIssue ? featuredIssue(desktopIssue) : null}
+          >
+            {featuredIssue(current)}
+          </DesktopEditionView>
+        ) : (
+          featuredIssue(current)
+        )
       ) : null}
 
       {articlesShown ? (

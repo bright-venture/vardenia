@@ -51,7 +51,7 @@ import { usePlaceNumbers } from './use-place-numbers'
  *   3 price/terms  the price and the terms, "Submit" finishes it
  *   4 thank you    clears itself after a minute
  *
- * The preview sits above the fields on step 1 and redraws from the form state
+ * The preview shares the fields’ state on step 1 and redraws from the form state
  * as the owner types; it shows placeholders where the photos go, because the
  * photos come from the phone later. Nothing is public until staff accept.
  *
@@ -440,7 +440,13 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const districts = districtsFor(state.governorate)
 
   return (
-    <div data-place-form dir={dir} lang={locale} className="mt-4 flex flex-col gap-8">
+    <div
+      data-place-form
+      data-listing-editor
+      dir={dir}
+      lang={locale}
+      className="mt-4 flex flex-col gap-8"
+    >
       {warning}
       <section aria-labelledby={fid('preview-title')} className="flex flex-col gap-3">
         <div>
@@ -463,7 +469,15 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       {progress}
 
       <form ref={formRef} onSubmit={next} noValidate aria-busy={busy}>
-        <p className="text-ink-700 text-sm">{t('form.intro')}</p>
+        <p className="text-ink-700 text-sm" data-form-intro>
+          {t('form.intro')}
+        </p>
+        {locale === 'en' && (
+          <p hidden data-desktop-intro>
+            Choose a layout, enter your details and pick a page number. In the next step, scan the
+            code with your phone to send your logo and main photo.
+          </p>
+        )}
 
         <fieldset disabled={busy} className="m-0 mt-6 flex min-w-0 flex-col gap-10 border-0 p-0">
           {/* Layout */}

@@ -263,15 +263,21 @@ export function RoomTypesManager({
   const hotelName = (id: number) => hotels.find((hotel) => hotel.id === id)?.name ?? ''
 
   return (
-    <section className="mt-10">
+    <section className="vd-partner-tools vd-room-tools mt-10">
+      <header hidden className="vd-room-intro">
+        <h2>{t('title')}</h2>
+        <p>{t('intro')}</p>
+      </header>
       {!editing
         ? hotels.map((hotel) => (
             <HotelTimes key={hotel.id} hotel={hotel} showName={hotels.length > 1} />
           ))
         : null}
 
-      <h2 className="font-display text-ink-900 mt-10 text-2xl">{t('title')}</h2>
-      <p className="text-ink-500 mt-2 text-sm">{t('intro')}</p>
+      <h2 className="vd-room-original-title font-display text-ink-900 mt-10 text-2xl">
+        {t('title')}
+      </h2>
+      <p className="vd-room-original-copy text-ink-500 mt-2 text-sm">{t('intro')}</p>
 
       {saved ? <p className={`${NOTICE_SUCCESS} mt-4`}>{t('saved')}</p> : null}
       {error && !editing ? <p className={`${NOTICE_ERROR} mt-4`}>{error}</p> : null}

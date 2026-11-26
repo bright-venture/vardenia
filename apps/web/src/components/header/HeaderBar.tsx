@@ -15,13 +15,20 @@ export function HeaderBar({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!home) return
     let frame = 0
+    const header = document.querySelector<HTMLElement>('.vd-header')
     const update = () => {
       frame = 0
-      const hero = document.querySelector(
-        matchMedia('(max-width: 700px)').matches ? '.vd-hero-media' : '.vd-hero-track',
+      const phone = matchMedia('(max-width: 700px)').matches
+      const hero = document.querySelector(phone ? '.vd-hero-media' : '.vd-hero-track')
+      const bounds = header?.getBoundingClientRect()
+      if (phone && bounds) header?.style.setProperty('--vd-mobile-menu-top', `${bounds.bottom}px`)
+      setOverHero(
+        Boolean(
+          hero &&
+          hero.getBoundingClientRect().bottom >
+            (phone ? (bounds?.bottom ?? 70) : (bounds?.height ?? 80)),
+        ),
       )
-      const header = document.querySelector('.vd-header')
-      setOverHero(Boolean(hero && hero.getBoundingClientRect().bottom > (header?.getBoundingClientRect().height ?? 80)))
     }
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update)
@@ -35,8 +42,17 @@ export function HeaderBar({ children }: { children: ReactNode }) {
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
       window.removeEventListener('pageshow', schedule)
+      header?.style.removeProperty('--vd-mobile-menu-top')
     }
   }, [home, pathname])
 
-  return <header className="vd-header" data-home={home || undefined} data-overlay={(home && overHero) || undefined}>{children}</header>
+  return (
+    <header
+      className="vd-header"
+      data-home={home || undefined}
+      data-overlay={(home && overHero) || undefined}
+    >
+      {children}
+    </header>
+  )
 }

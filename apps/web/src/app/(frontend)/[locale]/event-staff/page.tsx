@@ -7,7 +7,7 @@ import { EVENT_STAFF_COMING_SOON, EVENT_STAFF_ROLES, EVENT_STAFF_SECTION } from 
 import { isLocale, type Locale } from '@vardenia/i18n'
 import { Link } from '../../../../i18n/routing'
 import { PageHero } from '../../../../components/editorial/PageHero'
-import { ComingSoonNotice } from '../../../../components/ComingSoonNotice'
+import { ComingSoonNotice, DesktopOpeningNotice } from '../../../../components/ComingSoonNotice'
 import { buildMetadata } from '../../../../lib/seo'
 import { sectionName, sectionSummary } from '../../../../lib/labels'
 
@@ -45,7 +45,7 @@ export default async function EventStaffPage({ params }: Props) {
   const t = await getTranslations('eventStaff')
 
   return (
-    <main>
+    <main data-staff-opening={EVENT_STAFF_COMING_SOON || undefined}>
       <EnglishPageSchema
         locale={locale}
         path={'/event-staff'}
@@ -58,7 +58,11 @@ export default async function EventStaffPage({ params }: Props) {
         intro={t('intro')}
         place={4}
         locale={locale as Locale}
-      />
+      >
+        {EVENT_STAFF_COMING_SOON && locale === 'en' && (
+          <DesktopOpeningNotice body="eventStaffBody" />
+        )}
+      </PageHero>
       {/* Coming soon (25 November 2026): no request forms until it opens. */}
       {EVENT_STAFF_COMING_SOON ? (
         <ComingSoonNotice body="eventStaffBody" />

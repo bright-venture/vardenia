@@ -87,6 +87,11 @@ export default async function VerifyPage({
             <Link href="/account/login" className={PRIMARY_BUTTON}>
               {t('signIn')}
             </Link>
+            {locale === 'en' && (
+              <p hidden className="vd-verify-help">
+                Sign in to request a fresh verification email.
+              </p>
+            )}
             <Link href="/account/forgot" className={LINK}>
               {t('forgot')}
             </Link>

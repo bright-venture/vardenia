@@ -640,7 +640,9 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
   .vd-home-selection:has(.vd-place-sets) .vd-home-heading {
     margin-bottom: 20px;
   }
+}
 
+@media (min-width: 1051px), (max-width: 700px) {
   .vd-place-set-controls {
     display: flex;
     gap: 8px;
@@ -669,7 +671,7 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
   }
 }
 
-@media (min-width: 1051px) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   .vd-place-sets[data-flipping='true'] .vd-place-board {
     display: grid;
   }
@@ -677,8 +679,8 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
   .vd-place-sets[data-flipping='true'] .vd-place-set:is([data-current='true'], [data-arriving='true']) {
     display: grid;
     grid-area: 1 / 1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 28px;
+    grid-template-columns: var(--vd-set-columns, repeat(3, minmax(0, 1fr)));
+    gap: var(--vd-set-gap, 28px);
     align-content: start;
   }
 
@@ -931,46 +933,66 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
 .vd-home :is(.vd-button,.vd-feelings button), .vd-footer .vd-button {border-radius:6px;}
 .vd-postcard-return { display: none; }
 @media (max-width: 700px) {
+  .vd-header[data-home] .vd-header-inner { padding-inline: var(--vd-gutter); }
+  .vd-header[data-home] .vd-mobile-sheet { top: var(--vd-mobile-menu-top, 70px); }
   /* The film and its paper introduction follow the thumb in normal document flow. */
   .vd-home .vd-hero-track { height: auto; }
   .vd-public:has(.vd-header[data-home]) .vd-home .vd-hero {
     position: relative;
     display: grid;
-    grid-template-areas: "film" "bridge";
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(clamp(480px, 78svh, 760px), auto) auto;
+    grid-template-rows: [film-start] minmax(92px, 1fr) [copy] auto [controls] auto [film-end bridge] auto;
     height: auto;
     min-height: 0;
     background: var(--vd-paper);
   }
-  .vd-home .vd-hero :is(.vd-hero-media, .vd-hero-shade) { grid-area: film; }
+  .vd-home .vd-hero :is(.vd-hero-media, .vd-hero-shade),
+  .vd-home .vd-hero::after { grid-area: film-start / 1 / film-end / 2; }
+  .vd-home .vd-hero::before {
+    content: '';
+    grid-area: film-start / 1 / controls / 2;
+    /* The closed film control and its margins occupy the last 88px.
+       Opening it grows the film below the finger. */
+    min-block-size: calc(clamp(480px, 78svh, 760px) - 88px);
+    pointer-events: none;
+  }
   .vd-home .vd-hero-media { background: var(--vd-ink); }
   .vd-home .vd-hero-shade {
     background: linear-gradient(0deg, rgb(9 21 33 / .87), rgb(9 21 33 / .58) 33%, transparent 73%);
   }
   .vd-home .vd-hero-copy {
     position: relative;
-    grid-area: film;
+    grid-area: copy / 1 / controls / 2;
     align-self: end;
     inset: auto;
     max-width: none;
-    margin: 94px var(--vd-gutter) 86px;
+    margin: 0 var(--vd-gutter);
     opacity: 1;
     transform: none;
   }
-  .vd-home .vd-hero h1 { font-size: clamp(45px, 13vw, 75px); line-height: .97; }
+  .vd-home .vd-hero h1 { font-size: clamp(45px, 14vw, 75px); line-height: .97; }
   .vd-home .vd-hero-copy p { margin-block: 14px 18px; max-width: 32ch; line-height: 1.5; }
   .vd-home .vd-film-controls {
-    grid-area: film;
-    bottom: 32px;
+    grid-area: controls / 1 / film-end / 2;
+    position: relative;
+    inset: auto;
+    justify-self: start;
+    max-width: calc(100% - 2 * var(--vd-gutter));
+    margin: 8px var(--vd-gutter) 36px;
+  }
+  .vd-home .vd-film-controls[open] > div {
+    position: static;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0;
+    padding: 6px;
   }
   .vd-home .vd-hero-next { display: none; }
   .vd-home .vd-hero::after {
-    grid-area: film;
     height: 30px;
   }
   .vd-home .vd-hero-bridge {
-    grid-area: bridge;
+    grid-area: bridge / 1 / auto / 2;
     display: block;
     position: relative;
     inset: auto;
@@ -991,24 +1013,143 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
     text-decoration: underline;
     text-underline-offset: 4px;
   }
-  .vd-home .vd-journey-intro { padding-block: 38px 30px; }
-  .vd-home .vd-journey-intro > p { margin-top: 14px; }
-  .vd-home .vd-atlas > .vd-section-heading { padding-bottom: 10px; }
-  .vd-home .vd-featured-destinations-title { margin-block: 16px 12px; }
-  .vd-home .vd-detours .vd-section-heading { margin-bottom: 12px; padding-bottom: 0; }
-  .vd-home .vd-detours .vd-section-heading p { margin-top: 14px; }
-  .vd-home .vd-postcard-controls { margin-top: 12px; }
-  .vd-home .vd-postcards { gap: 14px; grid-auto-columns: min(82vw, 350px); }
-  .vd-home .vd-home-selection { padding-block: 44px; }
-  .vd-home .vd-home-selection .vd-home-heading { margin-bottom: 20px; }
-  .vd-home .vd-home-selection > ul {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px 14px;
+  .vd-home .vd-landscape { scroll-margin-block-start: 70px; }
+  .vd-home .vd-journey-intro { padding-block: 38px 40px; }
+  .vd-home .vd-journey-intro > p { margin-top: 14px; text-wrap: balance; }
+  .vd-home .vd-landscape .vd-trip-scene {
+    row-gap: 36px;
+    padding-bottom: 52px;
   }
-  .vd-home-selection .vd-listing-card .vd-plate { aspect-ratio: 1; border-radius: 10px; }
-  .vd-home-selection .vd-listing-card h3 { font-size: clamp(20px, 5vw, 25px); }
-  .vd-home .vd-manifesto { padding-block: 48px; text-align: start; }
+  .vd-home .vd-landscape .vd-scene-copy {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+  .vd-home .vd-landscape .vd-scene-copy p {
+    max-width: 34ch;
+    margin-block: 14px 18px;
+    line-height: 1.55;
+  }
+  .vd-home .vd-atlas { padding-top: 36px; scroll-margin-block-start: 70px; }
+  .vd-home .vd-atlas > .vd-section-heading { padding-bottom: 0; }
+  .vd-home .vd-atlas > .vd-section-heading h2 { font-size: clamp(36px, 11.6vw, 72px); }
+  .vd-home .vd-atlas > .vd-section-heading p { margin-top: 12px; text-wrap: pretty; }
+  .vd-home .vd-featured-destinations-title { margin-block: 28px 12px; }
+  .vd-home .vd-atlas .vd-destination-stage {
+    grid-template-areas: "filters" "photo" "details" "navigation" "map";
+    gap: 20px;
+    padding-block: 20px 28px;
+  }
+  .vd-home .vd-atlas .vd-feelings {
+    gap: 8px;
+    margin-inline-end: calc(-1 * var(--vd-gutter));
+    max-width: none;
+    padding: 4px var(--vd-gutter) 6px 0;
+    overscroll-behavior-x: contain;
+  }
+  .vd-home .vd-atlas .vd-feelings > button {
+    min-height: 44px;
+    padding-inline: 14px;
+    border: 1px solid color-mix(in srgb, var(--vd-paper) 45%, transparent);
+  }
+  .vd-home .vd-atlas .vd-destination-images {
+    grid-area: photo;
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .vd-home .vd-atlas .vd-destination-shade { display: none; }
+  .vd-home .vd-atlas .vd-destination-region { margin-bottom: 4px; }
+  .vd-home .vd-atlas .vd-destination-coordinates { margin-block: 8px 12px; }
+  .vd-home .vd-atlas .vd-destination-actions { gap: 8px; margin-top: 16px; }
+  .vd-home .vd-atlas .vd-destination-navigation {
+    padding-block: 12px;
+    border-block: 1px solid color-mix(in srgb, var(--vd-paper) 25%, transparent);
+  }
+  .vd-home .vd-atlas .vd-destination-map {
+    justify-self: center;
+    width: min(100%, 300px);
+    text-align: center;
+  }
+  .vd-home .vd-atlas .vd-destination-map > a { padding: 12px; margin-top: 0; }
+  .vd-home .vd-atlas .vd-trip-panel { scroll-margin-block-start: 82px; }
+  .vd-home .vd-atlas .vd-trip-panel li button { min-width: 44px; min-height: 44px; }
+  .vd-home .vd-detours { scroll-margin-block-start: 70px; }
+  .vd-home .vd-detours .vd-section-heading { margin-bottom: 10px; padding-bottom: 0; }
+  .vd-home .vd-detours .vd-section-heading h2 { font-size: clamp(38px, 11.6vw, 68px); }
+  .vd-home .vd-detours .vd-section-heading > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .vd-home .vd-detours .vd-section-heading p { margin: 0; max-width: 28ch; text-wrap: pretty; }
+  .vd-home .vd-detours .vd-postcard-controls { flex: none; gap: 4px; margin: 0; }
+  .vd-home .vd-postcard-controls button {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    color: var(--vd-ink);
+    border: 1px solid color-mix(in srgb, var(--vd-ink) 30%, transparent);
+  }
+  .vd-home .vd-postcards { gap: 14px; grid-auto-columns: min(calc(100% - 20px), 410px); }
+  .vd-home .vd-detours .vd-postcard-photo {
+    width: 100%;
+    aspect-ratio: 1.22;
+    min-height: 260px;
+  }
+  .vd-home .vd-detours :is(.vd-postcard-front, .vd-postcard-back) { border-radius: 10px; }
+  .vd-home .vd-detours .vd-postcard-front > .vd-coordinates {
+    justify-content: end;
+    padding: 10px 14px;
+  }
+  .vd-home .vd-detours .vd-postcard-back {
+    align-items: start;
+    text-align: start;
+    padding: 48px 18px 16px;
+    gap: 10px;
+  }
+  .vd-home .vd-detours .vd-postcard > h3 { margin-top: 14px; }
+  .vd-home .vd-detours .vd-postcard > p { margin-top: 8px; }
+  .vd-home .vd-home-selection {
+    --vd-set-columns: minmax(0, 1fr);
+    --vd-set-gap: 0;
+    padding-block: 36px;
+    scroll-margin-block-start: 70px;
+  }
+  .vd-home .vd-home-selection .vd-home-heading { margin-bottom: 12px; }
+  .vd-home .vd-home-selection .vd-home-heading p { margin-top: 8px; }
+  .vd-home .vd-home-selection .vd-home-heading > a { margin-top: 4px; min-height: 44px; }
+  .vd-home-selection > ul, .vd-home-selection .vd-place-set[data-current='true'] {
+    display: grid;
+    grid-template-columns: var(--vd-set-columns);
+    gap: var(--vd-set-gap);
+  }
+  .vd-home-selection .vd-place-set[data-current='false']:not([data-arriving='true']) { display: none; }
+  .vd-home-selection .vd-listing-card {
+    display: grid;
+    grid-template-columns: clamp(76px, 23vw, 120px) minmax(0, 1fr) 44px;
+    grid-template-areas: "photo category save" "photo caption save";
+    column-gap: clamp(8px, 2.6vw, 16px);
+    padding-block: 16px;
+    border-top: 1px solid color-mix(in srgb, var(--vd-ink) 18%, transparent);
+  }
+  .vd-home-selection .vd-card-media { display: contents; }
+  .vd-home-selection .vd-listing-card .vd-plate { grid-area: photo; align-self: center; aspect-ratio: 1; border-radius: 10px; }
+  .vd-home-selection .vd-card-labels { position: static; grid-area: category; align-self: end; }
+  .vd-home-selection .vd-card-category { background: none; padding: 0; font-size: 12px; }
+  .vd-home-selection .vd-card-caption { grid-area: caption; margin: 3px 0 0; display: flex; flex-direction: column; }
+  .vd-home-selection .vd-listing-card h3 { order: -1; margin: 0; font-size: clamp(21px, 5.5vw, 28px); line-height: 1.12; }
+  .vd-home-selection .vd-card-caption > :empty { display: none; }
+  .vd-home-selection .vd-card-place { margin-top: 3px; }
+  .vd-home-selection .vd-card-body { margin-top: 5px; line-height: 1.4; }
+  .vd-home-selection .vd-card-save { position: relative; inset: auto; grid-area: save; align-self: center; }
+  .vd-home-selection .vd-card-save button { width: 44px; height: 44px; }
+  .vd-home .vd-manifesto { padding-block: 40px; text-align: start; scroll-margin-block-start: 70px; }
   .vd-home .vd-manifesto .vd-kinetic-stage {
     position: static;
     height: auto;
@@ -1016,13 +1157,28 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
     padding: 0;
     justify-content: start;
   }
-  .vd-home .vd-manifesto h2 { max-width: 19ch; text-wrap: pretty; }
-  .vd-home .vd-manifesto > p { max-width: 40ch; margin: 18px 0 0; padding: 0; }
+  .vd-home .vd-manifesto h2 {
+    max-width: 100%;
+    font-size: clamp(24px, 9.1vw, 48px);
+    line-height: 1.12;
+  }
+  .vd-home .vd-manifesto .vd-sentence-break { display: block; }
+  .vd-home .vd-manifesto > p {
+    max-width: 38ch;
+    margin: 14px 0 0;
+    padding: 0;
+    text-wrap: pretty;
+  }
   .vd-home .vd-scan-process .vd-print-sticky { padding-block: 48px; gap: 24px; }
   .vd-home .vd-scan-process .vd-print-steps { margin-top: 20px; }
   .vd-home .vd-scan-process .vd-print-steps li { padding-block: 12px; gap: 8px; grid-template-columns: 30px minmax(0, 1fr); }
   .vd-home .vd-scan-process .vd-print-phone { width: min(225px, 100%); }
-  .vd-home .vd-pinned-photo { --vd-print-border: 9px; }
+  .vd-home .vd-landscape .vd-pinned-photo {
+    --vd-print-border: 10px;
+    --vd-radius-print: 16px;
+    --vd-radius-photo: 10px;
+    aspect-ratio: 1.22;
+  }
   .vd-home .vd-pinned-photo .vd-photo-caption {
     height: 60px;
     padding-inline: 3px;
@@ -1031,11 +1187,18 @@ body:has(:is(.vd-motion-off, .vd-inner-motion-off)) .vd-header .vd-discovery-dro
   .vd-home .vd-pinned-photo .vd-photo-caption > span:first-child { font-size: 24px; }
   .vd-home .vd-pinned-photo .vd-photo-caption :is(.vd-coordinates, .vd-coordinate-digits) { font-size: 16px; }
   .vd-home .vd-pinned-photo .vd-scene-image { height: calc(100% - 60px); }
-  .vd-home .vd-photo-city { grid-column: 2 / 7; }
-  .vd-home .vd-photo-village { grid-column: 1 / 6; }
+  .vd-home .vd-landscape :is(.vd-photo-city, .vd-photo-village) {
+    grid-column: 1 / -1;
+    width: 90%;
+    aspect-ratio: 1.28;
+    margin-top: 10px;
+  }
+  .vd-home .vd-landscape .vd-photo-city { justify-self: end; }
+  .vd-home .vd-landscape .vd-photo-village { justify-self: start; }
   .vd-home .vd-detours .vd-postcard-turn[aria-expanded='false'] { pointer-events: auto; }
   .vd-home .vd-detours .vd-postcard-turn[aria-expanded='true'] {
-    inset: 4px 4px auto auto; min-height: 44px; padding-inline: 12px;
+    inset: 4px 4px auto auto; width: 44px; height: 44px;
+    display: grid; place-items: center; padding: 0; margin: 0; border-radius: 6px;
     pointer-events: auto; color: var(--vd-ink); background: var(--vd-paper);
   }
   .vd-home-whatsapp-label { display: inline; }

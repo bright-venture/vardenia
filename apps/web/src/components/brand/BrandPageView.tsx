@@ -23,8 +23,13 @@ export async function BrandPageView({ brand, locale }: { brand: PublicBrand; loc
 
   return (
     <main>
-      <EnglishPageSchema locale={locale} path={`/brands/${brand.slug}`} name={brand.name}
-        description={brand.description ?? t('description', { name: brand.name })} type="CollectionPage" />
+      <EnglishPageSchema
+        locale={locale}
+        path={`/brands/${brand.slug}`}
+        name={brand.name}
+        description={brand.description ?? t('description', { name: brand.name })}
+        type="CollectionPage"
+      />
       <article className="mx-auto max-w-3xl px-6 py-14 sm:py-20">
         <Link
           href="/directory"
@@ -82,7 +87,9 @@ export async function BrandPageView({ brand, locale }: { brand: PublicBrand; loc
                   >
                     {branch.name}
                   </Link>
-                  {place ? <p className="text-ink-700 mt-1 text-sm">{place}</p> : null}
+                  {place ? (
+                    <p className="vd-branch-locality text-ink-700 mt-1 text-sm">{place}</p>
+                  ) : null}
                   {address ? (
                     <p dir="auto" className="text-ink-500 mt-1 whitespace-pre-line text-sm">
                       {address}

@@ -177,7 +177,7 @@ export default async function IssuePage({ params }: Params) {
                 in Beirut, then turn to Matn, Keserwan, the North, Chouf, the Bekaa and the South
                 for places to stay, eat and visit.
               </p>
-              <a className="vd-text-link" href="#beirut-spread">
+              <a className="vd-text-link" data-sample-primary={!edition} href="#beirut-spread">
                 Preview Beirut, pages 4–5
               </a>
             </div>

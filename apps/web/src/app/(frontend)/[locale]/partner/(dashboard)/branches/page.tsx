@@ -48,7 +48,7 @@ export default async function PartnerBranchesPage({ params }: Props) {
     .map((listing) => ({ id: listing.id, name: listing.name }))
 
   return (
-    <section className="mt-10">
+    <section className="vd-partner-tools mt-10">
       <h2 className="font-display text-ink-900 text-2xl">{t('title')}</h2>
 
       {sources.length === 0 ? (

@@ -423,9 +423,13 @@ export function PasswordStrength({
         words or more" look identical otherwise and only one of them will stop
         the form being accepted.
       */}
-      <ul className="mt-3 grid gap-1.5">
+      <ul className="vd-password-rules mt-3 grid gap-1.5">
         {rules.map((rule) => (
-          <li key={rule.id} className="flex items-center gap-2 text-xs">
+          <li
+            key={rule.id}
+            data-required={rule.required || undefined}
+            className="flex items-center gap-2 text-xs"
+          >
             <span
               aria-hidden
               className={`grid size-3.5 shrink-0 place-items-center border transition-colors duration-200 ${
