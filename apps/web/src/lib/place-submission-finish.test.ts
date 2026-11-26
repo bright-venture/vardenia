@@ -25,7 +25,11 @@ const sub = (f: FakePayload) => f.row('businesses').submission as Sub
 const NOW = new Date('2026-11-23T12:00:00.000Z')
 
 function world(
-  over: { business?: Record<string, unknown>; session?: Record<string, unknown> } = {},
+  over: {
+    business?: Record<string, unknown>
+    session?: Record<string, unknown>
+    issue?: Record<string, unknown>
+  } = {},
 ) {
   const f = fakePayload({
     businesses: [
@@ -60,7 +64,7 @@ function world(
         ...over.session,
       },
     ],
-    issues: [{ id: 7, title: 'Summer 2027' }],
+    issues: [{ id: 7, title: 'Summer 2027', ...over.issue }],
   })
   return f
 }
@@ -220,6 +224,80 @@ describe('finishPlaceSubmission', () => {
     })
     f.settings.value = { magazinePlaces: { pricePerYear: 99 } }
     expect(sub(f).terms.priceAtAcceptance).toBe(35)
+  })
+
+  it('uses the price snapshot of the draft, not Settings, and records layout and issue in the terms', async () => {
+    const f = world({
+      business: {
+        pageLayout: 'full-page',
+        submission: {
+          status: 'incomplete',
+          reference: 'VD-5',
+          ownerName: 'Nour',
+          ownerEmail: 'nour@example.com',
+          pageTemplate: 'a',
+          payment: { price: 500, downpaymentAmount: 250 },
+        },
+      },
+    })
+    f.settings.value = { magazinePlaces: { pricePerYear: 35, downpaymentPercent: 10 } }
+    await finish(f)
+    const s = f.row('businesses').submission as Record<string, Record<string, unknown>>
+    expect(s.terms).toMatchObject({
+      priceAtAcceptance: 500,
+      layout: 'Full page',
+      issue: 'Summer 2027',
+    })
+    expect(s.payment).toMatchObject({ price: 500, downpaymentAmount: 250, stillToPay: 500 })
+  })
+
+  it('records the page of the slot held in the terms, as text', async () => {
+    const f = world({
+      business: {
+        pageLayout: 'quarter-page',
+        listingNumber: 12,
+        submission: {
+          status: 'incomplete',
+          reference: 'VD-5',
+          ownerName: 'Nour',
+          ownerEmail: 'nour@example.com',
+          pageTemplate: 'a',
+          payment: { price: 100, downpaymentAmount: 50 },
+        },
+      },
+      issue: {
+        slots: [
+          { number: 11, page: 62, position: 2, layout: 'quarter-page' },
+          { number: 12, page: 62, position: 3, layout: 'quarter-page' },
+        ],
+      },
+    })
+    await finish(f)
+    expect(sub(f).terms).toMatchObject({
+      layout: '1/4',
+      issue: 'Summer 2027',
+      page: 'Page 62, position 3',
+    })
+  })
+
+  it('records both pages of a spread', async () => {
+    const f = world({
+      business: { pageLayout: 'full-spread' },
+      issue: { slots: [{ number: 12, page: 62, position: null, layout: 'full-spread' }] },
+    })
+    await finish(f)
+    expect(sub(f).terms.page).toBe('Pages 62-63')
+  })
+
+  it('a legacy draft without a snapshot uses the Settings price and has no layout in the terms', async () => {
+    const f = world()
+    f.settings.value = { magazinePlaces: { pricePerYear: 35, downpaymentPercent: 50 } }
+    await finish(f)
+    const s = f.row('businesses').submission as Record<string, Record<string, unknown>>
+    expect(s.terms?.priceAtAcceptance).toBe(35)
+    expect(s.terms).not.toHaveProperty('layout')
+    expect(s.terms).not.toHaveProperty('page')
+    expect(s.payment).toMatchObject({ price: 35, downpaymentAmount: 17.5, stillToPay: 35 })
   })
 
   it('snapshots the two-stage payment: price, downpayment, deadlines, no money yet', async () => {

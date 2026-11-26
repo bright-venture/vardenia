@@ -9,12 +9,17 @@ import type {
 import {
   DEFAULT_LISTING_TOTAL,
   LISTING_GOVERNORATES,
+  blockNumbers,
+  blockProblem,
+  blocksOverlap,
   nextFreeNumber,
   orphanedNumbers,
   rangeProblem,
   type NumberRange,
+  type PageBlock,
 } from '@vardenia/core'
 import { isStaff } from '../access/index'
+import { slotsPageCount, toSlots } from './Issues'
 
 const GOVERNORATE_LABELS: Record<(typeof LISTING_GOVERNORATES)[number], string> = {
   keserwan: 'Keserwan',
@@ -111,12 +116,46 @@ export async function nextFromDefault(payload: Payload | undefined): Promise<num
   return nextFreeNumber(existing.docs as unknown as NumberRange[])
 }
 
+/** A page as the admin or the API hands it in; blank is null. */
+const pageOrNull = (value: unknown): number | null =>
+  value === null || value === undefined || value === '' ? null : Number(value)
+
+/** The other governorates' page blocks; a range with no pages (typed numbers) has none. */
+const siblingBlocks = (docs: readonly unknown[]): PageBlock[] =>
+  docs.flatMap((raw) => {
+    const d = raw as { firstPage?: unknown; lastPage?: unknown }
+    const firstPage = pageOrNull(d.firstPage)
+    const lastPage = pageOrNull(d.lastPage)
+    return firstPage === null || lastPage === null ? [] : [{ firstPage, lastPage }]
+  })
+
+/**
+ * `from` and `to` stay required in the database; on an issue with a template
+ * the hook fills them from the pages, so the admin may leave them blank when
+ * both pages are given.
+ */
+const numberOrPages = (
+  value: unknown,
+  { siblingData }: { siblingData?: Record<string, unknown> },
+) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value >= 1 ? true : 'The number must be at least 1.'
+  }
+  const pagesGiven =
+    pageOrNull(siblingData?.firstPage) !== null && pageOrNull(siblingData?.lastPage) !== null
+  return pagesGiven
+    ? true
+    : 'Enter a number, or the first and last page on an issue with a template.'
+}
+
 const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, operation, req }) => {
   const merged = { ...(originalDoc ?? {}), ...(data ?? {}) } as {
     issue?: unknown
     governorate?: string
     from?: number
     to?: number
+    firstPage?: unknown
+    lastPage?: unknown
   }
   const issueId = idOf(merged.issue)
   if (issueId === null || !merged.governorate || !req?.payload) return data
@@ -146,12 +185,54 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     overrideAccess: true,
   })
 
+  /*
+   * An issue built from a template: the admin enters the governorate's pages,
+   * and its numbers are the slots on those pages (contiguous, because slots are
+   * numbered in page order). Blocks stay inside the template, do not overlap,
+   * and never cut a spread in two. Issues without slots keep typed numbers.
+   */
+  const slots = toSlots((issue as { slots?: unknown }).slots)
+  let derived: { from: number; to: number } | null = null
+  if (slots.length > 0) {
+    const firstPage = pageOrNull(merged.firstPage)
+    const lastPage = pageOrNull(merged.lastPage)
+    if (firstPage === null || lastPage === null) {
+      throw new APIError(
+        "This issue is built from a template: enter the first and last page of the governorate's block.",
+        400,
+        null,
+        true,
+      )
+    }
+    const block: PageBlock = { firstPage, lastPage }
+    const problem =
+      blockProblem(slots, block, slotsPageCount(slots)) ??
+      blocksOverlap([block, ...siblingBlocks(siblings.docs)])
+    if (problem) throw new APIError(problem, 400, null, true)
+    derived = blockNumbers(slots, block)
+    if (!derived) throw new APIError('These pages hold no listing.', 400, null, true)
+    if (data) {
+      data.from = derived.from
+      data.to = derived.to
+    }
+  }
+
   // REST and local API writes may leave `from` out; start after the last block.
-  const from =
-    typeof merged.from === 'number'
+  const from = derived
+    ? derived.from
+    : typeof merged.from === 'number'
       ? merged.from
       : nextFreeNumber(siblings.docs as unknown as NumberRange[])
   if (data && typeof data.from !== 'number') data.from = from
+  const to = derived ? derived.to : merged.to
+  if (typeof to !== 'number') {
+    throw new APIError(
+      'This issue has no template: enter the from and to numbers.',
+      400,
+      null,
+      true,
+    )
+  }
 
   /*
    * Moving a range to another governorate or issue (21 November 2026, auth
@@ -186,7 +267,7 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     candidate: {
       governorate: merged.governorate,
       from,
-      to: merged.to as number,
+      to,
     },
     others: siblings.docs as unknown as NumberRange[],
     total,
@@ -234,7 +315,7 @@ export const ListingRanges: CollectionConfig = {
   labels: { singular: 'Listing number range', plural: 'Listing number ranges' },
   admin: {
     useAsTitle: 'governorate',
-    defaultColumns: ['issue', 'governorate', 'from', 'to'],
+    defaultColumns: ['issue', 'governorate', 'firstPage', 'lastPage', 'from', 'to'],
     group: 'Magazine',
     description:
       "Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.",
@@ -252,11 +333,24 @@ export const ListingRanges: CollectionConfig = {
       options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_LABELS[value], value })),
     },
     {
+      name: 'firstPage',
+      label: 'First page',
+      type: 'number',
+      min: 1,
+      admin: {
+        step: 1,
+        description:
+          "For an issue built from a template: the governorate's first and last page. The numbers are then filled from the slots on those pages.",
+      },
+    },
+    { name: 'lastPage', label: 'Last page', type: 'number', min: 1, admin: { step: 1 } },
+    {
       name: 'from',
       label: 'From number',
       type: 'number',
       required: true,
       min: 1,
+      validate: numberOrPages,
       // Starts after the highest number any range reaches, so a new
       // governorate's block begins where the last one ended. A best guess: the
       // default cannot see which issue the form has chosen, so it uses the
@@ -264,6 +358,16 @@ export const ListingRanges: CollectionConfig = {
       // and fills `from`, for the issue actually chosen.
       defaultValue: ({ req }: { req?: { payload?: Payload } }) => nextFromDefault(req?.payload),
     },
-    { name: 'to', label: 'To number', type: 'number', required: true, min: 1 },
+    {
+      name: 'to',
+      label: 'To number',
+      type: 'number',
+      required: true,
+      min: 1,
+      validate: numberOrPages,
+      admin: {
+        description: 'Typed for an issue without a template; filled from the pages otherwise.',
+      },
+    },
   ],
 }

@@ -1,6 +1,7 @@
 import { z } from './zod'
 import { LOCALE_CODES } from './locales'
 import { LISTING_GOVERNORATES } from './listing-numbers'
+import { PAGE_LAYOUTS } from './page-layouts'
 import { GOVERNORATES } from './regions'
 import { CONTACT_FIELDS, checkContactValue, normaliseContact, type ContactField } from './contact'
 import { isSubmittableKind, type SubmittableKindSlug } from './taxonomy'
@@ -126,6 +127,8 @@ export const placeSubmissionSchema = z
     ownerEmail: emailAddress,
     ownerPhone: z.string().trim().min(1, 'required').max(40, 'too long'),
     pageTemplate: z.enum(PAGE_TEMPLATES),
+    // How much of the magazine the business buys; sets the price and the numbers offered.
+    layout: z.enum(PAGE_LAYOUTS),
     issue: z.coerce.number().int().positive(),
     listingNumber: z.coerce.number().int().positive(),
     locale: z.enum(LOCALE_CODES),

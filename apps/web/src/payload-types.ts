@@ -83,6 +83,7 @@ export interface Config {
     'guest-questions': GuestQuestion;
     articles: Article;
     issues: Issue;
+    templates: Template;
     'listing-ranges': ListingRange;
     editions: Edition;
     media: Media;
@@ -123,6 +124,7 @@ export interface Config {
     'guest-questions': GuestQuestionsSelect<false> | GuestQuestionsSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
     issues: IssuesSelect<false> | IssuesSelect<true>;
+    templates: TemplatesSelect<false> | TemplatesSelect<true>;
     'listing-ranges': ListingRangesSelect<false> | ListingRangesSelect<true>;
     editions: EditionsSelect<false> | EditionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -675,9 +677,13 @@ export interface Business {
   qrCode?: (number | null) | QrCode;
   issue?: (number | null) | Issue;
   /**
-   * The number in the printed magazine, from the range of this governorate in the chosen issue.
+   * The number in the printed magazine, from the range of this governorate in the chosen issue. Sample listings hold no number.
    */
   listingNumber?: number | null;
+  /**
+   * Set when the form is started. It cannot be changed afterwards.
+   */
+  pageLayout?: ('full-spread' | 'full-page' | 'half-page' | 'three-third' | 'quarter-page') | null;
   /**
    * Mock listing shown to visitors but not a real business. Holds no magazine number. Admin only.
    */
@@ -815,6 +821,9 @@ export interface Business {
     };
     terms?: {
       version?: string | null;
+      layout?: string | null;
+      issue?: string | null;
+      page?: string | null;
       priceAtAcceptance?: number | null;
       currency?: string | null;
       termMonths?: number | null;
@@ -1262,19 +1271,73 @@ export interface Issue {
   season?: string | null;
   cover: number | Media;
   publishedAt: string;
+  /**
+   * Set from the template when the issue has one.
+   */
   pageCount?: number | null;
   /**
    * Copies printed. Used to compute scan rate per thousand copies.
    */
   printRun?: number | null;
   /**
-   * How many numbers the printed issue has. Each governorate takes a block of them under Listing number ranges.
+   * How many numbers the printed issue has. Set from the template (one per slot) when the issue has one. Each governorate takes a block of them under Listing number ranges.
    */
   listingTotal?: number | null;
+  /**
+   * Sets the slots, the listing total and the pages. Cannot change once a business holds a number in this issue.
+   */
+  template?: (number | null) | Template;
+  /**
+   * Copied from the template when it is assigned. Never edited by hand.
+   */
+  slots?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Each layout once, with a price of at least 1. A layout with slots held under it cannot be switched off or removed.
+   */
+  layouts?:
+    | {
+        layout: 'full-spread' | 'full-page' | 'half-page' | 'three-third' | 'quarter-page';
+        offered?: boolean | null;
+        price?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * The full issue as a PDF, read on the issue page like a book. Upload it here or pick one from Magazine PDFs (up to 200 MB).
    */
   digitalEdition?: (number | null) | Edition;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The pages of an issue, one layout each. Once an issue uses a template it is locked: duplicate it to make a changed copy.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "templates".
+ */
+export interface Template {
+  id: number;
+  name: string;
+  /**
+   * In print order. A full spread is one entry that takes two pages. Cannot change once an issue uses the template.
+   */
+  pages: {
+    layout: 'full-spread' | 'full-page' | 'half-page' | 'three-third' | 'quarter-page';
+    id?: string | null;
+  }[];
+  locked?: boolean | null;
+  /**
+   * Calculated from the pages when the template is saved.
+   */
+  summary?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1675,7 +1738,15 @@ export interface ListingRange {
   id: number;
   issue: number | Issue;
   governorate: 'keserwan' | 'north-lebanon' | 'beirut' | 'beqaa' | 'south-lebanon' | 'chouf' | 'matn';
+  /**
+   * For an issue built from a template: the governorate's first and last page. The numbers are then filled from the slots on those pages.
+   */
+  firstPage?: number | null;
+  lastPage?: number | null;
   from: number;
+  /**
+   * Typed for an issue without a template; filled from the pages otherwise.
+   */
   to: number;
   updatedAt: string;
   createdAt: string;
@@ -1875,6 +1946,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'issues';
         value: number | Issue;
+      } | null)
+    | ({
+        relationTo: 'templates';
+        value: number | Template;
       } | null)
     | ({
         relationTo: 'listing-ranges';
@@ -2107,6 +2182,7 @@ export interface BusinessesSelect<T extends boolean = true> {
   qrCode?: T;
   issue?: T;
   listingNumber?: T;
+  pageLayout?: T;
   isSample?: T;
   contact?:
     | T
@@ -2195,6 +2271,9 @@ export interface BusinessesSelect<T extends boolean = true> {
           | T
           | {
               version?: T;
+              layout?: T;
+              issue?: T;
+              page?: T;
               priceAtAcceptance?: T;
               currency?: T;
               termMonths?: T;
@@ -2542,7 +2621,34 @@ export interface IssuesSelect<T extends boolean = true> {
   pageCount?: T;
   printRun?: T;
   listingTotal?: T;
+  template?: T;
+  slots?: T;
+  layouts?:
+    | T
+    | {
+        layout?: T;
+        offered?: T;
+        price?: T;
+        id?: T;
+      };
   digitalEdition?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "templates_select".
+ */
+export interface TemplatesSelect<T extends boolean = true> {
+  name?: T;
+  pages?:
+    | T
+    | {
+        layout?: T;
+        id?: T;
+      };
+  locked?: T;
+  summary?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2553,6 +2659,8 @@ export interface IssuesSelect<T extends boolean = true> {
 export interface ListingRangesSelect<T extends boolean = true> {
   issue?: T;
   governorate?: T;
+  firstPage?: T;
+  lastPage?: T;
   from?: T;
   to?: T;
   updatedAt?: T;

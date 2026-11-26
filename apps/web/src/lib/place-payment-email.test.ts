@@ -315,3 +315,60 @@ describe('withinDays: the Settings days in words', () => {
     expect(paymentEmail('E3paid', { ...facts, locale: 'ar' }).text).toContain('لا يتبقى عليك شيء')
   })
 })
+
+describe('the layout line (E1, E3, E8)', () => {
+  const withLayout = { ...BASE, layout: 'Full page', issue: 'Summer 2027' }
+
+  it.each(['E1', 'E3', 'E8'] as const)('%s carries it in English and Arabic', (event) => {
+    const en = paymentEmail(event, withLayout)
+    expect(en.text).toContain('Layout: Full page · Issue: Summer 2027 · No. 17')
+    const ar = paymentEmail(event, { ...withLayout, locale: 'ar' })
+    expect(ar.text).toContain('التصميم: Full page · العدد: Summer 2027 · رقم 17')
+  })
+
+  it.each(['E1', 'E3', 'E8'] as const)('%s has no such line for a legacy listing', (event) => {
+    expect(paymentEmail(event, BASE).text).not.toContain('Layout:')
+    expect(paymentEmail(event, { ...BASE, locale: 'ar' }).text).not.toContain('التصميم:')
+  })
+
+  it.each(['E1', 'E3', 'E8'] as const)(
+    '%s carries the page the slot sits on (PRD v7 §6)',
+    (event) => {
+      const facts = { ...withLayout, page: 'Page 62, position 3' }
+      expect(paymentEmail(event, facts).text).toContain(
+        'Layout: Full page · Issue: Summer 2027 · Page 62, position 3 · No. 17',
+      )
+      expect(paymentEmail(event, { ...facts, locale: 'ar' }).text).toContain(
+        'التصميم: Full page · العدد: Summer 2027 · الصفحة 62، الموقع 3 · رقم 17',
+      )
+      const spread = { ...withLayout, page: 'Pages 62-63', locale: 'ar' as const }
+      expect(paymentEmail(event, spread).text).toContain('الصفحتان 62-63')
+      expect(paymentEmail(event, { ...withLayout, page: 'Page 12', locale: 'ar' }).text).toContain(
+        'الصفحة 12 · رقم 17',
+      )
+    },
+  )
+
+  it('with a layout, the number is a listing number, not a page number (en and ar)', () => {
+    const facts = { ...withLayout, ...AFTER_DOWN, page: 'Page 62, position 3' }
+    for (const event of PAYMENT_EVENTS) {
+      const en = paymentEmail(event, facts)
+      expect(en.text, event).not.toMatch(/page number/i)
+      const ar = paymentEmail(event, { ...facts, locale: 'ar' })
+      expect(ar.text, event).not.toContain('رقم الصفحة')
+    }
+    expect(paymentEmail('E1', facts).text).toContain('Listing number 17 is reserved for you.')
+    expect(paymentEmail('E1', facts).text).toContain('the listing number is released')
+    expect(paymentEmail('E1', { ...facts, locale: 'ar' }).text).toContain(
+      'رقم الإعلان 17 محجوز لك.',
+    )
+    expect(unpaidTeamEmail(facts).text).toContain('Listing number (released)')
+  })
+
+  it('without a layout (legacy), the wording stays "page number"', () => {
+    expect(paymentEmail('E1', BASE).text).toContain('Page number 17 is reserved for you.')
+    expect(paymentEmail('E1', BASE).text).toContain('the page number is released')
+    expect(paymentEmail('E1', { ...BASE, locale: 'ar' }).text).toContain('رقم الصفحة 17 محجوز لك.')
+    expect(unpaidTeamEmail(BASE).text).toContain('Page number (released)')
+  })
+})

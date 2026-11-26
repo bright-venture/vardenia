@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { dirFor, type Locale } from '@vardenia/i18n'
+import { PAGE_LAYOUTS, type PageLayout } from '@vardenia/core/page-layouts'
 import { PAGE_TEMPLATES } from '@vardenia/core/place-submission'
 import { submittableKindsByCategory } from '@vardenia/core/taxonomy'
 import { categoryLabel, cityLabel, governorateLabel, subcategoryLabel } from '../../lib/labels'
@@ -35,18 +36,19 @@ import {
 import { NumberPicker } from './NumberPicker'
 import { PhoneStep } from './PhoneStep'
 import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
-import { postSubmission, type SubmitResult } from './submit-client'
+import { postSubmission, type Quote, type SubmitResult } from './submit-client'
 import { TermsStep } from './TermsStep'
 import { ThanksStep } from './ThanksStep'
 import { useKioskIdle } from './use-kiosk-idle'
-import { usePlaceNumbers } from './use-place-numbers'
+import { issuesForLayout, usePlaceNumbers } from './use-place-numbers'
 
 /**
  * "Add your place" on /magazine-places: a business owner lays out their page in
  * the printed magazine, picks its number, adds the logo and main photo from
  * their phone, and sends it for review. Four steps on the big screen:
  *
- *   1 details      the fields and the number; "Next" starts the submission
+ *   1 details      the fields, the layout (how much of the magazine) and a free
+ *                  slot of it; "Next" starts the submission
  *   2 phone upload a QR code for the phone, live ticks as the photos arrive
  *   3 price/terms  the price and the terms, "Submit" finishes it
  *   4 thank you    clears itself after a minute
@@ -81,6 +83,8 @@ type Step = 1 | 2 | 3 | 4 | 'expired'
 interface Session {
   token: string
   uploadUrl: string
+  /** The chosen layout's price, snapshotted at the start; shown on step 3. */
+  quote: Quote | null
 }
 
 const templateKey = { a: 'A', b: 'B', c: 'C' } as const
@@ -177,6 +181,20 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     })
   }
 
+  /** A new layout offers other slots: the number picked for the old one goes. */
+  function chooseLayout(layout: PageLayout) {
+    if (layout === state.layout) return
+    setPick(null)
+    setNumberNotice(null)
+    set({ layout })
+    setErrors((current) => {
+      const next = { ...current }
+      delete next.layout
+      delete next.number
+      return next
+    })
+  }
+
   function message(key: string): string | null {
     const raw = errors[key]
     return raw ? t(`errors.${errorKind(raw)}`) : null
@@ -230,7 +248,11 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       // anything else, so every answer needs a fresh one (step 3 draws its own).
       turnstile.current?.reset()
       if (result.kind === 'ok') {
-        setSession({ token: result.sessionToken, uploadUrl: result.uploadUrl })
+        setSession({
+          token: result.sessionToken,
+          uploadUrl: result.uploadUrl,
+          quote: result.quote ?? null,
+        })
         setReference(result.reference)
         setStep(2)
         return
@@ -365,6 +387,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         {step === 3 ? (
           <TermsStep
             locale={locale}
+            quote={session?.quote ?? null}
             busy={busy}
             problem={finishProblem}
             canSubmit={!isTurnstileEnabled() || turnstileToken !== null}
@@ -666,6 +689,39 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             </div>
           </fieldset>
 
+          {/* How much of the magazine: same radios as the page design above, text only. */}
+          <fieldset
+            className="m-0 min-w-0 border-0 p-0"
+            aria-describedby={message('layout') ? `${fid('layout')}-error` : undefined}
+          >
+            <legend className={legend}>{t('form.layoutLegend')}</legend>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {PAGE_LAYOUTS.map((layout) => (
+                <label
+                  key={layout}
+                  className="border-ink-100 has-[:checked]:border-cedar-900 has-[:checked]:bg-surface-raised has-[:focus-visible]:outline-gold-500 flex cursor-pointer items-center gap-2 border p-3 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+                >
+                  <input
+                    type="radio"
+                    name="layout"
+                    value={layout}
+                    checked={state.layout === layout}
+                    onChange={() => chooseLayout(layout)}
+                    className={CHECK}
+                  />
+                  <span className="text-ink-900 text-sm font-semibold">
+                    {t(`form.layouts.${layout}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {message('layout') ? (
+              <p id={`${fid('layout')}-error`} className={ERROR_TEXT}>
+                {message('layout')}
+              </p>
+            ) : null}
+          </fieldset>
+
           {/* The number */}
           <fieldset
             className="m-0 min-w-0 border-0 p-0"
@@ -694,9 +750,15 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                     {t('numbers.retry')}
                   </button>
                 </div>
+              ) : numbers.issues.length === 0 ? (
+                <p className={NOTICE_INFO} role="status">
+                  {t('numbers.noRange')}
+                </p>
+              ) : !state.layout ? (
+                <p className="text-ink-500 text-sm">{t('numbers.chooseLayout')}</p>
               ) : (
                 <NumberPicker
-                  issues={numbers.issues}
+                  issues={issuesForLayout(numbers.issues, state.layout)}
                   value={pick?.number ?? null}
                   selectedIssue={pick?.issue ?? null}
                   onChange={choose}

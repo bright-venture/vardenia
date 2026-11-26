@@ -4,15 +4,23 @@ import type { Payload } from 'payload'
 import {
   categoryOfKind,
   isInRange,
+  isOffered,
   isSubmittableKind,
+  layoutSlots,
+  slotLastPage,
   type NumberRange,
+  type PageLayout,
   type PlaceSubmission,
+  type PriceRow,
+  type Slot,
 } from '@vardenia/core'
 import { DEFAULT_LOCALE } from '@vardenia/i18n'
+import { toPriceRows, toSlots } from '../collections/Issues'
 import { heldNumbers } from '../collections/ListingRanges'
 import { slugify } from '../fields/slug'
 import { runInTransaction } from './branches'
 import { advisoryLock } from './partner-lock'
+import { downpaymentFor } from './place-payment-rules'
 import { hardCapFrom } from './place-session'
 import { uniqueViolation } from './db-errors'
 import { getPlaceSettings } from './place-settings'
@@ -52,10 +60,26 @@ import { formatSubmissionReference } from './submission-reference'
  * time-out, which is shorter (Settings holdMinutes) and moves with activity.
  */
 export type SubmissionOutcome =
-  | { ok: true; listingId: number; reference: string; sessionToken: string; expiresAt: string }
+  | {
+      ok: true
+      listingId: number
+      reference: string
+      sessionToken: string
+      expiresAt: string
+      /** The layout's price as snapshotted on the draft, and its downpayment. */
+      price: number
+      downpaymentAmount: number
+      currency: string
+    }
   | {
       ok: false
-      code: 'number-unavailable' | 'no-range' | 'kind-unavailable' | 'too-many-open' | 'error'
+      code:
+        | 'number-unavailable'
+        | 'layout-unavailable'
+        | 'no-range'
+        | 'kind-unavailable'
+        | 'too-many-open'
+        | 'error'
       message: string
     }
 
@@ -69,6 +93,7 @@ export type SubmissionOutcome =
 export const MAX_OPEN_STARTS_PER_EMAIL = 3
 
 const COULD_NOT_SAVE = 'We could not save that. Please try again.'
+const LAYOUT_UNAVAILABLE = 'That layout is not available. Please choose another.'
 const NUMBER_UNAVAILABLE = 'That number is no longer available. Please choose another.'
 
 /** The SHA-256 of a session token, as hex: the only form of it that is stored. */
@@ -90,17 +115,72 @@ interface RangeRow {
   to: number
 }
 
+/** A free slot, as the form shows it ("Page 62, position 3"; "Pages 62-63" for a spread). */
+export interface FreeSlot {
+  number: number
+  page: number
+  position: number | null
+  lastPage: number
+}
+
+export interface LayoutNumbers {
+  layout: PageLayout
+  price: number
+  downpaymentAmount: number
+  /** The free slots of this layout inside the governorate's block, in number order. */
+  slots: FreeSlot[]
+  free: number
+}
+
 /**
- * Each issue that has a block of numbers for this governorate, and which of
- * them are taken. A number is taken when a listing that is not in the trash
- * holds it (Payload hides trashed documents from `find`). Never says who holds
- * one: only the numbers come back.
+ * An issue's slots and price table, read fresh from the issue. Both are
+ * staff-read fields, hence overrideAccess. A legacy issue (no template) has no
+ * slots, and so offers no layout.
+ */
+async function issueLayouts(
+  payload: Payload,
+  issueId: number,
+): Promise<{ slots: Slot[]; prices: PriceRow[] }> {
+  const issue = (await payload.findByID({
+    collection: 'issues',
+    id: issueId,
+    depth: 0,
+    overrideAccess: true,
+    disableErrors: true,
+  })) as { slots?: unknown; layouts?: unknown } | null
+  return { slots: toSlots(issue?.slots), prices: toPriceRows(issue?.layouts) }
+}
+
+/** The price of a layout when it is on sale in the issue, else null. */
+function offeredPrice(prices: readonly PriceRow[], slots: readonly Slot[], layout: unknown) {
+  const row = prices.find((r) => r.layout === layout)
+  return row && isOffered(row, slots) ? (row.price as number) : null
+}
+
+/**
+ * Each issue that has a block of numbers for this governorate, which of them
+ * are taken, and per layout on sale in the issue its price and the FREE slots
+ * it has inside the block (with page and position, for the label). A layout
+ * with slots in the block that are all held is still listed, with `free: 0`,
+ * so the form can say it is sold out; one with no slot in the block at all is
+ * not offered in this governorate and is left out. A number is taken when
+ * a listing that is not in the trash holds it (Payload hides trashed documents
+ * from `find`). Never says who holds one: only the numbers come back.
  */
 export async function listNumbersFor(
   payload: Payload,
   governorate: string,
 ): Promise<
-  Array<{ issueId: number; issueTitle: string; from: number; to: number; taken: number[] }>
+  Array<{
+    issueId: number
+    issueTitle: string
+    from: number
+    to: number
+    taken: number[]
+    /** The Settings currency the layout prices are in, for the form to show them. */
+    currency: string
+    layouts: LayoutNumbers[]
+  }>
 > {
   const ranges = await payload.find({
     collection: 'listing-ranges',
@@ -112,12 +192,48 @@ export async function listNumbersFor(
     overrideAccess: true,
   })
   const rows = ranges.docs as unknown as RangeRow[]
+  if (rows.length === 0) return []
+  const settings = await getPlaceSettings(payload)
   return Promise.all(
     rows.map(async (row) => {
       const issueId = typeof row.issue === 'object' ? row.issue.id : row.issue
       const issueTitle = typeof row.issue === 'object' ? (row.issue.title ?? '') : ''
       const taken = await heldNumbers(payload, issueId, governorate)
-      return { issueId, issueTitle, from: row.from, to: row.to, taken }
+      const held = new Set(taken)
+      const { slots, prices } = await issueLayouts(payload, issueId)
+      const layouts: LayoutNumbers[] = []
+      for (const priceRow of prices) {
+        const price = offeredPrice(prices, slots, priceRow.layout)
+        if (price === null) continue
+        const inBlock = layoutSlots(slots, priceRow.layout, { from: row.from, to: row.to })
+        // No slot of this layout in this governorate's pages: not offered here.
+        if (inBlock.length === 0) continue
+        const free = inBlock
+          .filter((slot) => !held.has(slot.number))
+          .sort((a, b) => a.number - b.number)
+          .map((slot) => ({
+            number: slot.number,
+            page: slot.page,
+            position: slot.position,
+            lastPage: slotLastPage(slot),
+          }))
+        layouts.push({
+          layout: priceRow.layout,
+          price,
+          downpaymentAmount: downpaymentFor(price, settings.downpaymentPercent),
+          slots: free,
+          free: free.length,
+        })
+      }
+      return {
+        issueId,
+        issueTitle,
+        from: row.from,
+        to: row.to,
+        taken,
+        currency: settings.currency,
+        layouts,
+      }
     }),
   )
 }
@@ -239,12 +355,33 @@ export async function startPlaceSubmission(args: {
     if (!isInRange(input.listingNumber, range)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
+    // The layout must be on sale in this issue, and the number one of its
+    // slots inside the governorate's block. Slots and price are read here, from
+    // the issue as it is now, never from the browser or an earlier answer.
+    const { slots, prices } = await issueLayouts(payload, input.issue)
+    const layoutPrice = offeredPrice(prices, slots, input.layout)
+    if (layoutPrice === null) {
+      return { ok: false, code: 'layout-unavailable', message: LAYOUT_UNAVAILABLE }
+    }
+    const isSlot = layoutSlots(slots, input.layout, range).some(
+      (slot) => slot.number === input.listingNumber,
+    )
+    if (!isSlot) {
+      return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
+    }
     const held = await heldNumbers(payload, input.issue, input.governorate)
     if (held.includes(input.listingNumber)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
 
     const settings = await getPlaceSettings(payload)
+    // The price snapshot: what this layout costs in this issue NOW, stored on
+    // the draft (submission.payment.price / downpaymentAmount). The finish step
+    // copies it into the terms and payment records instead of reading Settings,
+    // so a later price change in the admin cannot change what this owner was
+    // shown. Drafts made before layouts have none and fall back to Settings.
+    const price = layoutPrice
+    const downpaymentAmount = downpaymentFor(price, settings.downpaymentPercent)
     const sessionToken = randomBytes(32).toString('base64url')
     // The absolute end of the session (see lib/place-session): what the browser
     // is shown as expiresAt. The idle time-out (holdMinutes) is separate and
@@ -267,6 +404,8 @@ export async function startPlaceSubmission(args: {
       payments: { cash: false, card: false, whish: input.acceptsWhish, omt: false },
       issue: input.issue,
       listingNumber: input.listingNumber,
+      // Written once, here; hooks/guardPageLayout refuses any later change.
+      pageLayout: input.layout,
       _status: 'draft',
       // Public contact: shown on the listing page. Only these three come from
       // the form; the owner adds the rest later in the partner area.
@@ -281,6 +420,7 @@ export async function startPlaceSubmission(args: {
         ownerEmail: input.ownerEmail,
         ownerPhone: input.ownerPhone,
         pageTemplate: input.pageTemplate,
+        payment: { price, downpaymentAmount },
       },
     }
 
@@ -373,7 +513,16 @@ export async function startPlaceSubmission(args: {
           }
         }
         const { listingId, reference } = started
-        return { ok: true, listingId, reference, sessionToken, expiresAt }
+        return {
+          ok: true,
+          listingId,
+          reference,
+          sessionToken,
+          expiresAt,
+          price,
+          downpaymentAmount,
+          currency: settings.currency,
+        }
       } catch (error) {
         if (!isSlugTaken(error) || i === attempts.length - 1) throw error
       }

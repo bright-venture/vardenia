@@ -1,3 +1,4 @@
+import { PAGE_LAYOUT_LABELS, isPageLayout, slotLabel, type Slot } from '@vardenia/core/page-layouts'
 import {
   ADMIN_ONLY_ACTIONS,
   afterUndo,
@@ -55,7 +56,9 @@ export interface PanelDoc {
   _status?: string | null
   listingNumber?: number | null
   /** The magazine issue (an id, or the issue itself at depth 1). */
-  issue?: number | string | { id?: number | string | null } | null
+  issue?: number | string | { id?: number | string | null; slots?: unknown } | null
+  /** Read-only here: the layout is fixed when the form is started. */
+  pageLayout?: string | null
   submission?: {
     status?: string | null
     ownerName?: string | null
@@ -96,6 +99,17 @@ const priceOf = (doc: PanelDoc): number => {
   if (typeof p === 'number' && Number.isFinite(p)) return p
   const t = doc.submission?.terms?.priceAtAcceptance
   return typeof t === 'number' && Number.isFinite(t) ? t : 0
+}
+
+/** "Half page, Page 2, position 2", or null for a listing made before layouts. */
+export function layoutWords(doc: PanelDoc): string | null {
+  if (!isPageLayout(doc.pageLayout)) return null
+  const label = PAGE_LAYOUT_LABELS[doc.pageLayout]
+  const slots = doc.issue && typeof doc.issue === 'object' ? doc.issue.slots : null
+  const slot = Array.isArray(slots)
+    ? (slots as Slot[]).find((s) => s.number === doc.listingNumber)
+    : undefined
+  return slot ? `${label}, ${slotLabel(slot)}` : label
 }
 
 export const currencyOf = (doc: PanelDoc) =>

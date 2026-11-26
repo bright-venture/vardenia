@@ -1,12 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { PAGE_LAYOUTS, isPageLayout, type PageLayout } from '@vardenia/core/page-layouts'
 
 /**
- * The listing numbers of one governorate, for the number picker.
+ * The listing numbers of one governorate, for the number picker: per issue,
+ * the layouts it offers there, each with its price and its FREE slots (a slot
+ * is one listing number at a page and position).
  *
- * Asks `/place-submissions/numbers` with `cache: 'no-store'`: the taken list
- * changes whenever another owner submits, and a cached copy would offer numbers
+ * Asks `/place-submissions/numbers` with `cache: 'no-store'`: the free slots
+ * change whenever another owner submits, and a cached copy would offer numbers
  * that are already gone.
  *
  * # A slow answer for a governorate the owner already left is ignored
@@ -18,12 +21,44 @@ import { useCallback, useEffect, useState } from 'react'
  * `loading`, which is also why no state is set synchronously in the effect.
  */
 
+/** One free slot: its listing number and where it sits. A spread covers page..lastPage. */
+export interface NumbersSlot {
+  number: number
+  page: number
+  /** Null for the one-slot layouts (full page, spread). */
+  position: number | null
+  lastPage: number
+}
+
+/** One layout an issue offers in this governorate: its price and its free slots. */
+export interface NumbersLayout {
+  layout: PageLayout
+  price: number
+  downpaymentAmount: number
+  slots: NumbersSlot[]
+  free: number
+}
+
 export interface NumbersIssue {
   issueId: number
   issueTitle: string
   from: number
   to: number
   taken: number[]
+  /** The Settings currency the prices are in; '' when the route did not say. */
+  currency: string
+  /** In the form's order (PAGE_LAYOUTS). Empty for a legacy issue: it offers nothing. */
+  layouts: NumbersLayout[]
+}
+
+/** One issue as the picker shows it for the chosen layout. */
+export interface LayoutIssue {
+  issueId: number
+  issueTitle: string
+  currency: string
+  price: number
+  downpaymentAmount: number
+  slots: NumbersSlot[]
 }
 
 export type NumbersState = 'idle' | 'loading' | 'ready' | 'error'
@@ -34,6 +69,52 @@ export function numbersUrl(governorate: string): string {
 
 const isWhole = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value)
+
+const isAmount = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0
+
+function parseSlot(raw: unknown): NumbersSlot | null {
+  if (!raw || typeof raw !== 'object') return null
+  const slot = raw as Record<string, unknown>
+  const { number, page, position, lastPage } = slot
+  if (!isWhole(number) || number < 1 || !isWhole(page) || page < 1) return null
+  if (position !== null && !(isWhole(position) && position >= 1)) return null
+  if (!isWhole(lastPage) || lastPage < page) return null
+  return { number, page, position, lastPage }
+}
+
+function parseLayout(raw: unknown): NumbersLayout | null {
+  if (!raw || typeof raw !== 'object') return null
+  const row = raw as Record<string, unknown>
+  if (!isPageLayout(row.layout) || !isAmount(row.price) || row.price <= 0) return null
+  if (!isAmount(row.downpaymentAmount)) return null
+  const slots = Array.isArray(row.slots)
+    ? row.slots.map(parseSlot).filter((s): s is NumbersSlot => s !== null)
+    : []
+  // Counted from the slots kept, so the heading never promises a dropped one.
+  return {
+    layout: row.layout,
+    price: row.price,
+    downpaymentAmount: row.downpaymentAmount,
+    slots,
+    free: slots.length,
+  }
+}
+
+/**
+ * An issue's layouts in the form's order. The route answers in price-table
+ * order, which staff can change; the owner always sees the same order. A
+ * layout listed twice keeps its first row.
+ */
+function parseLayouts(raw: unknown): NumbersLayout[] {
+  if (!Array.isArray(raw)) return []
+  const byLayout = new Map<PageLayout, NumbersLayout>()
+  for (const row of raw) {
+    const layout = parseLayout(row)
+    if (layout && !byLayout.has(layout.layout)) byLayout.set(layout.layout, layout)
+  }
+  return PAGE_LAYOUTS.flatMap((code) => byLayout.get(code) ?? [])
+}
 
 /** The route's issues, or null when the reply is anything else. */
 export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
@@ -52,9 +133,37 @@ export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
       from: issue.from,
       to: issue.to,
       taken: Array.isArray(issue.taken) ? issue.taken.filter(isWhole) : [],
+      currency: typeof issue.currency === 'string' ? issue.currency : '',
+      layouts: parseLayouts(issue.layouts),
     })
   }
   return out
+}
+
+/**
+ * The issues that offer `layout`, each with that layout's price and free
+ * slots. Nothing while no layout is chosen: a number only means something
+ * once the owner knows what it buys. A legacy issue (no layouts) never shows.
+ */
+export function issuesForLayout(
+  issues: readonly NumbersIssue[],
+  layout: PageLayout | null,
+): LayoutIssue[] {
+  if (layout === null) return []
+  return issues.flatMap((issue) => {
+    const row = issue.layouts.find((l) => l.layout === layout)
+    if (!row) return []
+    return [
+      {
+        issueId: issue.issueId,
+        issueTitle: issue.issueTitle,
+        currency: issue.currency,
+        price: row.price,
+        downpaymentAmount: row.downpaymentAmount,
+        slots: row.slots,
+      },
+    ]
+  })
 }
 
 interface Stored {

@@ -91,6 +91,8 @@ export interface NotifyBusiness {
   name?: unknown
   _status?: unknown
   listingNumber?: unknown
+  issue?: unknown
+  pageLayout?: unknown
   contractStartsAt?: unknown
   contractEndsAt?: unknown
   submission?: {
@@ -104,7 +106,13 @@ export interface NotifyBusiness {
     rejectionReasonShared?: boolean | null
     payments?: PaymentEntry[] | null
     payment?: Record<string, unknown> | null
-    terms?: { priceAtAcceptance?: number | null; currency?: string | null } | null
+    terms?: {
+      priceAtAcceptance?: number | null
+      currency?: string | null
+      layout?: string | null
+      issue?: string | null
+      page?: string | null
+    } | null
     [key: string]: unknown
   } | null
 }
@@ -205,6 +213,10 @@ export async function sendPaymentEmail(
         businessName: String(b.name ?? ''),
         reference: String(submission.reference ?? ''),
         pageNumber: pageNumberOf(b, ctx.listingNumber),
+        // The labels the owner agreed to, copied into the terms at finish.
+        layout: submission.terms?.layout || null,
+        issue: submission.terms?.issue || null,
+        page: submission.terms?.page || null,
         price,
         downpaymentAmount: num(payment.downpaymentAmount),
         received: money.received,

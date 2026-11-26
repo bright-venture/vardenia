@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import type { DefaultServerCellComponentProps, Payload } from 'payload'
+import { PAGE_LAYOUT_LABELS, isPageLayout, slotLabel, type Slot } from '@vardenia/core'
 import { formatMoney } from '../../lib/place-payment-rules'
 import {
   STAGE_LABELS,
@@ -28,6 +29,7 @@ type Props = DefaultServerCellComponentProps
 interface Row {
   issue?: number | string | { id?: number | string; title?: string | null } | null
   listingNumber?: number | null
+  pageLayout?: string | null
   submission?:
     | (SubmissionRow & {
         reference?: string | null
@@ -65,20 +67,33 @@ const shortDate = (at: Date) =>
     timeZone: 'Asia/Beirut',
   })
 
-/** Every issue's title, once per render. Titles only; nothing private. */
-const issueTitles = cache(async (payload: Payload): Promise<Map<string, string>> => {
+interface IssueInfo {
+  title: string
+  slots: Slot[]
+}
+
+/**
+ * Every issue's title and slots, once per render. Titles and the slot table
+ * only (no prices); this is a staff list, and the slots field is staff-only.
+ */
+const issueInfo = cache(async (payload: Payload): Promise<Map<string, IssueInfo>> => {
   const result = await payload.find({
     collection: 'issues',
     depth: 0,
     pagination: false,
     overrideAccess: true,
-    select: { title: true },
+    select: { title: true, slots: true },
   })
   return new Map(
-    (result.docs as { id: number | string; title?: string | null }[]).map((doc) => [
-      String(doc.id),
-      doc.title ?? `Issue ${doc.id}`,
-    ]),
+    (result.docs as { id: number | string; title?: string | null; slots?: unknown }[]).map(
+      (doc) => [
+        String(doc.id),
+        {
+          title: doc.title ?? `Issue ${doc.id}`,
+          slots: Array.isArray(doc.slots) ? (doc.slots as Slot[]) : [],
+        },
+      ],
+    ),
   )
 })
 
@@ -90,18 +105,27 @@ export function ReferenceCell(props: Props) {
   return reference ? <span className="vd-num">{reference}</span> : null
 }
 
-/** "Winter 2026", "Page 12". */
+/**
+ * "Winter 2026", then the layout and where the number sits ("Half page", "Page
+ * 62, position 3"). A listing made before layouts shows a dash for the layout
+ * and its number as the page, as before.
+ */
 export async function IssuePageCell(props: Props) {
-  const { issue, listingNumber } = row(props)
+  const { issue, listingNumber, pageLayout } = row(props)
   const id = issue && typeof issue === 'object' ? issue.id : issue
   if (!id && !listingNumber) return null
+  const info = id ? (await issueInfo(props.payload)).get(String(id)) : undefined
   let title: string | null = null
   if (issue && typeof issue === 'object' && issue.title) title = issue.title
-  else if (id) title = (await issueTitles(props.payload)).get(String(id)) ?? `Issue ${id}`
+  else if (id) title = info?.title ?? `Issue ${id}`
+  const layout = isPageLayout(pageLayout) ? PAGE_LAYOUT_LABELS[pageLayout] : null
+  const slot = listingNumber ? info?.slots.find((s) => s.number === listingNumber) : undefined
+  const where = slot ? slotLabel(slot) : listingNumber ? `Page ${listingNumber}` : null
   return (
     <span>
       {title}
-      {listingNumber ? <span style={muted}>Page {listingNumber}</span> : null}
+      <span style={muted}>{layout ?? '-'}</span>
+      {where ? <span style={muted}>{where}</span> : null}
     </span>
   )
 }

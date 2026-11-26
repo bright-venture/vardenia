@@ -301,6 +301,22 @@ describe('sendPaymentEmail', () => {
     expect(ownerMails()[0]!.html).toContain('12 (released)')
   })
 
+  it('puts the layout, issue and page the owner agreed to (the terms) in the layout line', async () => {
+    world(
+      business('awaiting_downpayment', {
+        submission: {
+          terms: { layout: 'Half page', issue: 'Summer 2027', page: 'Page 62, position 2' },
+        },
+      }),
+    )
+    await send('E1')
+    const mail = ownerMails()[0]!
+    expect(mail.text).toContain(
+      'Layout: Half page · Issue: Summer 2027 · Page 62, position 2 · No. 12',
+    )
+    expect(mail.text).toContain('Listing number 12 is reserved for you.')
+  })
+
   it('uses the company Whish number from the settings', async () => {
     world(STATE.E1())
     await send('E1')

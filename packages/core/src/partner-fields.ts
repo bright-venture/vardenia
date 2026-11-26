@@ -62,6 +62,8 @@ export const STAFF_ONLY_LISTING_FIELDS = Object.freeze([
   'booking',
   'issue',
   'listingNumber',
+  'pageLayout',
+  'isSample',
   'submission',
   'importBatch',
   'category',

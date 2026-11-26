@@ -17,6 +17,8 @@ import { upload } from 'payload/shared'
 import type { CollectionConfig, Field, PayloadRequest, UploadFieldSingleValidation } from 'payload'
 import {
   GOVERNORATES,
+  PAGE_LAYOUTS,
+  PAGE_LAYOUT_LABELS,
   SUBCATEGORY_PARENT,
   amenityOptions,
   isValidPoint,
@@ -43,6 +45,7 @@ import { categoryOptions, cityOptions, governorateOptions, subcategoryOptions } 
 import { ensureQrCode } from '../hooks/ensureQrCode'
 import { fillLocationFromMapUrl } from '../hooks/fillLocationFromMapUrl'
 import { releaseListingNumber } from '../hooks/releaseListingNumber'
+import { guardPageLayout } from '../hooks/guardPageLayout'
 import { syncOwnerPhoneSearch } from '../hooks/syncOwnerPhoneSearch'
 import { staffSearch } from '../hooks/staffSearch'
 import { HISTORY_STEPS, recordSubmissionHistory } from '../hooks/recordSubmissionHistory'
@@ -384,6 +387,7 @@ export const Businesses: CollectionConfig = {
     beforeChange: [
       approveSubmissionOnPublish,
       releaseListingNumber,
+      guardPageLayout,
       syncOwnerPhoneSearch,
       recordSubmissionHistory,
     ],
@@ -1022,6 +1026,26 @@ export const Businesses: CollectionConfig = {
       },
     },
     {
+      // The page layout bought, written once when the form is started and never
+      // changed (hooks/guardPageLayout). Staff-only to read: it is not part of
+      // any public output. Empty for listings made before layouts and samples.
+      // Not creatable through the admin or the API either: the start sets it
+      // with overrideAccess after checking the number is a free slot of that
+      // layout in the governorate's block. guardPageLayout also checks every
+      // create and update that puts a number on an issue with slots: the
+      // number must be a slot of this layout, so a business with no layout
+      // can hold no number there (it could never be given one afterwards).
+      name: 'pageLayout',
+      label: 'Page layout',
+      type: 'select',
+      options: PAGE_LAYOUTS.map((value) => ({ label: PAGE_LAYOUT_LABELS[value], value })),
+      access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+      admin: {
+        position: 'sidebar',
+        description: 'Set when the form is started. It cannot be changed afterwards.',
+      },
+    },
+    {
       name: 'isSample',
       label: 'Sample listing',
       type: 'checkbox',
@@ -1338,6 +1362,11 @@ export const Businesses: CollectionConfig = {
           access: submissionAccess,
           fields: [
             { name: 'version', type: 'text', access: submissionAccess },
+            // The layout, issue and slot the owner agreed to, as labels, copied with the price.
+            { name: 'layout', type: 'text', access: submissionAccess },
+            { name: 'issue', type: 'text', access: submissionAccess },
+            // Where the slot sits in print, as text ("Page 62, position 3").
+            { name: 'page', type: 'text', access: submissionAccess },
             { name: 'priceAtAcceptance', type: 'number', min: 0, access: submissionAccess },
             { name: 'currency', type: 'text', access: submissionAccess },
             { name: 'termMonths', type: 'number', min: 1, access: submissionAccess },

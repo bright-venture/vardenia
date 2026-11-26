@@ -139,8 +139,54 @@ describe('PlaceSubmissionForm, the four steps', () => {
   const UPLOAD_URL = `https://vardenia.test/en/magazine-places/upload#t=${TOKEN}`
 
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
-  const numbersReply = (taken: number[] = []) =>
-    json({ ok: true, issues: [{ issueId: 1, issueTitle: 'All Lebanon', from: 1, to: 10, taken }] })
+  // Numbers 1 to 10 of a block: 1-5 are full pages (pages 1-5), 6-9 the
+  // quarters of page 6 and 10 a full page again. Held numbers are not free.
+  const numbersReply = (taken: number[] = []) => {
+    const free = (numbers: number[], slotOf: (n: number) => object) =>
+      numbers.filter((n) => !taken.includes(n)).map(slotOf)
+    const fullPages = free([1, 2, 3, 4, 5, 10], (n) => ({
+      number: n,
+      page: n <= 5 ? n : 7,
+      position: null,
+      lastPage: n <= 5 ? n : 7,
+    }))
+    const quarters = free([6, 7, 8, 9], (n) => ({
+      number: n,
+      page: 6,
+      position: n - 5,
+      lastPage: 6,
+    }))
+    return json({
+      ok: true,
+      issues: [
+        {
+          issueId: 1,
+          issueTitle: 'All Lebanon',
+          from: 1,
+          to: 10,
+          taken,
+          currency: 'USD',
+          // Price-table order, not the form's: the form lists them its own way.
+          layouts: [
+            {
+              layout: 'quarter-page',
+              price: 200,
+              downpaymentAmount: 100,
+              slots: quarters,
+              free: quarters.length,
+            },
+            {
+              layout: 'full-page',
+              price: 1000,
+              downpaymentAmount: 500,
+              slots: fullPages,
+              free: fullPages.length,
+            },
+          ],
+        },
+      ],
+    })
+  }
   const started = () =>
     json(
       {
@@ -170,6 +216,8 @@ describe('PlaceSubmissionForm, the four steps', () => {
   const q = <T extends Element>(selector: string) => container.querySelector<T>(selector)!
   const nextButton = () => q<HTMLButtonElement>('button[type="submit"]')
   const numberButton = (n: number) => q<HTMLButtonElement>(`button[data-number="${n}"]`)
+  const layoutRadio = (layout: string) =>
+    q<HTMLInputElement>(`input[name="layout"][value="${layout}"]`)
   const button = (label: string) =>
     [...container.querySelectorAll('button')].find((b) => b.textContent === label)!
   const calls = (url: string) => fetchMock.mock.calls.filter(([u]) => u === url)
@@ -235,6 +283,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
     await setValue(q('input[name="ownerName"]'), 'Rita Haddad')
     await setValue(q('input[name="ownerEmail"]'), 'rita@example.com')
     await setValue(q('input[name="ownerPhone"]'), '+961 3 000 000')
+    await click(layoutRadio('full-page'))
     await click(numberButton(4))
   }
   const pressNext = () => act(async () => q<HTMLFormElement>('form').requestSubmit())
@@ -254,6 +303,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
       await click(q('input[name="pageTemplate"][value="c"]'))
       expect(q('[data-template]').getAttribute('data-template')).toBe('c')
       await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
       await click(numberButton(4))
       expect(q('[data-template]').textContent).toContain('VARDENIA - 4')
       expect(q('[data-template]').querySelector('img')).toBeNull()
@@ -262,12 +312,83 @@ describe('PlaceSubmissionForm, the four steps', () => {
     it('keeps Next disabled until a number is chosen', async () => {
       expect(nextButton().disabled).toBe(true)
       await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
+      expect(nextButton().disabled).toBe(true)
       await click(numberButton(4))
       expect(nextButton().disabled).toBe(false)
     })
 
+    it('offers the five layouts as plain radios, in the fixed order, none chosen', async () => {
+      const radios = [...container.querySelectorAll<HTMLInputElement>('input[name="layout"]')]
+      expect(radios.map((r) => r.value)).toEqual([
+        'full-spread',
+        'full-page',
+        'half-page',
+        'three-third',
+        'quarter-page',
+      ])
+      expect(radios.some((r) => r.checked)).toBe(false)
+      const labels = radios.map((r) => r.closest('label')!.textContent)
+      expect(labels).toEqual([
+        m.form.layouts['full-spread'],
+        m.form.layouts['full-page'],
+        m.form.layouts['half-page'],
+        m.form.layouts['three-third'],
+        m.form.layouts['quarter-page'],
+      ])
+      // The A/B/C page design is still there, unchanged.
+      expect(container.querySelectorAll('input[name="pageTemplate"]')).toHaveLength(3)
+    })
+
+    it('asks for a layout before listing places, then lists only its free slots with its price', async () => {
+      await setValue(q('select[name="governorate"]'), 'keserwan')
+      expect(container.textContent).toContain(m.numbers.chooseLayout)
+      expect(container.querySelector('button[data-number]')).toBeNull()
+      await click(layoutRadio('quarter-page'))
+      expect(container.textContent).not.toContain(m.numbers.chooseLayout)
+      const slots = [...container.querySelectorAll('button[data-number]')]
+      expect(slots.map((b) => b.getAttribute('data-number'))).toEqual(['6', '7', '8', '9'])
+      expect(slots[0]!.textContent).toBe('Page 6, position 1')
+      expect(container.textContent).toContain('$200 per year')
+      await click(layoutRadio('full-page'))
+      expect(container.textContent).toContain('$1,000 per year')
+      expect(numberButton(10).textContent).toBe('Page 7')
+    })
+
+    it('says so when the region does not offer the chosen layout', async () => {
+      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-spread'))
+      expect(container.textContent).toContain(m.numbers.noneForLayout)
+      expect(container.querySelector('button[data-number]')).toBeNull()
+    })
+
+    it('clears the picked number when the layout changes', async () => {
+      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
+      await click(numberButton(4))
+      expect(nextButton().disabled).toBe(false)
+      await click(layoutRadio('quarter-page'))
+      expect(container.querySelector('button[aria-pressed="true"]')).toBeNull()
+      expect(nextButton().disabled).toBe(true)
+      await click(layoutRadio('full-page'))
+      expect(numberButton(4).getAttribute('aria-pressed')).toBe('false')
+    })
+
+    it('offers nothing from a legacy issue without layouts', async () => {
+      routes['/place-submissions/numbers?governorate=keserwan'] = () =>
+        json({
+          ok: true,
+          issues: [{ issueId: 3, issueTitle: 'Old', from: 1, to: 10, taken: [], layouts: [] }],
+        })
+      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
+      expect(container.querySelector('button[data-number]')).toBeNull()
+      expect(container.textContent).toContain(m.numbers.noneForLayout)
+    })
+
     it('shows field errors next to their inputs without posting', async () => {
       await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
       await click(numberButton(4))
       await pressNext()
       expect(calls('/place-submissions').length).toBe(0)
@@ -327,6 +448,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
 
     it('never changes the numbers when the city changes', async () => {
       await setValue(q('select[name="governorate"]'), 'keserwan')
+      await click(layoutRadio('full-page'))
       await click(numberButton(4))
       const fetched = fetchMock.mock.calls.length
       await setValue(q('select[name="city"]'), 'jounieh')
@@ -352,7 +474,9 @@ describe('PlaceSubmissionForm, the four steps', () => {
       routes['/place-submissions/numbers?governorate=keserwan'] = () => numbersReply([4])
       await pressNext()
       expect(container.textContent).toContain(m.numbers.justTaken)
-      expect(numberButton(4).disabled).toBe(true)
+      // Only free slots are listed: number 4 is gone, its neighbours stay.
+      expect(container.querySelector('button[data-number="4"]')).toBeNull()
+      expect(numberButton(5).disabled).toBe(false)
       expect(container.querySelector('button[aria-pressed="true"]')).toBeNull()
       expect(q<HTMLInputElement>('input[name="name"]').value).toBe('Le Petit Jardin')
       expect(nextButton().disabled).toBe(true)
@@ -392,10 +516,12 @@ describe('PlaceSubmissionForm, the four steps', () => {
         listingNumber: 4,
         locale: 'en',
         pageTemplate: 'a',
+        layout: 'full-page',
         kind: 'restaurants',
         governorate: 'keserwan',
         city: 'jbeil',
       })
+      expect(body.data).not.toHaveProperty('price')
       expect(body.turnstileToken).toBe('ts-1')
       expect(JSON.stringify(body)).not.toMatch(/hero|logo|gallery/)
     })
@@ -598,6 +724,27 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(container.textContent).not.toMatch(/pay only if we accept/i)
       // The company number is never on the shared screen: it goes by email.
       expect(container.textContent).not.toMatch(/96179300350/)
+    })
+
+    it('shows the price of the chosen layout from the start answer, over the Settings price', async () => {
+      routes['/place-submissions'] = () =>
+        json(
+          {
+            ok: true,
+            reference: 'VD-12',
+            sessionToken: TOKEN,
+            uploadUrl: UPLOAD_URL,
+            expiresAt: '2026-11-23T10:30:00.000Z',
+            price: 200,
+            downpaymentAmount: 100,
+            currency: 'USD',
+          },
+          201,
+        )
+      await toStep3()
+      expect(q('[data-price]').textContent).toBe('$200 per year')
+      expect(q('[data-payment-terms]').textContent).toContain('($100)')
+      expect(container.textContent).not.toContain('$1,000')
     })
 
     it('takes every payment number from the Settings, never from the copy', async () => {

@@ -29,6 +29,7 @@ import { Brands } from './collections/Brands'
 import { Articles } from './collections/Articles'
 import { Issues } from './collections/Issues'
 import { ListingRanges } from './collections/ListingRanges'
+import { Templates } from './collections/Templates'
 import { QrCodes } from './collections/QrCodes'
 import { ScanEvents } from './collections/ScanEvents'
 import { ErrorEvents } from './collections/ErrorEvents'
@@ -227,6 +228,7 @@ export default buildConfig({
     GuestQuestions,
     Articles,
     Issues,
+    Templates,
     ListingRanges,
     Editions,
     Media,

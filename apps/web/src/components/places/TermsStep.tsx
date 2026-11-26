@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { HINT, NOTICE_ERROR, NOTICE_INFO, PRIMARY_BUTTON, SECONDARY_BUTTON } from '../formStyles'
-import { fetchTerms, type Terms } from './flow-client'
+import { fetchTerms, formatMoney, type Terms } from './flow-client'
+import type { Quote } from './submit-client'
 
 /**
  * Step 3 of the big-screen form: the price and the terms, then Submit.
  *
- * The price and the payment terms come from the Settings through GET
- * /place-submissions/terms, never from the page. This step only SHOWS them:
+ * The payment terms come from the Settings through GET /place-submissions/terms,
+ * never from the page. The price, its downpayment and currency are the chosen
+ * layout's, snapshotted when the submission started (`quote`, from the start
+ * answer) and shown over the Settings price; without a quote (an answer with
+ * no usable price) the Settings price stands. This step only SHOWS them:
  * nothing is paid in the form. The two-stage payment (spec v4): the
  * downpayment by Whish within its days keeps the page number, and is returned
  * if the business is not accepted; the rest is due within its days of
@@ -17,19 +21,6 @@ import { fetchTerms, type Terms } from './flow-client'
  * check (`turnstile`, drawn by the parent) has a token, when there is one to
  * wait for.
  */
-
-/** 20 USD as "$20" in the page language; a currency code Intl does not know is shown as text. */
-function formatMoney(value: number, currency: string, locale: string): string {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
-    }).format(value)
-  } catch {
-    return `${value} ${currency}`
-  }
-}
 
 /** The price minus the downpayment, counted in cents like the payment engine. */
 const restOf = (terms: Terms) =>
@@ -48,6 +39,7 @@ const CHECK = 'accent-cedar-900 size-4 shrink-0'
 
 export function TermsStep({
   locale,
+  quote = null,
   busy,
   problem,
   canSubmit,
@@ -55,6 +47,8 @@ export function TermsStep({
   onSubmit,
 }: {
   locale: string
+  /** The chosen layout's price from the start answer. */
+  quote?: Quote | null
   busy: boolean
   problem: string | null
   /** False while the bot check has not produced its token yet. */
@@ -64,7 +58,7 @@ export function TermsStep({
 }) {
   const t = useTranslations('magazinePlaces')
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const [terms, setTerms] = useState<Terms | null>(null)
+  const [settingsTerms, setTerms] = useState<Terms | null>(null)
   const [failed, setFailed] = useState(false)
   const [reload, setReload] = useState(0)
   const [accepted, setAccepted] = useState(false)
@@ -89,6 +83,16 @@ export function TermsStep({
     setFailed(false)
     setReload((n) => n + 1)
   }, [])
+
+  const terms: Terms | null =
+    settingsTerms && quote
+      ? {
+          ...settingsTerms,
+          price: quote.price,
+          downpaymentAmount: quote.downpaymentAmount,
+          currency: quote.currency,
+        }
+      : settingsTerms
 
   const amount = terms ? formatMoney(terms.price, terms.currency, locale) : ''
 

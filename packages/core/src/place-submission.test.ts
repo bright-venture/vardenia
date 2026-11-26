@@ -23,6 +23,7 @@ const valid = {
   ownerEmail: 'sami@example.com',
   ownerPhone: '+96170000000',
   pageTemplate: 'a',
+  layout: 'full-page',
   issue: 1,
   listingNumber: 12,
   locale: 'en',
@@ -32,6 +33,13 @@ const parse = (over: Record<string, unknown> = {}) =>
   placeSubmissionSchema.safeParse({ ...valid, ...over })
 
 describe('placeSubmissionSchema', () => {
+  it('requires a known page layout', () => {
+    const without = Object.fromEntries(Object.entries(valid).filter(([k]) => k !== 'layout'))
+    expect(placeSubmissionSchema.safeParse(without).success).toBe(false)
+    expect(parse({ layout: 'poster' }).success).toBe(false)
+    expect(parse({ layout: 'quarter-page' }).success).toBe(true)
+  })
+
   it('parses a minimal valid object', () => {
     expect(parse().success).toBe(true)
   })

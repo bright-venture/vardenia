@@ -37,6 +37,23 @@ export interface Terms {
   balanceDeadlineDays: number
 }
 
+/**
+ * 20 USD as "$20" in the page language; a currency code Intl does not know is
+ * shown as text, and no currency at all as the bare amount.
+ */
+export function formatMoney(value: number, currency: string, locale: string): string {
+  if (!currency) return String(value)
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    }).format(value)
+  } catch {
+    return `${value} ${currency}`
+  }
+}
+
 const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
 export async function fetchTerms(fetchImpl: typeof fetch = fetch): Promise<Terms | null> {

@@ -59,6 +59,26 @@ describe('postSubmission', () => {
     expect(await postSubmission(parts(), reply(201, STARTED))).toEqual({ kind: 'ok', ...STARTED })
   })
 
+  it('carries the price of the chosen layout from the start answer', async () => {
+    const result = await postSubmission(
+      parts(),
+      reply(201, { ...STARTED, price: 500, downpaymentAmount: 250, currency: 'USD' }),
+    )
+    expect(result).toEqual({
+      kind: 'ok',
+      ...STARTED,
+      quote: { price: 500, downpaymentAmount: 250, currency: 'USD' },
+    })
+  })
+
+  it('leaves the quote out when the start answer has no usable price', async () => {
+    const result = await postSubmission(
+      parts(),
+      reply(201, { ...STARTED, price: 'x', downpaymentAmount: 250, currency: 'USD' }),
+    )
+    expect(result).toEqual({ kind: 'ok', ...STARTED })
+  })
+
   it('treats a 201 without them as unknown', async () => {
     expect((await postSubmission(parts(), reply(201, { ok: true }))).kind).toBe('unknown')
   })
