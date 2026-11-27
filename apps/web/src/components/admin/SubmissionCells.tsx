@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cache } from 'react'
 import type { DefaultServerCellComponentProps, Payload } from 'payload'
 import { PAGE_LAYOUT_LABELS, isPageLayout, slotLabel, type Slot } from '@vardenia/core'
@@ -99,10 +100,24 @@ const issueInfo = cache(async (payload: Payload): Promise<Map<string, IssueInfo>
 
 const row = (props: Props) => (props.rowData ?? {}) as Row
 
-/** VD-123. */
+/**
+ * VD-123. As the list's first column it is also the link to the listing:
+ * Payload links the first column only in its own default cell, and a custom
+ * cell replaces that, which left every row with nothing to click (only the
+ * bulk Edit, which opens a field picker). A listing with no reference (one not
+ * made by the form) shows "Open" so it can still be opened.
+ */
 export function ReferenceCell(props: Props) {
-  const reference = row(props).submission?.reference
-  return reference ? <span className="vd-num">{reference}</span> : null
+  const data = row(props) as Row & { id?: number | string }
+  const reference = data.submission?.reference
+  const text = reference ? <span className="vd-num">{reference}</span> : null
+  if (!props.link || data.id === undefined || data.id === null) return text
+  const href =
+    props.linkURL ??
+    `${props.payload.config.routes.admin}/collections/${props.collectionSlug}${
+      props.viewType === 'trash' ? '/trash' : ''
+    }/${encodeURIComponent(String(data.id))}`
+  return <Link href={href}>{text ?? 'Open'}</Link>
 }
 
 /**

@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { buildSlots } from '@vardenia/core'
-import { IssuePageCell } from './SubmissionCells'
+import { IssuePageCell, ReferenceCell } from './SubmissionCells'
 
 const slots = buildSlots([{ layout: 'full-page' }, { layout: 'half-page' }])
 
@@ -32,5 +32,39 @@ describe('IssuePageCell', () => {
     expect(html).toContain('Winter 2026')
     expect(html).toContain('Page 12')
     expect(html).toContain('>-<')
+  })
+})
+
+describe('ReferenceCell', () => {
+  const cell = (props: Record<string, unknown>) =>
+    renderToStaticMarkup(
+      ReferenceCell({
+        payload: { config: { routes: { admin: '/admin' } } },
+        collectionSlug: 'businesses',
+        ...props,
+      } as unknown as Parameters<typeof ReferenceCell>[0]) as React.ReactElement,
+    )
+
+  it('links the reference to the listing when it is the first column', () => {
+    const html = cell({ link: true, rowData: { id: 7, submission: { reference: 'VD-7' } } })
+    expect(html).toContain('href="/admin/collections/businesses/7"')
+    expect(html).toContain('VD-7')
+  })
+
+  it('still gives a listing with no reference something to click', () => {
+    const html = cell({ link: true, rowData: { id: 8 } })
+    expect(html).toContain('href="/admin/collections/businesses/8"')
+    expect(html).toContain('Open')
+  })
+
+  it('opens trashed listings in the trash view', () => {
+    const html = cell({ link: true, viewType: 'trash', rowData: { id: 9 } })
+    expect(html).toContain('href="/admin/collections/businesses/trash/9"')
+  })
+
+  it('is plain text when it is not the first column', () => {
+    const html = cell({ link: false, rowData: { id: 7, submission: { reference: 'VD-7' } } })
+    expect(html).not.toContain('href')
+    expect(html).toContain('VD-7')
   })
 })
