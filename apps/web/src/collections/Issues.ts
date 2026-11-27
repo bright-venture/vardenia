@@ -68,12 +68,16 @@ const wholeNumber = (v: unknown, min: number): v is number =>
  * edited by hand, and a missing slot is refused later rather than sold.
  */
 /** "1: Pages 1-2 (Full spread)", one line per slot, for the admin. Empty without slots. */
-export function issueSlotList(value: unknown): string {
+export function issueSlotList(value: unknown, pageCount?: unknown): string {
   const slots = toSlots(value)
   if (slots.length === 0) return ''
-  return slots
-    .map((slot) => `${slot.number}: ${slotLabel(slot)} (${PAGE_LAYOUT_LABELS[slot.layout]})`)
-    .join('\n')
+  const lines = slots.map(
+    (slot) => `${slot.number}: ${slotLabel(slot)} (${PAGE_LAYOUT_LABELS[slot.layout]})`,
+  )
+  // The totals first, so they are read off the issue without counting lines.
+  return wholeNumber(pageCount, 1)
+    ? [`${pageCount} pages, ${slots.length} listings.`, ...lines].join('\n')
+    : lines.join('\n')
 }
 
 export function toSlots(value: unknown): Slot[] {
@@ -362,10 +366,11 @@ export const Issues: CollectionConfig = {
       defaultValue: 100,
       min: 1,
       admin: {
-        description: 'Filled from the template when you save. Not edited by hand.',
-        // The pages come from the template (the hook below writes this on save,
-        // next to the slots), so the input is shown but disabled.
-        readOnly: true,
+        // The pages come from the template: the hook below writes this on save,
+        // next to the slots. Not shown in the form (it would only show a stale
+        // default while the issue is being made); the totals head the Slots
+        // list once the issue is saved with a template.
+        hidden: true,
       },
     },
     {
@@ -388,11 +393,9 @@ export const Issues: CollectionConfig = {
       min: 1,
       admin: {
         step: 1,
-        description:
-          'One per slot of the template. Filled when you save. Not edited by hand. Each governorate takes a block of them under Listing number ranges.',
-        // Same as Pages: the slots of the template decide it, so the input is
-        // shown but disabled.
-        readOnly: true,
+        // Same as Pages: the slots of the template decide it (one per slot), the
+        // hook writes it on save, and the form does not show it.
+        hidden: true,
       },
     },
     {
@@ -441,7 +444,7 @@ export const Issues: CollectionConfig = {
         description: 'Copied from the template when it is assigned. Never edited by hand.',
         condition: (data) => toSlots(data?.slots).length > 0,
       },
-      hooks: { afterRead: [({ data }) => issueSlotList(data?.slots)] },
+      hooks: { afterRead: [({ data }) => issueSlotList(data?.slots, data?.pageCount)] },
     },
     {
       /**

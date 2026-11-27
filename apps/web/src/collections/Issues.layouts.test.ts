@@ -428,6 +428,12 @@ describe('issueSlotList', () => {
     ])
   })
 
+  it('starts with the totals when the page count is known', () => {
+    const slots = buildSlots([{ layout: 'full-spread' }, { layout: 'half-page' }])
+    expect(issueSlotList(slots, 3).split('\n')[0]).toBe('3 pages, 3 listings.')
+    expect(issueSlotList(slots, undefined).split('\n')[0]).toBe('1: Pages 1-2 (Full spread)')
+  })
+
   it('is empty for an issue with no slots', () => {
     expect(issueSlotList(null)).toBe('')
     expect(issueSlotList([])).toBe('')
