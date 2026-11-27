@@ -69,17 +69,7 @@ export default async function MagazinePlacesPage({ params }: Props) {
           </figure>
         </header>
       )}
-      <div
-        className={`${styles.workspace} mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[3fr_2fr]`}
-      >
-        <section aria-labelledby="places-viewer">
-          <h2 id="places-viewer" className="font-display text-ink-900 text-2xl">
-            {t('viewerTitle')}
-          </h2>
-          <div className="border-ink-100 bg-surface-raised text-ink-500 mt-4 flex aspect-[3/4] items-center justify-center border p-6 text-center text-sm">
-            {t('viewerSoon')}
-          </div>
-        </section>
+      <div className={`${styles.workspace} mx-auto max-w-6xl px-6 py-12`}>
         <section aria-labelledby="places-form">
           <h2 id="places-form" className="font-display text-ink-900 text-2xl">
             {t('formTitle')}

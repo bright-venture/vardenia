@@ -1009,8 +1009,6 @@
   "magazinePlaces": {
     "title": "您在杂志中的位置",
     "intro": "浏览杂志，为您的商家申请一个位置。",
-    "viewerTitle": "杂志",
-    "viewerSoon": "杂志阅读器即将推出。",
     "formTitle": "申请位置",
     "form": {
       "intro": "Choose your place in the magazine first: issue, region, size and page. Then tell us about your business; the page beside fills in as you type.",

@@ -1009,8 +1009,6 @@
   "magazinePlaces": {
     "title": "Ваше место в журнале",
     "intro": "Посмотрите журнал и запросите место для своего бизнеса.",
-    "viewerTitle": "Журнал",
-    "viewerSoon": "Просмотр журнала скоро появится.",
     "formTitle": "Запросить место",
     "form": {
       "intro": "Choose your place in the magazine first: issue, region, size and page. Then tell us about your business; the page beside fills in as you type.",

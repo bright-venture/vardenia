@@ -1009,8 +1009,6 @@
   "magazinePlaces": {
     "title": "पत्रिका में आपकी जगह",
     "intro": "पत्रिका देखें और अपने व्यवसाय के लिए जगह का अनुरोध करें।",
-    "viewerTitle": "पत्रिका",
-    "viewerSoon": "पत्रिका व्यूअर जल्द आ रहा है।",
     "formTitle": "जगह का अनुरोध करें",
     "form": {
       "intro": "Choose your place in the magazine first: issue, region, size and page. Then tell us about your business; the page beside fills in as you type.",

@@ -4,7 +4,6 @@
 
 @media (min-width: 1051px) {
   .page > :global(.vd-inner-hero),
-  .page .workspace > section[aria-labelledby='places-viewer'],
   .page [data-form-intro] {
     display: none;
   }

@@ -1009,8 +1009,6 @@
   "magazinePlaces": {
     "title": "Votre place dans le magazine",
     "intro": "Découvrez le magazine et demandez une place pour votre établissement.",
-    "viewerTitle": "Le magazine",
-    "viewerSoon": "La liseuse du magazine arrive bientôt.",
     "formTitle": "Demander une place",
     "form": {
       "intro": "Choose your place in the magazine first: issue, region, size and page. Then tell us about your business; the page beside fills in as you type.",
