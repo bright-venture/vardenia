@@ -340,6 +340,18 @@ describe('PlaceSubmissionForm, the four steps', () => {
   }
 
   describe('step 1: details', () => {
+    it('offers the magazine link only once an issue is chosen, with the number when one is picked', async () => {
+      const link = () =>
+        container.querySelector<HTMLAnchorElement>('a[href*="/magazine-places/view"]')
+      expect(link()).toBeNull()
+      await setValue(q('select[name="issue"]'), '1')
+      expect(link()?.getAttribute('href')).toBe('/en/magazine-places/view?issue=1')
+      expect(link()?.target).toBe('_blank')
+      expect(link()?.rel).toBe('noopener')
+      await fillAndPick()
+      expect(link()?.getAttribute('href')).toBe('/en/magazine-places/view?issue=1&number=4')
+    })
+
     it('switches the preview to template C and shows the number, with placeholders for photos', async () => {
       await click(q('input[name="pageTemplate"][value="c"]'))
       expect(q('[data-template]').getAttribute('data-template')).toBe('c')
@@ -697,6 +709,15 @@ describe('PlaceSubmissionForm, the four steps', () => {
       routes['/place-submissions'] = () => json({ ok: false, code: 'failed', message: 'x' }, 403)
       await pressNext()
       expect(container.textContent).toContain(m.errors.botCheck)
+    })
+
+    it('posts the typed description, and shows it on the page preview', async () => {
+      await fillAndPick()
+      await setValue(q('textarea[name="description"]'), 'Seasonal Lebanese cooking.')
+      expect(q('[data-template]').textContent).toContain('Seasonal Lebanese cooking.')
+      await pressNext()
+      const [call] = calls('/place-submissions')
+      expect(bodyOf(call!).data).toMatchObject({ description: 'Seasonal Lebanese cooking.' })
     })
 
     it('posts the fields as JSON with the first Turnstile token and no photos', async () => {

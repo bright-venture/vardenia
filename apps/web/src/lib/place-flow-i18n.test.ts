@@ -24,9 +24,6 @@ const paths = (tree: Tree, prefix = ''): string[] =>
 const ARABIC = /[؀-ۿ]/
 
 const REMOVED = [
-  // The description is no longer asked or previewed (27 November 2026).
-  'form.description',
-  'form.descriptionHint',
   'form.subcategories',
   'form.subcategoriesHint',
   'form.hoursLegend',

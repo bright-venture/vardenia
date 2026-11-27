@@ -31,6 +31,7 @@ export interface FormState {
   issue: OpenIssue | null
   name: string
   tagline: string
+  description: string
   kind: string
   governorate: string
   city: string
@@ -57,6 +58,7 @@ export function initialFormState(): FormState {
     issue: null,
     name: '',
     tagline: '',
+    description: '',
     kind: '',
     governorate: '',
     city: '',
@@ -109,6 +111,7 @@ export function buildSubmission(
   const data: Record<string, unknown> = {
     name: state.name,
     tagline: state.tagline,
+    description: state.description,
     kind: state.kind,
     governorate: state.governorate,
     // Only an issue for one governorate asks for the city.
@@ -214,6 +217,7 @@ export function previewDataFrom(
     ...emptyPreview(locale),
     name: state.name,
     tagline: state.tagline,
+    description: state.description,
     category: categoryLabel(categoryOfKind(state.kind) ?? '', locale),
     governorate: placeLabel(state.governorate, state.city, locale),
     address: state.address,

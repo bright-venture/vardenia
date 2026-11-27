@@ -123,6 +123,16 @@ describe('buildSubmission', () => {
     }
   })
 
+  it('sends the optional description, and the schema accepts it empty or up to 2000', () => {
+    const { data } = buildSubmission({ ...filled(), description: 'Seasonal cooking.' }, pick, 'en')
+    expect(data).toMatchObject({ description: 'Seasonal cooking.' })
+    expect(placeSubmissionSchema.safeParse(data).success).toBe(true)
+    const empty = buildSubmission({ ...filled(), description: '' }, pick, 'en').data
+    expect(placeSubmissionSchema.safeParse(empty).success).toBe(true)
+    const long = buildSubmission({ ...filled(), description: 'x'.repeat(2001) }, pick, 'en').data
+    expect(placeSubmissionSchema.safeParse(long).success).toBe(false)
+  })
+
   it('sends the chosen issue, and no number while none is picked', () => {
     const { data } = buildSubmission(filled(), null, 'en')
     expect(data).toMatchObject({ issue: 1 })

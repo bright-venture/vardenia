@@ -7,6 +7,7 @@ const data: PreviewData = {
   ...emptyPreview('en'),
   name: 'Le Petit Jardin',
   tagline: 'Garden dining by the old port',
+  description: 'Seasonal Lebanese cooking.',
   category: 'Food & Beverage',
   governorate: 'Byblos',
   address: 'Old Port, Byblos',
@@ -57,12 +58,13 @@ describe('BusinessPagePreview', () => {
         expect(html).toContain('lang="ar"')
       })
 
-      it('has no description slot, so no placeholder body text (27 November 2026)', () => {
+      it('clamps a 5000 character description', () => {
+        const long = 'x'.repeat(5000)
         const html = renderToStaticMarkup(
-          <BusinessPagePreview template={t} data={emptyPreview('en')} />,
+          <BusinessPagePreview template={t} data={{ ...data, description: long }} />,
         )
-        expect(html).not.toContain('worth a visit')
-        expect(html).not.toContain('-webkit-line-clamp')
+        expect(html).not.toContain(long)
+        expect(html).toContain('\u2026')
       })
 
       it('uses the page ratio variable and no physical direction classes', () => {
@@ -90,13 +92,10 @@ describe('BusinessPagePreview', () => {
     }
   })
 
-  it('clamps a 5000 character tagline (template A shows it)', () => {
-    const long = 'x'.repeat(5000)
-    const html = renderToStaticMarkup(
-      <BusinessPagePreview template="a" data={{ ...data, tagline: long }} />,
+  it('takes the body clamp from the layout budget', () => {
+    expect(renderToStaticMarkup(<BusinessPagePreview template="a" data={data} />)).toContain(
+      '-webkit-line-clamp:4',
     )
-    expect(html).not.toContain(long)
-    expect(html).toContain('\u2026')
   })
 
   it('renders no scannable-looking code, only a decorative square', () => {

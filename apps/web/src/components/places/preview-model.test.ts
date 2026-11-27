@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DESCRIPTION_MAX,
   NAME_MAX,
   A_LAYOUT,
   B_LAYOUT,
@@ -13,6 +14,7 @@ import {
   previewText,
   templateAAvailable,
   templateAStack,
+  templateBBodyOverflow,
   templateBStack,
   templateCBand,
   templateCBandLimit,
@@ -24,8 +26,8 @@ describe('clampText', () => {
   })
 
   it('cuts long text to the limit, ellipsis included', () => {
-    const out = clampText('a'.repeat(5000), NAME_MAX)
-    expect(out.length).toBeLessThanOrEqual(NAME_MAX)
+    const out = clampText('a'.repeat(5000), DESCRIPTION_MAX)
+    expect(out.length).toBeLessThanOrEqual(DESCRIPTION_MAX)
     expect(out.endsWith('\u2026')).toBe(true)
   })
 
@@ -46,7 +48,7 @@ describe('clampText', () => {
 
 describe('limits', () => {
   it('are the agreed ones', () => {
-    expect([NAME_MAX, TAGLINE_MAX]).toEqual([60, 90])
+    expect([DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX]).toEqual([600, 60, 90])
     expect(PAGE_RATIO).toBe('210 / 297')
   })
 })
@@ -87,21 +89,25 @@ describe('layout budget (cqw)', () => {
   it('A: hero plus the text block at the clamp limits fits the page', () => {
     expect(templateAStack()).toBeLessThanOrEqual(templateAAvailable())
   })
-  it('A: fails if the hero is made much larger', () => {
-    expect(templateAStack()).toBeGreaterThan(templateAAvailable({ ...A_LAYOUT, heroPct: 60 }))
+  it('A: fails if the hero or the body clamp is made larger', () => {
+    expect(templateAStack({ ...A_LAYOUT, bodyLines: 6 })).toBeGreaterThan(
+      templateAAvailable({ ...A_LAYOUT, bodyLines: 6 }),
+    )
+    expect(templateAStack()).toBeGreaterThan(templateAAvailable({ ...A_LAYOUT, heroPct: 52 }))
   })
 
-  it('B: the page fits', () => {
+  it('B: the page fits, and the body fits beside its photo', () => {
     expect(templateBStack()).toBeLessThanOrEqual(PAGE_HEIGHT)
+    expect(templateBBodyOverflow()).toBeLessThanOrEqual(0)
   })
-  it('B: fails if the photos are made much taller', () => {
-    expect(templateBStack({ ...B_LAYOUT, photoHeight: 70 })).toBeGreaterThan(PAGE_HEIGHT)
+  it('B: fails if the body clamp is made larger', () => {
+    expect(templateBBodyOverflow({ ...B_LAYOUT, bodyLines: 13 })).toBeGreaterThan(0)
   })
 
   it('C: the text band stays within its share of the page', () => {
     expect(templateCBand()).toBeLessThanOrEqual(templateCBandLimit())
   })
-  it('C: fails if the band is given a much smaller share', () => {
-    expect(templateCBand()).toBeGreaterThan(templateCBandLimit({ ...C_LAYOUT, maxBandPct: 30 }))
+  it('C: fails if the body clamp is made larger', () => {
+    expect(templateCBand({ ...C_LAYOUT, bodyLines: 8 })).toBeGreaterThan(templateCBandLimit())
   })
 })

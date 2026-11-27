@@ -34,7 +34,7 @@ import {
 } from './form-model'
 import { NumberPicker } from './NumberPicker'
 import { PhoneStep } from './PhoneStep'
-import { NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
+import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
 import { postSubmission, type Quote, type SubmitResult } from './submit-client'
 import { TermsStep } from './TermsStep'
 import { ThanksStep } from './ThanksStep'
@@ -494,6 +494,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const previewLabels: PreviewLabels = {
     name: t('form.name'),
     tagline: t('form.tagline'),
+    description: t('form.description'),
     category: t('form.category'),
     governorate: t('form.governorate'),
     address: t('form.address'),
@@ -610,6 +611,16 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                   </option>
                 ))}
               </select>
+              {state.issue ? (
+                <a
+                  href={`/${locale}/magazine-places/view?issue=${state.issue.issueId}${pick ? `&number=${pick.number}` : ''}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-ink-700 mt-2 inline-flex min-h-11 items-center text-sm underline"
+                >
+                  {t('form.seeMagazine')}
+                </a>
+              ) : null}
               {openIssues.state === 'loading' ? (
                 <p className={HINT} role="status">
                   {t('form.issuesLoading')}
@@ -756,6 +767,24 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 {t('form.taglineHint')} {counter(state.tagline, TAGLINE_MAX)}
               </p>
               {errorLine('tagline')}
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('description')}>
+                {t('form.description')}
+              </label>
+              <textarea
+                {...control('description', true)}
+                rows={6}
+                maxLength={DESCRIPTION_MAX}
+                dir="auto"
+                value={state.description}
+                onChange={(e) => set({ description: e.target.value })}
+              />
+              <p id={`${fid('description')}-hint`} className={HINT}>
+                {t('form.descriptionHint')} {counter(state.description, DESCRIPTION_MAX)}
+              </p>
+              {errorLine('description')}
             </div>
 
             <div>
