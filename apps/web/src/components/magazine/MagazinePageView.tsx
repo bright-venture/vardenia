@@ -21,6 +21,7 @@ export function MagazinePageView({
   highlight,
   labels,
   dir,
+  imageFor = null,
 }: {
   page: MagazinePage
   businesses: Map<number, MagazineBusiness>
@@ -28,8 +29,24 @@ export function MagazinePageView({
   highlight: number | null
   labels: MagazineLabels
   dir: 'ltr' | 'rtl'
+  /** The printed page images (an All Lebanon issue), or null to draw the page. */
+  imageFor?: ((page: number) => string | null) | null
 }) {
   const span = page.kind === 'listings' ? page.span : 1
+  const images = imageFor ? Array.from({ length: span }, (_, i) => imageFor(page.page + i)) : []
+  if (images.length > 0 && images.every(Boolean)) {
+    return (
+      <PrintedPage
+        page={page}
+        span={span}
+        images={images as string[]}
+        businesses={businesses}
+        highlight={highlight}
+        labels={labels}
+        dir={dir}
+      />
+    )
+  }
   const grid = page.kind === 'listings' ? CARD_STYLE[page.layout] : undefined
   const slotCount = page.kind === 'listings' ? LAYOUT_SHAPE[page.layout].slots : 0
   return (
@@ -84,6 +101,100 @@ export function MagazinePageView({
           </footer>
         </>
       )}
+    </div>
+  )
+}
+
+/**
+ * The designer's printed page as it will be printed, with each slot a business
+ * has reserved marked over it by name (and the reader's own slot ringed). Free
+ * slots show the page as it is. The slot grid is the same as the drawn page's
+ * (half page: two rows, 1/3: three, 1/4: two by two), which is how the PDF
+ * lays them out, so a mark sits over its listing.
+ */
+function PrintedPage({
+  page,
+  span,
+  images,
+  businesses,
+  highlight,
+  labels,
+  dir,
+}: {
+  page: MagazinePage
+  span: 1 | 2
+  images: string[]
+  businesses: Map<number, MagazineBusiness>
+  highlight: number | null
+  labels: MagazineLabels
+  dir: 'ltr' | 'rtl'
+}) {
+  const grid = page.kind === 'listings' ? CARD_STYLE[page.layout] : undefined
+  const slots = page.kind === 'listings' ? page.slots.slice(0, LAYOUT_SHAPE[page.layout].slots) : []
+  return (
+    <div
+      dir={dir}
+      data-page={page.page}
+      data-span={span}
+      data-printed
+      style={
+        {
+          aspectRatio: `${RATIO_W * span} / ${RATIO_H}`,
+          containerType: 'inline-size',
+          '--u': `${1 / span}cqw`,
+        } as React.CSSProperties
+      }
+      className="bg-surface-base border-ink-100 relative flex w-full overflow-hidden border shadow-lg"
+    >
+      {images.map((src, i) => (
+        // Plain img: static files of a fixed size, already compressed; the
+        // image optimiser would only re-encode them.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={src}
+          src={src}
+          alt={labels.page(page.page + i)}
+          loading="lazy"
+          decoding="async"
+          className="h-full min-w-0 flex-1 object-cover"
+        />
+      ))}
+      {grid ? (
+        <div
+          className="pointer-events-none absolute inset-0 grid"
+          style={{
+            gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`,
+            padding: 'calc(var(--u) * 4) calc(var(--u) * 4) calc(var(--u) * 7)',
+            gap: 'calc(var(--u) * 2)',
+          }}
+        >
+          {slots.map((slot) => {
+            const business = businesses.get(slot.number)
+            const mine = highlight === slot.number
+            return (
+              <div
+                key={slot.number}
+                data-slot={slot.number}
+                {...(mine ? { 'data-you': '' } : {})}
+                className={`flex items-end justify-start ${mine ? 'outline-gold-500 rounded-sm outline outline-[3px]' : ''}`}
+              >
+                {business || mine ? (
+                  <span
+                    className="bg-ink-900/85 text-surface-base font-body max-w-full truncate rounded-sm shadow"
+                    style={{
+                      fontSize: 'calc(var(--u) * 2.6)',
+                      padding: 'calc(var(--u) * 0.8) calc(var(--u) * 1.6)',
+                    }}
+                  >
+                    {mine ? labels.you : business?.name}
+                  </span>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      ) : null}
     </div>
   )
 }

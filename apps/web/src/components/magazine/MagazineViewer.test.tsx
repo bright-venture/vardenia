@@ -5,6 +5,16 @@ import { createRoot, type Root } from 'react-dom/client'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@vardenia/i18n/messages'
 import type { Locale } from '@vardenia/i18n'
+// These tests are about the drawn pages; the printed-page mode for an All
+// Lebanon issue (page-images) is switched on only where a test asks for it.
+const printed = vi.hoisted(() => ({ on: false }))
+vi.mock('./page-images', async (importOriginal) => {
+  const real = await importOriginal<typeof import('./page-images')>()
+  // Which issues match the PDF is tested in page-images.test; here the
+  // viewer only has to draw the images when it is told to.
+  return { ...real, pageImagesFor: () => (printed.on ? real.allLebanonPage : null) }
+})
+
 import { MagazineViewer } from './MagazineViewer'
 import { useMagazine } from './use-magazine'
 import type { MagazineBusiness, MagazineData } from './types'
@@ -202,6 +212,23 @@ describe('MagazineViewer', () => {
     expect(shownPages()).toEqual([4, 5])
     expect(host.querySelectorAll('[data-you]')).toHaveLength(1)
     expect(host.textContent).toContain('Mine')
+  })
+
+  it('shows the printed pages for an All Lebanon issue, with reserved slots named', async () => {
+    printed.on = true
+    try {
+      fetchMock.mockResolvedValue(ok(base([biz(3, 'Mine')])))
+      await mount({ highlight: 3 })
+      const imgs = [...host.querySelectorAll('img')].map((i) => i.getAttribute('src'))
+      expect(imgs).toEqual([
+        '/magazine-pages/all-lebanon/004.webp',
+        '/magazine-pages/all-lebanon/005.webp',
+      ])
+      expect(host.querySelectorAll('[data-printed]')).toHaveLength(2)
+      expect(host.textContent).toContain('You')
+    } finally {
+      printed.on = false
+    }
   })
 
   it('opens on the first spread when the number is not in the issue', async () => {

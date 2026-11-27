@@ -6,6 +6,7 @@ import { dirFor, type Locale } from '@vardenia/i18n'
 import { regionOfPage, toSpreads, type MagazinePage } from '@vardenia/core/magazine-view'
 import { MagazinePageView } from './MagazinePageView'
 import { buildMagazineLabels } from './magazine-labels'
+import { pageImagesFor } from './page-images'
 import { mergeRegions } from './regions'
 import { useMagazine } from './use-magazine'
 import type { MagazineBusiness } from './types'
@@ -53,6 +54,7 @@ export function MagazineViewer({
 
   const spreads = useMemo(() => (data ? toSpreads(data.pages) : []), [data])
   const regions = useMemo(() => mergeRegions(data?.regions ?? []), [data])
+  const imageFor = useMemo(() => pageImagesFor(data?.regions ?? [], data?.pages ?? []), [data])
   const businesses = useMemo(
     () => new Map<number, MagazineBusiness>((data?.businesses ?? []).map((b) => [b.number, b])),
     [data],
@@ -248,6 +250,7 @@ export function MagazineViewer({
               highlight={highlight}
               labels={labels}
               dir={dir}
+              imageFor={imageFor}
             />
           ))}
         </div>
