@@ -3,6 +3,7 @@ import { APIError } from 'payload'
 import { buildSlots } from '@vardenia/core'
 import { isStaffFieldLevel } from '../access/index'
 import {
+  COVERAGE_LOCKED_MESSAGE,
   Issues,
   RANGES_FIRST_MESSAGE,
   makeCheckIssue,
@@ -447,5 +448,105 @@ describe('issueSlotList', () => {
     }>
     expect(fields.find((f) => f.name === 'slots')?.admin?.hidden).toBe(true)
     expect(fields.find((f) => f.name === 'slotList')?.virtual).toBe(true)
+  })
+})
+
+describe('what an issue covers', () => {
+  const runWith = (lookups: IssueLookups) => {
+    const hook = makeCheckIssue(lookups)
+    return (data: Record<string, unknown>, originalDoc?: Record<string, unknown>) =>
+      hook({
+        data,
+        originalDoc,
+        operation: originalDoc ? 'update' : 'create',
+        req: { payload: {} },
+      } as never)
+  }
+  const field = (name: string) =>
+    (Issues.fields as Array<Record<string, unknown>>).find((f) => f.name === name) as {
+      defaultValue?: unknown
+      options?: { value: string; label: string }[]
+      access?: { read?: unknown }
+      enumName?: string
+      admin?: { condition?: (data: Record<string, unknown>) => boolean }
+    }
+
+  it('defaults to All Lebanon, offers One governorate, and is staff-read like the template', () => {
+    const coverage = field('coverage')
+    expect(coverage.defaultValue).toBe('all-lebanon')
+    expect(coverage.options).toEqual([
+      { label: 'All Lebanon', value: 'all-lebanon' },
+      { label: 'One governorate', value: 'governorate' },
+    ])
+    expect(coverage.access?.read).toBe(isStaffFieldLevel)
+    expect(field('governorate').access?.read).toBe(isStaffFieldLevel)
+  })
+
+  it('shows the governorate only for a one-governorate issue, on the ranges own enum', () => {
+    const governorate = field('governorate')
+    expect(governorate.admin?.condition?.({ coverage: 'governorate' })).toBe(true)
+    expect(governorate.admin?.condition?.({ coverage: 'all-lebanon' })).toBe(false)
+    expect(governorate.admin?.condition?.({})).toBe(false)
+    expect(governorate.enumName).toBe('enum_listing_ranges_governorate')
+  })
+
+  it('needs the governorate of a one-governorate issue', async () => {
+    await refused(runWith(lookupsWith())({ coverage: 'governorate' }), /needs its governorate/)
+    await refused(
+      runWith(lookupsWith())({ coverage: 'governorate', governorate: 'atlantis' }),
+      /needs its governorate/,
+    )
+    const data = { coverage: 'governorate', governorate: 'matn' }
+    await expect(runWith(lookupsWith())(data)).resolves.toBe(data)
+  })
+
+  it('clears a governorate left over on an All Lebanon issue', async () => {
+    const data: Record<string, unknown> = { coverage: 'all-lebanon', governorate: 'matn' }
+    await runWith(lookupsWith())(data)
+    expect(data.governorate).toBeNull()
+  })
+
+  it('refuses changing the coverage or the governorate once the issue has a range', async () => {
+    const lookups = lookupsWith({ ranges: [{ to: 20 }] })
+    await refused(
+      runWith(lookups)({ coverage: 'governorate', governorate: 'matn' }, { id: 1 }),
+      new RegExp(COVERAGE_LOCKED_MESSAGE.slice(0, 30)),
+    )
+    await refused(
+      runWith(lookups)(
+        { coverage: 'governorate', governorate: 'beirut' },
+        { id: 1, coverage: 'governorate', governorate: 'matn' },
+      ),
+      /delete them/,
+    )
+    await refused(
+      runWith(lookups)(
+        { coverage: 'all-lebanon' },
+        { id: 1, coverage: 'governorate', governorate: 'matn' },
+      ),
+      /delete them/,
+    )
+    expect(lookups.ranges).toHaveBeenCalledWith(1, expect.anything())
+  })
+
+  it('lets an old issue (no coverage stored) be saved again with the default', async () => {
+    const lookups = lookupsWith({ ranges: [{ to: 20 }] })
+    const data = { coverage: 'all-lebanon', governorate: null }
+    await expect(runWith(lookups)(data, { id: 1, coverage: null })).resolves.toBe(data)
+    const same = { coverage: 'governorate', governorate: 'matn' }
+    await expect(
+      runWith(lookups)(same, { id: 1, coverage: 'governorate', governorate: 'matn' }),
+    ).resolves.toBe(same)
+  })
+
+  it('allows the change while the issue has no range', async () => {
+    const data = { coverage: 'governorate', governorate: 'matn' }
+    await expect(runWith(lookupsWith())(data, { id: 1 })).resolves.toBe(data)
+  })
+
+  it('does not look at the ranges when the coverage is not being set', async () => {
+    const lookups = lookupsWith({ ranges: [{ to: 20 }] })
+    await runWith(lookups)({ title: 'x' }, { id: 1, coverage: 'governorate', governorate: 'matn' })
+    expect(lookups.ranges).not.toHaveBeenCalled()
   })
 })

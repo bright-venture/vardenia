@@ -8,28 +8,31 @@ import type {
 } from 'payload'
 import {
   DEFAULT_LISTING_TOTAL,
+  GOVERNORATES,
   LISTING_GOVERNORATES,
   blockNumbers,
   blockProblem,
   blocksOverlap,
   nextFreeNumber,
+  PAGE_LAYOUT_LABELS,
   orphanedNumbers,
+  rangePlaceProblem,
   rangeProblem,
   type NumberRange,
   type PageBlock,
 } from '@vardenia/core'
 import { isStaff } from '../access/index'
-import { issuePageCount, toSlots } from './Issues'
+import { GOVERNORATE_NAMES, issuePageCount, toSlots } from './Issues'
+import { cityOptions } from './options'
 
-const GOVERNORATE_LABELS: Record<(typeof LISTING_GOVERNORATES)[number], string> = {
-  keserwan: 'Keserwan',
-  'north-lebanon': 'North Lebanon',
-  beirut: 'Beirut',
-  beqaa: 'Beqaa',
-  'south-lebanon': 'South Lebanon',
-  chouf: 'Chouf',
-  matn: 'Matn',
-}
+/** Which governorate each city belongs to. */
+const CITY_PARENT: Record<string, string> = Object.fromEntries(
+  GOVERNORATES.flatMap((g) => g.cities.map((city) => [city.slug, g.slug])),
+)
+
+/** A city as the admin or the API hands it in; blank is none. */
+const cityOrNull = (value: unknown): string | null =>
+  typeof value === 'string' && value !== '' ? value : null
 
 const idOf = (value: unknown): number | string | null => {
   if (typeof value === 'number' || typeof value === 'string') return value
@@ -59,7 +62,10 @@ export function validateRangeAgainstIssue(args: {
 }
 
 /**
- * The numbers listings of this governorate hold in this issue.
+ * The numbers listings hold in one block of this issue: the listings of its
+ * governorate, and of its city when the block has one (an issue for one
+ * governorate). A governorate-wide block (All Lebanon) looks at every listing
+ * of the governorate, as before.
  *
  * Injectable: the businesses fields that carry them (`issue`, `listingNumber`)
  * arrive after this collection, so the generated types do not know them yet.
@@ -67,9 +73,10 @@ export function validateRangeAgainstIssue(args: {
 export async function heldNumbers(
   payload: Payload,
   issueId: number | string,
-  governorate: string,
+  place: { governorate: string; city?: string | null },
   req?: PayloadRequest,
 ): Promise<number[]> {
+  const city = cityOrNull(place.city)
   const found = await payload.find({
     collection: 'businesses',
     // Cast: `issue` and `listingNumber` are not in the generated types until
@@ -77,7 +84,8 @@ export async function heldNumbers(
     where: {
       and: [
         { issue: { equals: issueId } },
-        { governorate: { equals: governorate } },
+        { governorate: { equals: place.governorate } },
+        ...(city ? [{ city: { equals: city } }] : []),
         { listingNumber: { exists: true } },
       ],
     } as never,
@@ -152,6 +160,7 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
   const merged = { ...(originalDoc ?? {}), ...(data ?? {}) } as {
     issue?: unknown
     governorate?: string
+    city?: unknown
     from?: number
     to?: number
     firstPage?: unknown
@@ -160,6 +169,9 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
   const issueId = idOf(merged.issue)
   if (issueId === null || !merged.governorate || !req?.payload) return data
   const { payload } = req
+  const city = cityOrNull(merged.city)
+  // A blank select is no city (stored NULL, which the unique indexes rely on).
+  if (data && 'city' in data && city === null) data.city = null
 
   const issue = await payload.findByID({
     collection: 'issues',
@@ -184,6 +196,15 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     depth: 0,
     overrideAccess: true,
   })
+
+  // The issue's coverage decides whether this block names a city (core rangePlaceProblem).
+  const placeProblem = rangePlaceProblem({
+    issue: issue as { coverage?: unknown; governorate?: unknown },
+    governorate: merged.governorate,
+    city,
+    others: siblings.docs as unknown as { governorate: string; city?: string | null }[],
+  })
+  if (placeProblem) throw new APIError(placeProblem, 400, null, true)
 
   /*
    * An issue built from a template: the admin enters the governorate's pages,
@@ -255,15 +276,23 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
   if (operation === 'update' && originalDoc) {
     const oldIssue = idOf(originalDoc.issue)
     const oldGovernorate = originalDoc.governorate as string | undefined
+    const oldCity = cityOrNull(originalDoc.city)
     const moved =
       oldIssue !== null &&
       oldGovernorate !== undefined &&
-      (String(oldIssue) !== String(issueId) || oldGovernorate !== merged.governorate)
+      (String(oldIssue) !== String(issueId) ||
+        oldGovernorate !== merged.governorate ||
+        oldCity !== city)
     if (moved) {
-      const stranded = await heldNumbers(payload, oldIssue, oldGovernorate, req)
+      const stranded = await heldNumbers(
+        payload,
+        oldIssue,
+        { governorate: oldGovernorate, city: oldCity },
+        req,
+      )
       if (stranded.length > 0) {
         throw new APIError(
-          `Listings in ${oldGovernorate} already hold ${[...stranded].sort((a, b) => a - b).join(', ')} in this range. Give them other numbers before moving it.`,
+          `Listings in ${oldCity ? `${oldGovernorate} / ${oldCity}` : oldGovernorate} already hold ${[...stranded].sort((a, b) => a - b).join(', ')} in this range. Give them other numbers before moving it.`,
           400,
           null,
           true,
@@ -273,11 +302,14 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
   }
 
   const held =
-    operation === 'update' ? await heldNumbers(payload, issueId, merged.governorate, req) : []
+    operation === 'update'
+      ? await heldNumbers(payload, issueId, { governorate: merged.governorate, city }, req)
+      : []
 
   const problem = validateRangeAgainstIssue({
     candidate: {
       governorate: merged.governorate,
+      city,
       from,
       to,
     },
@@ -303,10 +335,15 @@ const refuseDeletingHeldRange: CollectionBeforeDeleteHook = async ({ id, req }) 
     depth: 0,
     overrideAccess: true,
     req,
-  })) as unknown as { issue?: unknown; governorate?: string }
+  })) as unknown as { issue?: unknown; governorate?: string; city?: unknown }
   const issueId = idOf(range.issue)
   if (issueId === null || !range.governorate) return
-  const held = await heldNumbers(req.payload, issueId, range.governorate, req)
+  const held = await heldNumbers(
+    req.payload,
+    issueId,
+    { governorate: range.governorate, city: cityOrNull(range.city) },
+    req,
+  )
   if (held.length === 0) return
   throw new APIError(
     `Listings already hold ${[...held].sort((a, b) => a - b).join(', ')} in this range. Give them other numbers before deleting it.`,
@@ -314,6 +351,26 @@ const refuseDeletingHeldRange: CollectionBeforeDeleteHook = async ({ id, req }) 
     null,
     true,
   )
+}
+
+/**
+ * "Slots 33-60: 28 slots (Half page 28)": what a block's numbers hold, read off
+ * the issue's slots. Shown read-only on the range, so staff see how many
+ * listings the page range took without counting.
+ */
+export function blockSlotSummary(slotsValue: unknown, from: unknown, to: unknown): string {
+  if (typeof from !== 'number' || typeof to !== 'number') return ''
+  const inside = toSlots(slotsValue).filter((slot) => slot.number >= from && slot.number <= to)
+  if (inside.length === 0) return 'No slots in this block.'
+  const byLayout = new Map<string, number>()
+  for (const slot of inside) {
+    byLayout.set(slot.layout, (byLayout.get(slot.layout) ?? 0) + 1)
+  }
+  const parts = [...byLayout].map(
+    ([layout, count]) =>
+      `${PAGE_LAYOUT_LABELS[layout as keyof typeof PAGE_LAYOUT_LABELS]} ${count}`,
+  )
+  return `Slots ${from}-${to}: ${inside.length} ${inside.length === 1 ? 'slot' : 'slots'} (${parts.join(', ')}).`
 }
 
 /**
@@ -327,14 +384,21 @@ export const ListingRanges: CollectionConfig = {
   labels: { singular: 'Listing number range', plural: 'Listing number ranges' },
   admin: {
     useAsTitle: 'governorate',
-    defaultColumns: ['issue', 'governorate', 'firstPage', 'lastPage', 'from', 'to'],
+    defaultColumns: ['issue', 'governorate', 'city', 'firstPage', 'lastPage', 'from', 'to'],
     group: 'Magazine',
     description:
-      "Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.",
+      "Each governorate owns one block of the issue's listing numbers; on an issue for one governorate, each of its cities does. Blocks cannot overlap or run past the issue total.",
   },
   access: { read: isStaff, create: isStaff, update: isStaff, delete: isStaff },
-  // One row per governorate per issue; also stops a double-click making two.
-  indexes: [{ fields: ['issue', 'governorate'], unique: true }],
+  /*
+   * One row per governorate and city per issue; also stops a double-click
+   * making two. Postgres treats NULL cities as distinct, so this alone would
+   * let an All Lebanon issue have two governorate-wide rows for one
+   * governorate: migration 20261127_110000 adds a partial unique index on
+   * (issue, governorate) WHERE city IS NULL for that, and the hook (core
+   * rangePlaceProblem) refuses it first with a readable message.
+   */
+  indexes: [{ fields: ['issue', 'governorate', 'city'], unique: true }],
   hooks: { beforeValidate: [checkRange], beforeDelete: [refuseDeletingHeldRange] },
   fields: [
     { name: 'issue', type: 'relationship', relationTo: 'issues', required: true, index: true },
@@ -342,7 +406,30 @@ export const ListingRanges: CollectionConfig = {
       name: 'governorate',
       type: 'select',
       required: true,
-      options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_LABELS[value], value })),
+      options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_NAMES[value], value })),
+    },
+    {
+      // Only on an issue for one governorate (Issues `coverage`); the hook
+      // enforces it either way.
+      name: 'city',
+      label: 'City',
+      type: 'select',
+      options: cityOptions,
+      // The same values as a business's city, so the same database type.
+      enumName: 'enum_businesses_city',
+      filterOptions: ({ options, data }) => {
+        const governorate = (data as { governorate?: unknown } | undefined)?.governorate
+        return typeof governorate === 'string' && governorate
+          ? options.filter(
+              (option) =>
+                CITY_PARENT[typeof option === 'string' ? option : option.value] === governorate,
+            )
+          : options
+      },
+      admin: {
+        description:
+          "For an issue that covers one governorate: the city this block is for, one of that governorate's cities (each city once). Businesses of that city are offered only this block. Leave empty on an All Lebanon issue.",
+      },
     },
     {
       name: 'firstPage',
@@ -363,6 +450,10 @@ export const ListingRanges: CollectionConfig = {
       required: true,
       min: 1,
       validate: numberOrPages,
+      // Not shown: with a template the hook fills it from the pages (see the
+      // slot count below). Still stored, and still the number the rest of the
+      // code reads.
+      admin: { hidden: true },
       // Starts after the highest number any range reaches, so a new
       // governorate's block begins where the last one ended. A best guess: the
       // default cannot see which issue the form has chosen, so it uses the
@@ -377,8 +468,38 @@ export const ListingRanges: CollectionConfig = {
       required: true,
       min: 1,
       validate: numberOrPages,
+      admin: { hidden: true },
+    },
+    {
+      // Worked out on read from the issue's slots and this block's numbers.
+      name: 'slotSummary',
+      label: 'Slots in this block',
+      type: 'textarea',
+      virtual: true,
+      access: { create: () => false, update: () => false },
       admin: {
-        description: 'Typed for an issue without a template; filled from the pages otherwise.',
+        readOnly: true,
+        description: 'Filled from the pages when you save.',
+        condition: (_data, _sibling, { operation }) => operation === 'update',
+      },
+      hooks: {
+        afterRead: [
+          async ({ data, req }) => {
+            const issueId = idOf(data?.issue)
+            if (issueId === null) return ''
+            const issue = (await req.payload
+              .findByID({
+                collection: 'issues',
+                id: issueId,
+                depth: 0,
+                overrideAccess: true,
+                req,
+                select: { slots: true },
+              })
+              .catch(() => null)) as { slots?: unknown } | null
+            return blockSlotSummary(issue?.slots, data?.from, data?.to)
+          },
+        ],
       },
     },
   ],

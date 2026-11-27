@@ -107,6 +107,10 @@ const defaultSlots = [
 function stub(
   opts: {
     range?: boolean
+    /** The ranges every listing-ranges query answers; default: beirut 10-20 in issue 7. */
+    ranges?: unknown[]
+    /** Coverage fields of issue 7; default: none (All Lebanon). */
+    issue?: Record<string, unknown>
     /** The issue's price table; default: full page at 500, half page at 300. */
     layouts?: unknown[] | null
     /** The issue's slots; default: defaultSlots. null for a legacy issue. */
@@ -131,7 +135,9 @@ function stub(
         docs:
           opts.range === false
             ? []
-            : [{ issue: { id: 7, title: 'Summer' }, governorate: 'beirut', from: 10, to: 20 }],
+            : (opts.ranges ?? [
+                { issue: { id: 7, title: 'Summer' }, governorate: 'beirut', from: 10, to: 20 },
+              ]),
       }
     }
     if (collection === 'businesses')
@@ -158,6 +164,7 @@ function stub(
   ]
   const findByID = vi.fn(async () => ({
     id: 7,
+    ...opts.issue,
     slots: opts.slots === undefined ? defaultSlots : opts.slots,
     layouts: opts.layouts === undefined ? defaultLayouts : opts.layouts,
   }))
@@ -185,6 +192,7 @@ describe('listNumbersFor', () => {
       {
         issueId: 7,
         issueTitle: 'Summer',
+        coverage: 'all-lebanon',
         from: 10,
         to: 20,
         taken: [11],
@@ -286,6 +294,7 @@ describe('listNumbersFor', () => {
       {
         issueId: 7,
         issueTitle: 'Summer',
+        coverage: 'all-lebanon',
         from: 10,
         to: 20,
         taken: [11],
@@ -838,5 +847,116 @@ describe('startPlaceSubmission', () => {
       message: 'We could not save that. Please try again.',
     })
     expect(reportError).toHaveBeenCalled()
+  })
+})
+
+/**
+ * An issue for one governorate (27 November 2026): its blocks are cities, and
+ * a business is offered, and may start in, only the block of its own city.
+ */
+describe('an issue for one governorate', () => {
+  const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+  const cityRanges = [
+    { issue: { id: 7, title: 'Matn' }, governorate: 'matn', city: 'dbayeh', from: 1, to: 9 },
+    { issue: { id: 7, title: 'Matn' }, governorate: 'matn', city: 'broummana', from: 10, to: 20 },
+  ]
+  const businessQuery = (s: Stub) =>
+    JSON.stringify(
+      s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'businesses')?.where,
+    )
+
+  it("lists the block of the business's city, holding numbers by that city", async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const out = await listNumbersFor(s, 'matn', 'broummana')
+    expect(out).toHaveLength(1)
+    expect(out[0]).toMatchObject({ issueId: 7, issueTitle: 'Matn', from: 10, to: 20 })
+    expect(out[0]!.layouts.map((l) => l.layout)).toEqual(['full-page', 'half-page'])
+    expect(businessQuery(s)).toContain('"city":{"equals":"broummana"}')
+  })
+
+  it('lists nothing for a city of the governorate without a block', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    expect(await listNumbersFor(s, 'matn', 'bikfaya')).toEqual([])
+  })
+
+  it('without a city, says the issue needs one: no block, no numbers, no holder lookup', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const needsCity = {
+      issueId: 7,
+      issueTitle: 'Matn',
+      coverage: 'governorate',
+      from: null,
+      to: null,
+      taken: [],
+      currency: 'USD',
+      layouts: [],
+    }
+    expect(await listNumbersFor(s, 'matn')).toEqual([needsCity])
+    expect(await listNumbersFor(s, 'matn', null)).toEqual([needsCity])
+    expect(s.find.mock.calls.some((c) => c[0].collection === 'businesses')).toBe(false)
+  })
+
+  it('marks every block it lists with its issue coverage', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    expect((await listNumbersFor(s, 'matn', 'broummana'))[0]!.coverage).toBe('governorate')
+  })
+
+  it('lists nothing for another governorate', async () => {
+    const s = stub({ ranges: cityRanges, issue: { coverage: 'governorate', governorate: 'chouf' } })
+    expect(await listNumbersFor(s, 'matn', 'broummana')).toEqual([])
+  })
+
+  it('gives an All Lebanon issue its governorate block whatever the city, not filtering by city', async () => {
+    const s = stub({ issue: { coverage: 'all-lebanon' } })
+    const out = await listNumbersFor(s, 'beirut', 'beirut')
+    expect(out[0]).toMatchObject({ from: 10, to: 20, taken: [11] })
+    expect(businessQuery(s)).not.toContain('"city"')
+  })
+
+  it('starts in the block of its own city', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ governorate: 'matn', city: 'broummana', listingNumber: 12 }),
+    })
+    expect(out).toMatchObject({ ok: true, price: 500 })
+    expect(businessQuery(s)).toContain('"city":{"equals":"broummana"}')
+  })
+
+  it("refuses a number of another city's block, writing nothing", async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ governorate: 'matn', city: 'dbayeh', listingNumber: 12 }),
+    })
+    expect(out).toMatchObject({ ok: false, code: 'number-unavailable' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a city with no block as number-unavailable, writing nothing', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ governorate: 'matn', city: 'bikfaya', listingNumber: 12 }),
+    })
+    expect(out).toEqual({
+      ok: false,
+      code: 'number-unavailable',
+      message: 'That number is no longer available. Please choose another.',
+    })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('still refuses a layout that is not on sale as a layout problem first', async () => {
+    const s = stub({
+      ranges: cityRanges,
+      issue: matnOnly,
+      layouts: [{ layout: 'full-page', offered: false, price: 500 }],
+    })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ governorate: 'matn', city: 'bikfaya' }),
+    })
+    expect(out).toMatchObject({ ok: false, code: 'layout-unavailable' })
   })
 })

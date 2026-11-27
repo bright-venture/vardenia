@@ -27,6 +27,7 @@ const ISSUES = [
   {
     issueId: 7,
     issueTitle: 'Summer',
+    coverage: 'all-lebanon',
     from: 10,
     to: 20,
     taken: [11],
@@ -39,6 +40,16 @@ const ISSUES = [
         free: 1,
       },
     ],
+  },
+  // An issue for one governorate asked without a city: the form must ask for one.
+  {
+    issueId: 8,
+    issueTitle: 'Matn',
+    coverage: 'governorate',
+    from: null,
+    to: null,
+    taken: [],
+    layouts: [],
   },
 ]
 
@@ -61,6 +72,25 @@ describe('GET /place-submissions/numbers', () => {
     expect(r.cache).toBe('no-store')
     expect(r.body).toEqual({ ok: true, issues: ISSUES })
     expect(vi.mocked(listNumbersFor).mock.calls[0]![1]).toBe('beirut')
+  })
+
+  it('passes a known city of the governorate on, and no city as undefined', async () => {
+    vi.mocked(listNumbersFor).mockResolvedValue([] as never)
+    await get('?governorate=matn&city=broummana')
+    expect(vi.mocked(listNumbersFor).mock.calls[0]!.slice(1)).toEqual(['matn', 'broummana'])
+    await get('?governorate=matn')
+    expect(vi.mocked(listNumbersFor).mock.calls[1]!.slice(1)).toEqual(['matn', undefined])
+    await get('?governorate=matn&city=')
+    expect(vi.mocked(listNumbersFor).mock.calls[2]!.slice(1)).toEqual(['matn', undefined])
+  })
+
+  it('refuses a city that is not in the governorate with 400, reading nothing', async () => {
+    for (const query of ['?governorate=matn&city=jounieh', '?governorate=matn&city=atlantis']) {
+      const r = await get(query)
+      expect(r.status).toBe(400)
+      expect(r.body).toEqual({ ok: false, message: 'Choose a city of that governorate.' })
+    }
+    expect(listNumbersFor).not.toHaveBeenCalled()
   })
 
   it('reports a failure and answers 500 without details', async () => {

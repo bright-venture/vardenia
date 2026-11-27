@@ -121,7 +121,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const generation = useRef(0)
   const stayRef = useRef<HTMLButtonElement>(null)
 
-  const numbers = usePlaceNumbers(state.governorate)
+  const numbers = usePlaceNumbers(state.governorate, state.city)
 
   useEffect(() => {
     mounted.current = true
@@ -659,8 +659,18 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 required
                 disabled={cities.length === 0}
                 value={state.city}
-                // Only the city: the page numbers depend on the region alone.
-                onChange={(e) => set({ city: e.target.value })}
+                // The numbers depend on the city only when an issue for this
+                // governorate is split by city: then a new city offers other
+                // slots, and the number picked for the old one goes. All
+                // Lebanon numbers depend on the region alone.
+                onChange={(e) => {
+                  const next = e.target.value
+                  if (next !== state.city && numbers.needsCity) {
+                    setPick(null)
+                    setNumberNotice(null)
+                  }
+                  set({ city: next })
+                }}
               >
                 <option value="">{t('form.chooseCity')}</option>
                 {cities.map((d) => (
@@ -753,7 +763,9 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             ) : null}
             <div className="mt-3" aria-live="polite">
               {numbers.state === 'idle' ? (
-                <p className="text-ink-500 text-sm">{t('numbers.chooseRegion')}</p>
+                <p className="text-ink-500 text-sm">
+                  {t(numbers.needsCity ? 'numbers.chooseCity' : 'numbers.chooseRegion')}
+                </p>
               ) : numbers.state === 'loading' ? (
                 <p className="text-ink-500 text-sm" role="status">
                   {t('numbers.loading')}

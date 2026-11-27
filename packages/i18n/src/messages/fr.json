@@ -1066,6 +1066,7 @@
       "legend": "Your page number",
       "hint": "Each region has its own pages. Pick a free place: its number becomes your listing number in the magazine.",
       "chooseRegion": "Choose a region above to see its numbers.",
+      "chooseCity": "Choose your city above to see its numbers.",
       "loading": "Loading numbers...",
       "error": "We could not load the numbers.",
       "retry": "Try again",

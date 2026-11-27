@@ -8,7 +8,11 @@ import {
 import { anyone, isAdmin, isStaff, isStaffFieldLevel } from '../access/index'
 import {
   DEFAULT_LISTING_TOTAL,
+  ISSUE_COVERAGES,
+  ISSUE_COVERAGE_LABELS,
+  LISTING_GOVERNORATES,
   PAGE_LAYOUTS,
+  coverageOf,
   PAGE_LAYOUT_LABELS,
   buildSlots,
   isPageLayout,
@@ -206,9 +210,76 @@ const defaultLookups: IssueLookups = {
   },
 }
 
+export const COVERAGE_LOCKED_MESSAGE =
+  'This issue already has listing number ranges: delete them before changing what the issue covers or its governorate.'
+
+/** The governorates' admin labels; ListingRanges uses the same. */
+export const GOVERNORATE_NAMES: Record<(typeof LISTING_GOVERNORATES)[number], string> = {
+  keserwan: 'Keserwan',
+  'north-lebanon': 'North Lebanon',
+  beirut: 'Beirut',
+  beqaa: 'Beqaa',
+  'south-lebanon': 'South Lebanon',
+  chouf: 'Chouf',
+  matn: 'Matn',
+}
+
+const governorateOrNull = (value: unknown): string | null =>
+  typeof value === 'string' && (LISTING_GOVERNORATES as readonly string[]).includes(value)
+    ? value
+    : null
+
+/**
+ * What the issue covers (27 November 2026). All Lebanon: one block per
+ * governorate, as before. One governorate: the issue belongs to that
+ * governorate, and its blocks are its cities (ListingRanges checks those).
+ *
+ * The governorate is needed for a one-governorate issue and cleared for an
+ * All Lebanon one (the admin keeps a hidden field's value). Neither may change
+ * once the issue has a range: those blocks were entered for what it covered.
+ * Issues made before this hold no coverage, read as All Lebanon, so saving one
+ * again with the default is not a change.
+ */
+async function checkCoverage(
+  lookups: IssueLookups,
+  data: Record<string, unknown>,
+  originalDoc: Record<string, unknown> | undefined,
+  req: PayloadRequest | undefined,
+): Promise<void> {
+  if (!('coverage' in data) && !('governorate' in data)) return
+  const coverage = coverageOf('coverage' in data ? data.coverage : originalDoc?.coverage)
+  let governorate: string | null = null
+  if (coverage === 'governorate') {
+    governorate = governorateOrNull(
+      'governorate' in data ? data.governorate : originalDoc?.governorate,
+    )
+    if (governorate === null) {
+      throw new APIError(
+        'An issue for one governorate needs its governorate. Choose it, or set the coverage to All Lebanon.',
+        400,
+        null,
+        true,
+      )
+    }
+  } else {
+    data.governorate = null
+  }
+
+  const issueId = originalDoc?.id as number | string | undefined
+  if (issueId === undefined || !req?.payload) return
+  const coverageBefore = coverageOf(originalDoc?.coverage)
+  const governorateBefore =
+    coverageBefore === 'governorate' ? governorateOrNull(originalDoc?.governorate) : null
+  if (coverageBefore === coverage && governorateBefore === governorate) return
+  if ((await lookups.ranges(issueId, req)).length > 0) {
+    throw new APIError(COVERAGE_LOCKED_MESSAGE, 400, null, true)
+  }
+}
+
 /**
  * The issue's own checks, before Payload validates the fields.
  *
+ * - What the issue covers (see checkCoverage).
  * - The listing total cannot drop under a governorate's range (as before).
  * - The price table: each layout once, prices of at least 1. Checked on create too.
  * - A layout cannot be switched off or removed while a business holds a slot
@@ -217,6 +288,8 @@ const defaultLookups: IssueLookups = {
 export function makeCheckIssue(lookups: IssueLookups): CollectionBeforeValidateHook {
   return async ({ data, originalDoc, req }) => {
     const issueId = originalDoc?.id as number | string | undefined
+    // Before the early return below: a save that only sets the coverage is checked too.
+    if (data) await checkCoverage(lookups, data, originalDoc, req)
     const total = data?.listingTotal
     const layoutsSent = Array.isArray(data?.layouts)
     if (typeof total !== 'number' && !layoutsSent) return data
@@ -336,7 +409,7 @@ export const Issues: CollectionConfig = {
   slug: 'issues',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'issueNumber', 'publishedAt'],
+    defaultColumns: ['title', 'issueNumber', 'coverage', 'governorate', 'publishedAt'],
     group: 'Magazine',
   },
   access: { read: anyone, create: isStaff, update: isStaff, delete: isAdmin },
@@ -358,6 +431,34 @@ export const Issues: CollectionConfig = {
       type: 'date',
       required: true,
       admin: { date: { displayFormat: 'd MMM yyyy' } },
+    },
+    {
+      // Staff-only to read, like the template: the public numbers route reads
+      // it with overrideAccess.
+      name: 'coverage',
+      label: 'Covers',
+      type: 'select',
+      defaultValue: 'all-lebanon',
+      options: ISSUE_COVERAGES.map((value) => ({ label: ISSUE_COVERAGE_LABELS[value], value })),
+      access: { read: isStaffFieldLevel },
+      admin: {
+        description:
+          'All Lebanon: one listing number range per governorate. One governorate: each range is a city of that governorate, and a business is offered only its own city. Cannot change once the issue has a range.',
+      },
+    },
+    {
+      name: 'governorate',
+      label: 'Governorate',
+      type: 'select',
+      options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_NAMES[value], value })),
+      // The same values as a range's governorate, so the same database type.
+      enumName: 'enum_listing_ranges_governorate',
+      access: { read: isStaffFieldLevel },
+      admin: {
+        // Needed then, cleared otherwise: the hook above says so.
+        condition: (data) => data?.coverage === 'governorate',
+        description: 'The one governorate this issue is for. Its ranges are its cities.',
+      },
     },
     {
       name: 'pageCount',

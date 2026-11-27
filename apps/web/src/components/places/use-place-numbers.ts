@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PAGE_LAYOUTS, isPageLayout, type PageLayout } from '@vardenia/core/page-layouts'
 
 /**
- * The listing numbers of one governorate, for the number picker: per issue,
+ * The listing numbers of one governorate and city, for the number picker: per issue,
  * the layouts it offers there, each with its price and its FREE slots (a slot
  * is one listing number at a page and position).
  *
@@ -14,7 +14,14 @@ import { PAGE_LAYOUTS, isPageLayout, type PageLayout } from '@vardenia/core/page
  *
  * # A slow answer for a governorate the owner already left is ignored
  *
- * Every request is tied to a key (the governorate and a reload counter). The
+ * The city counts only for an issue that covers one governorate (27 November
+ * 2026): it has a block per city, and the route lists only the owner's city's.
+ * So the governorate alone is asked first, as before. When the answer says an
+ * issue needs a city (`coverage: 'governorate'` with no block), the hook waits
+ * for the city and asks again with it, and again whenever the city changes.
+ * All Lebanon issues never depend on the city.
+ *
+ * Every request is tied to a key (governorate, city when it counts, and a reload counter). The
  * effect aborts the request it started when the key changes, and the result is
  * stored with its key, so an answer can only be shown for the key it was asked
  * for. While the stored result belongs to another key the state reads
@@ -39,9 +46,13 @@ export interface NumbersLayout {
   free: number
 }
 
+export type NumbersCoverage = 'all-lebanon' | 'governorate'
+
 export interface NumbersIssue {
   issueId: number
   issueTitle: string
+  /** 'governorate': an issue for one governorate, whose blocks are cities. */
+  coverage: NumbersCoverage
   from: number
   to: number
   taken: number[]
@@ -63,8 +74,9 @@ export interface LayoutIssue {
 
 export type NumbersState = 'idle' | 'loading' | 'ready' | 'error'
 
-export function numbersUrl(governorate: string): string {
-  return `/place-submissions/numbers?governorate=${encodeURIComponent(governorate)}`
+export function numbersUrl(governorate: string, city?: string): string {
+  const base = `/place-submissions/numbers?governorate=${encodeURIComponent(governorate)}`
+  return city ? `${base}&city=${encodeURIComponent(city)}` : base
 }
 
 const isWhole = (value: unknown): value is number =>
@@ -116,20 +128,39 @@ function parseLayouts(raw: unknown): NumbersLayout[] {
   return PAGE_LAYOUTS.flatMap((code) => byLayout.get(code) ?? [])
 }
 
-/** The route's issues, or null when the reply is anything else. */
-export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
+export interface NumbersReply {
+  issues: NumbersIssue[]
+  /** An issue for this governorate needs the owner's city before it can offer numbers. */
+  needsCity: boolean
+}
+
+/**
+ * The route's issues, and whether a city is needed, or null when the reply is
+ * anything else. An issue for one governorate asked without a city comes back
+ * with no block (`from`/`to` null): it only says a city is needed, and is not
+ * an issue to pick from.
+ */
+export function parseNumbersReply(body: unknown): NumbersReply | null {
   if (!body || typeof body !== 'object') return null
   const { ok, issues } = body as { ok?: unknown; issues?: unknown }
   if (ok !== true || !Array.isArray(issues)) return null
   const out: NumbersIssue[] = []
+  let needsCity = false
   for (const raw of issues) {
     if (!raw || typeof raw !== 'object') continue
     const issue = raw as Record<string, unknown>
+    const coverage: NumbersCoverage =
+      issue.coverage === 'governorate' ? 'governorate' : 'all-lebanon'
+    if (coverage === 'governorate' && issue.from === null && issue.to === null) {
+      needsCity = true
+      continue
+    }
     if (!isWhole(issue.issueId) || !isWhole(issue.from) || !isWhole(issue.to)) continue
     if (issue.from < 1 || issue.to < issue.from) continue
     out.push({
       issueId: issue.issueId,
       issueTitle: typeof issue.issueTitle === 'string' ? issue.issueTitle : '',
+      coverage,
       from: issue.from,
       to: issue.to,
       taken: Array.isArray(issue.taken) ? issue.taken.filter(isWhole) : [],
@@ -137,7 +168,12 @@ export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
       layouts: parseLayouts(issue.layouts),
     })
   }
-  return out
+  return { issues: out, needsCity }
+}
+
+/** The route's issues, or null when the reply is anything else. */
+export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
+  return parseNumbersReply(body)?.issues ?? null
 }
 
 /**
@@ -188,49 +224,74 @@ interface Stored {
   key: string
   state: 'ready' | 'error'
   issues: NumbersIssue[]
+  needsCity: boolean
 }
 
 const NONE: NumbersIssue[] = []
 
-export function usePlaceNumbers(governorate: string): {
+/**
+ * Asks `url` and stores the answer under `key` unless the request was
+ * aborted first. Returns the abort, for the effect's cleanup.
+ */
+function load(url: string, key: string, store: (stored: Stored) => void): () => void {
+  const controller = new AbortController()
+  const settle = (result: Omit<Stored, 'key'>) => {
+    if (!controller.signal.aborted) store({ key, ...result })
+  }
+  fetch(url, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal })
+    .then(async (response) => {
+      let body: unknown = null
+      try {
+        body = await response.json()
+      } catch {
+        // 429 from the rate limiter is plain text.
+      }
+      const reply = response.ok ? parseNumbersReply(body) : null
+      settle(
+        reply ? { state: 'ready', ...reply } : { state: 'error', issues: NONE, needsCity: false },
+      )
+    })
+    .catch(() => settle({ state: 'error', issues: NONE, needsCity: false }))
+  return () => controller.abort()
+}
+
+export function usePlaceNumbers(
+  governorate: string,
+  city: string,
+): {
   state: NumbersState
   issues: NumbersIssue[]
+  /** True when an issue for this governorate is split by city: the city decides the numbers. */
+  needsCity: boolean
   reload: () => void
 } {
   const [version, setVersion] = useState(0)
-  const [stored, setStored] = useState<Stored | null>(null)
-  const key = `${governorate}#${version}`
+  // The governorate's answer, then (only when it says so) the city's.
+  const [probe, setProbe] = useState<Stored | null>(null)
+  const [detail, setDetail] = useState<Stored | null>(null)
+  const probeKey = `${governorate}#${version}`
+  const detailKey = `${governorate}#${city}#${version}`
+  const probed = probe?.key === probeKey ? probe : null
+  const needsCity = probed?.state === 'ready' && probed.needsCity
 
   useEffect(() => {
     if (!governorate) return
-    const controller = new AbortController()
-    const settle = (result: Omit<Stored, 'key'>) => {
-      if (!controller.signal.aborted) setStored({ key, ...result })
-    }
+    return load(numbersUrl(governorate), probeKey, setProbe)
+  }, [governorate, probeKey])
 
-    fetch(numbersUrl(governorate), {
-      cache: 'no-store',
-      credentials: 'same-origin',
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        let body: unknown = null
-        try {
-          body = await response.json()
-        } catch {
-          // 429 from the rate limiter is plain text.
-        }
-        const issues = response.ok ? parseNumbersResponse(body) : null
-        settle(issues ? { state: 'ready', issues } : { state: 'error', issues: NONE })
-      })
-      .catch(() => settle({ state: 'error', issues: NONE }))
-
-    return () => controller.abort()
-  }, [governorate, key])
+  useEffect(() => {
+    if (!needsCity || !city) return
+    return load(numbersUrl(governorate, city), detailKey, setDetail)
+  }, [needsCity, governorate, city, detailKey])
 
   const reload = useCallback(() => setVersion((v) => v + 1), [])
 
-  if (!governorate) return { state: 'idle', issues: NONE, reload }
-  if (stored?.key !== key) return { state: 'loading', issues: NONE, reload }
-  return { state: stored.state, issues: stored.issues, reload }
+  if (!governorate) return { state: 'idle', issues: NONE, needsCity: false, reload }
+  if (!probed) return { state: 'loading', issues: NONE, needsCity: false, reload }
+  if (!needsCity) {
+    return { state: probed.state, issues: probed.issues, needsCity: false, reload }
+  }
+  if (!city) return { state: 'idle', issues: NONE, needsCity: true, reload }
+  if (detail?.key !== detailKey) return { state: 'loading', issues: NONE, needsCity: true, reload }
+  return { state: detail.state, issues: detail.issues, needsCity: true, reload }
 }

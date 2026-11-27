@@ -8,6 +8,7 @@ import {
   hotelFacilityOptions,
   propertyHighlightOptions,
   isInRange,
+  rangeForPlace,
   normaliseContact,
   validContactValue,
   type ContactField,
@@ -207,7 +208,11 @@ export const validListingNumber = async (
   if (value === null || value === undefined || value === '') return true
   const n = Number(value)
   if (!Number.isInteger(n)) return 'A listing number is a whole number, like 12.'
-  const { issue, governorate } = (data ?? {}) as { issue?: unknown; governorate?: string }
+  const { issue, governorate, city } = (data ?? {}) as {
+    issue?: unknown
+    governorate?: string
+    city?: string | null
+  }
   const issueId = idOf(issue)
   if (issueId === null) return 'Choose the magazine issue before giving a listing number.'
   if (!governorate || !req?.payload) return true
@@ -215,15 +220,34 @@ export const validListingNumber = async (
   const found = await req.payload.find({
     collection: 'listing-ranges',
     where: { and: [{ issue: { equals: issueId } }, { governorate: { equals: governorate } }] },
-    limit: 1,
+    limit: 0,
+    pagination: false,
     depth: 0,
     overrideAccess: true,
     req,
   })
-  const range = found.docs[0] as unknown as NumberRange | undefined
-  if (!range) return `This issue has no number range for ${governorate} yet.`
+  const ranges = found.docs as unknown as NumberRange[]
+  if (ranges.length === 0) return `This issue has no number range for ${governorate} yet.`
+  // Which block is the business's: on an issue for one governorate, its own
+  // city's (core rangeForPlace, as the form and the start route resolve it).
+  // Staff-read fields, hence overrideAccess.
+  const coverage = (await req.payload.findByID({
+    collection: 'issues',
+    id: issueId,
+    depth: 0,
+    overrideAccess: true,
+    disableErrors: true,
+    req,
+  })) as { coverage?: unknown; governorate?: unknown } | null
+  const range = rangeForPlace(ranges, coverage ?? {}, { governorate, city })
+  if (!range) {
+    return city
+      ? `This issue has no number range for ${city} (${governorate}) yet.`
+      : 'This issue is for one governorate: choose the city of this business before giving it a listing number.'
+  }
   if (!isInRange(n, range)) {
-    return `Listing numbers for ${governorate} run from ${range.from} to ${range.to}.`
+    const place = range.city ? `${governorate} / ${range.city}` : governorate
+    return `Listing numbers for ${place} run from ${range.from} to ${range.to}.`
   }
 
   // Trashed listings are not found, and they have given their number back.

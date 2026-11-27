@@ -6,6 +6,7 @@ import {
   issuesForLayout,
   layoutPrice,
   numbersUrl,
+  parseNumbersReply,
   parseNumbersResponse,
   usePlaceNumbers,
   type NumbersIssue,
@@ -31,6 +32,8 @@ describe('parseNumbersResponse', () => {
       {
         issueId: 1,
         issueTitle: 'All Lebanon',
+        // No coverage in the reply: All Lebanon.
+        coverage: 'all-lebanon',
         from: 1,
         to: 90,
         taken: [3],
@@ -144,8 +147,15 @@ describe('parseNumbersResponse', () => {
     ).toEqual([])
   })
 
-  it('builds the URL with the slug escaped', () => {
+  it('builds the URL with the slug escaped, and the city when there is one', () => {
     expect(numbersUrl('north-lebanon')).toBe('/place-submissions/numbers?governorate=north-lebanon')
+    expect(numbersUrl('matn', 'broummana')).toBe(
+      '/place-submissions/numbers?governorate=matn&city=broummana',
+    )
+    expect(numbersUrl('north-lebanon', 'faqra-faraya')).toBe(
+      '/place-submissions/numbers?governorate=north-lebanon&city=faqra-faraya',
+    )
+    expect(numbersUrl('matn', '')).toBe('/place-submissions/numbers?governorate=matn')
   })
 })
 
@@ -154,6 +164,7 @@ describe('issuesForLayout', () => {
     {
       issueId: 1,
       issueTitle: 'Legacy',
+      coverage: 'all-lebanon',
       from: 1,
       to: 9,
       taken: [],
@@ -163,6 +174,7 @@ describe('issuesForLayout', () => {
     {
       issueId: 2,
       issueTitle: 'Summer',
+      coverage: 'all-lebanon',
       from: 1,
       to: 9,
       taken: [],
@@ -213,14 +225,15 @@ describe('usePlaceNumbers', () => {
   let root: Root
   let seen: ReturnType<typeof usePlaceNumbers>
 
-  function Probe({ governorate }: { governorate: string }) {
-    seen = usePlaceNumbers(governorate)
+  function Probe({ governorate, city }: { governorate: string; city: string }) {
+    seen = usePlaceNumbers(governorate, city)
     return null
   }
 
-  const render = (governorate: string) =>
+  // Most tests are about the governorate; any city will do for them.
+  const render = (governorate: string, city = governorate ? 'town' : '') =>
     act(async () => {
-      root.render(<Probe governorate={governorate} />)
+      root.render(<Probe governorate={governorate} city={city} />)
     })
 
   beforeEach(() => {
@@ -248,6 +261,108 @@ describe('usePlaceNumbers', () => {
     await render('')
     expect(seen.state).toBe('idle')
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('asks with the governorate alone for All Lebanon issues, whatever the city', async () => {
+    const fetchMock = vi.fn(async (url: string) => ok(url))
+    vi.stubGlobal('fetch', fetchMock)
+    await render('beirut', '')
+    expect(seen.state).toBe('ready')
+    expect(seen.needsCity).toBe(false)
+    expect(seen.issues[0]!.issueTitle).toBe('/place-submissions/numbers?governorate=beirut')
+    expect(seen.issues[0]!.coverage).toBe('all-lebanon')
+    await render('beirut', 'beirut')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(seen.state).toBe('ready')
+  })
+
+  describe('an issue split by city', () => {
+    const routed = (url: string) =>
+      url.includes('&city=')
+        ? new Response(
+            JSON.stringify({
+              ok: true,
+              issues: [
+                {
+                  issueId: 2,
+                  issueTitle: url,
+                  coverage: 'governorate',
+                  from: 1,
+                  to: 3,
+                  taken: [],
+                },
+              ],
+            }),
+            { status: 200 },
+          )
+        : new Response(
+            JSON.stringify({
+              ok: true,
+              issues: [
+                { issueId: 2, issueTitle: 'Matn', coverage: 'governorate', from: null, to: null },
+              ],
+            }),
+            { status: 200 },
+          )
+
+    it('waits for the city, then asks for it, and again when it changes', async () => {
+      const fetchMock = vi.fn(async (url: string) => routed(url))
+      vi.stubGlobal('fetch', fetchMock)
+      await render('matn', '')
+      expect(seen).toMatchObject({ state: 'idle', needsCity: true, issues: [] })
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      await render('matn', 'broummana')
+      expect(seen.needsCity).toBe(true)
+      expect(seen.issues[0]!.issueTitle).toBe(
+        '/place-submissions/numbers?governorate=matn&city=broummana',
+      )
+      expect(seen.issues[0]!.coverage).toBe('governorate')
+      await render('matn', 'dbayeh')
+      expect(seen.issues[0]!.issueTitle).toBe(
+        '/place-submissions/numbers?governorate=matn&city=dbayeh',
+      )
+    })
+
+    it('ignores a slow answer for a city the owner already left', async () => {
+      let releaseFirst: (r: Response) => void = () => {}
+      const first = new Promise<Response>((resolve) => (releaseFirst = resolve))
+      const fetchMock = vi.fn(async (url: string) =>
+        url.endsWith('city=broummana') ? first : routed(url),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+      await render('matn', 'broummana')
+      await render('matn', 'dbayeh')
+      await act(async () => releaseFirst(routed('/x?governorate=matn&city=broummana')))
+      expect(seen.issues[0]!.issueTitle).toBe(
+        '/place-submissions/numbers?governorate=matn&city=dbayeh',
+      )
+    })
+  })
+
+  it('reads the need for a city from the reply, leaving the empty entry out', () => {
+    expect(
+      parseNumbersReply({
+        ok: true,
+        issues: [
+          { issueId: 2, issueTitle: 'Matn', coverage: 'governorate', from: null, to: null },
+          { issueId: 1, issueTitle: 'All', from: 1, to: 3, taken: [] },
+        ],
+      }),
+    ).toEqual({
+      needsCity: true,
+      issues: [
+        {
+          issueId: 1,
+          issueTitle: 'All',
+          coverage: 'all-lebanon',
+          from: 1,
+          to: 3,
+          taken: [],
+          currency: '',
+          layouts: [],
+        },
+      ],
+    })
   })
 
   it('loads, then is ready, fetching with no-store', async () => {
@@ -309,6 +424,7 @@ describe('layoutPrice', () => {
   const issue = (issueId: number, prices: Record<string, number>): NumbersIssue => ({
     issueId,
     issueTitle: `Issue ${issueId}`,
+    coverage: 'all-lebanon',
     from: 1,
     to: 9,
     taken: [],

@@ -219,11 +219,23 @@ function optionsOf2(f: Loose) {
 describe('listing number', () => {
   const number = field('listingNumber')
   /** A range for every query on listing-ranges; `holders` for the businesses lookup. */
-  const withRange = (range: object | null, holders: object[] = []) => ({
+  const withRange = (
+    range: object | object[] | null,
+    holders: object[] = [],
+    issue: object = {},
+  ) => ({
     payload: {
       find: vi.fn(async ({ collection }: { collection: string }) => ({
-        docs: collection === 'businesses' ? holders : range ? [range] : [],
+        docs:
+          collection === 'businesses'
+            ? holders
+            : Array.isArray(range)
+              ? range
+              : range
+                ? [range]
+                : [],
       })),
+      findByID: vi.fn<(args: unknown) => Promise<object>>(async () => ({ id: 4, ...issue })),
     },
   })
   const beirut = { governorate: 'beirut', from: 100, to: 150 }
@@ -290,6 +302,51 @@ describe('listing number', () => {
       .map((c) => c[0] as Record<string, unknown>)
       .find((a) => a.collection === 'businesses')!
     expect(JSON.stringify(query.where)).not.toContain('not_equals')
+  })
+
+  /**
+   * An issue for one governorate (27 November 2026): a business's number must
+   * be in the block of its own city, so staff changing the city or the number
+   * cannot take it into another city's pages.
+   */
+  describe('on an issue for one governorate', () => {
+    const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+    const blocks = [
+      { governorate: 'matn', city: 'dbayeh', from: 1, to: 20 },
+      { governorate: 'matn', city: 'broummana', from: 21, to: 40 },
+    ]
+    const matn = (city?: string) => ({ issue: 4, governorate: 'matn', city })
+
+    it("accepts a number in the block of the business's city", async () => {
+      const req = withRange(blocks, [], matnOnly)
+      expect(await number.validate!(25, { data: matn('broummana'), req })).toBe(true)
+      expect(req.payload.findByID.mock.calls[0]![0]).toMatchObject({
+        collection: 'issues',
+        id: 4,
+        overrideAccess: true,
+      })
+    })
+
+    it("refuses a number of another city's block, naming the city's own", async () => {
+      const req = withRange(blocks, [], matnOnly)
+      const result = await number.validate!(25, { data: matn('dbayeh'), req })
+      expect(result).toBe('Listing numbers for matn / dbayeh run from 1 to 20.')
+    })
+
+    it('refuses a city with no block, and a business with no city', async () => {
+      const req = withRange(blocks, [], matnOnly)
+      expect(await number.validate!(25, { data: matn('bikfaya'), req })).toBe(
+        'This issue has no number range for bikfaya (matn) yet.',
+      )
+      expect(await number.validate!(25, { data: matn(), req })).toBe(
+        'This issue is for one governorate: choose the city of this business before giving it a listing number.',
+      )
+    })
+
+    it('keeps the governorate block of an All Lebanon issue for any city', async () => {
+      const req = withRange({ governorate: 'matn', city: null, from: 1, to: 40 })
+      expect(await number.validate!(25, { data: matn('dbayeh'), req })).toBe(true)
+    })
   })
 
   it('is unique per issue', () => {

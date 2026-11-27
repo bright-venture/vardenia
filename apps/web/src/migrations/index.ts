@@ -80,6 +80,7 @@ import * as migration_20261126_100000_district_to_city from './20261126_100000_d
 import * as migration_20261126_100000_sample_listings from './20261126_100000_sample_listings'
 import * as migration_20261126_120000_page_layouts from './20261126_120000_page_layouts'
 import * as migration_20261127_100000_template_no_listings from './20261127_100000_template_no_listings'
+import * as migration_20261127_110000_issue_coverage_and_range_city from './20261127_110000_issue_coverage_and_range_city'
 
 export const migrations = [
   {
@@ -491,5 +492,10 @@ export const migrations = [
     up: migration_20261127_100000_template_no_listings.up,
     down: migration_20261127_100000_template_no_listings.down,
     name: '20261127_100000_template_no_listings',
+  },
+  {
+    up: migration_20261127_110000_issue_coverage_and_range_city.up,
+    down: migration_20261127_110000_issue_coverage_and_range_city.down,
+    name: '20261127_110000_issue_coverage_and_range_city',
   },
 ]

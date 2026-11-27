@@ -6,8 +6,12 @@ import {
   isInRange,
   isOffered,
   isSubmittableKind,
+  coverageOf,
   layoutSlots,
+  rangeForPlace,
   slotLastPage,
+  type IssueCoverage,
+  type IssueCoverageFields,
   type NumberRange,
   type PageLayout,
   type PlaceSubmission,
@@ -111,6 +115,8 @@ function paragraphs(text: string): string[] {
 
 interface RangeRow {
   issue: { id: number; title?: string } | number
+  governorate: string
+  city?: string | null
   from: number
   to: number
 }
@@ -133,22 +139,27 @@ export interface LayoutNumbers {
 }
 
 /**
- * An issue's slots and price table, read fresh from the issue. Both are
- * staff-read fields, hence overrideAccess. A legacy issue (no template) has no
- * slots, and so offers no layout.
+ * An issue's slots, price table and coverage, read fresh from the issue. All
+ * are staff-read fields, hence overrideAccess. A legacy issue (no template) has
+ * no slots, and so offers no layout. The coverage decides which of the issue's
+ * blocks serves a business (core rangeForPlace).
  */
 async function issueLayouts(
   payload: Payload,
   issueId: number,
-): Promise<{ slots: Slot[]; prices: PriceRow[] }> {
+): Promise<{ slots: Slot[]; prices: PriceRow[]; coverage: IssueCoverageFields }> {
   const issue = (await payload.findByID({
     collection: 'issues',
     id: issueId,
     depth: 0,
     overrideAccess: true,
     disableErrors: true,
-  })) as { slots?: unknown; layouts?: unknown } | null
-  return { slots: toSlots(issue?.slots), prices: toPriceRows(issue?.layouts) }
+  })) as { slots?: unknown; layouts?: unknown; coverage?: unknown; governorate?: unknown } | null
+  return {
+    slots: toSlots(issue?.slots),
+    prices: toPriceRows(issue?.layouts),
+    coverage: { coverage: issue?.coverage, governorate: issue?.governorate },
+  }
 }
 
 /** The price of a layout when it is on sale in the issue, else null. */
@@ -158,7 +169,7 @@ function offeredPrice(prices: readonly PriceRow[], slots: readonly Slot[], layou
 }
 
 /**
- * Each issue that has a block of numbers for this governorate, which of them
+ * Each issue that has a block of numbers for this governorate (and city), which of them
  * are taken, and per layout on sale in the issue its price and the FREE slots
  * it has inside the block (with page and position, for the label). A layout
  * with slots in the block that are all held is still listed, with `free: 0`,
@@ -166,16 +177,28 @@ function offeredPrice(prices: readonly PriceRow[], slots: readonly Slot[], layou
  * not offered in this governorate and is left out. A number is taken when
  * a listing that is not in the trash holds it (Payload hides trashed documents
  * from `find`). Never says who holds one: only the numbers come back.
+ *
+ * Which block of an issue (core rangeForPlace): an All Lebanon issue gives the
+ * governorate's block, whatever the city; an issue for one governorate gives
+ * only the block of `city`, and nothing for another governorate.
+ *
+ * Each entry says its issue's `coverage`, so the form knows whether the city
+ * matters. Asked without a city, an issue for this one governorate comes back
+ * with no block (`from`/`to` null, no layouts): it tells the form to ask for
+ * the city, then ask again with it. An All Lebanon issue never needs one.
  */
 export async function listNumbersFor(
   payload: Payload,
   governorate: string,
+  city?: string | null,
 ): Promise<
   Array<{
     issueId: number
     issueTitle: string
-    from: number
-    to: number
+    coverage: IssueCoverage
+    /** Null for an issue for one governorate asked without a city. */
+    from: number | null
+    to: number | null
     taken: number[]
     /** The Settings currency the layout prices are in, for the form to show them. */
     currency: string
@@ -193,14 +216,38 @@ export async function listNumbersFor(
   })
   const rows = ranges.docs as unknown as RangeRow[]
   if (rows.length === 0) return []
+  // An issue for one governorate has a block per city: one entry per issue.
+  const byIssue = new Map<number, RangeRow[]>()
+  for (const row of rows) {
+    const issueId = typeof row.issue === 'object' ? row.issue.id : row.issue
+    byIssue.set(issueId, [...(byIssue.get(issueId) ?? []), row])
+  }
   const settings = await getPlaceSettings(payload)
-  return Promise.all(
-    rows.map(async (row) => {
-      const issueId = typeof row.issue === 'object' ? row.issue.id : row.issue
-      const issueTitle = typeof row.issue === 'object' ? (row.issue.title ?? '') : ''
-      const taken = await heldNumbers(payload, issueId, governorate)
+  const issues = await Promise.all(
+    [...byIssue].map(async ([issueId, issueRows]) => {
+      const first = issueRows[0]!
+      const issueTitle = typeof first.issue === 'object' ? (first.issue.title ?? '') : ''
+      const { slots, prices, coverage } = await issueLayouts(payload, issueId)
+      const row = rangeForPlace(issueRows, coverage, { governorate, city })
+      const issueCoverage = coverageOf(coverage.coverage)
+      if (!row) {
+        // This governorate's own issue, asked without a city: say a city is needed.
+        if (issueCoverage === 'governorate' && coverage.governorate === governorate && !city) {
+          return {
+            issueId,
+            issueTitle,
+            coverage: issueCoverage,
+            from: null,
+            to: null,
+            taken: [],
+            currency: settings.currency,
+            layouts: [],
+          }
+        }
+        return null
+      }
+      const taken = await heldNumbers(payload, issueId, { governorate, city: row.city })
       const held = new Set(taken)
-      const { slots, prices } = await issueLayouts(payload, issueId)
       const layouts: LayoutNumbers[] = []
       for (const priceRow of prices) {
         const price = offeredPrice(prices, slots, priceRow.layout)
@@ -228,6 +275,7 @@ export async function listNumbersFor(
       return {
         issueId,
         issueTitle,
+        coverage: issueCoverage,
         from: row.from,
         to: row.to,
         taken,
@@ -236,6 +284,7 @@ export async function listNumbersFor(
       }
     }),
   )
+  return issues.filter((issue) => issue !== null)
 }
 
 /**
@@ -340,12 +389,13 @@ export async function startPlaceSubmission(args: {
       where: {
         and: [{ issue: { equals: input.issue } }, { governorate: { equals: input.governorate } }],
       },
-      limit: 1,
+      limit: 0,
+      pagination: false,
       depth: 0,
       overrideAccess: true,
     })
-    const range = found.docs[0] as unknown as NumberRange | undefined
-    if (!range) {
+    const ranges = found.docs as unknown as NumberRange[]
+    if (ranges.length === 0) {
       return {
         ok: false,
         code: 'no-range',
@@ -357,10 +407,17 @@ export async function startPlaceSubmission(args: {
     // the issue as it is now, never from the browser or an earlier answer. The
     // layout is checked before the number, so a layout that is not on sale is
     // refused as such whatever number came with it.
-    const { slots, prices } = await issueLayouts(payload, input.issue)
+    const { slots, prices, coverage } = await issueLayouts(payload, input.issue)
     const layoutPrice = offeredPrice(prices, slots, input.layout)
     if (layoutPrice === null) {
       return { ok: false, code: 'layout-unavailable', message: LAYOUT_UNAVAILABLE }
+    }
+    // The block for the business's own city on an issue for one governorate
+    // (Broummana's pages for a Broummana business); the governorate's block
+    // otherwise. None: this place has no numbers in the issue.
+    const range = rangeForPlace(ranges, coverage, input)
+    if (!range) {
+      return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     if (!isInRange(input.listingNumber, range)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
@@ -371,7 +428,10 @@ export async function startPlaceSubmission(args: {
     if (!isSlot) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
-    const held = await heldNumbers(payload, input.issue, input.governorate)
+    const held = await heldNumbers(payload, input.issue, {
+      governorate: range.governorate,
+      city: range.city,
+    })
     if (held.includes(input.listingNumber)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }

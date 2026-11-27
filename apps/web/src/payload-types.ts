@@ -1272,16 +1272,18 @@ export interface Issue {
   cover: number | Media;
   publishedAt: string;
   /**
-   * Set from the template when the issue has one.
+   * All Lebanon: one listing number range per governorate. One governorate: each range is a city of that governorate, and a business is offered only its own city. Cannot change once the issue has a range.
    */
+  coverage?: ('all-lebanon' | 'governorate') | null;
+  /**
+   * The one governorate this issue is for. Its ranges are its cities.
+   */
+  governorate?: ('keserwan' | 'north-lebanon' | 'beirut' | 'beqaa' | 'south-lebanon' | 'chouf' | 'matn') | null;
   pageCount?: number | null;
   /**
    * Copies printed. Used to compute scan rate per thousand copies.
    */
   printRun?: number | null;
-  /**
-   * How many numbers the printed issue has. Set from the template (one per slot) when the issue has one. Each governorate takes a block of them under Listing number ranges.
-   */
   listingTotal?: number | null;
   /**
    * Sets the slots, the listing total and the pages. Cannot change once a business holds a number in this issue.
@@ -1731,7 +1733,7 @@ export interface GuestQuestion {
   createdAt: string;
 }
 /**
- * Each governorate owns one block of the issue's listing numbers. Blocks cannot overlap or run past the issue total.
+ * Each governorate owns one block of the issue's listing numbers; on an issue for one governorate, each of its cities does. Blocks cannot overlap or run past the issue total.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "listing-ranges".
@@ -1741,15 +1743,62 @@ export interface ListingRange {
   issue: number | Issue;
   governorate: 'keserwan' | 'north-lebanon' | 'beirut' | 'beqaa' | 'south-lebanon' | 'chouf' | 'matn';
   /**
+   * For an issue that covers one governorate: the city this block is for, one of that governorate's cities (each city once). Businesses of that city are offered only this block. Leave empty on an All Lebanon issue.
+   */
+  city?:
+    | (
+        | 'beirut'
+        | 'dbayeh'
+        | 'broummana'
+        | 'bikfaya'
+        | 'baabda'
+        | 'hammana'
+        | 'aley'
+        | 'bassour'
+        | 'jounieh'
+        | 'harissa'
+        | 'kaslik'
+        | 'ghazir'
+        | 'tabarja'
+        | 'faqra-faraya'
+        | 'jbeil'
+        | 'batroun'
+        | 'chekka'
+        | 'koura'
+        | 'tripoli'
+        | 'zgharta'
+        | 'bsharri'
+        | 'akkar'
+        | 'deir-el-qamar'
+        | 'beiteddine'
+        | 'baakline'
+        | 'moukhtara'
+        | 'barouk'
+        | 'jiyeh'
+        | 'damour'
+        | 'zahle'
+        | 'baalbek'
+        | 'western-beqaa'
+        | 'hermel'
+        | 'chtoura'
+        | 'saghbine'
+        | 'masnaa'
+        | 'sidon'
+        | 'tyre'
+        | 'jezzine'
+      )
+    | null;
+  /**
    * For an issue built from a template: the governorate's first and last page. The numbers are then filled from the slots on those pages.
    */
   firstPage?: number | null;
   lastPage?: number | null;
   from: number;
-  /**
-   * Typed for an issue without a template; filled from the pages otherwise.
-   */
   to: number;
+  /**
+   * Filled from the pages when you save.
+   */
+  slotSummary?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2620,6 +2669,8 @@ export interface IssuesSelect<T extends boolean = true> {
   season?: T;
   cover?: T;
   publishedAt?: T;
+  coverage?: T;
+  governorate?: T;
   pageCount?: T;
   printRun?: T;
   listingTotal?: T;
@@ -2663,10 +2714,12 @@ export interface TemplatesSelect<T extends boolean = true> {
 export interface ListingRangesSelect<T extends boolean = true> {
   issue?: T;
   governorate?: T;
+  city?: T;
   firstPage?: T;
   lastPage?: T;
   from?: T;
   to?: T;
+  slotSummary?: T;
   updatedAt?: T;
   createdAt?: T;
 }

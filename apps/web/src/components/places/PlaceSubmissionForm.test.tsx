@@ -274,6 +274,12 @@ describe('PlaceSubmissionForm, the four steps', () => {
     vi.useRealTimers()
   })
 
+  /** Keserwan, Jbeil: the numbers are asked for once both are chosen. */
+  async function chooseKeserwan() {
+    await setValue(q('select[name="governorate"]'), 'keserwan')
+    await setValue(q('select[name="city"]'), 'jbeil')
+  }
+
   async function fillAndPick() {
     await setValue(q('input[name="name"]'), 'Le Petit Jardin')
     await setValue(q('select[name="kind"]'), 'restaurants')
@@ -302,7 +308,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
     it('switches the preview to template C and shows the number, with placeholders for photos', async () => {
       await click(q('input[name="pageTemplate"][value="c"]'))
       expect(q('[data-template]').getAttribute('data-template')).toBe('c')
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       await click(numberButton(4))
       expect(q('[data-template]').textContent).toContain('VARDENIA - 4')
@@ -311,7 +317,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
 
     it('keeps Next disabled until a number is chosen', async () => {
       expect(nextButton().disabled).toBe(true)
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       expect(nextButton().disabled).toBe(true)
       await click(numberButton(4))
@@ -341,7 +347,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
     })
 
     it('asks for a layout before listing places, then lists only its free slots with its price', async () => {
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       expect(container.textContent).toContain(m.numbers.chooseLayout)
       expect(container.querySelector('button[data-number]')).toBeNull()
       await click(layoutRadio('quarter-page'))
@@ -356,14 +362,14 @@ describe('PlaceSubmissionForm, the four steps', () => {
     })
 
     it('says so when the region does not offer the chosen layout', async () => {
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-spread'))
       expect(container.textContent).toContain(m.numbers.noneForLayout)
       expect(container.querySelector('button[data-number]')).toBeNull()
     })
 
     it('clears the picked number when the layout changes', async () => {
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       await click(numberButton(4))
       expect(nextButton().disabled).toBe(false)
@@ -380,14 +386,14 @@ describe('PlaceSubmissionForm, the four steps', () => {
           ok: true,
           issues: [{ issueId: 3, issueTitle: 'Old', from: 1, to: 10, taken: [], layouts: [] }],
         })
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       expect(container.querySelector('button[data-number]')).toBeNull()
       expect(container.textContent).toContain(m.numbers.noneForLayout)
     })
 
     it('shows field errors next to their inputs without posting', async () => {
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       await click(numberButton(4))
       await pressNext()
@@ -446,8 +452,8 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(q('[data-template]').textContent).toContain('Faqra / Faraya, Keserwan')
     })
 
-    it('never changes the numbers when the city changes', async () => {
-      await setValue(q('select[name="governorate"]'), 'keserwan')
+    it('never changes the All Lebanon numbers when the city changes', async () => {
+      await chooseKeserwan()
       await click(layoutRadio('full-page'))
       await click(numberButton(4))
       const fetched = fetchMock.mock.calls.length
@@ -456,6 +462,58 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(fetchMock.mock.calls.length).toBe(fetched)
       expect(numberButton(4).getAttribute('aria-pressed')).toBe('true')
       expect(nextButton().disabled).toBe(false)
+    })
+
+    /**
+     * An issue for one governorate (27 November 2026): its blocks are cities,
+     * so the route asked without a city says so, and the form asks for the
+     * city, then for that city's numbers.
+     */
+    describe('an issue split by city', () => {
+      const needsCity = () =>
+        json({
+          ok: true,
+          issues: [
+            {
+              issueId: 2,
+              issueTitle: 'Keserwan',
+              coverage: 'governorate',
+              from: null,
+              to: null,
+              taken: [],
+              layouts: [],
+            },
+          ],
+        })
+      const cityUrl = (city: string) =>
+        `/place-submissions/numbers?governorate=keserwan&city=${city}`
+      beforeEach(() => {
+        routes['/place-submissions/numbers?governorate=keserwan'] = needsCity
+        routes[cityUrl('jbeil')] = () => numbersReply()
+        routes[cityUrl('jounieh')] = () => numbersReply()
+      })
+
+      it('asks for the city before listing numbers', async () => {
+        await setValue(q('select[name="governorate"]'), 'keserwan')
+        expect(container.textContent).toContain(m.numbers.chooseCity)
+        expect(calls(cityUrl('jbeil')).length).toBe(0)
+        await setValue(q('select[name="city"]'), 'jbeil')
+        expect(container.textContent).not.toContain(m.numbers.chooseCity)
+        expect(calls(cityUrl('jbeil')).length).toBe(1)
+        await click(layoutRadio('full-page'))
+        expect(numberButton(4).disabled).toBe(false)
+      })
+
+      it("asks for the new city's numbers and clears the picked number when the city changes", async () => {
+        await chooseKeserwan()
+        await click(layoutRadio('full-page'))
+        await click(numberButton(4))
+        expect(nextButton().disabled).toBe(false)
+        await setValue(q('select[name="city"]'), 'jounieh')
+        expect(calls(cityUrl('jounieh')).length).toBe(1)
+        expect(container.querySelector('button[aria-pressed="true"]')).toBeNull()
+        expect(nextButton().disabled).toBe(true)
+      })
     })
 
     it('puts a server field error on the right input', async () => {

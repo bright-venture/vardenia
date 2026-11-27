@@ -3,11 +3,16 @@ import {
   DEFAULT_LISTING_TOTAL,
   LISTING_GOVERNORATES,
   LISTING_NUMBER_MIN,
+  ISSUE_COVERAGES,
   allocatedCount,
+  coverageOf,
+  isCityOf,
   isInRange,
   nextFreeNumber,
   numbersIn,
   orphanedNumbers,
+  rangeForPlace,
+  rangePlaceProblem,
   rangeProblem,
   totalProblem,
   type NumberRange,
@@ -79,5 +84,154 @@ describe('totalProblem', () => {
   it('refuses a total below the highest number in use', () => {
     expect(totalProblem(100, 150)).not.toBeNull()
     expect(totalProblem(408, 150)).toBeNull()
+  })
+})
+
+describe('rangeProblem with city blocks', () => {
+  const broummana: NumberRange = { governorate: 'matn', city: 'broummana', from: 21, to: 40 }
+
+  it('checks two city blocks of one governorate against each other', () => {
+    expect(
+      rangeProblem({ governorate: 'matn', city: 'dbayeh', from: 30, to: 50 }, [broummana], 408),
+    ).toBe('The range overlaps matn / broummana (21-40).')
+    expect(
+      rangeProblem({ governorate: 'matn', city: 'dbayeh', from: 41, to: 50 }, [broummana], 408),
+    ).toBeNull()
+  })
+
+  it('still skips an entry of the same governorate and city (its own old value)', () => {
+    expect(rangeProblem({ ...broummana, from: 25, to: 45 }, [broummana], 408)).toBeNull()
+  })
+})
+
+describe('issue coverage', () => {
+  it('has two kinds, and reads anything else (issues made before it) as All Lebanon', () => {
+    expect(ISSUE_COVERAGES).toEqual(['all-lebanon', 'governorate'])
+    expect(coverageOf('governorate')).toBe('governorate')
+    expect(coverageOf('all-lebanon')).toBe('all-lebanon')
+    expect(coverageOf(null)).toBe('all-lebanon')
+    expect(coverageOf(undefined)).toBe('all-lebanon')
+    expect(coverageOf('mars')).toBe('all-lebanon')
+  })
+
+  it('knows which cities belong to a governorate', () => {
+    expect(isCityOf('matn', 'broummana')).toBe(true)
+    expect(isCityOf('matn', 'jounieh')).toBe(false)
+    expect(isCityOf('atlantis', 'broummana')).toBe(false)
+  })
+})
+
+describe('rangeForPlace', () => {
+  const ranges = [
+    { id: 1, governorate: 'matn', city: null, from: 1, to: 20 },
+    { id: 2, governorate: 'matn', city: 'broummana', from: 21, to: 40 },
+    { id: 3, governorate: 'matn', city: 'dbayeh', from: 41, to: 60 },
+  ]
+  const allLebanon = { coverage: 'all-lebanon' }
+  const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+
+  it("gives an All Lebanon issue's governorate-wide block, whatever the city", () => {
+    expect(rangeForPlace(ranges, allLebanon, { governorate: 'matn', city: 'dbayeh' })?.id).toBe(1)
+    expect(rangeForPlace(ranges, allLebanon, { governorate: 'matn' })?.id).toBe(1)
+    expect(rangeForPlace(ranges, {}, { governorate: 'matn' })?.id).toBe(1)
+    expect(rangeForPlace(ranges, allLebanon, { governorate: 'beirut' })).toBeNull()
+  })
+
+  it("gives a one-governorate issue's block of the same city only", () => {
+    expect(rangeForPlace(ranges, matnOnly, { governorate: 'matn', city: 'dbayeh' })?.id).toBe(3)
+    expect(rangeForPlace(ranges, matnOnly, { governorate: 'matn', city: 'bikfaya' })).toBeNull()
+    expect(rangeForPlace(ranges, matnOnly, { governorate: 'matn' })).toBeNull()
+    expect(rangeForPlace(ranges, matnOnly, { governorate: 'matn', city: null })).toBeNull()
+  })
+
+  it("never gives a one-governorate issue's block to another governorate", () => {
+    const other = { coverage: 'governorate', governorate: 'keserwan' }
+    expect(rangeForPlace(ranges, other, { governorate: 'matn', city: 'dbayeh' })).toBeNull()
+  })
+})
+
+describe('rangePlaceProblem', () => {
+  const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+  const allLebanon = { coverage: 'all-lebanon' }
+
+  it('accepts a city of the issue governorate, once', () => {
+    expect(
+      rangePlaceProblem({ issue: matnOnly, governorate: 'matn', city: 'broummana', others: [] }),
+    ).toBeNull()
+    expect(
+      rangePlaceProblem({
+        issue: matnOnly,
+        governorate: 'matn',
+        city: 'broummana',
+        others: [{ governorate: 'matn', city: 'dbayeh' }],
+      }),
+    ).toBeNull()
+  })
+
+  it('refuses a block with no city on a one-governorate issue', () => {
+    expect(
+      rangePlaceProblem({ issue: matnOnly, governorate: 'matn', city: null, others: [] }),
+    ).toBe('This issue is for Matn only: choose the city of this block.')
+  })
+
+  it('refuses another governorate on a one-governorate issue', () => {
+    expect(
+      rangePlaceProblem({ issue: matnOnly, governorate: 'beirut', city: 'beirut', others: [] }),
+    ).toBe('This issue is for Matn only: choose Matn as the governorate of this block.')
+  })
+
+  it('refuses a city of another governorate', () => {
+    expect(
+      rangePlaceProblem({ issue: matnOnly, governorate: 'matn', city: 'jounieh', others: [] }),
+    ).toBe("Jounieh is not in Matn. Choose one of Matn's cities.")
+  })
+
+  it('refuses a city that already has a block in the issue', () => {
+    expect(
+      rangePlaceProblem({
+        issue: matnOnly,
+        governorate: 'matn',
+        city: 'broummana',
+        others: [{ governorate: 'matn', city: 'broummana' }],
+      }),
+    ).toBe('Broummana already has a block in this issue.')
+  })
+
+  it('refuses a one-governorate issue with no governorate chosen', () => {
+    expect(
+      rangePlaceProblem({
+        issue: { coverage: 'governorate' },
+        governorate: 'matn',
+        city: 'broummana',
+        others: [],
+      }),
+    ).toMatch(/choose its governorate/)
+  })
+
+  it('refuses a city on an All Lebanon issue', () => {
+    expect(
+      rangePlaceProblem({ issue: allLebanon, governorate: 'matn', city: 'broummana', others: [] }),
+    ).toBe(
+      'This issue covers All Lebanon: a block is for a whole governorate. Leave the city empty.',
+    )
+  })
+
+  it('refuses a second block for one governorate on an All Lebanon issue (NULL cities)', () => {
+    expect(
+      rangePlaceProblem({
+        issue: {},
+        governorate: 'matn',
+        city: null,
+        others: [{ governorate: 'matn', city: null }],
+      }),
+    ).toBe('Matn already has a block in this issue.')
+    expect(
+      rangePlaceProblem({
+        issue: {},
+        governorate: 'matn',
+        city: null,
+        others: [{ governorate: 'beirut' }],
+      }),
+    ).toBeNull()
   })
 })
