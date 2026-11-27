@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { regionOfPage } from '@vardenia/core/magazine-view'
@@ -58,6 +58,10 @@ export function IssuePagePreview({
     return map
   }, [data, draft, number])
   const imageFor = useMemo(() => (data ? pageImagesFor(data.regions, data.pages) : null), [data])
+  // A full spread is two pages wide: shown one page at a time, full size, with
+  // a switch between its two pages. Back to its first page when the spread changes.
+  const [shown, setShown] = useState<{ page: number; side: 0 | 1 } | null>(null)
+  const side: 0 | 1 = entry && shown?.page === entry.page ? shown.side : 0
 
   if (!entry || !data) {
     const hint = !issueId
@@ -77,15 +81,59 @@ export function IssuePagePreview({
   }
 
   const region = regionOfPage(mergeRegions(data.regions), entry.page)
-  return (
+  const dir = dirFor(locale)
+  const view = (
     <MagazinePageView
       page={entry}
       businesses={businesses}
       regionName={region ? labels.governorate(region.governorate) : null}
       highlight={number}
       labels={labels}
-      dir={dirFor(locale)}
+      dir={dir}
       imageFor={imageFor}
     />
+  )
+  if (entry.kind !== 'listings' || entry.span !== 2) return view
+
+  // The spread's first page sits on the start side (left in English, right in
+  // Arabic), so which half to slide into view depends on the direction.
+  const offset = (side === 0) === (dir === 'rtl') ? '-50%' : '0%'
+  const pages = [entry.page, entry.page + 1] as const
+  return (
+    <div className="flex flex-col gap-3" data-spread-preview>
+      <div style={{ aspectRatio: PAGE_RATIO }} className="w-full overflow-hidden" dir="ltr">
+        <div
+          className="w-[200%] transition-transform duration-200 motion-reduce:transition-none"
+          style={{ transform: `translateX(${offset})` }}
+          data-side={side}
+        >
+          {view}
+        </div>
+      </div>
+      <div
+        role="group"
+        aria-label={formT('form.previewSpread')}
+        className="flex justify-center gap-2"
+      >
+        {pages.map((page, i) => {
+          const active = side === i
+          return (
+            <button
+              key={page}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setShown({ page: entry.page, side: i as 0 | 1 })}
+              className={`focus-visible:outline-gold-300 inline-flex min-h-11 items-center px-4 text-sm tabular-nums transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                active
+                  ? 'bg-cedar-900 text-surface-base'
+                  : 'border-ink-100 text-ink-900 hover:border-ink-300 hover:bg-surface-raised border'
+              }`}
+            >
+              {t('page', { page })}
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
