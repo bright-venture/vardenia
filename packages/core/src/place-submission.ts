@@ -14,8 +14,6 @@ import { isSubmittableKind, type SubmittableKindSlug } from './taxonomy'
  * `_status` never reaches the record.
  */
 
-export const PAGE_TEMPLATES = ['a', 'b', 'c'] as const
-
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
 /**
@@ -130,7 +128,6 @@ export const placeSubmissionSchema = z
     ownerName: z.string().trim().min(1, 'required').max(120, 'too long'),
     ownerEmail: emailAddress,
     ownerPhone: z.string().trim().min(1, 'required').max(40, 'too long'),
-    pageTemplate: z.enum(PAGE_TEMPLATES),
     // How much of the magazine the business buys; sets the price and the numbers offered.
     layout: z.enum(PAGE_LAYOUTS),
     issue: z.coerce.number().int().positive(),

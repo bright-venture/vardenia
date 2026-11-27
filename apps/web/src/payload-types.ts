@@ -722,7 +722,6 @@ export interface Business {
     ownerEmail?: string | null;
     ownerPhone?: string | null;
     ownerPhoneSearch?: string | null;
-    pageTemplate?: ('a' | 'b' | 'c') | null;
     submittedAt?: string | null;
     reference?: string | null;
     acceptedAt?: string | null;
@@ -2257,7 +2256,6 @@ export interface BusinessesSelect<T extends boolean = true> {
         ownerEmail?: T;
         ownerPhone?: T;
         ownerPhoneSearch?: T;
-        pageTemplate?: T;
         submittedAt?: T;
         reference?: T;
         acceptedAt?: T;

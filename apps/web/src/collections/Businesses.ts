@@ -1172,16 +1172,6 @@ export const Businesses: CollectionConfig = {
           access: submissionAccess,
           admin: { readOnly: true, hidden: true },
         },
-        {
-          name: 'pageTemplate',
-          type: 'select',
-          options: [
-            { label: 'A', value: 'a' },
-            { label: 'B', value: 'b' },
-            { label: 'C', value: 'c' },
-          ],
-          access: submissionAccess,
-        },
         { name: 'submittedAt', type: 'date', access: submissionAccess },
         {
           // VD-<n>, made by lib/submission-reference. Unique where set (Postgres

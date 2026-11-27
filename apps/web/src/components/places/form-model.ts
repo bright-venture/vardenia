@@ -3,10 +3,7 @@ import { fieldErrors } from '@vardenia/core/booking-request'
 import { contactProblemCode } from '@vardenia/core/contact'
 import type { PageLayout } from '@vardenia/core/page-layouts'
 import { SUBMISSION_EMAIL_MESSAGE, placeSubmissionSchema } from '@vardenia/core/place-submission'
-import { categoryOfKind } from '@vardenia/core/taxonomy'
-import { categoryLabel, placeLabel } from '../../lib/labels'
 import type { OpenIssue } from './use-place-issues'
-import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-model'
 
 /**
  * The "add your place" form as data: its state, what it sends, and how the
@@ -20,7 +17,6 @@ import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-
  */
 
 export interface FormState {
-  template: PreviewTemplate
   /** How much of the magazine is bought; null until chosen. Decides the price and the slots offered. */
   layout: PageLayout | null
   /**
@@ -53,7 +49,6 @@ export interface NumberPick {
 
 export function initialFormState(): FormState {
   return {
-    template: 'a',
     layout: null,
     issue: null,
     name: '',
@@ -124,7 +119,6 @@ export function buildSubmission(
     ownerName: state.ownerName,
     ownerEmail: state.ownerEmail,
     ownerPhone: state.ownerPhone,
-    pageTemplate: state.template,
     locale,
   }
   if (state.layout) data.layout = state.layout
@@ -205,26 +199,4 @@ export function checkSubmission(
   }
   if (Object.keys(errors).length === 0) return { ok: true, data }
   return { ok: false, errors }
-}
-
-/** What the page preview shows: translated labels, never slugs. */
-export function previewDataFrom(
-  state: FormState,
-  media: { heroUrl?: string; galleryUrls: string[]; logoUrl?: string; listingNumber?: number },
-  locale: Locale,
-): PreviewData {
-  return {
-    ...emptyPreview(locale),
-    name: state.name,
-    tagline: state.tagline,
-    description: state.description,
-    category: categoryLabel(categoryOfKind(state.kind) ?? '', locale),
-    governorate: placeLabel(state.governorate, state.city, locale),
-    address: state.address,
-    phone: state.publicPhone.trim(),
-    galleryUrls: media.galleryUrls,
-    ...(media.heroUrl ? { heroUrl: media.heroUrl } : {}),
-    ...(media.logoUrl ? { logoUrl: media.logoUrl } : {}),
-    ...(media.listingNumber !== undefined ? { listingNumber: media.listingNumber } : {}),
-  }
 }

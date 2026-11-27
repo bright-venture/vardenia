@@ -9,7 +9,6 @@ export interface ReviewValues {
   ownerName?: unknown
   ownerEmail?: unknown
   ownerPhone?: unknown
-  pageTemplate?: unknown
   submittedAt?: unknown
   reference?: unknown
   termsVersion?: unknown
@@ -50,7 +49,6 @@ export function agreedPrice(values: ReviewValues): string {
 }
 
 export function reviewRows(values: ReviewValues): [string, string][] {
-  const layout = text(values.pageTemplate)
   const accepted = reviewDate(values.termsAcceptedAt)
   const price = agreedPrice(values)
   const rows: [string, string][] = [
@@ -59,7 +57,6 @@ export function reviewRows(values: ReviewValues): [string, string][] {
     ['Owner', text(values.ownerName)],
     ['Email', text(values.ownerEmail)],
     ['Phone', text(values.ownerPhone)],
-    ['Layout', layout ? layout.toUpperCase() : ''],
     ['Submitted', reviewDate(values.submittedAt)],
     ['Terms version', text(values.termsVersion)],
     ['Price agreed', price ? (accepted ? `${price}, accepted ${accepted}` : price) : ''],

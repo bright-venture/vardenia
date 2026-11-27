@@ -6,7 +6,6 @@ const FULL = {
   ownerName: 'Sami Khoury',
   ownerEmail: 'sami@example.com',
   ownerPhone: '+961 3 123 456',
-  pageTemplate: 'b',
   submittedAt: '2026-11-23T10:00:00.000Z',
   reference: 'VD-42',
   termsVersion: '2026-11',
@@ -20,11 +19,12 @@ const FULL = {
 const row = (label: string, values = FULL) => reviewRows(values).find(([l]) => l === label)?.[1]
 
 describe('reviewRows', () => {
-  it('shows owner, layout, submitted, terms, price agreed with when accepted, reference and page', () => {
+  it('shows owner, submitted, terms, price agreed with when accepted, reference and page', () => {
     expect(row('Owner')).toBe('Sami Khoury')
     expect(row('Email')).toBe('sami@example.com')
     expect(row('Phone')).toBe('+961 3 123 456')
-    expect(row('Layout')).toBe('B')
+    // The old A/B/C page design is gone (27 November 2026).
+    expect(row('Layout')).toBeUndefined()
     expect(row('Submitted')).toBe('23 Nov 2026, 12:00')
     expect(row('Terms version')).toBe('2026-11')
     expect(row('Price agreed')).toBe('$20 for 12 months, accepted 23 Nov 2026, 12:00')

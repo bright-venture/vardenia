@@ -13,7 +13,6 @@ const valid = {
   ownerName: 'Sami',
   ownerEmail: 'sami@example.com',
   ownerPhone: '+96170000000',
-  pageTemplate: 'a',
   layout: 'full-page',
   issue: 1,
   listingNumber: 12,
@@ -168,8 +167,9 @@ describe('placeSubmissionSchema', () => {
     expect(r.success && r.data.ownerEmail).toBe('a@b.com')
   })
 
-  it('rejects an unknown page template', () => {
-    expect(parse({ pageTemplate: 'd' }).success).toBe(false)
+  it('no longer takes a page design: the key is stripped', () => {
+    const r = parse({ pageTemplate: 'a' })
+    expect(r.success && 'pageTemplate' in r.data).toBe(false)
   })
 
   it('no longer accepts a website: the key is stripped', () => {

@@ -62,7 +62,6 @@ const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
     ownerName: 'Nour',
     ownerEmail: 'n@x.com',
     ownerPhone: '+9617',
-    pageTemplate: 'a',
     layout: 'full-page',
     issue: 7,
     listingNumber: 12,
@@ -551,7 +550,6 @@ describe('startPlaceSubmission', () => {
       'ownerEmail',
       'ownerName',
       'ownerPhone',
-      'pageTemplate',
       'payment',
       'status',
     ])

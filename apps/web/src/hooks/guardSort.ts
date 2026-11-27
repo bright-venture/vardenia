@@ -68,7 +68,6 @@ export const PROTECTED_SORT_FIELDS = [
   'submission.history.step',
   'submission.history.at',
   'submission.history.by',
-  'submission.pageTemplate',
   'submission.submittedAt',
   'submission.reference',
   'submission.acceptedAt',

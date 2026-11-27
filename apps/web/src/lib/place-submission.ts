@@ -645,7 +645,6 @@ export async function startPlaceSubmission(args: {
         ownerName: input.ownerName,
         ownerEmail: input.ownerEmail,
         ownerPhone: input.ownerPhone,
-        pageTemplate: input.pageTemplate,
         payment: { price, downpaymentAmount },
       },
     }

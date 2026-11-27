@@ -239,7 +239,8 @@ describe('MagazineViewer', () => {
         '/magazine-pages/all-lebanon/005.webp',
       ])
       expect(host.querySelectorAll('[data-printed]')).toHaveLength(2)
-      expect(host.textContent).toContain('You')
+      // The reader's own slot shows the business on it, by name.
+      expect(host.textContent).toContain('Mine')
     } finally {
       printed.on = false
     }

@@ -70,10 +70,10 @@ describe('PlaceSubmissionForm, first paint', () => {
     expect(ar.body.textContent).toContain(getMessages('ar').magazinePlaces.flow.next)
   })
 
-  it('puts the preview above the fields, on template A', () => {
+  it('puts the preview above the fields, asking for an issue first', () => {
     const page = doc(renderToStaticMarkup(wrap('en')))
-    const preview = page.querySelector('[data-template]')!
-    expect(preview.getAttribute('data-template')).toBe('a')
+    const preview = page.querySelector('[data-preview-empty]')!
+    expect(preview.textContent).toBe(getMessages('en').magazinePlaces.form.previewChooseIssue)
     const firstField = page.querySelector('input[name="name"]')!
     expect(
       preview.compareDocumentPosition(firstField) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -230,6 +230,31 @@ describe('PlaceSubmissionForm, the four steps', () => {
       },
       201,
     )
+  /** The issue's pages for the preview: page 3 holds full-page slot 4, in Keserwan. */
+  const magazineReply = () =>
+    json({
+      ok: true,
+      issue: { id: 1, title: 'All Lebanon' },
+      pages: [
+        { page: 1, kind: 'editorial', note: null },
+        {
+          page: 2,
+          kind: 'listings',
+          layout: 'full-page',
+          span: 1,
+          slots: [{ number: 3, position: null }],
+        },
+        {
+          page: 3,
+          kind: 'listings',
+          layout: 'full-page',
+          span: 1,
+          slots: [{ number: 4, position: null }],
+        },
+      ],
+      regions: [{ governorate: 'keserwan', firstPage: 2, lastPage: 3 }],
+      businesses: [],
+    })
   const status = (logo: boolean, hero: boolean, live = true) =>
     json({ ok: true, logoReceived: logo, heroReceived: hero, live })
   const termsReply = () =>
@@ -289,6 +314,8 @@ describe('PlaceSubmissionForm, the four steps', () => {
       '/place-submissions/status': () => status(false, false),
       '/place-submissions/terms': termsReply,
       '/place-submissions/finish': () => json({ ok: true, reference: 'VD-12' }),
+      '/place-submissions/magazine?issue=1&locale=en': magazineReply,
+      '/place-submissions/magazine?issue=2&locale=en': magazineReply,
     }
     fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       const route = routes[url]
@@ -352,14 +379,17 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(link()?.getAttribute('href')).toBe('/en/magazine-places/view?issue=1&number=4')
     })
 
-    it('switches the preview to template C and shows the number, with placeholders for photos', async () => {
-      await click(q('input[name="pageTemplate"][value="c"]'))
-      expect(q('[data-template]').getAttribute('data-template')).toBe('c')
+    it('shows the page of the issue that holds the picked number, with the owner on it', async () => {
+      await setValue(q('input[name="name"]'), 'Le Petit Jardin')
       await chooseKeserwan()
+      expect(q('[data-preview-empty]').textContent).toBe(m.form.previewChoosePage)
       await click(layoutRadio('full-page'))
       await click(numberButton(4))
-      expect(q('[data-template]').textContent).toContain('VARDENIA - 4')
-      expect(q('[data-template]').querySelector('img')).toBeNull()
+      const page = q('[data-page]')
+      expect(page.getAttribute('data-page')).toBe('3')
+      expect(page.querySelector('[data-number="4"]')?.textContent).toContain('Le Petit Jardin')
+      expect(page.querySelector('[data-you]')).not.toBeNull()
+      expect(container.querySelector('[data-preview-empty]')).toBeNull()
     })
 
     it('keeps Next disabled until a number is chosen', async () => {
@@ -389,8 +419,8 @@ describe('PlaceSubmissionForm, the four steps', () => {
         m.form.layouts['three-third'],
         m.form.layouts['quarter-page'],
       ])
-      // The A/B/C page design is still there, unchanged.
-      expect(container.querySelectorAll('input[name="pageTemplate"]')).toHaveLength(3)
+      // The old A/B/C page design is gone: the issue's own template decides the page.
+      expect(container.querySelector('input[name="pageTemplate"]')).toBeNull()
     })
 
     it('asks for a layout before listing places, then lists only its free slots with its price', async () => {
@@ -603,9 +633,11 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(q<HTMLSelectElement>('select[name="governorate"]').value).toBe('')
     })
 
-    it('shows the governorate, with no city, in the preview of an All Lebanon listing', async () => {
+    it('shows the region on the preview page of an All Lebanon listing', async () => {
       await chooseKeserwan()
-      expect(q('[data-template]').textContent).toContain('Keserwan')
+      await click(layoutRadio('full-page'))
+      await click(numberButton(4))
+      expect(q('[data-page] [data-footer]').textContent).toContain('KESERWAN')
     })
 
     it('puts a server field error on the right input', async () => {
@@ -714,7 +746,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
     it('posts the typed description, and shows it on the page preview', async () => {
       await fillAndPick()
       await setValue(q('textarea[name="description"]'), 'Seasonal Lebanese cooking.')
-      expect(q('[data-template]').textContent).toContain('Seasonal Lebanese cooking.')
+      expect(q('[data-page]').textContent).toContain('Seasonal Lebanese cooking.')
       await pressNext()
       const [call] = calls('/place-submissions')
       expect(bodyOf(call!).data).toMatchObject({ description: 'Seasonal Lebanese cooking.' })
@@ -729,13 +761,13 @@ describe('PlaceSubmissionForm, the four steps', () => {
         issue: 1,
         listingNumber: 4,
         locale: 'en',
-        pageTemplate: 'a',
         layout: 'full-page',
         kind: 'restaurants',
         governorate: 'keserwan',
       })
-      // An All Lebanon listing has no city.
+      // An All Lebanon listing has no city, and no page design is sent.
       expect(body.data).not.toHaveProperty('city')
+      expect(body.data).not.toHaveProperty('pageTemplate')
       expect(body.data).not.toHaveProperty('price')
       expect(body.turnstileToken).toBe('ts-1')
       expect(JSON.stringify(body)).not.toMatch(/hero|logo|gallery/)

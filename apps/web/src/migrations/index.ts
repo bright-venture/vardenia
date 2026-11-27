@@ -81,6 +81,7 @@ import * as migration_20261126_100000_sample_listings from './20261126_100000_sa
 import * as migration_20261126_120000_page_layouts from './20261126_120000_page_layouts'
 import * as migration_20261127_100000_template_no_listings from './20261127_100000_template_no_listings'
 import * as migration_20261127_110000_issue_coverage_and_range_city from './20261127_110000_issue_coverage_and_range_city'
+import * as migration_20261127_120000_drop_page_template from './20261127_120000_drop_page_template'
 
 export const migrations = [
   {
@@ -497,5 +498,10 @@ export const migrations = [
     up: migration_20261127_110000_issue_coverage_and_range_city.up,
     down: migration_20261127_110000_issue_coverage_and_range_city.down,
     name: '20261127_110000_issue_coverage_and_range_city',
+  },
+  {
+    up: migration_20261127_120000_drop_page_template.up,
+    down: migration_20261127_120000_drop_page_template.down,
+    name: '20261127_120000_drop_page_template',
   },
 ]

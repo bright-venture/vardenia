@@ -56,7 +56,6 @@ export function SubmissionReview() {
     ownerName: fields?.['submission.ownerName']?.value,
     ownerEmail: fields?.['submission.ownerEmail']?.value,
     ownerPhone: fields?.['submission.ownerPhone']?.value,
-    pageTemplate: fields?.['submission.pageTemplate']?.value,
     submittedAt: fields?.['submission.submittedAt']?.value,
     reference: fields?.['submission.reference']?.value,
     termsVersion: fields?.['submission.terms.version']?.value,

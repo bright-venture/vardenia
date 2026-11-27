@@ -117,7 +117,7 @@ describe('opening times', () => {
 })
 
 describe('submission fields', () => {
-  const names = ['status', 'ownerName', 'ownerEmail', 'ownerPhone', 'pageTemplate', 'submittedAt']
+  const names = ['status', 'ownerName', 'ownerEmail', 'ownerPhone', 'submittedAt']
   const group = field('submission')
   const sub = (name: string) => (group.fields as Loose[]).find((f) => f.name === name)!
 
@@ -133,7 +133,7 @@ describe('submission fields', () => {
     expect(sub('status')).not.toHaveProperty('defaultValue')
   })
 
-  it('offers the review and form statuses, and the templates', () => {
+  it('offers the review and form statuses, and no A/B/C page design', () => {
     expect(optionsOf2(sub('status'))).toEqual([
       'incomplete',
       'abandoned',
@@ -146,7 +146,8 @@ describe('submission fields', () => {
       'rejected',
       'expired',
     ])
-    expect(optionsOf2(sub('pageTemplate'))).toEqual(['a', 'b', 'c'])
+    expect(sub('status')).toBeTruthy()
+    expect((group.fields as Loose[]).some((f) => f.name === 'pageTemplate')).toBe(false)
   })
 })
 

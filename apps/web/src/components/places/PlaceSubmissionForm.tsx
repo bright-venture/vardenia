@@ -4,8 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { PAGE_LAYOUTS, type PageLayout } from '@vardenia/core/page-layouts'
-import { PAGE_TEMPLATES } from '@vardenia/core/place-submission'
-import { submittableKindsByCategory } from '@vardenia/core/taxonomy'
+import { categoryOfKind, submittableKindsByCategory } from '@vardenia/core/taxonomy'
 import { categoryLabel, cityLabel, governorateLabel, subcategoryLabel } from '../../lib/labels'
 import { Turnstile, isTurnstileEnabled, type TurnstileHandle } from '../Turnstile'
 import {
@@ -19,22 +18,21 @@ import {
   PRIMARY_BUTTON,
   SECONDARY_BUTTON,
 } from '../formStyles'
-import { BusinessPagePreview } from './BusinessPagePreview'
 import { formatMoney, postFinish, type FinishResult } from './flow-client'
 import {
   checkSubmission,
   errorKind,
   initialFormState,
   normaliseErrors,
-  previewDataFrom,
   withIssue,
   withPlace,
   type FormState,
   type NumberPick,
 } from './form-model'
+import { IssuePagePreview } from './IssuePagePreview'
 import { NumberPicker } from './NumberPicker'
 import { PhoneStep } from './PhoneStep'
-import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
+import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX } from './preview-model'
 import { postSubmission, type Quote, type SubmitResult } from './submit-client'
 import { TermsStep } from './TermsStep'
 import { ThanksStep } from './ThanksStep'
@@ -93,8 +91,6 @@ interface Session {
   /** The chosen layout's price, snapshotted at the start; shown on step 3. */
   quote: Quote | null
 }
-
-const templateKey = { a: 'A', b: 'B', c: 'C' } as const
 
 const FOCUS_RING =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500'
@@ -491,19 +487,20 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     )
   }
 
-  const previewLabels: PreviewLabels = {
-    name: t('form.name'),
-    tagline: t('form.tagline'),
-    description: t('form.description'),
-    category: t('form.category'),
-    governorate: t('form.governorate'),
-    address: t('form.address'),
-    phone: t('form.publicPhone'),
-    photo: t('form.hero'),
+  // The owner's business as typed so far, placed on the picked number in the
+  // preview. No photos yet: they come from the phone in step 2.
+  const draft = {
+    number: pick?.number ?? 0,
+    name: state.name.trim(),
+    tagline: state.tagline.trim(),
+    category: categoryOfKind(state.kind) ?? '',
+    governorate: state.governorate,
+    address: state.address.trim(),
+    hours: '',
+    phone: state.publicPhone.trim(),
+    description: state.description.trim(),
+    photoUrl: null,
   }
-  // No photos yet: they come from the phone in step 2, so the preview shows
-  // its placeholders.
-  const preview = previewDataFrom(state, { galleryUrls: [], listingNumber: pick?.number }, locale)
 
   const canNext = Boolean(pick) && !busy
 
@@ -566,11 +563,15 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         <div
           ref={previewRef}
           tabIndex={-1}
-          data-template={state.template}
           aria-label={t('form.previewTitle')}
           className={`mx-auto w-full max-w-sm scroll-mt-24 ${FOCUS_RING}`}
         >
-          <BusinessPagePreview template={state.template} data={preview} labels={previewLabels} />
+          <IssuePagePreview
+            issueId={state.issue?.issueId ?? null}
+            number={pick?.number ?? null}
+            draft={draft}
+            locale={locale}
+          />
         </div>
       </section>
 
@@ -695,36 +696,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 {errorLine(placeKey)}
               </div>
             ) : null}
-          </fieldset>
-
-          {/* Layout */}
-          <fieldset className="m-0 min-w-0 border-0 p-0">
-            <legend className={legend}>{t('form.templateLegend')}</legend>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {PAGE_TEMPLATES.map((key) => (
-                <label
-                  key={key}
-                  className="border-ink-100 has-[:checked]:border-cedar-900 has-[:checked]:bg-surface-raised has-[:focus-visible]:outline-gold-500 flex cursor-pointer flex-col gap-1 border p-3 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
-                >
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="pageTemplate"
-                      value={key}
-                      checked={state.template === key}
-                      onChange={() => set({ template: key })}
-                      className={CHECK}
-                    />
-                    <span className="text-ink-900 text-sm font-semibold">
-                      {t(`form.template${templateKey[key]}`)}
-                    </span>
-                  </span>
-                  <span className="text-ink-500 text-xs">
-                    {t(`form.template${templateKey[key]}Hint`)}
-                  </span>
-                </label>
-              ))}
-            </div>
           </fieldset>
 
           {/* The business */}

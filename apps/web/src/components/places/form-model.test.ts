@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { placeSubmissionSchema } from '@vardenia/core/place-submission'
-import { GOVERNORATES } from '@vardenia/core/regions'
-import { CATEGORIES, submittableKindsByCategory } from '@vardenia/core/taxonomy'
+import { submittableKindsByCategory } from '@vardenia/core/taxonomy'
 import {
   buildSubmission,
   checkSubmission,
@@ -9,7 +8,6 @@ import {
   formErrorKey,
   initialFormState,
   normaliseErrors,
-  previewDataFrom,
   withIssue,
   withPlace,
   type FormState,
@@ -113,7 +111,6 @@ describe('buildSubmission', () => {
       issue: 1,
       listingNumber: 47,
       locale: 'ar',
-      pageTemplate: 'a',
       layout: 'full-page',
       kind: 'restaurants',
       acceptsWhish: true,
@@ -155,9 +152,9 @@ describe('buildSubmission', () => {
     expect(data).not.toHaveProperty('layout')
   })
 
-  it('starts with no layout chosen, the A/B/C page design untouched', () => {
+  it('starts with no layout chosen, and never sends a page design', () => {
     expect(initialFormState().layout).toBeNull()
-    expect(initialFormState().template).toBe('a')
+    expect(buildSubmission(filled(), pick, 'en').data).not.toHaveProperty('pageTemplate')
   })
 })
 
@@ -264,24 +261,5 @@ describe('error keys and kinds', () => {
     expect(errorKind('Enter an https:// link on facebook.com or fb.com.')).toBe('link')
     expect(errorKind('Use 6 to 20 characters: digits, spaces, +, - and parentheses.')).toBe('phone')
     expect(errorKind('Invalid input: expected number, received undefined')).toBe('invalid')
-  })
-})
-
-describe('previewDataFrom', () => {
-  it('passes translated labels, never slugs', () => {
-    const state = { ...filled(), publicPhone: '+961 9 000 000' }
-    const data = previewDataFrom(state, { galleryUrls: [], listingNumber: 47 }, 'ar')
-    expect(data.category).toBe(CATEGORIES.find((c) => c.slug === 'food-and-beverage')!.ar)
-    expect(data.governorate).toContain(GOVERNORATES.find((g) => g.slug === 'keserwan')!.ar)
-    expect(data.listingNumber).toBe(47)
-    expect(data.phone).toBe('+961 9 000 000')
-    expect(data.locale).toBe('ar')
-  })
-
-  it('stays blank where the owner has not chosen', () => {
-    const data = previewDataFrom(initialFormState(), { galleryUrls: [] }, 'en')
-    expect(data.category).toBe('')
-    expect(data.governorate).toBe('')
-    expect(data.listingNumber).toBeUndefined()
   })
 })

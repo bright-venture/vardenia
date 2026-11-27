@@ -15,7 +15,6 @@ const DATA = {
   ownerName: 'Sami',
   ownerEmail: 'sami@example.com',
   ownerPhone: '70123456',
-  pageTemplate: 'a',
   layout: 'full-page',
   issue: 1,
   listingNumber: 5,

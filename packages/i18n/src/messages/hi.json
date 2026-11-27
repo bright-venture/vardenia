@@ -1016,6 +1016,8 @@
       "intro": "Choose a layout, tell us about your business and pick your page number. The page above fills in as you type.",
       "previewTitle": "Your page",
       "previewNote": "A preview of your page. It is not public until our team has reviewed and accepted your business.",
+      "previewChooseIssue": "Choose a magazine issue to see your page.",
+      "previewChoosePage": "Pick a page number to see your place on the page.",
       "previewButton": "See my page",
       "templateLegend": "Page layout",
       "templateA": "Hero",

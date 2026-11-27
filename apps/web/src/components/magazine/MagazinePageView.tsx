@@ -187,7 +187,7 @@ function PrintedPage({
                       padding: 'calc(var(--u) * 0.8) calc(var(--u) * 1.6)',
                     }}
                   >
-                    {mine ? labels.you : business?.name}
+                    {mine ? business?.name || labels.you : business?.name}
                   </span>
                 ) : null}
               </div>

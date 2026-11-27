@@ -15,8 +15,10 @@ const source = readFileSync(
 const [up, down] = source.split('export async function down')
 
 describe('migration 20261127_110000_issue_coverage_and_range_city', () => {
-  it('is registered last', () => {
-    expect(migrations.at(-1)?.name).toBe('20261127_110000_issue_coverage_and_range_city')
+  it('is registered right after the "No listings" page type', () => {
+    const names = migrations.map((m) => m.name)
+    const at = names.indexOf('20261127_110000_issue_coverage_and_range_city')
+    expect(names[at - 1]).toBe('20261127_100000_template_no_listings')
   })
 
   it('sets the lock timeout before any change, both ways', () => {
