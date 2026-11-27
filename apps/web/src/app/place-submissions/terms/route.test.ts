@@ -4,14 +4,19 @@ vi.mock('payload', () => ({ getPayload: vi.fn(async () => ({})) }))
 vi.mock('../../../payload.config', () => ({ default: {} }))
 vi.mock('../../../lib/rate-limit', () => ({ withRateLimit: (handler: unknown) => handler }))
 vi.mock('../../../lib/place-settings', () => ({ getPlaceSettings: vi.fn() }))
+vi.mock('../../../lib/place-draft-price', () => ({ draftPrice: vi.fn(async () => null) }))
 
 const { GET } = await import('./route')
 const { downpaymentFor } = await import('../../../lib/place-payment-rules')
 const { getPlaceSettings } = await import('../../../lib/place-settings')
 const { getPayload } = await import('payload')
+const { draftPrice } = await import('../../../lib/place-draft-price')
 
-const get = async () => {
-  const response = await (GET as unknown as () => Promise<Response>)()
+const get = async (token?: string) => {
+  const request = new Request('http://x/place-submissions/terms', {
+    headers: token ? { 'x-place-session': token } : {},
+  })
+  const response = await (GET as unknown as (r: Request) => Promise<Response>)(request)
   return {
     status: response.status,
     cache: response.headers.get('cache-control'),
@@ -69,6 +74,28 @@ describe('GET /place-submissions/terms', () => {
     expect(body.downpaymentAmount).toBe(downpaymentFor(999.99, 33.3))
     expect(body.downpaymentAmount).toBe(333)
     expect(body.balanceDeadlineDays).toBe(45)
+  })
+
+  /**
+   * PRD v7 section 5: a started form's terms come from its draft, so an admin
+   * changing the issue's price after Next changes nothing for that form.
+   */
+  it("answers with the started form's own price and downpayment when its token is sent", async () => {
+    vi.mocked(getPlaceSettings).mockResolvedValue(settings({ pricePerYear: 20 }))
+    vi.mocked(draftPrice).mockResolvedValueOnce({ price: 800, downpaymentAmount: 400 })
+    const { body } = await get('tok-123')
+    expect(vi.mocked(draftPrice).mock.calls.at(-1)?.[1]).toBe('tok-123')
+    expect(body.price).toBe(800)
+    expect(body.downpaymentAmount).toBe(400)
+    expect(body.termsVersion).toBe('2026-11-24')
+  })
+
+  it('falls back to the Settings price for a form with no saved price', async () => {
+    vi.mocked(getPlaceSettings).mockResolvedValue(settings({ pricePerYear: 20 }))
+    vi.mocked(draftPrice).mockResolvedValueOnce(null)
+    const { body } = await get('tok-old')
+    expect(body.price).toBe(20)
+    expect(body.downpaymentAmount).toBe(10)
   })
 
   it('answers 500 with a plain message when the settings cannot be read', async () => {

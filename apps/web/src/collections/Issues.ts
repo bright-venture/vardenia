@@ -14,6 +14,7 @@ import {
   isPageLayout,
   priceRowsDropped,
   priceRowsProblem,
+  slotLabel,
   slotLastPage,
   totalProblem,
   type PageLayout,
@@ -65,6 +66,15 @@ const wholeNumber = (v: unknown, min: number): v is number =>
  * out: the hook alone writes them, so that only happens if the column was
  * edited by hand, and a missing slot is refused later rather than sold.
  */
+/** "1: Pages 1-2 (Full spread)", one line per slot, for the admin. Empty without slots. */
+export function issueSlotList(value: unknown): string {
+  const slots = toSlots(value)
+  if (slots.length === 0) return ''
+  return slots
+    .map((slot) => `${slot.number}: ${slotLabel(slot)} (${PAGE_LAYOUT_LABELS[slot.layout]})`)
+    .join('\n')
+}
+
 export function toSlots(value: unknown): Slot[] {
   if (!Array.isArray(value)) return []
   return value.flatMap((raw) => {
@@ -390,8 +400,24 @@ export const Issues: CollectionConfig = {
       access: { read: isStaffFieldLevel, create: () => false, update: () => false },
       admin: {
         readOnly: true,
-        description: 'Copied from the template when it is assigned. Never edited by hand.',
+        // Hidden in the editor: Payload's JSON editor (Monaco) does not load in
+        // this admin, so staff read the slots in the plain list below instead.
+        hidden: true,
       },
+    },
+    {
+      // The slots above as plain text, worked out on read; nothing stored.
+      name: 'slotList',
+      label: 'Slots',
+      type: 'textarea',
+      virtual: true,
+      access: { read: isStaffFieldLevel, create: () => false, update: () => false },
+      admin: {
+        readOnly: true,
+        description: 'Copied from the template when it is assigned. Never edited by hand.',
+        condition: (data) => toSlots(data?.slots).length > 0,
+      },
+      hooks: { afterRead: [({ data }) => issueSlotList(data?.slots)] },
     },
     {
       /**

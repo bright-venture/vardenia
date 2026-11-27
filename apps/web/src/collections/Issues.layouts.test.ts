@@ -6,6 +6,7 @@ import {
   Issues,
   RANGES_FIRST_MESSAGE,
   makeCheckIssue,
+  issueSlotList,
   makeSnapshotTemplate,
   toSlots,
   type IssueLookups,
@@ -381,5 +382,39 @@ describe('the Issues template fields', () => {
   it('runs the hooks in order', () => {
     expect(Issues.hooks?.beforeValidate).toHaveLength(1)
     expect(Issues.hooks?.beforeChange).toHaveLength(1)
+  })
+})
+
+/** The issue's slots as plain text in the admin (QA run 26 November 2026, LP-IS2). */
+describe('issueSlotList', () => {
+  it('lists every slot with its page and layout, one per line', () => {
+    const slots = buildSlots([
+      { layout: 'full-spread' },
+      { layout: 'half-page' },
+      { layout: 'three-third' },
+    ])
+    expect(issueSlotList(slots).split('\n')).toEqual([
+      '1: Pages 1-2 (Full spread)',
+      '2: Page 3, position 1 (Half page)',
+      '3: Page 3, position 2 (Half page)',
+      '4: Page 4, position 1 (1/3)',
+      '5: Page 4, position 2 (1/3)',
+      '6: Page 4, position 3 (1/3)',
+    ])
+  })
+
+  it('is empty for an issue with no slots', () => {
+    expect(issueSlotList(null)).toBe('')
+    expect(issueSlotList([])).toBe('')
+  })
+
+  it('keeps the slots out of the editor and shows the plain list instead', () => {
+    const fields = Issues.fields as Array<{
+      name?: string
+      admin?: { hidden?: boolean }
+      virtual?: boolean
+    }>
+    expect(fields.find((f) => f.name === 'slots')?.admin?.hidden).toBe(true)
+    expect(fields.find((f) => f.name === 'slotList')?.virtual).toBe(true)
   })
 })

@@ -28,7 +28,7 @@ export const PAGE_LAYOUT_LABELS: Record<PageLayout, string> = {
   'full-spread': 'Full spread',
   'full-page': 'Full page',
   'half-page': 'Half page',
-  'three-third': 'Three third',
+  'three-third': '1/3',
   'quarter-page': '1/4',
 }
 

@@ -40,7 +40,7 @@ describe('page layout codes', () => {
     expect(PAGE_LAYOUT_LABELS['full-spread']).toBe('Full spread')
     expect(PAGE_LAYOUT_LABELS['full-page']).toBe('Full page')
     expect(PAGE_LAYOUT_LABELS['half-page']).toBe('Half page')
-    expect(PAGE_LAYOUT_LABELS['three-third']).toBe('Three third')
+    expect(PAGE_LAYOUT_LABELS['three-third']).toBe('1/3')
     expect(PAGE_LAYOUT_LABELS['quarter-page']).toBe('1/4')
   })
   it('recognises only known codes', () => {

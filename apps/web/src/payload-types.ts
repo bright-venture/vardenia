@@ -248,7 +248,7 @@ export interface Business {
     [k: string]: unknown;
   } | null;
   /**
-   * Required for every listing except a submission that is still incomplete or abandoned.
+   * Required for every listing except a submission that is still incomplete, abandoned or rejected.
    */
   heroImage?: (number | null) | Media;
   /**
@@ -1287,9 +1287,6 @@ export interface Issue {
    * Sets the slots, the listing total and the pages. Cannot change once a business holds a number in this issue.
    */
   template?: (number | null) | Template;
-  /**
-   * Copied from the template when it is assigned. Never edited by hand.
-   */
   slots?:
     | {
         [k: string]: unknown;
@@ -1299,6 +1296,10 @@ export interface Issue {
     | number
     | boolean
     | null;
+  /**
+   * Copied from the template when it is assigned. Never edited by hand.
+   */
+  slotList?: string | null;
   /**
    * Each layout once, with a price of at least 1. A layout with slots held under it cannot be switched off or removed.
    */
@@ -2623,6 +2624,7 @@ export interface IssuesSelect<T extends boolean = true> {
   listingTotal?: T;
   template?: T;
   slots?: T;
+  slotList?: T;
   layouts?:
     | T
     | {

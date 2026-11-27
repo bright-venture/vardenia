@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { APIError } from 'payload'
 import { buildSlots } from '@vardenia/core'
-import { makeGuardPageLayout } from './guardPageLayout'
+import { LAYOUT_SET_ONCE, makeGuardPageLayout, makeRefuseLayoutChange } from './guardPageLayout'
 
 /** Slots 1-2 full page (pages 1-2), 3-4 half page (page 3), 5 full page (page 4). */
 const slots = buildSlots([
@@ -201,6 +201,53 @@ describe('guardPageLayout: an issue with slots only takes numbers with a layout'
     await expect(run('update', moved, { id: 8, issue: 4, listingNumber: null })).resolves.toBe(
       moved,
     )
+    expect(load).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * A changed layout is refused out loud, not dropped quietly by field access
+ * (QA run 26 November 2026, LP-PM2: the API answered 200 and kept the layout).
+ */
+describe('refusing a layout change on the request', () => {
+  const hookWith = (stored: unknown) => {
+    const load = vi.fn(async () => stored)
+    const hook = makeRefuseLayoutChange(load)
+    const run = (operation: string, args: Record<string, unknown>) =>
+      hook({ operation, args, req: {} } as never)
+    return { load, run }
+  }
+
+  it('refuses a different layout with the set-once message', async () => {
+    const { run } = hookWith('half-page')
+    await expect(run('update', { id: 7, data: { pageLayout: 'full-page' } })).rejects.toThrow(
+      LAYOUT_SET_ONCE,
+    )
+    await expect(run('update', { id: 7, data: { pageLayout: null } })).rejects.toBeInstanceOf(
+      APIError,
+    )
+  })
+
+  it('refuses giving a layout to a business that has none', async () => {
+    const { run } = hookWith(null)
+    await expect(run('update', { id: 7, data: { pageLayout: 'half-page' } })).rejects.toThrow(
+      LAYOUT_SET_ONCE,
+    )
+  })
+
+  it('lets the same layout through, as the admin form re-sends it on save', async () => {
+    const { run } = hookWith('half-page')
+    await expect(
+      run('update', { id: 7, data: { pageLayout: 'half-page', name: 'x' } }),
+    ).resolves.toBeTruthy()
+    const none = hookWith(null)
+    await expect(none.run('update', { id: 8, data: { pageLayout: null } })).resolves.toBeTruthy()
+  })
+
+  it('does not look the business up when no layout is sent, or on create', async () => {
+    const { load, run } = hookWith('half-page')
+    await run('update', { id: 7, data: { name: 'x' } })
+    await run('create', { data: { pageLayout: 'half-page' } })
     expect(load).not.toHaveBeenCalled()
   })
 })

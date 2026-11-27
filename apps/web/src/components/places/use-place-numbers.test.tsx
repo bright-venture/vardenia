@@ -4,6 +4,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import {
   issuesForLayout,
+  layoutPrice,
   numbersUrl,
   parseNumbersResponse,
   usePlaceNumbers,
@@ -300,5 +301,50 @@ describe('usePlaceNumbers', () => {
     await act(async () => seen.reload())
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(seen.state).toBe('ready')
+  })
+})
+
+/** PRD v7 section 9: the price beside each layout in the size choice. */
+describe('layoutPrice', () => {
+  const issue = (issueId: number, prices: Record<string, number>): NumbersIssue => ({
+    issueId,
+    issueTitle: `Issue ${issueId}`,
+    from: 1,
+    to: 9,
+    taken: [],
+    currency: 'USD',
+    layouts: Object.entries(prices).map(([layout, price]) => ({
+      layout: layout as NumbersIssue['layouts'][number]['layout'],
+      price,
+      downpaymentAmount: price / 2,
+      free: 1,
+      slots: [slot(1, 1)],
+    })),
+  })
+
+  it('shows the layout price of the one issue offering it', () => {
+    expect(layoutPrice([issue(1, { 'half-page': 800 })], 'half-page')).toEqual({
+      amount: 800,
+      currency: 'USD',
+      from: false,
+    })
+  })
+
+  it('shows nothing for a layout no issue offers in the region', () => {
+    expect(layoutPrice([issue(1, { 'half-page': 800 })], 'three-third')).toBeNull()
+    expect(layoutPrice([], 'half-page')).toBeNull()
+  })
+
+  it('shows the lowest price, marked from, when issues price it differently', () => {
+    expect(
+      layoutPrice([issue(1, { 'full-page': 1500 }), issue(2, { 'full-page': 1200 })], 'full-page'),
+    ).toEqual({ amount: 1200, currency: 'USD', from: true })
+  })
+
+  it('is not marked from when every issue asks the same', () => {
+    expect(
+      layoutPrice([issue(1, { 'full-page': 1500 }), issue(2, { 'full-page': 1500 })], 'full-page')
+        ?.from,
+    ).toBe(false)
   })
 })

@@ -1058,7 +1058,7 @@
         "full-spread": "Full spread",
         "full-page": "Full page",
         "half-page": "Half page",
-        "three-third": "Three third",
+        "three-third": "1/3",
         "quarter-page": "1/4"
       }
     },
@@ -1076,6 +1076,7 @@
       "chooseLayout": "Choose a size above to see the free places.",
       "noneForLayout": "This size is not offered in this region. Please choose another size.",
       "price": "{amount} per year",
+      "priceFrom": "from {amount} per year",
       "free": "{free} free",
       "slotPage": "Page {page}",
       "slotPosition": "Page {page}, position {position}",

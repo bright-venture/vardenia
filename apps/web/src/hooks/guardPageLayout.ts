@@ -1,7 +1,14 @@
 import { APIError } from 'payload'
-import type { CollectionBeforeChangeHook, PayloadRequest } from 'payload'
+import type {
+  CollectionBeforeChangeHook,
+  CollectionBeforeOperationHook,
+  PayloadRequest,
+} from 'payload'
 import { PAGE_LAYOUT_LABELS, isPageLayout } from '@vardenia/core'
 import { toSlots } from '../collections/Issues'
+
+export const LAYOUT_SET_ONCE =
+  'The page layout is set once, when the form is started, and cannot be changed.'
 
 const idOf = (value: unknown): number | string | null => {
   if (typeof value === 'number' || typeof value === 'string') return value
@@ -64,12 +71,7 @@ export function makeGuardPageLayout(load: LoadIssueSlots): CollectionBeforeChang
       data.pageLayout !== undefined &&
       layoutOf(data.pageLayout) !== stored
     ) {
-      throw new APIError(
-        'The page layout is set once, when the form is started, and cannot be changed.',
-        400,
-        null,
-        true,
-      )
+      throw new APIError(LAYOUT_SET_ONCE, 400, null, true)
     }
     const layout = isUpdate ? stored : layoutOf(data.pageLayout)
 
@@ -119,3 +121,46 @@ export function makeGuardPageLayout(load: LoadIssueSlots): CollectionBeforeChang
 }
 
 export const guardPageLayout = makeGuardPageLayout(loadIssueSlots)
+
+/** The stored layout of a business, read past access (it is staff-read). */
+export type LoadStoredLayout = (id: number | string, req: PayloadRequest) => Promise<unknown>
+
+const loadStoredLayout: LoadStoredLayout = async (id, req) => {
+  const doc = await req.payload.findByID({
+    collection: 'businesses',
+    id,
+    depth: 0,
+    overrideAccess: true,
+    disableErrors: true,
+    trash: true,
+    req,
+  })
+  return (doc as { pageLayout?: unknown } | null)?.pageLayout ?? null
+}
+
+/**
+ * Says no, out loud, to a request that tries to change a business's layout.
+ *
+ * Field access (`update: () => false`) drops such a change before any change
+ * hook sees it, so the API answered 200 and quietly kept the old layout (QA run
+ * of 26 November 2026, LP-PM2). This runs first, on the request as sent: a
+ * different layout is refused with the same message as the change guard. The
+ * same value sent again (the admin form re-sends read-only fields on save)
+ * passes. Only updates of one business by id; the change guard above still
+ * protects every other write path.
+ */
+export function makeRefuseLayoutChange(load: LoadStoredLayout): CollectionBeforeOperationHook {
+  return async ({ args, operation, req }) => {
+    if (operation !== 'update') return args
+    const data = (args as { data?: Record<string, unknown> }).data
+    const id = (args as { id?: number | string }).id
+    if (!data || !('pageLayout' in data) || id === undefined || id === null) return args
+    const stored = layoutOf(await load(id, req))
+    if (layoutOf(data.pageLayout) !== stored) {
+      throw new APIError(LAYOUT_SET_ONCE, 400, null, true)
+    }
+    return args
+  }
+}
+
+export const refuseLayoutChange = makeRefuseLayoutChange(loadStoredLayout)

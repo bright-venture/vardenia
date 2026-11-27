@@ -166,6 +166,24 @@ export function issuesForLayout(
   })
 }
 
+/**
+ * The price to show beside a layout in the size choice (PRD v7 section 9: "the
+ * price beside each layout"), from the issues serving the chosen region.
+ * Null when no issue offers the layout there, so no price is shown for it.
+ * When issues price it differently the lowest is shown, marked `from`.
+ */
+export function layoutPrice(
+  issues: readonly NumbersIssue[],
+  layout: PageLayout,
+): { amount: number; currency: string; from: boolean } | null {
+  const offers = issuesForLayout(issues, layout)
+  if (offers.length === 0) return null
+  const prices = offers.map((o) => o.price)
+  const amount = Math.min(...prices)
+  const cheapest = offers.find((o) => o.price === amount)!
+  return { amount, currency: cheapest.currency, from: new Set(prices).size > 1 }
+}
+
 interface Stored {
   key: string
   state: 'ready' | 'error'
