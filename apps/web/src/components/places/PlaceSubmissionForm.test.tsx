@@ -80,6 +80,17 @@ describe('PlaceSubmissionForm, first paint', () => {
     ).toBeTruthy()
   })
 
+  it('asks for the place in the magazine (issue, size) before the business details', () => {
+    const page = doc(renderToStaticMarkup(wrap('en')))
+    const issue = page.querySelector('select[name="issue"]')!
+    const size = page.querySelector('input[name="layout"]')!
+    const name = page.querySelector('input[name="name"]')!
+    const follows = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(follows(issue, size)).toBe(true)
+    expect(follows(size, name)).toBe(true)
+  })
+
   it('starts on step 1 with Next disabled, and says why', () => {
     const page = doc(renderToStaticMarkup(wrap('en')))
     expect(page.querySelector('[data-step]')!.textContent).toBe('Step 1 of 4')
@@ -377,6 +388,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(link()?.rel).toBe('noopener')
       await fillAndPick()
       expect(link()?.getAttribute('href')).toBe('/en/magazine-places/view?issue=1&number=4')
+      expect(link()?.textContent).toContain('See your place in the magazine')
     })
 
     it('shows the page of the issue that holds the picked number, with the owner on it', async () => {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ArrowUpRight, BookOpen } from 'lucide-react'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { PAGE_LAYOUTS, type PageLayout } from '@vardenia/core/page-layouts'
 import { categoryOfKind, submittableKindsByCategory } from '@vardenia/core/taxonomy'
@@ -583,7 +584,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         </p>
         {locale === 'en' && (
           <p hidden data-desktop-intro>
-            Choose a layout, enter your details and pick a page number. In the next step, scan the
+            Choose your place in the magazine, then fill in your page. In the next step, scan the
             code with your phone to send your logo and main photo.
           </p>
         )}
@@ -612,16 +613,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                   </option>
                 ))}
               </select>
-              {state.issue ? (
-                <a
-                  href={`/${locale}/magazine-places/view?issue=${state.issue.issueId}${pick ? `&number=${pick.number}` : ''}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="text-ink-700 mt-2 inline-flex min-h-11 items-center text-sm underline"
-                >
-                  {t('form.seeMagazine')}
-                </a>
-              ) : null}
               {openIssues.state === 'loading' ? (
                 <p className={HINT} role="status">
                   {t('form.issuesLoading')}
@@ -698,114 +689,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             ) : null}
           </fieldset>
 
-          {/* The business */}
-          <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
-            <legend className={`${legend} mb-1`}>{t('form.businessLegend')}</legend>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('name')}>
-                {t('form.name')}
-              </label>
-              <input
-                {...control('name', true)}
-                type="text"
-                required
-                maxLength={NAME_MAX}
-                autoComplete="organization"
-                dir="auto"
-                value={state.name}
-                onChange={(e) => set({ name: e.target.value })}
-              />
-              <p id={`${fid('name')}-hint`} className={HINT}>
-                {counter(state.name, NAME_MAX)}
-              </p>
-              {errorLine('name')}
-            </div>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('tagline')}>
-                {t('form.tagline')}
-              </label>
-              <input
-                {...control('tagline', true)}
-                type="text"
-                maxLength={TAGLINE_MAX}
-                dir="auto"
-                value={state.tagline}
-                onChange={(e) => set({ tagline: e.target.value })}
-              />
-              <p id={`${fid('tagline')}-hint`} className={HINT}>
-                {t('form.taglineHint')} {counter(state.tagline, TAGLINE_MAX)}
-              </p>
-              {errorLine('tagline')}
-            </div>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('description')}>
-                {t('form.description')}
-              </label>
-              <textarea
-                {...control('description', true)}
-                rows={6}
-                maxLength={DESCRIPTION_MAX}
-                dir="auto"
-                value={state.description}
-                onChange={(e) => set({ description: e.target.value })}
-              />
-              <p id={`${fid('description')}-hint`} className={HINT}>
-                {t('form.descriptionHint')} {counter(state.description, DESCRIPTION_MAX)}
-              </p>
-              {errorLine('description')}
-            </div>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('kind')}>
-                {t('form.category')}
-              </label>
-              <select
-                {...control('kind')}
-                required
-                value={state.kind}
-                onChange={(e) => set({ kind: e.target.value })}
-              >
-                <option value="">{t('form.chooseCategory')}</option>
-                {kindGroups.map(({ category, kinds }) => (
-                  <optgroup key={category.slug} label={categoryLabel(category.slug, locale)}>
-                    {kinds.map((kind) => (
-                      <option key={kind.slug} value={kind.slug}>
-                        {subcategoryLabel(kind.slug, locale)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              {errorLine('kind')}
-            </div>
-          </fieldset>
-
-          {/* Where */}
-          <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
-            <legend className={`${legend} mb-1`}>{t('form.locationLegend')}</legend>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('address')}>
-                {t('form.address')}
-              </label>
-              <input
-                {...control('address')}
-                type="text"
-                required
-                maxLength={300}
-                autoComplete="street-address"
-                dir="auto"
-                value={state.address}
-                onChange={(e) => set({ address: e.target.value })}
-              />
-              {errorLine('address')}
-            </div>
-          </fieldset>
-
-          {/* How much of the magazine: same radios as the page design above, text only. */}
+          {/* How much of the magazine: plain radios with the price, once the place is chosen. */}
           <fieldset
             className="m-0 min-w-0 border-0 p-0"
             aria-describedby={message('layout') ? `${fid('layout')}-error` : undefined}
@@ -916,6 +800,134 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 {message('number')}
               </p>
             ) : null}
+            {state.issue ? (
+              <a
+                href={`/${locale}/magazine-places/view?issue=${state.issue.issueId}${pick ? `&number=${pick.number}` : ''}`}
+                target="_blank"
+                rel="noopener"
+                data-see-magazine
+                className="border-ink-100 bg-surface-raised text-ink-900 hover:border-ink-300 hover:bg-surface-sunken focus-visible:outline-gold-300 group mt-4 flex min-h-11 items-center gap-3 border px-4 py-3 text-sm transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                <BookOpen aria-hidden className="text-gold-700 size-5 shrink-0" />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-medium">
+                    {pick ? t('form.seeMagazinePage') : t('form.seeMagazine')}
+                  </span>
+                  <span className="text-ink-500 text-xs">{t('form.seeMagazineHint')}</span>
+                </span>
+                <ArrowUpRight
+                  aria-hidden
+                  className="text-ink-500 size-4 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none rtl:-scale-x-100"
+                />
+              </a>
+            ) : null}
+          </fieldset>
+
+          {/* The business */}
+          <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
+            <legend className={`${legend} mb-1`}>{t('form.businessLegend')}</legend>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('name')}>
+                {t('form.name')}
+              </label>
+              <input
+                {...control('name', true)}
+                type="text"
+                required
+                maxLength={NAME_MAX}
+                autoComplete="organization"
+                dir="auto"
+                value={state.name}
+                onChange={(e) => set({ name: e.target.value })}
+              />
+              <p id={`${fid('name')}-hint`} className={HINT}>
+                {counter(state.name, NAME_MAX)}
+              </p>
+              {errorLine('name')}
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('tagline')}>
+                {t('form.tagline')}
+              </label>
+              <input
+                {...control('tagline', true)}
+                type="text"
+                maxLength={TAGLINE_MAX}
+                dir="auto"
+                value={state.tagline}
+                onChange={(e) => set({ tagline: e.target.value })}
+              />
+              <p id={`${fid('tagline')}-hint`} className={HINT}>
+                {t('form.taglineHint')} {counter(state.tagline, TAGLINE_MAX)}
+              </p>
+              {errorLine('tagline')}
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('description')}>
+                {t('form.description')}
+              </label>
+              <textarea
+                {...control('description', true)}
+                rows={6}
+                maxLength={DESCRIPTION_MAX}
+                dir="auto"
+                value={state.description}
+                onChange={(e) => set({ description: e.target.value })}
+              />
+              <p id={`${fid('description')}-hint`} className={HINT}>
+                {t('form.descriptionHint')} {counter(state.description, DESCRIPTION_MAX)}
+              </p>
+              {errorLine('description')}
+            </div>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('kind')}>
+                {t('form.category')}
+              </label>
+              <select
+                {...control('kind')}
+                required
+                value={state.kind}
+                onChange={(e) => set({ kind: e.target.value })}
+              >
+                <option value="">{t('form.chooseCategory')}</option>
+                {kindGroups.map(({ category, kinds }) => (
+                  <optgroup key={category.slug} label={categoryLabel(category.slug, locale)}>
+                    {kinds.map((kind) => (
+                      <option key={kind.slug} value={kind.slug}>
+                        {subcategoryLabel(kind.slug, locale)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {errorLine('kind')}
+            </div>
+          </fieldset>
+
+          {/* Where */}
+          <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
+            <legend className={`${legend} mb-1`}>{t('form.locationLegend')}</legend>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('address')}>
+                {t('form.address')}
+              </label>
+              <input
+                {...control('address')}
+                type="text"
+                required
+                maxLength={300}
+                autoComplete="street-address"
+                dir="auto"
+                value={state.address}
+                onChange={(e) => set({ address: e.target.value })}
+              />
+              {errorLine('address')}
+            </div>
           </fieldset>
 
           {/* Details */}

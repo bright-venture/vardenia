@@ -1013,7 +1013,7 @@
     "viewerSoon": "पत्रिका व्यूअर जल्द आ रहा है।",
     "formTitle": "जगह का अनुरोध करें",
     "form": {
-      "intro": "Choose a layout, tell us about your business and pick your page number. The page above fills in as you type.",
+      "intro": "Choose your place in the magazine first: issue, region, size and page. Then tell us about your business; the page beside fills in as you type.",
       "previewTitle": "Your page",
       "previewNote": "A preview of your page. It is not public until our team has reviewed and accepted your business.",
       "previewChooseIssue": "Choose a magazine issue to see your page.",
@@ -1040,6 +1040,8 @@
       "issue": "Magazine issue",
       "chooseIssue": "Choose an issue",
       "seeMagazine": "See the magazine",
+      "seeMagazinePage": "See your place in the magazine",
+      "seeMagazineHint": "Flip through the whole issue. Opens in a new tab.",
       "issuesLoading": "Loading the issues...",
       "issuesError": "We could not load the issues.",
       "noIssues": "No issue is open for listings yet. Please contact the Vardenia team.",
