@@ -34,7 +34,7 @@ const REMOVED = [
   'form.noPriceRange',
   'form.amenities',
   'form.payments',
-  'form.paymentCash',
+  // form.paymentCash is back: the form asks Whish or cash (27 November 2026).
   'form.paymentCard',
   'form.paymentOmt',
   'form.success',
