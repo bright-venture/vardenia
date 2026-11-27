@@ -49,6 +49,7 @@ import { MoneyCell as MoneyCell_07f513c68167caf320c51b8dc6c45309 } from '../../.
 import { ListingAllocation as ListingAllocation_4b4bdc8b6e0453f22f75fc9dadd097ef } from '../../../components/admin/ListingAllocation'
 import { TemplateBulkAdd as TemplateBulkAdd_eff32680b5aff4d8cba8f5217be964b7 } from '../../../components/admin/TemplateBulkAdd'
 import { TemplatePageLabel as TemplatePageLabel_654de36002359cd3f49885cb07821948 } from '../../../components/admin/TemplatePageLabel'
+import { RangeGovernorateField as RangeGovernorateField_b43f80d2a716ff028be28e97b1ae724a } from '../../../components/admin/RangeGovernorateField'
 import { AccountHelp as AccountHelp_d5e13084357838e096328882a056e6b4 } from '../../../components/admin/AccountHelp'
 import { ResolvedCell as ResolvedCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
@@ -113,6 +114,7 @@ export const importMap = {
   "/components/admin/ListingAllocation#ListingAllocation": ListingAllocation_4b4bdc8b6e0453f22f75fc9dadd097ef,
   "/components/admin/TemplateBulkAdd#TemplateBulkAdd": TemplateBulkAdd_eff32680b5aff4d8cba8f5217be964b7,
   "/components/admin/TemplatePageLabel#TemplatePageLabel": TemplatePageLabel_654de36002359cd3f49885cb07821948,
+  "/components/admin/RangeGovernorateField#RangeGovernorateField": RangeGovernorateField_b43f80d2a716ff028be28e97b1ae724a,
   "/components/admin/AccountHelp#AccountHelp": AccountHelp_d5e13084357838e096328882a056e6b4,
   "/components/admin/ListCells#ResolvedCell": ResolvedCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,

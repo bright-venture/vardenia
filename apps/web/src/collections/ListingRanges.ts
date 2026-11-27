@@ -13,6 +13,7 @@ import {
   blockNumbers,
   blockProblem,
   blocksOverlap,
+  coverageOf,
   nextFreeNumber,
   PAGE_LAYOUT_LABELS,
   orphanedNumbers,
@@ -167,11 +168,8 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     lastPage?: unknown
   }
   const issueId = idOf(merged.issue)
-  if (issueId === null || !merged.governorate || !req?.payload) return data
+  if (issueId === null || !req?.payload) return data
   const { payload } = req
-  const city = cityOrNull(merged.city)
-  // A blank select is no city (stored NULL, which the unique indexes rely on).
-  if (data && 'city' in data && city === null) data.city = null
 
   const issue = await payload.findByID({
     collection: 'issues',
@@ -179,6 +177,22 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     depth: 0,
     overrideAccess: true,
   })
+  // An issue for one governorate fixes the range's governorate: it is taken
+  // from the issue, whatever was sent, so a range can never name another.
+  const issueGovernorate = (issue as { governorate?: unknown }).governorate
+  if (
+    coverageOf((issue as { coverage?: unknown }).coverage) === 'governorate' &&
+    typeof issueGovernorate === 'string' &&
+    issueGovernorate
+  ) {
+    merged.governorate = issueGovernorate
+    if (data) data.governorate = issueGovernorate
+  }
+  if (!merged.governorate) return data
+  const city = cityOrNull(merged.city)
+  // A blank select is no city (stored NULL, which the unique indexes rely on).
+  if (data && 'city' in data && city === null) data.city = null
+
   const total = (issue as { listingTotal?: number | null }).listingTotal ?? DEFAULT_LISTING_TOTAL
 
   const siblings = await payload.find({
@@ -407,6 +421,10 @@ export const ListingRanges: CollectionConfig = {
       type: 'select',
       required: true,
       options: LISTING_GOVERNORATES.map((value) => ({ label: GOVERNORATE_NAMES[value], value })),
+      // Fixed by the issue when it covers one governorate (the hook enforces it).
+      admin: {
+        components: { Field: '/components/admin/RangeGovernorateField#RangeGovernorateField' },
+      },
     },
     {
       // Only on an issue for one governorate (Issues `coverage`); the hook

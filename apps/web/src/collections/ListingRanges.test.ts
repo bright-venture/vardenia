@@ -632,7 +632,7 @@ describe('city blocks', () => {
     ).toMatch(/choose the city/)
   })
 
-  it('refuses another governorate on a one-governorate issue', async () => {
+  it('takes the governorate from a one-governorate issue, so another one never sticks', async () => {
     expect(
       await refusal(
         create(setup(matnOnly), {
@@ -643,7 +643,7 @@ describe('city blocks', () => {
           to: 20,
         }),
       ),
-    ).toMatch(/for Matn only/)
+    ).toMatch(/Beirut is not in Matn/)
   })
 
   it('refuses a city of another governorate', async () => {
