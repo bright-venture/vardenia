@@ -147,6 +147,13 @@ describe('buildSubmission', () => {
     expect(placeSubmissionSchema.safeParse(byCity).success).toBe(true)
   })
 
+  it('sends cash and Whish as ticked, and the schema keeps both', () => {
+    const { data } = buildSubmission({ ...filled(), acceptsCash: true }, pick, 'en')
+    const parsed = placeSubmissionSchema.safeParse(data)
+    expect(parsed.success && parsed.data.acceptsCash).toBe(true)
+    expect(parsed.success && parsed.data.acceptsWhish).toBe(false)
+  })
+
   it('sends no layout while none is chosen', () => {
     const { data } = buildSubmission({ ...filled(), layout: null }, pick, 'en')
     expect(data).not.toHaveProperty('layout')

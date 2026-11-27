@@ -627,7 +627,7 @@ export async function startPlaceSubmission(args: {
       governorate: place.governorate,
       city: place.city ?? undefined,
       address: input.address,
-      payments: { cash: false, card: false, whish: input.acceptsWhish, omt: false },
+      payments: { cash: input.acceptsCash, card: false, whish: input.acceptsWhish, omt: false },
       issue: input.issue,
       listingNumber: input.listingNumber,
       // Written once, here; hooks/guardPageLayout refuses any later change.

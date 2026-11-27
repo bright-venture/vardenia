@@ -119,8 +119,10 @@ export const placeSubmissionSchema = z
     // it for such an issue and drops it otherwise.
     city: z.preprocess(blankToUndefined, z.string().trim().max(64, 'too long').optional()),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
-    // Stored as the listing's payments.whish; the other methods are never asked.
+    // How guests can pay: stored as the listing's payments.whish and
+    // payments.cash; card and OMT are never asked.
     acceptsWhish: z.boolean().default(false),
+    acceptsCash: z.boolean().default(false),
     // Public contact: stored in the listing's `contact` group.
     publicPhone: contactValue('phone'),
     instagram: contactValue('instagram'),

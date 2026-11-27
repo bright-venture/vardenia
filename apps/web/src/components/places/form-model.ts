@@ -33,6 +33,7 @@ export interface FormState {
   city: string
   address: string
   acceptsWhish: boolean
+  acceptsCash: boolean
   publicPhone: string
   instagram: string
   facebook: string
@@ -59,6 +60,7 @@ export function initialFormState(): FormState {
     city: '',
     address: '',
     acceptsWhish: false,
+    acceptsCash: false,
     publicPhone: '',
     instagram: '',
     facebook: '',
@@ -113,6 +115,7 @@ export function buildSubmission(
     ...(state.issue?.coverage === 'governorate' && state.city ? { city: state.city } : {}),
     address: state.address,
     acceptsWhish: state.acceptsWhish,
+    acceptsCash: state.acceptsCash,
     publicPhone: state.publicPhone,
     instagram: state.instagram,
     facebook: state.facebook,

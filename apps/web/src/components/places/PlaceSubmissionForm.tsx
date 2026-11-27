@@ -922,16 +922,31 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
           <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
             <legend className={`${legend} mb-1`}>{t('form.detailsLegend')}</legend>
 
-            <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="acceptsWhish"
-                checked={state.acceptsWhish}
-                onChange={(e) => set({ acceptsWhish: e.target.checked })}
-                className={CHECK}
-              />
-              {t('form.paymentWhish')}
-            </label>
+            <fieldset className="m-0 min-w-0 border-0 p-0">
+              <legend className={LABEL}>{t('form.paymentsLegend')}</legend>
+              <div className="mt-1 flex flex-wrap gap-x-6">
+                <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="acceptsWhish"
+                    checked={state.acceptsWhish}
+                    onChange={(e) => set({ acceptsWhish: e.target.checked })}
+                    className={CHECK}
+                  />
+                  {t('form.paymentWhish')}
+                </label>
+                <label className="text-ink-900 flex min-h-11 items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="acceptsCash"
+                    checked={state.acceptsCash}
+                    onChange={(e) => set({ acceptsCash: e.target.checked })}
+                    className={CHECK}
+                  />
+                  {t('form.paymentCash')}
+                </label>
+              </div>
+            </fieldset>
 
             <div>
               <label className={LABEL} htmlFor={fid('publicPhone')}>

@@ -94,6 +94,16 @@ describe('placeSubmissionSchema', () => {
     })
   })
 
+  describe('acceptsCash', () => {
+    it('defaults to false and takes a boolean only', () => {
+      const r = parse({})
+      expect(r.success && r.data.acceptsCash).toBe(false)
+      const t = parse({ acceptsCash: true })
+      expect(t.success && t.data.acceptsCash).toBe(true)
+      expect(parse({ acceptsCash: 'yes' }).success).toBe(false)
+    })
+  })
+
   describe('acceptsWhish', () => {
     it('defaults to false and keeps true', () => {
       const r = parse()

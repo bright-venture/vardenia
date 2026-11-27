@@ -56,6 +56,7 @@ const input = (over: Partial<PlaceSubmission> = {}): PlaceSubmission =>
     city: 'beirut',
     address: 'Hamra St',
     acceptsWhish: true,
+    acceptsCash: false,
     publicPhone: '+9611',
     instagram: 'https://instagram.com/cafenour',
     facebook: undefined,
@@ -589,6 +590,20 @@ describe('startPlaceSubmission', () => {
     const s = stub()
     await startPlaceSubmission({ payload: s, input: input({ acceptsWhish: false }) })
     expect(created(s, 'businesses')[0].data.payments.whish).toBe(false)
+  })
+
+  it('stores Whish and cash as ticked, and never card or OMT', async () => {
+    const s = stub()
+    await startPlaceSubmission({
+      payload: s,
+      input: input({ acceptsWhish: true, acceptsCash: true }),
+    })
+    expect(created(s, 'businesses')[0].data.payments).toEqual({
+      cash: true,
+      card: false,
+      whish: true,
+      omt: false,
+    })
   })
 
   it('returns the plain token once and stores only its hash', async () => {
