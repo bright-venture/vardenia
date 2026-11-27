@@ -3,16 +3,16 @@
 import { useMemo, useState } from 'react'
 import { useForm, useFormFields } from '@payloadcms/ui'
 import {
-  PAGE_LAYOUTS,
-  PAGE_LAYOUT_LABELS,
-  isPageLayout,
-  type PageLayout,
+  TEMPLATE_PAGE_KINDS,
+  TEMPLATE_PAGE_LABELS,
+  isTemplatePageKind,
+  type TemplatePageKind,
 } from '@vardenia/core/page-layouts'
 import { nextPage, planRange } from './template-pages'
 
 /**
  * "Add several pages at once" under a template's page list: from page 1 to page
- * 10, all half pages, in one go. It only adds rows to the form (the same rows
+ * 10, all half pages (or pages without listings), in one go. It only adds rows to the form (the same rows
  * "Add Page" adds, one at a time); nothing is saved until the template is, and
  * the server rebuilds the slots from the layouts either way.
  *
@@ -37,7 +37,7 @@ export function TemplateBulkAdd({ path, schemaPath }: { path?: string; schemaPat
 
   const [from, setFrom] = useState<string>('')
   const [to, setTo] = useState<string>('')
-  const [layout, setLayout] = useState<PageLayout>('half-page')
+  const [layout, setLayout] = useState<TemplatePageKind>('half-page')
   const [message, setMessage] = useState<string | null>(null)
 
   if (locked) return null
@@ -101,13 +101,13 @@ export function TemplateBulkAdd({ path, schemaPath }: { path?: string; schemaPat
             style={styles.input}
             value={layout}
             onChange={(e) => {
-              if (isPageLayout(e.target.value)) setLayout(e.target.value)
+              if (isTemplatePageKind(e.target.value)) setLayout(e.target.value)
               setMessage(null)
             }}
           >
-            {PAGE_LAYOUTS.map((value) => (
+            {TEMPLATE_PAGE_KINDS.map((value) => (
               <option key={value} value={value}>
-                {PAGE_LAYOUT_LABELS[value]}
+                {TEMPLATE_PAGE_LABELS[value]}
               </option>
             ))}
           </select>
@@ -118,7 +118,8 @@ export function TemplateBulkAdd({ path, schemaPath }: { path?: string; schemaPat
       </div>
       <p style={styles.hint}>
         The range continues where the template ends (next page: {next}). A full spread takes two
-        pages, so 1 to 10 gives five spreads.
+        pages, so 1 to 10 gives five spreads. &ldquo;No listings&rdquo; adds pages that sell nothing
+        (cover, contents); add a note on each row to say what it is.
       </p>
       {message ? (
         <p role="status" style={styles.message}>

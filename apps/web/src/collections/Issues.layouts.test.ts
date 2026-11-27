@@ -248,6 +248,31 @@ describe('assigning a template to an issue', () => {
     expect(data.pageCount).toBe(5)
   })
 
+  it('counts pages without listings in the page count, trailing ones included', async () => {
+    const withBlanks = [
+      { layout: 'no-listings' as const, note: 'Cover' },
+      ...templatePages,
+      { layout: 'no-listings' as const },
+      { layout: 'no-listings' as const, note: 'Back cover' },
+    ]
+    const data: Record<string, unknown> = { template: 12 }
+    await runWith(lookupsWith({ templates: { 12: withBlanks } }))(data)
+    expect(data.slots).toEqual(buildSlots(withBlanks))
+    expect((data.slots as { page: number }[])[0]!.page).toBe(2)
+    expect(data.listingTotal).toBe(8)
+    expect(data.pageCount).toBe(8)
+  })
+
+  it('keeps the stored page count on a later save when blank pages end the issue', async () => {
+    const data: Record<string, unknown> = {}
+    await runWith(lookupsWith())(data, { id: 7, template: 11, slots, pageCount: 7 })
+    expect(data.pageCount).toBe(7)
+    // A stored count below what the slots span is not trusted.
+    const low: Record<string, unknown> = {}
+    await runWith(lookupsWith())(low, { id: 7, template: 11, slots, pageCount: 2 })
+    expect(low.pageCount).toBe(5)
+  })
+
   it('leaves an issue without a template (legacy) alone', async () => {
     const lookups = lookupsWith()
     const data: Record<string, unknown> = { listingTotal: 300 }

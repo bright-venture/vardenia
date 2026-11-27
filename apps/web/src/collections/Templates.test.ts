@@ -74,6 +74,12 @@ describe('a template that an issue uses (locked)', () => {
     )
   })
 
+  it('accepts a changed note: it moves no slot', async () => {
+    const lockedWithNotes = { ...locked, pages: [page('no-listings', 'z'), ...pages] }
+    const data = { pages: [{ ...page('no-listings', 'z'), note: 'Cover' }, ...pages] }
+    await expect(change('update', data, lockedWithNotes)).resolves.toBe(data)
+  })
+
   it('accepts a save that sends the same pages (the admin sends them all), or a new name', async () => {
     const same = { name: 'Summer 2027', pages: pages.map((p) => ({ ...p })) }
     await expect(change('update', same, locked)).resolves.toBe(same)
@@ -147,7 +153,31 @@ describe('the template pages', () => {
       'half-page',
       'three-third',
       'quarter-page',
+      'no-listings',
     ])
+    expect(f.fields[0]!.options.at(-1)).toEqual({ label: 'No listings', value: 'no-listings' })
+  })
+
+  it('accepts pages without listings around real ones', async () => {
+    const data = { name: 'x', pages: [page('no-listings', 'c1'), ...pages, page('no-listings')] }
+    await expect(validate(data)).resolves.toBe(data)
+  })
+
+  it('refuses a template of pages without listings only, in plain words', async () => {
+    await refused(
+      validate({ name: 'x', pages: [page('no-listings', 'a'), page('no-listings', 'b')] }),
+      /^A template needs at least one page with listings\.$/,
+    )
+  })
+
+  it('has an optional short note on each page', () => {
+    const f = Templates.fields.find((x) => 'name' in x && x.name === 'pages') as {
+      fields: { name: string; type: string; required?: boolean; maxLength?: number }[]
+    }
+    const note = f.fields.find((x) => x.name === 'note')
+    expect(note?.type).toBe('text')
+    expect(note?.required).toBeFalsy()
+    expect(note?.maxLength).toBe(80)
   })
 })
 
@@ -177,6 +207,19 @@ describe('the template summary', () => {
     expect(text).toContain('2: Page 3 (Full page)')
     expect(text).toContain('3: Page 4, position 1 (Half page)')
     expect(text).toContain('4: Page 4, position 2 (Half page)')
+  })
+
+  it('counts pages without listings as pages, with no slot, and numbers the rest after them', () => {
+    const text = templateSummary([
+      { layout: 'no-listings', note: 'Cover' },
+      { layout: 'no-listings' },
+      ...pages,
+      { layout: 'no-listings', note: 'Back cover' },
+    ])
+    expect(text).toMatch(/^7 pages \(3 without listings\), 4 listings\./)
+    expect(text).toContain('1: Pages 3-4 (Full spread)')
+    expect(text).toContain('4: Page 6, position 2 (Half page)')
+    expect(text.split('\n')).toHaveLength(5)
   })
 
   it('is empty without pages', () => {

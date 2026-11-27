@@ -1,8 +1,8 @@
 import {
-  LAYOUT_SHAPE,
-  PAGE_LAYOUT_LABELS,
-  isPageLayout,
-  type PageLayout,
+  TEMPLATE_PAGE_LABELS,
+  TEMPLATE_PAGE_SHAPE,
+  isTemplatePageKind,
+  type TemplatePageKind,
 } from '@vardenia/core/page-layouts'
 
 /**
@@ -10,8 +10,10 @@ import {
  * rows so far. The admin shows them; nothing here is stored (the slots are
  * built again, from the layouts alone, when the template is saved).
  *
- * A full spread is one row that takes two pages, so it reads "Page 1→2". A row
- * with no layout yet counts as one page until one is chosen.
+ * A full spread is one row that takes two pages, so it reads "Page 1→2". A
+ * "No listings" row (cover, contents, separator) is one page like any other,
+ * so the numbers after it keep running. A row with no layout yet counts as one
+ * page until one is chosen.
  *
  * Imported by the admin's browser code, so it imports the narrow
  * `@vardenia/core/page-layouts` entry, not the whole package.
@@ -29,7 +31,7 @@ export function pageSpans(layouts: readonly RowLayout[]): PageSpan[] {
   const spans: PageSpan[] = []
   let next = 1
   for (const layout of layouts) {
-    const pages = isPageLayout(layout) ? LAYOUT_SHAPE[layout].pages : 1
+    const pages = isTemplatePageKind(layout) ? TEMPLATE_PAGE_SHAPE[layout].pages : 1
     spans.push({ first: next, last: next + pages - 1 })
     next += pages
   }
@@ -43,13 +45,22 @@ export function nextPage(layouts: readonly RowLayout[]): number {
   return last ? last.last + 1 : 1
 }
 
-/** "Page 3 · Half page", "Page 1→2 · Full spread", "Page 3 · choose a layout". */
-export function rowTitle(layouts: readonly RowLayout[], index: number): string {
+/**
+ * "Page 3 · Half page", "Page 1→2 · Full spread", "Page 1 · No listings (Cover)",
+ * "Page 3 · choose a layout". A row's note, when it has one, follows in brackets.
+ */
+export function rowTitle(
+  layouts: readonly RowLayout[],
+  index: number,
+  note?: string | null,
+): string {
   const span = pageSpans(layouts)[index]
   if (!span) return `Page ${index + 1}`
   const where = span.last > span.first ? `Page ${span.first}→${span.last}` : `Page ${span.first}`
   const layout = layouts[index]
-  return `${where} · ${isPageLayout(layout) ? PAGE_LAYOUT_LABELS[layout] : 'choose a layout'}`
+  if (!isTemplatePageKind(layout)) return `${where} · choose a layout`
+  const extra = note?.trim() ? ` (${note.trim()})` : ''
+  return `${where} · ${TEMPLATE_PAGE_LABELS[layout]}${extra}`
 }
 
 /** More rows than this in one go is a typo, not a magazine. */
@@ -66,7 +77,7 @@ export function planRange(
   layouts: readonly RowLayout[],
   from: number,
   to: number,
-  layout: PageLayout,
+  layout: TemplatePageKind,
 ): RangePlan {
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < 1) {
     return { ok: false, message: 'Enter whole page numbers, 1 or more.' }
@@ -83,11 +94,11 @@ export function planRange(
   }
   if (to < from) return { ok: false, message: 'The last page cannot be before the first page.' }
   const pages = to - from + 1
-  const per = LAYOUT_SHAPE[layout].pages
+  const per = TEMPLATE_PAGE_SHAPE[layout].pages
   if (pages % per !== 0) {
     return {
       ok: false,
-      message: `A ${PAGE_LAYOUT_LABELS[layout].toLowerCase()} takes ${per} pages, so the range must cover an even number of pages. Pages ${from} to ${to} is ${pages}.`,
+      message: `A ${TEMPLATE_PAGE_LABELS[layout].toLowerCase()} takes ${per} pages, so the range must cover an even number of pages. Pages ${from} to ${to} is ${pages}.`,
     }
   }
   const count = pages / per

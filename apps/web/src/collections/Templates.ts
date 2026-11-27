@@ -7,10 +7,12 @@ import type {
   PayloadRequest,
 } from 'payload'
 import {
-  PAGE_LAYOUTS,
+  NO_LISTINGS,
   PAGE_LAYOUT_LABELS,
+  TEMPLATE_PAGE_KINDS,
+  TEMPLATE_PAGE_LABELS,
   buildSlots,
-  isPageLayout,
+  isTemplatePageKind,
   slotLabel,
   templateProblem,
   templateTotals,
@@ -27,29 +29,47 @@ export const LOCKED_TEMPLATE_MESSAGE =
  */
 export const toTemplatePages = (value: unknown): TemplatePage[] =>
   Array.isArray(value)
-    ? value.map((raw) => ({
-        layout: (raw as { layout?: unknown } | null)?.layout as TemplatePage['layout'],
-      }))
+    ? value.map((raw) => {
+        const row = (raw ?? {}) as { layout?: unknown; note?: unknown }
+        return {
+          layout: row.layout as TemplatePage['layout'],
+          note: typeof row.note === 'string' ? row.note : null,
+        }
+      })
     : []
 
-/** The layouts in order, to tell a real change from the admin resending the same pages. */
+/**
+ * The layouts in order, to tell a real change from the admin resending the
+ * same pages. Notes are left out on purpose: they move no slot, so a locked
+ * template's notes may still be corrected (like its name).
+ */
 const layoutSequence = (value: unknown): string =>
   toTemplatePages(value)
     .map((p) => String(p.layout))
     .join(',')
 
-/** "N pages, M listings." then one line per slot. Shown read-only on the template. */
+/**
+ * "N pages, M listings." (with "(K without listings)" when there are some)
+ * then one line per slot. Shown read-only on the template. Pages without
+ * listings stay in, so the slots after them keep their real page numbers.
+ */
 export function templateSummary(value: unknown): string {
-  const pages = toTemplatePages(value).filter((p) => isPageLayout(p.layout))
+  const pages = toTemplatePages(value).filter((p) => isTemplatePageKind(p.layout))
   if (pages.length === 0) return ''
   const totals = templateTotals(pages)
+  const blanks = pages.filter((p) => p.layout === NO_LISTINGS).length
+  const pageText =
+    blanks > 0 ? `${totals.pages} pages (${blanks} without listings)` : `${totals.pages} pages`
   const lines = buildSlots(pages).map(
     (slot) => `${slot.number}: ${slotLabel(slot)} (${PAGE_LAYOUT_LABELS[slot.layout]})`,
   )
-  return [`${totals.pages} pages, ${totals.listings} listings.`, ...lines].join('\n')
+  return [`${pageText}, ${totals.listings} listings.`, ...lines].join('\n')
 }
 
-/** At least one page, every page a known layout. Checked on create and whenever pages change. */
+/**
+ * At least one page, every page a known layout (or no listings), and at least
+ * one page with listings. Checked on create and whenever pages change.
+ */
 export const checkTemplate: CollectionBeforeValidateHook = async ({ data, originalDoc }) => {
   const pagesSent = data && 'pages' in data && data.pages !== undefined
   if (!pagesSent && originalDoc) return data
@@ -145,9 +165,10 @@ export const Templates: CollectionConfig = {
       labels: { singular: 'Page', plural: 'Pages' },
       admin: {
         description:
-          'In print order. A full spread is one entry that takes two pages. Cannot change once an issue uses the template.',
+          'In print order. A full spread is one entry that takes two pages. "No listings" is a page that sells nothing (cover, contents, a separator): it counts as a page but makes no slot. Cannot change once an issue uses the template (notes can).',
         components: {
-          // Titles each row by its pages ("Page 1→2 · Full spread") and adds
+          // Titles each row by its pages ("Page 1→2 · Full spread",
+          // "Page 1 · No listings (Cover)") and adds
           // "from page 1 to 10, all half pages". Admin screen only: the stored
           // data and the checks are unchanged.
           RowLabel: '/components/admin/TemplatePageLabel#TemplatePageLabel',
@@ -159,7 +180,19 @@ export const Templates: CollectionConfig = {
           name: 'layout',
           type: 'select',
           required: true,
-          options: PAGE_LAYOUTS.map((value) => ({ label: PAGE_LAYOUT_LABELS[value], value })),
+          // The five layouts, then "No listings" last. Only the template has
+          // it: an issue's price table and a business's layout keep the five.
+          options: TEMPLATE_PAGE_KINDS.map((value) => ({
+            label: TEMPLATE_PAGE_LABELS[value],
+            value,
+          })),
+        },
+        {
+          // What the page is, for the admin's eyes only ("Cover", "Contents").
+          name: 'note',
+          type: 'text',
+          maxLength: 80,
+          admin: { placeholder: 'Cover, Contents, Keserwan separator...' },
         },
       ],
     },

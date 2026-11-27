@@ -44,9 +44,42 @@ export const LAYOUT_SHAPE: Record<PageLayout, { pages: 1 | 2; slots: 1 | 2 | 3 |
   'quarter-page': { pages: 1, slots: 4 },
 }
 
-/** One entry of a template: the layout of one page (a spread is one entry, two pages). */
+/**
+ * A template page that sells nothing: cover, contents, a governorate's
+ * separator. It takes one page, so the page numbers after it keep running,
+ * and makes no slot. It is never a layout: it is not in PAGE_LAYOUTS, so it
+ * never reaches an issue's price table, a business, the form or the reports.
+ */
+export const NO_LISTINGS = 'no-listings'
+
+/** What a template page can be: one of the layouts, or a page without listings. */
+export const TEMPLATE_PAGE_KINDS = [...PAGE_LAYOUTS, NO_LISTINGS] as const
+
+export type TemplatePageKind = (typeof TEMPLATE_PAGE_KINDS)[number]
+
+export const isTemplatePageKind = (value: unknown): value is TemplatePageKind =>
+  typeof value === 'string' && (TEMPLATE_PAGE_KINDS as readonly string[]).includes(value)
+
+/** English labels for the template editor: the layouts, then "No listings". */
+export const TEMPLATE_PAGE_LABELS: Record<TemplatePageKind, string> = {
+  ...PAGE_LAYOUT_LABELS,
+  [NO_LISTINGS]: 'No listings',
+}
+
+/** What each template page takes up. A page without listings is one page, no slot. */
+export const TEMPLATE_PAGE_SHAPE: Record<TemplatePageKind, { pages: 1 | 2; slots: number }> = {
+  ...LAYOUT_SHAPE,
+  [NO_LISTINGS]: { pages: 1, slots: 0 },
+}
+
+/**
+ * One entry of a template: the layout of one page (a spread is one entry, two
+ * pages), or a page without listings. `note` says what a page is ("Cover");
+ * it is for the admin only and changes no slot.
+ */
 export interface TemplatePage {
-  layout: PageLayout
+  layout: TemplatePageKind
+  note?: string | null
 }
 
 /** One sellable listing. `page` is the first page it sits on; `position` is null when the layout has one slot. */
@@ -57,11 +90,19 @@ export interface Slot {
   layout: PageLayout
 }
 
-/** The slots of a template, numbered from 1 in page order. The same pages always give the same slots. */
+/**
+ * The slots of a template, numbered from 1 in page order. The same pages always
+ * give the same slots. A page without listings moves the page count on but
+ * makes no slot, so the first slot may sit on page 8.
+ */
 export function buildSlots(pages: readonly TemplatePage[]): Slot[] {
   const slots: Slot[] = []
   let page = 1
   for (const entry of pages) {
+    if (entry.layout === NO_LISTINGS) {
+      page += TEMPLATE_PAGE_SHAPE[NO_LISTINGS].pages
+      continue
+    }
     const shape = LAYOUT_SHAPE[entry.layout]
     if (!shape) continue
     for (let i = 1; i <= shape.slots; i++) {
@@ -77,7 +118,7 @@ export function buildSlots(pages: readonly TemplatePage[]): Slot[] {
   return slots
 }
 
-/** Pages and listings a template adds up to. Never typed by hand. */
+/** Pages and listings a template adds up to (a page without listings: 1 page, 0 listings). Never typed by hand. */
 export function templateTotals(pages: readonly TemplatePage[]): {
   pages: number
   listings: number
@@ -85,7 +126,7 @@ export function templateTotals(pages: readonly TemplatePage[]): {
   let p = 0
   let listings = 0
   for (const entry of pages) {
-    const shape = LAYOUT_SHAPE[entry.layout]
+    const shape = TEMPLATE_PAGE_SHAPE[entry.layout]
     if (!shape) continue
     p += shape.pages
     listings += shape.slots
@@ -97,7 +138,11 @@ export function templateTotals(pages: readonly TemplatePage[]): {
 export function templateProblem(pages: readonly TemplatePage[]): string | null {
   if (pages.length === 0) return 'A template needs at least one page.'
   for (const entry of pages) {
-    if (!isPageLayout(entry.layout)) return `Unknown layout "${String(entry.layout)}".`
+    if (!isTemplatePageKind(entry.layout)) return `Unknown layout "${String(entry.layout)}".`
+  }
+  // Pages without listings alone sell nothing: an issue built from it would have no number.
+  if (!pages.some((entry) => isPageLayout(entry.layout))) {
+    return 'A template needs at least one page with listings.'
   }
   return null
 }

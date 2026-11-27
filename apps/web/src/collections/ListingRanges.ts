@@ -19,7 +19,7 @@ import {
   type PageBlock,
 } from '@vardenia/core'
 import { isStaff } from '../access/index'
-import { slotsPageCount, toSlots } from './Issues'
+import { issuePageCount, toSlots } from './Issues'
 
 const GOVERNORATE_LABELS: Record<(typeof LISTING_GOVERNORATES)[number], string> = {
   keserwan: 'Keserwan',
@@ -206,11 +206,23 @@ const checkRange: CollectionBeforeValidateHook = async ({ data, originalDoc, ope
     }
     const block: PageBlock = { firstPage, lastPage }
     const problem =
-      blockProblem(slots, block, slotsPageCount(slots)) ??
-      blocksOverlap([block, ...siblingBlocks(siblings.docs)])
+      // The template's pages, so a block may end on pages without listings (back cover).
+      blockProblem(
+        slots,
+        block,
+        issuePageCount((issue as { pageCount?: unknown }).pageCount, slots),
+      ) ?? blocksOverlap([block, ...siblingBlocks(siblings.docs)])
     if (problem) throw new APIError(problem, 400, null, true)
     derived = blockNumbers(slots, block)
-    if (!derived) throw new APIError('These pages hold no listing.', 400, null, true)
+    if (!derived) {
+      // Only pages without listings (cover, separator): nothing to number.
+      throw new APIError(
+        `Pages ${firstPage}-${lastPage} hold no listing (only pages without listings). Choose pages that include listings.`,
+        400,
+        null,
+        true,
+      )
+    }
     if (data) {
       data.from = derived.from
       data.to = derived.to

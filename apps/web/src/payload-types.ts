@@ -1328,10 +1328,11 @@ export interface Template {
   id: number;
   name: string;
   /**
-   * In print order. A full spread is one entry that takes two pages. Cannot change once an issue uses the template.
+   * In print order. A full spread is one entry that takes two pages. "No listings" is a page that sells nothing (cover, contents, a separator): it counts as a page but makes no slot. Cannot change once an issue uses the template (notes can).
    */
   pages: {
-    layout: 'full-spread' | 'full-page' | 'half-page' | 'three-third' | 'quarter-page';
+    layout: 'full-spread' | 'full-page' | 'half-page' | 'three-third' | 'quarter-page' | 'no-listings';
+    note?: string | null;
     id?: string | null;
   }[];
   locked?: boolean | null;
@@ -2647,6 +2648,7 @@ export interface TemplatesSelect<T extends boolean = true> {
     | T
     | {
         layout?: T;
+        note?: T;
         id?: T;
       };
   locked?: T;

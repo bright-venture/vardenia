@@ -28,6 +28,27 @@ describe('template page numbers', () => {
   })
 })
 
+describe('pages without listings in the editor', () => {
+  it('count as one page each, so page 8 follows seven of them', () => {
+    const layouts = [...Array.from({ length: 7 }, () => 'no-listings'), 'full-page']
+    expect(pageSpans(layouts)[7]).toEqual({ first: 8, last: 8 })
+    expect(nextPage(layouts)).toBe(9)
+  })
+
+  it('read "Page 1 · No listings (Cover)", or without a note', () => {
+    const layouts = ['no-listings', 'full-spread', 'no-listings']
+    expect(rowTitle(layouts, 0, 'Cover')).toBe('Page 1 · No listings (Cover)')
+    expect(rowTitle(layouts, 1)).toBe('Page 2→3 · Full spread')
+    expect(rowTitle(layouts, 2)).toBe('Page 4 · No listings')
+    expect(rowTitle(layouts, 2, '   ')).toBe('Page 4 · No listings')
+    expect(rowTitle(layouts, 1, 'Keserwan opens')).toBe('Page 2→3 · Full spread (Keserwan opens)')
+  })
+
+  it('can be added as a range, one row per page', () => {
+    expect(planRange([], 1, 7, 'no-listings')).toEqual({ ok: true, count: 7 })
+  })
+})
+
 describe('planRange', () => {
   it('turns "page 1 to 10, half pages" into ten rows', () => {
     expect(planRange([], 1, 10, 'half-page')).toEqual({ ok: true, count: 10 })

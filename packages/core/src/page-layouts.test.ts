@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
   LAYOUT_SHAPE,
+  NO_LISTINGS,
   PAGE_LAYOUTS,
   PAGE_LAYOUT_LABELS,
+  TEMPLATE_PAGE_KINDS,
+  TEMPLATE_PAGE_LABELS,
+  TEMPLATE_PAGE_SHAPE,
   blockNumbers,
   blockProblem,
   blocksOverlap,
   buildSlots,
   isOffered,
   isPageLayout,
+  isTemplatePageKind,
   layoutSlots,
   priceRowsDropped,
   priceRowsProblem,
@@ -18,6 +23,8 @@ import {
   templateTotals,
   type PageLayout,
   type PriceRow,
+  type TemplatePage,
+  type TemplatePageKind,
 } from './page-layouts'
 
 const pages = (...layouts: PageLayout[]) => layouts.map((layout) => ({ layout }))
@@ -254,5 +261,74 @@ describe('blocksOverlap', () => {
         { firstPage: 1, lastPage: 9 },
       ]),
     ).not.toBeNull()
+  })
+})
+
+describe('pages without listings', () => {
+  const kinds = (...layouts: TemplatePageKind[]): TemplatePage[] =>
+    layouts.map((layout) => ({ layout }))
+  const blanks = (n: number): TemplatePageKind[] => Array.from({ length: n }, () => NO_LISTINGS)
+
+  it('is a template page kind, never a sellable layout', () => {
+    expect(TEMPLATE_PAGE_KINDS).toEqual([...PAGE_LAYOUTS, 'no-listings'])
+    expect(PAGE_LAYOUTS).not.toContain('no-listings')
+    expect(isTemplatePageKind('no-listings')).toBe(true)
+    expect(isTemplatePageKind('full-page')).toBe(true)
+    expect(isTemplatePageKind('cover')).toBe(false)
+    expect(isPageLayout('no-listings')).toBe(false)
+    expect(TEMPLATE_PAGE_LABELS['no-listings']).toBe('No listings')
+    expect(TEMPLATE_PAGE_LABELS['half-page']).toBe(PAGE_LAYOUT_LABELS['half-page'])
+    expect(TEMPLATE_PAGE_SHAPE['no-listings']).toEqual({ pages: 1, slots: 0 })
+    expect(Object.keys(LAYOUT_SHAPE)).toEqual([...PAGE_LAYOUTS])
+  })
+
+  it('keeps the page numbers running: page 8 stays page 8 after 7 blank pages', () => {
+    const slots = buildSlots(kinds(...blanks(7), 'full-page', 'half-page'))
+    expect(slots).toEqual([
+      { number: 1, page: 8, position: null, layout: 'full-page' },
+      { number: 2, page: 9, position: 1, layout: 'half-page' },
+      { number: 3, page: 9, position: 2, layout: 'half-page' },
+    ])
+  })
+
+  it('counts a blank as one page and no listing', () => {
+    expect(templateTotals(kinds(NO_LISTINGS, 'half-page', NO_LISTINGS, NO_LISTINGS))).toEqual({
+      pages: 4,
+      listings: 2,
+    })
+  })
+
+  it('places a spread after blanks on the right pages, and blanks between slots move later ones', () => {
+    const slots = buildSlots(
+      kinds(NO_LISTINGS, NO_LISTINGS, 'full-spread', NO_LISTINGS, 'full-page'),
+    )
+    expect(slots).toEqual([
+      { number: 1, page: 3, position: null, layout: 'full-spread' },
+      { number: 2, page: 6, position: null, layout: 'full-page' },
+    ])
+    expect(slotLabel(slots[0]!)).toBe('Pages 3-4')
+  })
+
+  it('refuses a template with no page with listings, and accepts blanks around real pages', () => {
+    expect(templateProblem(kinds(...blanks(3)))).toBe(
+      'A template needs at least one page with listings.',
+    )
+    expect(templateProblem(kinds(NO_LISTINGS, 'full-page', NO_LISTINGS))).toBeNull()
+    expect(templateProblem([{ layout: 'cover' as TemplatePageKind }])).toMatch(/Unknown layout/)
+  })
+
+  it('lets blocks start, end on or contain blanks', () => {
+    // Pages 1-2 blank, 3 full page, 4 blank, 5 half page, 6 blank.
+    const tpl = kinds(NO_LISTINGS, NO_LISTINGS, 'full-page', NO_LISTINGS, 'half-page', NO_LISTINGS)
+    const slots = buildSlots(tpl)
+    const total = templateTotals(tpl).pages
+    expect(total).toBe(6)
+    expect(blockProblem(slots, { firstPage: 1, lastPage: 4 }, total)).toBeNull()
+    expect(blockNumbers(slots, { firstPage: 1, lastPage: 4 })).toEqual({ from: 1, to: 1 })
+    expect(blockProblem(slots, { firstPage: 5, lastPage: 6 }, total)).toBeNull()
+    expect(blockNumbers(slots, { firstPage: 5, lastPage: 6 })).toEqual({ from: 2, to: 3 })
+    // Only blanks: a valid block, but it holds no listing number.
+    expect(blockProblem(slots, { firstPage: 1, lastPage: 2 }, total)).toBeNull()
+    expect(blockNumbers(slots, { firstPage: 1, lastPage: 2 })).toBeNull()
   })
 })

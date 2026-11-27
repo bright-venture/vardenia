@@ -480,3 +480,57 @@ describe('page blocks on an issue with slots', () => {
     expect(from.validate(3, { siblingData: {} })).toBe(true)
   })
 })
+
+/**
+ * A template with pages without listings: page 1 blank (cover), 2 full page
+ * (number 1), 3 half page (2-3), 4 and 5 blank (separator, back cover). The
+ * issue's page count (5) comes from the template, past the last slot.
+ */
+describe('page blocks over pages without listings', () => {
+  const hook = ListingRanges.hooks!.beforeValidate![0] as (args: never) => Promise<unknown>
+  const slots = buildSlots([
+    { layout: 'no-listings' },
+    { layout: 'full-page' },
+    { layout: 'half-page' },
+    { layout: 'no-listings' },
+    { layout: 'no-listings' },
+  ])
+  const create = (data: Record<string, unknown>, pageCount: unknown = 5) => {
+    const find = vi.fn(async () => ({ docs: [] }))
+    const findByID = vi.fn(async () => ({ id: 1, listingTotal: 3, pageCount, slots }))
+    return hook({ data, operation: 'create', req: { payload: { find, findByID } } } as never)
+  }
+
+  it('lets a block start and end on them, up to the last page of the template', async () => {
+    const data: Record<string, unknown> = {
+      issue: 1,
+      governorate: 'beirut',
+      firstPage: 1,
+      lastPage: 5,
+    }
+    await create(data)
+    expect(data.from).toBe(1)
+    expect(data.to).toBe(3)
+  })
+
+  it('falls back to the last page of a slot when the issue has no usable page count', async () => {
+    await expect(
+      create({ issue: 1, governorate: 'beirut', firstPage: 1, lastPage: 5 }, null),
+    ).rejects.toThrow(/within 1-3/)
+  })
+
+  it('refuses a block of pages without listings only, in plain words', async () => {
+    const error = await create({
+      issue: 1,
+      governorate: 'beirut',
+      firstPage: 4,
+      lastPage: 5,
+    }).catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(APIError)
+    expect((error as APIError).status).toBe(400)
+    expect((error as APIError).isPublic).toBe(true)
+    expect((error as Error).message).toBe(
+      'Pages 4-5 hold no listing (only pages without listings). Choose pages that include listings.',
+    )
+  })
+})

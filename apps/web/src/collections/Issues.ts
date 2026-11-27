@@ -16,11 +16,12 @@ import {
   priceRowsProblem,
   slotLabel,
   slotLastPage,
+  templateTotals,
   totalProblem,
-  type PageLayout,
   type PriceRow,
   type Slot,
   type TemplatePage,
+  type TemplatePageKind,
 } from '@vardenia/core'
 import { slugField } from '../fields/slug'
 import { markMediaAttached } from '../hooks/markMediaAttached'
@@ -90,6 +91,17 @@ export function toSlots(value: unknown): Slot[] {
 /** The pages a set of slots spans: the last page of the last slot. */
 export const slotsPageCount = (slots: readonly Slot[]): number =>
   slots.reduce((high, s) => Math.max(high, slotLastPage(s)), 0)
+
+/**
+ * The pages of an issue built from a template. The slots alone cannot tell:
+ * pages without listings at the end (back cover) hold no slot. So the
+ * template's total, stored as `pageCount` when it was assigned, is kept, as
+ * long as it covers every slot; otherwise the slots' last page.
+ */
+export const issuePageCount = (stored: unknown, slots: readonly Slot[]): number => {
+  const spanned = slotsPageCount(slots)
+  return wholeNumber(stored, Math.max(spanned, 1)) ? stored : spanned
+}
 
 /**
  * What the issue checks read from and write to the database. Injectable, so
@@ -167,7 +179,10 @@ const defaultLookups: IssueLookups = {
       req,
     })
     if (!template) return null
-    return ((template.pages ?? []) as { layout: PageLayout }[]).map((p) => ({ layout: p.layout }))
+    // The layouts only: a page's note changes no slot.
+    return ((template.pages ?? []) as { layout: TemplatePageKind }[]).map((p) => ({
+      layout: p.layout,
+    }))
   },
   lockTemplate: async (templateId, req) => {
     try {
@@ -258,7 +273,7 @@ export function makeSnapshotTemplate(lookups: IssueLookups): CollectionBeforeCha
       const stored = toSlots(originalDoc?.slots)
       if (stored.length > 0) {
         data.listingTotal = stored.length
-        data.pageCount = slotsPageCount(stored)
+        data.pageCount = issuePageCount(originalDoc?.pageCount, stored)
       }
       return data
     }
@@ -303,7 +318,8 @@ export function makeSnapshotTemplate(lookups: IssueLookups): CollectionBeforeCha
     const slots = buildSlots(pages)
     data.slots = slots
     data.listingTotal = slots.length
-    data.pageCount = slotsPageCount(slots)
+    // The template's pages, those without listings included (a back cover holds no slot).
+    data.pageCount = templateTotals(pages).pages
     return data
   }
 }

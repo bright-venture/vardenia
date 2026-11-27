@@ -79,6 +79,7 @@ import * as migration_20261125_100000_business_pages_merged from './20261125_100
 import * as migration_20261126_100000_district_to_city from './20261126_100000_district_to_city'
 import * as migration_20261126_100000_sample_listings from './20261126_100000_sample_listings'
 import * as migration_20261126_120000_page_layouts from './20261126_120000_page_layouts'
+import * as migration_20261127_100000_template_no_listings from './20261127_100000_template_no_listings'
 
 export const migrations = [
   {
@@ -485,5 +486,10 @@ export const migrations = [
     up: migration_20261126_120000_page_layouts.up,
     down: migration_20261126_120000_page_layouts.down,
     name: '20261126_120000_page_layouts',
+  },
+  {
+    up: migration_20261127_100000_template_no_listings.up,
+    down: migration_20261127_100000_template_no_listings.down,
+    name: '20261127_100000_template_no_listings',
   },
 ]
