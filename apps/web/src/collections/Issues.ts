@@ -361,7 +361,12 @@ export const Issues: CollectionConfig = {
       type: 'number',
       defaultValue: 100,
       min: 1,
-      admin: { description: 'Set from the template when the issue has one.' },
+      admin: {
+        description: 'Set from the template when the issue has one.',
+        // With a template the pages come from it (the hook below fills this in
+        // on save), so the input is only shown for older issues without one.
+        condition: (data) => !data?.template,
+      },
     },
     {
       name: 'printRun',
@@ -385,6 +390,9 @@ export const Issues: CollectionConfig = {
         step: 1,
         description:
           'How many numbers the printed issue has. Set from the template (one per slot) when the issue has one. Each governorate takes a block of them under Listing number ranges.',
+        // Same as Pages: the slots of the template decide it, so it is only
+        // typed for older issues without a template.
+        condition: (data) => !data?.template,
       },
     },
     {
