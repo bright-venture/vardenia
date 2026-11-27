@@ -230,7 +230,11 @@ function Dispute({ line, receipt }: { line: Line; receipt?: ReceiptSummary }) {
 
 const styles: Record<string, React.CSSProperties> = {
   box: {
-    border: '1px solid var(--theme-elevation-150)',
+    // Longhands, not `border`: boxWaiting swaps width and colour (React warns
+    // when a rerender drops a longhand that a shorthand on the same element set).
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--theme-elevation-150)',
     borderRadius: '8px',
     padding: 'var(--base)',
     marginBottom: 'calc(var(--base) * 1.5)',

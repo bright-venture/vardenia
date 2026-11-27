@@ -115,7 +115,11 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '0.4rem',
     padding: '0.25rem 0.75rem',
-    border: '1px solid var(--theme-elevation-150)',
+    // Longhands, not `border`: `active` swaps borderColor, and React warns when
+    // a rerender removes a longhand that a shorthand on the same element set.
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: 'var(--theme-elevation-150)',
     borderRadius: '999px',
     fontSize: '0.85rem',
     color: 'var(--theme-elevation-800)',
