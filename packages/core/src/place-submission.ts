@@ -111,11 +111,15 @@ export const placeSubmissionSchema = z
     description: optionalText(2000),
     // One kind of place. The server derives the category from it (categoryOfKind).
     kind: z.custom<SubmittableKindSlug>(isSubmittableKind, UNAVAILABLE_KIND_MESSAGE),
+    // The form is issue first (27 November 2026). For an issue that covers one
+    // governorate the form sends the issue's own; the server never trusts it
+    // there and takes the issue's (core placeInIssue).
     governorate: z.enum(LISTING_GOVERNORATES),
-    // Required: since 24 November 2026 the cities are the towns readers
-    // know (core regions) and every governorate has at least one. Never
-    // decides which numbers are offered or valid; display only.
-    city: z.string().trim().min(1, 'required').max(64, 'too long'),
+    // Asked only for an issue that covers one governorate, where it picks the
+    // block of numbers; never for an All Lebanon issue, whose listings have no
+    // city. The schema cannot know the issue's coverage: the server requires
+    // it for such an issue and drops it otherwise.
+    city: z.preprocess(blankToUndefined, z.string().trim().max(64, 'too long').optional()),
     address: z.string().trim().min(1, 'required').max(300, 'too long'),
     // Stored as the listing's payments.whish; the other methods are never asked.
     acceptsWhish: z.boolean().default(false),

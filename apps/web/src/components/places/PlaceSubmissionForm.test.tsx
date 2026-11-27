@@ -94,22 +94,28 @@ describe('PlaceSubmissionForm, first paint', () => {
     expect(page.querySelector('input[type="file"]')).toBeNull()
   })
 
-  it('offers only the ten submittable kinds, grouped by category', () => {
+  it('offers all sixteen kinds, grouped by category', () => {
     const page = doc(renderToStaticMarkup(wrap('en')))
     const options = [...page.querySelectorAll('select[name="kind"] option')]
       .map((o) => o.getAttribute('value'))
       .filter(Boolean)
     expect(options.sort()).toEqual(
       [
+        'activities',
+        'airport-transfers',
         'cafes',
+        'car-rental',
+        'event-planners',
         'festivals',
         'getaways',
+        'guided-tours',
         'gyms',
         'historic-sites',
         'hotels',
         'malls',
         'nightlife',
         'pools',
+        'private-drivers',
         'restaurants',
       ].sort(),
     )
@@ -141,7 +147,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
   // Numbers 1 to 10 of a block: 1-5 are full pages (pages 1-5), 6-9 the
   // quarters of page 6 and 10 a full page again. Held numbers are not free.
-  const numbersReply = (taken: number[] = []) => {
+  const numbersReply = (taken: number[] = [], issueId = 1) => {
     const free = (numbers: number[], slotOf: (n: number) => object) =>
       numbers.filter((n) => !taken.includes(n)).map(slotOf)
     const fullPages = free([1, 2, 3, 4, 5, 10], (n) => ({
@@ -160,7 +166,7 @@ describe('PlaceSubmissionForm, the four steps', () => {
       ok: true,
       issues: [
         {
-          issueId: 1,
+          issueId,
           issueTitle: 'All Lebanon',
           from: 1,
           to: 10,
@@ -187,6 +193,32 @@ describe('PlaceSubmissionForm, the four steps', () => {
       ],
     })
   }
+  // Issue first: issue 1 covers All Lebanon (Keserwan open, Beirut full),
+  // issue 2 covers Keserwan alone, by city (Jbeil and Jounieh open, Kaslik full).
+  const NUMBERS = '/place-submissions/numbers?issue=1&governorate=keserwan'
+  const issuesReply = () =>
+    json({
+      ok: true,
+      issues: [
+        { issueId: 1, title: 'Summer', coverage: 'all-lebanon', governorate: null },
+        { issueId: 2, title: 'Keserwan', coverage: 'governorate', governorate: 'keserwan' },
+      ],
+    })
+  const placesReply = (issueId: number) =>
+    json({
+      ok: true,
+      places:
+        issueId === 1
+          ? [
+              { governorate: 'keserwan', city: null, free: 10 },
+              { governorate: 'beirut', city: null, free: 0 },
+            ]
+          : [
+              { governorate: 'keserwan', city: 'kaslik', free: 0 },
+              { governorate: 'keserwan', city: 'jbeil', free: 4 },
+              { governorate: 'keserwan', city: 'jounieh', free: 2 },
+            ],
+    })
   const started = () =>
     json(
       {
@@ -248,7 +280,11 @@ describe('PlaceSubmissionForm, the four steps', () => {
     turnstile.resets = 0
     vi.mocked(QRCode.toDataURL).mockClear()
     routes = {
-      '/place-submissions/numbers?governorate=keserwan': () => numbersReply(),
+      '/place-submissions/issues?locale=en': issuesReply,
+      '/place-submissions/issues?locale=ar': issuesReply,
+      '/place-submissions/issues?issue=1': () => placesReply(1),
+      '/place-submissions/issues?issue=2': () => placesReply(2),
+      [NUMBERS]: () => numbersReply(),
       '/place-submissions': started,
       '/place-submissions/status': () => status(false, false),
       '/place-submissions/terms': termsReply,
@@ -274,17 +310,16 @@ describe('PlaceSubmissionForm, the four steps', () => {
     vi.useRealTimers()
   })
 
-  /** Keserwan, Jbeil: the numbers are asked for once both are chosen. */
+  /** The All Lebanon issue, then Keserwan: the numbers are asked for once both are chosen. */
   async function chooseKeserwan() {
+    await setValue(q('select[name="issue"]'), '1')
     await setValue(q('select[name="governorate"]'), 'keserwan')
-    await setValue(q('select[name="city"]'), 'jbeil')
   }
 
   async function fillAndPick() {
     await setValue(q('input[name="name"]'), 'Le Petit Jardin')
     await setValue(q('select[name="kind"]'), 'restaurants')
-    await setValue(q('select[name="governorate"]'), 'keserwan')
-    await setValue(q('select[name="city"]'), 'jbeil')
+    await chooseKeserwan()
     await setValue(q('input[name="address"]'), 'Old Port, Byblos')
     await setValue(q('input[name="ownerName"]'), 'Rita Haddad')
     await setValue(q('input[name="ownerEmail"]'), 'rita@example.com')
@@ -381,10 +416,10 @@ describe('PlaceSubmissionForm, the four steps', () => {
     })
 
     it('offers nothing from a legacy issue without layouts', async () => {
-      routes['/place-submissions/numbers?governorate=keserwan'] = () =>
+      routes[NUMBERS] = () =>
         json({
           ok: true,
-          issues: [{ issueId: 3, issueTitle: 'Old', from: 1, to: 10, taken: [], layouts: [] }],
+          issues: [{ issueId: 1, issueTitle: 'Old', from: 1, to: 10, taken: [], layouts: [] }],
         })
       await chooseKeserwan()
       await click(layoutRadio('full-page'))
@@ -406,114 +441,159 @@ describe('PlaceSubmissionForm, the four steps', () => {
       )
     })
 
-    it("offers exactly the region's cities, by their names, and requires one", async () => {
-      const city = q<HTMLSelectElement>('select[name="city"]')
-      expect(city.required).toBe(true)
-      expect(city.disabled).toBe(true)
-      await setValue(q('select[name="governorate"]'), 'keserwan')
-      const options = [...city.options].filter((o) => o.value)
-      expect(options.map((o) => o.value)).toEqual([
-        'jounieh',
-        'harissa',
-        'kaslik',
-        'ghazir',
-        'tabarja',
-        'faqra-faraya',
-        'jbeil',
+    it('asks for the issue first, then its place, and fetches no numbers before', async () => {
+      expect(calls('/place-submissions/issues?locale=en').length).toBe(1)
+      const issue = q<HTMLSelectElement>('select[name="issue"]')
+      expect(issue.required).toBe(true)
+      expect([...issue.options].map((o) => o.textContent)).toEqual([
+        m.form.chooseIssue,
+        `Summer · ${m.form.allLebanon}`,
+        'Keserwan · Keserwan',
       ])
-      expect(options.map((o) => o.textContent)).toContain('Faqra / Faraya')
-      expect(city.options[0]!.value).toBe('')
-      expect(city.options[0]!.textContent).toBe(m.form.chooseCity)
+      // No place select and no number request until an issue is chosen.
+      expect(container.querySelector('select[name="governorate"]')).toBeNull()
+      expect(container.querySelector('select[name="city"]')).toBeNull()
+      expect(container.textContent).toContain(m.numbers.chooseIssue)
+      expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/numbers'))).toBe(false)
     })
 
-    it('names the cities in Arabic on the Arabic form', async () => {
-      await act(async () => root.render(wrap('ar')))
-      await setValue(q('select[name="governorate"]'), 'keserwan')
-      const names = [...q<HTMLSelectElement>('select[name="city"]').options].map(
-        (o) => o.textContent,
-      )
-      expect(names).toContain('فقرا / فاريا')
-      expect(names).toContain('جونية')
-      expect(names[0]).toBe(getMessages('ar').magazinePlaces.form.chooseCity)
+    it('says so when no issue is open', async () => {
+      routes['/place-submissions/issues?locale=en'] = () => json({ ok: true, issues: [] })
+      await act(async () => root.render(<div />))
+      await act(async () => root.render(wrap('en')))
+      expect(container.textContent).toContain(m.form.noIssues)
+      expect(q<HTMLSelectElement>('select[name="issue"]').disabled).toBe(true)
     })
 
-    it('puts "required" on the city when it is left unchosen, and the preview shows the chosen one', async () => {
-      await fillAndPick()
-      await setValue(q('select[name="city"]'), '')
-      await pressNext()
-      expect(calls('/place-submissions').length).toBe(0)
-      const city = q<HTMLSelectElement>('select[name="city"]')
-      expect(city.getAttribute('aria-invalid')).toBe('true')
-      const describedBy = city.getAttribute('aria-describedby')!
-      expect(container.querySelector(`[id="${describedBy.split(' ').pop()}"]`)!.textContent).toBe(
-        m.errors.required,
-      )
-      await setValue(city, 'faqra-faraya')
-      expect(q('[data-template]').textContent).toContain('Faqra / Faraya, Keserwan')
+    it('lets the owner retry when the issues cannot be loaded', async () => {
+      routes['/place-submissions/issues?locale=en'] = () => new Response('x', { status: 500 })
+      await act(async () => root.render(<div />))
+      await act(async () => root.render(wrap('en')))
+      expect(container.textContent).toContain(m.form.issuesError)
+      routes['/place-submissions/issues?locale=en'] = issuesReply
+      await click(button(m.numbers.retry))
+      expect([...q<HTMLSelectElement>('select[name="issue"]').options]).toHaveLength(3)
     })
 
-    it('never changes the All Lebanon numbers when the city changes', async () => {
-      await chooseKeserwan()
-      await click(layoutRadio('full-page'))
-      await click(numberButton(4))
-      const fetched = fetchMock.mock.calls.length
-      await setValue(q('select[name="city"]'), 'jounieh')
-      await setValue(q('select[name="city"]'), 'jbeil')
-      expect(fetchMock.mock.calls.length).toBe(fetched)
-      expect(numberButton(4).getAttribute('aria-pressed')).toBe('true')
-      expect(nextButton().disabled).toBe(false)
-    })
-
-    /**
-     * An issue for one governorate (27 November 2026): its blocks are cities,
-     * so the route asked without a city says so, and the form asks for the
-     * city, then for that city's numbers.
-     */
-    describe('an issue split by city', () => {
-      const needsCity = () =>
-        json({
-          ok: true,
-          issues: [
-            {
-              issueId: 2,
-              issueTitle: 'Keserwan',
-              coverage: 'governorate',
-              from: null,
-              to: null,
-              taken: [],
-              layouts: [],
-            },
-          ],
-        })
-      const cityUrl = (city: string) =>
-        `/place-submissions/numbers?governorate=keserwan&city=${city}`
-      beforeEach(() => {
-        routes['/place-submissions/numbers?governorate=keserwan'] = needsCity
-        routes[cityUrl('jbeil')] = () => numbersReply()
-        routes[cityUrl('jounieh')] = () => numbersReply()
+    describe('an All Lebanon issue', () => {
+      it('offers only the governorates with a block, a full one shown but disabled, and no city', async () => {
+        await setValue(q('select[name="issue"]'), '1')
+        const governorate = q<HTMLSelectElement>('select[name="governorate"]')
+        expect(governorate.required).toBe(true)
+        const options = [...governorate.options]
+        expect(options.map((o) => o.value)).toEqual(['', 'keserwan', 'beirut'])
+        expect(options[0]!.textContent).toBe(m.form.chooseGovernorate)
+        expect(options[1]!.disabled).toBe(false)
+        expect(options[2]!.disabled).toBe(true)
+        expect(options[2]!.textContent).toBe('Beirut (Full)')
+        expect(container.querySelector('select[name="city"]')).toBeNull()
+        expect(container.textContent).toContain(m.numbers.chooseRegion)
+        expect(calls(NUMBERS).length).toBe(0)
+        await setValue(governorate, 'keserwan')
+        expect(calls(NUMBERS).length).toBe(1)
       })
 
-      it('asks for the city before listing numbers', async () => {
-        await setValue(q('select[name="governorate"]'), 'keserwan')
+      it('puts "required" on the governorate when it is left unchosen', async () => {
+        await setValue(q('select[name="issue"]'), '1')
+        await pressNext()
+        // Next stays disabled without a number; the check runs on submit anyway.
+        const governorate = q<HTMLSelectElement>('select[name="governorate"]')
+        expect(governorate.getAttribute('aria-invalid')).toBe('true')
+        expect(calls('/place-submissions').length).toBe(0)
+      })
+    })
+
+    describe('an issue for one governorate', () => {
+      const cityUrl = (city: string) => `/place-submissions/numbers?issue=2&city=${city}`
+      beforeEach(() => {
+        routes[cityUrl('jbeil')] = () => numbersReply([], 2)
+        routes[cityUrl('jounieh')] = () => numbersReply([], 2)
+      })
+
+      it('fixes the governorate, offers only the cities with a block, a full one disabled', async () => {
+        await setValue(q('select[name="issue"]'), '2')
+        expect(container.querySelector('select[name="governorate"]')).toBeNull()
+        expect(container.textContent).toContain('This issue covers Keserwan.')
+        const city = q<HTMLSelectElement>('select[name="city"]')
+        expect(city.required).toBe(true)
+        const options = [...city.options]
+        // Core regions' order, as the server sends them.
+        expect(options.map((o) => o.value)).toEqual(['', 'kaslik', 'jbeil', 'jounieh'])
+        expect(options[0]!.textContent).toBe(m.form.chooseCity)
+        expect(options[1]!.disabled).toBe(true)
+        expect(options[1]!.textContent).toBe('Kaslik (Full)')
+        expect(options[2]!.textContent).toBe('Jbeil')
         expect(container.textContent).toContain(m.numbers.chooseCity)
-        expect(calls(cityUrl('jbeil')).length).toBe(0)
-        await setValue(q('select[name="city"]'), 'jbeil')
-        expect(container.textContent).not.toContain(m.numbers.chooseCity)
+        expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/numbers'))).toBe(false)
+        await setValue(city, 'jbeil')
         expect(calls(cityUrl('jbeil')).length).toBe(1)
         await click(layoutRadio('full-page'))
         expect(numberButton(4).disabled).toBe(false)
       })
 
-      it("asks for the new city's numbers and clears the picked number when the city changes", async () => {
-        await chooseKeserwan()
+      it('names the cities in Arabic on the Arabic form', async () => {
+        await act(async () => root.render(wrap('ar')))
+        await setValue(q('select[name="issue"]'), '2')
+        const names = [...q<HTMLSelectElement>('select[name="city"]').options].map(
+          (o) => o.textContent,
+        )
+        expect(names).toContain('جونية')
+        expect(names[0]).toBe(getMessages('ar').magazinePlaces.form.chooseCity)
+      })
+
+      it("asks for the new city's numbers and clears the number and layout when the city changes", async () => {
+        await setValue(q('select[name="issue"]'), '2')
+        await setValue(q('select[name="city"]'), 'jbeil')
         await click(layoutRadio('full-page'))
         await click(numberButton(4))
         expect(nextButton().disabled).toBe(false)
         await setValue(q('select[name="city"]'), 'jounieh')
         expect(calls(cityUrl('jounieh')).length).toBe(1)
         expect(container.querySelector('button[aria-pressed="true"]')).toBeNull()
+        expect(layoutRadio('full-page').checked).toBe(false)
         expect(nextButton().disabled).toBe(true)
       })
+
+      it('posts the issue, its governorate and the city', async () => {
+        await setValue(q('input[name="name"]'), 'Le Petit Jardin')
+        await setValue(q('select[name="kind"]'), 'restaurants')
+        await setValue(q('select[name="issue"]'), '2')
+        await setValue(q('select[name="city"]'), 'jbeil')
+        await setValue(q('input[name="address"]'), 'Old Port, Byblos')
+        await setValue(q('input[name="ownerName"]'), 'Rita Haddad')
+        await setValue(q('input[name="ownerEmail"]'), 'rita@example.com')
+        await setValue(q('input[name="ownerPhone"]'), '+961 3 000 000')
+        await click(layoutRadio('full-page'))
+        await click(numberButton(4))
+        await pressNext()
+        const [call] = calls('/place-submissions')
+        expect(bodyOf(call!).data).toMatchObject({
+          issue: 2,
+          listingNumber: 4,
+          governorate: 'keserwan',
+          city: 'jbeil',
+        })
+        expect(q('[data-step]').textContent).toBe('Step 2 of 4')
+      })
+    })
+
+    it('clears the number and the layout when the issue or the governorate changes', async () => {
+      await chooseKeserwan()
+      await click(layoutRadio('full-page'))
+      await click(numberButton(4))
+      expect(nextButton().disabled).toBe(false)
+      await setValue(q('select[name="issue"]'), '2')
+      expect(layoutRadio('full-page').checked).toBe(false)
+      expect(nextButton().disabled).toBe(true)
+      expect(container.querySelector('select[name="governorate"]')).toBeNull()
+      // Back to All Lebanon: the governorate is asked again.
+      await setValue(q('select[name="issue"]'), '1')
+      expect(q<HTMLSelectElement>('select[name="governorate"]').value).toBe('')
+    })
+
+    it('shows the governorate, with no city, in the preview of an All Lebanon listing', async () => {
+      await chooseKeserwan()
+      expect(q('[data-template]').textContent).toContain('Keserwan')
     })
 
     it('puts a server field error on the right input', async () => {
@@ -529,8 +609,11 @@ describe('PlaceSubmissionForm, the four steps', () => {
       await fillAndPick()
       routes['/place-submissions'] = () =>
         json({ ok: false, code: 'number-unavailable', message: 'x' }, 409)
-      routes['/place-submissions/numbers?governorate=keserwan'] = () => numbersReply([4])
+      routes[NUMBERS] = () => numbersReply([4])
+      const placesAsked = calls('/place-submissions/issues?issue=1').length
       await pressNext()
+      // The free counts of the places are asked again too.
+      expect(calls('/place-submissions/issues?issue=1').length).toBe(placesAsked + 1)
       expect(container.textContent).toContain(m.numbers.justTaken)
       // Only free slots are listed: number 4 is gone, its neighbours stay.
       expect(container.querySelector('button[data-number="4"]')).toBeNull()
@@ -538,6 +621,58 @@ describe('PlaceSubmissionForm, the four steps', () => {
       expect(container.querySelector('button[aria-pressed="true"]')).toBeNull()
       expect(q<HTMLInputElement>('input[name="name"]').value).toBe('Le Petit Jardin')
       expect(nextButton().disabled).toBe(true)
+    })
+
+    it('drops the chosen governorate when the reloaded places say it is now full', async () => {
+      await fillAndPick()
+      routes['/place-submissions'] = () => json({ ok: false, code: 'no-range', message: 'x' }, 409)
+      routes['/place-submissions/issues?issue=1'] = () =>
+        json({
+          ok: true,
+          places: [
+            { governorate: 'keserwan', city: null, free: 0 },
+            { governorate: 'beirut', city: null, free: 3 },
+          ],
+        })
+      await pressNext()
+      const governorate = q<HTMLSelectElement>('select[name="governorate"]')
+      expect(governorate.value).toBe('')
+      expect([...governorate.options].find((o) => o.value === 'keserwan')!.disabled).toBe(true)
+      expect(layoutRadio('full-page').checked).toBe(false)
+      expect(container.querySelector('button[data-number]')).toBeNull()
+      expect(nextButton().disabled).toBe(true)
+      expect(q<HTMLInputElement>('input[name="name"]').value).toBe('Le Petit Jardin')
+    })
+
+    it('drops the chosen city when the reloaded places no longer list it', async () => {
+      routes['/place-submissions/numbers?issue=2&city=jbeil'] = () => numbersReply([], 2)
+      await setValue(q('select[name="issue"]'), '2')
+      await setValue(q('select[name="city"]'), 'jbeil')
+      await click(layoutRadio('full-page'))
+      await click(numberButton(4))
+      routes['/place-submissions'] = () =>
+        json({ ok: false, code: 'number-unavailable', message: 'x' }, 409)
+      routes['/place-submissions/issues?issue=2'] = () =>
+        json({ ok: true, places: [{ governorate: 'keserwan', city: 'jounieh', free: 2 }] })
+      await setValue(q('input[name="name"]'), 'Le Petit Jardin')
+      await setValue(q('select[name="kind"]'), 'restaurants')
+      await setValue(q('input[name="address"]'), 'Old Port, Byblos')
+      await setValue(q('input[name="ownerName"]'), 'Rita Haddad')
+      await setValue(q('input[name="ownerEmail"]'), 'rita@example.com')
+      await setValue(q('input[name="ownerPhone"]'), '+961 3 000 000')
+      await pressNext()
+      expect(q<HTMLSelectElement>('select[name="city"]').value).toBe('')
+      expect(container.textContent).toContain(m.numbers.chooseCity)
+      expect(nextButton().disabled).toBe(true)
+    })
+
+    it('keeps the chosen governorate when the reloaded places still have room', async () => {
+      await fillAndPick()
+      routes['/place-submissions'] = () =>
+        json({ ok: false, code: 'number-unavailable', message: 'x' }, 409)
+      await pressNext()
+      expect(q<HTMLSelectElement>('select[name="governorate"]').value).toBe('keserwan')
+      expect(layoutRadio('full-page').checked).toBe(true)
     })
 
     it('says when there are too many attempts', async () => {
@@ -577,8 +712,9 @@ describe('PlaceSubmissionForm, the four steps', () => {
         layout: 'full-page',
         kind: 'restaurants',
         governorate: 'keserwan',
-        city: 'jbeil',
       })
+      // An All Lebanon listing has no city.
+      expect(body.data).not.toHaveProperty('city')
       expect(body.data).not.toHaveProperty('price')
       expect(body.turnstileToken).toBe('ts-1')
       expect(JSON.stringify(body)).not.toMatch(/hero|logo|gallery/)

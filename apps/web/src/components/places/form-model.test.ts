@@ -5,23 +5,38 @@ import { CATEGORIES, submittableKindsByCategory } from '@vardenia/core/taxonomy'
 import {
   buildSubmission,
   checkSubmission,
-  citiesFor,
   errorKind,
   formErrorKey,
-  GOVERNORATE_ORDER,
   initialFormState,
   normaliseErrors,
   previewDataFrom,
-  withGovernorate,
+  withIssue,
+  withPlace,
   type FormState,
 } from './form-model'
+import type { OpenIssue } from './use-place-issues'
 
+const allLebanon: OpenIssue = {
+  issueId: 1,
+  title: 'Summer',
+  coverage: 'all-lebanon',
+  governorate: null,
+}
+const keserwanOnly: OpenIssue = {
+  issueId: 2,
+  title: 'Keserwan',
+  coverage: 'governorate',
+  governorate: 'keserwan',
+}
+
+/** A complete form on an All Lebanon issue: a governorate, no city. */
 const filled = (): FormState => ({
   ...initialFormState(),
+  issue: allLebanon,
   name: 'Le Petit Jardin',
   kind: 'restaurants',
   governorate: 'keserwan',
-  city: 'jbeil',
+  city: '',
   address: 'Old Port, Byblos',
   ownerName: 'Rita Haddad',
   ownerEmail: 'rita@example.com',
@@ -31,41 +46,60 @@ const filled = (): FormState => ({
 
 const pick = { issue: 1, number: 47 }
 
+/** A complete form on an issue for Keserwan: its city chosen. */
+const filledByCity = (): FormState => ({
+  ...filled(),
+  issue: keserwanOnly,
+  governorate: 'keserwan',
+  city: 'jbeil',
+})
+const cityPick = { issue: 2, number: 5 }
+
 describe('choices', () => {
-  it('offers the seven governorates in the agreed order', () => {
-    expect(GOVERNORATE_ORDER).toEqual([
-      'keserwan',
-      'north-lebanon',
-      'beirut',
-      'beqaa',
-      'south-lebanon',
-      'chouf',
-      'matn',
-    ])
-  })
-
-  it('offers only the submittable kinds, grouped, none of the hidden ones', () => {
+  it('offers every kind, coming-soon ones included, grouped by category', () => {
     const slugs = submittableKindsByCategory().flatMap((g) => g.kinds.map((k) => k.slug))
-    expect(slugs).toHaveLength(10)
-    expect(slugs).not.toContain('car-rental')
+    expect(slugs).toHaveLength(16)
+    expect(slugs).toContain('car-rental')
+  })
+})
+
+describe('issue first', () => {
+  it('starts with no issue and no place', () => {
+    expect(initialFormState()).toMatchObject({ issue: null, governorate: '', city: '' })
   })
 
-  it('offers only the cities of the chosen governorate', () => {
-    expect(citiesFor('south-lebanon').map((d) => d.slug)).toEqual(['sidon', 'tyre', 'jezzine'])
-    expect(citiesFor('')).toEqual([])
+  it('a new All Lebanon issue clears the place and the layout', () => {
+    const next = withIssue(filledByCity(), allLebanon)
+    expect(next).toMatchObject({ issue: allLebanon, governorate: '', city: '', layout: null })
   })
 
-  it('clears the city with the governorate', () => {
+  it('a new issue for one governorate takes that governorate, and clears the city and layout', () => {
+    const next = withIssue(filled(), keserwanOnly)
+    expect(next).toMatchObject({
+      issue: keserwanOnly,
+      governorate: 'keserwan',
+      city: '',
+      layout: null,
+    })
+  })
+
+  it('choosing the same issue again changes nothing', () => {
     const state = filled()
-    expect(withGovernorate(state, 'beirut').city).toBe('')
-    expect(withGovernorate(state, 'keserwan').city).toBe('jbeil')
+    expect(withIssue(state, { ...allLebanon })).toBe(state)
   })
 
-  it('offers every governorate exactly its own cities from core regions', () => {
-    for (const gov of GOVERNORATES) {
-      expect(citiesFor(gov.slug).map((d) => d.slug)).toEqual(gov.cities.map((d) => d.slug))
-      expect(citiesFor(gov.slug).length).toBeGreaterThan(0)
-    }
+  it('a new governorate of an All Lebanon issue clears the layout, and never sets a city', () => {
+    const next = withPlace(filled(), 'beirut')
+    expect(next).toMatchObject({ governorate: 'beirut', city: '', layout: null })
+    const same = filled()
+    expect(withPlace(same, 'keserwan')).toBe(same)
+  })
+
+  it('a new city of an issue for one governorate clears the layout, keeping the governorate', () => {
+    const next = withPlace(filledByCity(), 'jounieh')
+    expect(next).toMatchObject({ governorate: 'keserwan', city: 'jounieh', layout: null })
+    const same = filledByCity()
+    expect(withPlace(same, 'jbeil')).toBe(same)
   })
 })
 
@@ -89,10 +123,21 @@ describe('buildSubmission', () => {
     }
   })
 
-  it('sends no issue or number while none is picked', () => {
+  it('sends the chosen issue, and no number while none is picked', () => {
     const { data } = buildSubmission(filled(), null, 'en')
-    expect(data).not.toHaveProperty('issue')
+    expect(data).toMatchObject({ issue: 1 })
     expect(data).not.toHaveProperty('listingNumber')
+    const { data: none } = buildSubmission(initialFormState(), null, 'en')
+    expect(none).not.toHaveProperty('issue')
+  })
+
+  it('sends no city for an All Lebanon issue, and the city for an issue for one governorate', () => {
+    const { data } = buildSubmission({ ...filled(), city: 'jbeil' }, pick, 'en')
+    expect(data).toMatchObject({ governorate: 'keserwan' })
+    expect(data).not.toHaveProperty('city')
+    const { data: byCity } = buildSubmission(filledByCity(), cityPick, 'en')
+    expect(byCity).toMatchObject({ issue: 2, governorate: 'keserwan', city: 'jbeil' })
+    expect(placeSubmissionSchema.safeParse(byCity).success).toBe(true)
   })
 
   it('sends no layout while none is chosen', () => {
@@ -111,41 +156,46 @@ describe('checkSubmission', () => {
     expect(checkSubmission(filled(), pick, 'en').ok).toBe(true)
   })
 
-  it('reports missing fields under the form keys', () => {
+  it('passes a complete form on an issue for one governorate', () => {
+    expect(checkSubmission(filledByCity(), cityPick, 'en').ok).toBe(true)
+  })
+
+  it('reports missing fields under the form keys, and the issue first', () => {
     const result = checkSubmission(initialFormState(), null, 'en')
     expect(result.ok).toBe(false)
     if (result.ok) return
+    expect(result.errors.issue).toBe('required')
     expect(result.errors.name).toBe('required')
     expect(result.errors.address).toBe('required')
     expect(result.errors.ownerEmail).toBeDefined()
     expect(result.errors.number).toBeDefined()
     expect(result.errors.kind).toBe('required')
-    expect(result.errors.governorate).toBe('required')
     expect(result.errors.layout).toBe('required')
-    // No region yet: the city select is disabled, so the error is on the region only.
+    // No issue yet: no place select is shown, so the error is on the issue only.
+    expect(result.errors.governorate).toBeUndefined()
     expect(result.errors.city).toBeUndefined()
   })
 
-  it('requires a city once the region is chosen', () => {
-    const result = checkSubmission({ ...filled(), city: '' }, pick, 'en')
+  it('requires the governorate, never a city, on an All Lebanon issue', () => {
+    const result = checkSubmission({ ...filled(), governorate: '' }, pick, 'en')
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.errors).toEqual({ governorate: 'required' })
+  })
+
+  it('requires the city on an issue for one governorate', () => {
+    const result = checkSubmission({ ...filledByCity(), city: '' }, cityPick, 'en')
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(result.errors).toEqual({ city: 'required' })
   })
 
-  it('refuses a city of another region on the city input', () => {
-    const result = checkSubmission({ ...filled(), city: 'tyre' }, pick, 'en')
+  it("refuses a city that is not the issue governorate's on the city input", () => {
+    const result = checkSubmission({ ...filledByCity(), city: 'tyre' }, cityPick, 'en')
     expect(result.ok).toBe(false)
     if (result.ok) return
     expect(Object.keys(result.errors)).toEqual(['city'])
     expect(result.errors.city).not.toBe('required')
-  })
-
-  it('sends the same issue and number whatever the city', () => {
-    for (const city of citiesFor('keserwan')) {
-      const { data } = buildSubmission({ ...filled(), city: city.slug }, pick, 'en')
-      expect(data).toMatchObject({ issue: 1, listingNumber: 47, city: city.slug })
-    }
   })
 
   it('catches a social link on the wrong site, and a bad phone', () => {
@@ -172,14 +222,17 @@ describe('checkSubmission', () => {
 describe('error keys and kinds', () => {
   it('maps schema paths to the inputs that show them', () => {
     expect(formErrorKey('kind')).toBe('kind')
-    expect(formErrorKey('issue')).toBe('number')
+    expect(formErrorKey('issue')).toBe('issue')
     expect(formErrorKey('listingNumber')).toBe('number')
     expect(formErrorKey('name')).toBe('name')
     expect(formErrorKey('layout')).toBe('layout')
   })
 
   it('keeps the first message per key', () => {
-    expect(normaliseErrors({ issue: 'a', listingNumber: 'b' })).toEqual({ number: 'a' })
+    expect(normaliseErrors({ listingNumber: 'a', 'listingNumber.x': 'b', issue: 'c' })).toEqual({
+      number: 'a',
+      issue: 'c',
+    })
   })
 
   it('names the kind of a contact message by its code, never by searching the text', () => {
@@ -188,8 +241,8 @@ describe('error keys and kinds', () => {
     expect(errorKind('between 6 to 20 people')).toBe('invalid')
   })
 
-  it('refuses a hidden kind on the kind input', () => {
-    const hidden = checkSubmission({ ...filled(), kind: 'car-rental' }, pick, 'en')
+  it('refuses an unknown kind on the kind input', () => {
+    const hidden = checkSubmission({ ...filled(), kind: 'spaceport' }, pick, 'en')
     expect(hidden.ok).toBe(false)
     if (!hidden.ok) expect(hidden.errors.kind).toBeDefined()
   })

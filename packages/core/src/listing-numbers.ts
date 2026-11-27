@@ -119,6 +119,47 @@ export function rangeForPlace<R extends { governorate: string; city?: string | n
 }
 
 /**
+ * Where a business sits for this issue, as the issue decides it, or null when
+ * the place does not fit the issue. The public form is issue first (27
+ * November 2026):
+ *
+ * - All Lebanon: the governorate the owner chose; the city is never asked and
+ *   always null, whatever was sent.
+ * - One governorate: the issue's own governorate, whatever was sent (never
+ *   trusted from the browser), and the city, which must be one of its cities.
+ */
+export function placeInIssue(
+  issue: IssueCoverageFields,
+  place: { governorate?: string | null; city?: string | null },
+): { governorate: string; city: string | null } | null {
+  if (coverageOf(issue.coverage) === 'governorate') {
+    const governorate = cityOrNull(issue.governorate)
+    const city = cityOrNull(place.city)
+    if (governorate === null || city === null || !isCityOf(governorate, city)) return null
+    return { governorate, city }
+  }
+  const governorate = place.governorate ?? ''
+  if (!(LISTING_GOVERNORATES as readonly string[]).includes(governorate)) return null
+  return { governorate, city: null }
+}
+
+/**
+ * The blocks of an issue that serve a place, one per governorate (All Lebanon)
+ * or per city of the issue's governorate (one governorate), in the order they
+ * came. A block that fits no place of the issue (a city block on an All Lebanon
+ * issue, another governorate's block) is left out: the form never offers it.
+ */
+export function placeRanges<R extends { governorate: string; city?: string | null }>(
+  ranges: readonly R[],
+  issue: IssueCoverageFields,
+): R[] {
+  return ranges.filter((range) => {
+    const place = placeInIssue(issue, range)
+    return place !== null && rangeForPlace(ranges, issue, place) === range
+  })
+}
+
+/**
  * Why a block cannot sit in this issue with this governorate and city, or null.
  * `others` are the issue's other blocks (not this one).
  *

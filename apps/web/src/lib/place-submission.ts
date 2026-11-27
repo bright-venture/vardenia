@@ -7,7 +7,11 @@ import {
   isOffered,
   isSubmittableKind,
   coverageOf,
+  GOVERNORATES,
+  LISTING_GOVERNORATES,
   layoutSlots,
+  placeInIssue,
+  placeRanges,
   rangeForPlace,
   slotLastPage,
   type IssueCoverage,
@@ -114,7 +118,6 @@ function paragraphs(text: string): string[] {
 }
 
 interface RangeRow {
-  issue: { id: number; title?: string } | number
   governorate: string
   city?: string | null
   from: number
@@ -133,29 +136,65 @@ export interface LayoutNumbers {
   layout: PageLayout
   price: number
   downpaymentAmount: number
-  /** The free slots of this layout inside the governorate's block, in number order. */
+  /** The free slots of this layout inside the block, in number order. */
   slots: FreeSlot[]
   free: number
 }
 
+/** An issue the public form offers: one that has at least one block of numbers. */
+export interface OpenIssue {
+  issueId: number
+  title: string
+  coverage: IssueCoverage
+  /** The governorate of an issue that covers one; null for All Lebanon. */
+  governorate: string | null
+}
+
 /**
- * An issue's slots, price table and coverage, read fresh from the issue. All
- * are staff-read fields, hence overrideAccess. A legacy issue (no template) has
- * no slots, and so offers no layout. The coverage decides which of the issue's
- * blocks serves a business (core rangeForPlace).
+ * A place the owner can choose in an issue: a governorate (All Lebanon) or a
+ * city of the issue's governorate (one governorate), and how many slots are
+ * free in its block. `free` 0 is a full block: the form lists it, not choosable.
  */
-async function issueLayouts(
-  payload: Payload,
-  issueId: number,
-): Promise<{ slots: Slot[]; prices: PriceRow[]; coverage: IssueCoverageFields }> {
+export interface IssuePlace {
+  governorate: string
+  city: string | null
+  free: number
+}
+
+/** The issue fields the public form needs. Slots and prices never leave the server. */
+interface IssueRead {
+  found: boolean
+  title: string
+  slots: Slot[]
+  prices: PriceRow[]
+  coverage: IssueCoverageFields
+}
+
+/**
+ * An issue's title, slots, price table and coverage, read fresh from the issue.
+ * All but the title are staff-read fields, hence overrideAccess. A legacy issue
+ * (no template) has no slots, and so offers no layout. The coverage decides
+ * which of the issue's blocks serves a business (core rangeForPlace). A missing
+ * issue reads as `found: false`, with nothing in it.
+ */
+async function issueLayouts(payload: Payload, issueId: number): Promise<IssueRead> {
   const issue = (await payload.findByID({
     collection: 'issues',
     id: issueId,
     depth: 0,
+    select: { title: true, slots: true, layouts: true, coverage: true, governorate: true },
     overrideAccess: true,
     disableErrors: true,
-  })) as { slots?: unknown; layouts?: unknown; coverage?: unknown; governorate?: unknown } | null
+  } as never)) as {
+    title?: unknown
+    slots?: unknown
+    layouts?: unknown
+    coverage?: unknown
+    governorate?: unknown
+  } | null
   return {
+    found: Boolean(issue),
+    title: typeof issue?.title === 'string' ? issue.title : '',
     slots: toSlots(issue?.slots),
     prices: toPriceRows(issue?.layouts),
     coverage: { coverage: issue?.coverage, governorate: issue?.governorate },
@@ -169,122 +208,240 @@ function offeredPrice(prices: readonly PriceRow[], slots: readonly Slot[], layou
 }
 
 /**
- * Each issue that has a block of numbers for this governorate (and city), which of them
- * are taken, and per layout on sale in the issue its price and the FREE slots
- * it has inside the block (with page and position, for the label). A layout
- * with slots in the block that are all held is still listed, with `free: 0`,
- * so the form can say it is sold out; one with no slot in the block at all is
- * not offered in this governorate and is left out. A number is taken when
- * a listing that is not in the trash holds it (Payload hides trashed documents
- * from `find`). Never says who holds one: only the numbers come back.
+ * Per layout on sale in the issue (offered, priced, with slots), its price and
+ * the FREE slots it has inside the block. A layout with slots in the block that
+ * are all held is still listed, with `free: 0`, so the form can say it is sold
+ * out; one with no slot in the block at all is not offered there and is left
+ * out. The one rule for both the number picker and the free counts of the
+ * place choice, so a place is never choosable with nothing to pick in it.
+ */
+function blockLayouts(
+  issue: Pick<IssueRead, 'slots' | 'prices'>,
+  block: { from: number; to: number },
+  held: ReadonlySet<number>,
+  downpaymentPercent: number,
+): LayoutNumbers[] {
+  const layouts: LayoutNumbers[] = []
+  for (const priceRow of issue.prices) {
+    const price = offeredPrice(issue.prices, issue.slots, priceRow.layout)
+    if (price === null) continue
+    const inBlock = layoutSlots(issue.slots, priceRow.layout, block)
+    if (inBlock.length === 0) continue
+    const free = inBlock
+      .filter((slot) => !held.has(slot.number))
+      .sort((a, b) => a.number - b.number)
+      .map((slot) => ({
+        number: slot.number,
+        page: slot.page,
+        position: slot.position,
+        lastPage: slotLastPage(slot),
+      }))
+    layouts.push({
+      layout: priceRow.layout,
+      price,
+      downpaymentAmount: downpaymentFor(price, downpaymentPercent),
+      slots: free,
+      free: free.length,
+    })
+  }
+  return layouts
+}
+
+const idOf = (value: unknown): number | null => {
+  const id = value && typeof value === 'object' ? (value as { id?: unknown }).id : value
+  return typeof id === 'number' && Number.isInteger(id) ? id : null
+}
+
+/**
+ * The issues the public form offers, newest first: every issue with at least
+ * one block the form can use (core placeRanges): a governorate-wide block on an
+ * All Lebanon issue, or a city block of its own governorate on an issue for
+ * one governorate. Only the id, title (in `locale`), coverage and the
+ * governorate of a one-governorate issue: never its slots or prices.
+ */
+export async function openIssues(payload: Payload, locale?: string): Promise<OpenIssue[]> {
+  const ranges = await payload.find({
+    collection: 'listing-ranges',
+    select: { issue: true, governorate: true, city: true } as never,
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const byIssue = new Map<number, RangeRow[]>()
+  for (const row of ranges.docs as unknown as (RangeRow & { issue?: unknown })[]) {
+    const id = idOf(row.issue)
+    if (id !== null) byIssue.set(id, [...(byIssue.get(id) ?? []), row])
+  }
+  if (byIssue.size === 0) return []
+  const issues = await payload.find({
+    collection: 'issues',
+    where: { id: { in: [...byIssue.keys()] } },
+    select: { title: true, coverage: true, governorate: true } as never,
+    sort: '-publishedAt',
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+    ...(locale ? { locale: locale as never } : {}),
+  })
+  const docs = issues.docs as unknown as {
+    id: number
+    title?: unknown
+    coverage?: unknown
+    governorate?: unknown
+  }[]
+  return docs.flatMap((doc): OpenIssue[] => {
+    const coverage = { coverage: doc.coverage, governorate: doc.governorate }
+    if (placeRanges(byIssue.get(doc.id) ?? [], coverage).length === 0) return []
+    const kind = coverageOf(doc.coverage)
+    return [
+      {
+        issueId: doc.id,
+        title: typeof doc.title === 'string' ? doc.title : '',
+        coverage: kind,
+        governorate:
+          kind === 'governorate' && typeof doc.governorate === 'string' ? doc.governorate : null,
+      },
+    ]
+  })
+}
+
+/** Where a place sorts: governorates in the admin's order, cities in core regions' order. */
+function placeOrder(place: { governorate: string; city: string | null }): [number, number] {
+  const g = (LISTING_GOVERNORATES as readonly string[]).indexOf(place.governorate)
+  const cities = GOVERNORATES.find((gov) => gov.slug === place.governorate)?.cities ?? []
+  const c = place.city ? cities.findIndex((city) => city.slug === place.city) : -1
+  return [g, c]
+}
+
+/**
+ * The places an issue offers, each with how many slots its block has free:
+ * the governorates with a block (All Lebanon) or the cities with a block
+ * (one governorate). The free count follows the number picker's rule
+ * (blockLayouts): a slot of a layout on sale, inside the block, not held. A
+ * block with none free is still listed, with `free: 0` ("Full").
  *
- * Which block of an issue (core rangeForPlace): an All Lebanon issue gives the
- * governorate's block, whatever the city; an issue for one governorate gives
- * only the block of `city`, and nothing for another governorate.
+ * The holders are read in one query for the whole issue and matched to each
+ * block in memory, as heldNumbers would (governorate, and city for a city
+ * block). Only numbers come back, never who holds them.
+ */
+export async function issuePlaces(payload: Payload, issueId: number): Promise<IssuePlace[]> {
+  const issue = await issueLayouts(payload, issueId)
+  if (!issue.found) return []
+  const found = await payload.find({
+    collection: 'listing-ranges',
+    where: { issue: { equals: issueId } },
+    select: { governorate: true, city: true, from: true, to: true } as never,
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const blocks = placeRanges(found.docs as unknown as RangeRow[], issue.coverage)
+  if (blocks.length === 0) return []
+  const holders = await payload.find({
+    collection: 'businesses',
+    where: {
+      and: [{ issue: { equals: issueId } }, { listingNumber: { exists: true } }],
+    } as never,
+    select: { governorate: true, city: true, listingNumber: true } as never,
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const held = holders.docs as unknown as {
+    governorate?: string | null
+    city?: string | null
+    listingNumber?: number | null
+  }[]
+  const settings = await getPlaceSettings(payload)
+  const places = blocks.map((block) => {
+    const city = block.city || null
+    const taken = new Set(
+      held
+        .filter((h) => h.governorate === block.governorate && (!city || h.city === city))
+        .map((h) => h.listingNumber)
+        .filter((n): n is number => typeof n === 'number'),
+    )
+    const layouts = blockLayouts(issue, block, taken, settings.downpaymentPercent)
+    return {
+      governorate: block.governorate,
+      city,
+      free: layouts.reduce((sum, layout) => sum + layout.free, 0),
+    }
+  })
+  return places.sort((a, b) => {
+    const [ga, ca] = placeOrder(a)
+    const [gb, cb] = placeOrder(b)
+    return ga - gb || ca - cb
+  })
+}
+
+/** What the number picker gets for one issue and place. */
+export interface IssueNumbers {
+  issueId: number
+  issueTitle: string
+  coverage: IssueCoverage
+  from: number
+  to: number
+  taken: number[]
+  /** The Settings currency the layout prices are in, for the form to show them. */
+  currency: string
+  layouts: LayoutNumbers[]
+}
+
+/**
+ * The block of one issue that serves the place, which of its numbers are
+ * taken, and per layout on sale its price and free slots (blockLayouts). A
+ * number is taken when a listing that is not in the trash holds it (Payload
+ * hides trashed documents from `find`). Never says who holds one.
  *
- * Each entry says its issue's `coverage`, so the form knows whether the city
- * matters. Asked without a city, an issue for this one governorate comes back
- * with no block (`from`/`to` null, no layouts): it tells the form to ask for
- * the city, then ask again with it. An All Lebanon issue never needs one.
+ * The place is read as the issue decides it (core placeInIssue): an All
+ * Lebanon issue takes the governorate and ignores any city; an issue for one
+ * governorate takes its own governorate and needs one of its cities. Empty
+ * when the place does not fit the issue or has no block in it; otherwise one
+ * entry, an array so the form reads it as before.
  */
 export async function listNumbersFor(
   payload: Payload,
-  governorate: string,
-  city?: string | null,
-): Promise<
-  Array<{
-    issueId: number
-    issueTitle: string
-    coverage: IssueCoverage
-    /** Null for an issue for one governorate asked without a city. */
-    from: number | null
-    to: number | null
-    taken: number[]
-    /** The Settings currency the layout prices are in, for the form to show them. */
-    currency: string
-    layouts: LayoutNumbers[]
-  }>
-> {
+  issueId: number,
+  place: { governorate?: string | null; city?: string | null },
+): Promise<IssueNumbers[]> {
+  const issue = await issueLayouts(payload, issueId)
+  if (!issue.found) return []
+  const resolved = placeInIssue(issue.coverage, place)
+  if (!resolved) return []
   const ranges = await payload.find({
     collection: 'listing-ranges',
-    where: { governorate: { equals: governorate } },
-    sort: '-issue',
+    where: {
+      and: [{ issue: { equals: issueId } }, { governorate: { equals: resolved.governorate } }],
+    },
     limit: 0,
     pagination: false,
-    depth: 1,
+    depth: 0,
     overrideAccess: true,
   })
-  const rows = ranges.docs as unknown as RangeRow[]
-  if (rows.length === 0) return []
-  // An issue for one governorate has a block per city: one entry per issue.
-  const byIssue = new Map<number, RangeRow[]>()
-  for (const row of rows) {
-    const issueId = typeof row.issue === 'object' ? row.issue.id : row.issue
-    byIssue.set(issueId, [...(byIssue.get(issueId) ?? []), row])
-  }
+  const row = rangeForPlace(ranges.docs as unknown as RangeRow[], issue.coverage, resolved)
+  if (!row) return []
+  const taken = await heldNumbers(payload, issueId, {
+    governorate: resolved.governorate,
+    city: row.city,
+  })
   const settings = await getPlaceSettings(payload)
-  const issues = await Promise.all(
-    [...byIssue].map(async ([issueId, issueRows]) => {
-      const first = issueRows[0]!
-      const issueTitle = typeof first.issue === 'object' ? (first.issue.title ?? '') : ''
-      const { slots, prices, coverage } = await issueLayouts(payload, issueId)
-      const row = rangeForPlace(issueRows, coverage, { governorate, city })
-      const issueCoverage = coverageOf(coverage.coverage)
-      if (!row) {
-        // This governorate's own issue, asked without a city: say a city is needed.
-        if (issueCoverage === 'governorate' && coverage.governorate === governorate && !city) {
-          return {
-            issueId,
-            issueTitle,
-            coverage: issueCoverage,
-            from: null,
-            to: null,
-            taken: [],
-            currency: settings.currency,
-            layouts: [],
-          }
-        }
-        return null
-      }
-      const taken = await heldNumbers(payload, issueId, { governorate, city: row.city })
-      const held = new Set(taken)
-      const layouts: LayoutNumbers[] = []
-      for (const priceRow of prices) {
-        const price = offeredPrice(prices, slots, priceRow.layout)
-        if (price === null) continue
-        const inBlock = layoutSlots(slots, priceRow.layout, { from: row.from, to: row.to })
-        // No slot of this layout in this governorate's pages: not offered here.
-        if (inBlock.length === 0) continue
-        const free = inBlock
-          .filter((slot) => !held.has(slot.number))
-          .sort((a, b) => a.number - b.number)
-          .map((slot) => ({
-            number: slot.number,
-            page: slot.page,
-            position: slot.position,
-            lastPage: slotLastPage(slot),
-          }))
-        layouts.push({
-          layout: priceRow.layout,
-          price,
-          downpaymentAmount: downpaymentFor(price, settings.downpaymentPercent),
-          slots: free,
-          free: free.length,
-        })
-      }
-      return {
-        issueId,
-        issueTitle,
-        coverage: issueCoverage,
-        from: row.from,
-        to: row.to,
-        taken,
-        currency: settings.currency,
-        layouts,
-      }
-    }),
-  )
-  return issues.filter((issue) => issue !== null)
+  return [
+    {
+      issueId,
+      issueTitle: issue.title,
+      coverage: coverageOf(issue.coverage.coverage),
+      from: row.from,
+      to: row.to,
+      taken,
+      currency: settings.currency,
+      layouts: blockLayouts(issue, row, new Set(taken), settings.downpaymentPercent),
+    },
+  ]
 }
 
 /**
@@ -382,20 +539,33 @@ export async function startPlaceSubmission(args: {
       }
     }
 
-    // The form checks all of this too; the server does not trust that. A
-    // missing issue has no range, so it lands here as well.
-    const found = await payload.find({
-      collection: 'listing-ranges',
-      where: {
-        and: [{ issue: { equals: input.issue } }, { governorate: { equals: input.governorate } }],
-      },
-      limit: 0,
-      pagination: false,
-      depth: 0,
-      overrideAccess: true,
-    })
-    const ranges = found.docs as unknown as NumberRange[]
-    if (ranges.length === 0) {
+    // The form checks all of this too; the server does not trust that. The
+    // issue decides the place (core placeInIssue): an issue for one
+    // governorate takes its own governorate, never the browser's, and needs
+    // one of its cities; an All Lebanon issue takes the governorate and drops
+    // any city. A missing issue, a place that does not fit it, and a place
+    // with no block in it are all 'no-range'.
+    const issue = await issueLayouts(payload, input.issue)
+    const place = issue.found ? placeInIssue(issue.coverage, input) : null
+    const found = place
+      ? await payload.find({
+          collection: 'listing-ranges',
+          where: {
+            and: [
+              { issue: { equals: input.issue } },
+              { governorate: { equals: place.governorate } },
+            ],
+          },
+          limit: 0,
+          pagination: false,
+          depth: 0,
+          overrideAccess: true,
+        })
+      : null
+    const range = place
+      ? rangeForPlace((found?.docs ?? []) as unknown as NumberRange[], issue.coverage, place)
+      : null
+    if (!place || !range) {
       return {
         ok: false,
         code: 'no-range',
@@ -403,21 +573,14 @@ export async function startPlaceSubmission(args: {
       }
     }
     // The layout must be on sale in this issue, and the number one of its
-    // slots inside the governorate's block. Slots and price are read here, from
-    // the issue as it is now, never from the browser or an earlier answer. The
+    // slots inside the place's block. Slots and price are read here, from the
+    // issue as it is now, never from the browser or an earlier answer. The
     // layout is checked before the number, so a layout that is not on sale is
-    // refused as such whatever number came with it.
-    const { slots, prices, coverage } = await issueLayouts(payload, input.issue)
+    // refused as such whatever number came with it (LP-ST2).
+    const { slots, prices } = issue
     const layoutPrice = offeredPrice(prices, slots, input.layout)
     if (layoutPrice === null) {
       return { ok: false, code: 'layout-unavailable', message: LAYOUT_UNAVAILABLE }
-    }
-    // The block for the business's own city on an issue for one governorate
-    // (Broummana's pages for a Broummana business); the governorate's block
-    // otherwise. None: this place has no numbers in the issue.
-    const range = rangeForPlace(ranges, coverage, input)
-    if (!range) {
-      return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     if (!isInRange(input.listingNumber, range)) {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
@@ -429,7 +592,7 @@ export async function startPlaceSubmission(args: {
       return { ok: false, code: 'number-unavailable', message: NUMBER_UNAVAILABLE }
     }
     const held = await heldNumbers(payload, input.issue, {
-      governorate: range.governorate,
+      governorate: place.governorate,
       city: range.city,
     })
     if (held.includes(input.listingNumber)) {
@@ -460,8 +623,9 @@ export async function startPlaceSubmission(args: {
       description: input.description ? richText(paragraphs(input.description)) : undefined,
       category: categoryOfKind(input.kind),
       subcategories: [input.kind],
-      governorate: input.governorate,
-      city: input.city,
+      // As the issue decided them: no city for an All Lebanon listing.
+      governorate: place.governorate,
+      city: place.city ?? undefined,
       address: input.address,
       payments: { cash: false, card: false, whish: input.acceptsWhish, omt: false },
       issue: input.issue,

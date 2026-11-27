@@ -99,8 +99,8 @@ describe('parseSubmission', () => {
     const r = parseSubmission({ data: DATA })
     expect(r.ok && r.input.name).toBe('Cafe Cedar')
   })
-  it('400s with a kind field error for a hidden kind', () => {
-    const r = parseSubmission({ data: { ...DATA, kind: 'car-rental' } })
+  it('400s with a kind field error for an unknown kind', () => {
+    const r = parseSubmission({ data: { ...DATA, kind: 'spaceport' } })
     expect(r.ok).toBe(false)
     if (!r.ok) {
       expect(r.status).toBe(400)

@@ -1,17 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { UNAVAILABLE_KIND_MESSAGE, placeSubmissionSchema } from './place-submission'
+import { placeSubmissionSchema } from './place-submission'
 import { GOVERNORATES } from './regions'
 import { LISTING_GOVERNORATES } from './listing-numbers'
 import { SUBMITTABLE_KIND_SLUGS, categoryOfKind, submittableKindsByCategory } from './taxonomy'
-
-const HIDDEN_KINDS = [
-  'guided-tours',
-  'activities',
-  'event-planners',
-  'car-rental',
-  'airport-transfers',
-  'private-drivers',
-]
 
 const valid = {
   name: 'Cafe Example',
@@ -65,15 +56,6 @@ describe('placeSubmissionSchema', () => {
       expect(r.success && r.data.kind).toBe(kind)
     })
 
-    it.each(HIDDEN_KINDS)('refuses the hidden kind %s with a clear message', (kind) => {
-      const r = parse({ kind })
-      expect(r.success).toBe(false)
-      if (!r.success) {
-        const issue = r.error.issues.find((i) => i.path[0] === 'kind')
-        expect(issue?.message).toBe(UNAVAILABLE_KIND_MESSAGE)
-      }
-    })
-
     it('refuses an unknown, missing, empty, list or category-slug kind', () => {
       for (const kind of ['spaceport', '', ['cafes'], 'hospitality', 42, null]) {
         expect(parse({ kind }).success).toBe(false)
@@ -83,10 +65,10 @@ describe('placeSubmissionSchema', () => {
       expect(placeSubmissionSchema.safeParse(without).success).toBe(false)
     })
 
-    it('has exactly ten submittable kinds, none hidden, every one with a category', () => {
-      expect(SUBMITTABLE_KIND_SLUGS).toHaveLength(10)
-      for (const hidden of HIDDEN_KINDS) {
-        expect(SUBMITTABLE_KIND_SLUGS).not.toContain(hidden)
+    it('offers all sixteen kinds, coming-soon ones included, every one with a category', () => {
+      expect(SUBMITTABLE_KIND_SLUGS).toHaveLength(16)
+      for (const soon of ['guided-tours', 'car-rental', 'event-planners']) {
+        expect(SUBMITTABLE_KIND_SLUGS).toContain(soon)
       }
       for (const kind of SUBMITTABLE_KIND_SLUGS) expect(categoryOfKind(kind)).toBeDefined()
       expect(categoryOfKind('cafes')).toBe('food-and-beverage')
@@ -94,12 +76,12 @@ describe('placeSubmissionSchema', () => {
       expect(categoryOfKind('nope')).toBeUndefined()
     })
 
-    it('groups the submittable kinds by category without hidden ones', () => {
+    it('groups the submittable kinds by category, coming-soon categories included', () => {
       const groups = submittableKindsByCategory()
       const flat = groups.flatMap((g) => g.kinds.map((k) => k.slug))
       expect([...flat].sort()).toEqual([...SUBMITTABLE_KIND_SLUGS].sort())
-      expect(groups.map((g) => g.category.slug)).not.toContain('weddings')
-      expect(groups.map((g) => g.category.slug)).not.toContain('transportation')
+      expect(groups.map((g) => g.category.slug)).toContain('weddings')
+      expect(groups.map((g) => g.category.slug)).toContain('transportation')
     })
 
     it('no longer takes category or subcategories: the keys are stripped', () => {
@@ -236,7 +218,12 @@ describe('placeSubmissionSchema', () => {
     })
   })
 
-  describe('city is required', () => {
+  /**
+   * Issue first (27 November 2026): the city is asked only for an issue that
+   * covers one governorate, which the schema cannot see; the server requires
+   * it there (core placeInIssue). An All Lebanon listing has none.
+   */
+  describe('city is optional', () => {
     it('every governorate a place can be in has at least one city', () => {
       for (const slug of LISTING_GOVERNORATES) {
         const gov = GOVERNORATES.find((g) => g.slug === slug)
@@ -244,21 +231,22 @@ describe('placeSubmissionSchema', () => {
       }
     })
 
-    it.each(['', '   '])('refuses a blank city (%j) as required', (city) => {
+    it.each(['', '   ', null])('reads a blank city (%j) as no city', (city) => {
       const r = parse({ city })
-      expect(r.success).toBe(false)
-      if (!r.success) {
-        const issue = r.error.issues.find((i) => i.path[0] === 'city')
-        expect(issue?.message).toBe('required')
-      }
+      expect(r.success).toBe(true)
+      if (r.success) expect(r.data.city).toBeUndefined()
     })
 
-    it('refuses a missing city, on city alone', () => {
+    it('accepts a missing city', () => {
       const without: Record<string, unknown> = { ...valid }
       delete without.city
       const r = placeSubmissionSchema.safeParse(without)
-      expect(r.success).toBe(false)
-      if (!r.success) expect(r.error.issues.every((i) => i.path[0] === 'city')).toBe(true)
+      expect(r.success).toBe(true)
+      if (r.success) expect(r.data.city).toBeUndefined()
+    })
+
+    it('still refuses a city that is too long', () => {
+      expect(parse({ city: 'x'.repeat(65) }).success).toBe(false)
     })
 
     it('accepts every city of every governorate, keeping the slug', () => {

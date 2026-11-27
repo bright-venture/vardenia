@@ -34,7 +34,9 @@ import { statusForOutcome } from './place-submission-request'
 import {
   hashSessionToken,
   isListingNumberTaken,
+  issuePlaces,
   listNumbersFor,
+  openIssues,
   MAX_OPEN_STARTS_PER_EMAIL,
   startPlaceSubmission,
 } from './place-submission'
@@ -117,6 +119,12 @@ function stub(
     slots?: unknown[] | null
     /** The numbers listings hold in the block; default: [11]. */
     held?: number[]
+    /** Who holds them, for the per-place counts; default: the held numbers, in beirut. */
+    holders?: { listingNumber: number; governorate: string; city?: string | null }[]
+    /** What an `issues` find answers; default: issue 7. */
+    issues?: unknown[]
+    /** Issue 7 does not exist. */
+    noIssue?: boolean
     holdMinutes?: number
     /** One error per business create, in order; creates after the last succeed. */
     listingErrors?: unknown[]
@@ -141,7 +149,13 @@ function stub(
       }
     }
     if (collection === 'businesses')
-      return { docs: held.map((listingNumber) => ({ listingNumber })) }
+      return {
+        docs:
+          opts.holders ??
+          held.map((listingNumber) => ({ listingNumber, governorate: 'beirut', city: null })),
+      }
+    if (collection === 'issues')
+      return { docs: opts.issues ?? [{ id: 7, title: 'Summer', ...opts.issue }] }
     return { docs: [] }
   })
   const create = vi.fn(
@@ -162,12 +176,17 @@ function stub(
     { layout: 'full-page', offered: true, price: 500 },
     { layout: 'half-page', offered: true, price: 300 },
   ]
-  const findByID = vi.fn(async () => ({
-    id: 7,
-    ...opts.issue,
-    slots: opts.slots === undefined ? defaultSlots : opts.slots,
-    layouts: opts.layouts === undefined ? defaultLayouts : opts.layouts,
-  }))
+  const findByID = vi.fn(async () =>
+    opts.noIssue
+      ? null
+      : {
+          id: 7,
+          title: 'Summer',
+          ...opts.issue,
+          slots: opts.slots === undefined ? defaultSlots : opts.slots,
+          layouts: opts.layouts === undefined ? defaultLayouts : opts.layouts,
+        },
+  )
   const update = vi.fn(async () => {
     if (opts.failUpdate) throw opts.failUpdate
     return { id: 555 }
@@ -187,7 +206,7 @@ const stored = (collection: string) =>
 describe('listNumbersFor', () => {
   it('returns the block, what is taken, and the free slots of each offered layout in it', async () => {
     const s = stub()
-    const out = await listNumbersFor(s, 'beirut')
+    const out = await listNumbersFor(s, 7, { governorate: 'beirut' })
     expect(out).toEqual([
       {
         issueId: 7,
@@ -235,7 +254,8 @@ describe('listNumbersFor', () => {
         slots: [{ number: 12, page: 62, position: null, layout: 'full-spread' }],
         layouts: [{ layout: 'full-spread', offered: true, price: 900 }],
       }),
-      'beirut',
+      7,
+      { governorate: 'beirut' },
     )
     expect(out[0]!.layouts).toEqual([
       expect.objectContaining({
@@ -247,7 +267,7 @@ describe('listNumbersFor', () => {
   })
 
   it('reports a layout whose slots in the block are all held with free: 0 and no slots', async () => {
-    const out = await listNumbersFor(stub({ held: [10, 11] }), 'beirut')
+    const out = await listNumbersFor(stub({ held: [10, 11] }), 7, { governorate: 'beirut' })
     expect(out[0]!.layouts.find((l) => l.layout === 'half-page')).toEqual({
       layout: 'half-page',
       price: 300,
@@ -260,7 +280,8 @@ describe('listNumbersFor', () => {
   it('leaves out an offered layout with no slot in this block (quarters sit after it)', async () => {
     const out = await listNumbersFor(
       stub({ layouts: [{ layout: 'quarter-page', offered: true, price: 100 }] }),
-      'beirut',
+      7,
+      { governorate: 'beirut' },
     )
     expect(out[0]!.layouts).toEqual([])
   })
@@ -273,13 +294,13 @@ describe('listNumbersFor', () => {
         { layout: 'three-third', offered: true, price: 200 },
       ],
     })
-    const out = await listNumbersFor(s, 'beirut')
+    const out = await listNumbersFor(s, 7, { governorate: 'beirut' })
     expect(out[0]!.layouts).toEqual([])
   })
 
   it('reads the issue with overrideAccess and never names an owner', async () => {
     const s = stub()
-    const out = await listNumbersFor(s, 'beirut')
+    const out = await listNumbersFor(s, 7, { governorate: 'beirut' })
     expect(JSON.stringify(out)).not.toMatch(/owner|email|name/i)
     expect(s.findByID.mock.calls[0]![0]).toMatchObject({
       collection: 'issues',
@@ -289,7 +310,7 @@ describe('listNumbersFor', () => {
   })
 
   it('offers no layouts for a legacy issue without slots, keeping its numbers', async () => {
-    const out = await listNumbersFor(stub({ slots: null }), 'beirut')
+    const out = await listNumbersFor(stub({ slots: null }), 7, { governorate: 'beirut' })
     expect(out).toEqual([
       {
         issueId: 7,
@@ -305,7 +326,7 @@ describe('listNumbersFor', () => {
   })
 
   it('returns nothing for a governorate with no range', async () => {
-    expect(await listNumbersFor(stub({ range: false }), 'matn')).toEqual([])
+    expect(await listNumbersFor(stub({ range: false }), 7, { governorate: 'matn' })).toEqual([])
   })
 })
 
@@ -450,8 +471,8 @@ describe('startPlaceSubmission', () => {
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('refuses a hidden kind even if the schema was bypassed', async () => {
-    for (const kind of ['car-rental', 'guided-tours', 'nonsense']) {
+  it('refuses an unknown kind even if the schema was bypassed', async () => {
+    for (const kind of ['spaceport', 'nonsense']) {
       const s = stub()
       const out = await startPlaceSubmission({
         payload: s,
@@ -539,9 +560,9 @@ describe('startPlaceSubmission', () => {
     // Category comes from the one kind; payments hold only Whish.
     expect(listing.data.category).toBe('food-and-beverage')
     expect(listing.data.subcategories).toEqual(['cafes'])
-    // The city is stored as the slug the Businesses city select takes.
+    // An All Lebanon issue (the default): the governorate only, no city.
     expect(listing.data.governorate).toBe('beirut')
-    expect(listing.data.city).toBe('beirut')
+    expect(listing.data.city).toBeUndefined()
     expect(listing.data.payments).toEqual({ cash: false, card: false, whish: true, omt: false })
     expect(listing.data.contact).toEqual({
       phone: '+9611',
@@ -853,6 +874,7 @@ describe('startPlaceSubmission', () => {
 /**
  * An issue for one governorate (27 November 2026): its blocks are cities, and
  * a business is offered, and may start in, only the block of its own city.
+ * The form is issue first: the issue decides the governorate, never the browser.
  */
 describe('an issue for one governorate', () => {
   const matnOnly = { coverage: 'governorate', governorate: 'matn' }
@@ -864,56 +886,50 @@ describe('an issue for one governorate', () => {
     JSON.stringify(
       s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'businesses')?.where,
     )
+  const rangeQuery = (s: Stub) =>
+    JSON.stringify(
+      s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'listing-ranges')?.where,
+    )
 
-  it("lists the block of the business's city, holding numbers by that city", async () => {
+  it('lists the block of the city, holding numbers by that city', async () => {
     const s = stub({ ranges: cityRanges, issue: matnOnly })
-    const out = await listNumbersFor(s, 'matn', 'broummana')
+    const out = await listNumbersFor(s, 7, { city: 'broummana' })
     expect(out).toHaveLength(1)
-    expect(out[0]).toMatchObject({ issueId: 7, issueTitle: 'Matn', from: 10, to: 20 })
+    expect(out[0]).toMatchObject({ issueId: 7, coverage: 'governorate', from: 10, to: 20 })
     expect(out[0]!.layouts.map((l) => l.layout)).toEqual(['full-page', 'half-page'])
     expect(businessQuery(s)).toContain('"city":{"equals":"broummana"}')
+    expect(businessQuery(s)).toContain('"governorate":{"equals":"matn"}')
   })
 
-  it('lists nothing for a city of the governorate without a block', async () => {
+  it("takes the issue's governorate, never the one asked for", async () => {
     const s = stub({ ranges: cityRanges, issue: matnOnly })
-    expect(await listNumbersFor(s, 'matn', 'bikfaya')).toEqual([])
+    const out = await listNumbersFor(s, 7, { governorate: 'beirut', city: 'broummana' })
+    expect(out[0]).toMatchObject({ from: 10, to: 20 })
+    expect(rangeQuery(s)).toContain('"governorate":{"equals":"matn"}')
   })
 
-  it('without a city, says the issue needs one: no block, no numbers, no holder lookup', async () => {
+  it('lists nothing for a city without a block, a city of another governorate, or no city', async () => {
     const s = stub({ ranges: cityRanges, issue: matnOnly })
-    const needsCity = {
-      issueId: 7,
-      issueTitle: 'Matn',
-      coverage: 'governorate',
-      from: null,
-      to: null,
-      taken: [],
-      currency: 'USD',
-      layouts: [],
-    }
-    expect(await listNumbersFor(s, 'matn')).toEqual([needsCity])
-    expect(await listNumbersFor(s, 'matn', null)).toEqual([needsCity])
+    expect(await listNumbersFor(s, 7, { city: 'bikfaya' })).toEqual([])
+    expect(await listNumbersFor(s, 7, { city: 'jounieh' })).toEqual([])
+    expect(await listNumbersFor(s, 7, { governorate: 'matn' })).toEqual([])
+    expect(await listNumbersFor(s, 7, { governorate: 'matn', city: null })).toEqual([])
     expect(s.find.mock.calls.some((c) => c[0].collection === 'businesses')).toBe(false)
   })
 
-  it('marks every block it lists with its issue coverage', async () => {
-    const s = stub({ ranges: cityRanges, issue: matnOnly })
-    expect((await listNumbersFor(s, 'matn', 'broummana'))[0]!.coverage).toBe('governorate')
+  it('lists nothing for a missing issue', async () => {
+    const s = stub({ ranges: cityRanges, noIssue: true })
+    expect(await listNumbersFor(s, 7, { city: 'broummana' })).toEqual([])
   })
 
-  it('lists nothing for another governorate', async () => {
-    const s = stub({ ranges: cityRanges, issue: { coverage: 'governorate', governorate: 'chouf' } })
-    expect(await listNumbersFor(s, 'matn', 'broummana')).toEqual([])
-  })
-
-  it('gives an All Lebanon issue its governorate block whatever the city, not filtering by city', async () => {
+  it('gives an All Lebanon issue its governorate block, ignoring any city', async () => {
     const s = stub({ issue: { coverage: 'all-lebanon' } })
-    const out = await listNumbersFor(s, 'beirut', 'beirut')
-    expect(out[0]).toMatchObject({ from: 10, to: 20, taken: [11] })
+    const out = await listNumbersFor(s, 7, { governorate: 'beirut', city: 'beirut' })
+    expect(out[0]).toMatchObject({ from: 10, to: 20, taken: [11], coverage: 'all-lebanon' })
     expect(businessQuery(s)).not.toContain('"city"')
   })
 
-  it('starts in the block of its own city', async () => {
+  it('starts in the block of its city, under the issue governorate', async () => {
     const s = stub({ ranges: cityRanges, issue: matnOnly })
     const out = await startPlaceSubmission({
       payload: s,
@@ -921,6 +937,20 @@ describe('an issue for one governorate', () => {
     })
     expect(out).toMatchObject({ ok: true, price: 500 })
     expect(businessQuery(s)).toContain('"city":{"equals":"broummana"}')
+    const [listing] = created(s, 'businesses')
+    expect(listing.data.governorate).toBe('matn')
+    expect(listing.data.city).toBe('broummana')
+  })
+
+  it('never trusts the governorate sent: the listing gets the issue one', async () => {
+    const s = stub({ ranges: cityRanges, issue: matnOnly })
+    const out = await startPlaceSubmission({
+      payload: s,
+      input: input({ governorate: 'beirut', city: 'broummana', listingNumber: 12 }),
+    })
+    expect(out).toMatchObject({ ok: true })
+    expect(rangeQuery(s)).toContain('"governorate":{"equals":"matn"}')
+    expect(created(s, 'businesses')[0].data.governorate).toBe('matn')
   })
 
   it("refuses a number of another city's block, writing nothing", async () => {
@@ -933,21 +963,25 @@ describe('an issue for one governorate', () => {
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('refuses a city with no block as number-unavailable, writing nothing', async () => {
+  it.each([
+    ['a city with no block', 'bikfaya'],
+    ['a city of another governorate', 'jounieh'],
+    ['no city', undefined],
+  ])('refuses %s as no-range, writing nothing', async (_name, city) => {
     const s = stub({ ranges: cityRanges, issue: matnOnly })
     const out = await startPlaceSubmission({
       payload: s,
-      input: input({ governorate: 'matn', city: 'bikfaya', listingNumber: 12 }),
+      input: input({ governorate: 'matn', city, listingNumber: 12 }),
     })
     expect(out).toEqual({
       ok: false,
-      code: 'number-unavailable',
-      message: 'That number is no longer available. Please choose another.',
+      code: 'no-range',
+      message: 'Listings in that region are not open for this issue yet.',
     })
     expect(s.create).not.toHaveBeenCalled()
   })
 
-  it('still refuses a layout that is not on sale as a layout problem first', async () => {
+  it('still refuses a layout that is not on sale as a layout problem, before the number', async () => {
     const s = stub({
       ranges: cityRanges,
       issue: matnOnly,
@@ -955,8 +989,156 @@ describe('an issue for one governorate', () => {
     })
     const out = await startPlaceSubmission({
       payload: s,
-      input: input({ governorate: 'matn', city: 'bikfaya' }),
+      input: input({ governorate: 'matn', city: 'broummana', listingNumber: 99 }),
     })
     expect(out).toMatchObject({ ok: false, code: 'layout-unavailable' })
+  })
+})
+
+describe('an All Lebanon issue at start', () => {
+  it('stores no city, whatever was sent', async () => {
+    const s = stub({ issue: { coverage: 'all-lebanon' } })
+    const out = await startPlaceSubmission({ payload: s, input: input({ city: 'beirut' }) })
+    expect(out).toMatchObject({ ok: true })
+    const [listing] = created(s, 'businesses')
+    expect(listing.data.governorate).toBe('beirut')
+    expect(listing.data.city).toBeUndefined()
+    const held = JSON.stringify(
+      s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'businesses')?.where,
+    )
+    expect(held).not.toContain('"city"')
+  })
+
+  it('refuses a missing issue as no-range, writing nothing', async () => {
+    const s = stub({ noIssue: true })
+    const out = await startPlaceSubmission({ payload: s, input: input() })
+    expect(out).toMatchObject({ ok: false, code: 'no-range' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+
+  it('refuses a governorate with no block in the issue as no-range', async () => {
+    const s = stub()
+    const out = await startPlaceSubmission({ payload: s, input: input({ governorate: 'matn' }) })
+    expect(out).toMatchObject({ ok: false, code: 'no-range' })
+    expect(s.create).not.toHaveBeenCalled()
+  })
+})
+
+describe('openIssues', () => {
+  it('lists the issues with a usable block, with only their title and coverage', async () => {
+    const s = stub({
+      ranges: [
+        { issue: 7, governorate: 'beirut', city: null },
+        { issue: 7, governorate: 'matn', city: null },
+        { issue: 9, governorate: 'matn', city: 'dbayeh' },
+      ],
+      issues: [
+        { id: 9, title: 'Matn', coverage: 'governorate', governorate: 'matn' },
+        { id: 7, title: 'Summer', coverage: null, governorate: 'matn' },
+      ],
+    })
+    expect(await openIssues(s, 'ar')).toEqual([
+      { issueId: 9, title: 'Matn', coverage: 'governorate', governorate: 'matn' },
+      // No coverage stored: All Lebanon, and no governorate.
+      { issueId: 7, title: 'Summer', coverage: 'all-lebanon', governorate: null },
+    ])
+    const issuesQuery = s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'issues')
+    expect(issuesQuery.where).toEqual({ id: { in: [7, 9] } })
+    expect(issuesQuery.select).toEqual({ title: true, coverage: true, governorate: true })
+    expect(issuesQuery.locale).toBe('ar')
+    expect(issuesQuery.overrideAccess).toBe(true)
+    const rangesQuery = s.find.mock.calls
+      .map((c) => c[0])
+      .find((a) => a.collection === 'listing-ranges')
+    expect(rangesQuery.select).toEqual({ issue: true, governorate: true, city: true })
+  })
+
+  it('leaves out an issue whose ranges serve no place of it', async () => {
+    const s = stub({
+      ranges: [
+        // All Lebanon with only a city block: not usable.
+        { issue: 7, governorate: 'beirut', city: 'beirut' },
+        // One governorate (matn) with a governorate-wide block, and another governorate's city.
+        { issue: 9, governorate: 'matn', city: null },
+        { issue: 9, governorate: 'keserwan', city: 'jbeil' },
+        // One governorate with no governorate set on the issue.
+        { issue: 11, governorate: 'matn', city: 'dbayeh' },
+        // Usable.
+        { issue: 12, governorate: 'matn', city: 'dbayeh' },
+      ],
+      issues: [
+        { id: 7, title: 'A', coverage: 'all-lebanon' },
+        { id: 9, title: 'B', coverage: 'governorate', governorate: 'matn' },
+        { id: 11, title: 'C', coverage: 'governorate', governorate: null },
+        { id: 12, title: 'D', coverage: 'governorate', governorate: 'matn' },
+      ],
+    })
+    expect((await openIssues(s)).map((i) => i.issueId)).toEqual([12])
+  })
+
+  it('lists nothing, and reads no issue, without any range', async () => {
+    const s = stub({ range: false })
+    expect(await openIssues(s)).toEqual([])
+    expect(s.find.mock.calls.some((c) => c[0].collection === 'issues')).toBe(false)
+  })
+})
+
+describe('issuePlaces', () => {
+  it('counts the free slots of each governorate block of an All Lebanon issue', async () => {
+    const s = stub({
+      ranges: [
+        { governorate: 'matn', city: null, from: 1, to: 9 },
+        { governorate: 'beirut', city: null, from: 10, to: 20 },
+      ],
+      holders: [
+        { listingNumber: 11, governorate: 'beirut', city: 'beirut' },
+        // A holder in another governorate does not count against beirut.
+        { listingNumber: 12, governorate: 'matn', city: null },
+      ],
+    })
+    // beirut 10-20: full pages 12-20 (9) and half page 10 (11 is held): 10.
+    // matn 1-9: only full page 9 is a slot on sale there.
+    expect(await issuePlaces(s, 7)).toEqual([
+      { governorate: 'beirut', city: null, free: 10 },
+      { governorate: 'matn', city: null, free: 1 },
+    ])
+    const holders = s.find.mock.calls.map((c) => c[0]).find((a) => a.collection === 'businesses')
+    expect(holders.select).toEqual({ governorate: true, city: true, listingNumber: true })
+    expect(holders.overrideAccess).toBe(true)
+  })
+
+  it('marks a block with no free slot of a layout on sale as full (free 0)', async () => {
+    const s = stub({
+      layouts: [{ layout: 'half-page', offered: true, price: 300 }],
+      held: [10, 11],
+    })
+    expect(await issuePlaces(s, 7)).toEqual([{ governorate: 'beirut', city: null, free: 0 }])
+  })
+
+  it('counts per city on an issue for one governorate, leaving out blocks that fit no place', async () => {
+    const s = stub({
+      issue: { coverage: 'governorate', governorate: 'matn' },
+      ranges: [
+        { governorate: 'matn', city: 'broummana', from: 10, to: 20 },
+        { governorate: 'matn', city: 'dbayeh', from: 1, to: 9 },
+        // Another governorate, and a governorate-wide block: not places of this issue.
+        { governorate: 'beirut', city: 'beirut', from: 21, to: 25 },
+        { governorate: 'matn', city: null, from: 26, to: 30 },
+      ],
+      holders: [
+        { listingNumber: 12, governorate: 'matn', city: 'broummana' },
+        // Held in dbayeh: does not count against broummana.
+        { listingNumber: 13, governorate: 'matn', city: 'dbayeh' },
+      ],
+    })
+    // Cities in core regions' order: Dbayeh before Broummana.
+    expect(await issuePlaces(s, 7)).toEqual([
+      { governorate: 'matn', city: 'dbayeh', free: 1 },
+      { governorate: 'matn', city: 'broummana', free: 10 },
+    ])
+  })
+
+  it('lists nothing for a missing issue', async () => {
+    expect(await issuePlaces(stub({ noIssue: true }), 7)).toEqual([])
   })
 })

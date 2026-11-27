@@ -1,31 +1,18 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { PAGE_LAYOUTS, isPageLayout, type PageLayout } from '@vardenia/core/page-layouts'
+import { useFreshJson, type FreshState } from './use-fresh-json'
 
 /**
- * The listing numbers of one governorate and city, for the number picker: per issue,
- * the layouts it offers there, each with its price and its FREE slots (a slot
- * is one listing number at a page and position).
+ * The listing numbers of one place of one issue, for the number picker: the
+ * layouts the issue offers there, each with its price and its FREE slots (a
+ * slot is one listing number at a page and position).
  *
- * Asks `/place-submissions/numbers` with `cache: 'no-store'`: the free slots
- * change whenever another owner submits, and a cached copy would offer numbers
- * that are already gone.
- *
- * # A slow answer for a governorate the owner already left is ignored
- *
- * The city counts only for an issue that covers one governorate (27 November
- * 2026): it has a block per city, and the route lists only the owner's city's.
- * So the governorate alone is asked first, as before. When the answer says an
- * issue needs a city (`coverage: 'governorate'` with no block), the hook waits
- * for the city and asks again with it, and again whenever the city changes.
- * All Lebanon issues never depend on the city.
- *
- * Every request is tied to a key (governorate, city when it counts, and a reload counter). The
- * effect aborts the request it started when the key changes, and the result is
- * stored with its key, so an answer can only be shown for the key it was asked
- * for. While the stored result belongs to another key the state reads
- * `loading`, which is also why no state is set synchronously in the effect.
+ * The form is issue first (27 November 2026): the owner chooses the issue,
+ * then a governorate (All Lebanon issue) or a city (issue for one
+ * governorate), and only then are the numbers asked for, with
+ * `cache: 'no-store'` (use-fresh-json): the free slots change whenever another
+ * owner submits. An answer for a choice the owner already left is ignored.
  */
 
 /** One free slot: its listing number and where it sits. A spread covers page..lastPage. */
@@ -37,7 +24,7 @@ export interface NumbersSlot {
   lastPage: number
 }
 
-/** One layout an issue offers in this governorate: its price and its free slots. */
+/** One layout an issue offers in the chosen place: its price and its free slots. */
 export interface NumbersLayout {
   layout: PageLayout
   price: number
@@ -72,11 +59,22 @@ export interface LayoutIssue {
   slots: NumbersSlot[]
 }
 
-export type NumbersState = 'idle' | 'loading' | 'ready' | 'error'
+export type NumbersState = FreshState
 
-export function numbersUrl(governorate: string, city?: string): string {
-  const base = `/place-submissions/numbers?governorate=${encodeURIComponent(governorate)}`
-  return city ? `${base}&city=${encodeURIComponent(city)}` : base
+/**
+ * What the numbers are asked for: the issue and its place. An All Lebanon
+ * issue is asked with the governorate, an issue for one governorate with the
+ * city (its governorate comes from the issue, server side).
+ */
+export type NumbersQuery =
+  | { issueId: number; governorate: string; city?: undefined }
+  | { issueId: number; city: string; governorate?: undefined }
+
+export function numbersUrl(query: NumbersQuery): string {
+  const base = `/place-submissions/numbers?issue=${query.issueId}`
+  return query.city !== undefined
+    ? `${base}&city=${encodeURIComponent(query.city)}`
+    : `${base}&governorate=${encodeURIComponent(query.governorate)}`
 }
 
 const isWhole = (value: unknown): value is number =>
@@ -128,39 +126,21 @@ function parseLayouts(raw: unknown): NumbersLayout[] {
   return PAGE_LAYOUTS.flatMap((code) => byLayout.get(code) ?? [])
 }
 
-export interface NumbersReply {
-  issues: NumbersIssue[]
-  /** An issue for this governorate needs the owner's city before it can offer numbers. */
-  needsCity: boolean
-}
-
-/**
- * The route's issues, and whether a city is needed, or null when the reply is
- * anything else. An issue for one governorate asked without a city comes back
- * with no block (`from`/`to` null): it only says a city is needed, and is not
- * an issue to pick from.
- */
-export function parseNumbersReply(body: unknown): NumbersReply | null {
+/** The route's issues (at most one), or null when the reply is anything else. */
+export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
   if (!body || typeof body !== 'object') return null
   const { ok, issues } = body as { ok?: unknown; issues?: unknown }
   if (ok !== true || !Array.isArray(issues)) return null
   const out: NumbersIssue[] = []
-  let needsCity = false
   for (const raw of issues) {
     if (!raw || typeof raw !== 'object') continue
     const issue = raw as Record<string, unknown>
-    const coverage: NumbersCoverage =
-      issue.coverage === 'governorate' ? 'governorate' : 'all-lebanon'
-    if (coverage === 'governorate' && issue.from === null && issue.to === null) {
-      needsCity = true
-      continue
-    }
     if (!isWhole(issue.issueId) || !isWhole(issue.from) || !isWhole(issue.to)) continue
     if (issue.from < 1 || issue.to < issue.from) continue
     out.push({
       issueId: issue.issueId,
       issueTitle: typeof issue.issueTitle === 'string' ? issue.issueTitle : '',
-      coverage,
+      coverage: issue.coverage === 'governorate' ? 'governorate' : 'all-lebanon',
       from: issue.from,
       to: issue.to,
       taken: Array.isArray(issue.taken) ? issue.taken.filter(isWhole) : [],
@@ -168,12 +148,7 @@ export function parseNumbersReply(body: unknown): NumbersReply | null {
       layouts: parseLayouts(issue.layouts),
     })
   }
-  return { issues: out, needsCity }
-}
-
-/** The route's issues, or null when the reply is anything else. */
-export function parseNumbersResponse(body: unknown): NumbersIssue[] | null {
-  return parseNumbersReply(body)?.issues ?? null
+  return out
 }
 
 /**
@@ -204,7 +179,7 @@ export function issuesForLayout(
 
 /**
  * The price to show beside a layout in the size choice (PRD v7 section 9: "the
- * price beside each layout"), from the issues serving the chosen region.
+ * price beside each layout"), from the chosen issue's block for the chosen place.
  * Null when no issue offers the layout there, so no price is shown for it.
  * When issues price it differently the lowest is shown, marked `from`.
  */
@@ -220,78 +195,17 @@ export function layoutPrice(
   return { amount, currency: cheapest.currency, from: new Set(prices).size > 1 }
 }
 
-interface Stored {
-  key: string
-  state: 'ready' | 'error'
-  issues: NumbersIssue[]
-  needsCity: boolean
-}
-
 const NONE: NumbersIssue[] = []
 
-/**
- * Asks `url` and stores the answer under `key` unless the request was
- * aborted first. Returns the abort, for the effect's cleanup.
- */
-function load(url: string, key: string, store: (stored: Stored) => void): () => void {
-  const controller = new AbortController()
-  const settle = (result: Omit<Stored, 'key'>) => {
-    if (!controller.signal.aborted) store({ key, ...result })
-  }
-  fetch(url, { cache: 'no-store', credentials: 'same-origin', signal: controller.signal })
-    .then(async (response) => {
-      let body: unknown = null
-      try {
-        body = await response.json()
-      } catch {
-        // 429 from the rate limiter is plain text.
-      }
-      const reply = response.ok ? parseNumbersReply(body) : null
-      settle(
-        reply ? { state: 'ready', ...reply } : { state: 'error', issues: NONE, needsCity: false },
-      )
-    })
-    .catch(() => settle({ state: 'error', issues: NONE, needsCity: false }))
-  return () => controller.abort()
-}
-
-export function usePlaceNumbers(
-  governorate: string,
-  city: string,
-): {
+/** The numbers of the chosen issue and place; idle while either is missing (`query` null). */
+export function usePlaceNumbers(query: NumbersQuery | null): {
   state: NumbersState
   issues: NumbersIssue[]
-  /** True when an issue for this governorate is split by city: the city decides the numbers. */
-  needsCity: boolean
   reload: () => void
 } {
-  const [version, setVersion] = useState(0)
-  // The governorate's answer, then (only when it says so) the city's.
-  const [probe, setProbe] = useState<Stored | null>(null)
-  const [detail, setDetail] = useState<Stored | null>(null)
-  const probeKey = `${governorate}#${version}`
-  const detailKey = `${governorate}#${city}#${version}`
-  const probed = probe?.key === probeKey ? probe : null
-  const needsCity = probed?.state === 'ready' && probed.needsCity
-
-  useEffect(() => {
-    if (!governorate) return
-    return load(numbersUrl(governorate), probeKey, setProbe)
-  }, [governorate, probeKey])
-
-  useEffect(() => {
-    if (!needsCity || !city) return
-    return load(numbersUrl(governorate, city), detailKey, setDetail)
-  }, [needsCity, governorate, city, detailKey])
-
-  const reload = useCallback(() => setVersion((v) => v + 1), [])
-
-  if (!governorate) return { state: 'idle', issues: NONE, needsCity: false, reload }
-  if (!probed) return { state: 'loading', issues: NONE, needsCity: false, reload }
-  if (!needsCity) {
-    return { state: probed.state, issues: probed.issues, needsCity: false, reload }
-  }
-  if (!city) return { state: 'idle', issues: NONE, needsCity: true, reload }
-  if (detail?.key !== detailKey) return { state: 'loading', issues: NONE, needsCity: true, reload }
-  return { state: detail.state, issues: detail.issues, needsCity: true, reload }
+  const { state, value, reload } = useFreshJson(
+    query === null ? null : numbersUrl(query),
+    parseNumbersResponse,
+  )
+  return { state, issues: value ?? NONE, reload }
 }

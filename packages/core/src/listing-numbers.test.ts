@@ -11,6 +11,8 @@ import {
   nextFreeNumber,
   numbersIn,
   orphanedNumbers,
+  placeInIssue,
+  placeRanges,
   rangeForPlace,
   rangePlaceProblem,
   rangeProblem,
@@ -147,6 +149,60 @@ describe('rangeForPlace', () => {
   it("never gives a one-governorate issue's block to another governorate", () => {
     const other = { coverage: 'governorate', governorate: 'keserwan' }
     expect(rangeForPlace(ranges, other, { governorate: 'matn', city: 'dbayeh' })).toBeNull()
+  })
+})
+
+describe('placeInIssue', () => {
+  const allLebanon = { coverage: 'all-lebanon' }
+  const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+
+  it('takes the chosen governorate on an All Lebanon issue and always drops the city', () => {
+    expect(placeInIssue(allLebanon, { governorate: 'matn', city: 'dbayeh' })).toEqual({
+      governorate: 'matn',
+      city: null,
+    })
+    expect(placeInIssue({}, { governorate: 'beirut' })).toEqual({
+      governorate: 'beirut',
+      city: null,
+    })
+    expect(placeInIssue(allLebanon, { governorate: 'atlantis' })).toBeNull()
+    expect(placeInIssue(allLebanon, { city: 'dbayeh' })).toBeNull()
+  })
+
+  it("takes the issue's governorate on a one-governorate issue, never the one sent", () => {
+    expect(placeInIssue(matnOnly, { governorate: 'beirut', city: 'dbayeh' })).toEqual({
+      governorate: 'matn',
+      city: 'dbayeh',
+    })
+    expect(placeInIssue(matnOnly, { city: 'broummana' })).toEqual({
+      governorate: 'matn',
+      city: 'broummana',
+    })
+  })
+
+  it('needs a city of the issue governorate on a one-governorate issue', () => {
+    expect(placeInIssue(matnOnly, { governorate: 'matn' })).toBeNull()
+    expect(placeInIssue(matnOnly, { governorate: 'matn', city: '' })).toBeNull()
+    expect(placeInIssue(matnOnly, { governorate: 'beirut', city: 'beirut' })).toBeNull()
+    expect(placeInIssue({ coverage: 'governorate' }, { city: 'dbayeh' })).toBeNull()
+  })
+})
+
+describe('placeRanges', () => {
+  const ranges = [
+    { id: 1, governorate: 'matn', city: null, from: 1, to: 20 },
+    { id: 2, governorate: 'matn', city: 'broummana', from: 21, to: 40 },
+    { id: 3, governorate: 'beirut', city: null, from: 41, to: 60 },
+    { id: 4, governorate: 'beirut', city: 'beirut', from: 61, to: 70 },
+  ]
+
+  it('keeps the governorate-wide blocks of an All Lebanon issue', () => {
+    expect(placeRanges(ranges, { coverage: 'all-lebanon' }).map((r) => r.id)).toEqual([1, 3])
+  })
+
+  it("keeps only the issue governorate's city blocks of a one-governorate issue", () => {
+    const matnOnly = { coverage: 'governorate', governorate: 'matn' }
+    expect(placeRanges(ranges, matnOnly).map((r) => r.id)).toEqual([2])
   })
 })
 

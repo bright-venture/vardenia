@@ -269,9 +269,9 @@ export function categoryTakesBookings(category: string | null | undefined): bool
  * form (23 November 2026). One shared list: the schema refuses anything else and
  * the form offers exactly these.
  *
- * The other six kinds (guided-tours, activities, event-planners, car-rental,
- * airport-transfers, private-drivers) are coming soon: still in the taxonomy,
- * not yet submittable. Adding one later means adding its slug here.
+ * Every kind is offered, including the six whose booking is coming soon
+ * (guided-tours, activities, event-planners, car-rental, airport-transfers,
+ * private-drivers): for now a place is only its basic details.
  */
 export const SUBMITTABLE_KIND_SLUGS = [
   'hotels',
@@ -284,6 +284,14 @@ export const SUBMITTABLE_KIND_SLUGS = [
   'festivals',
   'malls',
   'gyms',
+  // Booking is coming soon for these, but a listing can still be added: they
+  // are basic details for now (a business has no real account yet).
+  'guided-tours',
+  'activities',
+  'event-planners',
+  'car-rental',
+  'airport-transfers',
+  'private-drivers',
 ] as const
 
 export type SubmittableKindSlug = (typeof SUBMITTABLE_KIND_SLUGS)[number]

@@ -23,32 +23,39 @@ import { BusinessPagePreview } from './BusinessPagePreview'
 import { formatMoney, postFinish, type FinishResult } from './flow-client'
 import {
   checkSubmission,
-  citiesFor,
   errorKind,
-  GOVERNORATE_ORDER,
   initialFormState,
   normaliseErrors,
   previewDataFrom,
-  withGovernorate,
+  withIssue,
+  withPlace,
   type FormState,
   type NumberPick,
 } from './form-model'
 import { NumberPicker } from './NumberPicker'
 import { PhoneStep } from './PhoneStep'
-import { DESCRIPTION_MAX, NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
+import { NAME_MAX, TAGLINE_MAX, type PreviewLabels } from './preview-model'
 import { postSubmission, type Quote, type SubmitResult } from './submit-client'
 import { TermsStep } from './TermsStep'
 import { ThanksStep } from './ThanksStep'
 import { useKioskIdle } from './use-kiosk-idle'
-import { issuesForLayout, layoutPrice, usePlaceNumbers } from './use-place-numbers'
+import { useIssuePlaces, useOpenIssues } from './use-place-issues'
+import {
+  issuesForLayout,
+  layoutPrice,
+  usePlaceNumbers,
+  type NumbersQuery,
+} from './use-place-numbers'
 
 /**
  * "Add your place" on /magazine-places: a business owner lays out their page in
  * the printed magazine, picks its number, adds the logo and main photo from
  * their phone, and sends it for review. Four steps on the big screen:
  *
- *   1 details      the fields, the layout (how much of the magazine) and a free
- *                  slot of it; "Next" starts the submission
+ *   1 details      the issue first, then its place (a governorate of an All
+ *                  Lebanon issue, or a city of an issue for one governorate),
+ *                  the fields, the layout (how much of the magazine) and a
+ *                  free slot of it; "Next" starts the submission
  *   2 phone upload a QR code for the phone, live ticks as the photos arrive
  *   3 price/terms  the price and the terms, "Submit" finishes it
  *   4 thank you    clears itself after a minute
@@ -121,7 +128,21 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const generation = useRef(0)
   const stayRef = useRef<HTMLButtonElement>(null)
 
-  const numbers = usePlaceNumbers(state.governorate, state.city)
+  // Issue first (27 November 2026): the issue, then its place, then the
+  // numbers of that place's block. Nothing is asked before it can be.
+  const openIssues = useOpenIssues(locale)
+  const issuePlaces = useIssuePlaces(state.issue?.issueId ?? null)
+  const numbersQuery: NumbersQuery | null = !state.issue
+    ? null
+    : state.issue.coverage === 'governorate'
+      ? state.city
+        ? { issueId: state.issue.issueId, city: state.city }
+        : null
+      : state.governorate
+        ? { issueId: state.issue.issueId, governorate: state.governorate }
+        : null
+  const numbers = usePlaceNumbers(numbersQuery)
+  const reloadIssues = openIssues.reload
 
   useEffect(() => {
     mounted.current = true
@@ -150,7 +171,9 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
     setBusy(false)
     submitting.current = false
     setStep(1)
-  }, [])
+    // The next owner sees the issues as they are now.
+    reloadIssues()
+  }, [reloadIssues])
 
   /** The session ended (expired, closed, or unknown): the token is useless now. */
   const expire = useCallback(() => {
@@ -179,6 +202,57 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       delete next.number
       return next
     })
+  }
+
+  /**
+   * A new issue or place has other blocks, sizes and prices: the number and
+   * the layout picked for the old one go (the state change drops the layout).
+   */
+  function dropPick() {
+    setPick(null)
+    setNumberNotice(null)
+    setErrors((current) => {
+      const next = { ...current }
+      for (const key of ['issue', 'governorate', 'city', 'layout', 'number']) delete next[key]
+      return next
+    })
+  }
+
+  function chooseIssue(value: string) {
+    const issue = openIssues.issues.find((i) => String(i.issueId) === value) ?? null
+    if (issue?.issueId === state.issue?.issueId) return
+    dropPick()
+    setState((current) => withIssue(current, issue))
+  }
+
+  function choosePlace(value: string) {
+    const current = state.issue?.coverage === 'governorate' ? state.city : state.governorate
+    if (value === current) return
+    dropPick()
+    setState((now) => withPlace(now, value))
+  }
+
+  /**
+   * A fresh list of places (after a refusal, the counts are asked again) may no
+   * longer offer the chosen one: its block is now full or gone. Then the choice
+   * is dropped, with its number and layout, so the select never shows a blank
+   * or disabled value while the form still holds it. Adjusted while rendering,
+   * when a new answer arrives, rather than in an effect.
+   */
+  const [seenPlaces, setSeenPlaces] = useState(issuePlaces.places)
+  if (issuePlaces.places !== seenPlaces) {
+    setSeenPlaces(issuePlaces.places)
+    const chosen = state.issue?.coverage === 'governorate' ? state.city : state.governorate
+    if (issuePlaces.state === 'ready' && chosen) {
+      const entry = issuePlaces.places.find(
+        (place) =>
+          (state.issue?.coverage === 'governorate' ? place.city : place.governorate) === chosen,
+      )
+      if (!entry || entry.free === 0) {
+        dropPick()
+        setState((now) => withPlace(now, ''))
+      }
+    }
   }
 
   /** A new layout offers other slots: the number picked for the old one goes. */
@@ -265,6 +339,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
       if (result.kind === 'number-taken' || result.kind === 'no-range') {
         setPick(null)
         numbers.reload()
+        issuePlaces.reload()
         if (result.kind === 'number-taken') setNumberNotice(t('numbers.justTaken'))
       }
       setProblem(failure(result))
@@ -419,7 +494,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
   const previewLabels: PreviewLabels = {
     name: t('form.name'),
     tagline: t('form.tagline'),
-    description: t('form.description'),
     category: t('form.category'),
     governorate: t('form.governorate'),
     address: t('form.address'),
@@ -461,7 +535,16 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
 
   const legend = 'font-display text-ink-900 text-xl'
   const kindGroups = submittableKindsByCategory()
-  const cities = citiesFor(state.governorate)
+  const byCity = state.issue?.coverage === 'governorate'
+  const placeKey = byCity ? 'city' : 'governorate'
+  const placeValue = byCity ? state.city : state.governorate
+  const issueText = (issue: { title: string; coverage: string; governorate: string | null }) => {
+    const where =
+      issue.coverage === 'governorate'
+        ? governorateLabel(issue.governorate, locale)
+        : t('form.allLebanon')
+    return issue.title ? `${issue.title} · ${where}` : where
+  }
 
   return (
     <div
@@ -504,6 +587,105 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
         )}
 
         <fieldset disabled={busy} className="m-0 mt-6 flex min-w-0 flex-col gap-10 border-0 p-0">
+          {/* The magazine: the issue first, then its place. The issue's own
+              template is fixed and never shown or changed here. */}
+          <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
+            <legend className={`${legend} mb-1`}>{t('form.magazineLegend')}</legend>
+
+            <div>
+              <label className={LABEL} htmlFor={fid('issue')}>
+                {t('form.issue')}
+              </label>
+              <select
+                {...control('issue')}
+                required
+                disabled={openIssues.issues.length === 0}
+                value={state.issue ? String(state.issue.issueId) : ''}
+                onChange={(e) => chooseIssue(e.target.value)}
+              >
+                <option value="">{t('form.chooseIssue')}</option>
+                {openIssues.issues.map((issue) => (
+                  <option key={issue.issueId} value={String(issue.issueId)}>
+                    {issueText(issue)}
+                  </option>
+                ))}
+              </select>
+              {openIssues.state === 'loading' ? (
+                <p className={HINT} role="status">
+                  {t('form.issuesLoading')}
+                </p>
+              ) : openIssues.state === 'error' ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <p className="text-state-danger text-sm">{t('form.issuesError')}</p>
+                  <button type="button" className={SECONDARY_BUTTON} onClick={openIssues.reload}>
+                    {t('numbers.retry')}
+                  </button>
+                </div>
+              ) : openIssues.state === 'ready' && openIssues.issues.length === 0 ? (
+                <p className={`${NOTICE_INFO} mt-2`} role="status">
+                  {t('form.noIssues')}
+                </p>
+              ) : null}
+              {errorLine('issue')}
+            </div>
+
+            {state.issue ? (
+              <div>
+                <label className={LABEL} htmlFor={fid(placeKey)}>
+                  {t(byCity ? 'form.city' : 'form.governorate')}
+                </label>
+                {byCity ? (
+                  <p id={`${fid(placeKey)}-hint`} className={HINT}>
+                    {t('form.issueCovers', {
+                      place: governorateLabel(state.issue.governorate, locale),
+                    })}
+                  </p>
+                ) : null}
+                <select
+                  {...control(placeKey, byCity)}
+                  required
+                  disabled={issuePlaces.places.length === 0}
+                  value={placeValue}
+                  onChange={(e) => choosePlace(e.target.value)}
+                >
+                  <option value="">
+                    {t(byCity ? 'form.chooseCity' : 'form.chooseGovernorate')}
+                  </option>
+                  {issuePlaces.places.map((place) => {
+                    const slug = byCity ? (place.city ?? '') : place.governorate
+                    const name = byCity
+                      ? cityLabel(place.city, locale)
+                      : governorateLabel(place.governorate, locale)
+                    // A full block is listed, so the owner knows it exists,
+                    // but cannot be chosen.
+                    return (
+                      <option key={slug} value={slug} disabled={place.free === 0}>
+                        {place.free === 0 ? t('form.placeFull', { place: name }) : name}
+                      </option>
+                    )
+                  })}
+                </select>
+                {issuePlaces.state === 'loading' ? (
+                  <p className={HINT} role="status">
+                    {t('form.placesLoading')}
+                  </p>
+                ) : issuePlaces.state === 'error' ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <p className="text-state-danger text-sm">{t('form.placesError')}</p>
+                    <button type="button" className={SECONDARY_BUTTON} onClick={issuePlaces.reload}>
+                      {t('numbers.retry')}
+                    </button>
+                  </div>
+                ) : issuePlaces.state === 'ready' && issuePlaces.places.length === 0 ? (
+                  <p className={`${NOTICE_INFO} mt-2`} role="status">
+                    {t('numbers.noRange')}
+                  </p>
+                ) : null}
+                {errorLine(placeKey)}
+              </div>
+            ) : null}
+          </fieldset>
+
           {/* Layout */}
           <fieldset className="m-0 min-w-0 border-0 p-0">
             <legend className={legend}>{t('form.templateLegend')}</legend>
@@ -577,24 +759,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             </div>
 
             <div>
-              <label className={LABEL} htmlFor={fid('description')}>
-                {t('form.description')}
-              </label>
-              <textarea
-                {...control('description', true)}
-                rows={6}
-                maxLength={DESCRIPTION_MAX}
-                dir="auto"
-                value={state.description}
-                onChange={(e) => set({ description: e.target.value })}
-              />
-              <p id={`${fid('description')}-hint`} className={HINT}>
-                {t('form.descriptionHint')} {counter(state.description, DESCRIPTION_MAX)}
-              </p>
-              {errorLine('description')}
-            </div>
-
-            <div>
               <label className={LABEL} htmlFor={fid('kind')}>
                 {t('form.category')}
               </label>
@@ -622,65 +786,6 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
           {/* Where */}
           <fieldset className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
             <legend className={`${legend} mb-1`}>{t('form.locationLegend')}</legend>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('governorate')}>
-                {t('form.governorate')}
-              </label>
-              <select
-                {...control('governorate')}
-                required
-                value={state.governorate}
-                onChange={(e) => {
-                  const next = e.target.value
-                  if (next !== state.governorate) {
-                    setPick(null)
-                    setNumberNotice(null)
-                  }
-                  setState((current) => withGovernorate(current, next))
-                }}
-              >
-                <option value="">{t('form.chooseGovernorate')}</option>
-                {GOVERNORATE_ORDER.map((slug) => (
-                  <option key={slug} value={slug}>
-                    {governorateLabel(slug, locale)}
-                  </option>
-                ))}
-              </select>
-              {errorLine('governorate')}
-            </div>
-
-            <div>
-              <label className={LABEL} htmlFor={fid('city')}>
-                {t('form.city')}
-              </label>
-              <select
-                {...control('city')}
-                required
-                disabled={cities.length === 0}
-                value={state.city}
-                // The numbers depend on the city only when an issue for this
-                // governorate is split by city: then a new city offers other
-                // slots, and the number picked for the old one goes. All
-                // Lebanon numbers depend on the region alone.
-                onChange={(e) => {
-                  const next = e.target.value
-                  if (next !== state.city && numbers.needsCity) {
-                    setPick(null)
-                    setNumberNotice(null)
-                  }
-                  set({ city: next })
-                }}
-              >
-                <option value="">{t('form.chooseCity')}</option>
-                {cities.map((d) => (
-                  <option key={d.slug} value={d.slug}>
-                    {cityLabel(d.slug, locale)}
-                  </option>
-                ))}
-              </select>
-              {errorLine('city')}
-            </div>
 
             <div>
               <label className={LABEL} htmlFor={fid('address')}>
@@ -724,7 +829,7 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                     <span className="text-ink-900 text-sm font-semibold">
                       {t(`form.layouts.${layout}`)}
                     </span>
-                    {/* The price beside each size (PRD v7 section 9), once a region is chosen. */}
+                    {/* The price beside each size (PRD v7 section 9), once the place is chosen. */}
                     {(() => {
                       const price =
                         numbers.state === 'ready' ? layoutPrice(numbers.issues, layout) : null
@@ -764,7 +869,13 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
             <div className="mt-3" aria-live="polite">
               {numbers.state === 'idle' ? (
                 <p className="text-ink-500 text-sm">
-                  {t(numbers.needsCity ? 'numbers.chooseCity' : 'numbers.chooseRegion')}
+                  {t(
+                    !state.issue
+                      ? 'numbers.chooseIssue'
+                      : byCity
+                        ? 'numbers.chooseCity'
+                        : 'numbers.chooseRegion',
+                  )}
                 </p>
               ) : numbers.state === 'loading' ? (
                 <p className="text-ink-500 text-sm" role="status">
@@ -785,7 +896,12 @@ export function PlaceSubmissionForm({ locale }: { locale: Locale }) {
                 <p className="text-ink-500 text-sm">{t('numbers.chooseLayout')}</p>
               ) : (
                 <NumberPicker
-                  issues={issuesForLayout(numbers.issues, state.layout)}
+                  // The issue is chosen above, in the page language: the
+                  // picker does not repeat its title.
+                  issues={issuesForLayout(numbers.issues, state.layout).map((issue) => ({
+                    ...issue,
+                    issueTitle: '',
+                  }))}
                   value={pick?.number ?? null}
                   selectedIssue={pick?.issue ?? null}
                   onChange={choose}

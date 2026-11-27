@@ -1,12 +1,11 @@
 import type { Locale } from '@vardenia/i18n'
 import { fieldErrors } from '@vardenia/core/booking-request'
-import { LISTING_GOVERNORATES } from '@vardenia/core/listing-numbers'
 import { contactProblemCode } from '@vardenia/core/contact'
 import type { PageLayout } from '@vardenia/core/page-layouts'
 import { SUBMISSION_EMAIL_MESSAGE, placeSubmissionSchema } from '@vardenia/core/place-submission'
-import { GOVERNORATES, type City } from '@vardenia/core/regions'
 import { categoryOfKind } from '@vardenia/core/taxonomy'
 import { categoryLabel, placeLabel } from '../../lib/labels'
+import type { OpenIssue } from './use-place-issues'
 import { emptyPreview, type PreviewData, type PreviewTemplate } from './preview-model'
 
 /**
@@ -24,9 +23,14 @@ export interface FormState {
   template: PreviewTemplate
   /** How much of the magazine is bought; null until chosen. Decides the price and the slots offered. */
   layout: PageLayout | null
+  /**
+   * The magazine issue, chosen first (27 November 2026); null until chosen.
+   * Its coverage decides the place asked next: a governorate (All Lebanon,
+   * no city) or a city of the issue's own governorate.
+   */
+  issue: OpenIssue | null
   name: string
   tagline: string
-  description: string
   kind: string
   governorate: string
   city: string
@@ -46,16 +50,13 @@ export interface NumberPick {
   number: number
 }
 
-/** The order the form lists them in (the admin's order). */
-export const GOVERNORATE_ORDER: readonly string[] = LISTING_GOVERNORATES
-
 export function initialFormState(): FormState {
   return {
     template: 'a',
     layout: null,
+    issue: null,
     name: '',
     tagline: '',
-    description: '',
     kind: '',
     governorate: '',
     city: '',
@@ -70,18 +71,33 @@ export function initialFormState(): FormState {
   }
 }
 
-export function citiesFor(governorate: string): readonly City[] {
-  return (
-    (GOVERNORATES as readonly { slug: string; cities: readonly City[] }[]).find(
-      (g) => g.slug === governorate,
-    )?.cities ?? []
-  )
+/**
+ * A new issue: its place is chosen again (an issue for one governorate fixes
+ * the governorate to its own), and the layout goes with it, since the sizes on
+ * sale and their prices are the issue's.
+ */
+export function withIssue(state: FormState, issue: OpenIssue | null): FormState {
+  if (issue?.issueId === state.issue?.issueId) return state
+  return {
+    ...state,
+    issue,
+    governorate: issue?.coverage === 'governorate' ? (issue.governorate ?? '') : '',
+    city: '',
+    layout: null,
+  }
 }
 
-/** A new governorate drops the city, which belonged to the old one. */
-export function withGovernorate(state: FormState, governorate: string): FormState {
-  if (governorate === state.governorate) return state
-  return { ...state, governorate, city: '' }
+/**
+ * A new place of the issue (a governorate of an All Lebanon issue, or a city
+ * of an issue for one governorate) has its own block: the layout goes.
+ */
+export function withPlace(state: FormState, place: string): FormState {
+  if (state.issue?.coverage === 'governorate') {
+    if (place === state.city) return state
+    return { ...state, city: place, layout: null }
+  }
+  if (place === state.governorate) return state
+  return { ...state, governorate: place, city: '', layout: null }
 }
 
 /** The object the route validates. */
@@ -93,10 +109,10 @@ export function buildSubmission(
   const data: Record<string, unknown> = {
     name: state.name,
     tagline: state.tagline,
-    description: state.description,
     kind: state.kind,
     governorate: state.governorate,
-    city: state.city,
+    // Only an issue for one governorate asks for the city.
+    ...(state.issue?.coverage === 'governorate' && state.city ? { city: state.city } : {}),
     address: state.address,
     acceptsWhish: state.acceptsWhish,
     publicPhone: state.publicPhone,
@@ -113,16 +129,18 @@ export function buildSubmission(
     data.issue = pick.issue
     data.listingNumber = pick.number
   }
+  // The issue chosen first is the one that counts.
+  if (state.issue) data.issue = state.issue.issueId
   return { data }
 }
 
 /**
- * The input a schema path belongs to: issue and number both point at the
- * number picker, every other path names its input.
+ * The input a schema path belongs to: the number points at the number
+ * picker, every other path (the issue included) names its input.
  */
 export function formErrorKey(path: string): string {
   const [head] = path.split('.')
-  if (head === 'issue' || head === 'listingNumber') return 'number'
+  if (head === 'listingNumber') return 'number'
   return head || '_'
 }
 
@@ -161,16 +179,28 @@ export function checkSubmission(
 ): { ok: true; data: unknown } | { ok: false; errors: Record<string, string> } {
   const { data } = buildSubmission(state, pick, locale)
   const parsed = placeSubmissionSchema.safeParse(data)
-  if (parsed.success) return { ok: true, data }
-  const errors = normaliseErrors(fieldErrors(parsed.error))
+  const errors = parsed.success ? {} : normaliseErrors(fieldErrors(parsed.error))
   // An unchosen select fails as "not available" or an enum error; to the
   // owner it is simply not filled in yet.
   for (const key of ['kind', 'governorate', 'city', 'layout'] as const) {
     if (errors[key] && !state[key]) errors[key] = 'required'
   }
-  // With no region yet the city select is disabled and lists nothing: the
-  // error belongs on the region, the input the owner can change.
-  if (!state.governorate) delete errors.city
+  // The place depends on the issue, which the schema cannot see: with no
+  // issue nothing else is asked; an All Lebanon issue asks the governorate
+  // and never the city; an issue for one governorate fixes the governorate
+  // and asks the city.
+  if (!state.issue) {
+    errors.issue = 'required'
+    delete errors.governorate
+    delete errors.city
+  } else if (state.issue.coverage === 'governorate') {
+    delete errors.governorate
+    if (!state.city) errors.city = 'required'
+  } else {
+    delete errors.city
+    if (!state.governorate) errors.governorate = 'required'
+  }
+  if (Object.keys(errors).length === 0) return { ok: true, data }
   return { ok: false, errors }
 }
 
@@ -184,7 +214,6 @@ export function previewDataFrom(
     ...emptyPreview(locale),
     name: state.name,
     tagline: state.tagline,
-    description: state.description,
     category: categoryLabel(categoryOfKind(state.kind) ?? '', locale),
     governorate: placeLabel(state.governorate, state.city, locale),
     address: state.address,

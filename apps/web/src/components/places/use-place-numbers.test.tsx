@@ -6,10 +6,10 @@ import {
   issuesForLayout,
   layoutPrice,
   numbersUrl,
-  parseNumbersReply,
   parseNumbersResponse,
   usePlaceNumbers,
   type NumbersIssue,
+  type NumbersQuery,
 } from './use-place-numbers'
 
 const slot = (number: number, page: number, position: number | null = null, lastPage = page) => ({
@@ -147,15 +147,24 @@ describe('parseNumbersResponse', () => {
     ).toEqual([])
   })
 
-  it('builds the URL with the slug escaped, and the city when there is one', () => {
-    expect(numbersUrl('north-lebanon')).toBe('/place-submissions/numbers?governorate=north-lebanon')
-    expect(numbersUrl('matn', 'broummana')).toBe(
-      '/place-submissions/numbers?governorate=matn&city=broummana',
+  it('builds the URL from the issue and its place: the governorate, or the city', () => {
+    expect(numbersUrl({ issueId: 7, governorate: 'north-lebanon' })).toBe(
+      '/place-submissions/numbers?issue=7&governorate=north-lebanon',
     )
-    expect(numbersUrl('north-lebanon', 'faqra-faraya')).toBe(
-      '/place-submissions/numbers?governorate=north-lebanon&city=faqra-faraya',
+    expect(numbersUrl({ issueId: 8, city: 'faqra-faraya' })).toBe(
+      '/place-submissions/numbers?issue=8&city=faqra-faraya',
     )
-    expect(numbersUrl('matn', '')).toBe('/place-submissions/numbers?governorate=matn')
+    expect(numbersUrl({ issueId: 8, city: 'a b&c' })).toBe(
+      '/place-submissions/numbers?issue=8&city=a%20b%26c',
+    )
+  })
+
+  it('keeps the coverage of the reply', () => {
+    const [issue] = parseNumbersResponse({
+      ok: true,
+      issues: [{ issueId: 2, coverage: 'governorate', from: 1, to: 3, taken: [] }],
+    })!
+    expect(issue!.coverage).toBe('governorate')
   })
 })
 
@@ -225,16 +234,16 @@ describe('usePlaceNumbers', () => {
   let root: Root
   let seen: ReturnType<typeof usePlaceNumbers>
 
-  function Probe({ governorate, city }: { governorate: string; city: string }) {
-    seen = usePlaceNumbers(governorate, city)
+  function Probe({ query }: { query: NumbersQuery | null }) {
+    seen = usePlaceNumbers(query)
     return null
   }
 
-  // Most tests are about the governorate; any city will do for them.
-  const render = (governorate: string, city = governorate ? 'town' : '') =>
+  const render = (query: NumbersQuery | null) =>
     act(async () => {
-      root.render(<Probe governorate={governorate} city={city} />)
+      root.render(<Probe query={query} />)
     })
+  const beirut: NumbersQuery = { issueId: 7, governorate: 'beirut' }
 
   beforeEach(() => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -246,133 +255,43 @@ describe('usePlaceNumbers', () => {
     vi.unstubAllGlobals()
   })
 
-  const ok = (gov: string) =>
+  /** A reply whose issue title is the URL asked, to tell the answers apart. */
+  const ok = (url: string) =>
     new Response(
       JSON.stringify({
         ok: true,
-        issues: [{ issueId: 1, issueTitle: gov, from: 1, to: 3, taken: [] }],
+        issues: [{ issueId: 1, issueTitle: url, from: 1, to: 3, taken: [] }],
       }),
       { status: 200 },
     )
 
-  it('is idle without a governorate and does not fetch', async () => {
+  it('is idle until the issue and its place are chosen, and does not fetch', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
-    await render('')
+    await render(null)
     expect(seen.state).toBe('idle')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('asks with the governorate alone for All Lebanon issues, whatever the city', async () => {
+  it('loads, then is ready, fetching the issue and place with no-store', async () => {
     const fetchMock = vi.fn(async (url: string) => ok(url))
     vi.stubGlobal('fetch', fetchMock)
-    await render('beirut', '')
+    await render(beirut)
     expect(seen.state).toBe('ready')
-    expect(seen.needsCity).toBe(false)
-    expect(seen.issues[0]!.issueTitle).toBe('/place-submissions/numbers?governorate=beirut')
-    expect(seen.issues[0]!.coverage).toBe('all-lebanon')
-    await render('beirut', 'beirut')
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(seen.state).toBe('ready')
-  })
-
-  describe('an issue split by city', () => {
-    const routed = (url: string) =>
-      url.includes('&city=')
-        ? new Response(
-            JSON.stringify({
-              ok: true,
-              issues: [
-                {
-                  issueId: 2,
-                  issueTitle: url,
-                  coverage: 'governorate',
-                  from: 1,
-                  to: 3,
-                  taken: [],
-                },
-              ],
-            }),
-            { status: 200 },
-          )
-        : new Response(
-            JSON.stringify({
-              ok: true,
-              issues: [
-                { issueId: 2, issueTitle: 'Matn', coverage: 'governorate', from: null, to: null },
-              ],
-            }),
-            { status: 200 },
-          )
-
-    it('waits for the city, then asks for it, and again when it changes', async () => {
-      const fetchMock = vi.fn(async (url: string) => routed(url))
-      vi.stubGlobal('fetch', fetchMock)
-      await render('matn', '')
-      expect(seen).toMatchObject({ state: 'idle', needsCity: true, issues: [] })
-      expect(fetchMock).toHaveBeenCalledTimes(1)
-      await render('matn', 'broummana')
-      expect(seen.needsCity).toBe(true)
-      expect(seen.issues[0]!.issueTitle).toBe(
-        '/place-submissions/numbers?governorate=matn&city=broummana',
-      )
-      expect(seen.issues[0]!.coverage).toBe('governorate')
-      await render('matn', 'dbayeh')
-      expect(seen.issues[0]!.issueTitle).toBe(
-        '/place-submissions/numbers?governorate=matn&city=dbayeh',
-      )
-    })
-
-    it('ignores a slow answer for a city the owner already left', async () => {
-      let releaseFirst: (r: Response) => void = () => {}
-      const first = new Promise<Response>((resolve) => (releaseFirst = resolve))
-      const fetchMock = vi.fn(async (url: string) =>
-        url.endsWith('city=broummana') ? first : routed(url),
-      )
-      vi.stubGlobal('fetch', fetchMock)
-      await render('matn', 'broummana')
-      await render('matn', 'dbayeh')
-      await act(async () => releaseFirst(routed('/x?governorate=matn&city=broummana')))
-      expect(seen.issues[0]!.issueTitle).toBe(
-        '/place-submissions/numbers?governorate=matn&city=dbayeh',
-      )
-    })
-  })
-
-  it('reads the need for a city from the reply, leaving the empty entry out', () => {
-    expect(
-      parseNumbersReply({
-        ok: true,
-        issues: [
-          { issueId: 2, issueTitle: 'Matn', coverage: 'governorate', from: null, to: null },
-          { issueId: 1, issueTitle: 'All', from: 1, to: 3, taken: [] },
-        ],
-      }),
-    ).toEqual({
-      needsCity: true,
-      issues: [
-        {
-          issueId: 1,
-          issueTitle: 'All',
-          coverage: 'all-lebanon',
-          from: 1,
-          to: 3,
-          taken: [],
-          currency: '',
-          layouts: [],
-        },
-      ],
-    })
-  })
-
-  it('loads, then is ready, fetching with no-store', async () => {
-    const fetchMock = vi.fn(async () => ok('keserwan'))
-    vi.stubGlobal('fetch', fetchMock)
-    await render('keserwan')
-    expect(seen.state).toBe('ready')
-    expect(seen.issues[0]!.issueTitle).toBe('keserwan')
+    expect(seen.issues[0]!.issueTitle).toBe('/place-submissions/numbers?issue=7&governorate=beirut')
     const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1]
     expect(init.cache).toBe('no-store')
+  })
+
+  it('asks again when the issue or the place changes', async () => {
+    const fetchMock = vi.fn(async (url: string) => ok(url))
+    vi.stubGlobal('fetch', fetchMock)
+    await render({ issueId: 8, city: 'broummana' })
+    await render({ issueId: 8, city: 'dbayeh' })
+    expect(seen.issues[0]!.issueTitle).toBe('/place-submissions/numbers?issue=8&city=dbayeh')
+    await render({ issueId: 9, city: 'dbayeh' })
+    expect(seen.issues[0]!.issueTitle).toBe('/place-submissions/numbers?issue=9&city=dbayeh')
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it('reports an error for a refusal or a broken network', async () => {
@@ -380,7 +299,7 @@ describe('usePlaceNumbers', () => {
       'fetch',
       vi.fn(async () => new Response('Too many', { status: 429 })),
     )
-    await render('beirut')
+    await render(beirut)
     expect(seen.state).toBe('error')
     vi.stubGlobal(
       'fetch',
@@ -388,11 +307,11 @@ describe('usePlaceNumbers', () => {
         throw new TypeError('offline')
       }),
     )
-    await render('matn')
+    await render({ issueId: 7, governorate: 'matn' })
     expect(seen.state).toBe('error')
   })
 
-  it('ignores a slow answer for a governorate the owner already left', async () => {
+  it('ignores a slow answer for a place the owner already left', async () => {
     let releaseFirst: (r: Response) => void = () => {}
     const first = new Promise<Response>((resolve) => (releaseFirst = resolve))
     const fetchMock = vi
@@ -400,9 +319,9 @@ describe('usePlaceNumbers', () => {
       .mockImplementationOnce(() => first)
       .mockImplementationOnce(async () => ok('beirut'))
     vi.stubGlobal('fetch', fetchMock)
-    await render('keserwan')
+    await render({ issueId: 7, governorate: 'keserwan' })
     expect(seen.state).toBe('loading')
-    await render('beirut')
+    await render(beirut)
     expect(seen.issues[0]!.issueTitle).toBe('beirut')
     await act(async () => releaseFirst(ok('keserwan')))
     expect(seen.state).toBe('ready')
@@ -412,7 +331,7 @@ describe('usePlaceNumbers', () => {
   it('fetches again on reload', async () => {
     const fetchMock = vi.fn(async () => ok('chouf'))
     vi.stubGlobal('fetch', fetchMock)
-    await render('chouf')
+    await render(beirut)
     await act(async () => seen.reload())
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(seen.state).toBe('ready')

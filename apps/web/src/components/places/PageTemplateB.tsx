@@ -1,27 +1,24 @@
 /* Plain <img> on purpose: sources are browser object URLs (blob:), which next/image cannot optimise. */
 /* eslint-disable @next/next/no-img-element */
 import {
-  DESCRIPTION_MAX,
   NAME_MAX,
   pageNumberLabel,
   previewText,
   type TemplateProps,
   B_LAYOUT,
-  clampStyle,
 } from './preview-model'
 
 /**
- * Template B: title, one main photo beside the text, three small gallery
+ * Template B: title, one main photo across the page, three small gallery
  * photos, then amenities and contact. Sizes in `cqw`, see PageTemplateA.
  *
  * Layout budget (cqw, from B_LAYOUT in preview-model.ts, asserted in its test):
- * head 5+3.9+1.8+15.1 (2-line name)+5.85 = 31.7; photo row 48 (the 11-line
- * body is 45.4, so it fits beside the photo); gallery 3.2+17; foot 3.2+12+7.
- * Total 122.1 of 141.4.
+ * head 5+3.9+1.8+15.1 (2-line name)+5.85 = 31.7; photo row 48; gallery
+ * 3.2+17; foot 3.2+12+7. Total 122.1 of 141.4. No description (27 November
+ * 2026), so the photo spans the row.
  */
 export function PageTemplateB({ data, labels }: TemplateProps) {
   const name = previewText(data.name, labels.name, NAME_MAX)
-  const body = previewText(data.description, labels.description, DESCRIPTION_MAX)
   const category = [data.category, data.governorate].filter(Boolean).join(' \u00b7 ')
   // Always three slots, filled in order, so the row keeps its shape while typing.
   const gallery = [0, 1, 2].map((i) => data.galleryUrls[i])
@@ -47,11 +44,8 @@ export function PageTemplateB({ data, labels }: TemplateProps) {
         <div aria-hidden="true" className="bg-gold-700 my-[2.6cqw] h-[0.65cqw] w-[11cqw]" />
       </div>
 
-      <div className="flex gap-[3.2cqw] px-[5cqw]">
-        <div
-          className={`${slot} w-[46%] shrink-0`}
-          style={{ height: `${B_LAYOUT.photoHeight}cqw` }}
-        >
+      <div className="px-[5cqw]">
+        <div className={`${slot} w-full`} style={{ height: `${B_LAYOUT.photoHeight}cqw` }}>
           {/* Plain img, not next/image: the source is a browser object URL (blob:). */}
           {data.heroUrl ? (
             <img src={data.heroUrl} alt={data.name} className="size-full object-cover" />
@@ -59,13 +53,6 @@ export function PageTemplateB({ data, labels }: TemplateProps) {
             <span className={empty}>{labels.photo}</span>
           )}
         </div>
-        <p
-          dir="auto"
-          style={clampStyle(B_LAYOUT.bodyLines)}
-          className={`min-w-0 flex-1 text-[2.66cqw] leading-[1.55] ${body.placeholder ? 'text-ink-500 italic' : 'text-ink-700'}`}
-        >
-          {body.text}
-        </p>
       </div>
 
       <div className="flex gap-[2cqw] px-[5cqw] pt-[3.2cqw]">

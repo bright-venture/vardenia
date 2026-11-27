@@ -75,11 +75,11 @@ describe('POST /place-submissions', () => {
     expect(startPlaceSubmission).not.toHaveBeenCalled()
   })
 
-  it('400s with field errors for invalid data, and for a hidden kind', async () => {
+  it('400s with field errors for invalid data, and for an unknown kind', async () => {
     const bad = await post({ data: { ...DATA, name: '' } })
     expect(bad.status).toBe(400)
     expect(bad.body.errors).toHaveProperty('name')
-    const hidden = await post({ data: { ...DATA, kind: 'car-rental' } })
+    const hidden = await post({ data: { ...DATA, kind: 'spaceport' } })
     expect(hidden.status).toBe(400)
     expect(hidden.body.errors).toHaveProperty('kind')
     expect(startPlaceSubmission).not.toHaveBeenCalled()

@@ -55,6 +55,7 @@ describe('locale routing leaves alone', () => {
     ['/booking/availability', 'the same'],
     ['/place-submissions', 'a multipart POST: add-your-place submissions'],
     ['/place-submissions/numbers', 'JSON: the number picker'],
+    ['/place-submissions/issues', 'JSON: the issues and places the form offers first'],
     ['/place-submissions/status', 'JSON: the big screen polls the photo upload status'],
     ['/place-submissions/terms', 'JSON: the price and term shown before the owner submits'],
     ['/place-submissions/finish', 'JSON: the owner accepts the terms and submits'],
