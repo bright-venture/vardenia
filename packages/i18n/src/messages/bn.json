@@ -1406,6 +1406,7 @@
     "chooseIssue": "Choose a magazine issue to see its pages. Open the viewer from the places form.",
     "empty": "This issue has no pages to show yet.",
     "jumpRegion": "Jump to a region",
+    "wholeMagazine": "Whole magazine",
     "viewerLabel": "Magazine pages",
     "openForm": "Back to the places form",
     "unavailable": "This issue is not available to view."

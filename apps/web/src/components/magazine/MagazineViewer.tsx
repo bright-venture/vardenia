@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { dirFor, type Locale } from '@vardenia/i18n'
 import { regionOfPage, toSpreads, type MagazinePage } from '@vardenia/core/magazine-view'
 import { MagazinePageView } from './MagazinePageView'
@@ -32,7 +33,15 @@ const covers = (entry: MagazinePage, page: number) =>
   page >= entry.page && page < entry.page + (entry.kind === 'listings' ? entry.span : 1)
 
 const button =
-  'focus-visible:outline-gold-500 border-ink-100 bg-surface-raised text-ink-900 hover:bg-ink-100 inline-flex min-h-11 min-w-11 items-center justify-center border px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 aria-disabled:opacity-40'
+  'focus-visible:outline-gold-300 border-ink-100 bg-surface-raised text-ink-900 hover:border-ink-300 hover:bg-surface-sunken inline-flex min-h-11 min-w-11 items-center justify-center border px-3 text-sm transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 aria-disabled:pointer-events-none aria-disabled:opacity-40'
+
+/** A region tab: navy when it holds the page shown, a hairline outline otherwise. */
+const tab = (active: boolean) =>
+  `focus-visible:outline-gold-300 inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-4 text-sm transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
+    active
+      ? 'bg-cedar-900 text-surface-base'
+      : 'border-ink-100 text-ink-900 hover:border-ink-300 hover:bg-surface-raised border'
+  }`
 
 export function MagazineViewer({
   issueId,
@@ -53,7 +62,10 @@ export function MagazineViewer({
   const [jump, setJump] = useState('')
 
   const spreads = useMemo(() => (data ? toSpreads(data.pages) : []), [data])
-  const regions = useMemo(() => mergeRegions(data?.regions ?? []), [data])
+  const regions = useMemo(
+    () => mergeRegions(data?.regions ?? []).sort((a, b) => a.firstPage - b.firstPage),
+    [data],
+  )
   const imageFor = useMemo(() => pageImagesFor(data?.regions ?? [], data?.pages ?? []), [data])
   const businesses = useMemo(
     () => new Map<number, MagazineBusiness>((data?.businesses ?? []).map((b) => [b.number, b])),
@@ -164,7 +176,6 @@ export function MagazineViewer({
   // A single page beside no neighbour (the first, an odd last) keeps one page's width.
   const lone = wide && shown.length === 1 && (first.kind !== 'listings' || first.span === 1)
   const currentRegion = regionOfPage(regions, from)
-  const arrows = rtl ? ['›', '‹'] : ['‹', '›']
 
   return (
     <section
@@ -174,47 +185,64 @@ export function MagazineViewer({
       className="mx-auto w-full max-w-5xl"
     >
       <h2 className="font-display text-ink-900 mb-3 text-xl">{data.issue.title}</h2>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        {regions.length > 1 ? (
-          <label className="text-ink-900 flex items-center gap-2 text-sm">
-            <span>{t('region')}</span>
-            <select
-              className="border-ink-100 bg-surface-raised focus-visible:outline-gold-500 min-h-11 border px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-              aria-label={t('jumpRegion')}
-              value=""
-              onChange={(event) => {
-                const region = regions.find((r) => r.governorate === event.target.value)
-                if (region) goPage(region.firstPage)
-              }}
-            >
-              <option value="">
-                {currentRegion ? labels.governorate(currentRegion.governorate) : t('jumpRegion')}
-              </option>
-              {regions.map((r) => (
-                <option key={r.governorate} value={r.governorate}>
-                  {labels.governorate(r.governorate)}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
+      {regions.length > 1 ? (
+        <nav
+          aria-label={t('jumpRegion')}
+          className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+          <button
+            type="button"
+            className={tab(!currentRegion)}
+            aria-pressed={!currentRegion}
+            onClick={() => goPage(1)}
+          >
+            {t('wholeMagazine')}
+          </button>
+          {regions.map((r) => {
+            const active = currentRegion?.governorate === r.governorate
+            return (
+              <button
+                key={r.governorate}
+                type="button"
+                className={tab(active)}
+                aria-pressed={active}
+                onClick={() => goPage(r.firstPage)}
+              >
+                {labels.governorate(r.governorate)}
+              </button>
+            )
+          })}
+        </nav>
+      ) : null}
+      <div className="border-ink-100 mb-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+        <p className="text-ink-500 text-sm tabular-nums" aria-live="polite" data-position>
+          {position}
+        </p>
         <form
           className="flex items-center gap-2 text-sm"
           onSubmit={(event) => {
             event.preventDefault()
             const n = /^\d{1,6}$/.test(jump.trim()) ? Number(jump.trim()) : 0
-            if (n >= 1 && n <= total) goPage(n)
+            if (n >= 1 && n <= total) {
+              goPage(n)
+              setJump('')
+            }
           }}
         >
-          <label className="text-ink-900 flex items-center gap-2">
+          <label className="text-ink-500 flex items-center gap-2">
             <span>{t('pageInput')}</span>
             <input
               inputMode="numeric"
               value={jump}
+              placeholder={String(from)}
+              aria-describedby="magazine-page-total"
               onChange={(event) => setJump(event.target.value)}
-              className="border-ink-100 bg-surface-raised focus-visible:outline-gold-500 min-h-11 w-20 border px-2 tabular-nums focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              className="border-ink-100 bg-surface-base text-ink-900 placeholder:text-ink-500 focus-visible:outline-gold-300 min-h-11 w-16 border px-2 text-center text-base tabular-nums focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             />
           </label>
+          <span id="magazine-page-total" className="text-ink-500 tabular-nums">
+            / {total}
+          </span>
           <button type="submit" className={button}>
             {t('jump')}
           </button>
@@ -229,7 +257,7 @@ export function MagazineViewer({
           aria-disabled={index <= 0}
           onClick={() => step(-1)}
         >
-          <span aria-hidden>{arrows[0]}</span>
+          <ChevronLeft aria-hidden className="size-5 rtl:-scale-x-100" />
         </button>
         <div
           data-spread
@@ -261,16 +289,9 @@ export function MagazineViewer({
           aria-disabled={index >= units.length - 1}
           onClick={() => step(1)}
         >
-          <span aria-hidden>{arrows[1]}</span>
+          <ChevronRight aria-hidden className="size-5 rtl:-scale-x-100" />
         </button>
       </div>
-      <p
-        className="text-ink-500 mt-3 text-center text-sm tabular-nums"
-        aria-live="polite"
-        data-position
-      >
-        {position}
-      </p>
     </section>
   )
 }

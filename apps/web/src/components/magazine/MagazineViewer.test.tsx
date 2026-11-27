@@ -160,28 +160,42 @@ describe('MagazineViewer', () => {
     expect(shownPages()).toEqual([1])
   })
 
-  it('lists each governorate once and jumps to its first page', async () => {
+  const tabs = () => [...host.querySelectorAll('nav button')] as HTMLButtonElement[]
+  const tab = (label: string) => tabs().find((b) => b.textContent === label) ?? null
+  const pressed = () =>
+    tabs()
+      .filter((b) => b.getAttribute('aria-pressed') === 'true')
+      .map((b) => b.textContent)
+
+  it('lists the whole magazine, then each governorate once in page order', async () => {
+    fetchMock.mockResolvedValue(ok({ ...base([]), regions: [...base([]).regions].reverse() }))
+    await mount()
+    expect(tabs().map((b) => b.textContent)).toEqual(['Whole magazine', 'Beirut', 'metn'])
+  })
+
+  it('jumps to the first page of a governorate and marks it', async () => {
     fetchMock.mockResolvedValue(ok(base([])))
     await mount()
-    const select = host.querySelector('select') as HTMLSelectElement
-    expect([...select.options].map((o) => o.value).filter(Boolean)).toEqual(['beirut', 'metn'])
-    act(() => {
-      select.value = 'metn'
-      select.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    expect(pressed()).toEqual(['Whole magazine'])
+    click(tab('metn'))
     expect(shownPages()).toEqual([4, 5])
+    expect(pressed()).toEqual(['Beirut'])
   })
 
   it('jumps back to the start of the region already shown', async () => {
     fetchMock.mockResolvedValue(ok(base([])))
     await mount({ highlight: 4 })
     expect(shownPages()).toEqual([4, 5])
-    const select = host.querySelector('select') as HTMLSelectElement
-    act(() => {
-      select.value = 'beirut'
-      select.dispatchEvent(new Event('change', { bubbles: true }))
-    })
+    click(tab('Beirut'))
     expect(shownPages()).toEqual([2, 3])
+  })
+
+  it('goes back to the whole magazine from a region', async () => {
+    fetchMock.mockResolvedValue(ok(base([])))
+    await mount({ highlight: 4 })
+    click(tab('Whole magazine'))
+    expect(shownPages()).toEqual([1])
+    expect(pressed()).toEqual(['Whole magazine'])
   })
 
   it('jumps to a typed page and ignores an out-of-range one', async () => {

@@ -177,11 +177,11 @@ function PrintedPage({
                 key={slot.number}
                 data-slot={slot.number}
                 {...(mine ? { 'data-you': '' } : {})}
-                className={`flex items-end justify-start ${mine ? 'outline-gold-500 rounded-sm outline outline-[3px]' : ''}`}
+                className={`flex items-end justify-start ${mine ? 'outline-gold-500 outline outline-[3px]' : ''}`}
               >
                 {business || mine ? (
                   <span
-                    className="bg-ink-900/85 text-surface-base font-body max-w-full truncate rounded-sm shadow"
+                    className="bg-ink-900/85 text-surface-base font-body max-w-full truncate shadow"
                     style={{
                       fontSize: 'calc(var(--u) * 2.6)',
                       padding: 'calc(var(--u) * 0.8) calc(var(--u) * 1.6)',
