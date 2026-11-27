@@ -37,9 +37,33 @@ export default async function MagazinePlacesPage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations('magazinePlaces')
 
+  // The printed spread, on every screen (27 November 2026): in the page header
+  // on phones and in other languages, and in the English desktop opening.
+  // The pages keep their printed order whatever the reading direction.
+  const spread = (
+    <figure className={styles.spread}>
+      <div dir="ltr">
+        {[4, 5].map((page) => (
+          <Image
+            key={page}
+            src={`/journey/magazine-pages/all-lebanon-00${page}.webp`}
+            alt={`Beirut, All Lebanon magazine, page ${page}`}
+            width={1057}
+            height={1500}
+            sizes="(min-width: 1051px) 24vw, 50vw"
+          />
+        ))}
+      </div>
+      <figcaption>
+        <em>All Lebanon</em>
+        <span>Beirut, pages 4–5</span>
+      </figcaption>
+    </figure>
+  )
+
   return (
     <main className={locale === 'en' ? styles.page : undefined}>
-      <PageHero title={t('title')} intro={t('intro')} place={3} locale={locale as Locale} />
+      <PageHero title={t('title')} intro={t('intro')} locale={locale as Locale} media={spread} />
       {locale === 'en' && (
         <header className={styles.opening}>
           <div>
@@ -49,24 +73,7 @@ export default async function MagazinePlacesPage({ params }: Props) {
               {t('formTitle')} <span aria-hidden>↓</span>
             </a>
           </div>
-          <figure className={styles.spread}>
-            <div>
-              {[4, 5].map((page) => (
-                <Image
-                  key={page}
-                  src={`/journey/magazine-pages/all-lebanon-00${page}.webp`}
-                  alt={`Beirut, All Lebanon magazine, page ${page}`}
-                  width={1057}
-                  height={1500}
-                  sizes="(min-width: 1051px) 24vw, 1px"
-                />
-              ))}
-            </div>
-            <figcaption>
-              <em>All Lebanon</em>
-              <span>Beirut, pages 4–5</span>
-            </figcaption>
-          </figure>
+          {spread}
         </header>
       )}
       <div className={`${styles.workspace} mx-auto max-w-6xl px-6 py-12`}>

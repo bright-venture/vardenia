@@ -2,6 +2,36 @@
   display: none;
 }
 
+/* The printed spread: in the page header on phones, in the opening on desktop. */
+.spread {
+  min-width: 0;
+  margin: 0;
+}
+
+.spread > div {
+  display: flex;
+  box-shadow: 0 8px 18px -12px var(--vd-ink);
+}
+
+.spread img {
+  width: 50%;
+  height: auto;
+}
+
+.spread figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-block-start: 12px;
+  color: theme('colors.ink.700');
+  font-size: 14px;
+}
+
+.spread em {
+  font: italic 20px var(--font-display);
+}
+
 @media (min-width: 1051px) {
   .page > :global(.vd-inner-hero),
   .page [data-form-intro] {
@@ -45,30 +75,6 @@
     background: var(--vd-ink);
     color: var(--vd-paper);
     border-radius: var(--vd-radius-control);
-  }
-
-  .spread > div {
-    display: flex;
-    box-shadow: 0 8px 18px -12px var(--vd-ink);
-  }
-
-  .spread img {
-    width: 50%;
-    height: auto;
-  }
-
-  .spread figcaption {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 16px;
-    margin-block-start: 12px;
-    color: theme('colors.ink.700');
-    font-size: 14px;
-  }
-
-  .spread em {
-    font: italic 20px var(--font-display);
   }
 
   .page .workspace {

@@ -22,6 +22,7 @@ export async function PageHero({
   locale,
   children,
   immersive = false,
+  media,
 }: {
   title: string
   intro?: string
@@ -31,6 +32,11 @@ export async function PageHero({
   locale: Locale
   children?: ReactNode
   immersive?: boolean
+  /**
+   * Something other than a photograph in the image's place, drawn as given
+   * (Magazine Places shows a printed magazine spread there, 27 November 2026).
+   */
+  media?: ReactNode
 }) {
   const destination = DESTINATIONS[place] ?? DESTINATIONS[0]
   return (
@@ -49,7 +55,9 @@ export async function PageHero({
           </div>
         ) : null}
       </div>
-      {photo ? (
+      {media ? (
+        media
+      ) : photo ? (
         <WebsitePhoto
           photo={photo}
           locale={locale}
