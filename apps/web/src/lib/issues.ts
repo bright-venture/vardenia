@@ -18,6 +18,15 @@ export type Issue = NonNullable<Awaited<ReturnType<typeof findIssueBySlug>>>
 
 const client = async () => getPayload({ config })
 
+/**
+ * What a public read of an issue never needs: its slots (one entry per
+ * listing, up to a few hundred KB on a big magazine) and the template link.
+ * Both are staff-only fields, so a public reader got neither, but the database
+ * still fetched them before Payload dropped them. Excluding them here keeps
+ * the archive and the issue page light however large an issue's template is.
+ */
+const PUBLIC_SELECT = { slots: false, template: false } as const
+
 export async function findIssues(locale: Locale) {
   const payload = await client()
   return payload.find({
@@ -28,6 +37,7 @@ export async function findIssues(locale: Locale) {
     sort: ['-issueNumber'],
     limit: 100,
     overrideAccess: false,
+    select: PUBLIC_SELECT,
   })
 }
 
@@ -41,6 +51,7 @@ export const findIssueBySlug = cache(async (slug: string, locale: Locale) => {
     depth: 1,
     limit: 1,
     overrideAccess: false,
+    select: PUBLIC_SELECT,
   })
   return result.docs[0] ?? null
 })
@@ -54,6 +65,7 @@ export async function findAllIssueSlugs() {
     depth: 0,
     pagination: false,
     overrideAccess: false,
+    select: { slug: true },
   })
   return result.docs.map((doc) => doc.slug).filter((slug): slug is string => Boolean(slug))
 }

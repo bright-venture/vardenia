@@ -362,10 +362,10 @@ export const Issues: CollectionConfig = {
       defaultValue: 100,
       min: 1,
       admin: {
-        description: 'Set from the template when the issue has one.',
-        // With a template the pages come from it (the hook below fills this in
-        // on save), so the input is only shown for older issues without one.
-        condition: (data) => !data?.template,
+        description: 'Filled from the template when you save. Not edited by hand.',
+        // The pages come from the template (the hook below writes this on save,
+        // next to the slots), so the input is shown but disabled.
+        readOnly: true,
       },
     },
     {
@@ -389,10 +389,10 @@ export const Issues: CollectionConfig = {
       admin: {
         step: 1,
         description:
-          'How many numbers the printed issue has. Set from the template (one per slot) when the issue has one. Each governorate takes a block of them under Listing number ranges.',
-        // Same as Pages: the slots of the template decide it, so it is only
-        // typed for older issues without a template.
-        condition: (data) => !data?.template,
+          'One per slot of the template. Filled when you save. Not edited by hand. Each governorate takes a block of them under Listing number ranges.',
+        // Same as Pages: the slots of the template decide it, so the input is
+        // shown but disabled.
+        readOnly: true,
       },
     },
     {
