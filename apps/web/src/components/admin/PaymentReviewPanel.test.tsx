@@ -308,6 +308,32 @@ describe('PaymentReviewPanel', () => {
     expect(posts()).toEqual([['/api/resend-payment-email', { businessId: 7, event: 'E1' }]])
   })
 
+  it('draws no form of its own, since it sits inside the listing edit form', async () => {
+    await render()
+    await act(async () => button('Downpayment received')!.click())
+    expect(container.querySelector('form')).toBeNull()
+    expect(
+      container.querySelector('[role=group][aria-label="Downpayment received"]'),
+    ).not.toBeNull()
+    await act(async () => button('Cancel')!.click())
+    await act(async () => button('Extend deadline')!.click())
+    expect(container.querySelector('form')).toBeNull()
+  })
+
+  it('runs the action on Enter in a field, and stops Enter saving the listing form', async () => {
+    await render()
+    await act(async () => button('Downpayment received')!.click())
+    const whishAt = container.querySelector<HTMLInputElement>('input[name=whishAt]')!
+    await type(whishAt, '2026-11-20T14:30')
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    await act(async () => {
+      whishAt.dispatchEvent(enter)
+    })
+    await flush()
+    expect(enter.defaultPrevented).toBe(true)
+    expect(posts().map(([url]) => url)).toEqual(['/api/downpayment-received'])
+  })
+
   it('extends a deadline with days and a reason', async () => {
     await render()
     await act(async () => button('Extend deadline')!.click())

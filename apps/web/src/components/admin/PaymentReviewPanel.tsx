@@ -398,6 +398,19 @@ const MONEY_TITLES: Record<MoneyKind, string> = {
   refund: 'Refund sent',
 }
 
+/**
+ * These actions sit inside Payload's own edit form, so they cannot be forms
+ * themselves (a form inside a form is invalid HTML and a hydration error). They
+ * are groups with a plain button, and Enter in a one-line field runs the
+ * action here instead of submitting, and saving, the whole listing form.
+ */
+function submitOnEnter(event: React.KeyboardEvent<HTMLElement>, submit: () => void) {
+  const target = event.target as HTMLElement
+  if (event.key !== 'Enter' || target.tagName !== 'INPUT') return
+  event.preventDefault()
+  submit()
+}
+
 function MoneyAction({
   kind,
   doc,
@@ -418,14 +431,16 @@ function MoneyAction({
   const set = (patch: Partial<MoneyForm>) => setForm((f) => ({ ...f, ...patch }))
   const whish = form.method === 'whish'
 
+  const submit = () => {
+    if (!missing && !busy) void send(MONEY_PATHS[kind], moneyBody(doc.id, form))
+  }
+
   return (
-    <form
+    <div
       style={styles.form}
+      role="group"
       aria-label={MONEY_TITLES[kind]}
-      onSubmit={(event) => {
-        event.preventDefault()
-        if (!missing && !busy) void send(MONEY_PATHS[kind], moneyBody(doc.id, form))
-      }}
+      onKeyDown={(event) => submitOnEnter(event, submit)}
     >
       <h4 style={styles.formTitle}>{MONEY_TITLES[kind]}</h4>
       <label style={styles.field}>
@@ -496,14 +511,14 @@ function MoneyAction({
         <p style={styles.muted}>{missing}</p>
       ) : null}
       <p style={styles.buttons}>
-        <button type="submit" disabled={busy || missing !== null}>
+        <button type="button" onClick={submit} disabled={busy || missing !== null}>
           {busy ? 'Saving...' : `Record: ${MONEY_TITLES[kind].toLowerCase()}`}
         </button>
         <button type="button" onClick={onCancel} disabled={busy}>
           Cancel
         </button>
       </p>
-    </form>
+    </div>
   )
 }
 
@@ -642,21 +657,23 @@ function ExtendAction({
     which === 'balance'
       ? doc.submission?.payment?.balanceDueAt
       : doc.submission?.payment?.downpaymentDueAt
+  const submit = () => {
+    if (daysOk && reason.trim() && !busy) {
+      void send('/extend-deadline', {
+        businessId: doc.id,
+        which,
+        days: n,
+        reason: reason.trim(),
+      })
+    }
+  }
+
   return (
-    <form
+    <div
       style={styles.form}
+      role="group"
       aria-label="Extend deadline"
-      onSubmit={(event) => {
-        event.preventDefault()
-        if (daysOk && reason.trim() && !busy) {
-          void send('/extend-deadline', {
-            businessId: doc.id,
-            which,
-            days: n,
-            reason: reason.trim(),
-          })
-        }
-      }}
+      onKeyDown={(event) => submitOnEnter(event, submit)}
     >
       <h4 style={styles.formTitle}>{lapsed ? 'Extend deadline (re-open)' : 'Extend deadline'}</h4>
       <p style={styles.hint}>
@@ -696,14 +713,14 @@ function ExtendAction({
         </p>
       ) : null}
       <p style={styles.buttons}>
-        <button type="submit" disabled={busy || !daysOk || !reason.trim()}>
+        <button type="button" onClick={submit} disabled={busy || !daysOk || !reason.trim()}>
           {busy ? 'Saving...' : lapsed ? 'Re-open' : 'Extend'}
         </button>
         <button type="button" onClick={onCancel} disabled={busy}>
           Cancel
         </button>
       </p>
-    </form>
+    </div>
   )
 }
 
