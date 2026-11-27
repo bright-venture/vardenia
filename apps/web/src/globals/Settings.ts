@@ -251,7 +251,7 @@ export const Settings: GlobalConfig = {
         {
           label: 'Magazine places',
           description:
-            'The Magazine Places form: what a place pays, how much of it first (the downpayment) and the deadlines for both payments, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price, downpayment, deadlines and term are copied onto each submission when the owner sends the form, so changing them never rewrites one already sent.',
+            'The Magazine Places form: how much of the price is paid first (the downpayment; the price itself is set per layout on each issue) and the deadlines for both payments, how long it lasts, how long an unfinished form is held, and the company number for Whish and WhatsApp. Read by lib/place-settings; the price, downpayment, deadlines and term are copied onto each submission when the owner sends the form, so changing them never rewrites one already sent.',
           fields: [
             {
               name: 'magazinePlaces',
@@ -267,6 +267,11 @@ export const Settings: GlobalConfig = {
                   min: 1,
                   defaultValue: 1000,
                   admin: {
+                    // Prices are set per layout on each issue now. Hidden, not
+                    // removed: old drafts and submissions without a layout still
+                    // fall back to this value (lib/place-settings), and the stored
+                    // number stays as it is.
+                    hidden: true,
                     description: 'The full price of one year in the magazine. At least 1.',
                   },
                   validate: validatePricePerYear,

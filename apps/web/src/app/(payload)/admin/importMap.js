@@ -47,6 +47,8 @@ import { StatementDisputes as StatementDisputes_5adc2dd7b59f3080352673dc54f49823
 import { StatementLines as StatementLines_199a681780455e814151ac98ca81d7a7 } from '../../../components/admin/StatementLines'
 import { MoneyCell as MoneyCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ListingAllocation as ListingAllocation_4b4bdc8b6e0453f22f75fc9dadd097ef } from '../../../components/admin/ListingAllocation'
+import { TemplateBulkAdd as TemplateBulkAdd_eff32680b5aff4d8cba8f5217be964b7 } from '../../../components/admin/TemplateBulkAdd'
+import { TemplatePageLabel as TemplatePageLabel_654de36002359cd3f49885cb07821948 } from '../../../components/admin/TemplatePageLabel'
 import { AccountHelp as AccountHelp_d5e13084357838e096328882a056e6b4 } from '../../../components/admin/AccountHelp'
 import { ResolvedCell as ResolvedCell_07f513c68167caf320c51b8dc6c45309 } from '../../../components/admin/ListCells'
 import { ReportsNavLink as ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5 } from '../../../components/admin/ReportsNavLink'
@@ -109,6 +111,8 @@ export const importMap = {
   "/components/admin/StatementLines#StatementLines": StatementLines_199a681780455e814151ac98ca81d7a7,
   "/components/admin/ListCells#MoneyCell": MoneyCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ListingAllocation#ListingAllocation": ListingAllocation_4b4bdc8b6e0453f22f75fc9dadd097ef,
+  "/components/admin/TemplateBulkAdd#TemplateBulkAdd": TemplateBulkAdd_eff32680b5aff4d8cba8f5217be964b7,
+  "/components/admin/TemplatePageLabel#TemplatePageLabel": TemplatePageLabel_654de36002359cd3f49885cb07821948,
   "/components/admin/AccountHelp#AccountHelp": AccountHelp_d5e13084357838e096328882a056e6b4,
   "/components/admin/ListCells#ResolvedCell": ResolvedCell_07f513c68167caf320c51b8dc6c45309,
   "/components/admin/ReportsNavLink#ReportsNavLink": ReportsNavLink_c86b84327b33bc42c769fcc4286af7e5,

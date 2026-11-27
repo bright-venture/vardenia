@@ -146,6 +146,13 @@ export const Templates: CollectionConfig = {
       admin: {
         description:
           'In print order. A full spread is one entry that takes two pages. Cannot change once an issue uses the template.',
+        components: {
+          // Titles each row by its pages ("Page 1→2 · Full spread") and adds
+          // "from page 1 to 10, all half pages". Admin screen only: the stored
+          // data and the checks are unchanged.
+          RowLabel: '/components/admin/TemplatePageLabel#TemplatePageLabel',
+          afterInput: ['/components/admin/TemplateBulkAdd#TemplateBulkAdd'],
+        },
       },
       fields: [
         {
