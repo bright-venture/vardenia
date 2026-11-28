@@ -66,7 +66,7 @@ export function MagazineViewer({
     () => mergeRegions(data?.regions ?? []).sort((a, b) => a.firstPage - b.firstPage),
     [data],
   )
-  const imageFor = useMemo(() => pageImagesFor(data?.regions ?? [], data?.pages ?? []), [data])
+  const imageFor = useMemo(() => pageImagesFor(data?.pages ?? []), [data])
   const businesses = useMemo(
     () => new Map<number, MagazineBusiness>((data?.businesses ?? []).map((b) => [b.number, b])),
     [data],

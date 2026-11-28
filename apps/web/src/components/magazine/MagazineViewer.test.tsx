@@ -12,7 +12,11 @@ vi.mock('./page-images', async (importOriginal) => {
   const real = await importOriginal<typeof import('./page-images')>()
   // Which issues match the PDF is tested in page-images.test; here the
   // viewer only has to draw the images when it is told to.
-  return { ...real, pageImagesFor: () => (printed.on ? real.allLebanonPage : null) }
+  return {
+    ...real,
+    pageImagesFor: () =>
+      printed.on ? (page: number) => real.designPage(real.DESIGNS[0]!, page) : null,
+  }
 })
 
 import { MagazineViewer } from './MagazineViewer'

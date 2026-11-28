@@ -1,27 +1,45 @@
 import type { PageLayout } from '@vardenia/core/page-layouts'
-import type { MagazinePage, MagazineRegion } from '@vardenia/core/magazine-view'
+import type { MagazinePage } from '@vardenia/core/magazine-view'
 
 /**
- * The designer's printed pages for an All Lebanon issue (27 November 2026):
- * the 200 pages of the blank All Lebanon magazine (Web Review v2), one WebP
- * per page in public/magazine-pages/all-lebanon, numbered like the PDF.
+ * The designers' printed pages, built into the site (28 November 2026).
  *
- * Frontend only. The images are drawn only for an issue that IS this magazine:
- * it covers All Lebanon and its pages match the PDF one by one (same count,
- * same layout on every page, same pages without listings). Any other issue,
- * an All Lebanon template with fewer or more pages included, keeps the drawn
- * pages, so a printed page can never sit under the wrong slots.
+ * Each design is a folder of page images in public/magazine-pages/<folder>
+ * (001.webp, 002.webp, ...) and the shape of the template it was drawn for:
+ * one letter per page, in page order. An issue shows a design's pages when its
+ * template has exactly that shape: the same number of pages, the same layout
+ * on every page, the same pages without listings. Nothing else is compared,
+ * so the template's name, id and the issue's coverage or blocks do not matter
+ * (a production template entered with the same pages matches too). An issue
+ * whose template matches no design keeps the drawn pages, so a printed page
+ * can never sit under the wrong slots.
+ *
+ * Adding a design: put its pages in public/magazine-pages/<folder>, then add
+ * an entry below with the shape read from its slot map (letters below). Later
+ * the admin will upload a design onto a template instead (no deploy).
+ *
+ * Letters: "-" no listings (cover, intro, divider), F full page, S and s the
+ * two pages of a full spread, H half page, T 1/3, Q 1/4.
  */
-export const ALL_LEBANON_PAGE_COUNT = 200
+export interface BuiltInDesign {
+  /** Folder under public/magazine-pages. */
+  folder: string
+  /** What it is, for people reading this list. */
+  name: string
+  /** The template's pages in letters, one per page. */
+  shape: string
+}
 
-/**
- * The PDF page by page (from its slot map CSV): "-" no listings, F full page,
- * S and s the two pages of a full spread, H half page, T 1/3, Q 1/4.
- */
-export const ALL_LEBANON_PAGES =
-  '-------FFFHHFQHHQFHHQHFQHQHQHHQ--Ss--HQTHQHFHHFQHHQTQHTQHHQ----FHSsHFQHHQTHHTHQTQHTQHHQ----' +
-  'FHSsFHQFHQTQHTQHHQTQHTTH----FHTQHFQHHQTQHQSsHTQHHHQH----SsQHTHHTQHHQTHHTQHHQFFHQ----' +
-  'FHHFQHTHSsHTQHHQTHHQHTQ--'
+export const DESIGNS: readonly BuiltInDesign[] = [
+  {
+    folder: 'all-lebanon',
+    name: 'All Lebanon (Blank Web Review v2, 200 pages)',
+    shape:
+      '-------FFFHHFQHHQFHHQHFQHQHQHHQ--Ss--HQTHQHFHHFQHHQTQHTQHHQ----FHSsHFQHHQTHHTHQTQHTQHHQ----' +
+      'FHSsFHQFHQTQHTQHHQTQHTTH----FHTQHFQHHQTQHQSsHTQHHHQH----SsQHTHHTQHHQTHHTQHHQFFHQ----' +
+      'FHHFQHTHSsHTQHHQTHHQHTQ--',
+  },
+]
 
 const CODE: Record<PageLayout, string> = {
   'full-spread': 'Ss',
@@ -39,29 +57,26 @@ export function pageSignature(pages: readonly MagazinePage[]): string {
     .join('')
 }
 
-const pad = (n: number) => String(n).padStart(3, '0')
-
-export function allLebanonPage(page: number): string | null {
-  return Number.isInteger(page) && page >= 1 && page <= ALL_LEBANON_PAGE_COUNT
-    ? `/magazine-pages/all-lebanon/${pad(page)}.webp`
-    : null
+/** The design drawn for this shape of template, or null. */
+export function designFor(pages: readonly MagazinePage[]): BuiltInDesign | null {
+  if (pages.length === 0) return null
+  const shape = pageSignature(pages)
+  return DESIGNS.find((d) => d.shape === shape) ?? null
 }
 
-/**
- * True when the blocks span more than one governorate, as an All Lebanon
- * issue's do (the viewer's data does not carry the coverage itself; a
- * one-governorate issue has one block per city, all in its governorate).
- */
-export function coversAllLebanon(regions: readonly MagazineRegion[]): boolean {
-  return new Set(regions.map((r) => r.governorate)).size > 1
+const pad = (n: number) => String(n).padStart(3, '0')
+
+/** The image of one page of a design; null past its last page. */
+export function designPage(design: BuiltInDesign, page: number): string | null {
+  return Number.isInteger(page) && page >= 1 && page <= design.shape.length
+    ? `/magazine-pages/${design.folder}/${pad(page)}.webp`
+    : null
 }
 
 /** The page images to draw for this issue, or null to draw the pages as before. */
 export function pageImagesFor(
-  regions: readonly MagazineRegion[],
   pages: readonly MagazinePage[],
 ): ((page: number) => string | null) | null {
-  return coversAllLebanon(regions) && pageSignature(pages) === ALL_LEBANON_PAGES
-    ? allLebanonPage
-    : null
+  const design = designFor(pages)
+  return design ? (page) => designPage(design, page) : null
 }

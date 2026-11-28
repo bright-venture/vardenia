@@ -29,7 +29,7 @@ export function MagazinePageView({
   highlight: number | null
   labels: MagazineLabels
   dir: 'ltr' | 'rtl'
-  /** The printed page images (an All Lebanon issue), or null to draw the page. */
+  /** The printed page images (a template with a built-in design), or null to draw the page. */
   imageFor?: ((page: number) => string | null) | null
 }) {
   const span = page.kind === 'listings' ? page.span : 1

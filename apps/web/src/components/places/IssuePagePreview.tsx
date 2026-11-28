@@ -15,9 +15,9 @@ import { PAGE_RATIO } from './preview-model'
 /**
  * The form's preview (27 November 2026): the page of the chosen issue that
  * holds the number the owner picked, drawn from the issue's own template, with
- * the owner's details on their slot as they type. For the All Lebanon
- * magazine that is the designer's printed page (magazine/page-images); for any
- * other issue, the page as the magazine viewer draws it. Other businesses
+ * the owner's details on their slot as they type. When the template matches
+ * a built-in design that is the designer's printed page (magazine/page-images);
+ * otherwise the page as the magazine viewer draws it. Other businesses
  * already on the page show as they do in the viewer.
  *
  * Before an issue and a number are chosen, a blank page with a line saying
@@ -57,7 +57,7 @@ export function IssuePagePreview({
     if (draft && number !== null) map.set(number, { ...draft, number })
     return map
   }, [data, draft, number])
-  const imageFor = useMemo(() => (data ? pageImagesFor(data.regions, data.pages) : null), [data])
+  const imageFor = useMemo(() => (data ? pageImagesFor(data.pages) : null), [data])
   // A full spread is two pages wide: shown one page at a time, full size, with
   // a switch between its two pages. Back to its first page when the spread changes.
   const [shown, setShown] = useState<{ page: number; side: 0 | 1 } | null>(null)
